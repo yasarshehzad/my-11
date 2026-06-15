@@ -670,6 +670,56 @@ function generatePlayersDatabase(): Player[] {
       else if (year >= 2000) era = '00s';
       else era = '90s';
 
+      // Setup dynamic secondary positions for maximum versatility
+      const secondaryPositions = [...base.secondaryPositions];
+      
+      // LW <-> LM compatibility
+      if (base.primaryPosition === 'LW' && !secondaryPositions.includes('LM')) {
+        secondaryPositions.push('LM');
+      }
+      if (base.primaryPosition === 'LM' && !secondaryPositions.includes('LW')) {
+        secondaryPositions.push('LW');
+      }
+      // RW <-> RM compatibility
+      if (base.primaryPosition === 'RW' && !secondaryPositions.includes('RM')) {
+        secondaryPositions.push('RM');
+      }
+      if (base.primaryPosition === 'RM' && !secondaryPositions.includes('RW')) {
+        secondaryPositions.push('RW');
+      }
+      // ST <-> CF compatibility
+      if (base.primaryPosition === 'ST' && !secondaryPositions.includes('CF')) {
+        secondaryPositions.push('CF');
+      }
+      if (base.primaryPosition === 'CF' && !secondaryPositions.includes('ST')) {
+        secondaryPositions.push('ST');
+      }
+      // CM <-> CAM/CDM compatibility
+      if (base.primaryPosition === 'CM') {
+        if (!secondaryPositions.includes('CAM')) secondaryPositions.push('CAM');
+        if (!secondaryPositions.includes('CDM')) secondaryPositions.push('CDM');
+      }
+      if (base.primaryPosition === 'CAM' && !secondaryPositions.includes('CM')) {
+        secondaryPositions.push('CM');
+      }
+      if (base.primaryPosition === 'CDM' && !secondaryPositions.includes('CM')) {
+        secondaryPositions.push('CM');
+      }
+
+      // Check if secondary positions list implies the other winger/midfield position
+      if (secondaryPositions.includes('LW') && !secondaryPositions.includes('LM')) {
+        secondaryPositions.push('LM');
+      }
+      if (secondaryPositions.includes('LM') && !secondaryPositions.includes('LW')) {
+        secondaryPositions.push('LW');
+      }
+      if (secondaryPositions.includes('RW') && !secondaryPositions.includes('RM')) {
+        secondaryPositions.push('RM');
+      }
+      if (secondaryPositions.includes('RM') && !secondaryPositions.includes('RW')) {
+        secondaryPositions.push('RW');
+      }
+
       // Override club transfers historically
       let club = base.club;
       if (base.name === 'Alan Shearer' && year < 1996) {
@@ -827,7 +877,7 @@ function generatePlayersDatabase(): Player[] {
         league: 'Premier League',
         nationality: base.nationality,
         primaryPosition: base.primaryPosition,
-        secondaryPositions: base.secondaryPositions,
+        secondaryPositions: secondaryPositions,
         era,
         rating,
         attack,

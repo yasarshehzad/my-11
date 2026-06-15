@@ -10,7 +10,8 @@ import {
   simulateLeagueSeason,
   DAILY_CHALLENGES,
   createSeedableRandom,
-  getDetailedChemistryLogs
+  getDetailedChemistryLogs,
+  generateRandomSquad
 } from '../utils/gameLogic';
 import { PlayerCard } from '../components/PlayerCard';
 import { PitchLayout } from '../components/PitchLayout';
@@ -258,6 +259,55 @@ export default function DraftedXIGame() {
       setStats({ attack: 0, midfield: 0, defence: 0, chemistry: 0, overall: 0 });
       setSimResult(null);
       setPhase('formation');
+    };
+
+    if (document.startViewTransition) {
+      document.startViewTransition(updateDOM);
+    } else {
+      updateDOM();
+    }
+  };
+
+  // --- Start Random Draft & Simulate ---
+  const handleRandomDraft = (forceDailyRule?: boolean) => {
+    logGameStarted();
+    const updateDOM = () => {
+      const useChallenge = forceDailyRule !== undefined ? forceDailyRule : isDailyChallenge;
+      setIsDailyChallenge(useChallenge);
+
+      // 1. Pick a random formation
+      const formations: FormationType[] = ['4-3-3', '4-4-2', '3-5-2', '4-2-3-1'];
+      const randomFormation = formations[Math.floor(Math.random() * formations.length)];
+      setFormation(randomFormation);
+      
+      // 2. Generate random eligible unique squad
+      const rule = useChallenge && todayChallenge ? todayChallenge.rule : undefined;
+      const randomSquad = generateRandomSquad(randomFormation, rule);
+      setSelectedPlayers(randomSquad);
+      setCurrentSlotIndex(10);
+      setDraftOptions(null);
+      
+      // 3. Calculate team stats
+      const slots = FORMATION_SLOTS[randomFormation];
+      const newStats = calculateSquadStats(randomSquad, slots);
+      setStats(newStats);
+      
+      // 4. Simulate season
+      const result = simulateLeagueSeason(randomSquad, newStats);
+      setSimResult(result);
+      
+      // 5. Reset live simulation counters
+      setSimIndex(0);
+      setLiveWins(0);
+      setLiveDraws(0);
+      setLiveLosses(0);
+      setLivePoints(0);
+      setLiveGoalsFor(0);
+      setLiveGoalsAgainst(0);
+      setLiveMatches([]);
+      
+      // 6. Navigate directly to simulate
+      setPhase('simulating');
     };
 
     if (document.startViewTransition) {
@@ -716,18 +766,27 @@ export default function DraftedXIGame() {
         </div>
 
         {/* Standard CTA Button */}
-        <div className="w-full max-w-xs mt-2 pb-4">
+        <div className="w-full max-w-xs mt-2 pb-4 space-y-3">
           <button
             onClick={handleStartDraft}
             className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/10 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/20 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer"
           >
             Start Draft
           </button>
-          <p className="text-[9px] text-slate-600 font-extrabold mt-3 uppercase tracking-widest leading-none">
+
+          <button
+            onClick={() => {
+              handleRandomDraft(false);
+            }}
+            className="w-full py-3.5 px-6 rounded-2xl border border-dashed border-emerald-500/40 hover:border-emerald-400/80 bg-emerald-950/20 text-emerald-400 hover:bg-emerald-950/40 font-display font-black text-xs uppercase tracking-wider hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer text-center"
+          >
+            🎲 Instant Randomizer
+          </button>
+
+          <p className="text-[9px] text-slate-600 font-extrabold mt-3 uppercase tracking-widest leading-none text-center">
             Draft restrictions apply in daily challenge mode
           </p>
-        </div>
-      </div>
+        </div>     </div>
     );
   };
 
@@ -1277,13 +1336,19 @@ export default function DraftedXIGame() {
           />
         </div>
 
-        {/* Play Again Button */}
-        <div className="mt-4 mb-6 relative z-10 w-full">
+        {/* Play Again and Randomize Buttons */}
+        <div className="mt-4 mb-6 relative z-10 flex flex-col sm:flex-row gap-3 w-full">
           <button
             onClick={handleStartDraft}
-            className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-display font-black text-base uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 hover:-translate-y-0.5 transition-all duration-300 transform active:scale-98 cursor-pointer text-center"
+            className="flex-1 py-4 px-6 rounded-2xl bg-slate-900 border border-slate-800 text-white hover:bg-slate-800 font-display font-black text-sm uppercase tracking-wider transition-all duration-300 transform active:scale-98 cursor-pointer text-center"
           >
-            Play Again
+            🎮 Build Another Team
+          </button>
+          <button
+            onClick={() => handleRandomDraft()}
+            className="flex-grow py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 hover:-translate-y-0.5 transition-all duration-300 transform active:scale-98 cursor-pointer text-center"
+          >
+            🎲 Randomize Again
           </button>
         </div>
       </div>

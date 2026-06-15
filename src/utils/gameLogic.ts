@@ -232,9 +232,9 @@ export function getDraftOptions(
 
     // Filter candidate pool
     if (slot === 0) {
-      // Slot 0: Strict target position
+      // Slot 0: Strict target position or natural secondary position
       eligiblePool = players.filter(
-        (p) => p.primaryPosition === targetPos && p.rarity === rarity && satisfiesChallengeRule(p) && !draftedIds.has(p.id)
+        (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) && p.rarity === rarity && satisfiesChallengeRule(p) && !draftedIds.has(p.id)
       );
     } else if (slot === 1) {
       // Slot 1: Related positions
@@ -249,6 +249,12 @@ export function getDraftOptions(
     }
 
     // Fallbacks if pool is empty for the rolled rarity
+    if (eligiblePool.length === 0) {
+      // Try to find exact position match (primary or secondary) of any rarity first
+      eligiblePool = players.filter(
+        (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) && satisfiesChallengeRule(p) && !draftedIds.has(p.id)
+      );
+    }
     if (eligiblePool.length === 0) {
       eligiblePool = players.filter(
         (p) => relatedPositions.includes(p.primaryPosition) && satisfiesChallengeRule(p) && !draftedIds.has(p.id)
@@ -652,28 +658,41 @@ export function simulateLeagueSeason(
 
   shuffledFixtures.forEach((fixture) => {
     const oppRating = fixture.rating;
-    const ourPerf = stats.overall + (Math.random() * 12 - 6);
-    const oppPerf = oppRating + (Math.random() * 12 - 6);
+    
+    // Chemistry gives a nice direct boost or penalty to match day performance.
+    // 100 chemistry gives +2 performance boost, while low chemistry (e.g. 40) gives up to -4 penalty.
+    const chemBonus = (stats.chemistry - 80) / 10;
+
+    // We reduce the random range from [-6, 6] to [-4.5, 4.5] for each team,
+    // which makes the difference spread [-9, 9] instead of [-12, 12].
+    // This reduces extreme random upset frequency, making team quality shine through more consistently.
+    const ourPerf = stats.overall + chemBonus + (Math.random() * 9 - 4.5);
+    const oppPerf = oppRating + (Math.random() * 9 - 4.5);
 
     const diff = ourPerf - oppPerf;
     let outcome: 'W' | 'D' | 'L';
     let ourScore = 0;
     let oppScore = 0;
 
-    if (diff > 4.5) {
+    // Narrowed draw window to [-2.5, 2.5]
+    if (diff > 2.5) {
       outcome = 'W';
       wins++;
-      ourScore = Math.floor(Math.random() * 3) + 1;
+      const baseGoal = Math.floor(Math.random() * 2) + 1; // 1 or 2
+      const extraGoal = diff > 6 ? Math.floor(Math.random() * 3) : diff > 4 ? Math.floor(Math.random() * 2) : 0;
+      ourScore = baseGoal + extraGoal;
       oppScore = Math.max(0, ourScore - (Math.floor(Math.random() * 2) + 1));
-    } else if (diff < -4.5) {
+    } else if (diff < -2.5) {
       outcome = 'L';
       losses++;
-      oppScore = Math.floor(Math.random() * 3) + 1;
+      const baseGoal = Math.floor(Math.random() * 2) + 1;
+      const extraGoal = diff < -6 ? Math.floor(Math.random() * 3) : diff < -4 ? Math.floor(Math.random() * 2) : 0;
+      oppScore = baseGoal + extraGoal;
       ourScore = Math.max(0, oppScore - (Math.floor(Math.random() * 2) + 1));
     } else {
       outcome = 'D';
       draws++;
-      ourScore = Math.floor(Math.random() * 3);
+      ourScore = Math.floor(Math.random() * 3); // 0, 1, 2
       oppScore = ourScore;
     }
 
@@ -691,16 +710,38 @@ export function simulateLeagueSeason(
 
   const points = wins * 3 + draws;
 
-  // Determine league position based on points
+  // A realistic mapping of points to league position
   let leaguePosition = 1;
-  if (points >= 95) leaguePosition = 1;
-  else if (points >= 86) leaguePosition = Math.floor(Math.random() * 2) + 1;
-  else if (points >= 76) leaguePosition = Math.floor(Math.random() * 2) + 3;
-  else if (points >= 68) leaguePosition = Math.floor(Math.random() * 2) + 5;
-  else if (points >= 58) leaguePosition = Math.floor(Math.random() * 3) + 7;
-  else if (points >= 48) leaguePosition = Math.floor(Math.random() * 4) + 10;
-  else if (points >= 38) leaguePosition = Math.floor(Math.random() * 4) + 14;
-  else leaguePosition = Math.floor(Math.random() * 3) + 18;
+  if (points >= 95) {
+    leaguePosition = 1;
+  } else if (points >= 88) {
+    // 88-94 points: usually 1st or 2nd
+    leaguePosition = Math.random() < 0.5 ? 1 : 2;
+  } else if (points >= 80) {
+    // 80-87 points: 2nd or 3rd
+    leaguePosition = Math.floor(Math.random() * 2) + 2; // 2 or 3
+  } else if (points >= 72) {
+    // 72-79 points: 3rd or 4th
+    leaguePosition = Math.floor(Math.random() * 2) + 3; // 3 or 4
+  } else if (points >= 65) {
+    // 65-71 points: 4th or 5th
+    leaguePosition = Math.floor(Math.random() * 2) + 4; // 4 or 5
+  } else if (points >= 58) {
+    // 58-64 points: 6th or 7th
+    leaguePosition = Math.floor(Math.random() * 2) + 6; // 6 or 7
+  } else if (points >= 50) {
+    // 50-57 points: 8th to 10th
+    leaguePosition = Math.floor(Math.random() * 3) + 8; // 8, 9, 10
+  } else if (points >= 40) {
+    // 40-49 points: 11th to 14th
+    leaguePosition = Math.floor(Math.random() * 4) + 11; // 11, 12, 13, 14
+  } else if (points >= 35) {
+    // 35-39 points: 15th to 17th
+    leaguePosition = Math.floor(Math.random() * 3) + 15; // 15, 16, 17
+  } else {
+    // Under 35 points: 18th to 20th (relegation)
+    leaguePosition = Math.floor(Math.random() * 3) + 18; // 18, 19, 20
+  }
 
   // MVP & Weak Link
   const sortedByContribution = [...selectedPlayers].sort((a, b) => {
@@ -738,3 +779,127 @@ export function simulateLeagueSeason(
     worstLink,
   };
 }
+
+/**
+ * Generates an eligible squad of 11 unique players for the chosen formation and challenge rules
+ */
+export function generateRandomSquad(
+  formation: FormationType,
+  challengeRule?: ChallengeRuleType
+): Player[] {
+  const slots = FORMATION_SLOTS[formation];
+  const selected: Player[] = [];
+  const selectedIds = new Set<string>();
+
+  const satisfiesChallengeRule = (p: Player) => {
+    if (!challengeRule) return true;
+    switch (challengeRule) {
+      case 'only_2000s':
+        return p.era === '00s';
+      case 'underdog_xi':
+        return p.rarity === 'common' || p.rarity === 'rare';
+      case 'no_legends':
+        return p.rarity !== 'legend';
+      case 'under_90_rating':
+        return p.rating < 90;
+      case 'only_modern':
+        return p.era === 'Modern';
+      case 'one_superstar':
+        return true; // controlled below
+      default:
+        return true;
+    }
+  };
+
+  for (let i = 0; i < slots.length; i++) {
+    const slot = slots[i];
+    const targetPos = slot.position;
+    
+    // Find players matching target position, challenge rules, and not already drafted
+    let pool = players.filter(
+      (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) && satisfiesChallengeRule(p) && !selectedIds.has(p.id)
+    );
+
+    // Fallback 1: Try related positions
+    if (pool.length === 0) {
+      const related = RELATED_POSITIONS[targetPos] || [targetPos];
+      pool = players.filter(
+        (p) => related.includes(p.primaryPosition) && satisfiesChallengeRule(p) && !selectedIds.has(p.id)
+      );
+    }
+
+    // Fallback 2: Broad department match
+    if (pool.length === 0) {
+      const dept = POSITION_DEPARTMENTS[targetPos];
+      pool = players.filter(
+        (p) => POSITION_DEPARTMENTS[p.primaryPosition] === dept && satisfiesChallengeRule(p) && !selectedIds.has(p.id)
+      );
+    }
+
+    // Fallback 3: Any matching position (ignoring challenge rule if absolutely empty, to guarantee draft completion)
+    if (pool.length === 0) {
+      pool = players.filter(
+        (p) => (targetPos === 'GK' ? p.primaryPosition === 'GK' : p.primaryPosition !== 'GK') && !selectedIds.has(p.id)
+      );
+    }
+
+    // Roll a random player from the eligible pool
+    if (pool.length > 0) {
+      const randomPlayer = pool[Math.floor(Math.random() * pool.length)];
+      selected.push(randomPlayer);
+      selectedIds.add(randomPlayer.id);
+    } else {
+      // Emergency: get any player not selected
+      const emergencyPool = players.filter((p) => !selectedIds.has(p.id));
+      const randomPlayer = emergencyPool.length > 0 
+        ? emergencyPool[Math.floor(Math.random() * emergencyPool.length)]
+        : players[Math.floor(Math.random() * players.length)];
+      selected.push(randomPlayer);
+      selectedIds.add(randomPlayer.id);
+    }
+  }
+
+  // Handle 'one_superstar' rule: replace so we have exactly 1 legend
+  if (challengeRule === 'one_superstar') {
+    let legendIndices: number[] = [];
+    selected.forEach((p, idx) => {
+      if (p.rarity === 'legend') legendIndices.push(idx);
+    });
+
+    if (legendIndices.length > 1) {
+      // Keep only one legend, replace others with non-legends
+      for (let i = 1; i < legendIndices.length; i++) {
+        const idx = legendIndices[i];
+        const targetPos = slots[idx].position;
+        const pool = players.filter(
+          (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) && p.rarity !== 'legend' && !selectedIds.has(p.id)
+        );
+        const replacement = pool.length > 0 
+          ? pool[Math.floor(Math.random() * pool.length)]
+          : players.find(p => p.primaryPosition === targetPos && p.rarity !== 'legend');
+        if (replacement) {
+          selected[idx] = replacement;
+          selectedIds.add(replacement.id);
+        }
+      }
+    } else if (legendIndices.length === 0) {
+      // Replace one non-legend slot (e.g. striker or midfield) with a legend
+      const eligibleSlots = [5, 6, 7, 8, 9, 10]; // avoid GK & defenders for a superstar attacker/midfielder
+      const randomSlotIdx = eligibleSlots[Math.floor(Math.random() * eligibleSlots.length)];
+      const targetPos = slots[randomSlotIdx].position;
+      const pool = players.filter(
+        (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) && p.rarity === 'legend' && !selectedIds.has(p.id)
+      );
+      const replacement = pool.length > 0 
+        ? pool[Math.floor(Math.random() * pool.length)]
+        : players.find(p => p.primaryPosition === targetPos && p.rarity === 'legend');
+      if (replacement) {
+        selected[randomSlotIdx] = replacement;
+        selectedIds.add(replacement.id);
+      }
+    }
+  }
+
+  return selected;
+}
+
