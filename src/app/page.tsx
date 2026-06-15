@@ -624,7 +624,7 @@ export default function DraftedXIGame() {
     };
 
     return (
-      <div className="flex flex-col items-center justify-between min-h-[80vh] text-center px-4 sm:px-6 py-8 relative space-y-8">
+      <div className="flex flex-col items-center justify-between min-h-[80vh] text-center px-4 sm:px-6 py-8 relative space-y-8 w-full max-w-full overflow-hidden">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-72 h-72 rounded-full bg-emerald-500/5 filter blur-3xl pointer-events-none" />
 
         {/* Hero Title */}
@@ -741,7 +741,7 @@ export default function DraftedXIGame() {
     ];
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[75vh] px-4 sm:px-6 py-8 space-y-6">
+      <div className="flex flex-col items-center justify-center min-h-[75vh] px-4 sm:px-6 py-8 space-y-6 w-full max-w-full overflow-hidden">
         <div className="text-center">
           <h2 className="text-3xl font-display font-black text-white uppercase tracking-tight leading-none mb-2">
             {isDailyChallenge ? "CHALLENGE FORMATION" : "CHOOSE FORMATION"}
@@ -787,7 +787,7 @@ export default function DraftedXIGame() {
     const activeLogs = getDetailedChemistryLogs(selectedPlayers, slots);
 
     return (
-      <div className="flex flex-col gap-6 px-4 sm:px-6 py-6 max-w-lg mx-auto min-h-[90vh] relative">
+      <div className="flex flex-col gap-6 px-4 sm:px-6 py-6 w-full max-w-lg mx-auto min-h-[90vh] relative overflow-hidden">
         
         {/* Floating Chemistry Toast Notification (Micro-interaction) */}
         {chemistryToast && (
@@ -1017,7 +1017,7 @@ export default function DraftedXIGame() {
     const progressPercent = Math.round((simIndex / 38) * 100);
 
     return (
-      <div className="flex flex-col items-center justify-between min-h-[80vh] max-w-sm mx-auto px-4 sm:px-6 py-8 space-y-6">
+      <div className="flex flex-col items-center justify-between min-h-[80vh] w-full max-w-sm mx-auto px-4 sm:px-6 py-8 space-y-6 overflow-hidden">
         <div className="text-center w-full mt-2 leading-none">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/25 text-emerald-450 text-[10px] font-bold uppercase tracking-widest mb-3">
             ⚡ SIMULATING LEAGUE SEASON
@@ -1157,7 +1157,7 @@ export default function DraftedXIGame() {
     const isSoClose = simResult.wins === 36 || simResult.wins === 37;
 
     return (
-      <div className="flex flex-col gap-8 px-4 sm:px-6 py-8 max-w-lg mx-auto min-h-[95vh] relative w-full">
+      <div className="flex flex-col gap-8 px-4 sm:px-6 py-8 w-full max-w-lg mx-auto min-h-[95vh] relative overflow-hidden">
         {simResult.wins >= 35 && (
           <canvas
             ref={canvasRef}
@@ -1313,7 +1313,7 @@ export default function DraftedXIGame() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans flex flex-col pitch-bg">
+    <div className="min-h-screen bg-slate-950 text-white font-sans flex flex-col pitch-bg w-full overflow-x-hidden">
       {/* Header */}
       <header className="w-full py-4 px-6 border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50 flex justify-between items-center select-none shadow-lg">
         <button
