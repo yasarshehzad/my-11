@@ -402,7 +402,7 @@ export function getDetailedChemistryLogs(
       if (tag === '90s' || tag === '00s' || tag === '10s' || tag === 'Modern' || tag === 'Retro') {
         return; // skip
       }
-      const nations = ['Brazil', 'Argentina', 'France', 'Germany', 'Italy', 'Spain', 'England', 'Netherlands', 'Portugal', 'Belgium', 'Croatia', 'Norway', 'Uruguay', 'Denmark', 'Slovenia', 'Morocco', 'Egypt', 'Poland', 'South Korea', 'Ukraine', 'Czech Republic', 'New Zealand', 'Switzerland'];
+      const nations = ['Brazil', 'Argentina', 'France', 'Germany', 'Italy', 'Spain', 'England', 'Netherlands', 'Portugal', 'Belgium', 'Croatia', 'Norway', 'Uruguay', 'Denmark', 'Slovenia', 'Morocco', 'Egypt', 'Poland', 'South Korea', 'Ukraine', 'Czech Republic', 'New Zealand', 'Switzerland', 'Sweden', 'Cameroon', 'Ivory Coast', 'Colombia', 'Chile', 'Senegal', 'Algeria', 'Nigeria', 'Ghana', 'Wales', 'Scotland', 'Ireland'];
       if (nations.includes(tag)) {
         nationCounts[tag] = (nationCounts[tag] || 0) + 1;
       } else {

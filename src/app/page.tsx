@@ -284,7 +284,7 @@ export default function DraftedXIGame() {
       const rule = useChallenge && todayChallenge ? todayChallenge.rule : undefined;
       const randomSquad = generateRandomSquad(randomFormation, rule);
       setSelectedPlayers(randomSquad);
-      setCurrentSlotIndex(10);
+      setCurrentSlotIndex(11);
       setDraftOptions(null);
       
       // 3. Calculate team stats
@@ -306,8 +306,8 @@ export default function DraftedXIGame() {
       setLiveGoalsAgainst(0);
       setLiveMatches([]);
       
-      // 6. Navigate directly to simulate
-      setPhase('simulating');
+      // 6. Navigate to draft screen to review the random team first
+      setPhase('draft');
     };
 
     if (document.startViewTransition) {
@@ -454,21 +454,7 @@ export default function DraftedXIGame() {
 
       return () => clearTimeout(timer);
     } else {
-      // Simulation complete! Save outcomes to streaks & localStorage
-      const timer = setTimeout(() => {
-        handleSaveCampaignResults();
-        
-        const updateDOM = () => {
-          setPhase('results');
-        };
-        if (document.startViewTransition) {
-          document.startViewTransition(updateDOM);
-        } else {
-          updateDOM();
-        }
-      }, 1000);
-
-      return () => clearTimeout(timer);
+      // Simulation complete! Save outcomes is handled manually via the proceed button click.
     }
   }, [phase, simIndex, simResult]);
 
@@ -1180,14 +1166,33 @@ export default function DraftedXIGame() {
           </div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="w-full mt-4">
+        {/* Progress Bar & Proceed Action Button */}
+        <div className="w-full mt-4 space-y-4">
           <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-900">
             <div
               style={{ width: `${progressPercent}%` }}
               className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-300 ease-out"
             />
           </div>
+
+          {simIndex === 38 && (
+            <button
+              onClick={() => {
+                handleSaveCampaignResults();
+                const updateDOM = () => {
+                  setPhase('results');
+                };
+                if (document.startViewTransition) {
+                  document.startViewTransition(updateDOM);
+                } else {
+                  updateDOM();
+                }
+              }}
+              className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/35 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer text-center animate-bounce mt-2"
+            >
+              Reveal Final Standings ➔
+            </button>
+          )}
         </div>
       </div>
     );

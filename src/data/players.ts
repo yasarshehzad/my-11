@@ -623,6 +623,308 @@ const playerBases: PlayerBase[] = [
     baseRating: 88, startYear: 1992, baseTrait: 'Creator Supreme', playStyle: 'Luxury Player',
     rivals: ['Portsmouth', 'Bournemouth'],
   },
+
+  // --- INTERNATIONAL GOALKEEPERS ---
+  {
+    name: 'Gianluigi Buffon', lastName: 'Buffon', nationality: 'Italy',
+    primaryPosition: 'GK', secondaryPositions: [], era: '00s', club: 'Juventus',
+    baseRating: 92, startYear: 1995, baseTrait: 'Shot Stopper', playStyle: 'Traditional GK',
+    rivals: ['AC Milan', 'Inter Milan'],
+  },
+  {
+    name: 'Iker Casillas', lastName: 'Casillas', nationality: 'Spain',
+    primaryPosition: 'GK', secondaryPositions: [], era: '00s', club: 'Real Madrid',
+    baseRating: 90, startYear: 1999, baseTrait: 'Shot Stopper', playStyle: 'Sweeper Keeper',
+    rivals: ['Barcelona', 'Atletico Madrid'],
+  },
+  {
+    name: 'Manuel Neuer', lastName: 'Neuer', nationality: 'Germany',
+    primaryPosition: 'GK', secondaryPositions: [], era: '10s', club: 'Bayern Munich',
+    baseRating: 92, startYear: 2006, baseTrait: 'Sweeper Keeper', playStyle: 'Creator Supreme',
+    rivals: ['Dortmund', 'Schalke'],
+  },
+  {
+    name: 'Oliver Kahn', lastName: 'Kahn', nationality: 'Germany',
+    primaryPosition: 'GK', secondaryPositions: [], era: '90s', club: 'Bayern Munich',
+    baseRating: 90, startYear: 1994, baseTrait: 'Shot Stopper', playStyle: 'Traditional GK',
+    rivals: ['Dortmund'],
+  },
+
+  // --- INTERNATIONAL DEFENDERS ---
+  {
+    name: 'Paolo Maldini', lastName: 'Maldini', nationality: 'Italy',
+    primaryPosition: 'CB', secondaryPositions: ['LB'], era: '90s', club: 'AC Milan',
+    baseRating: 93, startYear: 1992, baseTrait: 'Defensive Leader', playStyle: 'Lockdown Defender',
+    rivals: ['Inter Milan', 'Juventus'],
+  },
+  {
+    name: 'Sergio Ramos', lastName: 'Ramos', nationality: 'Spain',
+    primaryPosition: 'CB', secondaryPositions: ['RB'], era: '00s', club: 'Real Madrid',
+    baseRating: 91, startYear: 2004, baseTrait: 'Defensive Leader', playStyle: 'Lockdown Defender',
+    rivals: ['Barcelona', 'Atletico Madrid'],
+  },
+  {
+    name: 'Fabio Cannavaro', lastName: 'Cannavaro', nationality: 'Italy',
+    primaryPosition: 'CB', secondaryPositions: [], era: '90s', club: 'Juventus',
+    baseRating: 89, startYear: 1995, baseTrait: 'Defensive Leader', playStyle: 'Lockdown Defender',
+    rivals: ['Inter Milan', 'AC Milan'],
+  },
+  {
+    name: 'Roberto Carlos', lastName: 'R. Carlos', nationality: 'Brazil',
+    primaryPosition: 'LB', secondaryPositions: ['LM'], era: '90s', club: 'Real Madrid',
+    baseRating: 90, startYear: 1996, baseTrait: 'Creator Supreme', playStyle: 'Overlapping Wingback',
+    rivals: ['Barcelona', 'Atletico Madrid'],
+  },
+  {
+    name: 'Cafu', lastName: 'Cafu', nationality: 'Brazil',
+    primaryPosition: 'RB', secondaryPositions: ['RM'], era: '90s', club: 'Roma',
+    baseRating: 89, startYear: 1997, baseTrait: 'Lockdown Fullback', playStyle: 'Overlapping Wingback',
+    rivals: ['Lazio', 'Juventus'],
+  },
+  {
+    name: 'Dani Alves', lastName: 'Alves', nationality: 'Brazil',
+    primaryPosition: 'RB', secondaryPositions: ['RM', 'CM'], era: '00s', club: 'Barcelona',
+    baseRating: 90, startYear: 2002, baseTrait: 'Creator Supreme', playStyle: 'Overlapping Wingback',
+    rivals: ['Real Madrid', 'Espanyol'],
+  },
+  {
+    name: 'Philipp Lahm', lastName: 'Lahm', nationality: 'Germany',
+    primaryPosition: 'RB', secondaryPositions: ['LB', 'CM', 'CDM'], era: '00s', club: 'Bayern Munich',
+    baseRating: 89, startYear: 2003, baseTrait: 'Lockdown Fullback', playStyle: 'Traditional Fullback',
+    rivals: ['Dortmund', 'Schalke'],
+  },
+  {
+    name: 'Javier Zanetti', lastName: 'Zanetti', nationality: 'Argentina',
+    primaryPosition: 'RB', secondaryPositions: ['LB', 'CDM', 'CM'], era: '90s', club: 'Inter Milan',
+    baseRating: 88, startYear: 1995, baseTrait: 'Engine Room', playStyle: 'Traditional Fullback',
+    rivals: ['AC Milan', 'Juventus'],
+  },
+  {
+    name: 'Alessandro Nesta', lastName: 'Nesta', nationality: 'Italy',
+    primaryPosition: 'CB', secondaryPositions: [], era: '90s', club: 'AC Milan',
+    baseRating: 92, startYear: 1993, baseTrait: 'Defensive Leader', playStyle: 'Lockdown Defender',
+    rivals: ['Inter Milan', 'Juventus'],
+  },
+  {
+    name: 'Carles Puyol', lastName: 'Puyol', nationality: 'Spain',
+    primaryPosition: 'CB', secondaryPositions: ['RB'], era: '90s', club: 'Barcelona',
+    baseRating: 90, startYear: 1999, baseTrait: 'Defensive Leader', playStyle: 'Lockdown Defender',
+    rivals: ['Real Madrid', 'Espanyol'],
+  },
+
+  // --- INTERNATIONAL MIDFIELDERS ---
+  {
+    name: 'Zinedine Zidane', lastName: 'Zidane', nationality: 'France',
+    primaryPosition: 'CAM', secondaryPositions: ['CM'], era: '90s', club: 'Real Madrid',
+    baseRating: 94, startYear: 1996, baseTrait: 'Creator Supreme', playStyle: 'Passing Maestro',
+    rivals: ['Barcelona', 'Atletico Madrid'],
+  },
+  {
+    name: 'Ronaldinho Gaucho', lastName: 'Ronaldinho', nationality: 'Brazil',
+    primaryPosition: 'CAM', secondaryPositions: ['LW', 'LM'], era: '00s', club: 'Barcelona',
+    baseRating: 93, startYear: 2001, baseTrait: 'Wing Wizard', playStyle: 'Pocket Playmaker',
+    rivals: ['Real Madrid', 'Espanyol'],
+  },
+  {
+    name: 'Kaka', lastName: 'Kaka', nationality: 'Brazil',
+    primaryPosition: 'CAM', secondaryPositions: ['CF'], era: '00s', club: 'AC Milan',
+    baseRating: 91, startYear: 2003, baseTrait: 'Wing Wizard', playStyle: 'Pocket Playmaker',
+    rivals: ['Inter Milan', 'Juventus'],
+  },
+  {
+    name: 'Xavi Hernandez', lastName: 'Xavi', nationality: 'Spain',
+    primaryPosition: 'CM', secondaryPositions: [], era: '90s', club: 'Barcelona',
+    baseRating: 92, startYear: 1998, baseTrait: 'Tempo Controller', playStyle: 'Passing Maestro',
+    rivals: ['Real Madrid', 'Espanyol'],
+  },
+  {
+    name: 'Andres Iniesta', lastName: 'Iniesta', nationality: 'Spain',
+    primaryPosition: 'CM', secondaryPositions: ['CAM', 'LW', 'LM'], era: '00s', club: 'Barcelona',
+    baseRating: 92, startYear: 2002, baseTrait: 'Tempo Controller', playStyle: 'Passing Maestro',
+    rivals: ['Real Madrid', 'Espanyol'],
+  },
+  {
+    name: 'Andrea Pirlo', lastName: 'Pirlo', nationality: 'Italy',
+    primaryPosition: 'CM', secondaryPositions: ['CDM'], era: '90s', club: 'AC Milan',
+    baseRating: 91, startYear: 1998, baseTrait: 'Tempo Controller', playStyle: 'Passing Maestro',
+    rivals: ['Inter Milan', 'Juventus'],
+  },
+  {
+    name: 'Luka Modric', lastName: 'Modric', nationality: 'Croatia',
+    primaryPosition: 'CM', secondaryPositions: ['CAM'], era: '00s', club: 'Real Madrid',
+    baseRating: 91, startYear: 2008, baseTrait: 'Tempo Controller', playStyle: 'Passing Maestro',
+    rivals: ['Barcelona', 'Atletico Madrid'],
+  },
+  {
+    name: 'Toni Kroos', lastName: 'Kroos', nationality: 'Germany',
+    primaryPosition: 'CM', secondaryPositions: ['CDM'], era: '00s', club: 'Real Madrid',
+    baseRating: 90, startYear: 2007, baseTrait: 'Tempo Controller', playStyle: 'Passing Maestro',
+    rivals: ['Barcelona', 'Atletico Madrid'],
+  },
+  {
+    name: 'Bastian Schweinsteiger', lastName: 'Schweinsteiger', nationality: 'Germany',
+    primaryPosition: 'CM', secondaryPositions: ['CDM', 'LM'], era: '00s', club: 'Bayern Munich',
+    baseRating: 88, startYear: 2002, baseTrait: 'Engine Room', playStyle: 'Box-to-Box Midfielder',
+    rivals: ['Dortmund', 'Schalke'],
+  },
+  {
+    name: 'Michael Ballack', lastName: 'Ballack', nationality: 'Germany',
+    primaryPosition: 'CM', secondaryPositions: ['CAM'], era: '90s', club: 'Leverkusen',
+    baseRating: 88, startYear: 1997, baseTrait: 'Engine Room', playStyle: 'Box-to-Box Midfielder',
+    rivals: ['Bayern Munich', 'Dortmund'],
+  },
+  {
+    name: 'Franck Ribery', lastName: 'Ribery', nationality: 'France',
+    primaryPosition: 'LW', secondaryPositions: ['LM', 'CAM'], era: '00s', club: 'Bayern Munich',
+    baseRating: 90, startYear: 2004, baseTrait: 'Wing Wizard', playStyle: 'Dribbling Winger',
+    rivals: ['Dortmund', 'Nurnberg'],
+  },
+  {
+    name: 'Arjen Robben', lastName: 'Robben', nationality: 'Netherlands',
+    primaryPosition: 'RW', secondaryPositions: ['RM'], era: '00s', club: 'Bayern Munich',
+    baseRating: 91, startYear: 2003, baseTrait: 'Wing Wizard', playStyle: 'Inside Forward',
+    rivals: ['Dortmund', '1860 Munich'],
+  },
+
+  // --- INTERNATIONAL ATTACKERS ---
+  {
+    name: 'Lionel Messi', lastName: 'Messi', nationality: 'Argentina',
+    primaryPosition: 'RW', secondaryPositions: ['CF', 'ST', 'CAM'], era: '00s', club: 'Barcelona',
+    baseRating: 96, startYear: 2004, baseTrait: 'Golden Boot Form', playStyle: 'Goal Machine',
+    rivals: ['Real Madrid', 'Espanyol'],
+  },
+  {
+    name: 'Ronaldo Nazario', lastName: 'Ronaldo Nazario', nationality: 'Brazil',
+    primaryPosition: 'ST', secondaryPositions: ['CF'], era: '90s', club: 'Real Madrid',
+    baseRating: 95, startYear: 1993, baseTrait: 'Golden Boot Form', playStyle: 'Goal Machine',
+    rivals: ['Barcelona', 'Atletico Madrid'],
+  },
+  {
+    name: 'Neymar Jr', lastName: 'Neymar', nationality: 'Brazil',
+    primaryPosition: 'LW', secondaryPositions: ['CAM', 'LM'], era: '00s', club: 'Barcelona',
+    baseRating: 91, startYear: 2009, baseTrait: 'Wing Wizard', playStyle: 'Dribbling Winger',
+    rivals: ['Real Madrid', 'Espanyol'],
+  },
+  {
+    name: 'Zlatan Ibrahimovic', lastName: 'Ibrahimovic', nationality: 'Sweden',
+    primaryPosition: 'ST', secondaryPositions: ['CF'], era: '90s', club: 'AC Milan',
+    baseRating: 91, startYear: 1999, baseTrait: 'Target Man', playStyle: 'Goal Machine',
+    rivals: ['Inter Milan', 'Juventus'],
+  },
+  {
+    name: 'Alessandro Del Piero', lastName: 'Del Piero', nationality: 'Italy',
+    primaryPosition: 'CF', secondaryPositions: ['CAM', 'ST'], era: '90s', club: 'Juventus',
+    baseRating: 90, startYear: 1993, baseTrait: 'Clutch Finisher', playStyle: 'Pocket Playmaker',
+    rivals: ['Torino', 'Inter Milan'],
+  },
+  {
+    name: 'Francesco Totti', lastName: 'Totti', nationality: 'Italy',
+    primaryPosition: 'CF', secondaryPositions: ['CAM', 'ST'], era: '90s', club: 'Roma',
+    baseRating: 91, startYear: 1993, baseTrait: 'Clutch Finisher', playStyle: 'Pocket Playmaker',
+    rivals: ['Lazio', 'Juventus'],
+  },
+  {
+    name: 'Robert Lewandowski', lastName: 'Lewandowski', nationality: 'Poland',
+    primaryPosition: 'ST', secondaryPositions: [], era: '10s', club: 'Bayern Munich',
+    baseRating: 92, startYear: 2010, baseTrait: 'Golden Boot Form', playStyle: 'Goal Machine',
+    rivals: ['Dortmund', 'Nurnberg'],
+  },
+  {
+    name: 'Karim Benzema', lastName: 'Benzema', nationality: 'France',
+    primaryPosition: 'ST', secondaryPositions: ['CF'], era: '00s', club: 'Real Madrid',
+    baseRating: 91, startYear: 2005, baseTrait: 'Clutch Finisher', playStyle: 'Goal Machine',
+    rivals: ['Atletico Madrid', 'Barcelona'],
+  },
+  {
+    name: 'Kylian Mbappe', lastName: 'Mbappe', nationality: 'France',
+    primaryPosition: 'ST', secondaryPositions: ['LW', 'RW'], era: '10s', club: 'PSG',
+    baseRating: 92, startYear: 2015, baseTrait: 'Golden Boot Form', playStyle: 'Goal Machine',
+    rivals: ['Marseille', 'Lille'],
+  },
+  {
+    name: 'Antoine Griezmann', lastName: 'Griezmann', nationality: 'France',
+    primaryPosition: 'CF', secondaryPositions: ['CAM', 'ST'], era: '00s', club: 'Atletico Madrid',
+    baseRating: 89, startYear: 2009, baseTrait: 'Clutch Finisher', playStyle: 'Pocket Playmaker',
+    rivals: ['Real Madrid', 'Real Sociedad'],
+  },
+  {
+    name: 'Raul Gonzalez', lastName: 'Raul', nationality: 'Spain',
+    primaryPosition: 'ST', secondaryPositions: ['CF'], era: '90s', club: 'Real Madrid',
+    baseRating: 90, startYear: 1994, baseTrait: 'Clutch Finisher', playStyle: 'Goal Machine',
+    rivals: ['Atletico Madrid', 'Barcelona'],
+  },
+  {
+    name: 'Luis Figo', lastName: 'Figo', nationality: 'Portugal',
+    primaryPosition: 'RW', secondaryPositions: ['RM', 'CAM'], era: '90s', club: 'Real Madrid',
+    baseRating: 91, startYear: 1992, baseTrait: 'Wing Wizard', playStyle: 'Dribbling Winger',
+    rivals: ['Barcelona', 'Atletico Madrid'],
+  },
+  {
+    name: 'Gabriel Batistuta', lastName: 'Batistuta', nationality: 'Argentina',
+    primaryPosition: 'ST', secondaryPositions: [], era: '90s', club: 'Fiorentina',
+    baseRating: 89, startYear: 1992, baseTrait: 'Target Man', playStyle: 'Goal Machine',
+    rivals: ['Juventus', 'Bologna'],
+  },
+  {
+    name: 'Roberto Baggio', lastName: 'Baggio', nationality: 'Italy',
+    primaryPosition: 'CF', secondaryPositions: ['CAM'], era: '90s', club: 'Juventus',
+    baseRating: 92, startYear: 1992, baseTrait: 'Clutch Finisher', playStyle: 'Pocket Playmaker',
+    rivals: ['Torino', 'Fiorentina'],
+  },
+  {
+    name: 'Andriy Shevchenko', lastName: 'Shevchenko', nationality: 'Ukraine',
+    primaryPosition: 'ST', secondaryPositions: [], era: '90s', club: 'AC Milan',
+    baseRating: 91, startYear: 1995, baseTrait: 'Golden Boot Form', playStyle: 'Goal Machine',
+    rivals: ['Inter Milan', 'Juventus'],
+  },
+  {
+    name: 'Marco van Basten', lastName: 'Van Basten', nationality: 'Netherlands',
+    primaryPosition: 'ST', secondaryPositions: ['CF'], era: '90s', club: 'AC Milan',
+    baseRating: 93, startYear: 1992, baseTrait: 'Golden Boot Form', playStyle: 'Goal Machine',
+    rivals: ['Inter Milan', 'Juventus'],
+  },
+  {
+    name: 'Ruud Gullit', lastName: 'Gullit', nationality: 'Netherlands',
+    primaryPosition: 'CF', secondaryPositions: ['CM', 'CAM', 'CB'], era: '90s', club: 'AC Milan',
+    baseRating: 92, startYear: 1992, baseTrait: 'Box-to-Box Monster', playStyle: 'Box-to-Box Midfielder',
+    rivals: ['Inter Milan', 'Juventus'],
+  },
+  {
+    name: 'Samuel Eto\'o', lastName: 'Eto\'o', nationality: 'Cameroon',
+    primaryPosition: 'ST', secondaryPositions: ['RW'], era: '90s', club: 'Barcelona',
+    baseRating: 90, startYear: 1997, baseTrait: 'Golden Boot Form', playStyle: 'Goal Machine',
+    rivals: ['Real Madrid', 'Espanyol'],
+  },
+  {
+    name: 'Hernan Crespo', lastName: 'Crespo', nationality: 'Argentina',
+    primaryPosition: 'ST', secondaryPositions: [], era: '90s', club: 'Parma',
+    baseRating: 87, startYear: 1996, baseTrait: 'Clutch Finisher', playStyle: 'Goal Machine',
+    rivals: ['Bologna', 'Juventus'],
+  },
+  {
+    name: 'David Trezeguet', lastName: 'Trezeguet', nationality: 'France',
+    primaryPosition: 'ST', secondaryPositions: [], era: '90s', club: 'Juventus',
+    baseRating: 88, startYear: 1995, baseTrait: 'Clutch Finisher', playStyle: 'Goal Machine',
+    rivals: ['Torino', 'Inter Milan'],
+  },
+  {
+    name: 'Miroslav Klose', lastName: 'Klose', nationality: 'Germany',
+    primaryPosition: 'ST', secondaryPositions: [], era: '90s', club: 'Bremen',
+    baseRating: 87, startYear: 1999, baseTrait: 'Target Man', playStyle: 'Goal Machine',
+    rivals: ['Hamburg', 'Bayern Munich'],
+  },
+  {
+    name: 'Thomas Müller', lastName: 'Muller', nationality: 'Germany',
+    primaryPosition: 'CAM', secondaryPositions: ['CF', 'RW', 'RM'], era: '00s', club: 'Bayern Munich',
+    baseRating: 88, startYear: 2008, baseTrait: 'Clutch Finisher', playStyle: 'Pocket Playmaker',
+    rivals: ['Dortmund', 'Schalke'],
+  },
+  {
+    name: 'Marco Reus', lastName: 'Reus', nationality: 'Germany',
+    primaryPosition: 'CAM', secondaryPositions: ['LW', 'LM', 'ST'], era: '00s', club: 'Dortmund',
+    baseRating: 88, startYear: 2009, baseTrait: 'Clutch Finisher', playStyle: 'Pocket Playmaker',
+    rivals: ['Schalke', 'Bayern Munich'],
+  },
 ];
 
 // Helper: Formats starting year to visual label (e.g. 2003/04)
@@ -744,6 +1046,69 @@ function generatePlayersDatabase(): Player[] {
         club = 'Manchester United';
       } else if (base.name === 'N\'Golo Kante' && year === 2015) {
         club = 'Leicester';
+      } else if (base.name === 'Cristiano Ronaldo' && year >= 2009 && year < 2018) {
+        club = 'Real Madrid';
+      } else if (base.name === 'Cristiano Ronaldo' && year >= 2018 && year < 2021) {
+        club = 'Juventus';
+      } else if (base.name === 'Lionel Messi') {
+        if (year >= 2021 && year < 2023) club = 'PSG';
+        else if (year >= 2023) club = 'Inter Miami';
+      } else if (base.name === 'Zlatan Ibrahimovic') {
+        if (year >= 2018 && year <= 2019) club = 'LA Galaxy';
+        else if (year >= 2016 && year <= 2017) club = 'Manchester United';
+        else if (year >= 2012 && year < 2016) club = 'PSG';
+        else if (year >= 2010 && year < 2012) club = 'AC Milan';
+        else if (year === 2009) club = 'Barcelona';
+        else if (year >= 2006 && year < 2009) club = 'Inter Milan';
+        else if (year >= 2004 && year < 2006) club = 'Juventus';
+        else if (year < 2004) club = 'Ajax';
+      } else if (base.name === 'Zinedine Zidane' && year < 2001) {
+        club = 'Juventus';
+      } else if (base.name === 'Ronaldinho Gaucho') {
+        if (year < 2003) club = 'PSG';
+        else if (year >= 2008) club = 'AC Milan';
+      } else if (base.name === 'Kaka' && year >= 2009) {
+        club = 'Real Madrid';
+      } else if (base.name === 'Sergio Ramos' && year >= 2021) {
+        club = 'PSG';
+      } else if (base.name === 'Fabio Cannavaro') {
+        if (year >= 2006 && year < 2009) club = 'Real Madrid';
+        else if (year >= 2004 && year < 2006) club = 'Juventus';
+        else if (year < 2002) club = 'Parma';
+      } else if (base.name === 'Ronaldo Nazario') {
+        if (year >= 2002) club = 'Real Madrid';
+        else if (year >= 1997 && year < 2002) club = 'Inter Milan';
+        else if (year >= 1996 && year < 1997) club = 'Barcelona';
+        else if (year >= 1994 && year < 1996) club = 'PSV';
+      } else if (base.name === 'Neymar Jr' && year >= 2017) {
+        club = 'PSG';
+      } else if (base.name === 'Robert Lewandowski') {
+        if (year < 2014) club = 'Dortmund';
+        else if (year >= 2022) club = 'Barcelona';
+      } else if (base.name === 'Karim Benzema' && year < 2009) {
+        club = 'Lyon';
+      } else if (base.name === 'Luis Figo') {
+        if (year < 2000) club = 'Barcelona';
+        else if (year >= 2005) club = 'Inter Milan';
+      } else if (base.name === 'Samuel Eto\'o') {
+        if (year >= 2009 && year <= 2011) club = 'Inter Milan';
+        else if (year >= 2013 && year <= 2014) club = 'Chelsea';
+        else if (year < 2004) club = 'Mallorca';
+      } else if (base.name === 'Gabriel Batistuta' && year >= 2000) {
+        club = 'Roma';
+      } else if (base.name === 'Roberto Baggio') {
+        if (year >= 1995 && year < 1997) club = 'AC Milan';
+        else if (year >= 1997 && year < 1998) club = 'Bologna';
+        else if (year >= 1998 && year < 2000) club = 'Inter Milan';
+        else if (year >= 2000) club = 'Brescia';
+      } else if (base.name === 'Andrea Pirlo' && year >= 2011) {
+        club = 'Juventus';
+      } else if (base.name === 'Toni Kroos' && year < 2014) {
+        club = 'Bayern Munich';
+      } else if (base.name === 'Luka Modric' && year < 2012) {
+        club = 'Tottenham';
+      } else if (base.name === 'Philipp Lahm' && year === 2003) {
+        club = 'Stuttgart';
       }
 
       // Determine Rarity
