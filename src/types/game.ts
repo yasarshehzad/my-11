@@ -106,6 +106,7 @@ export interface SimulationResult {
   percentile: number;
   bestLink: string;
   worstLink: string;
+  selectedLeague?: string;
 }
 
 export type ChallengeRuleType =

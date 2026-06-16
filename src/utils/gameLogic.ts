@@ -92,28 +92,121 @@ const POSITION_DEPARTMENTS: Record<Position, 'GK' | 'DEF' | 'MID' | 'ATT'> = {
   CF: 'ATT',
 };
 
-// Opponent teams with ratings for league simulation
-export const OPPONENTS = [
-  { name: 'Manchester Blue', rating: 92 },
-  { name: 'Madrid White', rating: 91 },
-  { name: 'Munich Red', rating: 89 },
-  { name: 'London Red', rating: 87 },
-  { name: 'Barcelona Blue-Red', rating: 88 },
-  { name: 'Paris Capital', rating: 86 },
-  { name: 'Milano Red', rating: 85 },
-  { name: 'Turin Zebra', rating: 85 },
-  { name: 'Liverpool Red', rating: 87 },
-  { name: 'London Blue', rating: 83 },
-  { name: 'Dortmund Yellow', rating: 82 },
-  { name: 'Milano Black-Blue', rating: 84 },
-  { name: 'Madrid Atletico', rating: 83 },
-  { name: 'Lisbon Eagles', rating: 80 },
-  { name: 'Amsterdam Ajax', rating: 78 },
-  { name: 'Newcastle Magpie', rating: 79 },
-  { name: 'Birmingham Blue', rating: 78 },
-  { name: 'Naples Light-Blue', rating: 81 },
-  { name: 'Leverkusen Pill', rating: 83 },
-];
+export interface OpponentTeam {
+  name: string;
+  rating: number;
+}
+
+export const LEAGUE_OPPONENTS: Record<string, OpponentTeam[]> = {
+  english: [
+    { name: 'Manchester City', rating: 91 },
+    { name: 'Arsenal', rating: 89 },
+    { name: 'Liverpool', rating: 89 },
+    { name: 'Chelsea', rating: 84 },
+    { name: 'Manchester United', rating: 82 },
+    { name: 'Aston Villa', rating: 83 },
+    { name: 'Tottenham Hotspur', rating: 83 },
+    { name: 'Newcastle United', rating: 81 },
+    { name: 'Brighton & Hove Albion', rating: 80 },
+    { name: 'West Ham United', rating: 79 },
+    { name: 'Bournemouth', rating: 79 },
+    { name: 'Crystal Palace', rating: 79 },
+    { name: 'Fulham', rating: 78 },
+    { name: 'Brentford', rating: 77 },
+    { name: 'Wolverhampton Wanderers', rating: 77 },
+    { name: 'Nottingham Forest', rating: 77 },
+    { name: 'Everton', rating: 76 },
+    { name: 'Leicester City', rating: 76 },
+    { name: 'Ipswich Town', rating: 74 },
+  ],
+  spanish: [
+    { name: 'Real Madrid', rating: 92 },
+    { name: 'Barcelona', rating: 90 },
+    { name: 'Atletico Madrid', rating: 85 },
+    { name: 'Athletic Bilbao', rating: 82 },
+    { name: 'Real Sociedad', rating: 81 },
+    { name: 'Girona', rating: 81 },
+    { name: 'Real Betis', rating: 80 },
+    { name: 'Villarreal', rating: 80 },
+    { name: 'Sevilla', rating: 78 },
+    { name: 'Valencia', rating: 77 },
+    { name: 'Osasuna', rating: 77 },
+    { name: 'Celta Vigo', rating: 77 },
+    { name: 'Mallorca', rating: 76 },
+    { name: 'Getafe', rating: 76 },
+    { name: 'Rayo Vallecano', rating: 76 },
+    { name: 'Deportivo Alaves', rating: 76 },
+    { name: 'Las Palmas', rating: 75 },
+    { name: 'Espanyol', rating: 75 },
+    { name: 'Real Valladolid', rating: 74 },
+  ],
+  german: [
+    { name: 'Bayern Munich', rating: 89 },
+    { name: 'Bayer Leverkusen', rating: 88 },
+    { name: 'Borussia Dortmund', rating: 85 },
+    { name: 'RB Leipzig', rating: 84 },
+    { name: 'VfB Stuttgart', rating: 82 },
+    { name: 'Eintracht Frankfurt', rating: 81 },
+    { name: 'Freiburg', rating: 78 },
+    { name: 'Hoffenheim', rating: 78 },
+    { name: 'Werder Bremen', rating: 77 },
+    { name: 'Wolfsburg', rating: 77 },
+    { name: 'Borussia Monchengladbach', rating: 77 },
+    { name: 'Heidenheim', rating: 77 },
+    { name: 'Mainz 05', rating: 76 },
+    { name: 'Augsburg', rating: 76 },
+    { name: 'Union Berlin', rating: 76 },
+    { name: 'Schalke 04', rating: 75 },
+    { name: 'Hertha Berlin', rating: 75 },
+    { name: 'VfL Bochum', rating: 74 },
+    { name: 'St. Pauli', rating: 74 },
+  ],
+  italian: [
+    { name: 'Inter Milan', rating: 89 },
+    { name: 'Juventus', rating: 86 },
+    { name: 'AC Milan', rating: 85 },
+    { name: 'Atalanta', rating: 84 },
+    { name: 'Napoli', rating: 84 },
+    { name: 'AS Roma', rating: 82 },
+    { name: 'Lazio', rating: 81 },
+    { name: 'Fiorentina', rating: 80 },
+    { name: 'Bologna', rating: 79 },
+    { name: 'Torino', rating: 77 },
+    { name: 'Parma', rating: 76 },
+    { name: 'Genoa', rating: 76 },
+    { name: 'Como 1907', rating: 76 },
+    { name: 'Udinese', rating: 76 },
+    { name: 'Monza', rating: 76 },
+    { name: 'Cagliari', rating: 75 },
+    { name: 'Hellas Verona', rating: 75 },
+    { name: 'Empoli', rating: 75 },
+    { name: 'Lecce', rating: 75 },
+  ],
+  french: [
+    { name: 'Paris Saint-Germain', rating: 88 },
+    { name: 'Marseille', rating: 82 },
+    { name: 'Monaco', rating: 82 },
+    { name: 'Lille', rating: 81 },
+    { name: 'Lyon', rating: 81 },
+    { name: 'Nice', rating: 80 },
+    { name: 'Lens', rating: 79 },
+    { name: 'Brest', rating: 79 },
+    { name: 'Rennes', rating: 78 },
+    { name: 'Reims', rating: 77 },
+    { name: 'Strasbourg', rating: 76 },
+    { name: 'Toulouse', rating: 76 },
+    { name: 'Montpellier', rating: 75 },
+    { name: 'Nantes', rating: 75 },
+    { name: 'Saint-Etienne', rating: 74 },
+    { name: 'Auxerre', rating: 74 },
+    { name: 'Le Havre', rating: 74 },
+    { name: 'Bordeaux', rating: 74 },
+    { name: 'Angers', rating: 73 },
+  ],
+};
+
+// Legacy OPPONENTS points to english pool for backward compatibility
+export const OPPONENTS = LEAGUE_OPPONENTS.english;
 
 // Daily challenges templates rotating by day-of-week (0 = Sun, 1 = Mon, ..., 6 = Sat)
 export const DAILY_CHALLENGES: ChallengeTemplate[] = [
@@ -638,7 +731,8 @@ export function getPercentileEstimate(points: number): number {
  */
 export function simulateLeagueSeason(
   selectedPlayers: Player[],
-  stats: SquadStats
+  stats: SquadStats,
+  leagueId: string = 'english'
 ): SimulationResult {
   const matches: MatchSimResult[] = [];
   let wins = 0;
@@ -647,9 +741,11 @@ export function simulateLeagueSeason(
   let goalsFor = 0;
   let goalsAgainst = 0;
 
+  const opponentPool = LEAGUE_OPPONENTS[leagueId] || LEAGUE_OPPONENTS.english;
+
   // Compile 38 games (19 opponents home & away)
   const fixtures: { opponent: string; rating: number }[] = [];
-  OPPONENTS.forEach((opp) => {
+  opponentPool.forEach((opp) => {
     fixtures.push({ opponent: opp.name, rating: opp.rating }); // Home leg
     fixtures.push({ opponent: opp.name, rating: opp.rating }); // Away leg
   });
@@ -659,14 +755,11 @@ export function simulateLeagueSeason(
   shuffledFixtures.forEach((fixture) => {
     const oppRating = fixture.rating;
     
-    // Chemistry gives a nice direct boost or penalty to match day performance.
-    // 100 chemistry gives +2 performance boost, while low chemistry (e.g. 40) gives up to -4 penalty.
-    const chemBonus = (stats.chemistry - 80) / 10;
-
+    // We remove the separate chemBonus penalty because chemistry is already factored directly into stats.overall
     // We reduce the random range from [-6, 6] to [-4.5, 4.5] for each team,
     // which makes the difference spread [-9, 9] instead of [-12, 12].
     // This reduces extreme random upset frequency, making team quality shine through more consistently.
-    const ourPerf = stats.overall + chemBonus + (Math.random() * 9 - 4.5);
+    const ourPerf = stats.overall + (Math.random() * 9 - 4.5);
     const oppPerf = oppRating + (Math.random() * 9 - 4.5);
 
     const diff = ourPerf - oppPerf;
@@ -777,6 +870,7 @@ export function simulateLeagueSeason(
     percentile,
     bestLink,
     worstLink,
+    selectedLeague: leagueId,
   };
 }
 

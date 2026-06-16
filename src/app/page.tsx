@@ -32,6 +32,7 @@ export default function DraftedXIGame() {
   // --- Game State ---
   const [phase, setPhase] = useState<'home' | 'formation' | 'draft' | 'simulating' | 'results'>('home');
   const [formation, setFormation] = useState<FormationType | null>(null);
+  const [selectedLeague, setSelectedLeague] = useState<string>('english');
   const [selectedPlayers, setSelectedPlayers] = useState<(Player | null)[]>(Array(11).fill(null));
   const [currentSlotIndex, setCurrentSlotIndex] = useState<number>(0);
   const [draftOptions, setDraftOptions] = useState<[Player, Player, Player] | null>(null);
@@ -43,6 +44,7 @@ export default function DraftedXIGame() {
   const [todayChallenge, setTodayChallenge] = useState<ChallengeTemplate | null>(null);
   const [todayDateStr, setTodayDateStr] = useState<string>('');
   const [challengeBeaten, setChallengeBeaten] = useState(false);
+  const [showFixturesBreakdown, setShowFixturesBreakdown] = useState(false);
 
   // --- Search & custom filters State ---
   const [draftTab, setDraftTab] = useState<'recommended' | 'search'>('recommended');
@@ -293,7 +295,7 @@ export default function DraftedXIGame() {
       setStats(newStats);
       
       // 4. Simulate season
-      const result = simulateLeagueSeason(randomSquad, newStats);
+      const result = simulateLeagueSeason(randomSquad, newStats, selectedLeague);
       setSimResult(result);
       
       // 5. Reset live simulation counters
@@ -406,7 +408,7 @@ export default function DraftedXIGame() {
     } else {
       // Draft complete! Compile final results
       const finalPlayers = updatedSelection.filter((p): p is Player => p !== null);
-      const result = simulateLeagueSeason(finalPlayers, newStats);
+      const result = simulateLeagueSeason(finalPlayers, newStats, selectedLeague);
       logDraftCompleted(newStats.overall, newStats.chemistry);
       setSimResult(result);
     }
@@ -785,40 +787,103 @@ export default function DraftedXIGame() {
       { type: '4-2-3-1', label: '4 - 2 - 3 - 1', desc: 'Double Pivot & Attacking Playmakers' },
     ];
 
+    const leaguesList = [
+      { id: 'english', name: 'English Premier League', flag: '🇬🇧', desc: 'The most intense, high-rated league in the world.', avgRating: 81 },
+      { id: 'spanish', name: 'La Liga', flag: '🇪🇸', desc: 'Tactical and technical football dominated by giants.', avgRating: 78 },
+      { id: 'german', name: 'Bundesliga', flag: '🇩🇪', desc: 'High-pressing, fast-paced attacking spectacles.', avgRating: 77 },
+      { id: 'italian', name: 'Serie A', flag: '🇮🇹', desc: 'Catenaccio heritage with robust tactical defensive units.', avgRating: 78 },
+      { id: 'french', name: 'Ligue 1', flag: '🇫🇷', desc: 'Physical, explosive counters and rising superstars.', avgRating: 76 },
+    ];
+
     return (
       <div className="flex flex-col items-center justify-center min-h-[75vh] px-4 sm:px-6 py-8 space-y-6 w-full max-w-full overflow-hidden">
         <div className="text-center">
           <h2 className="text-3xl font-display font-black text-white uppercase tracking-tight leading-none mb-2">
-            {isDailyChallenge ? "CHALLENGE FORMATION" : "CHOOSE FORMATION"}
+             Tactical Settings
           </h2>
           <p className="text-xs text-slate-400 font-semibold tracking-wide uppercase leading-none">
-            Select your tactical layout to begin drafting
+            Configure your campaign and layout to begin drafting
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-md">
-          {formations.map((f) => (
-            <button
-              key={f.type}
-              onClick={() => handleSelectFormation(f.type)}
-              className="w-full p-5 rounded-3xl glass hover:bg-slate-900/60 hover:border-emerald-500/40 text-left transition-all duration-300 group active:scale-98 cursor-pointer flex flex-col justify-between aspect-[3/1.8]"
-            >
-              <div className="flex justify-between items-center w-full">
-                <span className="text-xl font-display font-black text-white group-hover:text-emerald-450 transition-colors">
-                  {f.label}
-                </span>
-                <span className="text-[9px] font-extrabold text-slate-500 bg-slate-950 px-2 py-0.5 rounded border border-slate-900 font-display">
-                  {f.type}
-                </span>
-              </div>
-              <div>
-                <p className="text-xs font-bold text-slate-350 mt-2 leading-relaxed">
-                  {f.desc}
-                </p>
-                <div className="h-1 w-8 rounded bg-slate-800 group-hover:bg-emerald-500 group-hover:w-16 transition-all duration-300 mt-3.5" />
-              </div>
-            </button>
-          ))}
+        {/* League Selector */}
+        <div className="w-full max-w-md space-y-3">
+          <div className="text-center sm:text-left">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">
+              Select Competition League
+            </span>
+          </div>
+          <div className="flex flex-col gap-2.5">
+            {leaguesList.map((lg) => {
+              const active = selectedLeague === lg.id;
+              return (
+                <button
+                  key={lg.id}
+                  onClick={() => setSelectedLeague(lg.id)}
+                  className={`w-full p-3.5 rounded-2xl border text-left transition-all duration-300 flex items-center gap-3.5 cursor-pointer relative active:scale-99 ${
+                    active
+                      ? 'border-emerald-500 bg-emerald-950/20 text-white shadow-[0_0_15px_rgba(16,185,129,0.1)]'
+                      : 'border-slate-900 bg-slate-950/40 text-slate-350 hover:border-slate-805 hover:bg-slate-900/40'
+                  }`}
+                >
+                  <span className="text-2xl">{lg.flag}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-display font-black uppercase tracking-wide leading-none">
+                        {lg.name}
+                      </h4>
+                      <span className={`text-[8.5px] font-extrabold px-1.5 py-0.5 rounded uppercase leading-none font-display border ${
+                        active ? 'bg-emerald-500/10 text-emerald-450 border-emerald-500/20' : 'bg-slate-900 text-slate-400 border-slate-800'
+                      }`}>
+                        OVR ~{lg.avgRating}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-1 truncate leading-none">
+                      {lg.desc}
+                    </p>
+                  </div>
+                  {active && (
+                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="w-full max-w-md h-[1.5px] bg-slate-900/60" />
+
+        <div className="w-full max-w-md space-y-3">
+          <div className="text-center sm:text-left">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">
+              Choose Formation Layout
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+            {formations.map((f) => (
+              <button
+                key={f.type}
+                onClick={() => handleSelectFormation(f.type)}
+                className="w-full p-5 rounded-3xl glass hover:bg-slate-900/60 hover:border-emerald-500/40 text-left transition-all duration-300 group active:scale-98 cursor-pointer flex flex-col justify-between aspect-[3/1.8]"
+              >
+                <div className="flex justify-between items-center w-full">
+                  <span className="text-xl font-display font-black text-white group-hover:text-emerald-450 transition-colors">
+                    {f.label}
+                  </span>
+                  <span className="text-[9px] font-extrabold text-slate-500 bg-slate-950 px-2 py-0.5 rounded border border-slate-900 font-display">
+                    {f.type}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-350 mt-2 leading-relaxed">
+                    {f.desc}
+                  </p>
+                  <div className="h-1 w-8 rounded bg-slate-800 group-hover:bg-emerald-500 group-hover:w-16 transition-all duration-300 mt-3.5" />
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -1258,6 +1323,19 @@ export default function DraftedXIGame() {
               Daily Challenge: <span className="text-emerald-450 font-display">{todayChallenge.title}</span>
             </p>
           )}
+          <p className="text-[10px] text-slate-450 font-bold tracking-widest uppercase mt-1.5">
+            League: <span className="text-emerald-450 font-display">
+              {
+                {
+                  english: 'English Premier League 🇬🇧',
+                  spanish: 'La Liga 🇪🇸',
+                  german: 'Bundesliga 🇩🇪',
+                  italian: 'Serie A 🇮🇹',
+                  french: 'Ligue 1 🇫🇷',
+                }[simResult.selectedLeague || 'english']
+              }
+            </span>
+          </p>
         </div>
 
         {/* Heartbreak / Celebratory Banner */}
@@ -1313,6 +1391,210 @@ export default function DraftedXIGame() {
           <p className="text-xs font-semibold text-slate-400 max-w-sm leading-relaxed italic">
             "{simResult.summary}"
           </p>
+        </div>
+
+        {/* Manager's Tactical Report Card */}
+        {(() => {
+          const getManagerAdvice = () => {
+            const advice = [];
+            
+            // 1. Chemistry Advice
+            if (stats.chemistry < 80) {
+              advice.push({
+                type: 'chemistry',
+                status: 'warning',
+                title: 'Squad Chemistry is Low',
+                desc: `Your team chemistry is ${stats.chemistry}/100. Focus on linking adjacent players of the same club, nationality, or era. Good chemistry scales up your squad overall rating.`,
+              });
+            } else {
+              advice.push({
+                type: 'chemistry',
+                status: 'good',
+                title: 'Fluid Chemistry Links',
+                desc: `Excellent squad chemistry (${stats.chemistry}/100). Your players established strong links, boosting your team's tactical coordination.`,
+              });
+            }
+
+            // 2. Department Checks
+            if (stats.attack < 82) {
+              advice.push({
+                type: 'attack',
+                status: 'warning',
+                title: 'Attack Lacks Bite',
+                desc: `Your attack rating is ${stats.attack}. In your next draft, prioritize forwards with high finishing and pace ratings to convert critical chances.`,
+              });
+            }
+            if (stats.midfield < 82) {
+              advice.push({
+                type: 'midfield',
+                status: 'warning',
+                title: 'Midfield Control Weak',
+                desc: `Your midfield rating is ${stats.midfield}. Draft central midfielders (CM/CDM) with high passing and technique to control the tempo and possession.`,
+              });
+            }
+            if (stats.defence < 82) {
+              advice.push({
+                type: 'defence',
+                status: 'warning',
+                title: 'Backline is Vulnerable',
+                desc: `Your defence rating is ${stats.defence}. Try securing a defensive leader (CB) or anchor midfielder (CDM) to lock down opposing attacks.`,
+              });
+            }
+
+            // 3. Challenge Contextual Advice
+            if (isDailyChallenge && todayChallenge) {
+              if (todayChallenge.rule === 'no_legends') {
+                advice.push({
+                  type: 'challenge',
+                  status: 'info',
+                  title: 'No Legends Strategy',
+                  desc: 'Without 90+ rated superstar legends, maximizing tactical chemistry blocks (e.g. English core or Manchester United links) is crucial to overcome elite opponents.',
+                });
+              } else if (todayChallenge.rule === 'underdog_xi') {
+                advice.push({
+                  type: 'challenge',
+                  status: 'info',
+                  title: 'Underdog Efficiency',
+                  desc: 'Underdog drafts depend on high-efficiency Rare cards. Look for high-performing rare cards with strong nationality or club links to build chemistry.',
+                });
+              }
+            }
+
+            return advice;
+          };
+
+          return (
+            <div className="w-full p-6 rounded-[32px] glass border border-slate-900 z-10 flex flex-col gap-4 shadow-xl">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">📋</span>
+                <div className="flex-1 leading-none">
+                  <h3 className="text-md font-display font-black text-white uppercase tracking-tight">
+                    Manager's Tactical Report
+                  </h3>
+                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">
+                    Post-Campaign Analysis
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3.5 mt-2">
+                {getManagerAdvice().map((adv, idx) => {
+                  const borderColors = {
+                    warning: 'border-rose-500/25 bg-rose-950/10 text-rose-350',
+                    good: 'border-emerald-500/25 bg-emerald-950/10 text-emerald-350',
+                    info: 'border-indigo-500/25 bg-indigo-950/10 text-indigo-350',
+                  }[adv.status as 'warning' | 'good' | 'info'];
+
+                  const icon = {
+                    warning: '🔴',
+                    good: '🟢',
+                    info: '💡',
+                  }[adv.status as 'warning' | 'good' | 'info'];
+
+                  return (
+                    <div key={idx} className={`p-4.5 rounded-2xl border ${borderColors} flex gap-3.5 leading-normal text-xs`}>
+                      <span className="text-base flex-shrink-0 mt-0.5">{icon}</span>
+                      <div className="flex-1 space-y-1">
+                        <h4 className="font-extrabold uppercase text-[11px] tracking-wide leading-tight text-white">
+                          {adv.title}
+                        </h4>
+                        <p className="text-slate-400 font-medium leading-relaxed">
+                          {adv.desc}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Detailed Season Fixtures & Results (Collapsible) */}
+        <div className="w-full z-10 flex flex-col gap-3">
+          <button
+            onClick={() => setShowFixturesBreakdown(!showFixturesBreakdown)}
+            className="w-full p-4.5 rounded-2xl bg-slate-900 border border-slate-800 hover:bg-slate-850 hover:border-slate-700 transition-all duration-300 flex items-center justify-between cursor-pointer active:scale-99"
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="text-lg">📅</span>
+              <span className="text-xs font-display font-black text-white uppercase tracking-wider">
+                {showFixturesBreakdown ? 'Hide' : 'Show'} Detailed Season Fixtures
+              </span>
+            </div>
+            <span className="text-xs text-slate-450 font-extrabold font-display">
+              {showFixturesBreakdown ? '▲' : '▼'}
+            </span>
+          </button>
+
+          {showFixturesBreakdown && (() => {
+            const getMatchCommentary = (match: MatchSimResult) => {
+              const diff = match.ourScore - match.opponentScore;
+              if (match.outcome === 'W') {
+                if (diff >= 3) return 'An absolute masterclass. Complete dominance from kick-off.';
+                if (diff >= 2) return 'A comfortable performance, controlled the match beautifully.';
+                return 'A hard-fought victory. Held on under late pressure.';
+              } else if (match.outcome === 'L') {
+                if (diff <= -3) return 'Completely outclassed. The opponent rating gap was too wide.';
+                if (diff <= -2) return 'Defensive errors cost you. Opponent capitalized on key errors.';
+                return 'Unlucky. A very tight game decided by a narrow margin.';
+              } else {
+                if (match.ourScore === 0) return 'A scoreless, defensive stalemate. Strong defensive displays.';
+                return 'A lively draw. High-scoring end-to-end tactical battle.';
+              }
+            };
+
+            return (
+              <div className="w-full p-4.5 rounded-[32px] glass border border-slate-900 max-h-[420px] overflow-y-auto flex flex-col gap-2.5 scroll-smooth custom-scrollbar animate-card-deal">
+                {simResult.matches.map((match, idx) => {
+                  const outcomeColors = {
+                    W: 'bg-emerald-550/10 border-emerald-500/20 text-emerald-400',
+                    D: 'bg-slate-500/10 border-slate-900 text-slate-350',
+                    L: 'bg-rose-550/10 border-rose-500/20 text-rose-455',
+                  }[match.outcome];
+
+                  const outcomeBadge = {
+                    W: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400',
+                    D: 'bg-slate-900 border-slate-800 text-slate-400',
+                    L: 'bg-rose-500/15 border-rose-500/30 text-rose-400',
+                  }[match.outcome];
+
+                  return (
+                    <div
+                      key={idx}
+                      className={`flex items-start gap-4 p-3.5 rounded-2xl border ${outcomeColors} text-left leading-normal`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-center w-full leading-none">
+                          <span className="text-[9.5px] text-slate-500 font-bold uppercase tracking-wider">
+                            Game {idx + 1}
+                          </span>
+                          <span className={`text-[8.5px] font-extrabold px-1.5 py-0.5 rounded border uppercase leading-none font-display ${outcomeBadge}`}>
+                            {match.outcome === 'W' ? 'WIN' : match.outcome === 'D' ? 'DRAW' : 'LOSS'}
+                          </span>
+                        </div>
+                        <h4 className="text-sm font-display font-black text-white mt-1.5 leading-none uppercase">
+                          vs {match.opponent}
+                        </h4>
+                        <p className="text-[10px] text-slate-400 leading-normal mt-1 italic">
+                          {getMatchCommentary(match)}
+                        </p>
+                      </div>
+
+                      <div className="text-right flex flex-col items-end gap-1 flex-shrink-0 self-center leading-none">
+                        <span className="text-md font-display font-black text-white tracking-tight">
+                          {match.ourScore} - {match.opponentScore}
+                        </span>
+                        <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">
+                          {match.opponentRating} OVR
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </div>
 
         {/* 2. Premium Share Card Preview (Streaks inside) */}
