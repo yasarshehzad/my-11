@@ -1672,7 +1672,7 @@ export default function DraftedXIGame() {
             We couldn't load the Drafted XI player database. This might be due to a corrupt build or missing database assets.
           </p>
           <p className="text-xs text-slate-500 font-medium">
-            Please refresh the page or contact support at info@my-11.com if the issue persists.
+            Please refresh the page if the issue persists.
           </p>
         </main>
       </div>
@@ -1727,8 +1727,6 @@ export default function DraftedXIGame() {
           <Link href="/privacy" className="hover:text-emerald-400 transition-colors">Privacy Policy</Link>
           <span>•</span>
           <Link href="/terms" className="hover:text-emerald-400 transition-colors">Terms of Service</Link>
-          <span>•</span>
-          <Link href="/contact" className="hover:text-emerald-400 transition-colors">Contact Us</Link>
         </div>
         <p className="text-slate-600">
           DRAFTED XI © 2026 • CREATED FOR FANS
