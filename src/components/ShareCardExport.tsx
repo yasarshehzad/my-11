@@ -350,8 +350,8 @@ export const ShareCardExport: React.FC<ShareCardExportProps> = ({
           <p className="text-2xl font-display font-black tracking-tight text-white uppercase leading-none">
             CAN YOU BEAT THIS?
           </p>
-          <p className="text-xs text-slate-500 mt-2 font-bold uppercase leading-none">
-            draftedxi.com
+          <p className="text-xs text-emerald-450 mt-2 font-black uppercase leading-none tracking-widest font-display">
+            PLAY NOW AT MY-11.COM
           </p>
         </div>
 

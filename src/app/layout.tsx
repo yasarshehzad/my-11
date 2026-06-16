@@ -11,7 +11,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://draftedxi.com"),
+  metadataBase: new URL("https://my-11.com"),
   title: "Drafted XI — Build Your Ultimate Football Team",
   description: "Draft your dream football XI from iconic player seasons, simulate a 38-game season, and see if your squad can go unbeaten.",
   keywords: ["football draft", "football game", "squad builder", "football simulation", "Premier League", "legends", "Drafted XI"],
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Drafted XI — Build Your Ultimate Football Team",
     description: "Draft your dream football XI from iconic player seasons, simulate a 38-game season, and see if your squad can go unbeaten.",
-    url: "https://draftedxi.com",
+    url: "https://my-11.com",
     siteName: "Drafted XI",
     type: "website",
     images: [

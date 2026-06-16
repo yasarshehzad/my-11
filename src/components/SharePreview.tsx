@@ -57,8 +57,8 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
 📊 Record: ${simResult.wins}W - ${simResult.draws}D - ${simResult.losses}L (${simResult.points} PTS)
 ⭐ Outcome: ${dailyChallengeBeaten ? 'CHALLENGE CLEARED! ✅' : 'CHALLENGE FAILED ❌'}
 📊 Global Tier: Top ${simResult.percentile}%
-Can you beat this? Play Drafted XI!`
-      : `🎮 I built a ${simResult.wins}-${simResult.draws}-${simResult.losses} Drafted XI. MVP: ${simResult.mvp.displayName} (${simResult.mvp.rating}). Chemistry Grade: ${simResult.chemistryGrade}. Playstyle: ${simResult.playstyle}. Can you beat me?`;
+Can you beat this? Play now at https://my-11.com`
+      : `🎮 I built a ${simResult.wins}-${simResult.draws}-${simResult.losses} Drafted XI. MVP: ${simResult.mvp.displayName} (${simResult.mvp.rating}). Chemistry Grade: ${simResult.chemistryGrade}. Playstyle: ${simResult.playstyle}. Can you beat me? Play now at https://my-11.com`;
 
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
@@ -119,7 +119,7 @@ Can you beat this? Play Drafted XI!`
         await navigator.share({
           files: [file],
           title: 'Drafted XI Campaign',
-          text: `Check out my simulated campaign on Drafted XI! Formation: ${formation}, Playstyle: ${simResult.playstyle}.`,
+          text: `Check out my simulated campaign on Drafted XI! Formation: ${formation}, Playstyle: ${simResult.playstyle}. Play now at https://my-11.com`,
         });
       } else {
         // Fallback: Copy summary text to clipboard
