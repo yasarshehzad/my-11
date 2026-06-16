@@ -256,7 +256,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         {/* Display Name */}
         <div className="flex-1 flex flex-col justify-end mt-1 mb-0.5 leading-none">
           <span className="text-[9px] font-display font-extrabold text-white uppercase tracking-tight truncate">
-            {displayName.split(' ').pop()}
+            {displayName.split(' ').slice(0, -1).join(' ') || displayName}
           </span>
         </div>
 

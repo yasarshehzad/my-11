@@ -832,7 +832,7 @@ export default function DraftedXIGame() {
     const activeLogs = getDetailedChemistryLogs(selectedPlayers, slots);
 
     return (
-      <div className="flex flex-col gap-6 px-4 sm:px-6 py-6 w-full max-w-lg mx-auto min-h-[90vh] relative overflow-hidden">
+      <div className={`flex flex-col gap-6 px-4 sm:px-6 py-6 w-full max-w-lg mx-auto min-h-[90vh] relative overflow-hidden ${isFinished ? 'pb-24' : ''}`}>
         
         {/* Floating Chemistry Toast Notification (Micro-interaction) */}
         {chemistryToast && (
@@ -860,7 +860,7 @@ export default function DraftedXIGame() {
           {isFinished && simResult && (
             <button
               onClick={startSimulation}
-              className="py-3 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/10 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/20 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer"
+              className="hidden md:inline-flex py-3 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/10 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/20 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer"
             >
               Start simulation ➔
             </button>
@@ -1053,6 +1053,18 @@ export default function DraftedXIGame() {
             )}
           </div>
         )}
+
+        {/* Sticky Proceed Button for Mobile (Bottom of screen) */}
+        {isFinished && simResult && (
+          <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent border-t border-slate-900/30 md:relative md:bg-none md:border-none md:p-0 z-40 flex justify-center">
+            <button
+              onClick={startSimulation}
+              className="w-full max-w-sm py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/35 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer text-center"
+            >
+              Start Simulation ➔
+            </button>
+          </div>
+        )}
       </div>
     );
   };
@@ -1062,7 +1074,7 @@ export default function DraftedXIGame() {
     const progressPercent = Math.round((simIndex / 38) * 100);
 
     return (
-      <div className="flex flex-col items-center justify-between min-h-[80vh] w-full max-w-sm mx-auto px-4 sm:px-6 py-8 space-y-6 overflow-hidden">
+      <div className={`flex flex-col items-center justify-between min-h-[80vh] w-full max-w-sm mx-auto px-4 sm:px-6 py-8 space-y-6 overflow-hidden ${simIndex === 38 ? 'pb-24' : ''}`}>
         <div className="text-center w-full mt-2 leading-none">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/25 text-emerald-450 text-[10px] font-bold uppercase tracking-widest mb-3">
             ⚡ SIMULATING LEAGUE SEASON
@@ -1176,22 +1188,24 @@ export default function DraftedXIGame() {
           </div>
 
           {simIndex === 38 && (
-            <button
-              onClick={() => {
-                handleSaveCampaignResults();
-                const updateDOM = () => {
-                  setPhase('results');
-                };
-                if (document.startViewTransition) {
-                  document.startViewTransition(updateDOM);
-                } else {
-                  updateDOM();
-                }
-              }}
-              className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/35 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer text-center animate-bounce mt-2"
-            >
-              Reveal Final Standings ➔
-            </button>
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent border-t border-slate-900/30 md:relative md:bg-none md:border-none md:p-0 z-40 flex justify-center">
+              <button
+                onClick={() => {
+                  handleSaveCampaignResults();
+                  const updateDOM = () => {
+                    setPhase('results');
+                  };
+                  if (document.startViewTransition) {
+                    document.startViewTransition(updateDOM);
+                  } else {
+                    updateDOM();
+                  }
+                }}
+                className="w-full max-w-sm py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/35 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer text-center animate-bounce"
+              >
+                Reveal Final Standings ➔
+              </button>
+            </div>
           )}
         </div>
       </div>
