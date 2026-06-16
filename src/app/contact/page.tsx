@@ -21,7 +21,7 @@ export default function ContactPage() {
             You can reach us at our support channel:
           </p>
           <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-900 w-fit">
-            <span className="text-emerald-400 font-display font-bold">support@my-11.com</span>
+            <span className="text-emerald-400 font-display font-bold">info@my-11.com</span>
           </div>
           <p>
             Since we do not collect your personal data or email addresses on this site, emailing us directly is the best way to get support.

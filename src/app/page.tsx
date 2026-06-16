@@ -1672,7 +1672,7 @@ export default function DraftedXIGame() {
             We couldn't load the Drafted XI player database. This might be due to a corrupt build or missing database assets.
           </p>
           <p className="text-xs text-slate-500 font-medium">
-            Please refresh the page or contact support at support@my-11.com if the issue persists.
+            Please refresh the page or contact support at info@my-11.com if the issue persists.
           </p>
         </main>
       </div>
