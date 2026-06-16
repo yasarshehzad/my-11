@@ -1179,7 +1179,390 @@ const playerBases: PlayerBase[] = [
     baseRating: 80, startYear: 2009, baseTrait: 'Target Man', playStyle: 'Goal Machine',
     rivals: ['Blackburn', 'Newcastle'], isLegendaryPlayer: false,
   },
+  // --- ADDITIONAL FULLBACKS (LB/RB) ---
+  {
+    name: 'Aaron Cresswell', lastName: 'Cresswell', nationality: 'England',
+    primaryPosition: 'LB', secondaryPositions: ['CB', 'LM'], era: '10s', club: 'West Ham',
+    baseRating: 80, startYear: 2014, baseTrait: 'Creator Supreme', playStyle: 'Set Piece Master',
+    rivals: ['Tottenham', 'Chelsea'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Christian Fuchs', lastName: 'Fuchs', nationality: 'Austria',
+    primaryPosition: 'LB', secondaryPositions: ['LM'], era: '10s', club: 'Leicester',
+    baseRating: 81, startYear: 2015, baseTrait: 'Lockdown Fullback', playStyle: 'Traditional Fullback',
+    rivals: ['Derby County', 'Nottingham Forest'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Jose Holebas', lastName: 'Holebas', nationality: 'Greece',
+    primaryPosition: 'LB', secondaryPositions: ['LM'], era: '10s', club: 'Watford',
+    baseRating: 79, startYear: 2015, baseTrait: 'Wing Wizard', playStyle: 'Overlapping Wingback',
+    rivals: ['Luton Town', 'Crystal Palace'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Charlie Taylor', lastName: 'C. Taylor', nationality: 'England',
+    primaryPosition: 'LB', secondaryPositions: ['LM'], era: 'Modern', club: 'Burnley',
+    baseRating: 78, startYear: 2017, baseTrait: 'Lockdown Fullback', playStyle: 'Traditional Fullback',
+    rivals: ['Blackburn', 'Bolton'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Erik Pieters', lastName: 'Pieters', nationality: 'Netherlands',
+    primaryPosition: 'LB', secondaryPositions: ['CB'], era: '10s', club: 'Stoke City',
+    baseRating: 78, startYear: 2013, baseTrait: 'Lockdown Fullback', playStyle: 'Traditional Fullback',
+    rivals: ['Port Vale', 'Wolverhampton'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Patrick van Aanholt', lastName: 'Van Aanholt', nationality: 'Netherlands',
+    primaryPosition: 'LB', secondaryPositions: ['LM'], era: '10s', club: 'Sunderland',
+    baseRating: 80, startYear: 2009, baseTrait: 'Wing Wizard', playStyle: 'Overlapping Wingback',
+    rivals: ['Newcastle', 'Middlesbrough'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Kieran Gibbs', lastName: 'Gibbs', nationality: 'England',
+    primaryPosition: 'LB', secondaryPositions: ['LM'], era: '10s', club: 'Arsenal',
+    baseRating: 80, startYear: 2007, baseTrait: 'Lockdown Fullback', playStyle: 'Overlapping Wingback',
+    rivals: ['Tottenham', 'Chelsea'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Neil Taylor', lastName: 'N. Taylor', nationality: 'Wales',
+    primaryPosition: 'LB', secondaryPositions: [], era: '10s', club: 'Swansea',
+    baseRating: 78, startYear: 2010, baseTrait: 'Lockdown Fullback', playStyle: 'Traditional Fullback',
+    rivals: ['Cardiff', 'Bristol City'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Arthur Masuaku', lastName: 'Masuaku', nationality: 'DR Congo',
+    primaryPosition: 'LB', secondaryPositions: ['LM'], era: 'Modern', club: 'West Ham',
+    baseRating: 78, startYear: 2016, baseTrait: 'Wing Wizard', playStyle: 'Overlapping Wingback',
+    rivals: ['Tottenham', 'Chelsea'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Bacary Sagna', lastName: 'Sagna', nationality: 'France',
+    primaryPosition: 'RB', secondaryPositions: ['CB'], era: '00s', club: 'Arsenal',
+    baseRating: 84, startYear: 2007, baseTrait: 'Lockdown Fullback', playStyle: 'Traditional Fullback',
+    rivals: ['Tottenham', 'Chelsea'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Alan Hutton', lastName: 'Hutton', nationality: 'Scotland',
+    primaryPosition: 'RB', secondaryPositions: [], era: '00s', club: 'Aston Villa',
+    baseRating: 78, startYear: 2008, baseTrait: 'Lockdown Fullback', playStyle: 'Traditional Fullback',
+    rivals: ['Birmingham City', 'Wolverhampton'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Danny Simpson', lastName: 'Simpson', nationality: 'England',
+    primaryPosition: 'RB', secondaryPositions: [], era: '10s', club: 'Leicester',
+    baseRating: 79, startYear: 2006, baseTrait: 'Lockdown Fullback', playStyle: 'Traditional Fullback',
+    rivals: ['Derby County', 'Nottingham Forest'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Matthew Lowton', lastName: 'Lowton', nationality: 'England',
+    primaryPosition: 'RB', secondaryPositions: [], era: '10s', club: 'Burnley',
+    baseRating: 78, startYear: 2012, baseTrait: 'Lockdown Fullback', playStyle: 'Traditional Fullback',
+    rivals: ['Blackburn', 'Bolton'], isLegendaryPlayer: false,
+  },
+
+  // --- MULTI-LEAGUE NON-LEGENDS ---
+  // Goalkeepers
+  {
+    name: 'Diego Alves', lastName: 'Diego Alves', nationality: 'Brazil',
+    primaryPosition: 'GK', secondaryPositions: [], era: '00s', club: 'Valencia',
+    baseRating: 81, startYear: 2007, baseTrait: 'Shot Stopper', playStyle: 'Traditional GK',
+    rivals: ['Levante', 'Villarreal'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Roman Weidenfeller', lastName: 'Weidenfeller', nationality: 'Germany',
+    primaryPosition: 'GK', secondaryPositions: [], era: '00s', club: 'Dortmund',
+    baseRating: 81, startYear: 2002, baseTrait: 'Shot Stopper', playStyle: 'Traditional GK',
+    rivals: ['Schalke', 'Bayern Munich'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Samir Handanovic', lastName: 'Handanovic', nationality: 'Slovenia',
+    primaryPosition: 'GK', secondaryPositions: [], era: '00s', club: 'Inter Milan',
+    baseRating: 84, startYear: 2004, baseTrait: 'Shot Stopper', playStyle: 'Traditional GK',
+    rivals: ['AC Milan', 'Juventus'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Steve Mandanda', lastName: 'Mandanda', nationality: 'France',
+    primaryPosition: 'GK', secondaryPositions: [], era: '00s', club: 'Marseille',
+    baseRating: 82, startYear: 2007, baseTrait: 'Shot Stopper', playStyle: 'Sweeper Keeper',
+    rivals: ['PSG', 'Lyon'], isLegendaryPlayer: false,
+  },
+  // Centre Backs
+  {
+    name: 'Andrea Barzagli', lastName: 'Barzagli', nationality: 'Italy',
+    primaryPosition: 'CB', secondaryPositions: [], era: '00s', club: 'Juventus',
+    baseRating: 83, startYear: 2001, baseTrait: 'Defensive Leader', playStyle: 'Lockdown Defender',
+    rivals: ['Torino', 'AC Milan'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Marquinhos', lastName: 'Marquinhos', nationality: 'Brazil',
+    primaryPosition: 'CB', secondaryPositions: ['RB', 'CDM'], era: '10s', club: 'PSG',
+    baseRating: 84, startYear: 2013, baseTrait: 'Defensive Leader', playStyle: 'Ball Playing Defender',
+    rivals: ['Marseille', 'Monaco'], isLegendaryPlayer: false,
+  },
+  // Full Backs
+  {
+    name: 'Jordi Alba', lastName: 'Alba', nationality: 'Spain',
+    primaryPosition: 'LB', secondaryPositions: ['LM'], era: '00s', club: 'Barcelona',
+    baseRating: 84, startYear: 2009, baseTrait: 'Wing Wizard', playStyle: 'Overlapping Wingback',
+    rivals: ['Real Madrid', 'Espanyol'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Filipe Luis', lastName: 'Filipe Luis', nationality: 'Brazil',
+    primaryPosition: 'LB', secondaryPositions: [], era: '00s', club: 'Atletico Madrid',
+    baseRating: 83, startYear: 2005, baseTrait: 'Lockdown Fullback', playStyle: 'Traditional Fullback',
+    rivals: ['Real Madrid', 'Barcelona'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Lukasz Piszczek', lastName: 'Piszczek', nationality: 'Poland',
+    primaryPosition: 'RB', secondaryPositions: ['CB', 'RM'], era: '00s', club: 'Dortmund',
+    baseRating: 83, startYear: 2007, baseTrait: 'Lockdown Fullback', playStyle: 'Traditional Fullback',
+    rivals: ['Schalke', 'Bayern Munich'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Jonas Hector', lastName: 'Hector', nationality: 'Germany',
+    primaryPosition: 'LB', secondaryPositions: ['CDM', 'CM'], era: '10s', club: 'FC Koln',
+    baseRating: 80, startYear: 2010, baseTrait: 'Engine Room', playStyle: 'Traditional Fullback',
+    rivals: ['Gladbach', 'Leverkusen'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Lucas Digne', lastName: 'Digne', nationality: 'France',
+    primaryPosition: 'LB', secondaryPositions: ['LM'], era: '10s', club: 'PSG',
+    baseRating: 81, startYear: 2011, baseTrait: 'Creator Supreme', playStyle: 'Overlapping Wingback',
+    rivals: ['Marseille', 'Monaco'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Christophe Jallet', lastName: 'Jallet', nationality: 'France',
+    primaryPosition: 'RB', secondaryPositions: ['RM'], era: '00s', club: 'PSG',
+    baseRating: 79, startYear: 2003, baseTrait: 'Lockdown Fullback', playStyle: 'Traditional Fullback',
+    rivals: ['Marseille', 'Lyon'], isLegendaryPlayer: false,
+  },
+  // Midfielders
+  {
+    name: 'Ever Banega', lastName: 'Banega', nationality: 'Argentina',
+    primaryPosition: 'CM', secondaryPositions: ['CDM', 'CAM'], era: '00s', club: 'Sevilla',
+    baseRating: 82, startYear: 2007, baseTrait: 'Tempo Controller', playStyle: 'Passing Maestro',
+    rivals: ['Real Betis', 'Valencia'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Dani Parejo', lastName: 'Parejo', nationality: 'Spain',
+    primaryPosition: 'CM', secondaryPositions: ['CAM'], era: '00s', club: 'Valencia',
+    baseRating: 83, startYear: 2008, baseTrait: 'Tempo Controller', playStyle: 'Passing Maestro',
+    rivals: ['Levante', 'Villarreal'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Gabi Fernandez', lastName: 'Gabi', nationality: 'Spain',
+    primaryPosition: 'CDM', secondaryPositions: ['CM'], era: '00s', club: 'Atletico Madrid',
+    baseRating: 82, startYear: 2004, baseTrait: 'Engine Room', playStyle: 'Deep Lying Pivot',
+    rivals: ['Real Madrid', 'Barcelona'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Lars Bender', lastName: 'L. Bender', nationality: 'Germany',
+    primaryPosition: 'CDM', secondaryPositions: ['RB', 'CM'], era: '00s', club: 'Leverkusen',
+    baseRating: 81, startYear: 2006, baseTrait: 'Engine Room', playStyle: 'Lockdown Destroyer',
+    rivals: ['Koln', 'Dortmund'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Sven Bender', lastName: 'S. Bender', nationality: 'Germany',
+    primaryPosition: 'CDM', secondaryPositions: ['CB', 'CM'], era: '00s', club: 'Dortmund',
+    baseRating: 81, startYear: 2006, baseTrait: 'Engine Room', playStyle: 'Lockdown Destroyer',
+    rivals: ['Schalke', 'Bayern Munich'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Maximilian Arnold', lastName: 'Arnold', nationality: 'Germany',
+    primaryPosition: 'CM', secondaryPositions: ['CDM'], era: '10s', club: 'Wolfsburg',
+    baseRating: 81, startYear: 2011, baseTrait: 'Tempo Controller', playStyle: 'Passing Maestro',
+    rivals: ['Hannover', 'Bayern Munich'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Radja Nainggolan', lastName: 'Nainggolan', nationality: 'Belgium',
+    primaryPosition: 'CM', secondaryPositions: ['CAM', 'CDM'], era: '00s', club: 'Roma',
+    baseRating: 84, startYear: 2006, baseTrait: 'Engine Room', playStyle: 'Box-to-Box Midfielder',
+    rivals: ['Lazio', 'Juventus'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Marek Hamsik', lastName: 'Hamsik', nationality: 'Slovakia',
+    primaryPosition: 'CM', secondaryPositions: ['CAM'], era: '00s', club: 'Napoli',
+    baseRating: 84, startYear: 2004, baseTrait: 'Creator Supreme', playStyle: 'Pocket Playmaker',
+    rivals: ['Juventus', 'Roma'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Josip Ilicic', lastName: 'Ilicic', nationality: 'Slovenia',
+    primaryPosition: 'CAM', secondaryPositions: ['ST', 'CF'], era: '10s', club: 'Atalanta',
+    baseRating: 82, startYear: 2010, baseTrait: 'Wing Wizard', playStyle: 'Clutch Playmaker',
+    rivals: ['Brescia', 'Inter Milan'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Marco Verratti', lastName: 'Verratti', nationality: 'Italy',
+    primaryPosition: 'CM', secondaryPositions: ['CDM'], era: '10s', club: 'PSG',
+    baseRating: 85, startYear: 2008, baseTrait: 'Tempo Controller', playStyle: 'Passing Maestro',
+    rivals: ['Marseille', 'Monaco'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Blaise Matuidi', lastName: 'Matuidi', nationality: 'France',
+    primaryPosition: 'CM', secondaryPositions: ['CDM', 'LM'], era: '00s', club: 'PSG',
+    baseRating: 83, startYear: 2004, baseTrait: 'Engine Room', playStyle: 'Box-to-Box Midfielder',
+    rivals: ['Marseille', 'Monaco'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Dimitri Payet', lastName: 'Payet', nationality: 'France',
+    primaryPosition: 'CAM', secondaryPositions: ['LW', 'LM', 'RW'], era: '00s', club: 'Marseille',
+    baseRating: 83, startYear: 2005, baseTrait: 'Creator Supreme', playStyle: 'Clutch Playmaker',
+    rivals: ['PSG', 'Lyon'], isLegendaryPlayer: false,
+  },
+  // Attackers
+  {
+    name: 'Iago Aspas', lastName: 'Aspas', nationality: 'Spain',
+    primaryPosition: 'ST', secondaryPositions: ['RW', 'CF'], era: '00s', club: 'Celta Vigo',
+    baseRating: 83, startYear: 2008, baseTrait: 'Clutch Finisher', playStyle: 'Inside Forward',
+    rivals: ['Deportivo', 'Real Madrid'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Carlos Vela', lastName: 'Vela', nationality: 'Mexico',
+    primaryPosition: 'RW', secondaryPositions: ['LW', 'ST'], era: '00s', club: 'Real Sociedad',
+    baseRating: 82, startYear: 2006, baseTrait: 'Wing Wizard', playStyle: 'Inside Forward',
+    rivals: ['Athletic Bilbao', 'Real Madrid'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Florian Thauvin', lastName: 'Thauvin', nationality: 'France',
+    primaryPosition: 'RW', secondaryPositions: ['RM', 'LW'], era: '10s', club: 'Marseille',
+    baseRating: 81, startYear: 2011, baseTrait: 'Wing Wizard', playStyle: 'Inside Forward',
+    rivals: ['PSG', 'Lyon'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Domenico Berardi', lastName: 'Berardi', nationality: 'Italy',
+    primaryPosition: 'RW', secondaryPositions: ['RM', 'ST'], era: '10s', club: 'Sassuolo',
+    baseRating: 82, startYear: 2012, baseTrait: 'Clutch Finisher', playStyle: 'Inside Forward',
+    rivals: ['Bologna', 'Inter Milan'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Wissam Ben Yedder', lastName: 'Ben Yedder', nationality: 'France',
+    primaryPosition: 'ST', secondaryPositions: ['CF'], era: '10s', club: 'Monaco',
+    baseRating: 82, startYear: 2010, baseTrait: 'Clutch Finisher', playStyle: 'Goal Machine',
+    rivals: ['Nice', 'PSG'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Mario Gomez', lastName: 'Gomez', nationality: 'Germany',
+    primaryPosition: 'ST', secondaryPositions: [], era: '00s', club: 'Bayern Munich',
+    baseRating: 83, startYear: 2003, baseTrait: 'Target Man', playStyle: 'Goal Machine',
+    rivals: ['Dortmund', 'Stuttgart'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Vedad Ibisevic', lastName: 'Ibisevic', nationality: 'Bosnia and Herzegovina',
+    primaryPosition: 'ST', secondaryPositions: [], era: '00s', club: 'Hoffenheim',
+    baseRating: 79, startYear: 2004, baseTrait: 'Target Man', playStyle: 'Goal Machine',
+    rivals: ['Stuttgart', 'Bayern Munich'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Antonio Di Natale', lastName: 'Di Natale', nationality: 'Italy',
+    primaryPosition: 'ST', secondaryPositions: ['CF'], era: '90s', club: 'Udinese',
+    baseRating: 84, startYear: 1996, baseTrait: 'Clutch Finisher', playStyle: 'Goal Machine',
+    rivals: ['Triestina', 'Juventus'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Fabio Quagliarella', lastName: 'Quagliarella', nationality: 'Italy',
+    primaryPosition: 'ST', secondaryPositions: ['CF'], era: '00s', club: 'Sampdoria',
+    baseRating: 81, startYear: 1999, baseTrait: 'Clutch Finisher', playStyle: 'Goal Machine',
+    rivals: ['Genoa', 'Juventus'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Alexandre Lacazette', lastName: 'Lacazette', nationality: 'France',
+    primaryPosition: 'ST', secondaryPositions: ['CF'], era: '10s', club: 'Lyon',
+    baseRating: 83, startYear: 2010, baseTrait: 'Clutch Finisher', playStyle: 'Goal Machine',
+    rivals: ['Saint-Etienne', 'PSG'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Loic Remy', lastName: 'Remy', nationality: 'France',
+    primaryPosition: 'ST', secondaryPositions: ['RW'], era: '00s', club: 'Marseille',
+    baseRating: 80, startYear: 2006, baseTrait: 'Clutch Finisher', playStyle: 'Inside Forward',
+    rivals: ['PSG', 'Lyon'], isLegendaryPlayer: false,
+  },
 ];
+
+function getLeagueForClub(clubName: string): string {
+  const c = clubName.toLowerCase();
+  if (
+    c.includes('real madrid') ||
+    c.includes('barcelona') ||
+    c.includes('atletico') ||
+    c.includes('sevilla') ||
+    c.includes('valencia') ||
+    c.includes('villarreal') ||
+    c.includes('real sociedad') ||
+    c.includes('betis') ||
+    c.includes('getafe') ||
+    c.includes('celta vigo') ||
+    c.includes('deportivo') ||
+    c.includes('almeria')
+  ) {
+    return 'La Liga';
+  }
+  if (
+    c.includes('bayern munich') ||
+    c.includes('dortmund') ||
+    c.includes('leverkusen') ||
+    c.includes('leipzig') ||
+    c.includes('gladbach') ||
+    c.includes('schalke') ||
+    c.includes('frankfurt') ||
+    c.includes('wolfsburg') ||
+    c.includes('stuttgart') ||
+    c.includes('werder bremen') ||
+    c.includes('fc koln') ||
+    c.includes('mainz') ||
+    c.includes('bochum') ||
+    c.includes('hertha bsc') ||
+    c.includes('bremen') ||
+    c.includes('hoffenheim')
+  ) {
+    return 'Bundesliga';
+  }
+  if (
+    c.includes('juventus') ||
+    c.includes('ac milan') ||
+    c.includes('inter milan') ||
+    c.includes('roma') ||
+    c.includes('napoli') ||
+    c.includes('lazio') ||
+    c.includes('fiorentina') ||
+    c.includes('atalanta') ||
+    c.includes('parma') ||
+    c.includes('brescia') ||
+    c.includes('bologna') ||
+    c.includes('udinese') ||
+    c.includes('sampdoria') ||
+    c.includes('sassuolo') ||
+    c.includes('genoa')
+  ) {
+    return 'Serie A';
+  }
+  if (
+    c.includes('psg') ||
+    c.includes('marseille') ||
+    c.includes('lyon') ||
+    c.includes('monaco') ||
+    c.includes('lille') ||
+    c.includes('nice') ||
+    c.includes('rennes') ||
+    c.includes('lens') ||
+    c.includes('saint-etienne') ||
+    c.includes('toulouse')
+  ) {
+    return 'Ligue 1';
+  }
+  if (c.includes('inter miami') || c.includes('la galaxy') || c.includes('lafc')) {
+    return 'MLS';
+  }
+  if (c.includes('ajax') || c.includes('psv') || c.includes('feyenoord')) {
+    return 'Eredivisie';
+  }
+  if (c.includes('sporting cp') || c.includes('benfica') || c.includes('porto')) {
+    return 'Primeira Liga';
+  }
+  if (c.includes('galatasaray')) {
+    return 'Super Lig';
+  }
+  // Default to Premier League
+  return 'Premier League';
+}
 
 // Helper: Formats starting year to visual label (e.g. 2003/04)
 function formatSeason(start: number): string {
@@ -1412,6 +1795,83 @@ function generatePlayersDatabase(): Player[] {
         club = 'Birmingham';
       } else if (base.name === 'Ben Davies' && year < 2014) {
         club = 'Swansea';
+      } else if (base.name === 'Diego Alves' && year < 2011) {
+        club = 'Almeria';
+      } else if (base.name === 'Samir Handanovic' && year < 2012) {
+        club = 'Udinese';
+      } else if (base.name === 'Steve Mandanda' && year === 2016) {
+        club = 'Crystal Palace';
+      } else if (base.name === 'Jordi Alba' && year < 2012) {
+        club = 'Valencia';
+      } else if (base.name === 'Lucas Digne') {
+        if (year >= 2022) club = 'Aston Villa';
+        else if (year >= 2018) club = 'Everton';
+        else if (year >= 2016) club = 'Barcelona';
+        else if (year === 2015) club = 'Roma';
+        else if (year < 2013) club = 'Lille';
+      } else if (base.name === 'Marquinhos' && year === 2012) {
+        club = 'Roma';
+      } else if (base.name === 'Ever Banega') {
+        if (year >= 2014 && year !== 2016) club = 'Sevilla';
+        else if (year === 2016) club = 'Inter Milan';
+        else if (year < 2014) club = 'Valencia';
+      } else if (base.name === 'Dani Parejo' && year < 2011) {
+        club = 'Getafe';
+      } else if (base.name === 'Radja Nainggolan') {
+        if (year >= 2018) club = 'Inter Milan';
+        else if (year < 2014) club = 'Cagliari';
+      } else if (base.name === 'Marek Hamsik' && year < 2007) {
+        club = 'Brescia';
+      } else if (base.name === 'Marco Verratti' && year < 2012) {
+        club = 'Pescara';
+      } else if (base.name === 'Blaise Matuidi') {
+        if (year >= 2017) club = 'Juventus';
+        else if (year < 2011) club = 'Saint-Etienne';
+      } else if (base.name === 'Dimitri Payet') {
+        if (year === 2015 || year === 2016) club = 'West Ham';
+        else if (year >= 2011 && year < 2013) club = 'Lille';
+        else if (year < 2011) club = 'Saint-Etienne';
+      } else if (base.name === 'Iago Aspas') {
+        if (year === 2013) club = 'Liverpool';
+        else if (year === 2014) club = 'Sevilla';
+      } else if (base.name === 'Carlos Vela') {
+        if (year >= 2018) club = 'LAFC';
+        else if (year < 2011) club = 'Arsenal';
+      } else if (base.name === 'Wissam Ben Yedder') {
+        if (year >= 2019) club = 'Monaco';
+        else if (year < 2016) club = 'Toulouse';
+        else club = 'Sevilla';
+      } else if (base.name === 'Mario Gomez') {
+        if (year >= 2016) club = 'Wolfsburg';
+        else if (year === 2015) club = 'Besiktas';
+        else if (year === 2013 || year === 2014) club = 'Fiorentina';
+        else if (year < 2009) club = 'Stuttgart';
+      } else if (base.name === 'Alexandre Lacazette' && year >= 2017 && year < 2022) {
+        club = 'Arsenal';
+      } else if (base.name === 'Loic Remy') {
+        if (year >= 2014 && year <= 2016) club = 'Chelsea';
+        else if (year === 2013) club = 'QPR';
+        else if (year < 2010) club = 'Nice';
+      } else if (base.name === 'Filipe Luis' && year === 2014) {
+        club = 'Chelsea';
+      } else if (base.name === 'Lukasz Piszczek' && year < 2010) {
+        club = 'Hertha BSC';
+      } else if (base.name === 'Bacary Sagna') {
+        if (year >= 2014) club = 'Manchester City';
+        else if (year < 2007) club = 'Auxerre';
+      } else if (base.name === 'Christian Fuchs') {
+        if (year >= 2011 && year < 2015) club = 'Schalke';
+        else if (year === 2010) club = 'Mainz';
+        else if (year < 2010) club = 'Bochum';
+      } else if (base.name === 'Patrick van Aanholt') {
+        if (year >= 2021) club = 'Galatasaray';
+        else if (year >= 2017) club = 'Crystal Palace';
+        else if (year < 2014) club = 'Chelsea';
+      } else if (base.name === 'Kieran Gibbs' && year >= 2017) {
+        club = 'West Brom';
+      } else if (base.name === 'Alan Hutton') {
+        if (year < 2008) club = 'Rangers';
+        else if (year < 2011) club = 'Tottenham';
       }
 
       // Determine Rarity
@@ -1542,7 +2002,7 @@ function generatePlayersDatabase(): Player[] {
         displayName: `${base.lastName} ${seasonLabel.split('/')[0].substring(2)}/${seasonLabel.split('/')[1]}`,
         season: seasonLabel,
         club,
-        league: 'Premier League',
+        league: getLeagueForClub(club),
         nationality: base.nationality,
         primaryPosition: base.primaryPosition,
         secondaryPositions: secondaryPositions,

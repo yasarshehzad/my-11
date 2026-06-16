@@ -324,50 +324,103 @@ export function getDraftOptions(
     let eligiblePool: Player[] = [];
 
     // Filter candidate pool
-    if (slot === 0) {
-      // Slot 0: Strict target position or natural secondary position
+    if (slot === 0 || slot === 1) {
+      // Slot 0 and Slot 1: Strict target position or natural secondary position
       eligiblePool = players.filter(
-        (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) && p.rarity === rarity && satisfiesChallengeRule(p) && !draftedIds.has(p.id)
+        (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) &&
+               p.rarity === rarity &&
+               satisfiesChallengeRule(p) &&
+               !draftedIds.has(p.id)
       );
-    } else if (slot === 1) {
-      // Slot 1: Related positions
-      eligiblePool = players.filter(
-        (p) => relatedPositions.includes(p.primaryPosition) && p.rarity === rarity && satisfiesChallengeRule(p) && !draftedIds.has(p.id)
-      );
+
+      // Fallbacks if pool is empty for the rolled rarity
+      if (eligiblePool.length === 0) {
+        // Fallback 1: Strict target position (primary or secondary) of any rarity
+        eligiblePool = players.filter(
+          (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) &&
+                 satisfiesChallengeRule(p) &&
+                 !draftedIds.has(p.id)
+        );
+      }
+      if (eligiblePool.length === 0) {
+        // Fallback 2: Related positions of any rarity
+        eligiblePool = players.filter(
+          (p) => relatedPositions.includes(p.primaryPosition) &&
+                 satisfiesChallengeRule(p) &&
+                 !draftedIds.has(p.id)
+        );
+      }
     } else {
-      // Slot 2: Broad department match
+      // Slot 2: Related positions or broad department match
+      // Try related positions at rolled rarity first
       eligiblePool = players.filter(
-        (p) => POSITION_DEPARTMENTS[p.primaryPosition] === department && p.rarity === rarity && satisfiesChallengeRule(p) && !draftedIds.has(p.id)
+        (p) => relatedPositions.includes(p.primaryPosition) &&
+               p.rarity === rarity &&
+               satisfiesChallengeRule(p) &&
+               !draftedIds.has(p.id)
       );
+      if (eligiblePool.length === 0) {
+        // Try department match at rolled rarity
+        eligiblePool = players.filter(
+          (p) => POSITION_DEPARTMENTS[p.primaryPosition] === department &&
+                 p.rarity === rarity &&
+                 satisfiesChallengeRule(p) &&
+                 !draftedIds.has(p.id)
+        );
+      }
+      if (eligiblePool.length === 0) {
+        // Try related positions of any rarity
+        eligiblePool = players.filter(
+          (p) => relatedPositions.includes(p.primaryPosition) &&
+                 satisfiesChallengeRule(p) &&
+                 !draftedIds.has(p.id)
+        );
+      }
+      if (eligiblePool.length === 0) {
+        // Try department match of any rarity
+        eligiblePool = players.filter(
+          (p) => POSITION_DEPARTMENTS[p.primaryPosition] === department &&
+                 satisfiesChallengeRule(p) &&
+                 !draftedIds.has(p.id)
+        );
+      }
     }
 
-    // Fallbacks if pool is empty for the rolled rarity
+    // Generic emergency fallbacks (if still empty)
     if (eligiblePool.length === 0) {
-      // Try to find exact position match (primary or secondary) of any rarity first
       eligiblePool = players.filter(
-        (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) && satisfiesChallengeRule(p) && !draftedIds.has(p.id)
+        (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) &&
+               satisfiesChallengeRule(p) &&
+               !draftedIds.has(p.id)
       );
     }
     if (eligiblePool.length === 0) {
       eligiblePool = players.filter(
-        (p) => relatedPositions.includes(p.primaryPosition) && satisfiesChallengeRule(p) && !draftedIds.has(p.id)
+        (p) => relatedPositions.includes(p.primaryPosition) &&
+               satisfiesChallengeRule(p) &&
+               !draftedIds.has(p.id)
       );
     }
     if (eligiblePool.length === 0) {
       eligiblePool = players.filter(
-        (p) => POSITION_DEPARTMENTS[p.primaryPosition] === department && satisfiesChallengeRule(p) && !draftedIds.has(p.id)
+        (p) => POSITION_DEPARTMENTS[p.primaryPosition] === department &&
+               satisfiesChallengeRule(p) &&
+               !draftedIds.has(p.id)
       );
     }
     if (eligiblePool.length === 0) {
       // Wildcard fallback satisfying challenge rules
       eligiblePool = players.filter(
-        (p) => (targetPos === 'GK' ? p.primaryPosition === 'GK' : p.primaryPosition !== 'GK') && satisfiesChallengeRule(p) && !draftedIds.has(p.id)
+        (p) => (targetPos === 'GK' ? p.primaryPosition === 'GK' : p.primaryPosition !== 'GK') &&
+               satisfiesChallengeRule(p) &&
+               !draftedIds.has(p.id)
       );
     }
     if (eligiblePool.length === 0) {
-      // Absolute emergency fallback (ignoring challenge rules only if database is depleted, but satisfying position)
+      // Absolute emergency fallback (ignoring challenge rules only if database is depleted)
       eligiblePool = players.filter(
-        (p) => (targetPos === 'GK' ? p.primaryPosition === 'GK' : p.primaryPosition !== 'GK') && !draftedIds.has(p.id)
+        (p) => (targetPos === 'GK' ? p.primaryPosition === 'GK' : p.primaryPosition !== 'GK') &&
+               !draftedIds.has(p.id)
       );
     }
 
