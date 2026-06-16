@@ -1393,6 +1393,47 @@ export default function DraftedXIGame() {
           </p>
         </div>
 
+
+        {/* 2. Premium Share Card Preview (Streaks inside) */}
+        <SharePreview
+          formation={formation}
+          selectedPlayers={selectedPlayers.filter((p): p is Player => p !== null)}
+          stats={stats}
+          simResult={simResult}
+          streakStats={streakStats}
+          isDailyChallenge={isDailyChallenge}
+          dailyChallengeTitle={todayChallenge?.title}
+          dailyChallengeBeaten={challengeBeaten}
+          exportRef={exportRef}
+        />
+
+        {/* 3. Pitch XI Representation */}
+        <div className="flex flex-col gap-3 relative z-10 w-full">
+          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1 leading-none">
+            Squad Tactical Pitch Layout
+          </span>
+          <PitchLayout
+            formation={formation}
+            selectedPlayers={selectedPlayers}
+            currentSlotIndex={-1}
+          />
+        </div>
+
+        {/* 4. Complete Stats Breakdown */}
+        <div className="flex flex-col gap-3 relative z-10 w-full">
+          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1 leading-none">
+            Complete Team Statistics
+          </span>
+          <StatsDisplay
+            attack={stats.attack}
+            midfield={stats.midfield}
+            defence={stats.defence}
+            chemistry={stats.chemistry}
+            overall={stats.overall}
+            logs={getDetailedChemistryLogs(selectedPlayers, FORMATION_SLOTS[formation])}
+          />
+        </div>
+
         {/* Manager's Tactical Report Card */}
         {(() => {
           const getManagerAdvice = () => {
@@ -1595,46 +1636,6 @@ export default function DraftedXIGame() {
               </div>
             );
           })()}
-        </div>
-
-        {/* 2. Premium Share Card Preview (Streaks inside) */}
-        <SharePreview
-          formation={formation}
-          selectedPlayers={selectedPlayers.filter((p): p is Player => p !== null)}
-          stats={stats}
-          simResult={simResult}
-          streakStats={streakStats}
-          isDailyChallenge={isDailyChallenge}
-          dailyChallengeTitle={todayChallenge?.title}
-          dailyChallengeBeaten={challengeBeaten}
-          exportRef={exportRef}
-        />
-
-        {/* 3. Pitch XI Representation */}
-        <div className="flex flex-col gap-3 relative z-10 w-full">
-          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1 leading-none">
-            Squad Tactical Pitch Layout
-          </span>
-          <PitchLayout
-            formation={formation}
-            selectedPlayers={selectedPlayers}
-            currentSlotIndex={-1}
-          />
-        </div>
-
-        {/* 4. Complete Stats Breakdown */}
-        <div className="flex flex-col gap-3 relative z-10 w-full">
-          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1 leading-none">
-            Complete Team Statistics
-          </span>
-          <StatsDisplay
-            attack={stats.attack}
-            midfield={stats.midfield}
-            defence={stats.defence}
-            chemistry={stats.chemistry}
-            overall={stats.overall}
-            logs={getDetailedChemistryLogs(selectedPlayers, FORMATION_SLOTS[formation])}
-          />
         </div>
 
         {/* Play Again and Randomize Buttons */}
