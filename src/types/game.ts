@@ -66,6 +66,7 @@ export interface Player {
   weaknesses: string[];
   bestRole: string;
   chemistryBoosts: string[];
+  isLegendaryPlayer?: boolean;
 }
 
 export type FormationType = '4-3-3' | '4-4-2' | '3-5-2' | '4-2-3-1';

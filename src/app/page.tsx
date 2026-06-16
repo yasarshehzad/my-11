@@ -161,7 +161,7 @@ export default function DraftedXIGame() {
       case 'underdog_xi':
         return player.rarity === 'common' || player.rarity === 'rare';
       case 'no_legends':
-        return player.rarity !== 'legend';
+        return !player.isLegendaryPlayer;
       case 'under_90_rating':
         return player.rating < 90;
       case 'only_modern':

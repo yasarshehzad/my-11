@@ -14,6 +14,7 @@ interface PlayerBase {
   baseTrait: string;
   playStyle: string;
   rivals: string[];
+  isLegendaryPlayer?: boolean;
 }
 
 // 116 Iconic Premier League Base Players (1992 - 2026)
@@ -925,6 +926,259 @@ const playerBases: PlayerBase[] = [
     baseRating: 88, startYear: 2009, baseTrait: 'Clutch Finisher', playStyle: 'Pocket Playmaker',
     rivals: ['Schalke', 'Bayern Munich'],
   },
+  // --- NON-LEGENDS DAILY CHALLENGE BANK ---
+  // Goalkeepers
+  {
+    name: 'Mark Schwarzer', lastName: 'Schwarzer', nationality: 'Australia',
+    primaryPosition: 'GK', secondaryPositions: [], era: '00s', club: 'Middlesbrough',
+    baseRating: 81, startYear: 1997, baseTrait: 'Shot Stopper', playStyle: 'Traditional GK',
+    rivals: ['Newcastle', 'Sunderland'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Brad Friedel', lastName: 'Friedel', nationality: 'United States',
+    primaryPosition: 'GK', secondaryPositions: [], era: '00s', club: 'Blackburn',
+    baseRating: 82, startYear: 2000, baseTrait: 'Shot Stopper', playStyle: 'Traditional GK',
+    rivals: ['Burnley', 'Bolton'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Tim Howard', lastName: 'Howard', nationality: 'United States',
+    primaryPosition: 'GK', secondaryPositions: [], era: '00s', club: 'Everton',
+    baseRating: 82, startYear: 2003, baseTrait: 'Shot Stopper', playStyle: 'Sweeper Keeper',
+    rivals: ['Liverpool', 'Manchester United'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Lukasz Fabianski', lastName: 'Fabianski', nationality: 'Poland',
+    primaryPosition: 'GK', secondaryPositions: [], era: '10s', club: 'Swansea',
+    baseRating: 80, startYear: 2007, baseTrait: 'Shot Stopper', playStyle: 'Traditional GK',
+    rivals: ['Cardiff', 'West Ham'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Fraser Forster', lastName: 'Forster', nationality: 'England',
+    primaryPosition: 'GK', secondaryPositions: [], era: '10s', club: 'Southampton',
+    baseRating: 80, startYear: 2010, baseTrait: 'Shot Stopper', playStyle: 'Traditional GK',
+    rivals: ['Portsmouth', 'Bournemouth'], isLegendaryPlayer: false,
+  },
+  // Centre Backs
+  {
+    name: 'Phil Jagielka', lastName: 'Jagielka', nationality: 'England',
+    primaryPosition: 'CB', secondaryPositions: [], era: '00s', club: 'Everton',
+    baseRating: 81, startYear: 2007, baseTrait: 'Defensive Leader', playStyle: 'Lockdown Defender',
+    rivals: ['Liverpool', 'Sheffield United'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Ryan Shawcross', lastName: 'Shawcross', nationality: 'England',
+    primaryPosition: 'CB', secondaryPositions: [], era: '10s', club: 'Stoke City',
+    baseRating: 80, startYear: 2007, baseTrait: 'Defensive Leader', playStyle: 'Lockdown Defender',
+    rivals: ['Port Vale', 'Arsenal'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Brede Hangeland', lastName: 'Hangeland', nationality: 'Norway',
+    primaryPosition: 'CB', secondaryPositions: [], era: '00s', club: 'Fulham',
+    baseRating: 81, startYear: 2008, baseTrait: 'Defensive Leader', playStyle: 'Lockdown Defender',
+    rivals: ['Chelsea', 'QPR'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Sylvain Distin', lastName: 'Distin', nationality: 'France',
+    primaryPosition: 'CB', secondaryPositions: ['LB'], era: '00s', club: 'Everton',
+    baseRating: 81, startYear: 2001, baseTrait: 'Defensive Leader', playStyle: 'Lockdown Defender',
+    rivals: ['Liverpool', 'Manchester City'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Wes Morgan', lastName: 'Morgan', nationality: 'Jamaica',
+    primaryPosition: 'CB', secondaryPositions: [], era: '10s', club: 'Leicester',
+    baseRating: 81, startYear: 2012, baseTrait: 'Defensive Leader', playStyle: 'Lockdown Defender',
+    rivals: ['Derby County', 'Nottingham Forest'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Martin Skrtel', lastName: 'Skrtel', nationality: 'Slovakia',
+    primaryPosition: 'CB', secondaryPositions: [], era: '10s', club: 'Liverpool',
+    baseRating: 82, startYear: 2008, baseTrait: 'Defensive Leader', playStyle: 'Lockdown Defender',
+    rivals: ['Manchester United', 'Everton'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Conor Coady', lastName: 'Coady', nationality: 'England',
+    primaryPosition: 'CB', secondaryPositions: ['CDM'], era: 'Modern', club: 'Wolverhampton',
+    baseRating: 79, startYear: 2015, baseTrait: 'Defensive Leader', playStyle: 'Ball Playing Defender',
+    rivals: ['West Brom', 'Aston Villa'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Lewis Dunk', lastName: 'Dunk', nationality: 'England',
+    primaryPosition: 'CB', secondaryPositions: [], era: 'Modern', club: 'Brighton',
+    baseRating: 81, startYear: 2010, baseTrait: 'Defensive Leader', playStyle: 'Ball Playing Defender',
+    rivals: ['Crystal Palace', 'Southampton'], isLegendaryPlayer: false,
+  },
+  // Full Backs
+  {
+    name: 'John Arne Riise', lastName: 'Riise', nationality: 'Norway',
+    primaryPosition: 'LB', secondaryPositions: ['LM'], era: '00s', club: 'Liverpool',
+    baseRating: 83, startYear: 2001, baseTrait: 'Wing Wizard', playStyle: 'Overlapping Wingback',
+    rivals: ['Everton', 'Manchester United'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Stephen Carr', lastName: 'Carr', nationality: 'Ireland',
+    primaryPosition: 'RB', secondaryPositions: [], era: '90s', club: 'Tottenham',
+    baseRating: 81, startYear: 1993, baseTrait: 'Lockdown Fullback', playStyle: 'Overlapping Wingback',
+    rivals: ['Arsenal', 'Chelsea'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Seamus Coleman', lastName: 'Coleman', nationality: 'Ireland',
+    primaryPosition: 'RB', secondaryPositions: ['RM'], era: '10s', club: 'Everton',
+    baseRating: 81, startYear: 2009, baseTrait: 'Lockdown Fullback', playStyle: 'Overlapping Wingback',
+    rivals: ['Liverpool', 'Manchester United'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Danny Rose', lastName: 'Rose', nationality: 'England',
+    primaryPosition: 'LB', secondaryPositions: ['LM'], era: '10s', club: 'Tottenham',
+    baseRating: 81, startYear: 2007, baseTrait: 'Lockdown Fullback', playStyle: 'Overlapping Wingback',
+    rivals: ['Arsenal', 'Chelsea'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Glen Johnson', lastName: 'Johnson', nationality: 'England',
+    primaryPosition: 'RB', secondaryPositions: [], era: '00s', club: 'Liverpool',
+    baseRating: 82, startYear: 2002, baseTrait: 'Lockdown Fullback', playStyle: 'Overlapping Wingback',
+    rivals: ['Everton', 'Chelsea'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Ben Davies', lastName: 'Davies', nationality: 'Wales',
+    primaryPosition: 'LB', secondaryPositions: ['CB'], era: 'Modern', club: 'Tottenham',
+    baseRating: 79, startYear: 2012, baseTrait: 'Lockdown Fullback', playStyle: 'Traditional Fullback',
+    rivals: ['Arsenal', 'Chelsea'], isLegendaryPlayer: false,
+  },
+  // Midfielders (CDM/CM/CAM)
+  {
+    name: 'James Milner', lastName: 'Milner', nationality: 'England',
+    primaryPosition: 'CM', secondaryPositions: ['CDM', 'LB', 'RB'], era: '00s', club: 'Aston Villa',
+    baseRating: 83, startYear: 2002, baseTrait: 'Engine Room', playStyle: 'Tactical Leader',
+    rivals: ['Birmingham City', 'Leeds United'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Gareth Barry', lastName: 'Barry', nationality: 'England',
+    primaryPosition: 'CDM', secondaryPositions: ['CM'], era: '00s', club: 'Aston Villa',
+    baseRating: 83, startYear: 1998, baseTrait: 'Engine Room', playStyle: 'Deep Lying Pivot',
+    rivals: ['Birmingham City', 'Wolverhampton'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Mark Noble', lastName: 'Noble', nationality: 'England',
+    primaryPosition: 'CM', secondaryPositions: ['CDM'], era: '00s', club: 'West Ham',
+    baseRating: 80, startYear: 2004, baseTrait: 'Engine Room', playStyle: 'Box-to-Box Midfielder',
+    rivals: ['Tottenham', 'Millwall'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'James Ward-Prowse', lastName: 'Ward-Prowse', nationality: 'England',
+    primaryPosition: 'CM', secondaryPositions: ['RM'], era: '10s', club: 'Southampton',
+    baseRating: 82, startYear: 2011, baseTrait: 'Tempo Controller', playStyle: 'Passing Maestro',
+    rivals: ['Portsmouth', 'Bournemouth'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Wilfred Ndidi', lastName: 'Ndidi', nationality: 'Nigeria',
+    primaryPosition: 'CDM', secondaryPositions: ['CM'], era: 'Modern', club: 'Leicester',
+    baseRating: 81, startYear: 2017, baseTrait: 'Engine Room', playStyle: 'Interception Specialist',
+    rivals: ['Coventry City', 'Derby County'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Rory Delap', lastName: 'Delap', nationality: 'Ireland',
+    primaryPosition: 'CM', secondaryPositions: ['RM'], era: '00s', club: 'Stoke City',
+    baseRating: 78, startYear: 1998, baseTrait: 'Engine Room', playStyle: 'Physical Engine',
+    rivals: ['Port Vale', 'Arsenal'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Etienne Capoue', lastName: 'Capoue', nationality: 'France',
+    primaryPosition: 'CDM', secondaryPositions: ['CM'], era: '10s', club: 'Watford',
+    baseRating: 80, startYear: 2013, baseTrait: 'Engine Room', playStyle: 'Lockdown Destroyer',
+    rivals: ['Luton Town', 'Crystal Palace'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Leon Osman', lastName: 'Osman', nationality: 'England',
+    primaryPosition: 'CM', secondaryPositions: ['RM', 'LM'], era: '00s', club: 'Everton',
+    baseRating: 80, startYear: 2002, baseTrait: 'Tempo Controller', playStyle: 'Pocket Playmaker',
+    rivals: ['Liverpool', 'Manchester United'], isLegendaryPlayer: false,
+  },
+  // Wingers & Attacking Midfielders
+  {
+    name: 'Morten Gamst Pedersen', lastName: 'Pedersen', nationality: 'Norway',
+    primaryPosition: 'LM', secondaryPositions: ['LW', 'CM'], era: '00s', club: 'Blackburn',
+    baseRating: 81, startYear: 2004, baseTrait: 'Wing Wizard', playStyle: 'Cross Specialist',
+    rivals: ['Burnley', 'Bolton'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Sebastian Larsson', lastName: 'Larsson', nationality: 'Sweden',
+    primaryPosition: 'RM', secondaryPositions: ['CM'], era: '00s', club: 'Sunderland',
+    baseRating: 80, startYear: 2004, baseTrait: 'Tempo Controller', playStyle: 'Cross Specialist',
+    rivals: ['Newcastle', 'Middlesbrough'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Gylfi Sigurdsson', lastName: 'Sigurdsson', nationality: 'Iceland',
+    primaryPosition: 'CAM', secondaryPositions: ['CM'], era: '10s', club: 'Swansea',
+    baseRating: 83, startYear: 2010, baseTrait: 'Creator Supreme', playStyle: 'Clutch Playmaker',
+    rivals: ['Cardiff City', 'Everton'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Clint Dempsey', lastName: 'Dempsey', nationality: 'United States',
+    primaryPosition: 'CAM', secondaryPositions: ['CF', 'LW'], era: '00s', club: 'Fulham',
+    baseRating: 82, startYear: 2004, baseTrait: 'Clutch Finisher', playStyle: 'Pocket Playmaker',
+    rivals: ['Chelsea', 'QPR'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Salomon Kalou', lastName: 'Kalou', nationality: 'Ivory Coast',
+    primaryPosition: 'RW', secondaryPositions: ['LW', 'ST'], era: '00s', club: 'Chelsea',
+    baseRating: 81, startYear: 2006, baseTrait: 'Wing Wizard', playStyle: 'Inside Forward',
+    rivals: ['Arsenal', 'Tottenham'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Wilfried Zaha', lastName: 'Zaha', nationality: 'Ivory Coast',
+    primaryPosition: 'LW', secondaryPositions: ['RW', 'ST'], era: '10s', club: 'Crystal Palace',
+    baseRating: 83, startYear: 2010, baseTrait: 'Wing Wizard', playStyle: 'Dribbling Winger',
+    rivals: ['Brighton', 'Millwall'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Pascal Gross', lastName: 'Gross', nationality: 'Germany',
+    primaryPosition: 'CM', secondaryPositions: ['CAM', 'RB'], era: 'Modern', club: 'Brighton',
+    baseRating: 82, startYear: 2017, baseTrait: 'Creator Supreme', playStyle: 'Passing Maestro',
+    rivals: ['Crystal Palace', 'Southampton'], isLegendaryPlayer: false,
+  },
+  // Strikers
+  {
+    name: 'Peter Crouch', lastName: 'Crouch', nationality: 'England',
+    primaryPosition: 'ST', secondaryPositions: [], era: '00s', club: 'Stoke City',
+    baseRating: 82, startYear: 2000, baseTrait: 'Target Man', playStyle: 'Goal Machine',
+    rivals: ['Port Vale', 'Arsenal'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Olivier Giroud', lastName: 'Giroud', nationality: 'France',
+    primaryPosition: 'ST', secondaryPositions: [], era: '10s', club: 'Arsenal',
+    baseRating: 83, startYear: 2012, baseTrait: 'Target Man', playStyle: 'Goal Machine',
+    rivals: ['Tottenham', 'Chelsea'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Darren Bent', lastName: 'Bent', nationality: 'England',
+    primaryPosition: 'ST', secondaryPositions: [], era: '00s', club: 'Sunderland',
+    baseRating: 82, startYear: 2001, baseTrait: 'Clutch Finisher', playStyle: 'Goal Machine',
+    rivals: ['Newcastle', 'Middlesbrough'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Michail Antonio', lastName: 'Antonio', nationality: 'Jamaica',
+    primaryPosition: 'ST', secondaryPositions: ['RW', 'RM'], era: '10s', club: 'West Ham',
+    baseRating: 80, startYear: 2015, baseTrait: 'Target Man', playStyle: 'Physical Engine',
+    rivals: ['Tottenham', 'Millwall'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Danny Ings', lastName: 'Ings', nationality: 'England',
+    primaryPosition: 'ST', secondaryPositions: [], era: '10s', club: 'Southampton',
+    baseRating: 81, startYear: 2010, baseTrait: 'Clutch Finisher', playStyle: 'Goal Machine',
+    rivals: ['Portsmouth', 'Bournemouth'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Troy Deeney', lastName: 'Deeney', nationality: 'England',
+    primaryPosition: 'ST', secondaryPositions: [], era: '10s', club: 'Watford',
+    baseRating: 79, startYear: 2010, baseTrait: 'Target Man', playStyle: 'Physical Engine',
+    rivals: ['Luton Town', 'Crystal Palace'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Chris Wood', lastName: 'Wood', nationality: 'New Zealand',
+    primaryPosition: 'ST', secondaryPositions: [], era: 'Modern', club: 'Burnley',
+    baseRating: 80, startYear: 2009, baseTrait: 'Target Man', playStyle: 'Goal Machine',
+    rivals: ['Blackburn', 'Newcastle'], isLegendaryPlayer: false,
+  },
 ];
 
 // Helper: Formats starting year to visual label (e.g. 2003/04)
@@ -1109,6 +1363,55 @@ function generatePlayersDatabase(): Player[] {
         club = 'Tottenham';
       } else if (base.name === 'Philipp Lahm' && year === 2003) {
         club = 'Stuttgart';
+      } else if (base.name === 'Mark Schwarzer') {
+        if (year >= 2015) club = 'Leicester';
+        else if (year >= 2013) club = 'Chelsea';
+        else if (year >= 2008) club = 'Fulham';
+      } else if (base.name === 'Brad Friedel') {
+        if (year >= 2011) club = 'Tottenham';
+        else if (year >= 2008) club = 'Aston Villa';
+      } else if (base.name === 'Tim Howard' && year < 2006) {
+        club = 'Manchester United';
+      } else if (base.name === 'Lukasz Fabianski') {
+        if (year >= 2018) club = 'West Ham';
+        else if (year < 2014) club = 'Arsenal';
+      } else if (base.name === 'James Milner') {
+        if (year >= 2015) club = 'Liverpool';
+        else if (year >= 2010) club = 'Manchester City';
+        else if (year < 2008) club = 'Newcastle';
+      } else if (base.name === 'Gareth Barry') {
+        if (year >= 2013) club = 'Everton';
+        else if (year >= 2009) club = 'Manchester City';
+      } else if (base.name === 'Peter Crouch') {
+        if (year >= 2011) club = 'Stoke City';
+        else if (year >= 2009) club = 'Tottenham';
+        else if (year === 2008) club = 'Portsmouth';
+        else if (year >= 2005 && year < 2008) club = 'Liverpool';
+        else if (year < 2005) club = 'Aston Villa';
+      } else if (base.name === 'Olivier Giroud' && year >= 2018) {
+        club = 'Chelsea';
+      } else if (base.name === 'Darren Bent') {
+        if (year >= 2011) club = 'Aston Villa';
+        else if (year < 2009 && year >= 2007) club = 'Tottenham';
+        else if (year < 2007) club = 'Charlton';
+      } else if (base.name === 'Danny Ings') {
+        if (year >= 2021) club = 'Aston Villa';
+        else if (year < 2018) club = 'Liverpool';
+      } else if (base.name === 'Gylfi Sigurdsson') {
+        if (year >= 2017) club = 'Everton';
+        else if (year >= 2012 && year < 2014) club = 'Tottenham';
+      } else if (base.name === 'Clint Dempsey' && year === 2012) {
+        club = 'Tottenham';
+      } else if (base.name === 'John Arne Riise') {
+        if (year >= 2011) club = 'Fulham';
+        else if (year >= 2008 && year < 2011) club = 'Roma';
+      } else if (base.name === 'Glen Johnson') {
+        if (year >= 2007 && year < 2009) club = 'Portsmouth';
+        else if (year >= 2003 && year < 2007) club = 'Chelsea';
+      } else if (base.name === 'Sebastian Larsson' && year < 2011) {
+        club = 'Birmingham';
+      } else if (base.name === 'Ben Davies' && year < 2014) {
+        club = 'Swansea';
       }
 
       // Determine Rarity
@@ -1280,6 +1583,7 @@ function generatePlayersDatabase(): Player[] {
         weaknesses: weaknesses.slice(0, 2),
         bestRole,
         chemistryBoosts: [club, base.nationality, era],
+        isLegendaryPlayer: base.isLegendaryPlayer !== false,
       });
     });
   });

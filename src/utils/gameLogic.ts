@@ -211,7 +211,7 @@ export function getDraftOptions(
       case 'underdog_xi':
         return p.rarity === 'common' || p.rarity === 'rare';
       case 'no_legends':
-        return p.rarity !== 'legend';
+        return !p.isLegendaryPlayer;
       case 'under_90_rating':
         return p.rating < 90;
       case 'only_modern':
@@ -799,7 +799,7 @@ export function generateRandomSquad(
       case 'underdog_xi':
         return p.rarity === 'common' || p.rarity === 'rare';
       case 'no_legends':
-        return p.rarity !== 'legend';
+        return !p.isLegendaryPlayer;
       case 'under_90_rating':
         return p.rating < 90;
       case 'only_modern':
