@@ -27,6 +27,16 @@
   --pitch-green: #022c22;
   --pitch-green-light: #064e3b;
   --pitch-line: rgba(16, 185, 129, 0.15);
+
+  /* Theme-aware custom colors */
+  --emerald-450: #10b981;
+  --rose-450: #f43f5e;
+  --rose-455: #f87171;
+  --rose-350: #fca5a5;
+  --rose-550: #e11d48;
+  --rose-950: #450a0a;
+  --emerald-950: #022c22;
+  --amber-450: #f59e0b;
 }
 
 :root[data-theme='light'] {
@@ -55,6 +65,16 @@
   --pitch-green: #f0fdf4; /* light pitch green */
   --pitch-green-light: #dcfce7;
   --pitch-line: rgba(16, 185, 129, 0.25);
+
+  /* Light Theme mappings */
+  --emerald-450: #047857;
+  --rose-450: #b91c1c;
+  --rose-455: #be123c;
+  --rose-350: #9f1239;
+  --rose-550: #9f1239;
+  --rose-950: #fff5f5;
+  --emerald-950: #ecfdf5;
+  --amber-450: #b45309;
 }
 
 @theme {
@@ -77,6 +97,15 @@
   --color-pitch-green: var(--pitch-green);
   --color-pitch-green-light: var(--pitch-green-light);
   --color-pitch-line: var(--pitch-line);
+
+  --color-emerald-450: var(--emerald-450);
+  --color-rose-455: var(--rose-455);
+  --color-rose-450: var(--rose-450);
+  --color-rose-350: var(--rose-350);
+  --color-rose-550: var(--rose-550);
+  --color-rose-950: var(--rose-950);
+  --color-emerald-950: var(--emerald-950);
+  --color-amber-450: var(--amber-450);
 
   --color-legend-gold: #f59e0b;
   --color-elite-purple: #a855f7;

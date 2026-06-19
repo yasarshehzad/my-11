@@ -44,6 +44,7 @@ export default function DraftedXIGame() {
   const [showTutorial, setShowTutorial] = useState(false);
   const [draftIQMode, setDraftIQMode] = useState<boolean>(false);
   const [rerollsRemaining, setRerollsRemaining] = useState<number>(3);
+  const [freeSearchEnabled, setFreeSearchEnabled] = useState<boolean>(false);
 
   const toggleTheme = () => {
     const nextTheme = theme === 'dark' ? 'light' : 'dark';
@@ -179,6 +180,11 @@ export default function DraftedXIGame() {
     }
   }, []);
 
+  // Reset scroll to top on screen/phase transitions
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [phase]);
+
   // Reset search filters when target slot changes
   useEffect(() => {
     setSearchQuery('');
@@ -303,6 +309,7 @@ export default function DraftedXIGame() {
       setCurrentSlotIndex(0);
       setDraftOptions(null);
       setRerollsRemaining(3);
+      setFreeSearchEnabled(false);
       setStats({ attack: 0, midfield: 0, defence: 0, chemistry: 0, overall: 0 });
       setSimResult(null);
       setPhase('formation');
@@ -367,10 +374,15 @@ export default function DraftedXIGame() {
 
   // --- Selection of Formation ---
   const handleSelectFormation = (form: FormationType) => {
-    logFormationSelected(form);
+    setFormation(form);
+  };
+
+  // --- Confirm Tactical Settings & Start Draft ---
+  const handleConfirmTactics = () => {
+    if (!formation) return;
+    logFormationSelected(formation);
     const updateDOM = () => {
-      setFormation(form);
-      const slots = FORMATION_SLOTS[form];
+      const slots = FORMATION_SLOTS[formation];
 
       // If Daily Challenge, use date-based seed
       let options: [Player, Player, Player];
@@ -738,7 +750,7 @@ export default function DraftedXIGame() {
             ⚽ ALL-TIME DRAFT CHALLENGE
           </div>
           
-          <h1 className="text-5xl md:text-6xl font-display font-black tracking-tight text-white uppercase leading-none">
+          <h1 className="text-5xl md:text-6xl font-display font-black tracking-tight text-foreground uppercase leading-none">
             MY DRAFTED <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">XI</span>
           </h1>
 
@@ -751,7 +763,7 @@ export default function DraftedXIGame() {
             <div className="w-full max-w-[340px] rounded-2xl border border-slate-900 bg-slate-950/70 p-3.5 flex justify-between text-center glass">
               <div className="flex-1">
                 <span className="text-[7.5px] font-bold text-slate-500 uppercase tracking-widest block">Runs</span>
-                <p className="text-sm font-display font-black text-white mt-1">{streakStats.gamesPlayed}</p>
+                <p className="text-sm font-display font-black text-foreground mt-1">{streakStats.gamesPlayed}</p>
               </div>
               <div className="w-[1px] bg-slate-900" />
               <div className="flex-grow flex-shrink-0 px-2">
@@ -773,7 +785,7 @@ export default function DraftedXIGame() {
 
           {/* Daily Challenge Card */}
           {todayChallenge && (
-            <div className="w-full max-w-[340px] rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-emerald-950/30 to-slate-950/70 p-5 text-left relative glass shadow-2xl animate-card-deal">
+            <div className="w-full max-w-[340px] rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-emerald-500/15 to-slate-950/70 p-5 text-left relative glass shadow-2xl animate-card-deal">
               <div className="absolute top-4 right-4 text-[8px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-400 uppercase tracking-widest">
                 Daily Mode
               </div>
@@ -782,7 +794,7 @@ export default function DraftedXIGame() {
                 Today's Challenge
               </span>
               
-              <h3 className="text-lg font-display font-black text-white uppercase tracking-tight mt-1 leading-tight">
+              <h3 className="text-lg font-display font-black text-foreground uppercase tracking-tight mt-1 leading-tight">
                 {todayChallenge.title}
               </h3>
               
@@ -793,10 +805,10 @@ export default function DraftedXIGame() {
               {dailyStatus.completed ? (
                 <div className="flex justify-between items-center mt-4 pt-3 border-t border-slate-900 leading-none">
                   <span className="text-[9px] font-bold text-slate-500 uppercase">
-                    Status: <span className={dailyStatus.beaten ? 'text-emerald-400' : 'text-rose-455'}>{dailyStatus.beaten ? 'Cleared ✅' : 'Failed ❌'}</span>
+                    Status: <span className={dailyStatus.beaten ? 'text-emerald-450' : 'text-rose-455'}>{dailyStatus.beaten ? 'Cleared ✅' : 'Failed ❌'}</span>
                   </span>
                   <span className="text-[9px] font-black text-slate-500 uppercase">
-                    Score: <span className="text-emerald-400">{dailyStatus.score}</span>
+                    Score: <span className="text-emerald-450">{dailyStatus.score}</span>
                   </span>
                 </div>
               ) : (
@@ -822,6 +834,32 @@ export default function DraftedXIGame() {
 
         {/* Standard CTA Button */}
         <div className="w-full max-w-xs mt-2 pb-4 space-y-3">
+          {/* Free Database Search Toggle (Cheat Mode) */}
+          {!todayChallenge && (
+            <div className="w-full rounded-2xl border border-slate-900 bg-slate-950/70 p-3.5 flex justify-between items-center gap-3 select-none glass">
+              <div className="flex-1 text-left min-w-0">
+                <h4 className="text-[10px] font-display font-black uppercase text-foreground tracking-wider flex items-center gap-1 leading-none">
+                  🔍 Free Database Search
+                </h4>
+                <p className="text-[8px] text-slate-500 mt-1 leading-normal font-semibold">
+                  Search/select any player (disables Rerolls).
+                </p>
+              </div>
+              <button
+                onClick={() => setFreeSearchEnabled(!freeSearchEnabled)}
+                className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-300 focus:outline-none cursor-pointer flex-shrink-0 relative ${
+                  freeSearchEnabled ? 'bg-emerald-500' : 'bg-slate-800'
+                }`}
+              >
+                <div
+                  className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${
+                    freeSearchEnabled ? 'translate-x-4' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          )}
+
           <button
             onClick={handleStartDraft}
             className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/10 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/20 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer"
@@ -863,9 +901,9 @@ export default function DraftedXIGame() {
     ];
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[75vh] px-4 sm:px-6 py-8 space-y-6 w-full max-w-full overflow-hidden">
+      <div className={`flex flex-col items-center justify-center min-h-[75vh] px-4 sm:px-6 py-8 space-y-6 w-full max-w-full overflow-hidden ${formation ? 'pb-24 md:pb-8' : ''}`}>
         <div className="text-center">
-          <h2 className="text-3xl font-display font-black text-white uppercase tracking-tight leading-none mb-2">
+          <h2 className="text-3xl font-display font-black text-foreground uppercase tracking-tight leading-none mb-2">
              Tactical Settings
           </h2>
           <p className="text-xs text-slate-400 font-semibold tracking-wide uppercase leading-none">
@@ -889,7 +927,7 @@ export default function DraftedXIGame() {
                   onClick={() => setSelectedLeague(lg.id)}
                   className={`w-full p-3.5 rounded-2xl border text-left transition-all duration-300 flex items-center gap-3.5 cursor-pointer relative active:scale-99 ${
                     active
-                      ? 'border-emerald-500 bg-emerald-950/20 text-white shadow-[0_0_15px_rgba(16,185,129,0.1)]'
+                      ? 'border-emerald-500 bg-emerald-950/20 text-emerald-450 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
                       : 'border-slate-900 bg-slate-950/40 text-slate-350 hover:border-slate-805 hover:bg-slate-900/40'
                   }`}
                 >
@@ -921,7 +959,7 @@ export default function DraftedXIGame() {
         {/* Draft IQ Mode Toggle */}
         <div className="w-full max-w-md p-4 rounded-2xl glass border border-slate-900 flex justify-between items-center gap-4 select-none">
           <div className="flex-1 min-w-0">
-            <h4 className="text-xs font-display font-black uppercase text-white tracking-wider flex items-center gap-1.5 leading-none">
+            <h4 className="text-xs font-display font-black uppercase text-foreground tracking-wider flex items-center gap-1.5 leading-none">
               🧠 Draft IQ Mode
             </h4>
             <p className="text-[10px] text-slate-400 mt-1 leading-normal font-semibold">
@@ -935,7 +973,7 @@ export default function DraftedXIGame() {
             }`}
           >
             <div
-              className={`bg-slate-950 w-4.5 h-4.5 rounded-full shadow-md transform transition-transform duration-300 ${
+              className={`bg-white w-4.5 h-4.5 rounded-full shadow-md transform transition-transform duration-300 ${
                 draftIQMode ? 'translate-x-5.5' : 'translate-x-0'
               }`}
             />
@@ -952,30 +990,46 @@ export default function DraftedXIGame() {
             </span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-            {formations.map((f) => (
-              <button
-                key={f.type}
-                onClick={() => handleSelectFormation(f.type)}
-                className="w-full p-5 rounded-3xl glass hover:bg-slate-900/60 hover:border-emerald-500/40 text-left transition-all duration-300 group active:scale-98 cursor-pointer flex flex-col justify-between aspect-[3/1.8]"
-              >
-                <div className="flex justify-between items-center w-full">
-                  <span className="text-xl font-display font-black text-white group-hover:text-emerald-450 transition-colors">
-                    {f.label}
-                  </span>
-                  <span className="text-[9px] font-extrabold text-slate-500 bg-slate-950 px-2 py-0.5 rounded border border-slate-900 font-display">
-                    {f.type}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-slate-350 mt-2 leading-relaxed">
+            {formations.map((f) => {
+              const active = formation === f.type;
+              return (
+                <button
+                  key={f.type}
+                  onClick={() => handleSelectFormation(f.type)}
+                  className={`w-full p-3.5 rounded-2xl border text-left transition-all duration-300 group active:scale-98 cursor-pointer flex flex-col justify-between ${
+                    active
+                      ? 'border-emerald-500 bg-emerald-950/20 shadow-[0_0_15px_rgba(16,185,129,0.15)] ring-2 ring-emerald-500/30'
+                      : 'border-slate-900 bg-slate-950/40 hover:bg-slate-900/40 hover:border-slate-800'
+                  }`}
+                >
+                  <div className="flex justify-between items-center w-full leading-none">
+                    <span className={`text-base font-display font-black transition-colors ${active ? 'text-emerald-450' : 'text-foreground group-hover:text-emerald-450'}`}>
+                      {f.label}
+                    </span>
+                    <span className="text-[8px] font-extrabold text-slate-500 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-900 font-display">
+                      {f.type}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1.5 leading-tight font-semibold">
                     {f.desc}
                   </p>
-                  <div className="h-1 w-8 rounded bg-slate-800 group-hover:bg-emerald-500 group-hover:w-16 transition-all duration-300 mt-3.5" />
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         </div>
+
+        {/* Sticky proceed button */}
+        {formation && (
+          <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent border-t border-slate-900/30 md:relative md:bg-none md:border-none md:p-0 z-40 flex justify-center animate-card-deal">
+            <button
+              onClick={handleConfirmTactics}
+              className="w-full max-w-sm py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/35 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer text-center animate-pulse"
+            >
+              Confirm & Start Draft ➔
+            </button>
+          </div>
+        )}
       </div>
     );
   };
@@ -1008,7 +1062,7 @@ export default function DraftedXIGame() {
             <span className="text-[9px] font-black text-emerald-450 uppercase tracking-widest block mb-1">
               {isDailyChallenge ? `🏆 CHALLENGE: ${todayChallenge?.title}` : '⚽ CLASSIC LEAGUE RUN'}
             </span>
-            <h2 className="text-lg font-display font-black text-white uppercase tracking-wider">
+            <h2 className="text-lg font-display font-black text-foreground uppercase tracking-wider">
               {isFinished ? 'Draft Completed!' : `Pick #${currentSlotIndex + 1} of 11`}
             </h2>
           </div>
@@ -1055,61 +1109,65 @@ export default function DraftedXIGame() {
               </span>
 
               {/* Reroll Interface */}
-              <div className="flex items-center gap-3 select-none">
-                {/* Reroll Tokens representation */}
-                <div className="flex gap-1.5" title={`${rerollsRemaining} rerolls left`}>
-                  {Array.from({ length: 3 }).map((_, idx) => {
-                    const active = idx < rerollsRemaining;
-                    return (
-                      <span
-                        key={idx}
-                        className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                          active
-                            ? 'bg-amber-450 shadow-[0_0_8px_rgba(245,158,11,0.6)] animate-pulse'
-                            : 'bg-slate-800 border border-slate-900'
-                        }`}
-                      />
-                    );
-                  })}
-                </div>
+              {!freeSearchEnabled && (
+                <div className="flex items-center gap-3 select-none">
+                  {/* Reroll Tokens representation */}
+                  <div className="flex gap-1.5" title={`${rerollsRemaining} rerolls left`}>
+                    {Array.from({ length: 3 }).map((_, idx) => {
+                      const active = idx < rerollsRemaining;
+                      return (
+                        <span
+                          key={idx}
+                          className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                            active
+                              ? 'bg-amber-450 shadow-[0_0_8px_rgba(245,158,11,0.6)] animate-pulse'
+                              : 'bg-slate-800 border border-slate-900'
+                          }`}
+                        />
+                      );
+                    })}
+                  </div>
 
-                <button
-                  onClick={handleRerollOptions}
-                  disabled={rerollsRemaining <= 0}
-                  className={`px-3 py-1.5 rounded-xl font-display font-black text-[9px] uppercase tracking-wider transition-all select-none border cursor-pointer ${
-                    rerollsRemaining > 0
-                      ? 'bg-amber-500/10 text-amber-450 border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/40 active:scale-95'
-                      : 'bg-slate-900/50 text-slate-600 border-slate-950 cursor-not-allowed'
-                  }`}
-                >
-                  🔄 Reroll ({rerollsRemaining})
-                </button>
-              </div>
+                  <button
+                    onClick={handleRerollOptions}
+                    disabled={rerollsRemaining <= 0}
+                    className={`px-3 py-1.5 rounded-xl font-display font-black text-[9px] uppercase tracking-wider transition-all select-none border cursor-pointer ${
+                      rerollsRemaining > 0
+                        ? 'bg-amber-500/10 text-amber-450 border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/40 active:scale-95'
+                        : 'bg-slate-900/50 text-slate-600 border-slate-950 cursor-not-allowed'
+                    }`}
+                  >
+                    🔄 Reroll ({rerollsRemaining})
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Tab Swapper */}
-            <div className="flex bg-slate-950/70 p-1 rounded-2xl border border-slate-900 w-full mb-1">
-              <button
-                onClick={() => setDraftTab('recommended')}
-                className={`flex-grow py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
-                  draftTab === 'recommended'
-                    ? 'bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/25 text-emerald-400 font-black shadow-md'
-                    : 'border border-transparent text-slate-405 hover:text-white'
-                }`}
-              >
-                🔎 Scout Picks
-              </button>
-              <button
-                onClick={() => setDraftTab('search')}
-                className={`flex-grow py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
-                  draftTab === 'search'
-                    ? 'bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/25 text-emerald-450 font-black shadow-md'
-                    : 'border border-transparent text-slate-405 hover:text-white'
-                }`}
-              >
-                🔍 Search Database
-              </button>
-            </div>
+            {freeSearchEnabled && (
+              <div className="flex bg-slate-950/70 p-1 rounded-2xl border border-slate-900 w-full mb-1">
+                <button
+                  onClick={() => setDraftTab('recommended')}
+                  className={`flex-grow py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
+                    draftTab === 'recommended'
+                      ? 'bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/25 text-emerald-400 font-black shadow-md'
+                      : 'border border-transparent text-slate-405 hover:text-foreground'
+                  }`}
+                >
+                  🔎 Scout Picks
+                </button>
+                <button
+                  onClick={() => setDraftTab('search')}
+                  className={`flex-grow py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
+                    draftTab === 'search'
+                      ? 'bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/25 text-emerald-450 font-black shadow-md'
+                      : 'border border-transparent text-slate-405 hover:text-foreground'
+                  }`}
+                >
+                  🔍 Search Database
+                </button>
+              </div>
+            )}
 
             {/* Scout Recommended Picks */}
             {draftTab === 'recommended' && draftOptions && (
@@ -1137,13 +1195,13 @@ export default function DraftedXIGame() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search name, club, season..."
-                    className="w-full bg-slate-950/80 border border-slate-900 rounded-2xl py-3.5 pl-10 pr-10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all font-semibold"
+                    className="w-full bg-slate-950/80 border border-slate-900 rounded-2xl py-3.5 pl-10 pr-10 text-xs text-foreground placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all font-semibold"
                   />
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs">🔍</span>
                   {searchQuery !== '' && (
                     <button
                       onClick={() => setSearchQuery('')}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-xs cursor-pointer"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-foreground text-xs cursor-pointer"
                     >
                       ✕
                     </button>
@@ -1158,11 +1216,11 @@ export default function DraftedXIGame() {
                     <select
                       value={selectedClub}
                       onChange={(e) => setSelectedClub(e.target.value)}
-                      className="w-full bg-slate-950/85 border border-slate-900 rounded-xl py-2 px-3 text-[10px] text-white font-bold tracking-wide focus:outline-none focus:border-emerald-500/50 cursor-pointer"
+                      className="w-full bg-slate-950/85 border border-slate-900 rounded-xl py-2 px-3 text-[10px] text-foreground font-bold tracking-wide focus:outline-none focus:border-emerald-500/50 cursor-pointer"
                     >
-                      <option value="">All Clubs</option>
+                      <option value="" className="text-foreground bg-background">All Clubs</option>
                       {allClubs.map((club) => (
-                        <option key={club} value={club}>
+                        <option key={club} value={club} className="text-foreground bg-background">
                           {club}
                         </option>
                       ))}
@@ -1175,9 +1233,9 @@ export default function DraftedXIGame() {
                     <select
                       value={selectedEra}
                       onChange={(e) => setSelectedEra(e.target.value)}
-                      className="w-full bg-slate-950/85 border border-slate-900 rounded-xl py-2 px-3 text-[10px] text-white font-bold tracking-wide focus:outline-none focus:border-emerald-500/50 cursor-pointer"
+                      className="w-full bg-slate-950/85 border border-slate-900 rounded-xl py-2 px-3 text-[10px] text-foreground font-bold tracking-wide focus:outline-none focus:border-emerald-500/50 cursor-pointer"
                     >
-                      <option value="">All Eras</option>
+                      <option value="" className="text-foreground bg-background">All Eras</option>
                       {allEras.map((era) => {
                         const eraLabels: Record<string, string> = {
                           '90s': '1990s Era',
@@ -1186,7 +1244,7 @@ export default function DraftedXIGame() {
                           'Modern': 'Modern Era',
                         };
                         return (
-                          <option key={era} value={era}>
+                          <option key={era} value={era} className="text-foreground bg-background">
                             {eraLabels[era] || era}
                           </option>
                         );
@@ -1207,7 +1265,7 @@ export default function DraftedXIGame() {
                       onChange={(e) => setOnlyMatchingPosition(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 peer-checked:after:bg-emerald-450 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-950/60 border border-slate-700 peer-checked:border-emerald-550/40"></div>
+                    <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 peer-checked:after:bg-emerald-450 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-950/60 border border-slate-700 peer-checked:border-emerald-500/40 font-semibold"></div>
                   </label>
                 </div>
 
@@ -1271,7 +1329,7 @@ export default function DraftedXIGame() {
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/25 text-emerald-450 text-[10px] font-bold uppercase tracking-widest mb-3">
             ⚡ SIMULATING LEAGUE SEASON
           </div>
-          <h2 className="text-3xl font-display font-black text-white uppercase tracking-tight">
+          <h2 className="text-3xl font-display font-black text-foreground uppercase tracking-tight">
             FIXTURES PROGRESS
           </h2>
           <p className="text-xs text-slate-400 mt-2 font-bold tracking-wider uppercase">
@@ -1291,15 +1349,15 @@ export default function DraftedXIGame() {
           <div className="grid grid-cols-4 gap-2.5 text-center">
             <div className="bg-slate-950/50 p-2.5 rounded-2xl border border-slate-900/60 leading-none">
               <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Wins</span>
-              <p className="text-lg font-display font-black text-white mt-1">{liveWins}</p>
+              <p className="text-lg font-display font-black text-foreground mt-1">{liveWins}</p>
             </div>
             <div className="bg-slate-950/50 p-2.5 rounded-2xl border border-slate-900/60 leading-none">
               <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Draws</span>
-              <p className="text-lg font-display font-black text-white mt-1">{liveDraws}</p>
+              <p className="text-lg font-display font-black text-foreground mt-1">{liveDraws}</p>
             </div>
             <div className="bg-slate-950/50 p-2.5 rounded-2xl border border-slate-900/60 leading-none">
               <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Losses</span>
-              <p className="text-lg font-display font-black text-white mt-1">{liveLosses}</p>
+              <p className="text-lg font-display font-black text-foreground mt-1">{liveLosses}</p>
             </div>
             <div className="bg-slate-950/50 p-2.5 rounded-2xl border border-slate-900/60 leading-none">
               <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Diff</span>
@@ -1330,7 +1388,7 @@ export default function DraftedXIGame() {
               
               if (match) {
                 if (match.outcome === 'W') {
-                  bgColor = 'bg-emerald-500 border border-emerald-450';
+                  bgColor = 'bg-emerald-550 border border-emerald-450';
                   textLabel = 'W';
                   glowEffect = 'shadow-[0_0_8px_rgba(16,185,129,0.5)]';
                 } else if (match.outcome === 'D') {
@@ -1374,9 +1432,9 @@ export default function DraftedXIGame() {
             {liveMatches.length > 0 ? (
               liveMatches.map((match, idx) => {
                 const outcomeColors = {
-                  W: 'bg-emerald-550/10 border-emerald-500/30 text-emerald-400',
+                  W: 'bg-emerald-950/20 border-emerald-500/20 text-emerald-450',
                   D: 'bg-slate-500/10 border-slate-800 text-slate-350',
-                  L: 'bg-rose-550/10 border-rose-500/30 text-rose-455',
+                  L: 'bg-rose-950/20 border-rose-500/20 text-rose-455',
                 }[match.outcome];
 
                 const outcomeLabel = {
@@ -1394,13 +1452,13 @@ export default function DraftedXIGame() {
                       <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">
                         Game {38 - idx}
                       </span>
-                      <span className="text-xs font-bold text-white uppercase mt-1">
+                      <span className="text-xs font-bold text-foreground uppercase mt-1">
                         vs {match.opponent}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-display font-black text-white">
+                      <span className="text-sm font-display font-black text-foreground">
                         {match.ourScore} - {match.opponentScore}
                       </span>
                       <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border uppercase leading-none font-display">
@@ -1491,7 +1549,7 @@ export default function DraftedXIGame() {
             ⚽ FIXTURES COMPLETE
           </div>
           
-          <h2 className="text-3xl font-display font-black text-white uppercase tracking-tight">
+          <h2 className="text-3xl font-display font-black text-foreground uppercase tracking-tight">
             CAMPAIGN DEBRIEF
           </h2>
           
@@ -1555,12 +1613,12 @@ export default function DraftedXIGame() {
             </div>
           )}
 
-          <p className="text-5xl font-display font-black text-white leading-none tracking-tight">
+          <p className="text-5xl font-display font-black text-foreground leading-none tracking-tight">
             {simResult.wins}W - {simResult.draws}D - {simResult.losses}L
           </p>
           
           <p className="text-xs font-bold text-slate-350 mt-2 leading-none uppercase tracking-wide">
-            Record: <span className="text-white font-extrabold">{simResult.points} PTS</span> • Goals: <span className="text-white font-extrabold">{simResult.goalsFor}F / {simResult.goalsAgainst}A</span>
+            Record: <span className="text-foreground font-extrabold">{simResult.points} PTS</span> • Goals: <span className="text-foreground font-extrabold">{simResult.goalsFor}F / {simResult.goalsAgainst}A</span>
           </p>
 
           <div className="h-[1.5px] w-12 bg-slate-900 my-4" />
@@ -1686,7 +1744,7 @@ export default function DraftedXIGame() {
               <div className="flex items-center gap-2">
                 <span className="text-xl">📋</span>
                 <div className="flex-1 leading-none">
-                  <h3 className="text-md font-display font-black text-white uppercase tracking-tight">
+                  <h3 className="text-md font-display font-black text-foreground uppercase tracking-tight">
                     Manager's Tactical Report
                   </h3>
                   <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">
@@ -1713,7 +1771,7 @@ export default function DraftedXIGame() {
                     <div key={idx} className={`p-4.5 rounded-2xl border ${borderColors} flex gap-3.5 leading-normal text-xs`}>
                       <span className="text-base flex-shrink-0 mt-0.5">{icon}</span>
                       <div className="flex-1 space-y-1">
-                        <h4 className="font-extrabold uppercase text-[11px] tracking-wide leading-tight text-white">
+                        <h4 className="font-extrabold uppercase text-[11px] tracking-wide leading-tight text-foreground">
                           {adv.title}
                         </h4>
                         <p className="text-slate-400 font-medium leading-relaxed">
@@ -1736,7 +1794,7 @@ export default function DraftedXIGame() {
           >
             <div className="flex items-center gap-2.5">
               <span className="text-lg">📅</span>
-              <span className="text-xs font-display font-black text-white uppercase tracking-wider">
+              <span className="text-xs font-display font-black text-foreground uppercase tracking-wider">
                 {showFixturesBreakdown ? 'Hide' : 'Show'} Detailed Season Fixtures
               </span>
             </div>
@@ -1766,15 +1824,15 @@ export default function DraftedXIGame() {
               <div className="w-full p-4.5 rounded-[32px] glass border border-slate-900 max-h-[420px] overflow-y-auto flex flex-col gap-2.5 scroll-smooth custom-scrollbar animate-card-deal">
                 {simResult.matches.map((match, idx) => {
                   const outcomeColors = {
-                    W: 'bg-emerald-550/10 border-emerald-500/20 text-emerald-400',
+                    W: 'bg-emerald-950/20 border-emerald-500/20 text-emerald-450',
                     D: 'bg-slate-500/10 border-slate-900 text-slate-350',
-                    L: 'bg-rose-550/10 border-rose-500/20 text-rose-455',
+                    L: 'bg-rose-950/20 border-rose-500/20 text-rose-455',
                   }[match.outcome];
 
                   const outcomeBadge = {
-                    W: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400',
-                    D: 'bg-slate-900 border-slate-800 text-slate-400',
-                    L: 'bg-rose-500/15 border-rose-500/30 text-rose-400',
+                    W: 'bg-emerald-950/30 border-emerald-500/30 text-emerald-450',
+                    D: 'bg-slate-900 border-slate-800 text-slate-450',
+                    L: 'bg-rose-950/30 border-rose-500/30 text-rose-455',
                   }[match.outcome];
 
                   return (
@@ -1791,7 +1849,7 @@ export default function DraftedXIGame() {
                             {match.outcome === 'W' ? 'WIN' : match.outcome === 'D' ? 'DRAW' : 'LOSS'}
                           </span>
                         </div>
-                        <h4 className="text-sm font-display font-black text-white mt-1.5 leading-none uppercase">
+                        <h4 className="text-sm font-display font-black text-foreground mt-1.5 leading-none uppercase">
                           vs {match.opponent}
                         </h4>
                         <p className="text-[10px] text-slate-400 leading-normal mt-1 italic">
@@ -1800,7 +1858,7 @@ export default function DraftedXIGame() {
                       </div>
 
                       <div className="text-right flex flex-col items-end gap-1 flex-shrink-0 self-center leading-none">
-                        <span className="text-md font-display font-black text-white tracking-tight">
+                        <span className="text-md font-display font-black text-foreground tracking-tight">
                           {match.ourScore} - {match.opponentScore}
                         </span>
                         <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">
@@ -1819,7 +1877,7 @@ export default function DraftedXIGame() {
         <div className="mt-4 mb-6 relative z-10 flex flex-col sm:flex-row gap-3 w-full">
           <button
             onClick={handleStartDraft}
-            className="flex-1 py-4 px-6 rounded-2xl bg-slate-900 border border-slate-800 text-white hover:bg-slate-800 font-display font-black text-sm uppercase tracking-wider transition-all duration-300 transform active:scale-98 cursor-pointer text-center"
+            className="flex-1 py-4 px-6 rounded-2xl bg-slate-900 border border-slate-800 text-foreground hover:bg-slate-800 font-display font-black text-sm uppercase tracking-wider transition-all duration-300 transform active:scale-98 cursor-pointer text-center"
           >
             🎮 Build Another Team
           </button>
@@ -1857,7 +1915,7 @@ export default function DraftedXIGame() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans flex flex-col pitch-bg w-full overflow-x-hidden">
+    <div className="min-h-screen bg-slate-950 text-foreground font-sans flex flex-col pitch-bg w-full overflow-x-hidden">
       {/* Header */}
       <header className="w-full py-4 px-6 border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50 flex justify-between items-center select-none shadow-lg">
         <button
@@ -1873,7 +1931,7 @@ export default function DraftedXIGame() {
               }
             }
           }}
-          className="text-lg font-display font-black tracking-tight text-white uppercase hover:text-emerald-400 transition-colors cursor-pointer"
+          className="text-lg font-display font-black tracking-tight text-foreground uppercase hover:text-emerald-400 transition-colors cursor-pointer"
         >
           MY DRAFTED <span className="text-emerald-400">XI</span>
         </button>

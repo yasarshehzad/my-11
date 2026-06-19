@@ -47,7 +47,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   const rarityConfig = {
     legend: {
       border: 'border-amber-500/70',
-      bg: 'bg-gradient-to-b from-amber-950/45 via-slate-900/90 to-slate-950/98',
+      bg: 'bg-gradient-to-b from-amber-950/45 via-zinc-900/90 to-zinc-950/98',
       text: 'text-amber-400',
       ratingText: 'text-amber-300 font-extrabold',
       glow: 'animate-glow-legend shadow-[0_0_20px_rgba(245,158,11,0.2)]',
@@ -57,7 +57,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     },
     elite: {
       border: 'border-purple-500/70',
-      bg: 'bg-gradient-to-b from-purple-950/45 via-slate-900/90 to-slate-950/98',
+      bg: 'bg-gradient-to-b from-purple-950/45 via-zinc-900/90 to-zinc-950/98',
       text: 'text-purple-400',
       ratingText: 'text-purple-300 font-extrabold',
       glow: 'animate-glow-elite shadow-[0_0_20px_rgba(168,85,247,0.2)]',
@@ -67,7 +67,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     },
     rare: {
       border: 'border-blue-500/70',
-      bg: 'bg-gradient-to-b from-blue-950/45 via-slate-900/90 to-slate-950/98',
+      bg: 'bg-gradient-to-b from-blue-950/45 via-zinc-900/90 to-zinc-950/98',
       text: 'text-blue-400',
       ratingText: 'text-blue-300 font-extrabold',
       glow: 'animate-glow-rare shadow-[0_0_15px_rgba(59,130,246,0.2)]',
@@ -77,7 +77,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     },
     cult: {
       border: 'border-emerald-500/70',
-      bg: 'bg-gradient-to-b from-emerald-950/45 via-slate-900/90 to-slate-950/98',
+      bg: 'bg-gradient-to-b from-emerald-950/45 via-zinc-900/90 to-zinc-950/98',
       text: 'text-emerald-400',
       ratingText: 'text-emerald-300 font-extrabold',
       glow: 'shadow-[0_0_15px_rgba(16,185,129,0.2)] border-emerald-500/50',
@@ -86,33 +86,33 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
       label: 'CULT HERO',
     },
     solid: {
-      border: 'border-slate-500/60',
-      bg: 'bg-gradient-to-b from-slate-800/40 via-slate-900/90 to-slate-950/98',
-      text: 'text-slate-300',
-      ratingText: 'text-slate-200 font-semibold',
+      border: 'border-zinc-500/60',
+      bg: 'bg-gradient-to-b from-zinc-800/40 via-zinc-900/90 to-zinc-950/98',
+      text: 'text-zinc-300',
+      ratingText: 'text-zinc-200 font-semibold',
       glow: 'shadow-none',
-      badge: 'bg-slate-700/20 text-slate-300 border-slate-700/40',
-      accent: 'from-slate-400 to-slate-500',
+      badge: 'bg-zinc-700/20 text-zinc-300 border-zinc-700/40',
+      accent: 'from-zinc-400 to-zinc-500',
       label: 'SOLID',
     },
     common: {
-      border: 'border-slate-800',
-      bg: 'bg-gradient-to-b from-slate-900/40 via-slate-950/90 to-slate-950/98',
-      text: 'text-slate-400',
-      ratingText: 'text-slate-350 font-bold',
+      border: 'border-zinc-800',
+      bg: 'bg-gradient-to-b from-zinc-900/40 via-zinc-950/90 to-zinc-950/98',
+      text: 'text-zinc-450',
+      ratingText: 'text-zinc-300 font-bold',
       glow: 'shadow-none',
-      badge: 'bg-slate-800/40 text-slate-450 border-slate-700/50',
-      accent: 'from-slate-500 to-slate-600',
+      badge: 'bg-zinc-800/45 text-zinc-400 border-zinc-700/50',
+      accent: 'from-zinc-500 to-zinc-600',
       label: 'COMMON',
     },
   }[rarity] || {
-    border: 'border-slate-800',
-    bg: 'bg-gradient-to-b from-slate-900/40 via-slate-950/90 to-slate-950/98',
-    text: 'text-slate-400',
-    ratingText: 'text-slate-350 font-bold',
+    border: 'border-zinc-800',
+    bg: 'bg-gradient-to-b from-zinc-900/40 via-zinc-950/90 to-zinc-950/98',
+    text: 'text-zinc-450',
+    ratingText: 'text-zinc-300 font-bold',
     glow: 'shadow-none',
-    badge: 'bg-slate-850 text-slate-450 border-slate-750',
-    accent: 'from-slate-500 to-slate-600',
+    badge: 'bg-zinc-800 text-zinc-400 border-zinc-750',
+    accent: 'from-zinc-500 to-zinc-600',
     label: 'COMMON',
   };
 
@@ -157,12 +157,13 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   const keyStats = getTopStats();
 
   // LARGE LAYOUT (Used in selection screen)
+  // LARGE LAYOUT (Used in selection screen)
   if (layout === 'large') {
     return (
       <button
         onClick={onClick}
         className={`w-full max-w-[245px] min-h-[395px] rounded-2xl border ${rarityConfig.border} ${rarityConfig.bg} ${rarityConfig.glow} card-shine flex flex-col p-4 text-left relative transition-all duration-300 transform hover:-translate-y-2 active:scale-95 ${
-          selected ? 'ring-2 ring-emerald-400 ring-offset-4 ring-offset-slate-950 scale-102' : ''
+          selected ? 'ring-2 ring-emerald-400 ring-offset-4 ring-offset-zinc-950 scale-102' : ''
         } ${pulse ? 'animate-pulse' : ''} cursor-pointer select-none`}
       >
         {/* Dynamic Card Overlay Light Effect */}
@@ -174,7 +175,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
             <span className={`text-4xl font-display font-black tracking-tight ${rarityConfig.ratingText}`}>
               {draftIQActive ? '?' : rating}
             </span>
-            <span className="text-[10px] font-bold tracking-wider text-slate-400 bg-slate-950/70 px-1.5 py-0.5 rounded mt-1 uppercase font-display leading-none">
+            <span className="text-[10px] font-bold tracking-wider text-zinc-400 bg-zinc-950/70 px-1.5 py-0.5 rounded mt-1 uppercase font-display leading-none">
               {primaryPosition}
             </span>
           </div>
@@ -185,7 +186,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
               {rarityConfig.label}
             </span>
             {/* Era Badge */}
-            <span className="text-[8px] font-bold text-slate-400 bg-slate-950/70 px-1.5 py-0.5 rounded border border-slate-800/80 uppercase tracking-wider leading-none">
+            <span className="text-[8px] font-bold text-zinc-400 bg-zinc-950/70 px-1.5 py-0.5 rounded border border-zinc-800/80 uppercase tracking-wider leading-none">
               {era}
             </span>
           </div>
@@ -197,10 +198,10 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
           <h3 className="text-2xl font-display font-black leading-none text-white uppercase tracking-tight line-clamp-1">
             {displayName}
           </h3>
-          <p className="text-xs font-bold text-slate-300 mt-1 truncate leading-none uppercase tracking-wide">
+          <p className="text-xs font-bold text-zinc-300 mt-1 truncate leading-none uppercase tracking-wide">
             {club} • {season}
           </p>
-          <span className="text-[9px] font-medium text-slate-500 block truncate leading-none mt-1">
+          <span className="text-[9px] font-medium text-zinc-500 block truncate leading-none mt-1">
             {playerName} • {nationality}
           </span>
         </div>
@@ -208,27 +209,27 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         {/* Special Trait & Strengths */}
         <div className="mt-3.5 flex flex-col gap-2 relative z-10 flex-1 w-full">
           {specialTrait && (
-            <div className="bg-slate-950/60 border border-slate-800/80 rounded px-2.5 py-1 w-fit flex items-center leading-none">
+            <div className="bg-zinc-950/60 border border-zinc-800/80 rounded px-2.5 py-1 w-fit flex items-center leading-none">
               <span className="text-[9px] font-bold text-emerald-400 font-display tracking-wider uppercase">✨ {specialTrait}</span>
             </div>
           )}
 
           {oneLineDescription && (
-            <p className="text-[10.5px] text-slate-400 leading-relaxed italic line-clamp-2">
+            <p className="text-[10.5px] text-zinc-400 leading-relaxed italic line-clamp-2">
               “{oneLineDescription}”
             </p>
           )}
         </div>
 
         {/* Divider line */}
-        <div className="h-[1px] w-full bg-slate-800/60 my-2.5 relative z-10" />
+        <div className="h-[1px] w-full bg-zinc-800/60 my-2.5 relative z-10" />
 
         {/* 3 Key Stat Chips Row */}
         <div className="flex justify-between items-center gap-2 relative z-10 w-full">
           {keyStats.map((st, idx) => (
-            <div key={idx} className="flex-1 bg-slate-950/50 py-1.5 px-2 rounded-xl border border-slate-850/60 flex flex-col items-center leading-none">
-              <span className="text-[8px] font-semibold text-slate-500 uppercase tracking-wider">{st.label}</span>
-              <span className="text-sm font-display font-black text-slate-200 mt-1">{draftIQActive ? '?' : st.value}</span>
+            <div key={idx} className="flex-1 bg-zinc-950/50 py-1.5 px-2 rounded-xl border border-zinc-800/60 flex flex-col items-center leading-none">
+              <span className="text-[8px] font-semibold text-zinc-500 uppercase tracking-wider">{st.label}</span>
+              <span className="text-sm font-display font-black text-zinc-200 mt-1">{draftIQActive ? '?' : st.value}</span>
             </div>
           ))}
         </div>
@@ -250,7 +251,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
           <span className={`text-[12px] font-black font-display ${rarityConfig.text}`}>
             {draftIQActive ? '?' : rating}
           </span>
-          <span className="text-[8px] font-bold text-slate-450 bg-slate-950/70 px-0.5 py-0.2 rounded uppercase">
+          <span className="text-[8px] font-bold text-zinc-400 bg-zinc-950/70 px-0.5 py-0.2 rounded uppercase">
             {primaryPosition}
           </span>
         </div>
@@ -263,9 +264,9 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         </div>
 
         {/* Era Tag abbreviation at the bottom */}
-        <div className="flex justify-between items-center text-[7px] text-slate-500 border-t border-slate-850/60 pt-0.5 mt-0.5 leading-none">
+        <div className="flex justify-between items-center text-[7px] text-zinc-500 border-t border-zinc-800/60 pt-0.5 mt-0.5 leading-none">
           <span className="truncate max-w-[30px] font-semibold">{getAbbreviation(club)}</span>
-          <span className={`${rarity === 'legend' ? 'text-amber-400 font-bold' : rarity === 'elite' ? 'text-purple-400' : rarity === 'cult' ? 'text-emerald-400' : 'text-slate-400'}`}>
+          <span className={`${rarity === 'legend' ? 'text-amber-400 font-bold' : rarity === 'elite' ? 'text-purple-400' : rarity === 'cult' ? 'text-emerald-400' : 'text-zinc-400'}`}>
             {season.split('/')[0].substring(2)}
           </span>
         </div>
@@ -286,11 +287,11 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <h4 className="text-sm font-bold text-white truncate uppercase font-display leading-tight">{displayName}</h4>
-            <span className="text-[8.5px] font-bold px-1 py-0.2 bg-slate-950/80 rounded border border-slate-850 text-slate-450 uppercase leading-none">
+            <span className="text-[8.5px] font-bold px-1 py-0.2 bg-zinc-950/80 rounded border border-zinc-800 text-zinc-400 uppercase leading-none">
               {primaryPosition}
             </span>
           </div>
-          <p className="text-[10px] text-slate-450 truncate mt-0.5 leading-none">
+          <p className="text-[10px] text-zinc-450 truncate mt-0.5 leading-none">
             {club} • {season} • {rarityConfig.label}
           </p>
         </div>
@@ -299,9 +300,9 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
       {/* 3 Key Stats displayed in right side instead of generic grid */}
       <div className="flex gap-2 text-right items-center ml-2">
         {keyStats.map((st, idx) => (
-          <div key={idx} className="flex flex-col text-[10px] items-center px-1.5 py-0.5 bg-slate-950/30 rounded border border-slate-900/60 leading-none">
-            <span className="text-slate-500 font-semibold uppercase text-[7px]">{st.label}</span>
-            <span className="font-bold text-slate-300 mt-0.5">{draftIQActive ? '?' : st.value}</span>
+          <div key={idx} className="flex flex-col text-[10px] items-center px-1.5 py-0.5 bg-zinc-950/30 rounded border border-zinc-800/60 leading-none">
+            <span className="text-zinc-550 font-semibold uppercase text-[7px]">{st.label}</span>
+            <span className="font-bold text-zinc-350 mt-0.5">{draftIQActive ? '?' : st.value}</span>
           </div>
         ))}
       </div>

@@ -55,7 +55,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
             />
           </svg>
 
-          <span className="text-3xl font-display font-black text-white relative z-10 leading-none">
+          <span className="text-3xl font-display font-black text-foreground relative z-10 leading-none">
             {draftIQActive ? '?' : (overall || '--')}
           </span>
           <span className="text-[9px] font-black text-slate-500 tracking-widest relative z-10 mt-1 uppercase font-display">

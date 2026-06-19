@@ -21,7 +21,7 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
   const slots = FORMATION_SLOTS[formation] || [];
 
   return (
-    <div className="w-full relative aspect-[1/1.22] rounded-3xl overflow-hidden bg-gradient-to-b from-[#021813] to-[#040c09] border border-emerald-900/40 shadow-2xl shadow-emerald-950/20 select-none">
+    <div className="w-full relative aspect-[1/1.22] rounded-3xl overflow-hidden bg-gradient-to-b from-pitch-green to-pitch-green-light border border-emerald-900/40 shadow-2xl shadow-emerald-950/20 select-none">
       {/* 1. Tactical Pitch Lines overlay */}
       <div className="absolute inset-0 p-4 opacity-75 pointer-events-none">
         <div className="w-full h-full border-2 border-emerald-500/10 rounded-2xl relative">

@@ -165,7 +165,7 @@ Can you beat this? Play now at https://my-11.com`
       {generating && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex flex-col items-center justify-center animate-card-deal">
           <div className="w-12 h-12 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin mb-4" />
-          <h3 className="text-lg font-display font-black text-white uppercase tracking-wider">Generating Share Card...</h3>
+          <h3 className="text-lg font-display font-black text-foreground uppercase tracking-wider">Generating Share Card...</h3>
           <p className="text-xs text-slate-400 mt-1 uppercase font-semibold">Creating high-res 1080x1920 PNG</p>
         </div>
       )}
@@ -180,8 +180,8 @@ Can you beat this? Play now at https://my-11.com`
 
         <div className="flex justify-between items-start mb-5 relative z-10">
           <div>
-            <h2 className="text-2xl font-display font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-emerald-400 uppercase leading-none">
-              MY DRAFTED XI
+            <h2 className="text-2xl font-display font-black tracking-tight text-foreground uppercase leading-none">
+              MY DRAFTED <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">XI</span>
             </h2>
             <p className="text-[9px] font-bold text-slate-500 tracking-widest uppercase mt-1">
               {isDailyChallenge ? `Daily Challenge: ${dailyChallengeTitle}` : 'Football Draft League'}
@@ -214,18 +214,18 @@ Can you beat this? Play now at https://my-11.com`
           
           <div className="flex justify-between items-end">
             <div>
-              <p className="text-3xl font-display font-black text-white leading-none tracking-tight">
+              <p className="text-3xl font-display font-black text-foreground leading-none tracking-tight">
                 {simResult.wins}W - {simResult.draws}D - {simResult.losses}L
               </p>
-              <p className="text-xs text-slate-400 font-semibold mt-1.5 leading-none">
-                Points: <span className="text-white font-bold">{simResult.points} PTS</span> • Tier: <span className="text-emerald-400 font-bold">Top {simResult.percentile}%</span>
+              <p className="text-xs text-slate-455 font-semibold mt-1.5 leading-none">
+                Points: <span className="text-foreground font-bold">{simResult.points} PTS</span> • Tier: <span className="text-emerald-450 font-bold">Top {simResult.percentile}%</span>
               </p>
             </div>
 
             <div className="flex items-center gap-1.5">
               <div className="flex flex-col items-center bg-slate-900/40 px-2 py-1.5 rounded-xl border border-slate-850">
                 <span className="text-[7px] font-bold text-slate-500 uppercase leading-none">OVR</span>
-                <span className="text-xl font-display font-black text-white leading-none mt-1">
+                <span className="text-xl font-display font-black text-foreground leading-none mt-1">
                   {stats.overall}
                 </span>
               </div>
@@ -288,7 +288,7 @@ Can you beat this? Play now at https://my-11.com`
           <div className="flex-1 bg-slate-950/60 rounded-xl p-3 border border-emerald-500/10 flex flex-col justify-between h-[80px]">
             <div>
               <span className="text-[8px] font-bold text-emerald-450 uppercase tracking-widest block leading-none">⭐ Season MVP</span>
-              <span className="text-sm font-display font-black text-white uppercase truncate block mt-1 leading-tight">
+              <span className="text-sm font-display font-black text-foreground uppercase truncate block mt-1 leading-tight">
                 {simResult.mvp.displayName}
               </span>
             </div>
@@ -300,7 +300,7 @@ Can you beat this? Play now at https://my-11.com`
           <div className="flex-1 bg-slate-950/60 rounded-xl p-3 border border-rose-500/10 flex flex-col justify-between h-[80px]">
             <div>
               <span className="text-[8px] font-bold text-rose-400 uppercase tracking-widest block leading-none">⚠️ Weak Link</span>
-              <span className="text-sm font-display font-black text-white uppercase truncate block mt-1 leading-tight">
+              <span className="text-sm font-display font-black text-foreground uppercase truncate block mt-1 leading-tight">
                 {simResult.weakLink.displayName}
               </span>
             </div>
@@ -340,14 +340,14 @@ Can you beat this? Play now at https://my-11.com`
         <div className="grid grid-cols-2 gap-2">
           <button
             onClick={handleDownloadImage}
-            className="py-3 px-4 rounded-2xl bg-slate-900 border border-slate-800 text-white font-display font-bold text-xs uppercase tracking-wider hover:bg-slate-850 transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+            className="py-3 px-4 rounded-2xl bg-slate-900 border border-slate-800 text-slate-350 font-display font-bold text-xs uppercase tracking-wider hover:bg-slate-850 transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
           >
             <span>📥</span> Download Image
           </button>
           
           <button
             onClick={handleCopyText}
-            className="py-3 px-4 rounded-2xl bg-slate-900 border border-slate-800 text-white font-display font-bold text-xs uppercase tracking-wider hover:bg-slate-850 transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+            className="py-3 px-4 rounded-2xl bg-slate-900 border border-slate-800 text-slate-350 font-display font-bold text-xs uppercase tracking-wider hover:bg-slate-850 transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
           >
             {copied ? (
               <span className="text-emerald-400">Copied!</span>
