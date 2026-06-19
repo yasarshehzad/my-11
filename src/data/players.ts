@@ -2237,26 +2237,26 @@ function generatePlayersDatabase(): Player[] {
       let specialTrait = stage.trait || base.baseTrait;
 
       // Position-based sanitization of stage traits (e.g. preventing defenders/GKs from getting Golden Boot Form)
-      if (specialTrait === 'Golden Boot Form') {
+      if (stage.trait === 'Golden Boot Form') {
         const pos = base.primaryPosition;
         if (pos === 'GK') {
           specialTrait = 'Clean Sheet Master';
         } else if (pos === 'CB' || pos === 'LB' || pos === 'RB') {
-          specialTrait = 'Lockdown Defender';
+          // Playmaker fullbacks keep their Creator Supreme / Set Piece Master traits
+          if (base.baseTrait === 'Creator Supreme') {
+            specialTrait = 'Creator Supreme';
+          } else {
+            specialTrait = 'Lockdown Defender';
+          }
         } else if (pos === 'CDM' || pos === 'CM' || pos === 'CAM' || pos === 'LM' || pos === 'RM') {
-          specialTrait = 'Midfield Maestro';
-        }
-      }
-
-      if (rarity === 'legend' || rating >= 94) {
-        if (base.primaryPosition === 'ST' || base.primaryPosition === 'CF' || base.primaryPosition === 'LW' || base.primaryPosition === 'RW') {
-          specialTrait = 'Golden Boot Form';
-        } else if (base.primaryPosition === 'CB' || base.primaryPosition === 'LB' || base.primaryPosition === 'RB') {
-          specialTrait = 'Lockdown Defender';
-        } else if (base.primaryPosition === 'GK') {
-          specialTrait = 'Shot Stopper';
+          if (base.baseTrait === 'Creator Supreme' || base.baseTrait === 'Midfield General' || base.baseTrait === 'Box-to-Box Engine') {
+            specialTrait = base.baseTrait;
+          } else {
+            specialTrait = 'Midfield Maestro';
+          }
         } else {
-          specialTrait = 'Creator Supreme';
+          // ST, CF, LW, RW keep their baseTrait if it's specific, or get Golden Boot Form
+          specialTrait = base.baseTrait !== 'Chaos Merchant' ? base.baseTrait : 'Golden Boot Form';
         }
       }
 
@@ -2270,7 +2270,7 @@ function generatePlayersDatabase(): Player[] {
         return Math.min(99, Math.max(35, Math.round(baseVal * scaleFactor)));
       };
 
-      const baseAvg = 80; // normalized baseline average
+      const baseAvg = 84; // normalized baseline average (refined from 80 for realistic scaling)
       const scaleFactor = rating / baseAvg;
 
       const pos = base.primaryPosition;
@@ -2286,8 +2286,10 @@ function generatePlayersDatabase(): Player[] {
         baseAttack = 68; baseMidfield = 88; baseDefence = 55;
       } else if (pos === 'CDM') {
         baseAttack = 50; baseMidfield = 85; baseDefence = 82;
-      } else if (pos === 'CB' || pos === 'LB' || pos === 'RB') {
-        baseAttack = 40; baseMidfield = 60; baseDefence = 90;
+      } else if (pos === 'CB') {
+        baseAttack = 35; baseMidfield = 50; baseDefence = 92;
+      } else if (pos === 'LB' || pos === 'RB') {
+        baseAttack = 55; baseMidfield = 68; baseDefence = 80; // Fullbacks have lower base defense than CBs
       } else if (pos === 'GK') {
         baseAttack = 12; baseMidfield = 15; baseDefence = 92;
       }
@@ -2323,9 +2325,9 @@ function generatePlayersDatabase(): Player[] {
         
         // Fullback playmaker adjustments (Trent, Cancelo)
         if (pos === 'LB' || pos === 'RB') {
-          baseDefence = 72; // not 90
-          baseDefending = 64; // not 82
-          basePaceVal = 78; // not 88
+          baseDefence = 70; // Playmaker fullback base defense
+          baseDefending = 62;
+          basePaceVal = 78;
           baseAttack = Math.max(baseAttack, 55);
         }
       }
@@ -2353,7 +2355,7 @@ function generatePlayersDatabase(): Player[] {
         base.playStyle === 'Stopper' ||
         base.playStyle === 'Ball Winning Midfielder'
       ) {
-        baseDefence = Math.max(baseDefence, 92);
+        baseDefence = Math.max(baseDefence, pos === 'CB' ? 92 : 86); // CB gets 92, Fullback gets 86
         baseDefending = Math.max(baseDefending, 90);
         basePhysicalVal = Math.max(basePhysicalVal, 84);
       }
