@@ -284,7 +284,7 @@ export default function DraftedXIGame() {
       
       // 2. Generate random eligible unique squad
       const rule = useChallenge && todayChallenge ? todayChallenge.rule : undefined;
-      const randomSquad = generateRandomSquad(randomFormation, rule);
+      const randomSquad = generateRandomSquad(randomFormation, rule, selectedLeague);
       setSelectedPlayers(randomSquad);
       setCurrentSlotIndex(11);
       setDraftOptions(null);
@@ -331,9 +331,9 @@ export default function DraftedXIGame() {
       if (isDailyChallenge && todayChallenge) {
         const seedValue = parseInt(todayDateStr.replace(/-/g, ''), 10);
         const randFn = createSeedableRandom(seedValue + 0 * 1000);
-        options = getDraftOptions(slots[0].position, Array(11).fill(null), randFn, todayChallenge.rule);
+        options = getDraftOptions(slots[0].position, Array(11).fill(null), randFn, todayChallenge.rule, selectedLeague);
       } else {
-        options = getDraftOptions(slots[0].position, Array(11).fill(null));
+        options = getDraftOptions(slots[0].position, Array(11).fill(null), undefined, undefined, selectedLeague);
       }
 
       setDraftOptions(options);
@@ -400,9 +400,9 @@ export default function DraftedXIGame() {
       if (isDailyChallenge && todayChallenge) {
         const seedValue = parseInt(todayDateStr.replace(/-/g, ''), 10);
         const randFn = createSeedableRandom(seedValue + nextIndex * 1000);
-        nextOptions = getDraftOptions(slots[nextIndex].position, updatedSelection, randFn, todayChallenge.rule);
+        nextOptions = getDraftOptions(slots[nextIndex].position, updatedSelection, randFn, todayChallenge.rule, selectedLeague);
       } else {
-        nextOptions = getDraftOptions(slots[nextIndex].position, updatedSelection);
+        nextOptions = getDraftOptions(slots[nextIndex].position, updatedSelection, undefined, undefined, selectedLeague);
       }
       setDraftOptions(nextOptions);
     } else {

@@ -276,6 +276,14 @@ function rollRarity(randomFn: () => number): 'common' | 'rare' | 'elite' | 'lege
   return 'common'; // 45%
 }
 
+const LEAGUE_MAPPING: Record<string, string> = {
+  english: 'Premier League',
+  spanish: 'La Liga',
+  german: 'Bundesliga',
+  italian: 'Serie A',
+  french: 'Ligue 1',
+};
+
 /**
  * Generates 3 unique player options for a draft slot (supporting deterministic date seeds)
  */
@@ -283,7 +291,8 @@ export function getDraftOptions(
   targetPos: Position,
   currentSelection: (Player | null)[],
   customRandom?: () => number,
-  challengeRule?: ChallengeRuleType
+  challengeRule?: ChallengeRuleType,
+  selectedLeagueId?: string
 ): [Player, Player, Player] {
   const rand = customRandom || Math.random;
 
@@ -294,6 +303,8 @@ export function getDraftOptions(
   const selectedOptions: Player[] = [];
   const relatedPositions = RELATED_POSITIONS[targetPos] || [targetPos];
   const department = POSITION_DEPARTMENTS[targetPos];
+
+  const targetLeague = selectedLeagueId ? LEAGUE_MAPPING[selectedLeagueId] : undefined;
 
   // Helper to filter players based on challenge rule restrictions
   const satisfiesChallengeRule = (p: Player) => {
@@ -317,73 +328,105 @@ export function getDraftOptions(
     }
   };
 
+  // Helper function implementing candidate matching
+  const findPool = (useLeague: boolean, rarity: 'common' | 'rare' | 'elite' | 'legend', currentSlot: number) => {
+    const matchLeague = (p: Player) => !useLeague || p.league === targetLeague;
+    let pool: Player[] = [];
+    let clean: Player[] = [];
+
+    if (currentSlot === 0 || currentSlot === 1) {
+      // 1. Strict position + rolled rarity
+      pool = players.filter(
+        (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) &&
+               p.rarity === rarity &&
+               satisfiesChallengeRule(p) &&
+               !draftedIds.has(p.id) &&
+               matchLeague(p)
+      );
+      clean = pool.filter((p) => !selectedOptions.some((sel) => sel.id === p.id));
+      if (clean.length > 0) return pool;
+
+      // 2. Strict position + any rarity
+      pool = players.filter(
+        (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) &&
+               satisfiesChallengeRule(p) &&
+               !draftedIds.has(p.id) &&
+               matchLeague(p)
+      );
+      clean = pool.filter((p) => !selectedOptions.some((sel) => sel.id === p.id));
+      if (clean.length > 0) return pool;
+
+      // 3. Related positions + any rarity
+      pool = players.filter(
+        (p) => relatedPositions.includes(p.primaryPosition) &&
+               satisfiesChallengeRule(p) &&
+               !draftedIds.has(p.id) &&
+               matchLeague(p)
+      );
+      clean = pool.filter((p) => !selectedOptions.some((sel) => sel.id === p.id));
+      if (clean.length > 0) return pool;
+
+    } else {
+      // Slot 2: Related positions or broad department match
+      // 1. Related positions + rolled rarity
+      pool = players.filter(
+        (p) => relatedPositions.includes(p.primaryPosition) &&
+               p.rarity === rarity &&
+               satisfiesChallengeRule(p) &&
+               !draftedIds.has(p.id) &&
+               matchLeague(p)
+      );
+      clean = pool.filter((p) => !selectedOptions.some((sel) => sel.id === p.id));
+      if (clean.length > 0) return pool;
+
+      // 2. Department match + rolled rarity
+      pool = players.filter(
+        (p) => POSITION_DEPARTMENTS[p.primaryPosition] === department &&
+               p.rarity === rarity &&
+               satisfiesChallengeRule(p) &&
+               !draftedIds.has(p.id) &&
+               matchLeague(p)
+      );
+      clean = pool.filter((p) => !selectedOptions.some((sel) => sel.id === p.id));
+      if (clean.length > 0) return pool;
+
+      // 3. Related positions + any rarity
+      pool = players.filter(
+        (p) => relatedPositions.includes(p.primaryPosition) &&
+               satisfiesChallengeRule(p) &&
+               !draftedIds.has(p.id) &&
+               matchLeague(p)
+      );
+      clean = pool.filter((p) => !selectedOptions.some((sel) => sel.id === p.id));
+      if (clean.length > 0) return pool;
+
+      // 4. Department match + any rarity
+      pool = players.filter(
+        (p) => POSITION_DEPARTMENTS[p.primaryPosition] === department &&
+               satisfiesChallengeRule(p) &&
+               !draftedIds.has(p.id) &&
+               matchLeague(p)
+      );
+      clean = pool.filter((p) => !selectedOptions.some((sel) => sel.id === p.id));
+      if (clean.length > 0) return pool;
+    }
+
+    return [];
+  };
+
   // Try to generate 3 unique players
   for (let slot = 0; slot < 3; slot++) {
     // 1. Roll rarity
     const rarity = rollRarity(rand);
     let eligiblePool: Player[] = [];
 
-    // Filter candidate pool
-    if (slot === 0 || slot === 1) {
-      // Slot 0 and Slot 1: Strict target position or natural secondary position
-      eligiblePool = players.filter(
-        (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) &&
-               p.rarity === rarity &&
-               satisfiesChallengeRule(p) &&
-               !draftedIds.has(p.id)
-      );
-
-      // Fallbacks if pool is empty for the rolled rarity
-      if (eligiblePool.length === 0) {
-        // Fallback 1: Strict target position (primary or secondary) of any rarity
-        eligiblePool = players.filter(
-          (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) &&
-                 satisfiesChallengeRule(p) &&
-                 !draftedIds.has(p.id)
-        );
-      }
-      if (eligiblePool.length === 0) {
-        // Fallback 2: Related positions of any rarity
-        eligiblePool = players.filter(
-          (p) => relatedPositions.includes(p.primaryPosition) &&
-                 satisfiesChallengeRule(p) &&
-                 !draftedIds.has(p.id)
-        );
-      }
-    } else {
-      // Slot 2: Related positions or broad department match
-      // Try related positions at rolled rarity first
-      eligiblePool = players.filter(
-        (p) => relatedPositions.includes(p.primaryPosition) &&
-               p.rarity === rarity &&
-               satisfiesChallengeRule(p) &&
-               !draftedIds.has(p.id)
-      );
-      if (eligiblePool.length === 0) {
-        // Try department match at rolled rarity
-        eligiblePool = players.filter(
-          (p) => POSITION_DEPARTMENTS[p.primaryPosition] === department &&
-                 p.rarity === rarity &&
-                 satisfiesChallengeRule(p) &&
-                 !draftedIds.has(p.id)
-        );
-      }
-      if (eligiblePool.length === 0) {
-        // Try related positions of any rarity
-        eligiblePool = players.filter(
-          (p) => relatedPositions.includes(p.primaryPosition) &&
-                 satisfiesChallengeRule(p) &&
-                 !draftedIds.has(p.id)
-        );
-      }
-      if (eligiblePool.length === 0) {
-        // Try department match of any rarity
-        eligiblePool = players.filter(
-          (p) => POSITION_DEPARTMENTS[p.primaryPosition] === department &&
-                 satisfiesChallengeRule(p) &&
-                 !draftedIds.has(p.id)
-        );
-      }
+    // First try within target league
+    if (targetLeague) {
+      eligiblePool = findPool(true, rarity, slot);
+    }
+    // Fallback to any league
+    if (eligiblePool.length === 0) {
+      eligiblePool = findPool(false, rarity, slot);
     }
 
     // Generic emergency fallbacks (if still empty)
@@ -932,11 +975,14 @@ export function simulateLeagueSeason(
  */
 export function generateRandomSquad(
   formation: FormationType,
-  challengeRule?: ChallengeRuleType
+  challengeRule?: ChallengeRuleType,
+  selectedLeagueId?: string
 ): Player[] {
   const slots = FORMATION_SLOTS[formation];
   const selected: Player[] = [];
   const selectedIds = new Set<string>();
+
+  const targetLeague = selectedLeagueId ? LEAGUE_MAPPING[selectedLeagueId] : undefined;
 
   const satisfiesChallengeRule = (p: Player) => {
     if (!challengeRule) return true;
@@ -961,26 +1007,48 @@ export function generateRandomSquad(
   for (let i = 0; i < slots.length; i++) {
     const slot = slots[i];
     const targetPos = slot.position;
-    
-    // Find players matching target position, challenge rules, and not already drafted
-    let pool = players.filter(
-      (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) && satisfiesChallengeRule(p) && !selectedIds.has(p.id)
-    );
+    const related = RELATED_POSITIONS[targetPos] || [targetPos];
+    const dept = POSITION_DEPARTMENTS[targetPos];
 
-    // Fallback 1: Try related positions
-    if (pool.length === 0) {
-      const related = RELATED_POSITIONS[targetPos] || [targetPos];
-      pool = players.filter(
-        (p) => related.includes(p.primaryPosition) && satisfiesChallengeRule(p) && !selectedIds.has(p.id)
+    const getCandidates = (useLeague: boolean) => {
+      const matchLeague = (p: Player) => !useLeague || p.league === targetLeague;
+
+      // 1. Exact position
+      let pool = players.filter(
+        (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) &&
+               satisfiesChallengeRule(p) &&
+               !selectedIds.has(p.id) &&
+               matchLeague(p)
       );
+      if (pool.length > 0) return pool;
+
+      // 2. Related positions
+      pool = players.filter(
+        (p) => related.includes(p.primaryPosition) &&
+               satisfiesChallengeRule(p) &&
+               !selectedIds.has(p.id) &&
+               matchLeague(p)
+      );
+      if (pool.length > 0) return pool;
+
+      // 3. Department match
+      pool = players.filter(
+        (p) => POSITION_DEPARTMENTS[p.primaryPosition] === dept &&
+               satisfiesChallengeRule(p) &&
+               !selectedIds.has(p.id) &&
+               matchLeague(p)
+      );
+      if (pool.length > 0) return pool;
+
+      return [];
+    };
+
+    let pool: Player[] = [];
+    if (targetLeague) {
+      pool = getCandidates(true);
     }
-
-    // Fallback 2: Broad department match
     if (pool.length === 0) {
-      const dept = POSITION_DEPARTMENTS[targetPos];
-      pool = players.filter(
-        (p) => POSITION_DEPARTMENTS[p.primaryPosition] === dept && satisfiesChallengeRule(p) && !selectedIds.has(p.id)
-      );
+      pool = getCandidates(false);
     }
 
     // Fallback 3: Any matching position (ignoring challenge rule if absolutely empty, to guarantee draft completion)
@@ -1006,6 +1074,27 @@ export function generateRandomSquad(
     }
   }
 
+  // Helper for one_superstar replacement pools
+  const getReplacementPool = (isLegend: boolean, targetPos: Position) => {
+    const matchLeague = (p: Player) => !targetLeague || p.league === targetLeague;
+    const matchRarity = (p: Player) => isLegend ? p.rarity === 'legend' : p.rarity !== 'legend';
+    
+    let pool = players.filter(
+      (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) &&
+             matchRarity(p) &&
+             !selectedIds.has(p.id) &&
+             matchLeague(p)
+    );
+    if (pool.length > 0) return pool;
+    
+    // Fallback to any league
+    return players.filter(
+      (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) &&
+             matchRarity(p) &&
+             !selectedIds.has(p.id)
+    );
+  };
+
   // Handle 'one_superstar' rule: replace so we have exactly 1 legend
   if (challengeRule === 'one_superstar') {
     let legendIndices: number[] = [];
@@ -1018,9 +1107,7 @@ export function generateRandomSquad(
       for (let i = 1; i < legendIndices.length; i++) {
         const idx = legendIndices[i];
         const targetPos = slots[idx].position;
-        const pool = players.filter(
-          (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) && p.rarity !== 'legend' && !selectedIds.has(p.id)
-        );
+        const pool = getReplacementPool(false, targetPos);
         const replacement = pool.length > 0 
           ? pool[Math.floor(Math.random() * pool.length)]
           : players.find(p => p.primaryPosition === targetPos && p.rarity !== 'legend');
@@ -1034,9 +1121,7 @@ export function generateRandomSquad(
       const eligibleSlots = [5, 6, 7, 8, 9, 10]; // avoid GK & defenders for a superstar attacker/midfielder
       const randomSlotIdx = eligibleSlots[Math.floor(Math.random() * eligibleSlots.length)];
       const targetPos = slots[randomSlotIdx].position;
-      const pool = players.filter(
-        (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) && p.rarity === 'legend' && !selectedIds.has(p.id)
-      );
+      const pool = getReplacementPool(true, targetPos);
       const replacement = pool.length > 0 
         ? pool[Math.floor(Math.random() * pool.length)]
         : players.find(p => p.primaryPosition === targetPos && p.rarity === 'legend');
