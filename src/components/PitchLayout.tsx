@@ -8,6 +8,7 @@ interface PitchLayoutProps {
   selectedPlayers: (Player | null)[];
   currentSlotIndex: number;
   onSlotClick?: (index: number) => void;
+  draftIQActive?: boolean;
 }
 
 export const PitchLayout: React.FC<PitchLayoutProps> = ({
@@ -15,6 +16,7 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
   selectedPlayers,
   currentSlotIndex,
   onSlotClick,
+  draftIQActive = false,
 }) => {
   const slots = FORMATION_SLOTS[formation] || [];
 
@@ -75,6 +77,7 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
                 player={player}
                 layout="compact"
                 onClick={onSlotClick ? () => onSlotClick(index) : undefined}
+                draftIQActive={draftIQActive}
               />
             ) : (
               // Slot placeholder (not drafted yet)

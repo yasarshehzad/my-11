@@ -8,6 +8,7 @@ interface StatsDisplayProps {
   chemistry: number;
   overall: number;
   logs?: ChemistryLog[];
+  draftIQActive?: boolean;
 }
 
 export const StatsDisplay: React.FC<StatsDisplayProps> = ({
@@ -17,6 +18,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
   chemistry,
   overall,
   logs = [],
+  draftIQActive = false,
 }) => {
   const [showLogs, setShowLogs] = useState(false);
 
@@ -48,13 +50,13 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
               strokeWidth="5.5"
               fill="transparent"
               strokeDasharray={270.1}
-              strokeDashoffset={270.1 - (270.1 * (overall || 50)) / 100}
+              strokeDashoffset={draftIQActive ? 270.1 : (270.1 - (270.1 * (overall || 50)) / 100)}
               strokeLinecap="round"
             />
           </svg>
 
           <span className="text-3xl font-display font-black text-white relative z-10 leading-none">
-            {overall || '--'}
+            {draftIQActive ? '?' : (overall || '--')}
           </span>
           <span className="text-[9px] font-black text-slate-500 tracking-widest relative z-10 mt-1 uppercase font-display">
             OVR
@@ -67,11 +69,11 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
           <div>
             <div className="flex justify-between items-center text-xs mb-1">
               <span className="font-bold text-slate-400 tracking-wider uppercase text-[9px]">Attack</span>
-              <span className="font-bold text-emerald-400 font-display text-sm">{attack || '--'}</span>
+              <span className="font-bold text-emerald-400 font-display text-sm">{draftIQActive ? '?' : (attack || '--')}</span>
             </div>
             <div className="h-2 w-full bg-slate-950/80 rounded-full overflow-hidden border border-slate-900">
               <div
-                style={{ width: `${attack || 0}%` }}
+                style={{ width: `${draftIQActive ? 0 : (attack || 0)}%` }}
                 className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-full transition-all duration-500 ease-out"
               />
             </div>
@@ -81,11 +83,11 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
           <div>
             <div className="flex justify-between items-center text-xs mb-1">
               <span className="font-bold text-slate-400 tracking-wider uppercase text-[9px]">Midfield</span>
-              <span className="font-bold text-sky-400 font-display text-sm">{midfield || '--'}</span>
+              <span className="font-bold text-sky-400 font-display text-sm">{draftIQActive ? '?' : (midfield || '--')}</span>
             </div>
             <div className="h-2 w-full bg-slate-950/80 rounded-full overflow-hidden border border-slate-900">
               <div
-                style={{ width: `${midfield || 0}%` }}
+                style={{ width: `${draftIQActive ? 0 : (midfield || 0)}%` }}
                 className="h-full bg-gradient-to-r from-sky-600 to-sky-400 rounded-full transition-all duration-500 ease-out"
               />
             </div>
@@ -95,11 +97,11 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
           <div>
             <div className="flex justify-between items-center text-xs mb-1">
               <span className="font-bold text-slate-400 tracking-wider uppercase text-[9px]">Defence</span>
-              <span className="font-bold text-rose-400 font-display text-sm">{defence || '--'}</span>
+              <span className="font-bold text-rose-400 font-display text-sm">{draftIQActive ? '?' : (defence || '--')}</span>
             </div>
             <div className="h-2 w-full bg-slate-950/80 rounded-full overflow-hidden border border-slate-900">
               <div
-                style={{ width: `${defence || 0}%` }}
+                style={{ width: `${draftIQActive ? 0 : (defence || 0)}%` }}
                 className="h-full bg-gradient-to-r from-rose-600 to-rose-400 rounded-full transition-all duration-500 ease-out"
               />
             </div>
@@ -109,11 +111,11 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
           <div>
             <div className="flex justify-between items-center text-xs mb-1">
               <span className="font-bold text-slate-400 tracking-wider uppercase text-[9px]">Chemistry</span>
-              <span className="font-bold text-amber-400 font-display text-sm">{chemistry || '--'}/100</span>
+              <span className="font-bold text-amber-400 font-display text-sm">{draftIQActive ? '?' : (chemistry || '--')}/100</span>
             </div>
             <div className="h-2 w-full bg-slate-950/80 rounded-full overflow-hidden border border-slate-900">
               <div
-                style={{ width: `${chemistry || 0}%` }}
+                style={{ width: `${draftIQActive ? 0 : (chemistry || 0)}%` }}
                 className="h-full bg-gradient-to-r from-amber-600 to-amber-400 rounded-full transition-all duration-500 ease-out"
               />
             </div>
@@ -122,7 +124,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
       </div>
 
       {/* 3. Collapsible Chemistry Details (Micro-interaction) */}
-      {logs.length > 0 && (
+      {!draftIQActive && logs.length > 0 && (
         <div className="mt-2 pt-2 border-t border-slate-900 w-full">
           <button
             onClick={() => setShowLogs(!showLogs)}

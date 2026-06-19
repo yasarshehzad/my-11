@@ -39,6 +39,33 @@ export default function DraftedXIGame() {
   const [stats, setStats] = useState({ attack: 0, midfield: 0, defence: 0, chemistry: 0, overall: 0 });
   const [simResult, setSimResult] = useState<SimulationResult | null>(null);
 
+  // --- Theme, Tutorial and IQ Mode States ---
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [draftIQMode, setDraftIQMode] = useState<boolean>(false);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    document.documentElement.setAttribute('data-theme', nextTheme);
+    try {
+      localStorage.setItem('drafted_xi_theme', nextTheme);
+    } catch (e) {
+      console.warn('Failed to save theme to localStorage:', e);
+    }
+  };
+
+  const handleCloseTutorial = (dontShowAgain: boolean) => {
+    setShowTutorial(false);
+    if (dontShowAgain) {
+      try {
+        localStorage.setItem('drafted_xi_hide_tutorial', 'true');
+      } catch (e) {
+        console.warn('Failed to save tutorial preference:', e);
+      }
+    }
+  };
+
   // --- Upgrade: Challenge & Streaks States ---
   const [isDailyChallenge, setIsDailyChallenge] = useState(false);
   const [todayChallenge, setTodayChallenge] = useState<ChallengeTemplate | null>(null);
@@ -133,6 +160,21 @@ export default function DraftedXIGame() {
       } catch (e) {
         console.error('Failed to parse daily challenge status', e);
       }
+    }
+
+    // 5. Load theme and tutorial preferences safely
+    let savedTheme = 'dark';
+    let hideTutorial = false;
+    try {
+      savedTheme = localStorage.getItem('drafted_xi_theme') || 'dark';
+      hideTutorial = localStorage.getItem('drafted_xi_hide_tutorial') === 'true';
+    } catch (e) {
+      console.warn('localStorage theme/tutorial failed:', e);
+    }
+    setTheme(savedTheme as 'dark' | 'light');
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    if (!hideTutorial) {
+      setShowTutorial(true);
     }
   }, []);
 
@@ -851,6 +893,30 @@ export default function DraftedXIGame() {
           </div>
         </div>
 
+        {/* Draft IQ Mode Toggle */}
+        <div className="w-full max-w-md p-4 rounded-2xl glass border border-slate-900 flex justify-between items-center gap-4 select-none">
+          <div className="flex-1 min-w-0">
+            <h4 className="text-xs font-display font-black uppercase text-white tracking-wider flex items-center gap-1.5 leading-none">
+              🧠 Draft IQ Mode
+            </h4>
+            <p className="text-[10px] text-slate-400 mt-1 leading-normal font-semibold">
+              Hide ratings & stats during drafting. Rely on your football knowledge to build chemistry and reveal scores at the end!
+            </p>
+          </div>
+          <button
+            onClick={() => setDraftIQMode(!draftIQMode)}
+            className={`w-12 h-6.5 rounded-full p-1 transition-colors duration-300 focus:outline-none cursor-pointer flex-shrink-0 relative ${
+              draftIQMode ? 'bg-emerald-500' : 'bg-slate-800'
+            }`}
+          >
+            <div
+              className={`bg-slate-950 w-4.5 h-4.5 rounded-full shadow-md transform transition-transform duration-300 ${
+                draftIQMode ? 'translate-x-5.5' : 'translate-x-0'
+              }`}
+            />
+          </button>
+        </div>
+
         {/* Divider */}
         <div className="w-full max-w-md h-[1.5px] bg-slate-900/60" />
 
@@ -937,6 +1003,7 @@ export default function DraftedXIGame() {
           formation={formation}
           selectedPlayers={selectedPlayers}
           currentSlotIndex={isFinished ? -1 : currentSlotIndex}
+          draftIQActive={draftIQMode}
         />
 
         {/* 2. Interactive Stats Display */}
@@ -947,6 +1014,7 @@ export default function DraftedXIGame() {
           chemistry={stats.chemistry}
           overall={stats.overall}
           logs={activeLogs}
+          draftIQActive={draftIQMode}
         />
 
         {/* 3. Three Player Card Options / Custom Search (Horizontal slider with edge padding) */}
@@ -995,6 +1063,7 @@ export default function DraftedXIGame() {
                       player={player}
                       layout="large"
                       onClick={() => handleSelectPlayer(player)}
+                      draftIQActive={draftIQMode}
                     />
                   </div>
                 ))}
@@ -1099,6 +1168,7 @@ export default function DraftedXIGame() {
                             player={player}
                             layout="large"
                             onClick={() => handleSelectPlayer(player)}
+                            draftIQActive={draftIQMode}
                           />
                         </div>
                       ))}
@@ -1701,12 +1771,31 @@ export default function DraftedXIGame() {
           Drafted <span className="text-emerald-400">XI</span>
         </button>
         
-        {/* Streak Indicator in Header */}
-        {streakStats.currentDailyStreak > 0 && (
-          <span className="text-[9px] font-black text-indigo-300 bg-indigo-950/60 px-3 py-1 rounded-full border border-indigo-900/60 uppercase tracking-widest flex items-center gap-1 animate-pulse leading-none font-display">
-            ⚡ STREAK: {streakStats.currentDailyStreak}D
-          </span>
-        )}
+        <div className="flex items-center gap-3 select-none">
+          {streakStats.currentDailyStreak > 0 && (
+            <span className="text-[9px] font-black text-indigo-300 bg-indigo-950/60 px-3 py-1 rounded-full border border-indigo-900/60 uppercase tracking-widest flex items-center gap-1 animate-pulse leading-none font-display">
+              ⚡ STREAK: {streakStats.currentDailyStreak}D
+            </span>
+          )}
+          
+          {/* Help Tutorial Trigger Button */}
+          <button
+            onClick={() => setShowTutorial(true)}
+            title="How to Play"
+            className="w-7 h-7 rounded-full flex items-center justify-center border border-slate-900 bg-slate-950/60 text-[9px] text-slate-400 hover:text-white hover:border-slate-800 hover:bg-slate-900/60 cursor-pointer active:scale-95 transition-all leading-none"
+          >
+            ❓
+          </button>
+
+          {/* Theme Switcher Button */}
+          <button
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            className="w-7 h-7 rounded-full flex items-center justify-center border border-slate-900 bg-slate-950/60 text-slate-400 hover:text-white hover:border-slate-800 hover:bg-slate-900/60 cursor-pointer active:scale-95 transition-all text-[11px] leading-none"
+          >
+            {theme === 'dark' ? '🌙' : '☀️'}
+          </button>
+        </div>
       </header>
 
       {/* Screen Coordinator */}
@@ -1747,6 +1836,81 @@ export default function DraftedXIGame() {
             dailyChallengeBeaten={challengeBeaten}
             domRef={exportRef}
           />
+        </div>
+      )}
+
+      {/* 4. Tutorial Modal (How to Play Popup) */}
+      {showTutorial && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-slate-950/75 backdrop-blur-sm cursor-pointer"
+            onClick={() => handleCloseTutorial(false)}
+          />
+
+          {/* Modal Container */}
+          <div className="w-full max-w-md bg-slate-950 border border-slate-900 rounded-3xl p-6 shadow-2xl relative z-10 space-y-5 animate-card-deal">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center pb-3 border-b border-slate-900">
+              <h3 className="text-md font-display font-black text-white uppercase tracking-wider flex items-center gap-1.5 leading-none">
+                ⚽ How to Play Drafted XI
+              </h3>
+              <button
+                onClick={() => handleCloseTutorial(false)}
+                className="text-slate-500 hover:text-white text-sm font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body / Steps */}
+            <div className="text-xs text-slate-350 space-y-4 font-semibold leading-relaxed">
+              <div className="flex gap-3">
+                <span className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-450 flex items-center justify-center font-display font-black flex-shrink-0">1</span>
+                <div>
+                  <h4 className="text-white uppercase font-display font-black leading-none mb-1">Set Your Strategy</h4>
+                  <p className="text-[11px] text-slate-400 font-medium">Choose your team formation and match league. Toggle <b>Draft IQ Mode</b> to test your memory without seeing player stats!</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <span className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-450 flex items-center justify-center font-display font-black flex-shrink-0">2</span>
+                <div>
+                  <h4 className="text-white uppercase font-display font-black leading-none mb-1">Draft the Ultimate Squad</h4>
+                  <p className="text-[11px] text-slate-400 font-medium">Select players for each position. Link players of the same <b>nationality</b>, <b>club</b>, or <b>era</b> to boost Chemistry & performance!</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <span className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-450 flex items-center justify-center font-display font-black flex-shrink-0">3</span>
+                <div>
+                  <h4 className="text-white uppercase font-display font-black leading-none mb-1">Simulate & Win</h4>
+                  <p className="text-[11px] text-slate-400 font-medium">Simulate a full 38-game league season. Win matches based on your ratings and chemistry to climb the standings!</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Don't show again and Action Footer */}
+            <div className="pt-3 border-t border-slate-900 flex flex-col gap-3">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  id="dont-show-checkbox"
+                  type="checkbox"
+                  className="rounded border-slate-900 text-emerald-500 focus:ring-emerald-500/20 w-4 h-4 bg-slate-950 focus:outline-none"
+                />
+                <span className="text-[10px] text-slate-550 font-bold uppercase tracking-wider">Don't show this popup again</span>
+              </label>
+              <button
+                onClick={() => {
+                  const chk = document.getElementById('dont-show-checkbox') as HTMLInputElement;
+                  handleCloseTutorial(chk?.checked || false);
+                }}
+                className="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow hover:from-emerald-400 hover:to-teal-400 cursor-pointer text-center"
+              >
+                Let's Go! ➔
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

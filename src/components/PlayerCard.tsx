@@ -7,6 +7,7 @@ interface PlayerCardProps {
   onClick?: () => void;
   selected?: boolean;
   pulse?: boolean;
+  draftIQActive?: boolean;
 }
 
 export const PlayerCard: React.FC<PlayerCardProps> = ({
@@ -15,6 +16,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   onClick,
   selected = false,
   pulse = false,
+  draftIQActive = false,
 }) => {
   const {
     playerName,
@@ -170,7 +172,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         <div className="flex justify-between items-start w-full relative z-10">
           <div className="flex flex-col items-start leading-none">
             <span className={`text-4xl font-display font-black tracking-tight ${rarityConfig.ratingText}`}>
-              {rating}
+              {draftIQActive ? '?' : rating}
             </span>
             <span className="text-[10px] font-bold tracking-wider text-slate-400 bg-slate-950/70 px-1.5 py-0.5 rounded mt-1 uppercase font-display leading-none">
               {primaryPosition}
@@ -226,7 +228,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
           {keyStats.map((st, idx) => (
             <div key={idx} className="flex-1 bg-slate-950/50 py-1.5 px-2 rounded-xl border border-slate-850/60 flex flex-col items-center leading-none">
               <span className="text-[8px] font-semibold text-slate-500 uppercase tracking-wider">{st.label}</span>
-              <span className="text-sm font-display font-black text-slate-200 mt-1">{st.value}</span>
+              <span className="text-sm font-display font-black text-slate-200 mt-1">{draftIQActive ? '?' : st.value}</span>
             </div>
           ))}
         </div>
@@ -246,7 +248,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         {/* Rating and Position */}
         <div className="flex justify-between items-start leading-none">
           <span className={`text-[12px] font-black font-display ${rarityConfig.text}`}>
-            {rating}
+            {draftIQActive ? '?' : rating}
           </span>
           <span className="text-[8px] font-bold text-slate-450 bg-slate-950/70 px-0.5 py-0.2 rounded uppercase">
             {primaryPosition}
@@ -278,7 +280,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     >
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <div className={`w-9 h-9 rounded-full flex items-center justify-center border font-display font-black text-sm flex-shrink-0 ${rarityConfig.border} ${rarityConfig.bg} ${rarityConfig.text}`}>
-          {rating}
+          {draftIQActive ? '?' : rating}
         </div>
         
         <div className="min-w-0 flex-1">
@@ -299,7 +301,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         {keyStats.map((st, idx) => (
           <div key={idx} className="flex flex-col text-[10px] items-center px-1.5 py-0.5 bg-slate-950/30 rounded border border-slate-900/60 leading-none">
             <span className="text-slate-500 font-semibold uppercase text-[7px]">{st.label}</span>
-            <span className="font-bold text-slate-300 mt-0.5">{st.value}</span>
+            <span className="font-bold text-slate-300 mt-0.5">{draftIQActive ? '?' : st.value}</span>
           </div>
         ))}
       </div>
