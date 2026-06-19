@@ -37,6 +37,114 @@
   --rose-950: #450a0a;
   --emerald-950: #022c22;
   --amber-450: #f59e0b;
+
+  /* Rarity: Legend Theme Variables (Dark Mode) */
+  --legend-border: rgba(245, 158, 11, 0.7);
+  --legend-bg-from: rgba(69, 26, 3, 0.45);
+  --legend-bg-via: rgba(24, 24, 27, 0.9);
+  --legend-bg-to: rgba(9, 9, 11, 0.98);
+  --legend-text: #f59e0b;
+  --legend-rating-text: #fcd34d;
+  --legend-badge-bg: rgba(245, 158, 11, 0.15);
+  --legend-badge-text: #fcd34d;
+  --legend-badge-border: rgba(245, 158, 11, 0.3);
+  --legend-accent-from: #fbbf24;
+  --legend-accent-to: #d97706;
+  --legend-card-text-primary: #ffffff;
+  --legend-card-text-secondary: #e4e4e7;
+  --legend-card-text-muted: #a1a1aa;
+  --legend-card-sub-bg: rgba(9, 9, 11, 0.65);
+  --legend-card-sub-border: rgba(245, 158, 11, 0.2);
+
+  /* Rarity: Elite Theme Variables (Dark Mode) */
+  --elite-border: rgba(168, 85, 247, 0.7);
+  --elite-bg-from: rgba(88, 28, 135, 0.45);
+  --elite-bg-via: rgba(24, 24, 27, 0.9);
+  --elite-bg-to: rgba(9, 9, 11, 0.98);
+  --elite-text: #c084fc;
+  --elite-rating-text: #d8b4fe;
+  --elite-badge-bg: rgba(168, 85, 247, 0.15);
+  --elite-badge-text: #d8b4fe;
+  --elite-badge-border: rgba(168, 85, 247, 0.3);
+  --elite-accent-from: #c084fc;
+  --elite-accent-to: #4f46e5;
+  --elite-card-text-primary: #ffffff;
+  --elite-card-text-secondary: #e4e4e7;
+  --elite-card-text-muted: #a1a1aa;
+  --elite-card-sub-bg: rgba(9, 9, 11, 0.65);
+  --elite-card-sub-border: rgba(168, 85, 247, 0.2);
+
+  /* Rarity: Rare Theme Variables (Dark Mode) */
+  --rare-border: rgba(59, 130, 246, 0.7);
+  --rare-bg-from: rgba(30, 58, 138, 0.45);
+  --rare-bg-via: rgba(24, 24, 27, 0.9);
+  --rare-bg-to: rgba(9, 9, 11, 0.98);
+  --rare-text: #60a5fa;
+  --rare-rating-text: #93c5fd;
+  --rare-badge-bg: rgba(59, 130, 246, 0.15);
+  --rare-badge-text: #93c5fd;
+  --rare-badge-border: rgba(59, 130, 246, 0.3);
+  --rare-accent-from: #60a5fa;
+  --rare-accent-to: #0891b2;
+  --rare-card-text-primary: #ffffff;
+  --rare-card-text-secondary: #e4e4e7;
+  --rare-card-text-muted: #a1a1aa;
+  --rare-card-sub-bg: rgba(9, 9, 11, 0.65);
+  --rare-card-sub-border: rgba(59, 130, 246, 0.2);
+
+  /* Rarity: Cult Theme Variables (Dark Mode) */
+  --cult-border: rgba(16, 185, 129, 0.7);
+  --cult-bg-from: rgba(6, 95, 70, 0.45);
+  --cult-bg-via: rgba(24, 24, 27, 0.9);
+  --cult-bg-to: rgba(9, 9, 11, 0.98);
+  --cult-text: #34d399;
+  --cult-rating-text: #6ee7b7;
+  --cult-badge-bg: rgba(16, 185, 129, 0.15);
+  --cult-badge-text: #6ee7b7;
+  --cult-badge-border: rgba(16, 185, 129, 0.3);
+  --cult-accent-from: #34d399;
+  --cult-accent-to: #0d9488;
+  --cult-card-text-primary: #ffffff;
+  --cult-card-text-secondary: #e4e4e7;
+  --cult-card-text-muted: #a1a1aa;
+  --cult-card-sub-bg: rgba(9, 9, 11, 0.65);
+  --cult-card-sub-border: rgba(16, 185, 129, 0.2);
+
+  /* Rarity: Solid Theme Variables (Dark Mode) */
+  --solid-border: rgba(113, 113, 122, 0.6);
+  --solid-bg-from: rgba(39, 39, 42, 0.4);
+  --solid-bg-via: rgba(24, 24, 27, 0.9);
+  --solid-bg-to: rgba(9, 9, 11, 0.98);
+  --solid-text: #e4e4e7;
+  --solid-rating-text: #f4f4f5;
+  --solid-badge-bg: rgba(63, 63, 70, 0.3);
+  --solid-badge-text: #d4d4d8;
+  --solid-badge-border: rgba(63, 63, 70, 0.5);
+  --solid-accent-from: #a1a1aa;
+  --solid-accent-to: #71717a;
+  --solid-card-text-primary: #ffffff;
+  --solid-card-text-secondary: #d4d4d8;
+  --solid-card-text-muted: #a1a1aa;
+  --solid-card-sub-bg: rgba(9, 9, 11, 0.6);
+  --solid-card-sub-border: rgba(63, 63, 70, 0.4);
+
+  /* Rarity: Common Theme Variables (Dark Mode) */
+  --common-border: rgba(39, 39, 42, 0.85);
+  --common-bg-from: rgba(24, 24, 27, 0.45);
+  --common-bg-via: rgba(9, 9, 11, 0.9);
+  --common-bg-to: rgba(9, 9, 11, 0.98);
+  --common-text: #a1a1aa;
+  --common-rating-text: #d4d4d8;
+  --common-badge-bg: rgba(39, 39, 42, 0.45);
+  --common-badge-text: #a1a1aa;
+  --common-badge-border: rgba(63, 63, 70, 0.5);
+  --common-accent-from: #71717a;
+  --common-accent-to: #52525b;
+  --common-card-text-primary: #ffffff;
+  --common-card-text-secondary: #d4d4d8;
+  --common-card-text-muted: #71717a;
+  --common-card-sub-bg: rgba(9, 9, 11, 0.6);
+  --common-card-sub-border: rgba(39, 39, 42, 0.4);
 }
 
 :root[data-theme='light'] {
@@ -75,6 +183,114 @@
   --rose-950: #fff5f5;
   --emerald-950: #ecfdf5;
   --amber-450: #b45309;
+
+  /* Rarity: Legend Theme Variables (Light Mode) */
+  --legend-border: rgba(217, 119, 6, 0.75);
+  --legend-bg-from: rgba(254, 243, 199, 0.85);
+  --legend-bg-via: rgba(255, 251, 235, 0.96);
+  --legend-bg-to: #ffffff;
+  --legend-text: #b45309;
+  --legend-rating-text: #92400e;
+  --legend-badge-bg: rgba(245, 158, 11, 0.12);
+  --legend-badge-text: #b45309;
+  --legend-badge-border: rgba(245, 158, 11, 0.4);
+  --legend-accent-from: #d97706;
+  --legend-accent-to: #b45309;
+  --legend-card-text-primary: #1e293b;
+  --legend-card-text-secondary: #334155;
+  --legend-card-text-muted: #64748b;
+  --legend-card-sub-bg: rgba(241, 245, 249, 0.75);
+  --legend-card-sub-border: rgba(203, 213, 225, 0.9);
+
+  /* Rarity: Elite Theme Variables (Light Mode) */
+  --elite-border: rgba(126, 34, 206, 0.75);
+  --elite-bg-from: rgba(243, 232, 255, 0.85);
+  --elite-bg-via: rgba(250, 245, 255, 0.96);
+  --elite-bg-to: #ffffff;
+  --elite-text: #7e22ce;
+  --elite-rating-text: #6b21a8;
+  --elite-badge-bg: rgba(168, 85, 247, 0.12);
+  --elite-badge-text: #7e22ce;
+  --elite-badge-border: rgba(168, 85, 247, 0.4);
+  --elite-accent-from: #9333ea;
+  --elite-accent-to: #7e22ce;
+  --elite-card-text-primary: #1e293b;
+  --elite-card-text-secondary: #334155;
+  --elite-card-text-muted: #64748b;
+  --elite-card-sub-bg: rgba(241, 245, 249, 0.75);
+  --elite-card-sub-border: rgba(203, 213, 225, 0.9);
+
+  /* Rarity: Rare Theme Variables (Light Mode) */
+  --rare-border: rgba(29, 78, 216, 0.75);
+  --rare-bg-from: rgba(219, 234, 254, 0.85);
+  --rare-bg-via: rgba(239, 246, 255, 0.96);
+  --rare-bg-to: #ffffff;
+  --rare-text: #1d4ed8;
+  --rare-rating-text: #1e40af;
+  --rare-badge-bg: rgba(59, 130, 246, 0.12);
+  --rare-badge-text: #1d4ed8;
+  --rare-badge-border: rgba(59, 130, 246, 0.4);
+  --rare-accent-from: #2563eb;
+  --rare-accent-to: #1d4ed8;
+  --rare-card-text-primary: #1e293b;
+  --rare-card-text-secondary: #334155;
+  --rare-card-text-muted: #64748b;
+  --rare-card-sub-bg: rgba(241, 245, 249, 0.75);
+  --rare-card-sub-border: rgba(203, 213, 225, 0.9);
+
+  /* Rarity: Cult Theme Variables (Light Mode) */
+  --cult-border: rgba(4, 120, 87, 0.75);
+  --cult-bg-from: rgba(209, 250, 229, 0.85);
+  --cult-bg-via: rgba(236, 253, 245, 0.96);
+  --cult-bg-to: #ffffff;
+  --cult-text: #047857;
+  --cult-rating-text: #065f46;
+  --cult-badge-bg: rgba(16, 185, 129, 0.12);
+  --cult-badge-text: #047857;
+  --cult-badge-border: rgba(16, 185, 129, 0.4);
+  --cult-accent-from: #059669;
+  --cult-accent-to: #047857;
+  --cult-card-text-primary: #1e293b;
+  --cult-card-text-secondary: #334155;
+  --cult-card-text-muted: #64748b;
+  --cult-card-sub-bg: rgba(241, 245, 249, 0.75);
+  --cult-card-sub-border: rgba(203, 213, 225, 0.9);
+
+  /* Rarity: Solid Theme Variables (Light Mode) */
+  --solid-border: rgba(148, 163, 184, 0.7);
+  --solid-bg-from: rgba(241, 245, 249, 0.85);
+  --solid-bg-via: rgba(248, 250, 252, 0.96);
+  --solid-bg-to: #ffffff;
+  --solid-text: #475569;
+  --solid-rating-text: #334155;
+  --solid-badge-bg: rgba(148, 163, 184, 0.12);
+  --solid-badge-text: #475569;
+  --solid-badge-border: rgba(148, 163, 184, 0.35);
+  --solid-accent-from: #64748b;
+  --solid-accent-to: #475569;
+  --solid-card-text-primary: #1e293b;
+  --solid-card-text-secondary: #334155;
+  --solid-card-text-muted: #64748b;
+  --solid-card-sub-bg: rgba(241, 245, 249, 0.75);
+  --solid-card-sub-border: rgba(203, 213, 225, 0.9);
+
+  /* Rarity: Common Theme Variables (Light Mode) */
+  --common-border: rgba(203, 213, 225, 0.85);
+  --common-bg-from: rgba(241, 245, 249, 0.7);
+  --common-bg-via: rgba(248, 250, 252, 0.96);
+  --common-bg-to: #ffffff;
+  --common-text: #64748b;
+  --common-rating-text: #475569;
+  --common-badge-bg: rgba(148, 163, 184, 0.1);
+  --common-badge-text: #64748b;
+  --common-badge-border: rgba(203, 213, 225, 0.5);
+  --common-accent-from: #64748b;
+  --common-accent-to: #475569;
+  --common-card-text-primary: #1e293b;
+  --common-card-text-secondary: #334155;
+  --common-card-text-muted: #64748b;
+  --common-card-sub-bg: rgba(241, 245, 249, 0.7);
+  --common-card-sub-border: rgba(203, 213, 225, 0.8);
 }
 
 @theme {
@@ -106,6 +322,109 @@
   --color-rose-950: var(--rose-950);
   --color-emerald-950: var(--emerald-950);
   --color-amber-450: var(--amber-450);
+
+  /* Map the Rarity CSS Variables to Tailwind Colors */
+  --color-legend-border: var(--legend-border);
+  --color-legend-bg-from: var(--legend-bg-from);
+  --color-legend-bg-via: var(--legend-bg-via);
+  --color-legend-bg-to: var(--legend-bg-to);
+  --color-legend-text: var(--legend-text);
+  --color-legend-rating: var(--legend-rating-text);
+  --color-legend-badge-bg: var(--legend-badge-bg);
+  --color-legend-badge-text: var(--legend-badge-text);
+  --color-legend-badge-border: var(--legend-badge-border);
+  --color-legend-accent-from: var(--legend-accent-from);
+  --color-legend-accent-to: var(--legend-accent-to);
+  --color-legend-text-primary: var(--legend-card-text-primary);
+  --color-legend-text-secondary: var(--legend-card-text-secondary);
+  --color-legend-text-muted: var(--legend-card-text-muted);
+  --color-legend-sub-bg: var(--legend-card-sub-bg);
+  --color-legend-sub-border: var(--legend-card-sub-border);
+
+  --color-elite-border: var(--elite-border);
+  --color-elite-bg-from: var(--elite-bg-from);
+  --color-elite-bg-via: var(--elite-bg-via);
+  --color-elite-bg-to: var(--elite-bg-to);
+  --color-elite-text: var(--elite-text);
+  --color-elite-rating: var(--elite-rating-text);
+  --color-elite-badge-bg: var(--elite-badge-bg);
+  --color-elite-badge-text: var(--elite-badge-text);
+  --color-elite-badge-border: var(--elite-badge-border);
+  --color-elite-accent-from: var(--elite-accent-from);
+  --color-elite-accent-to: var(--elite-accent-to);
+  --color-elite-text-primary: var(--elite-card-text-primary);
+  --color-elite-text-secondary: var(--elite-card-text-secondary);
+  --color-elite-text-muted: var(--elite-card-text-muted);
+  --color-elite-sub-bg: var(--elite-card-sub-bg);
+  --color-elite-sub-border: var(--elite-card-sub-border);
+
+  --color-rare-border: var(--rare-border);
+  --color-rare-bg-from: var(--rare-bg-from);
+  --color-rare-bg-via: var(--rare-bg-via);
+  --color-rare-bg-to: var(--rare-bg-to);
+  --color-rare-text: var(--rare-text);
+  --color-rare-rating: var(--rare-rating-text);
+  --color-rare-badge-bg: var(--rare-badge-bg);
+  --color-rare-badge-text: var(--rare-badge-text);
+  --color-rare-badge-border: var(--rare-badge-border);
+  --color-rare-accent-from: var(--rare-accent-from);
+  --color-rare-accent-to: var(--rare-accent-to);
+  --color-rare-text-primary: var(--rare-card-text-primary);
+  --color-rare-text-secondary: var(--rare-card-text-secondary);
+  --color-rare-text-muted: var(--rare-card-text-muted);
+  --color-rare-sub-bg: var(--rare-card-sub-bg);
+  --color-rare-sub-border: var(--rare-card-sub-border);
+
+  --color-cult-border: var(--cult-border);
+  --color-cult-bg-from: var(--cult-bg-from);
+  --color-cult-bg-via: var(--cult-bg-via);
+  --color-cult-bg-to: var(--cult-bg-to);
+  --color-cult-text: var(--cult-text);
+  --color-cult-rating: var(--cult-rating-text);
+  --color-cult-badge-bg: var(--cult-badge-bg);
+  --color-cult-badge-text: var(--cult-badge-text);
+  --color-cult-badge-border: var(--cult-badge-border);
+  --color-cult-accent-from: var(--cult-accent-from);
+  --color-cult-accent-to: var(--cult-accent-to);
+  --color-cult-text-primary: var(--cult-card-text-primary);
+  --color-cult-text-secondary: var(--cult-card-text-secondary);
+  --color-cult-text-muted: var(--cult-card-text-muted);
+  --color-cult-sub-bg: var(--cult-card-sub-bg);
+  --color-cult-sub-border: var(--cult-card-sub-border);
+
+  --color-solid-border: var(--solid-border);
+  --color-solid-bg-from: var(--solid-bg-from);
+  --color-solid-bg-via: var(--solid-bg-via);
+  --color-solid-bg-to: var(--solid-bg-to);
+  --color-solid-text: var(--solid-text);
+  --color-solid-rating: var(--solid-rating-text);
+  --color-solid-badge-bg: var(--solid-badge-bg);
+  --color-solid-badge-text: var(--solid-badge-text);
+  --color-solid-badge-border: var(--solid-badge-border);
+  --color-solid-accent-from: var(--solid-accent-from);
+  --color-solid-accent-to: var(--solid-accent-to);
+  --color-solid-text-primary: var(--solid-card-text-primary);
+  --color-solid-text-secondary: var(--solid-card-text-secondary);
+  --color-solid-text-muted: var(--solid-card-text-muted);
+  --color-solid-sub-bg: var(--solid-card-sub-bg);
+  --color-solid-sub-border: var(--solid-card-sub-border);
+
+  --color-common-border: var(--common-border);
+  --color-common-bg-from: var(--common-bg-from);
+  --color-common-bg-via: var(--common-bg-via);
+  --color-common-bg-to: var(--common-bg-to);
+  --color-common-text: var(--common-text);
+  --color-common-rating: var(--common-rating-text);
+  --color-common-badge-bg: var(--common-badge-bg);
+  --color-common-badge-text: var(--common-badge-text);
+  --color-common-badge-border: var(--common-badge-border);
+  --color-common-accent-from: var(--common-accent-from);
+  --color-common-accent-to: var(--common-accent-to);
+  --color-common-text-primary: var(--common-card-text-primary);
+  --color-common-text-secondary: var(--common-card-text-secondary);
+  --color-common-text-muted: var(--common-card-text-muted);
+  --color-common-sub-bg: var(--common-card-sub-bg);
+  --color-common-sub-border: var(--common-card-sub-border);
 
   --color-legend-gold: #f59e0b;
   --color-elite-purple: #a855f7;

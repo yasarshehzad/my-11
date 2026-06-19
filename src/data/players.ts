@@ -2235,11 +2235,24 @@ function generatePlayersDatabase(): Player[] {
 
       // Determine Special Trait
       let specialTrait = stage.trait || base.baseTrait;
+
+      // Position-based sanitization of stage traits (e.g. preventing defenders/GKs from getting Golden Boot Form)
+      if (specialTrait === 'Golden Boot Form') {
+        const pos = base.primaryPosition;
+        if (pos === 'GK') {
+          specialTrait = 'Clean Sheet Master';
+        } else if (pos === 'CB' || pos === 'LB' || pos === 'RB') {
+          specialTrait = 'Lockdown Defender';
+        } else if (pos === 'CDM' || pos === 'CM' || pos === 'CAM' || pos === 'LM' || pos === 'RM') {
+          specialTrait = 'Midfield Maestro';
+        }
+      }
+
       if (rarity === 'legend' || rating >= 94) {
-        if (base.primaryPosition === 'ST' || base.primaryPosition === 'CF') {
+        if (base.primaryPosition === 'ST' || base.primaryPosition === 'CF' || base.primaryPosition === 'LW' || base.primaryPosition === 'RW') {
           specialTrait = 'Golden Boot Form';
         } else if (base.primaryPosition === 'CB' || base.primaryPosition === 'LB' || base.primaryPosition === 'RB') {
-          specialTrait = 'Lockdown Fullback';
+          specialTrait = 'Lockdown Defender';
         } else if (base.primaryPosition === 'GK') {
           specialTrait = 'Shot Stopper';
         } else {
@@ -2260,40 +2273,107 @@ function generatePlayersDatabase(): Player[] {
       const baseAvg = 80; // normalized baseline average
       const scaleFactor = rating / baseAvg;
 
-      // Primary position category weights
-      let attack = 45;
-      let midfield = 45;
-      let defence = 45;
-
       const pos = base.primaryPosition;
+
+      // Category baselines
+      let baseAttack = 45;
+      let baseMidfield = 45;
+      let baseDefence = 45;
+
       if (pos === 'ST' || pos === 'CF' || pos === 'LW' || pos === 'RW') {
-        attack = 88; midfield = 65; defence = 35;
+        baseAttack = 88; baseMidfield = 65; baseDefence = 35;
       } else if (pos === 'CAM' || pos === 'CM' || pos === 'LM' || pos === 'RM') {
-        attack = 68; midfield = 88; defence = 55;
+        baseAttack = 68; baseMidfield = 88; baseDefence = 55;
       } else if (pos === 'CDM') {
-        attack = 50; midfield = 85; defence = 82;
+        baseAttack = 50; baseMidfield = 85; baseDefence = 82;
       } else if (pos === 'CB' || pos === 'LB' || pos === 'RB') {
-        attack = 40; midfield = 60; defence = 90;
+        baseAttack = 40; baseMidfield = 60; baseDefence = 90;
       } else if (pos === 'GK') {
-        attack = 12; midfield = 15; defence = 92;
+        baseAttack = 12; baseMidfield = 15; baseDefence = 92;
       }
 
-      attack = scaleStat(attack, scaleFactor);
-      midfield = scaleStat(midfield, scaleFactor);
-      defence = scaleStat(defence, scaleFactor);
+      // Core attribute baselines
+      let basePaceVal = (pos === 'ST' || pos === 'LW' || pos === 'RW' || pos === 'RB' || pos === 'LB') ? 88 : 72;
+      let baseTechniqueVal = (pos === 'CAM' || pos === 'CM' || pos === 'LW' || pos === 'RW') ? 88 : 74;
+      let basePhysicalVal = (pos === 'CB' || pos === 'ST' || pos === 'CDM') ? 86 : 72;
+      let baseMentalityVal = 80;
 
-      const pace = scaleStat(pos === 'ST' || pos === 'LW' || pos === 'RW' || pos === 'RB' || pos === 'LB' ? 88 : 72, scaleFactor);
-      const technique = scaleStat(pos === 'CAM' || pos === 'CM' || pos === 'LW' || pos === 'RW' ? 88 : 74, scaleFactor);
-      const physical = scaleStat(pos === 'CB' || pos === 'ST' || pos === 'CDM' ? 86 : 72, scaleFactor);
-      const mentality = scaleStat(80, scaleFactor);
+      // Sub-stats baselines
+      let baseFinishing = (pos === 'ST' || pos === 'CF') ? 90 : (pos === 'LW' || pos === 'RW' || pos === 'CAM') ? 78 : 45;
+      let baseCreativity = (pos === 'CAM' || pos === 'LW' || pos === 'RW' || pos === 'CM') ? 88 : 50;
+      let basePassing = (pos === 'CAM' || pos === 'CM' || pos === 'CDM') ? 86 : 65;
+      let baseDribbling = (pos === 'LW' || pos === 'RW' || pos === 'CAM') ? 90 : 65;
+      let baseDefending = (pos === 'CB' || pos === 'CDM') ? 90 : (pos === 'LB' || pos === 'RB') ? 82 : 35;
+      let baseAerial = (pos === 'CB' || pos === 'ST') ? 84 : 60;
+
+      // --- APPLY PROFILE SKEWS BASED ON TRAIT/PLAYSTYLE ---
+      
+      // 1. Playmakers/Creators (e.g. Trent Alexander-Arnold, Pirlo, Modric, Kroos, Cancelo)
+      if (
+        base.baseTrait === 'Creator Supreme' || 
+        base.playStyle === 'Set Piece Master' || 
+        base.playStyle === 'Inverted Playmaker' || 
+        base.playStyle === 'Creative Playmaker' ||
+        base.playStyle === 'Tempo Controller'
+      ) {
+        basePassing = Math.max(basePassing, 88);
+        baseCreativity = Math.max(baseCreativity, 88);
+        baseTechniqueVal = Math.max(baseTechniqueVal, 88);
+        baseMidfield = Math.max(baseMidfield, 78);
+        
+        // Fullback playmaker adjustments (Trent, Cancelo)
+        if (pos === 'LB' || pos === 'RB') {
+          baseDefence = 72; // not 90
+          baseDefending = 64; // not 82
+          basePaceVal = 78; // not 88
+          baseAttack = Math.max(baseAttack, 55);
+        }
+      }
+
+      // 2. Speedsters vs slower tactical/technical players
+      const isSpeedster = 
+        base.playStyle.toLowerCase().includes('speedster') || 
+        base.playStyle.toLowerCase().includes('wingback') || 
+        base.playStyle.toLowerCase().includes('overlapping') || 
+        base.playStyle.toLowerCase().includes('runner');
+        
+      if (isSpeedster) {
+        basePaceVal = Math.max(basePaceVal, 88);
+      } else if (pos === 'LB' || pos === 'RB') {
+        // Tone down pace for technical/lockdown fullbacks
+        basePaceVal = 78;
+      }
+
+      // 3. Defensive Anchors / Hard Tacklers (e.g. Chiellini, Baresi, Nesta, Walker, Wan-Bissaka)
+      if (
+        base.baseTrait === 'Lockdown Fullback' || 
+        base.baseTrait === 'Defensive Anchor' || 
+        base.baseTrait === 'Tactical Interceptor' || 
+        base.playStyle === 'Hard Tackler' || 
+        base.playStyle === 'Stopper' ||
+        base.playStyle === 'Ball Winning Midfielder'
+      ) {
+        baseDefence = Math.max(baseDefence, 92);
+        baseDefending = Math.max(baseDefending, 90);
+        basePhysicalVal = Math.max(basePhysicalVal, 84);
+      }
+
+      const attack = scaleStat(baseAttack, scaleFactor);
+      const midfield = scaleStat(baseMidfield, scaleFactor);
+      const defence = scaleStat(baseDefence, scaleFactor);
+
+      const pace = scaleStat(basePaceVal, scaleFactor);
+      const technique = scaleStat(baseTechniqueVal, scaleFactor);
+      const physical = scaleStat(basePhysicalVal, scaleFactor);
+      const mentality = scaleStat(baseMentalityVal, scaleFactor);
 
       // Detailed sub-stats
-      const finishing = scaleStat(pos === 'ST' || pos === 'CF' ? 90 : pos === 'LW' || pos === 'RW' || pos === 'CAM' ? 78 : 45, scaleFactor);
-      const creativity = scaleStat(pos === 'CAM' || pos === 'LW' || pos === 'RW' || pos === 'CM' ? 88 : 50, scaleFactor);
-      const passing = scaleStat(pos === 'CAM' || pos === 'CM' || pos === 'CDM' ? 86 : 65, scaleFactor);
-      const dribbling = scaleStat(pos === 'LW' || pos === 'RW' || pos === 'CAM' ? 90 : 65, scaleFactor);
-      const defending = scaleStat(pos === 'CB' || pos === 'CDM' ? 90 : pos === 'LB' || pos === 'RB' ? 82 : 35, scaleFactor);
-      const aerial = scaleStat(pos === 'CB' || pos === 'ST' ? 84 : 60, scaleFactor);
+      const finishing = scaleStat(baseFinishing, scaleFactor);
+      const creativity = scaleStat(baseCreativity, scaleFactor);
+      const passing = scaleStat(basePassing, scaleFactor);
+      const dribbling = scaleStat(baseDribbling, scaleFactor);
+      const defending = scaleStat(baseDefending, scaleFactor);
+      const aerial = scaleStat(baseAerial, scaleFactor);
       const pressing = scaleStat(pos === 'ST' || pos === 'CM' || pos === 'CDM' ? 80 : 60, scaleFactor);
       const leadership = scaleStat(stageIdx >= 5 ? 90 : 70, scaleFactor);
       const bigGame = scaleStat(80, scaleFactor);
