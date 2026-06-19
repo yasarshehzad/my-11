@@ -15,7 +15,7 @@ export default function PrivacyPage() {
 
         <div className="text-sm text-slate-350 space-y-4 leading-relaxed font-semibold">
           <p>
-            Your privacy is extremely important to us. At <strong>Drafted XI</strong>, we do not collect, store, or sell any personal data.
+            Your privacy is extremely important to us. At <strong>MY DRAFTED XI</strong>, we do not collect, store, or sell any personal data.
           </p>
           <p>
             <strong>Local Storage:</strong> The game uses local storage on your browser strictly to store your gameplay stats, streak count, and daily challenge progress. This data remains on your device and is never uploaded to any external servers.

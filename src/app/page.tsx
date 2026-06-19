@@ -739,7 +739,7 @@ export default function DraftedXIGame() {
           </div>
           
           <h1 className="text-5xl md:text-6xl font-display font-black tracking-tight text-white uppercase leading-none">
-            DRAFTED <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">XI</span>
+            MY DRAFTED <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">XI</span>
           </h1>
 
           <p className="text-slate-400 text-xs md:text-sm max-w-md font-medium leading-relaxed">
@@ -1846,7 +1846,7 @@ export default function DraftedXIGame() {
             Database Loading Error
           </h1>
           <p className="text-sm text-slate-350 leading-relaxed font-semibold">
-            We couldn't load the Drafted XI player database. This might be due to a corrupt build or missing database assets.
+            We couldn't load the MY DRAFTED XI player database. This might be due to a corrupt build or missing database assets.
           </p>
           <p className="text-xs text-slate-500 font-medium">
             Please refresh the page if the issue persists.
@@ -1875,7 +1875,7 @@ export default function DraftedXIGame() {
           }}
           className="text-lg font-display font-black tracking-tight text-white uppercase hover:text-emerald-400 transition-colors cursor-pointer"
         >
-          Drafted <span className="text-emerald-400">XI</span>
+          MY DRAFTED <span className="text-emerald-400">XI</span>
         </button>
         
         <div className="flex items-center gap-3 select-none">
@@ -1925,7 +1925,7 @@ export default function DraftedXIGame() {
           <Link href="/terms" className="hover:text-emerald-400 transition-colors">Terms of Service</Link>
         </div>
         <p className="text-slate-600">
-          DRAFTED XI © 2026 • CREATED FOR FANS
+          MY DRAFTED XI © 2026 • CREATED FOR FANS
         </p>
       </footer>
 
@@ -1960,7 +1960,7 @@ export default function DraftedXIGame() {
             {/* Modal Header */}
             <div className="flex justify-between items-center pb-3 border-b border-slate-900">
               <h3 className="text-md font-display font-black text-white uppercase tracking-wider flex items-center gap-1.5 leading-none">
-                ⚽ How to Play Drafted XI
+                ⚽ How to Play MY DRAFTED XI
               </h3>
               <button
                 onClick={() => handleCloseTutorial(false)}

@@ -12,33 +12,33 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://my-11.com"),
-  title: "Drafted XI — Build Your Ultimate Football Team",
+  title: "MY DRAFTED XI — Build Your Ultimate Football Team",
   description: "Draft your dream football XI from iconic player seasons, simulate a 38-game season, and see if your squad can go unbeaten.",
-  keywords: ["football draft", "football game", "squad builder", "football simulation", "Premier League", "legends", "Drafted XI"],
-  authors: [{ name: "Drafted XI Fans" }],
+  keywords: ["football draft", "football game", "squad builder", "football simulation", "Premier League", "legends", "MY DRAFTED XI"],
+  authors: [{ name: "MY DRAFTED XI Fans" }],
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Drafted XI",
+    title: "MY DRAFTED XI",
   },
   openGraph: {
-    title: "Drafted XI — Build Your Ultimate Football Team",
+    title: "MY DRAFTED XI — Build Your Ultimate Football Team",
     description: "Draft your dream football XI from iconic player seasons, simulate a 38-game season, and see if your squad can go unbeaten.",
     url: "https://my-11.com",
-    siteName: "Drafted XI",
+    siteName: "MY DRAFTED XI",
     type: "website",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Drafted XI — Build Your Ultimate Football Team",
+        alt: "MY DRAFTED XI — Build Your Ultimate Football Team",
       }
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Drafted XI — Build Your Ultimate Football Team",
+    title: "MY DRAFTED XI — Build Your Ultimate Football Team",
     description: "Draft your dream football XI from iconic player seasons, simulate a 38-game season, and see if your squad can go unbeaten.",
     images: ["/og-image.png"],
   },

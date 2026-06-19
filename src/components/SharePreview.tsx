@@ -52,13 +52,13 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
   // Helper: Copy result summary text to clipboard
   const handleCopyText = () => {
     const text = isDailyChallenge
-      ? `🎮 I completed today's Daily Challenge "${dailyChallengeTitle}" on Drafted XI!
+      ? `🎮 I completed today's Daily Challenge "${dailyChallengeTitle}" on MY DRAFTED XI!
 🏆 Formation: ${formation} | OVR: ${stats.overall} | Chem: ${stats.chemistry} (${simResult.chemistryGrade})
 📊 Record: ${simResult.wins}W - ${simResult.draws}D - ${simResult.losses}L (${simResult.points} PTS)
 ⭐ Outcome: ${dailyChallengeBeaten ? 'CHALLENGE CLEARED! ✅' : 'CHALLENGE FAILED ❌'}
 📊 Global Tier: Top ${simResult.percentile}%
 Can you beat this? Play now at https://my-11.com`
-      : `🎮 I built a ${simResult.wins}-${simResult.draws}-${simResult.losses} Drafted XI. MVP: ${simResult.mvp.displayName} (${simResult.mvp.rating}). Chemistry Grade: ${simResult.chemistryGrade}. Playstyle: ${simResult.playstyle}. Can you beat me? Play now at https://my-11.com`;
+      : `🎮 I built a ${simResult.wins}-${simResult.draws}-${simResult.losses} MY DRAFTED XI. MVP: ${simResult.mvp.displayName} (${simResult.mvp.rating}). Chemistry Grade: ${simResult.chemistryGrade}. Playstyle: ${simResult.playstyle}. Can you beat me? Play now at https://my-11.com`;
 
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
@@ -118,8 +118,8 @@ Can you beat this? Play now at https://my-11.com`
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
-          title: 'Drafted XI Campaign',
-          text: `Check out my simulated campaign on Drafted XI! Formation: ${formation}, Playstyle: ${simResult.playstyle}. Play now at https://my-11.com`,
+          title: 'MY DRAFTED XI Campaign',
+          text: `Check out my simulated campaign on MY DRAFTED XI! Formation: ${formation}, Playstyle: ${simResult.playstyle}. Play now at https://my-11.com`,
         });
       } else {
         // Fallback: Copy summary text to clipboard
@@ -181,7 +181,7 @@ Can you beat this? Play now at https://my-11.com`
         <div className="flex justify-between items-start mb-5 relative z-10">
           <div>
             <h2 className="text-2xl font-display font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-emerald-400 uppercase leading-none">
-              Drafted XI
+              MY DRAFTED XI
             </h2>
             <p className="text-[9px] font-bold text-slate-500 tracking-widest uppercase mt-1">
               {isDailyChallenge ? `Daily Challenge: ${dailyChallengeTitle}` : 'Football Draft League'}
@@ -312,7 +312,7 @@ Can you beat this? Play now at https://my-11.com`
 
         {/* Roster XI Roster summary */}
         <div className="bg-slate-950/40 rounded-xl p-3.5 border border-slate-900/80 relative z-10 shadow-inner">
-          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2 leading-none">Drafted XI Roster</p>
+          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2 leading-none">MY DRAFTED XI Roster</p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[10px] leading-tight">
             {selectedPlayers.map((player) => (
               <div key={player.id} className="flex justify-between items-center text-slate-400 border-b border-slate-900/40 pb-0.5">

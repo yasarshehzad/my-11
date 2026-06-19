@@ -129,7 +129,7 @@ export const ShareCardExport: React.FC<ShareCardExportProps> = ({
       <div className="flex justify-between items-center w-full border-b-2 border-slate-900 pb-8 relative z-10">
         <div>
           <h1 className="text-6xl font-display font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-emerald-450 uppercase leading-none">
-            DRAFTED XI
+            MY DRAFTED XI
           </h1>
           <p className="text-lg font-bold text-slate-500 tracking-widest uppercase mt-3.5">
             {isDailyChallenge ? `Daily Challenge: ${dailyChallengeTitle}` : 'Football Draft League'}

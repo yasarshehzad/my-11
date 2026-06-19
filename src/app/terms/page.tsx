@@ -15,10 +15,10 @@ export default function TermsPage() {
 
         <div className="text-sm text-slate-350 space-y-4 leading-relaxed font-semibold">
           <p>
-            Welcome to <strong>Drafted XI</strong>. By accessing or playing our game, you agree to these Terms of Service.
+            Welcome to <strong>MY DRAFTED XI</strong>. By accessing or playing our game, you agree to these Terms of Service.
           </p>
           <p>
-            <strong>Fair Play:</strong> Drafted XI is a free, casual web game made for football fans. It is strictly for entertainment purposes.
+            <strong>Fair Play:</strong> MY DRAFTED XI is a free, casual web game made for football fans. It is strictly for entertainment purposes.
           </p>
           <p>
             <strong>Intellectual Property & Disclaimer:</strong> All player names, seasons, and references are historical and educational in nature. This is an unofficial game and is not affiliated with, endorsed by, or representing any official football club, league, player, rights holder, or governing body. No real badges, logos, or copyrighted assets are used in the application.
