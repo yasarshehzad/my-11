@@ -43,6 +43,7 @@ export default function DraftedXIGame() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [showTutorial, setShowTutorial] = useState(false);
   const [draftIQMode, setDraftIQMode] = useState<boolean>(false);
+  const [rerollsRemaining, setRerollsRemaining] = useState<number>(3);
 
   const toggleTheme = () => {
     const nextTheme = theme === 'dark' ? 'light' : 'dark';
@@ -277,6 +278,7 @@ export default function DraftedXIGame() {
       setSelectedPlayers(Array(11).fill(null));
       setCurrentSlotIndex(0);
       setDraftOptions(null);
+      setRerollsRemaining(3);
       setStats({ attack: 0, midfield: 0, defence: 0, chemistry: 0, overall: 0 });
       setSimResult(null);
       setPhase('formation');
@@ -300,6 +302,7 @@ export default function DraftedXIGame() {
       setSelectedPlayers(Array(11).fill(null));
       setCurrentSlotIndex(0);
       setDraftOptions(null);
+      setRerollsRemaining(3);
       setStats({ attack: 0, midfield: 0, defence: 0, chemistry: 0, overall: 0 });
       setSimResult(null);
       setPhase('formation');
@@ -330,6 +333,7 @@ export default function DraftedXIGame() {
       setSelectedPlayers(randomSquad);
       setCurrentSlotIndex(11);
       setDraftOptions(null);
+      setRerollsRemaining(3);
       
       // 3. Calculate team stats
       const slots = FORMATION_SLOTS[randomFormation];
@@ -387,6 +391,27 @@ export default function DraftedXIGame() {
     } else {
       updateDOM();
     }
+  };
+
+  // --- Reroll Draft Choices ---
+  const handleRerollOptions = () => {
+    if (rerollsRemaining <= 0 || !formation || currentSlotIndex >= 11) return;
+
+    const slots = FORMATION_SLOTS[formation];
+    const newRerolls = rerollsRemaining - 1;
+    setRerollsRemaining(newRerolls);
+
+    let options: [Player, Player, Player];
+    if (isDailyChallenge && todayChallenge) {
+      const seedValue = parseInt(todayDateStr.replace(/-/g, ''), 10);
+      // Incorporate the reroll count into the seed so it remains deterministic for daily challenges
+      const randFn = createSeedableRandom(seedValue + currentSlotIndex * 1000 + (3 - newRerolls) * 50000);
+      options = getDraftOptions(slots[currentSlotIndex].position, selectedPlayers, randFn, todayChallenge.rule, selectedLeague);
+    } else {
+      options = getDraftOptions(slots[currentSlotIndex].position, selectedPlayers, undefined, undefined, selectedLeague);
+    }
+
+    setDraftOptions(options);
   };
 
   // --- Select Player and Draft ---
@@ -1020,14 +1045,46 @@ export default function DraftedXIGame() {
         {/* 3. Three Player Card Options / Custom Search (Horizontal slider with edge padding) */}
         {!isFinished && (
           <div className="flex flex-col gap-3.5 w-full">
-            {/* Header / Info bar */}
-            <div className="text-center bg-slate-900/40 py-2.5 rounded-2xl border border-slate-900/60 leading-none">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            {/* Header / Info bar with Rerolls */}
+            <div className="flex flex-col sm:flex-row justify-between items-center bg-slate-900/40 px-4 py-3 rounded-2xl border border-slate-900/60 gap-3">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">
                 Choose Player for:{' '}
                 <span className="text-emerald-400 font-display font-black">
                   {slots[currentSlotIndex]?.label}
                 </span>
               </span>
+
+              {/* Reroll Interface */}
+              <div className="flex items-center gap-3 select-none">
+                {/* Reroll Tokens representation */}
+                <div className="flex gap-1.5" title={`${rerollsRemaining} rerolls left`}>
+                  {Array.from({ length: 3 }).map((_, idx) => {
+                    const active = idx < rerollsRemaining;
+                    return (
+                      <span
+                        key={idx}
+                        className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                          active
+                            ? 'bg-amber-450 shadow-[0_0_8px_rgba(245,158,11,0.6)] animate-pulse'
+                            : 'bg-slate-800 border border-slate-900'
+                        }`}
+                      />
+                    );
+                  })}
+                </div>
+
+                <button
+                  onClick={handleRerollOptions}
+                  disabled={rerollsRemaining <= 0}
+                  className={`px-3 py-1.5 rounded-xl font-display font-black text-[9px] uppercase tracking-wider transition-all select-none border cursor-pointer ${
+                    rerollsRemaining > 0
+                      ? 'bg-amber-500/10 text-amber-450 border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/40 active:scale-95'
+                      : 'bg-slate-900/50 text-slate-600 border-slate-950 cursor-not-allowed'
+                  }`}
+                >
+                  🔄 Reroll ({rerollsRemaining})
+                </button>
+              </div>
             </div>
 
             {/* Tab Swapper */}
@@ -1251,6 +1308,56 @@ export default function DraftedXIGame() {
                 {liveGoalsFor - liveGoalsAgainst}
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* Season Match Outcome Grid */}
+        <div className="w-full glass rounded-3xl p-4 border border-slate-900 shadow-xl flex flex-col gap-2 select-none">
+          <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest px-1">
+            Season Fixtures Progress Tracker
+          </span>
+          <div 
+            className="grid gap-1.5 justify-items-center mt-1"
+            style={{ gridTemplateColumns: 'repeat(19, minmax(0, 1fr))' }}
+          >
+            {Array.from({ length: 38 }).map((_, idx) => {
+              const played = idx < simIndex;
+              const match = played && simResult ? simResult.matches[idx] : null;
+              
+              let bgColor = 'bg-slate-900 border border-slate-800';
+              let textLabel = '';
+              let glowEffect = '';
+              
+              if (match) {
+                if (match.outcome === 'W') {
+                  bgColor = 'bg-emerald-500 border border-emerald-450';
+                  textLabel = 'W';
+                  glowEffect = 'shadow-[0_0_8px_rgba(16,185,129,0.5)]';
+                } else if (match.outcome === 'D') {
+                  bgColor = 'bg-slate-500 border border-slate-400';
+                  textLabel = 'D';
+                  glowEffect = 'shadow-[0_0_6px_rgba(148,163,184,0.4)]';
+                } else {
+                  bgColor = 'bg-rose-500 border border-rose-450';
+                  textLabel = 'L';
+                  glowEffect = 'shadow-[0_0_8px_rgba(239,68,68,0.5)]';
+                }
+              }
+
+              const isCurrent = idx === simIndex;
+
+              return (
+                <div
+                  key={idx}
+                  title={match ? `Game ${idx + 1} vs ${match.opponent}: ${match.ourScore}-${match.opponentScore} (${match.outcome})` : `Game ${idx + 1} (Unplayed)`}
+                  className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-black font-display leading-none text-slate-950 transition-all duration-300 ${bgColor} ${glowEffect} ${
+                    isCurrent ? 'ring-2 ring-emerald-400 ring-offset-2 ring-offset-slate-950 animate-pulse' : ''
+                  } ${played ? 'animate-card-deal' : ''}`}
+                >
+                  {textLabel}
+                </div>
+              );
+            })}
           </div>
         </div>
 
