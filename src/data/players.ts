@@ -1,7 +1,9 @@
 import { Player, Position, Rarity } from '../types/game';
+import { seasonOverrides } from './seasonOverrides';
+import { careerRegistry, PlayerCareerMeta } from './careerData';
 
 // Interface for player base template
-interface PlayerBase {
+export interface PlayerBase {
   name: string;
   lastName: string;
   nationality: string;
@@ -11,11 +13,15 @@ interface PlayerBase {
   club: string; // Default/main club
   baseRating: number;
   startYear: number;
+  careerStartYear?: number;
+  endYear?: number; // Last season start year; no cards are generated after this
+  careerEndYear?: number;
+  retirementYear?: number;
+  isRetired?: boolean;
   baseTrait: string;
   playStyle: string;
   rivals: string[];
   isLegendaryPlayer?: boolean;
-  endYear?: number; // Last season start year; no cards are generated after this
 }
 
 // 116 Iconic Premier League Base Players (1992 - 2026)
@@ -2454,21 +2460,265 @@ const statOverrides: Record<string, StatOverride> = {
 };
 
 
-// Dynamically generate the 800+ player seasons database
+
+// Helper: Position transitions across player careers
+function getPositionForSeason(
+  playerName: string,
+  year: number,
+  defaultPrimary: Position,
+  defaultSecondary: Position[]
+): { primaryPosition: Position; secondaryPositions: Position[] } {
+  let primaryPosition = defaultPrimary;
+  let secondaryPositions = [...defaultSecondary];
+
+  if (playerName === 'Gareth Bale') {
+    if (year <= 2009) {
+      primaryPosition = 'LB';
+      secondaryPositions = ['LM'];
+    } else if (year <= 2014) {
+      primaryPosition = 'LW';
+      secondaryPositions = ['RW', 'CF', 'LM'];
+    } else {
+      primaryPosition = 'RW';
+      secondaryPositions = ['LW', 'ST'];
+    }
+  } else if (playerName === 'Cristiano Ronaldo') {
+    if (year <= 2006) {
+      primaryPosition = 'RM';
+      secondaryPositions = ['RW', 'LM'];
+    } else if (year <= 2016) {
+      primaryPosition = 'LW';
+      secondaryPositions = ['RW', 'ST'];
+    } else {
+      primaryPosition = 'ST';
+      secondaryPositions = ['CF', 'LW'];
+    }
+  } else if (playerName === 'Thierry Henry') {
+    if (year <= 1998) {
+      primaryPosition = 'LW';
+      secondaryPositions = ['LM', 'ST'];
+    } else if (year <= 2006) {
+      primaryPosition = 'ST';
+      secondaryPositions = ['CF', 'LW'];
+    } else {
+      primaryPosition = 'LW';
+      secondaryPositions = ['ST', 'CF'];
+    }
+  } else if (playerName === 'Vincent Kompany') {
+    if (year <= 2009) {
+      primaryPosition = 'CDM';
+      secondaryPositions = ['CB', 'CM'];
+    } else {
+      primaryPosition = 'CB';
+      secondaryPositions = ['CDM'];
+    }
+  } else if (playerName === 'Philipp Lahm') {
+    if (year <= 2009) {
+      primaryPosition = 'LB';
+      secondaryPositions = ['RB', 'LM'];
+    } else if (year <= 2013) {
+      primaryPosition = 'RB';
+      secondaryPositions = ['LB', 'RM'];
+    } else {
+      primaryPosition = 'CDM';
+      secondaryPositions = ['RB', 'CM'];
+    }
+  } else if (playerName === 'Sergio Ramos') {
+    if (year <= 2010) {
+      primaryPosition = 'RB';
+      secondaryPositions = ['CB'];
+    } else {
+      primaryPosition = 'CB';
+      secondaryPositions = ['RB'];
+    }
+  } else if (playerName === 'Carles Puyol') {
+    if (year <= 2002) {
+      primaryPosition = 'RB';
+      secondaryPositions = ['CB'];
+    } else {
+      primaryPosition = 'CB';
+      secondaryPositions = ['RB'];
+    }
+  } else if (playerName === 'Javier Mascherano') {
+    if (year <= 2010) {
+      primaryPosition = 'CDM';
+      secondaryPositions = ['CM', 'CB'];
+    } else {
+      primaryPosition = 'CB';
+      secondaryPositions = ['CDM'];
+    }
+  } else if (playerName === 'David Alaba') {
+    if (year <= 2018) {
+      primaryPosition = 'LB';
+      secondaryPositions = ['CB', 'CM'];
+    } else {
+      primaryPosition = 'CB';
+      secondaryPositions = ['LB', 'CDM'];
+    }
+  } else if (playerName === 'Bastian Schweinsteiger') {
+    if (year <= 2008) {
+      primaryPosition = 'LM';
+      secondaryPositions = ['RM', 'LW', 'RW'];
+    } else {
+      primaryPosition = 'CM';
+      secondaryPositions = ['CDM', 'CAM'];
+    }
+  } else if (playerName === 'Ryan Giggs') {
+    if (year <= 2007) {
+      primaryPosition = 'LM';
+      secondaryPositions = ['LW', 'RM'];
+    } else {
+      primaryPosition = 'CM';
+      secondaryPositions = ['CAM', 'LM'];
+    }
+  } else if (playerName === 'Wayne Rooney') {
+    if (year <= 2014) {
+      primaryPosition = 'ST';
+      secondaryPositions = ['CF', 'CAM', 'LW'];
+    } else {
+      primaryPosition = 'CAM';
+      secondaryPositions = ['CM', 'ST', 'CF'];
+    }
+  } else if (playerName === 'Declan Rice') {
+    if (year <= 2018) {
+      primaryPosition = 'CB';
+      secondaryPositions = ['CDM'];
+    } else {
+      primaryPosition = 'CDM';
+      secondaryPositions = ['CM', 'CB'];
+    }
+  } else if (playerName === 'John Barnes') {
+    if (year <= 1994) {
+      primaryPosition = 'LW';
+      secondaryPositions = ['LM', 'ST'];
+    } else {
+      primaryPosition = 'CM';
+      secondaryPositions = ['CAM', 'LM'];
+    }
+  } else if (playerName === 'Kolo Toure') {
+    if (year <= 2002) {
+      primaryPosition = 'RB';
+      secondaryPositions = ['CDM', 'CB'];
+    } else {
+      primaryPosition = 'CB';
+      secondaryPositions = ['RB'];
+    }
+  }
+
+  // Dynamic secondary positions compatibility
+  if (primaryPosition === 'LW' && !secondaryPositions.includes('LM')) secondaryPositions.push('LM');
+  if (primaryPosition === 'LM' && !secondaryPositions.includes('LW')) secondaryPositions.push('LW');
+  if (primaryPosition === 'RW' && !secondaryPositions.includes('RM')) secondaryPositions.push('RM');
+  if (primaryPosition === 'RM' && !secondaryPositions.includes('RW')) secondaryPositions.push('RW');
+  if (primaryPosition === 'ST' && !secondaryPositions.includes('CF')) secondaryPositions.push('CF');
+  if (primaryPosition === 'CF' && !secondaryPositions.includes('ST')) secondaryPositions.push('ST');
+  if (primaryPosition === 'CM') {
+    if (!secondaryPositions.includes('CAM')) secondaryPositions.push('CAM');
+    if (!secondaryPositions.includes('CDM')) secondaryPositions.push('CDM');
+  }
+  if (primaryPosition === 'CAM' && !secondaryPositions.includes('CM')) secondaryPositions.push('CM');
+  if (primaryPosition === 'CDM' && !secondaryPositions.includes('CM')) secondaryPositions.push('CM');
+
+  return { primaryPosition, secondaryPositions };
+}
+
+// Map override years per player for guaranteed generation
+const playerOverrideYearsMap: Record<string, number[]> = {};
+for (const [ovKey] of Object.entries(seasonOverrides)) {
+  const parts = ovKey.split('_');
+  const year = parseInt(parts[parts.length - 1], 10);
+  if (isNaN(year)) continue;
+  const cleanKey = ovKey.replace(/[^a-z0-9]/g, '');
+  for (const name of Object.keys(careerRegistry)) {
+    const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (cleanKey.startsWith(cleanName)) {
+      playerOverrideYearsMap[name] = playerOverrideYearsMap[name] || [];
+      if (!playerOverrideYearsMap[name].includes(year)) {
+        playerOverrideYearsMap[name].push(year);
+      }
+      break;
+    }
+  }
+}
+
+// Helper: Find matching explicit season override
+function findSeasonOverride(playerName: string, club: string, year: number) {
+  const playerSlug = playerName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const playerClean = playerName.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const clubSlug = club.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  const cardId = `${playerSlug}_${clubSlug}_${year}`;
+  const direct = seasonOverrides[cardId] || 
+                 seasonOverrides[`${playerClean}_${clubSlug}_${year}`] ||
+                 seasonOverrides[`${playerSlug}_${year}`] ||
+                 seasonOverrides[`${playerClean}_${year}`] ||
+                 seasonOverrides[`${playerName}_${year}`];
+  if (direct) return direct;
+
+  const yearSuffix = `_${year}`;
+  for (const [key, val] of Object.entries(seasonOverrides)) {
+    if (key.endsWith(yearSuffix) && key.replace(/[^a-z0-9]/g, '').startsWith(playerClean)) {
+      return val;
+    }
+  }
+  return undefined;
+}
+
+// Helper: Determine seasons for a player strictly within career boundaries
+function getSeasonsForPlayer(base: PlayerBase, meta?: PlayerCareerMeta, overrideYears: number[] = []): number[] {
+  const start = meta?.careerStartYear ?? base.startYear;
+  const isRetired = meta?.isRetired ?? false;
+  const end = isRetired ? (meta?.careerEndYear ?? base.endYear ?? 2024) : (base.endYear ?? 2026);
+  const effectiveEnd = Math.min(2025, end);
+
+  const validOverrides = overrideYears.filter(y => y >= start && y <= effectiveEnd);
+  const yearsSet = new Set<number>(validOverrides);
+
+  const span = effectiveEnd - start + 1;
+  if (span <= 10) {
+    for (let y = start; y <= effectiveEnd; y++) {
+      yearsSet.add(y);
+    }
+  } else {
+    // Breakthrough / Debut
+    yearsSet.add(start);
+    // Final season
+    yearsSet.add(effectiveEnd);
+
+    // Sample points across career
+    const targetCount = 10;
+    const step = (effectiveEnd - start) / (targetCount - 1);
+    for (let i = 1; i < targetCount - 1; i++) {
+      yearsSet.add(Math.round(start + i * step));
+    }
+  }
+
+  return Array.from(yearsSet).sort((a, b) => a - b);
+}
+
+// Dynamically generate the player seasons database with career integrity and explicit overrides
 function generatePlayersDatabase(): Player[] {
   const allPlayerSeasons: Player[] = [];
 
-  playerBases.forEach((base, playerIdx) => {
-    careerStages.forEach((stage, stageIdx) => {
-      const year = base.startYear + stage.stepYear;
-      
-      // Prevent generating future seasons beyond 2026/27
+  playerBases.forEach((base) => {
+    const meta = careerRegistry[base.name];
+    const ovYears = playerOverrideYearsMap[base.name] || [];
+    const seasons = getSeasonsForPlayer(base, meta, ovYears);
+
+    const start = meta?.careerStartYear ?? base.startYear;
+    const isRetired = meta?.isRetired ?? false;
+    const end = isRetired ? (meta?.careerEndYear ?? base.endYear ?? 2024) : (base.endYear ?? 2026);
+    const effectiveEnd = Math.min(2025, end);
+    const careerLength = Math.max(1, effectiveEnd - start);
+
+    seasons.forEach((year) => {
+      // Career bounds enforcement
+      if (year < start) return;
+      if (isRetired && meta?.careerEndYear !== undefined && year > meta.careerEndYear) return;
       if (year > 2026) return;
-      if (base.endYear !== undefined && year > base.endYear) return;
 
       const seasonLabel = formatSeason(year);
-      const rating = Math.min(99, Math.max(70, base.baseRating + stage.ratingOffset));
-      
+
       // Determine era based on season year
       let era: '90s' | '00s' | '10s' | 'Modern' = base.era;
       if (year >= 2018) era = 'Modern';
@@ -2476,58 +2726,15 @@ function generatePlayersDatabase(): Player[] {
       else if (year >= 2000) era = '00s';
       else era = '90s';
 
-      // Setup dynamic secondary positions for maximum versatility
-      const secondaryPositions = [...base.secondaryPositions];
-      
-      // LW <-> LM compatibility
-      if (base.primaryPosition === 'LW' && !secondaryPositions.includes('LM')) {
-        secondaryPositions.push('LM');
-      }
-      if (base.primaryPosition === 'LM' && !secondaryPositions.includes('LW')) {
-        secondaryPositions.push('LW');
-      }
-      // RW <-> RM compatibility
-      if (base.primaryPosition === 'RW' && !secondaryPositions.includes('RM')) {
-        secondaryPositions.push('RM');
-      }
-      if (base.primaryPosition === 'RM' && !secondaryPositions.includes('RW')) {
-        secondaryPositions.push('RW');
-      }
-      // ST <-> CF compatibility
-      if (base.primaryPosition === 'ST' && !secondaryPositions.includes('CF')) {
-        secondaryPositions.push('CF');
-      }
-      if (base.primaryPosition === 'CF' && !secondaryPositions.includes('ST')) {
-        secondaryPositions.push('ST');
-      }
-      // CM <-> CAM/CDM compatibility
-      if (base.primaryPosition === 'CM') {
-        if (!secondaryPositions.includes('CAM')) secondaryPositions.push('CAM');
-        if (!secondaryPositions.includes('CDM')) secondaryPositions.push('CDM');
-      }
-      if (base.primaryPosition === 'CAM' && !secondaryPositions.includes('CM')) {
-        secondaryPositions.push('CM');
-      }
-      if (base.primaryPosition === 'CDM' && !secondaryPositions.includes('CM')) {
-        secondaryPositions.push('CM');
-      }
+      // Resolve position transitions and dynamic secondary positions
+      const { primaryPosition: initialPos, secondaryPositions: initialSecondaries } =
+        getPositionForSeason(base.name, year, base.primaryPosition, base.secondaryPositions);
 
-      // Check if secondary positions list implies the other winger/midfield position
-      if (secondaryPositions.includes('LW') && !secondaryPositions.includes('LM')) {
-        secondaryPositions.push('LM');
-      }
-      if (secondaryPositions.includes('LM') && !secondaryPositions.includes('LW')) {
-        secondaryPositions.push('LW');
-      }
-      if (secondaryPositions.includes('RW') && !secondaryPositions.includes('RM')) {
-        secondaryPositions.push('RM');
-      }
-      if (secondaryPositions.includes('RM') && !secondaryPositions.includes('RW')) {
-        secondaryPositions.push('RW');
-      }
+      let primaryPosition = initialPos;
+      let secondaryPositions = [...initialSecondaries];
 
-      // Override club transfers historically
-      let club = base.club;
+      // Resolve club
+            let club = base.club;
       if (base.name === 'Alan Shearer' && year < 1996) {
         club = 'Blackburn';
       } else if (base.name === 'Wayne Rooney') {
@@ -3218,57 +3425,128 @@ function generatePlayersDatabase(): Player[] {
         else if (year < 2011) club = 'Tottenham';
       }
 
+
       const careerPath = careerPaths[base.name];
       if (careerPath) {
         const resolved = careerPath(year);
         if (resolved) club = resolved;
       }
+      if (meta?.clubTimeline) {
+        const resolved = meta.clubTimeline(year);
+        if (resolved) club = resolved;
+      }
 
-      // Generate unique player card ID based on player name, resolved club, and year
+      // Check explicit season override
+      const override = findSeasonOverride(base.name, club, year);
+
+      // Career progression progress (0.0 debut -> 1.0 final season)
+      const progress = (year - start) / careerLength;
+
+      // Position-based progression and ratings
+      let ratingOffset = 0;
+      let defaultBio = 'An established first-team performer providing consistent quality.';
+      let defaultTrait = base.baseTrait;
+
+      const pos = primaryPosition;
+
+      if (pos === 'GK') {
+        if (progress < 0.20) {
+          ratingOffset = -5;
+          defaultBio = 'Promising young shot stopper developing first-team consistency.';
+          defaultTrait = 'Shot Stopper';
+        } else if (progress < 0.40) {
+          ratingOffset = -1;
+          defaultBio = 'Commanding goalkeeper cementing reputation as reliable last line of defence.';
+        } else if (progress < 0.80) {
+          ratingOffset = 2;
+          defaultBio = 'World-class goalkeeper in commanding peak form between the posts.';
+          defaultTrait = base.baseTrait || 'Shot Stopper';
+        } else {
+          ratingOffset = -2;
+          defaultBio = 'Vastly experienced veteran goalkeeper organizing defensive lines with authority.';
+          defaultTrait = 'Leadership';
+        }
+      } else if (pos === 'CB') {
+        if (progress < 0.20) {
+          ratingOffset = -5;
+          defaultBio = 'Physically gifted young defender adapting to senior tactical demands.';
+          defaultTrait = 'Defensive Anchor';
+        } else if (progress < 0.35) {
+          ratingOffset = -1;
+          defaultBio = 'Composed central defender establishing defensive dominance.';
+        } else if (progress < 0.75) {
+          ratingOffset = 2;
+          defaultBio = 'Dominant peak campaign commanding defensive lines with supreme authority.';
+          defaultTrait = base.baseTrait;
+        } else {
+          ratingOffset = -3;
+          defaultBio = 'Tactically astute veteran leader organizing the backline with deep game reading.';
+          defaultTrait = 'Leadership';
+        }
+      } else if (pos === 'CAM' || pos === 'CM' || pos === 'CDM') {
+        if (progress < 0.18) {
+          ratingOffset = -5;
+          defaultBio = 'Energetic young midfielder showcasing immense technical promise.';
+          defaultTrait = 'Chaos Merchant';
+        } else if (progress < 0.35) {
+          ratingOffset = -1;
+          defaultBio = 'Dynamic midfield presence dictating tempo and controlling territory.';
+        } else if (progress < 0.70) {
+          ratingOffset = 2;
+          defaultBio = 'A dominant prime campaign orchestrating midfield play with masterclass vision.';
+          defaultTrait = base.baseTrait;
+        } else if (progress < 0.85) {
+          ratingOffset = -1;
+          defaultBio = 'Seasoned playmaker reading the game two steps ahead with supreme composure.';
+          defaultTrait = base.baseTrait;
+        } else {
+          ratingOffset = -4;
+          defaultBio = 'Crucial veteran general providing tactical balance and dressing room leadership.';
+          defaultTrait = 'Leadership';
+        }
+      } else {
+        if (progress < 0.18) {
+          ratingOffset = -6;
+          defaultBio = 'Promising breakthrough season showcasing explosive raw potential.';
+          defaultTrait = 'Chaos Merchant';
+        } else if (progress < 0.35) {
+          ratingOffset = -1;
+          defaultBio = 'Exciting rising star campaign showing rapid progression and attacking danger.';
+        } else if (progress < 0.65) {
+          ratingOffset = 3;
+          defaultBio = 'An iconic peak campaign dismantling defences with ruthless efficiency.';
+          defaultTrait = base.baseTrait;
+        } else if (progress < 0.82) {
+          ratingOffset = -1;
+          defaultBio = 'Experienced attacking weapon relying on clinical movement and elite timing.';
+        } else {
+          ratingOffset = -5;
+          defaultBio = 'Veteran forward bringing invaluable experience and moments of class.';
+          defaultTrait = 'Leadership';
+        }
+      }
+
+      let rating = Math.min(99, Math.max(70, base.baseRating + ratingOffset));
+
+      // Generate unique player card ID
       const id = `${base.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${club.toLowerCase().replace(/[^a-z0-9]/g, '')}_${year}`;
 
       // Determine Rarity
-      let rarity = stage.rarity;
+      let rarity: Rarity = 'solid';
       if (rating >= 95) rarity = 'legend';
       else if (rating >= 90) rarity = 'elite';
       else if (rating >= 85) rarity = 'rare';
       else if (rating >= 79) rarity = 'solid';
       else rarity = 'common';
 
-      // Inject cult status for specific milestones
-      if (stage.rarity === 'cult' && rating < 90) {
+      if (progress >= 0.85 && rating < 90 && rating >= 80) {
         rarity = 'cult';
       }
 
       // Determine Special Trait
-      let specialTrait = stage.trait || base.baseTrait;
+      let specialTrait = defaultTrait || base.baseTrait;
 
-      // Position-based sanitization of stage traits (e.g. preventing defenders/GKs from getting Golden Boot Form)
-      if (stage.trait === 'Golden Boot Form') {
-        const pos = base.primaryPosition;
-        if (pos === 'GK') {
-          specialTrait = 'Clean Sheet Master';
-        } else if (pos === 'CB' || pos === 'LB' || pos === 'RB') {
-          // Playmaker fullbacks keep their Creator Supreme / Set Piece Master traits
-          if (base.baseTrait === 'Creator Supreme') {
-            specialTrait = 'Creator Supreme';
-          } else {
-            specialTrait = 'Lockdown Defender';
-          }
-        } else if (pos === 'CDM' || pos === 'CM' || pos === 'CAM' || pos === 'LM' || pos === 'RM') {
-          if (base.baseTrait === 'Creator Supreme' || base.baseTrait === 'Midfield General' || base.baseTrait === 'Box-to-Box Engine') {
-            specialTrait = base.baseTrait;
-          } else {
-            specialTrait = 'Midfield Maestro';
-          }
-        } else {
-          // ST, CF, LW, RW keep their baseTrait if it's specific, or get Golden Boot Form
-          specialTrait = base.baseTrait !== 'Chaos Merchant' ? base.baseTrait : 'Golden Boot Form';
-        }
-      }
-
-      // If GK, force Shot Stopper or Sweeper Keeper
-      if (base.primaryPosition === 'GK' && specialTrait !== 'Sweeper Keeper') {
+      if (pos === 'GK' && specialTrait !== 'Sweeper Keeper') {
         specialTrait = 'Shot Stopper';
       }
 
@@ -3277,10 +3555,8 @@ function generatePlayersDatabase(): Player[] {
         return Math.min(99, Math.max(35, Math.round(baseVal * scaleFactor)));
       };
 
-      const baseAvg = 84; // normalized baseline average (refined from 80 for realistic scaling)
+      const baseAvg = 84;
       const scaleFactor = rating / baseAvg;
-
-      const pos = base.primaryPosition;
 
       // Category baselines
       let baseAttack = 45;
@@ -3296,7 +3572,7 @@ function generatePlayersDatabase(): Player[] {
       } else if (pos === 'CB') {
         baseAttack = 35; baseMidfield = 50; baseDefence = 92;
       } else if (pos === 'LB' || pos === 'RB') {
-        baseAttack = 55; baseMidfield = 68; baseDefence = 80; // Fullbacks have lower base defense than CBs
+        baseAttack = 55; baseMidfield = 68; baseDefence = 80;
       } else if (pos === 'GK') {
         baseAttack = 12; baseMidfield = 15; baseDefence = 92;
       }
@@ -3315,9 +3591,7 @@ function generatePlayersDatabase(): Player[] {
       let baseDefending = (pos === 'CB' || pos === 'CDM') ? 90 : (pos === 'LB' || pos === 'RB') ? 82 : 35;
       let baseAerial = (pos === 'CB' || pos === 'ST') ? 84 : 60;
 
-      // --- APPLY PROFILE SKEWS BASED ON TRAIT/PLAYSTYLE ---
-      
-      // 1. Playmakers/Creators (e.g. Trent Alexander-Arnold, Pirlo, Modric, Kroos, Cancelo)
+      // Profile skews based on playstyle/trait
       if (
         base.baseTrait === 'Creator Supreme' || 
         base.playStyle === 'Set Piece Master' || 
@@ -3329,17 +3603,14 @@ function generatePlayersDatabase(): Player[] {
         baseCreativity = Math.max(baseCreativity, 88);
         baseTechniqueVal = Math.max(baseTechniqueVal, 88);
         baseMidfield = Math.max(baseMidfield, 78);
-        
-        // Fullback playmaker adjustments (Trent, Cancelo)
         if (pos === 'LB' || pos === 'RB') {
-          baseDefence = 70; // Playmaker fullback base defense
+          baseDefence = 70;
           baseDefending = 62;
           basePaceVal = 78;
           baseAttack = Math.max(baseAttack, 55);
         }
       }
 
-      // 2. Speedsters vs slower tactical/technical players
       const isSpeedster = 
         base.playStyle.toLowerCase().includes('speedster') || 
         base.playStyle.toLowerCase().includes('wingback') || 
@@ -3349,11 +3620,9 @@ function generatePlayersDatabase(): Player[] {
       if (isSpeedster) {
         basePaceVal = Math.max(basePaceVal, 88);
       } else if (pos === 'LB' || pos === 'RB') {
-        // Tone down pace for technical/lockdown fullbacks
         basePaceVal = 78;
       }
 
-      // 3. Defensive Anchors / Hard Tacklers (e.g. Chiellini, Baresi, Nesta, Walker, Wan-Bissaka)
       if (
         base.baseTrait === 'Lockdown Fullback' || 
         base.baseTrait === 'Defensive Anchor' || 
@@ -3362,12 +3631,12 @@ function generatePlayersDatabase(): Player[] {
         base.playStyle === 'Stopper' ||
         base.playStyle === 'Ball Winning Midfielder'
       ) {
-        baseDefence = Math.max(baseDefence, pos === 'CB' ? 92 : 86); // CB gets 92, Fullback gets 86
+        baseDefence = Math.max(baseDefence, pos === 'CB' ? 92 : 86);
         baseDefending = Math.max(baseDefending, 90);
         basePhysicalVal = Math.max(basePhysicalVal, 84);
       }
 
-      // 4. Known real-world profiles override the generic position/style formulas
+      // Base stat overrides from catalog
       const ov = statOverrides[base.name];
       if (ov) {
         if (ov.pace !== undefined) basePaceVal = ov.pace;
@@ -3381,31 +3650,59 @@ function generatePlayersDatabase(): Player[] {
         if (ov.aerial !== undefined) baseAerial = ov.aerial;
       }
 
-      // Pace declines with age: late-career stages lose a little each season
-      basePaceVal -= Math.max(0, stageIdx - 4) * 2;
+      // Attribute-specific ageing curve based on career progress
+      let pacePenalty = 0;
+      let physicalPenalty = 0;
+      let mentalityBonus = 0;
+      let leadershipBonus = 0;
+      let passingBonus = 0;
 
-      const attack = scaleStat(baseAttack, scaleFactor);
-      const midfield = scaleStat(baseMidfield, scaleFactor);
-      const defence = scaleStat(baseDefence, scaleFactor);
+      if (progress > 0.50) {
+        const lateCareer = progress - 0.50;
+        if (pos === 'ST' || pos === 'CF' || pos === 'LW' || pos === 'RW' || pos === 'LB' || pos === 'RB') {
+          pacePenalty = Math.round(lateCareer * 18);
+          physicalPenalty = Math.round(lateCareer * 10);
+        } else if (pos === 'CB' || pos === 'CDM' || pos === 'CM') {
+          pacePenalty = Math.round(lateCareer * 12);
+          physicalPenalty = Math.round(lateCareer * 8);
+        } else {
+          pacePenalty = Math.round(lateCareer * 6);
+        }
+      }
 
-      const pace = Math.min(base.name === 'Kylian Mbappe' ? 99 : 96, scaleStat(basePaceVal, scaleFactor));
-      const technique = scaleStat(baseTechniqueVal, scaleFactor);
-      const physical = scaleStat(basePhysicalVal, scaleFactor);
-      const mentality = scaleStat(baseMentalityVal, scaleFactor);
+      if (progress > 0.55) {
+        mentalityBonus = Math.min(8, Math.round((progress - 0.55) * 16));
+        leadershipBonus = Math.min(16, Math.round((progress - 0.55) * 32));
+        if (pos === 'CAM' || pos === 'CM' || pos === 'CDM') {
+          passingBonus = Math.min(4, Math.round((progress - 0.55) * 8));
+        }
+      }
 
-      // Detailed sub-stats
-      const finishing = scaleStat(baseFinishing, scaleFactor);
-      const creativity = scaleStat(baseCreativity, scaleFactor);
-      const passing = scaleStat(basePassing, scaleFactor);
-      const dribbling = scaleStat(baseDribbling, scaleFactor);
-      const defending = scaleStat(baseDefending, scaleFactor);
-      const aerial = scaleStat(baseAerial, scaleFactor);
-      const pressing = scaleStat(pos === 'ST' || pos === 'CM' || pos === 'CDM' ? 80 : 60, scaleFactor);
-      const leadership = scaleStat(stageIdx >= 5 ? 90 : 70, scaleFactor);
-      const bigGame = scaleStat(80, scaleFactor);
-      const consistency = scaleStat(82, scaleFactor);
+      basePaceVal = Math.max(45, basePaceVal - pacePenalty);
+      basePhysicalVal = Math.max(45, basePhysicalVal - physicalPenalty);
+      baseMentalityVal = Math.min(99, baseMentalityVal + mentalityBonus);
+      basePassing = Math.min(99, basePassing + passingBonus);
 
-      // Construct strengths and weaknesses dynamically
+      let attack = scaleStat(baseAttack, scaleFactor);
+      let midfield = scaleStat(baseMidfield, scaleFactor);
+      let defence = scaleStat(baseDefence, scaleFactor);
+
+      let pace = Math.min(base.name === 'Kylian Mbappe' ? 99 : 96, scaleStat(basePaceVal, scaleFactor));
+      let technique = scaleStat(baseTechniqueVal, scaleFactor);
+      let physical = scaleStat(basePhysicalVal, scaleFactor);
+      let mentality = scaleStat(baseMentalityVal, scaleFactor);
+
+      let finishing = scaleStat(baseFinishing, scaleFactor);
+      let creativity = scaleStat(baseCreativity, scaleFactor);
+      let passing = scaleStat(basePassing, scaleFactor);
+      let dribbling = scaleStat(baseDribbling, scaleFactor);
+      let defending = scaleStat(baseDefending, scaleFactor);
+      let aerial = scaleStat(baseAerial, scaleFactor);
+      let pressing = scaleStat(pos === 'ST' || pos === 'CM' || pos === 'CDM' ? 80 : 60, scaleFactor);
+      let leadership = scaleStat(Math.min(95, 68 + leadershipBonus), scaleFactor);
+      let bigGame = scaleStat(80, scaleFactor);
+      let consistency = scaleStat(82, scaleFactor);
+
       const strengths: string[] = [];
       const weaknesses: string[] = [];
 
@@ -3417,7 +3714,6 @@ function generatePlayersDatabase(): Player[] {
       if (physical >= 85) strengths.push('Strength');
       if (aerial >= 82) strengths.push('Aerial Duels');
       
-      // Ensure at least 2 strengths
       if (strengths.length < 2) {
         strengths.push('Technique');
         strengths.push('Work Rate');
@@ -3433,21 +3729,84 @@ function generatePlayersDatabase(): Player[] {
         weaknesses.push('Injury Risk');
       }
 
+      let shortBio = defaultBio;
+      let oneLineDescription = defaultBio;
+      let playStyleTags = [base.playStyle];
+
+      // Apply explicit season override if present
+      if (override) {
+        if (override.rating !== undefined) rating = override.rating;
+        if (override.attack !== undefined) attack = override.attack;
+        if (override.midfield !== undefined) midfield = override.midfield;
+        if (override.defence !== undefined) defence = override.defence;
+        if (override.pace !== undefined) pace = override.pace;
+        if (override.technique !== undefined) technique = override.technique;
+        if (override.physical !== undefined) physical = override.physical;
+        if (override.mentality !== undefined) mentality = override.mentality;
+        if (override.finishing !== undefined) finishing = override.finishing;
+        if (override.creativity !== undefined) creativity = override.creativity;
+        if (override.passing !== undefined) passing = override.passing;
+        if (override.dribbling !== undefined) dribbling = override.dribbling;
+        if (override.defending !== undefined) defending = override.defending;
+        if (override.aerial !== undefined) aerial = override.aerial;
+        if (override.pressing !== undefined) pressing = override.pressing;
+        if (override.leadership !== undefined) leadership = override.leadership;
+        if (override.bigGame !== undefined) bigGame = override.bigGame;
+        if (override.consistency !== undefined) consistency = override.consistency;
+        if (override.primaryPosition !== undefined) primaryPosition = override.primaryPosition;
+        if (override.secondaryPositions !== undefined) secondaryPositions = [...override.secondaryPositions];
+        if (override.rarity !== undefined) rarity = override.rarity;
+        if (override.specialTrait !== undefined) specialTrait = override.specialTrait;
+        if (override.playStyleTags !== undefined) playStyleTags = [...override.playStyleTags];
+        if (override.strengths !== undefined) {
+          strengths.length = 0;
+          strengths.push(...override.strengths);
+        }
+        if (override.weaknesses !== undefined) {
+          weaknesses.length = 0;
+          weaknesses.push(...override.weaknesses);
+        }
+        if (override.oneLineDescription !== undefined) oneLineDescription = override.oneLineDescription;
+        if (override.shortBio !== undefined) shortBio = override.shortBio;
+      }
+
+      // Clamp all attributes strictly to [1, 99] bounds
+      attack = Math.min(99, Math.max(1, attack));
+      midfield = Math.min(99, Math.max(1, midfield));
+      defence = Math.min(99, Math.max(1, defence));
+      if ((primaryPosition === 'LB' || primaryPosition === 'RB') && override?.defence === undefined) {
+        defence = Math.min(90, defence);
+      }
+      pace = Math.min(99, Math.max(1, pace));
+      technique = Math.min(99, Math.max(1, technique));
+      physical = Math.min(99, Math.max(1, physical));
+      mentality = Math.min(99, Math.max(1, mentality));
+      finishing = Math.min(99, Math.max(1, finishing));
+      creativity = Math.min(99, Math.max(1, creativity));
+      passing = Math.min(99, Math.max(1, passing));
+      dribbling = Math.min(99, Math.max(1, dribbling));
+      defending = Math.min(99, Math.max(1, defending));
+      aerial = Math.min(99, Math.max(1, aerial));
+      pressing = Math.min(99, Math.max(1, pressing));
+      leadership = Math.min(99, Math.max(1, leadership));
+      bigGame = Math.min(99, Math.max(1, bigGame));
+      consistency = Math.min(99, Math.max(1, consistency));
+      rating = Math.min(99, Math.max(70, rating));
+
       // Best Role & Boosts
       let bestRole = 'All-Rounder';
-      if (pos === 'GK') bestRole = specialTrait;
-      else if (pos === 'ST' || pos === 'CF') bestRole = rating >= 90 ? 'Elite Poacher' : 'Target Forward';
-      else if (pos === 'CAM') bestRole = 'Advanced Playmaker';
-      else if (pos === 'CM') bestRole = 'Box-to-Box Midfielder';
-      else if (pos === 'CDM') bestRole = 'Deep Defensive Shield';
-      else if (pos === 'CB') bestRole = 'Lockdown Defender';
-      else if (pos === 'LB' || pos === 'RB') bestRole = 'Overlapping Wingback';
+      if (primaryPosition === 'GK') bestRole = specialTrait;
+      else if (primaryPosition === 'ST' || primaryPosition === 'CF') bestRole = rating >= 90 ? 'Elite Poacher' : 'Target Forward';
+      else if (primaryPosition === 'CAM') bestRole = 'Advanced Playmaker';
+      else if (primaryPosition === 'CM') bestRole = 'Box-to-Box Midfielder';
+      else if (primaryPosition === 'CDM') bestRole = 'Deep Defensive Shield';
+      else if (primaryPosition === 'CB') bestRole = 'Lockdown Defender';
+      else if (primaryPosition === 'LB' || primaryPosition === 'RB') bestRole = 'Overlapping Wingback';
 
       // Build Tags
       const chemistryTags = [club, base.nationality, era, specialTrait, base.playStyle];
       const clubTags = [club];
-      const playStyleTags = [base.playStyle];
-      
+
       allPlayerSeasons.push({
         id,
         playerName: base.name,
@@ -3456,8 +3815,8 @@ function generatePlayersDatabase(): Player[] {
         club,
         league: getLeagueForClub(club),
         nationality: base.nationality,
-        primaryPosition: base.primaryPosition,
-        secondaryPositions: secondaryPositions,
+        primaryPosition,
+        secondaryPositions,
         era,
         rating,
         attack,
@@ -3485,12 +3844,12 @@ function generatePlayersDatabase(): Player[] {
         rivalryTags: base.rivals,
         rarity,
         specialTrait,
-        shortBio: stage.bio,
-        whyIncluded: `Iconic representation of ${base.name} during the ${seasonLabel} Premier League campaign.`,
+        shortBio,
+        whyIncluded: `Iconic representation of ${base.name} during the ${seasonLabel} season.`,
         dataConfidence: 'high',
         seasonLabel,
         clubSeasonLabel: `${club} ${seasonLabel}`,
-        oneLineDescription: stage.bio,
+        oneLineDescription,
         strengths: strengths.slice(0, 3),
         weaknesses: weaknesses.slice(0, 2),
         bestRole,
