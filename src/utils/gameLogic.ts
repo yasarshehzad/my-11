@@ -793,6 +793,16 @@ export function getDetailedChemistryLogs(
     logs.push({ delta: 8, reason: '🚨 Tactical Imbalance (Too many attackers!)', type: 'negative' });
   }
 
+  // Tactical Disconnect: fragmented squad with >= 8 disparate clubs or >= 8 disparate nations
+  const uniqueClubs = Object.keys(clubCounts).length;
+  const uniqueNations = Object.keys(nationCounts).length;
+  if (activePlayers.length >= 8 && uniqueClubs >= 8) {
+    logs.push({ delta: 6, reason: '⚠️ Fragmented Dressing Room (Mercenary squad with no club core)', type: 'negative' });
+  }
+  if (activePlayers.length >= 8 && uniqueNations >= 8) {
+    logs.push({ delta: 4, reason: '⚠️ Communication Barrier (Disparate language/nationalities)', type: 'negative' });
+  }
+
   // Midfield Balance
   const midfielders = activePlayers.filter(
     (p) => POSITION_DEPARTMENTS[p.primaryPosition] === 'MID'
@@ -1065,7 +1075,7 @@ export function simulateLeagueSeason(
     .sort((a, b) => a.defending - b.defending);
   const hasWeakLink = gkRating < 76 || (sortedDef.length > 0 && sortedDef[0].defending < 65);
 
-  const chemBonus = (chemistry - 75) * 0.08;
+  const chemBonus = (chemistry - 75) * 0.12;
 
   const hasFullbacks = slots
     ? slots.some((s) => s.position === 'LB') && slots.some((s) => s.position === 'RB')
@@ -1076,30 +1086,30 @@ export function simulateLeagueSeason(
 
   shuffledFixtures.forEach((fixture) => {
     const oppRating = fixture.rating;
-    const homeBonus = fixture.home ? 1.0 : -1.0;
+    const homeBonus = fixture.home ? 0.9 : -0.9;
 
     // Momentum bonus (up to +0.06 xG if on 3+ match win streak)
-    const momentum = winStreak >= 5 ? 0.08 : winStreak >= 3 ? 0.04 : 0;
+    const momentum = winStreak >= 5 ? 0.06 : winStreak >= 3 ? 0.03 : 0;
 
     // Midfield control differential
-    let midDiff = (midfield + homeBonus - oppRating) * 0.04 + chemBonus * 0.03;
-    if (hasDoublePivot) midDiff += 0.04;
+    let midDiff = (midfield + homeBonus - oppRating) * 0.04 + chemBonus * 0.035;
+    if (hasDoublePivot) midDiff += 0.035;
 
     // Attack vs Opponent Defence
-    let xG_us = 1.35 + (attack + homeBonus - oppRating) * 0.055 + midDiff * 0.04 + chemBonus * 0.03 + momentum;
-    if (!hasPlaymaker) xG_us -= 0.15;
+    let xG_us = 1.23 + (attack + homeBonus - oppRating) * 0.048 + midDiff * 0.035 + chemBonus * 0.052 + momentum;
+    if (!hasPlaymaker) xG_us -= 0.14;
     if (!hasFullbacks) xG_us -= 0.06;
-    xG_us = Math.max(0.15, xG_us);
+    xG_us = Math.max(0.10, xG_us);
 
     // Opponent Attack vs Our Defence & GK
-    let xG_opp = 1.15 + (oppRating - (defence + homeBonus)) * 0.055 - midDiff * 0.04 - chemBonus * 0.03;
-    xG_opp -= (gkRating - 82) * 0.022;
+    let xG_opp = 1.19 + (oppRating - (defence + homeBonus)) * 0.048 - midDiff * 0.035 - chemBonus * 0.052;
+    xG_opp -= (gkRating - 82) * 0.020;
     if (hasWeakLink) {
-      xG_opp += hasDoublePivot ? 0.08 : 0.20;
+      xG_opp += hasDoublePivot ? 0.08 : 0.18;
     }
     if (!hasPivot) xG_opp += 0.12;
-    if (hasDoublePivot) xG_opp -= 0.08;
-    if (!hasFullbacks) xG_opp += 0.22;
+    if (hasDoublePivot) xG_opp -= 0.075;
+    if (!hasFullbacks) xG_opp += 0.20;
     xG_opp = Math.max(0.10, xG_opp);
 
     let ourScore = sampleGoals(xG_us, rand);
@@ -1107,7 +1117,7 @@ export function simulateLeagueSeason(
 
     // Big Game Clutch Factor: in 1-goal margins or draws, high-leadership/big-game players can snatch winners
     const avgBigGame = selectedPlayers.reduce((acc, p) => acc + p.bigGame, 0) / Math.max(1, selectedPlayers.length);
-    if (ourScore === oppScore && avgBigGame >= 88 && rand() < 0.22) {
+    if (ourScore === oppScore && avgBigGame >= 88 && rand() < 0.20) {
       ourScore += 1; // 89th minute clutch winner!
     }
 
