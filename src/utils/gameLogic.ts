@@ -1,4 +1,16 @@
-import { Player, Position, FormationType, PitchSlot, SimulationResult, MatchSimResult, ChallengeTemplate, ChallengeRuleType, ChemistryLog, ChemistryGrade } from '../types/game';
+import { 
+  Player, 
+  Position, 
+  FormationType, 
+  PitchSlot, 
+  SimulationResult, 
+  MatchSimResult, 
+  ChallengeTemplate, 
+  ChallengeRuleType, 
+  ChemistryLog, 
+  ChemistryGrade,
+  Rarity 
+} from '../types/game';
 import { players } from '../data/players';
 
 // Formations and their coordinate positions on a mobile-first visual pitch
@@ -59,7 +71,7 @@ export const FORMATION_SLOTS: Record<FormationType, PitchSlot[]> = {
 };
 
 // Map of related positions to offer appropriate draft choices
-const RELATED_POSITIONS: Record<Position, Position[]> = {
+export const RELATED_POSITIONS: Record<Position, Position[]> = {
   GK: ['GK'],
   LB: ['LB', 'CB', 'RB'],
   RB: ['RB', 'CB', 'LB'],
@@ -76,7 +88,7 @@ const RELATED_POSITIONS: Record<Position, Position[]> = {
 };
 
 // Departments for broad fallback filters
-const POSITION_DEPARTMENTS: Record<Position, 'GK' | 'DEF' | 'MID' | 'ATT'> = {
+export const POSITION_DEPARTMENTS: Record<Position, 'GK' | 'DEF' | 'MID' | 'ATT'> = {
   GK: 'GK',
   LB: 'DEF',
   CB: 'DEF',
@@ -91,6 +103,15 @@ const POSITION_DEPARTMENTS: Record<Position, 'GK' | 'DEF' | 'MID' | 'ATT'> = {
   ST: 'ATT',
   CF: 'ATT',
 };
+
+// Pre-index cards for high performance and balanced player-first lookups
+const cardsByPlayerName = new Map<string, Player[]>();
+players.forEach((p) => {
+  if (!cardsByPlayerName.has(p.playerName)) {
+    cardsByPlayerName.set(p.playerName, []);
+  }
+  cardsByPlayerName.get(p.playerName)!.push(p);
+});
 
 export interface OpponentTeam {
   name: string;
@@ -205,7 +226,6 @@ export const LEAGUE_OPPONENTS: Record<string, OpponentTeam[]> = {
   ],
 };
 
-// Legacy OPPONENTS points to english pool for backward compatibility
 export const OPPONENTS = LEAGUE_OPPONENTS.english;
 
 // Daily challenges templates rotating by day-of-week (0 = Sun, 1 = Mon, ..., 6 = Sat)
@@ -266,14 +286,30 @@ export function createSeedableRandom(seed: number) {
 }
 
 /**
- * Roll a random rarity based on weights
+ * Roll a random rarity based on specific draft choice slot archetypes
  */
-function rollRarity(randomFn: () => number): 'common' | 'rare' | 'elite' | 'legend' {
-  const roll = randomFn() * 100;
-  if (roll < 5) return 'legend'; // 5%
-  if (roll < 20) return 'elite'; // 15%
-  if (roll < 55) return 'rare'; // 35%
-  return 'common'; // 45%
+function rollRaritySlot(slotType: 'star' | 'chemistry' | 'wildcard', rand: () => number): Rarity {
+  const roll = rand() * 100;
+  if (slotType === 'star') {
+    if (roll < 8) return 'legend';
+    if (roll < 40) return 'elite';
+    if (roll < 75) return 'rare';
+    if (roll < 90) return 'solid';
+    return 'cult';
+  } else if (slotType === 'chemistry') {
+    if (roll < 3) return 'legend';
+    if (roll < 18) return 'elite';
+    if (roll < 55) return 'rare';
+    if (roll < 85) return 'solid';
+    return 'common';
+  } else {
+    // Wildcard / Cult / Specialist
+    if (roll < 5) return 'legend';
+    if (roll < 20) return 'elite';
+    if (roll < 45) return 'rare';
+    if (roll < 75) return 'cult';
+    return 'solid';
+  }
 }
 
 const LEAGUE_MAPPING: Record<string, string> = {
@@ -285,7 +321,51 @@ const LEAGUE_MAPPING: Record<string, string> = {
 };
 
 /**
- * Generates 3 unique player options for a draft slot (supporting deterministic date seeds)
+ * Picks the most appropriate season card for a chosen player identity
+ */
+function pickSeasonForPlayer(
+  playerName: string,
+  targetPos: Position,
+  preferredRarity: Rarity,
+  preferredClub: string | undefined,
+  rand: () => number
+): Player | null {
+  const cards = cardsByPlayerName.get(playerName) || [];
+  if (cards.length === 0) return null;
+
+  // 1. Try matching preferred club (for chemistry slot) + position
+  if (preferredClub) {
+    const clubMatch = cards.filter((c) =>
+      c.club === preferredClub &&
+      (c.primaryPosition === targetPos || c.secondaryPositions.includes(targetPos))
+    );
+    if (clubMatch.length > 0) {
+      const rarityMatch = clubMatch.filter((c) => c.rarity === preferredRarity);
+      return rarityMatch.length > 0
+        ? rarityMatch[Math.floor(rand() * rarityMatch.length)]
+        : clubMatch[Math.floor(rand() * clubMatch.length)];
+    }
+  }
+
+  // 2. Try matching preferred rarity and position
+  let pool = cards.filter((c) =>
+    (c.primaryPosition === targetPos || c.secondaryPositions.includes(targetPos)) &&
+    c.rarity === preferredRarity
+  );
+  if (pool.length > 0) return pool[Math.floor(rand() * pool.length)];
+
+  // 3. Try matching position with any rarity
+  pool = cards.filter((c) =>
+    c.primaryPosition === targetPos || c.secondaryPositions.includes(targetPos)
+  );
+  if (pool.length > 0) return pool[Math.floor(rand() * pool.length)];
+
+  // 4. Fallback: any card of this player
+  return cards[Math.floor(rand() * cards.length)];
+}
+
+/**
+ * Generates 3 unique player options for a draft slot with real trade-offs and zero duplication
  */
 export function getDraftOptions(
   targetPos: Position,
@@ -296,17 +376,23 @@ export function getDraftOptions(
 ): [Player, Player, Player] {
   const rand = customRandom || Math.random;
 
-  const draftedIds = new Set(
-    currentSelection.filter((p): p is Player => p !== null).map((p) => p.id)
+  // Exclude all players already drafted anywhere in the starting XI
+  const draftedPlayerNames = new Set(
+    currentSelection.filter((p): p is Player => p !== null).map((p) => p.playerName)
   );
 
   const selectedOptions: Player[] = [];
+  const selectedPlayerNames = new Set<string>();
   const relatedPositions = RELATED_POSITIONS[targetPos] || [targetPos];
   const department = POSITION_DEPARTMENTS[targetPos];
-
   const targetLeague = selectedLeagueId ? LEAGUE_MAPPING[selectedLeagueId] : undefined;
 
-  // Helper to filter players based on challenge rule restrictions
+  // Analyze current squad chemistry to power the chemistry trade-off choice
+  const activePlayers = currentSelection.filter((p): p is Player => p !== null);
+  const activeClubs = new Set(activePlayers.map((p) => p.club));
+  const activeNations = new Set(activePlayers.map((p) => p.nationality));
+  const activeEras = new Set(activePlayers.map((p) => p.era));
+
   const satisfiesChallengeRule = (p: Player) => {
     if (!challengeRule) return true;
     switch (challengeRule) {
@@ -321,182 +407,139 @@ export function getDraftOptions(
       case 'only_modern':
         return p.era === 'Modern';
       case 'one_superstar':
-        // The page logic will control whether we filter out legends or not
         return true;
       default:
         return true;
     }
   };
 
-  // Helper function implementing candidate matching
-  const findPool = (useLeague: boolean, rarity: 'common' | 'rare' | 'elite' | 'legend', currentSlot: number) => {
-    const matchLeague = (p: Player) => !useLeague || p.league === targetLeague;
-    let pool: Player[] = [];
-    let clean: Player[] = [];
+  const matchLeague = (p: Player) => !targetLeague || p.league === targetLeague;
 
-    if (currentSlot === 0 || currentSlot === 1) {
-      // 1. Strict position + rolled rarity
-      pool = players.filter(
-        (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) &&
-               p.rarity === rarity &&
-               satisfiesChallengeRule(p) &&
-               !draftedIds.has(p.id) &&
-               matchLeague(p)
-      );
-      clean = pool.filter((p) => !selectedOptions.some((sel) => sel.id === p.id));
-      if (clean.length > 0) return pool;
+  // Helper to find eligible player names matching slot criteria
+  const getEligiblePlayers = (criterion: {
+    positionStrict: boolean;
+    chemMatch?: boolean;
+    cultMatch?: boolean;
+  }) => {
+    const eligibleNames: string[] = [];
+    for (const [name, cards] of cardsByPlayerName.entries()) {
+      if (draftedPlayerNames.has(name) || selectedPlayerNames.has(name)) continue;
 
-      // 2. Strict position + any rarity
-      pool = players.filter(
-        (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) &&
-               satisfiesChallengeRule(p) &&
-               !draftedIds.has(p.id) &&
-               matchLeague(p)
-      );
-      clean = pool.filter((p) => !selectedOptions.some((sel) => sel.id === p.id));
-      if (clean.length > 0) return pool;
+      const hasMatchingCard = cards.some((c) => {
+        if (!satisfiesChallengeRule(c) || !matchLeague(c)) return false;
 
-      // 3. Related positions + any rarity
-      pool = players.filter(
-        (p) => relatedPositions.includes(p.primaryPosition) &&
-               satisfiesChallengeRule(p) &&
-               !draftedIds.has(p.id) &&
-               matchLeague(p)
-      );
-      clean = pool.filter((p) => !selectedOptions.some((sel) => sel.id === p.id));
-      if (clean.length > 0) return pool;
+        const posMatch = criterion.positionStrict
+          ? c.primaryPosition === targetPos || c.secondaryPositions.includes(targetPos)
+          : relatedPositions.includes(c.primaryPosition) ||
+            POSITION_DEPARTMENTS[c.primaryPosition] === department;
+        if (!posMatch) return false;
 
-    } else {
-      // Slot 2: Related positions or broad department match
-      // 1. Related positions + rolled rarity
-      pool = players.filter(
-        (p) => relatedPositions.includes(p.primaryPosition) &&
-               p.rarity === rarity &&
-               satisfiesChallengeRule(p) &&
-               !draftedIds.has(p.id) &&
-               matchLeague(p)
-      );
-      clean = pool.filter((p) => !selectedOptions.some((sel) => sel.id === p.id));
-      if (clean.length > 0) return pool;
+        if (criterion.chemMatch && activePlayers.length > 0) {
+          const hasLink =
+            activeClubs.has(c.club) ||
+            activeNations.has(c.nationality) ||
+            activeEras.has(c.era);
+          if (!hasLink) return false;
+        }
 
-      // 2. Department match + rolled rarity
-      pool = players.filter(
-        (p) => POSITION_DEPARTMENTS[p.primaryPosition] === department &&
-               p.rarity === rarity &&
-               satisfiesChallengeRule(p) &&
-               !draftedIds.has(p.id) &&
-               matchLeague(p)
-      );
-      clean = pool.filter((p) => !selectedOptions.some((sel) => sel.id === p.id));
-      if (clean.length > 0) return pool;
+        if (criterion.cultMatch) {
+          if (
+            c.rarity === 'cult' ||
+            c.specialTrait === 'Chaos Merchant' ||
+            c.specialTrait === 'Long Range Threat' ||
+            c.specialTrait === 'Poacher' ||
+            c.specialTrait === 'Set Piece Master'
+          ) {
+            return true;
+          }
+        }
 
-      // 3. Related positions + any rarity
-      pool = players.filter(
-        (p) => relatedPositions.includes(p.primaryPosition) &&
-               satisfiesChallengeRule(p) &&
-               !draftedIds.has(p.id) &&
-               matchLeague(p)
-      );
-      clean = pool.filter((p) => !selectedOptions.some((sel) => sel.id === p.id));
-      if (clean.length > 0) return pool;
+        return true;
+      });
 
-      // 4. Department match + any rarity
-      pool = players.filter(
-        (p) => POSITION_DEPARTMENTS[p.primaryPosition] === department &&
-               satisfiesChallengeRule(p) &&
-               !draftedIds.has(p.id) &&
-               matchLeague(p)
-      );
-      clean = pool.filter((p) => !selectedOptions.some((sel) => sel.id === p.id));
-      if (clean.length > 0) return pool;
+      if (hasMatchingCard) eligibleNames.push(name);
     }
-
-    return [];
+    return eligibleNames;
   };
 
-  // Try to generate 3 unique players
-  for (let slot = 0; slot < 3; slot++) {
-    // 1. Roll rarity
-    const rarity = rollRarity(rand);
-    let eligiblePool: Player[] = [];
+  // Distinct trade-off slot archetypes
+  const slotArchetypes: ('star' | 'chemistry' | 'wildcard')[] = ['star', 'chemistry', 'wildcard'];
 
-    // First try within target league
-    if (targetLeague) {
-      eligiblePool = findPool(true, rarity, slot);
-    }
-    // Fallback to any league
-    if (eligiblePool.length === 0) {
-      eligiblePool = findPool(false, rarity, slot);
-    }
+  for (let s = 0; s < 3; s++) {
+    const archetype = slotArchetypes[s];
+    const preferredRarity = rollRaritySlot(archetype, rand);
 
-    // Generic emergency fallbacks (if still empty)
-    if (eligiblePool.length === 0) {
-      eligiblePool = players.filter(
-        (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) &&
-               satisfiesChallengeRule(p) &&
-               !draftedIds.has(p.id)
-      );
-    }
-    if (eligiblePool.length === 0) {
-      eligiblePool = players.filter(
-        (p) => relatedPositions.includes(p.primaryPosition) &&
-               satisfiesChallengeRule(p) &&
-               !draftedIds.has(p.id)
-      );
-    }
-    if (eligiblePool.length === 0) {
-      eligiblePool = players.filter(
-        (p) => POSITION_DEPARTMENTS[p.primaryPosition] === department &&
-               satisfiesChallengeRule(p) &&
-               !draftedIds.has(p.id)
-      );
-    }
-    if (eligiblePool.length === 0) {
-      // Wildcard fallback satisfying challenge rules
-      eligiblePool = players.filter(
-        (p) => (targetPos === 'GK' ? p.primaryPosition === 'GK' : p.primaryPosition !== 'GK') &&
-               satisfiesChallengeRule(p) &&
-               !draftedIds.has(p.id)
-      );
-    }
-    if (eligiblePool.length === 0) {
-      // Absolute emergency fallback (ignoring challenge rules only if database is depleted)
-      eligiblePool = players.filter(
-        (p) => (targetPos === 'GK' ? p.primaryPosition === 'GK' : p.primaryPosition !== 'GK') &&
-               !draftedIds.has(p.id)
-      );
-    }
+    let candidates: string[] = [];
+    let preferredClub: string | undefined = undefined;
 
-    // Filter out options already selected in this specific round's draft picks
-    const cleanPool = eligiblePool.filter((p) => !selectedOptions.some((sel) => sel.id === p.id));
-
-    if (cleanPool.length > 0) {
-      // Deterministic picking
-      const pickIdx = Math.floor(rand() * cleanPool.length);
-      selectedOptions.push(cleanPool[pickIdx]);
-    } else {
-      const emergencyPool = players.filter((p) => !draftedIds.has(p.id) && !selectedOptions.some((sel) => sel.id === p.id));
-      if (emergencyPool.length > 0) {
-        selectedOptions.push(emergencyPool[Math.floor(rand() * emergencyPool.length)]);
-      } else {
-        selectedOptions.push(players[Math.floor(rand() * players.length)]);
+    if (archetype === 'star') {
+      candidates = getEligiblePlayers({ positionStrict: true });
+      if (candidates.length === 0) candidates = getEligiblePlayers({ positionStrict: false });
+    } else if (archetype === 'chemistry') {
+      // Find candidate linking with active squad
+      candidates = getEligiblePlayers({ positionStrict: true, chemMatch: true });
+      if (candidates.length > 0 && activePlayers.length > 0) {
+        // Find the club with most representation in squad to prefer
+        const clubCounts: Record<string, number> = {};
+        activePlayers.forEach((p) => {
+          clubCounts[p.club] = (clubCounts[p.club] || 0) + 1;
+        });
+        preferredClub = Object.entries(clubCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
       }
+      if (candidates.length === 0) candidates = getEligiblePlayers({ positionStrict: true });
+      if (candidates.length === 0) candidates = getEligiblePlayers({ positionStrict: false });
+    } else {
+      // Wildcard / Cult / Specialist
+      candidates = getEligiblePlayers({ positionStrict: true, cultMatch: true });
+      if (candidates.length === 0) candidates = getEligiblePlayers({ positionStrict: true });
+      if (candidates.length === 0) candidates = getEligiblePlayers({ positionStrict: false });
+    }
+
+    // Fallback: any available player not drafted or already picked in options
+    if (candidates.length === 0) {
+      candidates = Array.from(cardsByPlayerName.keys()).filter(
+        (n) => !draftedPlayerNames.has(n) && !selectedPlayerNames.has(n)
+      );
+    }
+
+    // Step 1: Pick player identity uniformly across eligible players (removes card-count bias!)
+    const chosenPlayerName = candidates[Math.floor(rand() * candidates.length)];
+    selectedPlayerNames.add(chosenPlayerName);
+
+    // Step 2: Pick specific season card for this player
+    const card = pickSeasonForPlayer(
+      chosenPlayerName,
+      targetPos,
+      preferredRarity,
+      preferredClub,
+      rand
+    );
+
+    if (card) {
+      selectedOptions.push(card);
+    } else {
+      // Emergency: fallback to raw card
+      const fallbackCard = (cardsByPlayerName.get(chosenPlayerName) || [])[0] || players[0];
+      selectedOptions.push(fallbackCard);
     }
   }
 
   return [selectedOptions[0], selectedOptions[1], selectedOptions[2]];
 }
 
-interface SquadStats {
+export interface SquadStats {
   attack: number;
   midfield: number;
   defence: number;
   chemistry: number;
   overall: number;
+  gkRating?: number;
+  hasPivot?: boolean;
+  hasPlaymaker?: boolean;
 }
 
 /**
- * Calculates all team stats based on current layout and formation
+ * Calculates all team stats based on current layout, positions, and chemistry
  */
 export function calculateSquadStats(
   selectedPlayers: (Player | null)[],
@@ -507,42 +550,88 @@ export function calculateSquadStats(
     return { attack: 0, midfield: 0, defence: 0, chemistry: 0, overall: 0 };
   }
 
-  // 1. Calculate positional scores (Attack, Midfield, Defence)
+  // 1. Department calculations relative to football roles
   let attSum = 0, attWeight = 0;
   let midSum = 0, midWeight = 0;
   let defSum = 0, defWeight = 0;
+  let gkRating = 80;
 
-  activePlayers.forEach((player) => {
-    const dept = POSITION_DEPARTMENTS[player.primaryPosition];
-    
-    // Attack weighting
-    let attW = 0.25;
-    if (dept === 'ATT') attW = 1.0;
-    else if (dept === 'MID') attW = 0.6;
-    else if (dept === 'GK') attW = 0.05;
-    attSum += player.attack * attW;
-    attWeight += attW;
+  activePlayers.forEach((player, idx) => {
+    const slot = slots[idx];
+    const pos = slot.position;
+    const dept = POSITION_DEPARTMENTS[pos];
 
-    // Midfield weighting
-    let midW = 0.4;
-    if (dept === 'MID') midW = 1.0;
-    else if (dept === 'GK') midW = 0.1;
-    midSum += player.midfield * midW;
-    midWeight += midW;
+    // Out of natural position efficiency penalty
+    let efficiency = 1.0;
+    if (player.primaryPosition !== pos) {
+      if (player.secondaryPositions.includes(pos)) efficiency = 0.95;
+      else efficiency = 0.75;
+    }
 
-    // Defence weighting
-    let defW = 0.5;
-    if (dept === 'DEF' || dept === 'GK') defW = 1.0;
-    else if (dept === 'ATT') defW = 0.1;
-    defSum += player.defence * defW;
-    defWeight += defW;
+    if (pos === 'GK') {
+      gkRating = Math.round(player.defence * efficiency);
+      defSum += (player.defence * 0.65 + player.mentality * 0.2 + player.technique * 0.15) * efficiency * 1.25;
+      defWeight += 1.25;
+    } else if (dept === 'DEF') {
+      const isFullback = pos === 'LB' || pos === 'RB';
+      if (isFullback) {
+        attSum += (player.attack * 0.45 + player.pace * 0.35 + player.passing * 0.2) * efficiency * 0.35;
+        attWeight += 0.35;
+        midSum += (player.passing * 0.5 + player.technique * 0.5) * efficiency * 0.3;
+        midWeight += 0.3;
+        defSum += (player.defending * 0.5 + player.pace * 0.25 + player.physical * 0.25) * efficiency * 1.0;
+        defWeight += 1.0;
+      } else {
+        // CB
+        attSum += (player.aerial * 0.7 + player.physical * 0.3) * efficiency * 0.1;
+        attWeight += 0.1;
+        midSum += (player.passing * 0.6 + player.mentality * 0.4) * efficiency * 0.2;
+        midWeight += 0.2;
+        defSum += (player.defending * 0.5 + player.physical * 0.25 + player.aerial * 0.25) * efficiency * 1.1;
+        defWeight += 1.1;
+      }
+    } else if (dept === 'MID') {
+      const isCDM = pos === 'CDM';
+      const isCAM = pos === 'CAM';
+      if (isCDM) {
+        attSum += player.attack * efficiency * 0.2;
+        attWeight += 0.2;
+        midSum += (player.passing * 0.35 + player.mentality * 0.35 + player.physical * 0.3) * efficiency * 1.0;
+        midWeight += 1.0;
+        defSum += (player.defending * 0.6 + player.physical * 0.4) * efficiency * 0.7;
+        defWeight += 0.7;
+      } else if (isCAM) {
+        attSum += (player.attack * 0.4 + player.creativity * 0.4 + player.finishing * 0.2) * efficiency * 0.75;
+        attWeight += 0.75;
+        midSum += (player.passing * 0.4 + player.creativity * 0.35 + player.technique * 0.25) * efficiency * 1.0;
+        midWeight += 1.0;
+        defSum += player.defending * efficiency * 0.15;
+        defWeight += 0.15;
+      } else {
+        // CM, LM, RM
+        attSum += (player.attack * 0.5 + player.pace * 0.3 + player.technique * 0.2) * efficiency * 0.5;
+        attWeight += 0.5;
+        midSum += (player.midfield * 0.4 + player.passing * 0.3 + player.technique * 0.3) * efficiency * 1.0;
+        midWeight += 1.0;
+        defSum += (player.defence * 0.6 + player.physical * 0.4) * efficiency * 0.4;
+        defWeight += 0.4;
+      }
+    } else {
+      // ATT: ST, CF, LW, RW
+      attSum += (player.finishing * 0.4 + player.attack * 0.35 + player.pace * 0.15 + player.technique * 0.1) * efficiency * 1.1;
+      attWeight += 1.1;
+      midSum += (player.dribbling * 0.4 + player.creativity * 0.3 + player.passing * 0.3) * efficiency * 0.35;
+      midWeight += 0.35;
+      defSum += (player.pressing * 0.6 + player.defending * 0.4) * efficiency * 0.1;
+      defWeight += 0.1;
+    }
   });
 
-  const attackScore = Math.min(99, Math.round(attSum / attWeight));
-  const midfieldScore = Math.min(99, Math.round(midSum / midWeight));
-  const defenceScore = Math.min(99, Math.round(defSum / defWeight));
+  const attackScore = Math.min(99, Math.max(50, Math.round(attSum / Math.max(0.1, attWeight))));
+  const midfieldScore = Math.min(99, Math.max(50, Math.round(midSum / Math.max(0.1, midWeight))));
+  const defenceScore = Math.min(99, Math.max(50, Math.round(defSum / Math.max(0.1, defWeight))));
 
-  // 2. Chemistry calculations (Internal calculation matching page logs)
+  // 2. Chemistry calculations matching detailed chemistry logs
   const logs = getDetailedChemistryLogs(selectedPlayers, slots);
   let chemScore = 35; // base
   logs.forEach((log) => {
@@ -550,14 +639,17 @@ export function calculateSquadStats(
     else chemScore -= log.delta;
   });
 
-  // Clamp chemistry
   const finalChemistry = Math.max(10, Math.min(100, chemScore));
 
-  // 3. Overall calculation
-  const rawOverall = (attackScore * 0.35) + (midfieldScore * 0.3) + (defenceScore * 0.35);
-  // Chemistry modifier: 100 chemistry gives full rawOverall. 10 chemistry scales it down by 15%.
-  const chemFactor = 0.85 + (finalChemistry / 100) * 0.15;
-  const finalOverall = Math.max(50, Math.min(99, Math.round(rawOverall * chemFactor)));
+  // Tactical Midfield flags
+  const mids = activePlayers.filter((p) => POSITION_DEPARTMENTS[p.primaryPosition] === 'MID');
+  const hasPivot = mids.some((p) => p.defence >= 75 || p.primaryPosition === 'CDM');
+  const hasPlaymaker = mids.some((p) => p.technique >= 85 || p.primaryPosition === 'CAM' || p.creativity >= 85);
+
+  // 3. Overall calculation: player quality is primary, chemistry provides tactical polish
+  const rawOverall = Math.round(attackScore * 0.35 + midfieldScore * 0.30 + defenceScore * 0.35);
+  const chemAdjustment = Math.round((finalChemistry - 75) * 0.08);
+  const finalOverall = Math.max(50, Math.min(99, rawOverall + chemAdjustment));
 
   return {
     attack: attackScore,
@@ -565,11 +657,14 @@ export function calculateSquadStats(
     defence: defenceScore,
     chemistry: finalChemistry,
     overall: finalOverall,
+    gkRating,
+    hasPivot,
+    hasPlaymaker,
   };
 }
 
 /**
- * Computes active, visible chemistry log changes detailing why chemistry is adjusted
+ * Computes active chemistry logs detailing why chemistry is adjusted
  */
 export function getDetailedChemistryLogs(
   selectedPlayers: (Player | null)[],
@@ -586,18 +681,8 @@ export function getDetailedChemistryLogs(
 
   activePlayers.forEach((p) => {
     eraCounts[p.era] = (eraCounts[p.era] || 0) + 1;
-    
-    p.chemistryTags.forEach((tag) => {
-      if (tag === '90s' || tag === '00s' || tag === '10s' || tag === 'Modern' || tag === 'Retro') {
-        return; // skip
-      }
-      const nations = ['Brazil', 'Argentina', 'France', 'Germany', 'Italy', 'Spain', 'England', 'Netherlands', 'Portugal', 'Belgium', 'Croatia', 'Norway', 'Uruguay', 'Denmark', 'Slovenia', 'Morocco', 'Egypt', 'Poland', 'South Korea', 'Ukraine', 'Czech Republic', 'New Zealand', 'Switzerland', 'Sweden', 'Cameroon', 'Ivory Coast', 'Colombia', 'Chile', 'Senegal', 'Algeria', 'Nigeria', 'Ghana', 'Wales', 'Scotland', 'Ireland'];
-      if (nations.includes(tag)) {
-        nationCounts[tag] = (nationCounts[tag] || 0) + 1;
-      } else {
-        clubCounts[tag] = (clubCounts[tag] || 0) + 1;
-      }
-    });
+    nationCounts[p.nationality] = (nationCounts[p.nationality] || 0) + 1;
+    clubCounts[p.club] = (clubCounts[p.club] || 0) + 1;
   });
 
   // Nation connections
@@ -639,24 +724,38 @@ export function getDetailedChemistryLogs(
 
     if (player.primaryPosition !== slot.position) {
       if (player.secondaryPositions.includes(slot.position)) {
-        logs.push({ delta: 2, reason: `⚠️ ${player.displayName} out of natural role (${player.primaryPosition} at ${slot.label})`, type: 'negative' });
+        logs.push({
+          delta: 2,
+          reason: `⚠️ ${player.displayName} out of natural role (${player.primaryPosition} at ${slot.label})`,
+          type: 'negative',
+        });
       } else {
-        logs.push({ delta: 8, reason: `⚠️ ${player.displayName} out of position (${player.primaryPosition} at ${slot.label})`, type: 'negative' });
+        logs.push({
+          delta: 8,
+          reason: `⚠️ ${player.displayName} out of position (${player.primaryPosition} at ${slot.label})`,
+          type: 'negative',
+        });
       }
     }
   }
 
   // Tactical Imbalance: too many attackers
-  const attackerCount = activePlayers.filter((p) => POSITION_DEPARTMENTS[p.primaryPosition] === 'ATT').length;
+  const attackerCount = activePlayers.filter(
+    (p) => POSITION_DEPARTMENTS[p.primaryPosition] === 'ATT'
+  ).length;
   if (attackerCount > 4) {
     logs.push({ delta: 8, reason: '🚨 Tactical Imbalance (Too many attackers!)', type: 'negative' });
   }
 
   // Midfield Balance
-  const midfielders = activePlayers.filter((p) => POSITION_DEPARTMENTS[p.primaryPosition] === 'MID');
+  const midfielders = activePlayers.filter(
+    (p) => POSITION_DEPARTMENTS[p.primaryPosition] === 'MID'
+  );
   if (midfielders.length >= 2) {
     const hasDefensive = midfielders.some((p) => p.defence >= 75 || p.primaryPosition === 'CDM');
-    const hasPlaymaker = midfielders.some((p) => p.technique >= 85 || p.primaryPosition === 'CAM');
+    const hasPlaymaker = midfielders.some(
+      (p) => p.technique >= 85 || p.primaryPosition === 'CAM' || p.creativity >= 85
+    );
     if (hasDefensive && hasPlaymaker) {
       logs.push({ delta: 8, reason: '⚡ Creative Midfield Balance', type: 'positive' });
     } else {
@@ -675,49 +774,44 @@ export function getLinksSpotlight(selectedPlayers: Player[]): { best: string; wo
 
   let bestScore = 0;
   let bestLinkDesc = 'No strong connections';
-  
-  // 1. Calculate best link (highest matching chemistry tags)
+
   for (let i = 0; i < selectedPlayers.length; i++) {
     for (let j = i + 1; j < selectedPlayers.length; j++) {
       const p1 = selectedPlayers[i];
       const p2 = selectedPlayers[j];
-      
+
       let matchCount = 0;
       const sharedTags: string[] = [];
-      
-      p1.chemistryTags.forEach((tag) => {
-        if (tag === '90s' || tag === '00s' || tag === '10s' || tag === 'Modern' || tag === 'Retro') return;
-        if (p2.chemistryTags.includes(tag)) {
-          matchCount++;
-          sharedTags.push(tag);
-        }
-      });
 
-      if (p1.era === p2.era) matchCount += 0.5;
+      if (p1.club === p2.club) {
+        matchCount += 3;
+        sharedTags.push(p1.club);
+      }
+      if (p1.nationality === p2.nationality) {
+        matchCount += 2;
+        sharedTags.push(p1.nationality);
+      }
+      if (p1.era === p2.era) {
+        matchCount += 1;
+        sharedTags.push(p1.era);
+      }
 
       if (matchCount > bestScore) {
         bestScore = matchCount;
-        bestLinkDesc = `🤝 ${p1.displayName} & ${p2.displayName} (${sharedTags.join(' / ') || p1.era})`;
+        bestLinkDesc = `🤝 ${p1.displayName} & ${p2.displayName} (${sharedTags.join(' / ')})`;
       }
     }
   }
 
-  // 2. Calculate worst link (find player with fewest connections or lowest rating)
   let worstScore = 999;
   let worstPlayer: Player | null = null;
 
   selectedPlayers.forEach((p) => {
     let connections = 0;
-    
     selectedPlayers.forEach((other) => {
       if (p.id === other.id) return;
-      
-      p.chemistryTags.forEach((tag) => {
-        if (tag === '90s' || tag === '00s' || tag === '10s' || tag === 'Modern' || tag === 'Retro') return;
-        if (other.chemistryTags.includes(tag)) {
-          connections += 3;
-        }
-      });
+      if (p.club === other.club) connections += 3;
+      if (p.nationality === other.nationality) connections += 2;
       if (p.era === other.era) connections += 1;
     });
 
@@ -727,8 +821,8 @@ export function getLinksSpotlight(selectedPlayers: Player[]): { best: string; wo
     }
   });
 
-  const worstLinkDesc = worstPlayer 
-    ? `⚠️ ${(worstPlayer as Player).displayName} (Isolated with minimal squad connections)` 
+  const worstLinkDesc = worstPlayer
+    ? `⚠️ ${(worstPlayer as Player).displayName} (Isolated with minimal squad connections)`
     : 'None';
 
   return {
@@ -754,39 +848,45 @@ export function getChemistryGrade(score: number): ChemistryGrade {
 export function getResultNarrative(wins: number, draws: number, losses: number, stats: SquadStats): string {
   const points = wins * 3 + draws;
 
+  if (wins === 38) {
+    return '👑 The Immortals! 38 games. 38 victories. Perfection achieved. You have built arguably the greatest squad in football folklore.';
+  }
+  if (losses === 0) {
+    return '🏆 The Invincibles! Unbeaten across an entire 38-game campaign. Your tactical synergy and mental steel will echo through history.';
+  }
   if (points >= 95) {
-    return '🏆 Invincible-adjacent! You have built a title-winning behemoth. This team would dismantle the best squads in football history without breaking a sweat.';
+    return '🥇 Historic Champions! Over 95 points achieved with breathtaking football. Your home stadium was an impenetrable fortress.';
   }
   if (points >= 86) {
-    return '🥇 League Champions! A season built on incredible tactical synergy. Your squad wins titles with style, making the home stadium a fortress.';
+    return '🥇 League Champions! A season built on tactical balance and decisive star quality. Champions of the realm!';
   }
-  if (wins >= 24 && stats.attack >= 86 && stats.defence < 80) {
-    return '🔥 Gegenpress Chaos! Your attack is terrorising the league, but your defensive line might need intensive therapy. Highlights guaranteed every week.';
+  if (wins >= 24 && stats.attack >= 88 && stats.defence < 80) {
+    return '🔥 Gegenpress Chaos! Your attack terrorised the league, but your backline kept every match edge-of-the-seat. Box office football every weekend!';
   }
-  if (wins >= 18 && stats.defence >= 86 && stats.attack < 80) {
-    return '🧱 This side wins ugly, but it wins. Clean sheets, park the bus, and 1-0 victories are the standard. Opposing managers absolutely hate playing you.';
+  if (wins >= 20 && stats.defence >= 88 && stats.attack < 80) {
+    return '🧱 Defensive Masterclass! Clean sheets and 1-0 smash-and-grabs were your trademark. Opposing managers had nightmares facing your low block.';
   }
   if (stats.chemistry >= 88 && stats.overall < 84) {
-    return '🤝 Chemistry over individual stars. This team has highlight plays, fluid tiki-taka, but a nervous goalkeeper who keeps things spicy.';
+    return '🤝 Chemistry over individual superstars! Brilliant fluid football, though a nervous defence in clutch moments prevented a higher finish.';
   }
   if (stats.overall >= 88 && stats.chemistry < 62) {
-    return '🚨 Galáctico Imbalance! Individual brilliance wins you games, but the lack of squad synergy leads to dressing room drama and tactical chaos.';
+    return '🚨 Galáctico Imbalance! Individual brilliance won key games, but tactical disconnects and dressing room friction cost crucial points.';
   }
-  if (points >= 60) {
-    return '🇪🇺 Europa League secured! A solid season, showing strong chemistry and brilliant football, though a few late concessions cost you Champions League.';
+  if (points >= 65) {
+    return '🇪🇺 European Football secured! A fiercely competitive campaign securing top European qualification with style.';
   }
-  if (points >= 40) {
-    return '🤝 A mid-table finish. A season of mixed results, outstanding performances followed by immediate collapses. A few key squad adjustments could fix this.';
+  if (points >= 45) {
+    return '🤝 Mid-Table Security. Solid passages of play interspersed with lapses of consistency. A solid foundation to build upon.';
   }
-  return '😢 Relegated! Imbalanced squad building, tactical isolation, and massive defensive leakage resulted in a disastrous campaign. Back to the drawing board.';
+  return '😢 Relegated! Imbalanced squad construction and severe tactical vulnerabilities led to a difficult, bruising campaign. Back to the drawing board.';
 }
 
 /**
  * Classifies the squad playstyle based on ratings and attributes
  */
 export function getPlaystyle(stats: SquadStats, selectedPlayers: Player[]): string {
-  const avgPace = selectedPlayers.reduce((acc, p) => acc + p.pace, 0) / 11;
-  const avgPhys = selectedPlayers.reduce((acc, p) => acc + p.physical, 0) / 11;
+  const avgPace = selectedPlayers.reduce((acc, p) => acc + p.pace, 0) / Math.max(1, selectedPlayers.length);
+  const avgPhys = selectedPlayers.reduce((acc, p) => acc + p.physical, 0) / Math.max(1, selectedPlayers.length);
 
   if (avgPhys >= 80 && avgPace >= 83) {
     return 'Gegenpressing Chaos ⚡';
@@ -810,52 +910,65 @@ export function getPlaystyle(stats: SquadStats, selectedPlayers: Player[]): stri
  * Estimates overall global percentile ranking based on final league points
  */
 export function getPercentileEstimate(points: number): number {
-  // 114 is perfect 38 wins
-  if (points >= 110) return 0.1; // Top 0.1%
-  if (points >= 100) return 0.5; // Top 0.5%
-  if (points >= 95) return 1.5;  // Top 1.5%
-  if (points >= 88) return 5;    // Top 5%
-  if (points >= 80) return 12;   // Top 12%
-  if (points >= 70) return 25;   // Top 25%
-  if (points >= 55) return 50;   // Top 50%
-  if (points >= 40) return 75;   // Top 75%
-  return 95;                     // Bottom 5% (Top 95%)
+  if (points >= 114) return 0.01;
+  if (points >= 105) return 0.1;
+  if (points >= 98) return 0.5;
+  if (points >= 92) return 2.0;
+  if (points >= 85) return 6.0;
+  if (points >= 78) return 14.0;
+  if (points >= 70) return 26.0;
+  if (points >= 58) return 48.0;
+  if (points >= 45) return 72.0;
+  return 92.0;
+}
+
+// Sample integer goals from expected goals (Poisson process)
+function sampleGoals(xG: number, rand: () => number): number {
+  const L = Math.exp(-Math.max(0.05, Math.min(6.0, xG)));
+  let k = 0;
+  let p = 1;
+  do {
+    k++;
+    p *= rand();
+  } while (p > L && k < 12);
+  return k - 1;
 }
 
 /**
- * Simulates a full 38-game league season and returns results (extended with upgrades)
+ * Simulates a full 38-game league season with football-intelligent balance
  */
 export function simulateLeagueSeason(
   selectedPlayers: Player[],
   stats: SquadStats,
-  leagueId: string = 'english'
+  leagueId: string = 'english',
+  customRandom?: () => number
 ): SimulationResult {
+  const rand = customRandom || Math.random;
   const matches: MatchSimResult[] = [];
   let wins = 0;
   let draws = 0;
   let losses = 0;
   let goalsFor = 0;
   let goalsAgainst = 0;
-
   let cleanSheets = 0;
 
   const outfieldPlayers = selectedPlayers.filter((p) => p.primaryPosition !== 'GK');
   const playerGoalsMap = new Map<string, { player: Player; goals: number }>();
   selectedPlayers.forEach((p) => playerGoalsMap.set(p.id, { player: p, goals: 0 }));
 
-  // Scorer weights based on position & stats
+  // Goalscorer weights based on position, finishing, and technique
   const scorerCandidates = outfieldPlayers.map((p) => {
     let weight = 1;
     const pos = p.primaryPosition;
     if (['ST', 'CF', 'LW', 'RW'].includes(pos)) {
-      weight = (p.finishing || p.attack || 75) * 2.5;
+      weight = (p.finishing || p.attack || 75) * 2.8;
     } else if (['CAM', 'CM', 'LM', 'RM'].includes(pos)) {
-      weight = (p.finishing || p.attack || 70) * 1.0 + (p.technique || 70) * 0.4;
-    } else if (['CDM'].includes(pos)) {
-      weight = 25;
+      weight = (p.finishing || p.attack || 70) * 1.1 + (p.technique || 70) * 0.4;
+    } else if (pos === 'CDM') {
+      weight = 22;
     } else {
-      // CB, LB, RB - occasionally score headers/corners
-      weight = (p.physical || 70) * 0.15;
+      // CB, LB, RB - occasionally score headers / set-pieces
+      weight = (p.aerial || p.physical || 70) * 0.22;
     }
     return { player: p, weight: Math.max(5, weight) };
   });
@@ -863,7 +976,7 @@ export function simulateLeagueSeason(
   const totalScorerWeight = scorerCandidates.reduce((sum, c) => sum + c.weight, 0);
 
   const pickGoalscorer = (): Player => {
-    let r = Math.random() * totalScorerWeight;
+    let r = rand() * totalScorerWeight;
     for (const cand of scorerCandidates) {
       r -= cand.weight;
       if (r <= 0) return cand.player;
@@ -873,64 +986,90 @@ export function simulateLeagueSeason(
 
   const opponentPool = LEAGUE_OPPONENTS[leagueId] || LEAGUE_OPPONENTS.english;
 
-  // Compile 38 games (19 opponents home & away)
-  const fixtures: { opponent: string; rating: number }[] = [];
+  // Compile 38 fixtures (19 opponents home & away)
+  const fixtures: { name: string; rating: number; home: boolean }[] = [];
   opponentPool.forEach((opp) => {
-    fixtures.push({ opponent: opp.name, rating: opp.rating }); // Home leg
-    fixtures.push({ opponent: opp.name, rating: opp.rating }); // Away leg
+    fixtures.push({ name: opp.name, rating: opp.rating, home: true });
+    fixtures.push({ name: opp.name, rating: opp.rating, home: false });
   });
 
-  const shuffledFixtures = [...fixtures].sort(() => Math.random() - 0.5);
+  // Deterministic fixture shuffle
+  const shuffledFixtures = [...fixtures].sort(() => rand() - 0.5);
+
+  const { attack, midfield, defence, chemistry } = stats;
+  const gk = selectedPlayers.find((p) => p.primaryPosition === 'GK');
+  const gkRating = gk ? gk.defence : 78;
+
+  // Tactical balance checks
+  const mids = selectedPlayers.filter((p) => POSITION_DEPARTMENTS[p.primaryPosition] === 'MID');
+  const hasPivot = mids.some((p) => p.defence >= 75 || p.primaryPosition === 'CDM');
+  const hasPlaymaker = mids.some((p) => p.technique >= 85 || p.primaryPosition === 'CAM' || p.creativity >= 85);
+
+  const sortedDef = selectedPlayers
+    .filter((p) => POSITION_DEPARTMENTS[p.primaryPosition] === 'DEF')
+    .sort((a, b) => a.defending - b.defending);
+  const hasWeakLink = gkRating < 76 || (sortedDef.length > 0 && sortedDef[0].defending < 65);
+
+  const chemBonus = (chemistry - 75) * 0.08;
+
+  // Form momentum tracking (confidence streaks in football)
+  let winStreak = 0;
 
   shuffledFixtures.forEach((fixture) => {
     const oppRating = fixture.rating;
-    
-    // We remove the separate chemBonus penalty because chemistry is already factored directly into stats.overall
-    // We reduce the random range from [-6, 6] to [-4.5, 4.5] for each team,
-    // which makes the difference spread [-9, 9] instead of [-12, 12].
-    // This reduces extreme random upset frequency, making team quality shine through more consistently.
-    const ourPerf = stats.overall + (Math.random() * 9 - 4.5);
-    const oppPerf = oppRating + (Math.random() * 9 - 4.5);
+    const homeBonus = fixture.home ? 1.0 : -1.0;
 
-    const diff = ourPerf - oppPerf;
+    // Momentum bonus (up to +0.06 xG if on 3+ match win streak)
+    const momentum = winStreak >= 5 ? 0.08 : winStreak >= 3 ? 0.04 : 0;
+
+    // Midfield control differential
+    const midDiff = (midfield + homeBonus - oppRating) * 0.04 + chemBonus * 0.03;
+
+    // Attack vs Opponent Defence
+    let xG_us = 1.35 + (attack + homeBonus - oppRating) * 0.055 + midDiff * 0.04 + chemBonus * 0.03 + momentum;
+    if (!hasPlaymaker) xG_us -= 0.15;
+    xG_us = Math.max(0.15, xG_us);
+
+    // Opponent Attack vs Our Defence & GK
+    let xG_opp = 1.15 + (oppRating - (defence + homeBonus)) * 0.055 - midDiff * 0.04 - chemBonus * 0.03;
+    xG_opp -= (gkRating - 82) * 0.022;
+    if (hasWeakLink) xG_opp += 0.20;
+    if (!hasPivot) xG_opp += 0.12;
+    xG_opp = Math.max(0.10, xG_opp);
+
+    let ourScore = sampleGoals(xG_us, rand);
+    let oppScore = sampleGoals(xG_opp, rand);
+
+    // Big Game Clutch Factor: in 1-goal margins or draws, high-leadership/big-game players can snatch winners
+    const avgBigGame = selectedPlayers.reduce((acc, p) => acc + p.bigGame, 0) / Math.max(1, selectedPlayers.length);
+    if (ourScore === oppScore && avgBigGame >= 88 && rand() < 0.22) {
+      ourScore += 1; // 89th minute clutch winner!
+    }
+
     let outcome: 'W' | 'D' | 'L';
-    let ourScore = 0;
-    let oppScore = 0;
-
-    // Narrowed draw window to [-2.5, 2.5]
-    if (diff > 2.5) {
+    if (ourScore > oppScore) {
       outcome = 'W';
       wins++;
-      const baseGoal = Math.floor(Math.random() * 2) + 1; // 1 or 2
-      const extraGoal = diff > 6 ? Math.floor(Math.random() * 3) : diff > 4 ? Math.floor(Math.random() * 2) : 0;
-      ourScore = baseGoal + extraGoal;
-      oppScore = Math.max(0, ourScore - (Math.floor(Math.random() * 2) + 1));
-    } else if (diff < -2.5) {
-      outcome = 'L';
-      losses++;
-      const baseGoal = Math.floor(Math.random() * 2) + 1;
-      const extraGoal = diff < -6 ? Math.floor(Math.random() * 3) : diff < -4 ? Math.floor(Math.random() * 2) : 0;
-      oppScore = baseGoal + extraGoal;
-      ourScore = Math.max(0, oppScore - (Math.floor(Math.random() * 2) + 1));
-    } else {
+      winStreak++;
+    } else if (ourScore === oppScore) {
       outcome = 'D';
       draws++;
-      ourScore = Math.floor(Math.random() * 3); // 0, 1, 2
-      oppScore = ourScore;
+      winStreak = 0;
+    } else {
+      outcome = 'L';
+      losses++;
+      winStreak = 0;
     }
 
     goalsFor += ourScore;
     goalsAgainst += oppScore;
-
-    if (oppScore === 0) {
-      cleanSheets++;
-    }
+    if (oppScore === 0) cleanSheets++;
 
     const scorers: string[] = [];
     if (ourScore > 0 && scorerCandidates.length > 0) {
       const minutes: number[] = [];
       for (let g = 0; g < ourScore; g++) {
-        minutes.push(Math.floor(Math.random() * 88) + 2); // 2' to 89'
+        minutes.push(Math.floor(rand() * 88) + 2);
       }
       minutes.sort((a, b) => a - b);
       minutes.forEach((min) => {
@@ -943,7 +1082,7 @@ export function simulateLeagueSeason(
     }
 
     matches.push({
-      opponent: fixture.opponent,
+      opponent: fixture.name,
       opponentRating: oppRating,
       ourScore,
       opponentScore: oppScore,
@@ -954,49 +1093,81 @@ export function simulateLeagueSeason(
 
   const points = wins * 3 + draws;
 
-  // A realistic mapping of points to league position
+  // Realistic Premier League points-to-position mapping
   let leaguePosition = 1;
-  if (points >= 95) {
+  if (points >= 93) {
     leaguePosition = 1;
-  } else if (points >= 88) {
-    // 88-94 points: usually 1st or 2nd
-    leaguePosition = Math.random() < 0.5 ? 1 : 2;
-  } else if (points >= 80) {
-    // 80-87 points: 2nd or 3rd
-    leaguePosition = Math.floor(Math.random() * 2) + 2; // 2 or 3
-  } else if (points >= 72) {
-    // 72-79 points: 3rd or 4th
-    leaguePosition = Math.floor(Math.random() * 2) + 3; // 3 or 4
-  } else if (points >= 65) {
-    // 65-71 points: 4th or 5th
-    leaguePosition = Math.floor(Math.random() * 2) + 4; // 4 or 5
-  } else if (points >= 58) {
-    // 58-64 points: 6th or 7th
-    leaguePosition = Math.floor(Math.random() * 2) + 6; // 6 or 7
-  } else if (points >= 50) {
-    // 50-57 points: 8th to 10th
-    leaguePosition = Math.floor(Math.random() * 3) + 8; // 8, 9, 10
-  } else if (points >= 40) {
-    // 40-49 points: 11th to 14th
-    leaguePosition = Math.floor(Math.random() * 4) + 11; // 11, 12, 13, 14
-  } else if (points >= 35) {
-    // 35-39 points: 15th to 17th
-    leaguePosition = Math.floor(Math.random() * 3) + 15; // 15, 16, 17
+  } else if (points >= 86) {
+    leaguePosition = rand() < 0.65 ? 1 : 2;
+  } else if (points >= 78) {
+    leaguePosition = Math.floor(rand() * 2) + 2; // 2 or 3
+  } else if (points >= 70) {
+    leaguePosition = Math.floor(rand() * 2) + 3; // 3 or 4
+  } else if (points >= 62) {
+    leaguePosition = Math.floor(rand() * 2) + 5; // 5 or 6
+  } else if (points >= 54) {
+    leaguePosition = Math.floor(rand() * 3) + 7; // 7, 8, 9
+  } else if (points >= 44) {
+    leaguePosition = Math.floor(rand() * 4) + 10; // 10-13
+  } else if (points >= 36) {
+    leaguePosition = Math.floor(rand() * 4) + 14; // 14-17
   } else {
-    // Under 35 points: 18th to 20th (relegation)
-    leaguePosition = Math.floor(Math.random() * 3) + 18; // 18, 19, 20
+    leaguePosition = Math.floor(rand() * 3) + 18; // 18-20 (relegated)
   }
 
-  // MVP & Weak Link
-  const sortedByContribution = [...selectedPlayers].sort((a, b) => {
-    const aBonus = a.rarity === 'legend' ? 5 : a.rarity === 'elite' ? 3 : 0;
-    const bBonus = b.rarity === 'legend' ? 5 : b.rarity === 'elite' ? 3 : 0;
-    return (b.rating + bBonus) - (a.rating + aBonus);
-  });
-  const mvp = sortedByContribution[0];
+  // Intelligent MVP calculation (accounts for goals, clean sheets, match influence, and chemistry)
+  const calculateMVPScore = (p: Player) => {
+    let score = p.rating * 0.75;
+    const goals = playerGoalsMap.get(p.id)?.goals || 0;
+    const dept = POSITION_DEPARTMENTS[p.primaryPosition];
 
-  const sortedByLowest = [...selectedPlayers].sort((a, b) => a.rating - b.rating);
-  const weakLink = sortedByLowest[0];
+    if (dept === 'ATT') {
+      score += goals * 1.8;
+      score += (p.finishing - 80) * 0.2;
+    } else if (p.primaryPosition === 'GK') {
+      score += cleanSheets * 1.25;
+      score += (p.defence - 80) * 0.35;
+    } else if (dept === 'DEF') {
+      score += cleanSheets * 0.85;
+      score += (p.defending - 80) * 0.25;
+      score += goals * 2.5;
+    } else {
+      score += goals * 1.3;
+      score += (p.creativity - 80) * 0.2 + (p.passing - 80) * 0.2;
+      score += cleanSheets * 0.35;
+    }
+
+    score += (p.bigGame - 80) * 0.15 + (p.leadership - 80) * 0.15;
+    if (p.rarity === 'legend') score += 2;
+    return score;
+  };
+
+  const sortedMVP = [...selectedPlayers].sort((a, b) => calculateMVPScore(b) - calculateMVPScore(a));
+  const mvp = sortedMVP[0] || selectedPlayers[0];
+
+  // Intelligent Weak Link calculation (identifies structural limitation, not just lowest number)
+  const calculateLimitationScore = (p: Player) => {
+    let limitation = (86 - p.rating) * 1.2;
+    // Check connections
+    let connections = 0;
+    selectedPlayers.forEach((other) => {
+      if (p.id === other.id) return;
+      if (p.club === other.club) connections += 3;
+      if (p.nationality === other.nationality) connections += 2;
+      if (p.era === other.era) connections += 1;
+    });
+    if (connections === 0) limitation += 10;
+    else if (connections <= 2) limitation += 5;
+
+    // Conceding team penalizes low defending
+    if (goalsAgainst >= 45 && (p.primaryPosition === 'GK' || POSITION_DEPARTMENTS[p.primaryPosition] === 'DEF')) {
+      limitation += (82 - (p.primaryPosition === 'GK' ? p.defence : p.defending)) * 0.6;
+    }
+    return limitation;
+  };
+
+  const sortedWeak = [...selectedPlayers].sort((a, b) => calculateLimitationScore(b) - calculateLimitationScore(a));
+  const weakLink = sortedWeak[0] || selectedPlayers[selectedPlayers.length - 1];
 
   // Top Goalscorer
   let topScorer: { player: Player; goals: number } | undefined;
@@ -1038,7 +1209,7 @@ export function simulateLeagueSeason(
 }
 
 /**
- * Generates an eligible squad of 11 unique players for the chosen formation and challenge rules
+ * Generates an eligible squad of 11 unique players for chosen formation and challenge rules
  */
 export function generateRandomSquad(
   formation: FormationType,
@@ -1047,158 +1218,16 @@ export function generateRandomSquad(
 ): Player[] {
   const slots = FORMATION_SLOTS[formation];
   const selected: Player[] = [];
-  const selectedIds = new Set<string>();
-
-  const targetLeague = selectedLeagueId ? LEAGUE_MAPPING[selectedLeagueId] : undefined;
-
-  const satisfiesChallengeRule = (p: Player) => {
-    if (!challengeRule) return true;
-    switch (challengeRule) {
-      case 'only_2000s':
-        return p.era === '00s';
-      case 'underdog_xi':
-        return p.rarity === 'common' || p.rarity === 'rare';
-      case 'no_legends':
-        return !p.isLegendaryPlayer;
-      case 'under_90_rating':
-        return p.rating < 90;
-      case 'only_modern':
-        return p.era === 'Modern';
-      case 'one_superstar':
-        return true; // controlled below
-      default:
-        return true;
-    }
-  };
+  const draftedNames = new Set<string>();
 
   for (let i = 0; i < slots.length; i++) {
     const slot = slots[i];
-    const targetPos = slot.position;
-    const related = RELATED_POSITIONS[targetPos] || [targetPos];
-    const dept = POSITION_DEPARTMENTS[targetPos];
-
-    const getCandidates = (useLeague: boolean) => {
-      const matchLeague = (p: Player) => !useLeague || p.league === targetLeague;
-
-      // 1. Exact position
-      let pool = players.filter(
-        (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) &&
-               satisfiesChallengeRule(p) &&
-               !selectedIds.has(p.id) &&
-               matchLeague(p)
-      );
-      if (pool.length > 0) return pool;
-
-      // 2. Related positions
-      pool = players.filter(
-        (p) => related.includes(p.primaryPosition) &&
-               satisfiesChallengeRule(p) &&
-               !selectedIds.has(p.id) &&
-               matchLeague(p)
-      );
-      if (pool.length > 0) return pool;
-
-      // 3. Department match
-      pool = players.filter(
-        (p) => POSITION_DEPARTMENTS[p.primaryPosition] === dept &&
-               satisfiesChallengeRule(p) &&
-               !selectedIds.has(p.id) &&
-               matchLeague(p)
-      );
-      if (pool.length > 0) return pool;
-
-      return [];
-    };
-
-    let pool: Player[] = [];
-    if (targetLeague) {
-      pool = getCandidates(true);
-    }
-    if (pool.length === 0) {
-      pool = getCandidates(false);
-    }
-
-    // Fallback 3: Any matching position (ignoring challenge rule if absolutely empty, to guarantee draft completion)
-    if (pool.length === 0) {
-      pool = players.filter(
-        (p) => (targetPos === 'GK' ? p.primaryPosition === 'GK' : p.primaryPosition !== 'GK') && !selectedIds.has(p.id)
-      );
-    }
-
-    // Roll a random player from the eligible pool
-    if (pool.length > 0) {
-      const randomPlayer = pool[Math.floor(Math.random() * pool.length)];
-      selected.push(randomPlayer);
-      selectedIds.add(randomPlayer.id);
-    } else {
-      // Emergency: get any player not selected
-      const emergencyPool = players.filter((p) => !selectedIds.has(p.id));
-      const randomPlayer = emergencyPool.length > 0 
-        ? emergencyPool[Math.floor(Math.random() * emergencyPool.length)]
-        : players[Math.floor(Math.random() * players.length)];
-      selected.push(randomPlayer);
-      selectedIds.add(randomPlayer.id);
-    }
-  }
-
-  // Helper for one_superstar replacement pools
-  const getReplacementPool = (isLegend: boolean, targetPos: Position) => {
-    const matchLeague = (p: Player) => !targetLeague || p.league === targetLeague;
-    const matchRarity = (p: Player) => isLegend ? p.rarity === 'legend' : p.rarity !== 'legend';
-    
-    let pool = players.filter(
-      (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) &&
-             matchRarity(p) &&
-             !selectedIds.has(p.id) &&
-             matchLeague(p)
-    );
-    if (pool.length > 0) return pool;
-    
-    // Fallback to any league
-    return players.filter(
-      (p) => (p.primaryPosition === targetPos || p.secondaryPositions.includes(targetPos)) &&
-             matchRarity(p) &&
-             !selectedIds.has(p.id)
-    );
-  };
-
-  // Handle 'one_superstar' rule: replace so we have exactly 1 legend
-  if (challengeRule === 'one_superstar') {
-    let legendIndices: number[] = [];
-    selected.forEach((p, idx) => {
-      if (p.rarity === 'legend') legendIndices.push(idx);
-    });
-
-    if (legendIndices.length > 1) {
-      // Keep only one legend, replace others with non-legends
-      for (let i = 1; i < legendIndices.length; i++) {
-        const idx = legendIndices[i];
-        const targetPos = slots[idx].position;
-        const pool = getReplacementPool(false, targetPos);
-        const replacement = pool.length > 0 
-          ? pool[Math.floor(Math.random() * pool.length)]
-          : players.find(p => p.primaryPosition === targetPos && p.rarity !== 'legend');
-        if (replacement) {
-          selected[idx] = replacement;
-          selectedIds.add(replacement.id);
-        }
-      }
-    } else if (legendIndices.length === 0) {
-      // Replace one non-legend slot (e.g. striker or midfield) with a legend
-      const eligibleSlots = [5, 6, 7, 8, 9, 10]; // avoid GK & defenders for a superstar attacker/midfielder
-      const randomSlotIdx = eligibleSlots[Math.floor(Math.random() * eligibleSlots.length)];
-      const targetPos = slots[randomSlotIdx].position;
-      const pool = getReplacementPool(true, targetPos);
-      const replacement = pool.length > 0 
-        ? pool[Math.floor(Math.random() * pool.length)]
-        : players.find(p => p.primaryPosition === targetPos && p.rarity === 'legend');
-      if (replacement) {
-        selected[randomSlotIdx] = replacement;
-        selectedIds.add(replacement.id);
-      }
-    }
+    const options = getDraftOptions(slot.position, selected, undefined, challengeRule, selectedLeagueId);
+    // Pick the best option
+    const pick = options[0];
+    selected.push(pick);
+    draftedNames.add(pick.playerName);
   }
 
   return selected;
 }
-
