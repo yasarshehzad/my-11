@@ -104,6 +104,29 @@ export const POSITION_DEPARTMENTS: Record<Position, 'GK' | 'DEF' | 'MID' | 'ATT'
   CF: 'ATT',
 };
 
+/**
+ * Checks whether a player naturally fits a slot without role friction
+ */
+export function isNaturalPositionFit(player: Player, slotPos: Position): boolean {
+  if (player.primaryPosition === slotPos) return true;
+  if (player.secondaryPositions && player.secondaryPositions.includes(slotPos)) return true;
+  // Natural football role equivalences:
+  // 1. Wide left: LW <-> LM
+  if ((slotPos === 'LM' && player.primaryPosition === 'LW') || (slotPos === 'LW' && player.primaryPosition === 'LM')) return true;
+  // 2. Wide right: RW <-> RM
+  if ((slotPos === 'RM' && player.primaryPosition === 'RW') || (slotPos === 'RW' && player.primaryPosition === 'RM')) return true;
+  // 3. Central attack: ST <-> CF
+  if ((slotPos === 'ST' && player.primaryPosition === 'CF') || (slotPos === 'CF' && player.primaryPosition === 'ST')) return true;
+  // 4. Central/Defensive midfield versatility
+  if (slotPos === 'CDM' && (player.primaryPosition === 'CM' || player.secondaryPositions?.includes('CM')) && (player.defence >= 74 || player.defending >= 72)) return true;
+  if (slotPos === 'CM' && (player.primaryPosition === 'CDM' || player.secondaryPositions?.includes('CDM'))) return true;
+  if (slotPos === 'CAM' && (player.primaryPosition === 'CM' || player.secondaryPositions?.includes('CM')) && (player.creativity >= 78 || player.technique >= 80)) return true;
+  // 5. Fullback versatility
+  if (slotPos === 'LB' && player.primaryPosition === 'RB' && player.secondaryPositions?.includes('LB')) return true;
+  if (slotPos === 'RB' && player.primaryPosition === 'LB' && player.secondaryPositions?.includes('RB')) return true;
+  return false;
+}
+
 // Pre-index cards for high performance and balanced player-first lookups
 const cardsByPlayerName = new Map<string, Player[]>();
 players.forEach((p) => {
@@ -336,8 +359,7 @@ function pickSeasonForPlayer(
   // 1. Try matching preferred club (for chemistry slot) + position
   if (preferredClub) {
     const clubMatch = cards.filter((c) =>
-      c.club === preferredClub &&
-      (c.primaryPosition === targetPos || c.secondaryPositions.includes(targetPos))
+      c.club === preferredClub && isNaturalPositionFit(c, targetPos)
     );
     if (clubMatch.length > 0) {
       const rarityMatch = clubMatch.filter((c) => c.rarity === preferredRarity);
@@ -348,16 +370,11 @@ function pickSeasonForPlayer(
   }
 
   // 2. Try matching preferred rarity and position
-  let pool = cards.filter((c) =>
-    (c.primaryPosition === targetPos || c.secondaryPositions.includes(targetPos)) &&
-    c.rarity === preferredRarity
-  );
+  let pool = cards.filter((c) => isNaturalPositionFit(c, targetPos) && c.rarity === preferredRarity);
   if (pool.length > 0) return pool[Math.floor(rand() * pool.length)];
 
   // 3. Try matching position with any rarity
-  pool = cards.filter((c) =>
-    c.primaryPosition === targetPos || c.secondaryPositions.includes(targetPos)
-  );
+  pool = cards.filter((c) => isNaturalPositionFit(c, targetPos));
   if (pool.length > 0) return pool[Math.floor(rand() * pool.length)];
 
   // 4. Fallback: any card of this player
@@ -429,7 +446,7 @@ export function getDraftOptions(
         if (!satisfiesChallengeRule(c) || !matchLeague(c)) return false;
 
         const posMatch = criterion.positionStrict
-          ? c.primaryPosition === targetPos || c.secondaryPositions.includes(targetPos)
+          ? isNaturalPositionFit(c, targetPos)
           : relatedPositions.includes(c.primaryPosition) ||
             POSITION_DEPARTMENTS[c.primaryPosition] === department;
         if (!posMatch) return false;
@@ -535,6 +552,7 @@ export interface SquadStats {
   overall: number;
   gkRating?: number;
   hasPivot?: boolean;
+  hasDoublePivot?: boolean;
   hasPlaymaker?: boolean;
 }
 
@@ -563,8 +581,8 @@ export function calculateSquadStats(
 
     // Out of natural position efficiency penalty
     let efficiency = 1.0;
-    if (player.primaryPosition !== pos) {
-      if (player.secondaryPositions.includes(pos)) efficiency = 0.95;
+    if (!isNaturalPositionFit(player, pos)) {
+      if (player.secondaryPositions && player.secondaryPositions.includes(pos)) efficiency = 0.98;
       else efficiency = 0.75;
     }
 
@@ -593,28 +611,53 @@ export function calculateSquadStats(
     } else if (dept === 'MID') {
       const isCDM = pos === 'CDM';
       const isCAM = pos === 'CAM';
+      const isWideMid = pos === 'LM' || pos === 'RM';
+
       if (isCDM) {
-        attSum += player.attack * efficiency * 0.2;
-        attWeight += 0.2;
-        midSum += (player.passing * 0.35 + player.mentality * 0.35 + player.physical * 0.3) * efficiency * 1.0;
+        attSum += (player.attack * 0.6 + player.passing * 0.4) * efficiency * 0.05;
+        attWeight += 0.05;
+        midSum += (Math.max(player.midfield, player.passing) * 0.45 + player.passing * 0.25 + player.mentality * 0.2 + player.physical * 0.1) * efficiency * 1.0;
         midWeight += 1.0;
-        defSum += (player.defending * 0.6 + player.physical * 0.4) * efficiency * 0.7;
+        const cdmDef = Math.max(player.defence, player.defending, (player.rating - 5));
+        defSum += (cdmDef * 0.65 + player.physical * 0.2 + player.mentality * 0.15) * efficiency * 0.7;
         defWeight += 0.7;
       } else if (isCAM) {
-        attSum += (player.attack * 0.4 + player.creativity * 0.4 + player.finishing * 0.2) * efficiency * 0.75;
-        attWeight += 0.75;
-        midSum += (player.passing * 0.4 + player.creativity * 0.35 + player.technique * 0.25) * efficiency * 1.0;
+        // CAM: High attacking weight in single striker setup
+        attSum += (player.attack * 0.35 + player.creativity * 0.35 + player.finishing * 0.2 + player.technique * 0.1) * efficiency * 1.05;
+        attWeight += 1.05;
+        midSum += (Math.max(player.midfield, player.creativity) * 0.4 + player.passing * 0.35 + player.technique * 0.25) * efficiency * 1.0;
         midWeight += 1.0;
-        defSum += player.defending * efficiency * 0.15;
+        defSum += (player.defending * 0.6 + player.pressing * 0.4) * efficiency * 0.15;
         defWeight += 0.15;
+      } else if (isWideMid) {
+        // Distinguish attacking wide forwards (y <= 30 in 4-2-3-1) from wide midfielders/wingbacks (y > 30 in 3-5-2 / 4-4-2)
+        const isAttackingBand = slot.y <= 30;
+        if (isAttackingBand) {
+          // 4-2-3-1 wide attacking band (inverted wingers / wide forwards)
+          attSum += (player.finishing * 0.35 + player.attack * 0.35 + player.pace * 0.15 + player.creativity * 0.15) * efficiency * 1.1;
+          attWeight += 1.1;
+          midSum += (player.midfield * 0.4 + player.passing * 0.3 + player.technique * 0.3) * efficiency * 0.85;
+          midWeight += 0.85;
+          defSum += (player.defence * 0.5 + player.pressing * 0.5) * efficiency * 0.25;
+          defWeight += 0.25;
+        } else {
+          // 4-4-2 / 3-5-2 wide midfielders / wingbacks
+          attSum += (player.attack * 0.45 + player.pace * 0.3 + player.technique * 0.25) * efficiency * 0.65;
+          attWeight += 0.65;
+          midSum += (player.midfield * 0.4 + player.passing * 0.3 + player.technique * 0.3) * efficiency * 0.95;
+          midWeight += 0.95;
+          defSum += (player.defence * 0.5 + player.physical * 0.5) * efficiency * 0.4;
+          defWeight += 0.4;
+        }
       } else {
-        // CM, LM, RM
-        attSum += (player.attack * 0.5 + player.pace * 0.3 + player.technique * 0.2) * efficiency * 0.5;
-        attWeight += 0.5;
+        // CM
+        attSum += (player.attack * 0.5 + player.pace * 0.3 + player.technique * 0.2) * efficiency * 0.45;
+        attWeight += 0.45;
         midSum += (player.midfield * 0.4 + player.passing * 0.3 + player.technique * 0.3) * efficiency * 1.0;
         midWeight += 1.0;
-        defSum += (player.defence * 0.6 + player.physical * 0.4) * efficiency * 0.4;
-        defWeight += 0.4;
+        const cmDef = Math.max(player.defence, player.defending);
+        defSum += (cmDef * 0.55 + player.physical * 0.45) * efficiency * 0.45;
+        defWeight += 0.45;
       }
     } else {
       // ATT: ST, CF, LW, RW
@@ -643,7 +686,13 @@ export function calculateSquadStats(
 
   // Tactical Midfield flags
   const mids = activePlayers.filter((p) => POSITION_DEPARTMENTS[p.primaryPosition] === 'MID');
-  const hasPivot = mids.some((p) => p.defence >= 75 || p.primaryPosition === 'CDM');
+  const cdms = activePlayers.filter(
+    (p) => p.primaryPosition === 'CDM' || 
+           (p.secondaryPositions && p.secondaryPositions.includes('CDM')) ||
+           (POSITION_DEPARTMENTS[p.primaryPosition] === 'MID' && (p.defence >= 76 || p.defending >= 74))
+  );
+  const hasPivot = cdms.length >= 1;
+  const hasDoublePivot = cdms.length >= 2;
   const hasPlaymaker = mids.some((p) => p.technique >= 85 || p.primaryPosition === 'CAM' || p.creativity >= 85);
 
   // 3. Overall calculation: player quality is primary, chemistry provides tactical polish
@@ -659,6 +708,7 @@ export function calculateSquadStats(
     overall: finalOverall,
     gkRating,
     hasPivot,
+    hasDoublePivot,
     hasPlaymaker,
   };
 }
@@ -722,13 +772,9 @@ export function getDetailedChemistryLogs(
     if (!player) continue;
     const slot = slots[i];
 
-    if (player.primaryPosition !== slot.position) {
-      if (player.secondaryPositions.includes(slot.position)) {
-        logs.push({
-          delta: 2,
-          reason: `⚠️ ${player.displayName} out of natural role (${player.primaryPosition} at ${slot.label})`,
-          type: 'negative',
-        });
+    if (!isNaturalPositionFit(player, slot.position)) {
+      if (player.secondaryPositions && player.secondaryPositions.includes(slot.position)) {
+        // Accomplished secondary position - no penalty
       } else {
         logs.push({
           delta: 8,
@@ -752,7 +798,9 @@ export function getDetailedChemistryLogs(
     (p) => POSITION_DEPARTMENTS[p.primaryPosition] === 'MID'
   );
   if (midfielders.length >= 2) {
-    const hasDefensive = midfielders.some((p) => p.defence >= 75 || p.primaryPosition === 'CDM');
+    const hasDefensive = midfielders.some(
+      (p) => p.defence >= 75 || p.primaryPosition === 'CDM' || p.secondaryPositions?.includes('CDM')
+    );
     const hasPlaymaker = midfielders.some(
       (p) => p.technique >= 85 || p.primaryPosition === 'CAM' || p.creativity >= 85
     );
@@ -941,7 +989,8 @@ export function simulateLeagueSeason(
   selectedPlayers: Player[],
   stats: SquadStats,
   leagueId: string = 'english',
-  customRandom?: () => number
+  customRandom?: () => number,
+  slots?: PitchSlot[]
 ): SimulationResult {
   const rand = customRandom || Math.random;
   const matches: MatchSimResult[] = [];
@@ -1002,7 +1051,13 @@ export function simulateLeagueSeason(
 
   // Tactical balance checks
   const mids = selectedPlayers.filter((p) => POSITION_DEPARTMENTS[p.primaryPosition] === 'MID');
-  const hasPivot = mids.some((p) => p.defence >= 75 || p.primaryPosition === 'CDM');
+  const cdms = selectedPlayers.filter(
+    (p) => p.primaryPosition === 'CDM' || 
+           (p.secondaryPositions && p.secondaryPositions.includes('CDM')) ||
+           (POSITION_DEPARTMENTS[p.primaryPosition] === 'MID' && (p.defence >= 76 || p.defending >= 74))
+  );
+  const hasPivot = cdms.length >= 1;
+  const hasDoublePivot = stats.hasDoublePivot ?? (cdms.length >= 2);
   const hasPlaymaker = mids.some((p) => p.technique >= 85 || p.primaryPosition === 'CAM' || p.creativity >= 85);
 
   const sortedDef = selectedPlayers
@@ -1011,6 +1066,10 @@ export function simulateLeagueSeason(
   const hasWeakLink = gkRating < 76 || (sortedDef.length > 0 && sortedDef[0].defending < 65);
 
   const chemBonus = (chemistry - 75) * 0.08;
+
+  const hasFullbacks = slots
+    ? slots.some((s) => s.position === 'LB') && slots.some((s) => s.position === 'RB')
+    : selectedPlayers.some((p) => p.primaryPosition === 'LB') && selectedPlayers.some((p) => p.primaryPosition === 'RB');
 
   // Form momentum tracking (confidence streaks in football)
   let winStreak = 0;
@@ -1023,18 +1082,24 @@ export function simulateLeagueSeason(
     const momentum = winStreak >= 5 ? 0.08 : winStreak >= 3 ? 0.04 : 0;
 
     // Midfield control differential
-    const midDiff = (midfield + homeBonus - oppRating) * 0.04 + chemBonus * 0.03;
+    let midDiff = (midfield + homeBonus - oppRating) * 0.04 + chemBonus * 0.03;
+    if (hasDoublePivot) midDiff += 0.04;
 
     // Attack vs Opponent Defence
     let xG_us = 1.35 + (attack + homeBonus - oppRating) * 0.055 + midDiff * 0.04 + chemBonus * 0.03 + momentum;
     if (!hasPlaymaker) xG_us -= 0.15;
+    if (!hasFullbacks) xG_us -= 0.06;
     xG_us = Math.max(0.15, xG_us);
 
     // Opponent Attack vs Our Defence & GK
     let xG_opp = 1.15 + (oppRating - (defence + homeBonus)) * 0.055 - midDiff * 0.04 - chemBonus * 0.03;
     xG_opp -= (gkRating - 82) * 0.022;
-    if (hasWeakLink) xG_opp += 0.20;
+    if (hasWeakLink) {
+      xG_opp += hasDoublePivot ? 0.08 : 0.20;
+    }
     if (!hasPivot) xG_opp += 0.12;
+    if (hasDoublePivot) xG_opp -= 0.08;
+    if (!hasFullbacks) xG_opp += 0.22;
     xG_opp = Math.max(0.10, xG_opp);
 
     let ourScore = sampleGoals(xG_us, rand);

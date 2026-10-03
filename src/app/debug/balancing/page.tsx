@@ -217,7 +217,7 @@ export default function DebugBalancingPage() {
 
         const activeSquad = squad.filter((p): p is Player => p !== null);
         const stats = calculateSquadStats(activeSquad, slots);
-        const sim = simulateLeagueSeason(activeSquad, stats, 'english');
+        const sim = simulateLeagueSeason(activeSquad, stats, 'english', undefined, slots);
 
         winsArr.push(sim.wins);
         winHist[sim.wins] = (winHist[sim.wins] || 0) + 1;

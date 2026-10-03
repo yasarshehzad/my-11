@@ -356,7 +356,7 @@ export default function DraftedXIGame() {
       setStats(newStats);
       
       // 4. Simulate season
-      const result = simulateLeagueSeason(randomSquad, newStats, selectedLeague);
+      const result = simulateLeagueSeason(randomSquad, newStats, selectedLeague, undefined, slots);
       setSimResult(result);
       
       // 5. Reset live simulation counters
@@ -522,7 +522,7 @@ export default function DraftedXIGame() {
     } else {
       // Draft complete! Compile final results
       const finalPlayers = updatedSelection.filter((p): p is Player => p !== null);
-      const result = simulateLeagueSeason(finalPlayers, newStats, selectedLeague);
+      const result = simulateLeagueSeason(finalPlayers, newStats, selectedLeague, undefined, slots);
       logDraftCompleted(newStats.overall, newStats.chemistry);
       setSimResult(result);
     }
