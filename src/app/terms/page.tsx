@@ -3,9 +3,9 @@ import Link from 'next/link';
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen text-white font-sans flex flex-col pitch-bg p-6 sm:p-12">
+    <div className="min-h-screen text-foreground font-sans flex flex-col pitch-bg p-6 sm:p-12">
       <main className="flex-1 w-full max-w-2xl mx-auto flex flex-col justify-center my-8 glass rounded-3xl p-8 border border-slate-900 shadow-2xl space-y-6">
-        <h1 className="text-4xl font-display font-black text-white uppercase tracking-tight border-b border-slate-900 pb-4">
+        <h1 className="text-4xl font-display font-black text-foreground uppercase tracking-tight border-b border-slate-900 pb-4">
           Terms of Service
         </h1>
         
@@ -31,7 +31,7 @@ export default function TermsPage() {
         <div className="pt-4">
           <Link
             href="/"
-            className="inline-block py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/10 hover:from-emerald-400 hover:to-teal-400 transition-all duration-300 transform active:scale-95 cursor-pointer text-center"
+            className="inline-block py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-zinc-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/10 hover:from-emerald-400 hover:to-teal-400 transition-all duration-300 transform active:scale-95 cursor-pointer text-center"
           >
             ➔ Return to Main Game
           </Link>

@@ -77,19 +77,19 @@ export const ShareCardExport: React.FC<ShareCardExportProps> = ({
         glow: 'shadow-none',
       },
       common: {
-        border: 'border-slate-750',
+        border: 'border-slate-700',
         bg: 'from-slate-900/50 to-slate-950/95',
         text: 'text-slate-400',
         ratingText: 'text-slate-300 font-bold',
-        badge: 'bg-slate-800 text-slate-450 border-slate-750',
+        badge: 'bg-slate-800 text-slate-450 border-slate-700',
         glow: 'shadow-none',
       },
     }[rarity] || {
-      border: 'border-slate-750',
+      border: 'border-slate-700',
       bg: 'from-slate-900/50 to-slate-950/95',
       text: 'text-slate-400',
       ratingText: 'text-slate-300 font-bold',
-      badge: 'bg-slate-850 text-slate-450 border-slate-750',
+      badge: 'bg-slate-800 text-slate-450 border-slate-700',
       glow: 'shadow-none',
     };
   };
@@ -214,7 +214,7 @@ export const ShareCardExport: React.FC<ShareCardExportProps> = ({
                 </div>
 
                 {/* Club + Season rendered nicely at bottom of card */}
-                <div className="flex flex-col text-[8.5px] text-slate-400 border-t border-slate-850/60 pt-1.5 mt-1 font-semibold leading-none gap-1">
+                <div className="flex flex-col text-[8.5px] text-slate-400 border-t border-slate-800/60 pt-1.5 mt-1 font-semibold leading-none gap-1">
                   <span className="truncate max-w-[110px] uppercase text-slate-350">{player.club}</span>
                   <div className="flex justify-between items-center w-full">
                     <span className="text-[8px] text-slate-500 uppercase">{player.era}</span>
@@ -230,7 +230,7 @@ export const ShareCardExport: React.FC<ShareCardExportProps> = ({
       </div>
 
       {/* 3. Campaign Record Banner */}
-      <div className="w-full bg-slate-900 border border-slate-850 rounded-[35px] p-9 mt-6 flex justify-between items-center relative z-10 shadow-xl">
+      <div className="w-full bg-slate-900 border border-slate-800 rounded-[35px] p-9 mt-6 flex justify-between items-center relative z-10 shadow-xl">
         <div>
           <span className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">
             Simulated Campaign Results
@@ -260,23 +260,23 @@ export const ShareCardExport: React.FC<ShareCardExportProps> = ({
 
       {/* 4. Stats Category row */}
       <div className="grid grid-cols-5 gap-4 mt-6 relative z-10">
-        <div className="bg-slate-900/60 rounded-2xl p-4.5 border border-slate-850 text-center">
+        <div className="bg-slate-900/60 rounded-2xl p-4.5 border border-slate-800 text-center">
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">ATTACK</span>
           <p className="text-2xl font-display font-black text-emerald-450 mt-2">{stats.attack}</p>
         </div>
-        <div className="bg-slate-900/60 rounded-2xl p-4.5 border border-slate-850 text-center">
+        <div className="bg-slate-900/60 rounded-2xl p-4.5 border border-slate-800 text-center">
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">MIDFIELD</span>
           <p className="text-2xl font-display font-black text-sky-405 mt-2">{stats.midfield}</p>
         </div>
-        <div className="bg-slate-900/60 rounded-2xl p-4.5 border border-slate-850 text-center">
+        <div className="bg-slate-900/60 rounded-2xl p-4.5 border border-slate-800 text-center">
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">DEFENCE</span>
           <p className="text-2xl font-display font-black text-rose-455 mt-2">{stats.defence}</p>
         </div>
-        <div className="bg-slate-900/60 rounded-2xl p-4.5 border border-slate-850 text-center">
+        <div className="bg-slate-900/60 rounded-2xl p-4.5 border border-slate-800 text-center">
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">CHEMISTRY</span>
           <p className="text-2xl font-display font-black text-amber-450 mt-2">{stats.chemistry}</p>
         </div>
-        <div className="bg-slate-900/60 rounded-2xl p-4.5 border border-slate-850 text-center">
+        <div className="bg-slate-900/60 rounded-2xl p-4.5 border border-slate-800 text-center">
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">GLOBAL TIER</span>
           <p className="text-xl font-display font-black text-indigo-400 mt-2">Top {simResult.percentile}%</p>
         </div>
@@ -326,17 +326,17 @@ export const ShareCardExport: React.FC<ShareCardExportProps> = ({
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Runs Played</span>
             <p className="text-2xl font-display font-black text-white mt-1">{streakStats.gamesPlayed}</p>
           </div>
-          <div className="w-[1.5px] bg-slate-850" />
+          <div className="w-[1.5px] bg-slate-800" />
           <div className="flex-grow">
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Best League Record</span>
             <p className="text-2xl font-display font-black text-emerald-400 mt-1">{streakStats.bestPoints} pts</p>
           </div>
-          <div className="w-[1.5px] bg-slate-850" />
+          <div className="w-[1.5px] bg-slate-800" />
           <div className="flex-grow">
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Completed Runs</span>
             <p className="text-2xl font-display font-black text-amber-400 mt-1">{streakStats.dailyChallengesCompleted}</p>
           </div>
-          <div className="w-[1.5px] bg-slate-850" />
+          <div className="w-[1.5px] bg-slate-800" />
           <div className="flex-grow">
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Streak</span>
             <p className="text-2xl font-display font-black text-indigo-400 mt-1">⚡ {streakStats.currentDailyStreak} Days</p>
@@ -355,7 +355,7 @@ export const ShareCardExport: React.FC<ShareCardExportProps> = ({
           </p>
         </div>
 
-        <span className="text-xs font-black text-slate-500 bg-slate-900 px-4 py-1.5 rounded-lg border border-slate-850 uppercase tracking-wider">
+        <span className="text-xs font-black text-slate-500 bg-slate-900 px-4 py-1.5 rounded-lg border border-slate-800 uppercase tracking-wider">
           TACTICAL FORMATION: {formation}
         </span>
       </div>

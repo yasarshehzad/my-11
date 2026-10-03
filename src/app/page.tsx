@@ -434,6 +434,33 @@ export default function DraftedXIGame() {
     setDraftOptions(options);
   };
 
+  // --- Undo Pick ---
+  const handleUndoPick = () => {
+    if (!formation) return;
+    const targetIndex = currentSlotIndex >= 11 ? 10 : currentSlotIndex - 1;
+    if (targetIndex < 0) return;
+    const slots = FORMATION_SLOTS[formation];
+
+    const updatedSelection = [...selectedPlayers];
+    updatedSelection[targetIndex] = null;
+    setSelectedPlayers(updatedSelection);
+    setCurrentSlotIndex(targetIndex);
+    setSimResult(null);
+
+    const newStats = calculateSquadStats(updatedSelection, slots);
+    setStats(newStats);
+
+    let prevOptions: [Player, Player, Player];
+    if (isDailyChallenge && todayChallenge) {
+      const seedValue = parseInt(todayDateStr.replace(/-/g, ''), 10);
+      const randFn = createSeedableRandom(seedValue + targetIndex * 1000);
+      prevOptions = getDraftOptions(slots[targetIndex].position, updatedSelection, randFn, todayChallenge.rule, selectedLeague);
+    } else {
+      prevOptions = getDraftOptions(slots[targetIndex].position, updatedSelection, undefined, undefined, selectedLeague);
+    }
+    setDraftOptions(prevOptions);
+  };
+
   // --- Select Player and Draft ---
   const handleSelectPlayer = (player: Player) => {
     if (!formation) return;
@@ -827,7 +854,7 @@ export default function DraftedXIGame() {
 
               <button
                 onClick={handlePlayDailyChallenge}
-                className="w-full py-3 px-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow hover:shadow-emerald-400/10 mt-4 transition-all duration-300 transform active:scale-98 cursor-pointer text-center"
+                className="w-full py-3 px-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-display font-black text-xs uppercase tracking-wider shadow hover:shadow-emerald-400/10 mt-4 transition-all duration-300 transform active:scale-98 cursor-pointer text-center"
               >
                 {dailyStatus.completed ? "Re-play Daily Challenge" : "Play Today's Challenge"}
               </button>
@@ -866,7 +893,7 @@ export default function DraftedXIGame() {
 
           <button
             onClick={handleStartDraft}
-            className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/10 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/20 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer"
+            className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-zinc-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/10 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/20 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer"
           >
             Start Draft
           </button>
@@ -943,7 +970,7 @@ export default function DraftedXIGame() {
                   className={`w-full p-3.5 rounded-2xl border text-left transition-all duration-300 flex items-center gap-3.5 cursor-pointer relative active:scale-99 ${
                     active
                       ? 'border-emerald-500 bg-emerald-950/20 text-emerald-450 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
-                      : 'border-slate-900 bg-slate-950/40 text-slate-350 hover:border-slate-805 hover:bg-slate-900/40'
+                      : 'border-slate-900 bg-slate-950/40 text-slate-350 hover:border-slate-800 hover:bg-slate-900/40'
                   }`}
                 >
                   <span className="text-2xl">{lg.flag}</span>
@@ -1039,7 +1066,7 @@ export default function DraftedXIGame() {
           <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent border-t border-slate-900/30 md:relative md:bg-none md:border-none md:p-0 z-40 flex justify-center animate-card-deal">
             <button
               onClick={handleConfirmTactics}
-              className="w-full max-w-sm py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/35 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer text-center animate-pulse"
+              className="w-full max-w-sm py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-zinc-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/35 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer text-center animate-pulse"
             >
               Confirm & Start Draft ➔
             </button>
@@ -1082,13 +1109,34 @@ export default function DraftedXIGame() {
             </h2>
           </div>
           
-          {isFinished && simResult && (
-            <button
-              onClick={startSimulation}
-              className="hidden md:inline-flex py-3 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/10 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/20 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer"
-            >
-              Start simulation ➔
-            </button>
+          {isFinished ? (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleUndoPick}
+                title="Undo last pick"
+                className="py-2.5 px-3.5 rounded-2xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-foreground hover:bg-slate-800 hover:border-slate-700 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+              >
+                <span>↩️</span> Undo
+              </button>
+              {simResult && (
+                <button
+                  onClick={startSimulation}
+                  className="hidden md:inline-flex py-3 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-zinc-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/10 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/20 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer"
+                >
+                  Start simulation ➔
+                </button>
+              )}
+            </div>
+          ) : (
+            currentSlotIndex > 0 && (
+              <button
+                onClick={handleUndoPick}
+                title="Undo previous pick"
+                className="py-2 px-3 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-foreground hover:bg-slate-800 hover:border-slate-700 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+              >
+                <span>↩️</span> Undo
+              </button>
+            )
           )}
         </div>
 
@@ -1123,39 +1171,51 @@ export default function DraftedXIGame() {
                 </span>
               </span>
 
-              {/* Reroll Interface */}
-              {!freeSearchEnabled && (
-                <div className="flex items-center gap-3 select-none">
-                  {/* Reroll Tokens representation */}
-                  <div className="flex gap-1.5" title={`${rerollsRemaining} rerolls left`}>
-                    {Array.from({ length: 3 }).map((_, idx) => {
-                      const active = idx < rerollsRemaining;
-                      return (
-                        <span
-                          key={idx}
-                          className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                            active
-                              ? 'bg-amber-450 shadow-[0_0_8px_rgba(245,158,11,0.6)] animate-pulse'
-                              : 'bg-slate-800 border border-slate-900'
-                          }`}
-                        />
-                      );
-                    })}
-                  </div>
-
+              <div className="flex items-center gap-2.5 select-none">
+                {currentSlotIndex > 0 && (
                   <button
-                    onClick={handleRerollOptions}
-                    disabled={rerollsRemaining <= 0}
-                    className={`px-3 py-1.5 rounded-xl font-display font-black text-[9px] uppercase tracking-wider transition-all select-none border cursor-pointer ${
-                      rerollsRemaining > 0
-                        ? 'bg-amber-500/10 text-amber-450 border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/40 active:scale-95'
-                        : 'bg-slate-900/50 text-slate-600 border-slate-950 cursor-not-allowed'
-                    }`}
+                    onClick={handleUndoPick}
+                    title="Undo previous pick"
+                    className="px-2.5 py-1.5 rounded-xl font-display font-black text-[9px] uppercase tracking-wider transition-all select-none border border-slate-800 bg-slate-900 text-slate-300 hover:text-foreground hover:bg-slate-800 hover:border-slate-700 active:scale-95 cursor-pointer flex items-center gap-1"
                   >
-                    🔄 Reroll ({rerollsRemaining})
+                    <span>↩️</span> Undo
                   </button>
-                </div>
-              )}
+                )}
+
+                {/* Reroll Interface */}
+                {!freeSearchEnabled && (
+                  <div className="flex items-center gap-3 select-none">
+                    {/* Reroll Tokens representation */}
+                    <div className="flex gap-1.5" title={`${rerollsRemaining} rerolls left`}>
+                      {Array.from({ length: 3 }).map((_, idx) => {
+                        const active = idx < rerollsRemaining;
+                        return (
+                          <span
+                            key={idx}
+                            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                              active
+                                ? 'bg-amber-450 shadow-[0_0_8px_rgba(245,158,11,0.6)] animate-pulse'
+                                : 'bg-slate-800 border border-slate-900'
+                            }`}
+                          />
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      onClick={handleRerollOptions}
+                      disabled={rerollsRemaining <= 0}
+                      className={`px-3 py-1.5 rounded-xl font-display font-black text-[9px] uppercase tracking-wider transition-all select-none border cursor-pointer ${
+                        rerollsRemaining > 0
+                          ? 'bg-amber-500/10 text-amber-450 border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/40 active:scale-95'
+                          : 'bg-slate-900/50 text-slate-600 border-slate-950 cursor-not-allowed'
+                      }`}
+                    >
+                      🔄 Reroll ({rerollsRemaining})
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Tab Swapper */}
@@ -1324,7 +1384,7 @@ export default function DraftedXIGame() {
           <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent border-t border-slate-900/30 md:relative md:bg-none md:border-none md:p-0 z-40 flex justify-center">
             <button
               onClick={startSimulation}
-              className="w-full max-w-sm py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/35 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer text-center"
+              className="w-full max-w-sm py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-zinc-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/35 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer text-center"
             >
               Start Simulation ➔
             </button>
@@ -1423,7 +1483,7 @@ export default function DraftedXIGame() {
                 <div
                   key={idx}
                   title={match ? `Game ${idx + 1} vs ${match.opponent}: ${match.ourScore}-${match.opponentScore} (${match.outcome})` : `Game ${idx + 1} (Unplayed)`}
-                  className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-black font-display leading-none text-slate-950 transition-all duration-300 ${bgColor} ${glowEffect} ${
+                  className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-black font-display leading-none text-zinc-950 transition-all duration-300 ${bgColor} ${glowEffect} ${
                     isCurrent ? 'ring-2 ring-emerald-400 ring-offset-2 ring-offset-slate-950 animate-pulse' : ''
                   } ${played ? 'animate-card-deal' : ''}`}
                 >
@@ -1470,6 +1530,11 @@ export default function DraftedXIGame() {
                       <span className="text-xs font-bold text-foreground uppercase mt-1">
                         vs {match.opponent}
                       </span>
+                      {match.scorers && match.scorers.length > 0 && (
+                        <span className="text-[8.5px] text-emerald-450 font-bold mt-1 flex items-center gap-1">
+                          ⚽ {match.scorers.join(', ')}
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -1516,7 +1581,7 @@ export default function DraftedXIGame() {
                     updateDOM();
                   }
                 }}
-                className="w-full max-w-sm py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/35 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer text-center animate-bounce"
+                className="w-full max-w-sm py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-zinc-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/35 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer text-center animate-bounce"
               >
                 Reveal Final Standings ➔
               </button>
@@ -1543,7 +1608,7 @@ export default function DraftedXIGame() {
 
     const getFinishAccentClass = (pos: number) => {
       if (pos === 1) return 'from-amber-400 to-yellow-500 text-yellow-950 border-yellow-500 shadow-amber-500/20';
-      if (pos <= 4) return 'from-slate-200 to-slate-450 text-slate-950 border-slate-350';
+      if (pos <= 4) return 'from-slate-200 to-slate-450 text-zinc-950 border-slate-350';
       return 'from-slate-900 to-slate-950 text-slate-300 border-slate-900';
     };
 
@@ -1617,7 +1682,7 @@ export default function DraftedXIGame() {
           {isDailyChallenge ? (
             <div className={`px-5 py-2 rounded-2xl bg-gradient-to-r border shadow-lg font-display font-black text-sm uppercase tracking-wider mb-4 leading-none ${
               challengeBeaten 
-                ? 'from-emerald-400 to-teal-500 text-slate-950 border-emerald-400 shadow-emerald-500/20'
+                ? 'from-emerald-400 to-teal-500 text-zinc-950 border-emerald-400 shadow-emerald-500/20'
                 : 'from-rose-500 to-red-700 text-rose-950 border-rose-500'
             }`}>
               {challengeBeaten ? '✅ CHALLENGE CLEARED!' : '❌ CHALLENGE FAILED'}
@@ -1801,11 +1866,47 @@ export default function DraftedXIGame() {
           );
         })()}
 
+        {/* Season Awards: Top Scorer & Clean Sheets */}
+        {(simResult.topScorer || simResult.cleanSheets !== undefined) && (
+          <div className="w-full grid grid-cols-2 gap-3 z-10">
+            {simResult.topScorer && (
+              <div className="p-4 rounded-2xl glass border border-amber-500/20 bg-amber-950/10 flex flex-col justify-between">
+                <span className="text-[9px] font-black uppercase text-amber-400 tracking-wider flex items-center gap-1">
+                  🥇 Golden Boot
+                </span>
+                <div className="mt-2">
+                  <h4 className="text-sm font-display font-black text-foreground uppercase truncate">
+                    {simResult.topScorer.player.displayName}
+                  </h4>
+                  <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
+                    {simResult.topScorer.goals} Goals in 38 Matches
+                  </p>
+                </div>
+              </div>
+            )}
+            {simResult.cleanSheets !== undefined && (
+              <div className="p-4 rounded-2xl glass border border-emerald-500/20 bg-emerald-950/10 flex flex-col justify-between">
+                <span className="text-[9px] font-black uppercase text-emerald-400 tracking-wider flex items-center gap-1">
+                  🧤 Golden Glove
+                </span>
+                <div className="mt-2">
+                  <h4 className="text-sm font-display font-black text-foreground uppercase">
+                    {simResult.cleanSheets} Clean Sheets
+                  </h4>
+                  <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
+                    {38 - simResult.cleanSheets} Matches Conceded
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Detailed Season Fixtures & Results (Collapsible) */}
         <div className="w-full z-10 flex flex-col gap-3">
           <button
             onClick={() => setShowFixturesBreakdown(!showFixturesBreakdown)}
-            className="w-full p-4.5 rounded-2xl bg-slate-900 border border-slate-800 hover:bg-slate-850 hover:border-slate-700 transition-all duration-300 flex items-center justify-between cursor-pointer active:scale-99"
+            className="w-full p-4.5 rounded-2xl bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 transition-all duration-300 flex items-center justify-between cursor-pointer active:scale-99"
           >
             <div className="flex items-center gap-2.5">
               <span className="text-lg">📅</span>
@@ -1867,6 +1968,11 @@ export default function DraftedXIGame() {
                         <h4 className="text-sm font-display font-black text-foreground mt-1.5 leading-none uppercase">
                           vs {match.opponent}
                         </h4>
+                        {match.scorers && match.scorers.length > 0 && (
+                          <p className="text-[10px] text-emerald-450 font-bold leading-normal mt-1 flex items-center gap-1 flex-wrap">
+                            <span>⚽</span> {match.scorers.join(', ')}
+                          </p>
+                        )}
                         <p className="text-[10px] text-slate-400 leading-normal mt-1 italic">
                           {getMatchCommentary(match)}
                         </p>
@@ -1898,7 +2004,7 @@ export default function DraftedXIGame() {
           </button>
           <button
             onClick={() => handleRandomDraft()}
-            className="flex-grow py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 hover:-translate-y-0.5 transition-all duration-300 transform active:scale-98 cursor-pointer text-center"
+            className="flex-grow py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-zinc-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 hover:-translate-y-0.5 transition-all duration-300 transform active:scale-98 cursor-pointer text-center"
           >
             🎲 Randomize Again
           </button>
@@ -1935,7 +2041,8 @@ export default function DraftedXIGame() {
       <header className="w-full py-4 px-6 border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50 flex justify-between items-center select-none shadow-lg">
         <button
           onClick={() => {
-            if (window.confirm('Abandon current run and return to homepage?')) {
+            if (phase === 'home') return;
+            if (phase === 'results' || window.confirm('Abandon current run and return to homepage?')) {
               const updateDOM = () => {
                 setPhase('home');
               };
@@ -2004,7 +2111,7 @@ export default function DraftedXIGame() {
 
       {/* Hidden 1080x1920 Export Canvas */}
       {phase === 'results' && formation && simResult && (
-        <div className="absolute top-0 left-0 -translate-x-[9999px] -translate-y-[9999px] pointer-events-none select-none">
+        <div className="fixed top-0 left-0 pointer-events-none opacity-0 select-none -z-50">
           <ShareCardExport
             formation={formation}
             selectedPlayers={selectedPlayers}

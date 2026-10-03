@@ -223,7 +223,7 @@ Can you beat this? Play now at https://my-11.com`
             </div>
 
             <div className="flex items-center gap-1.5">
-              <div className="flex flex-col items-center bg-slate-900/40 px-2 py-1.5 rounded-xl border border-slate-850">
+              <div className="flex flex-col items-center bg-slate-900/40 px-2 py-1.5 rounded-xl border border-slate-800">
                 <span className="text-[7px] font-bold text-slate-500 uppercase leading-none">OVR</span>
                 <span className="text-xl font-display font-black text-foreground leading-none mt-1">
                   {stats.overall}
@@ -332,7 +332,7 @@ Can you beat this? Play now at https://my-11.com`
       <div className="flex flex-col gap-2 w-full max-w-sm mt-1 px-4 sm:px-0">
         <button
           onClick={handleShareResult}
-          className="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/10 hover:from-emerald-400 hover:to-teal-400 transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+          className="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-zinc-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/10 hover:from-emerald-400 hover:to-teal-400 transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center justify-center gap-2"
         >
           <span>🔗</span> Share Result Card
         </button>
@@ -340,14 +340,14 @@ Can you beat this? Play now at https://my-11.com`
         <div className="grid grid-cols-2 gap-2">
           <button
             onClick={handleDownloadImage}
-            className="py-3 px-4 rounded-2xl bg-slate-900 border border-slate-800 text-slate-350 font-display font-bold text-xs uppercase tracking-wider hover:bg-slate-850 transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+            className="py-3 px-4 rounded-2xl bg-slate-900 border border-slate-800 text-slate-350 font-display font-bold text-xs uppercase tracking-wider hover:bg-slate-800 transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
           >
             <span>📥</span> Download Image
           </button>
           
           <button
             onClick={handleCopyText}
-            className="py-3 px-4 rounded-2xl bg-slate-900 border border-slate-800 text-slate-350 font-display font-bold text-xs uppercase tracking-wider hover:bg-slate-850 transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+            className="py-3 px-4 rounded-2xl bg-slate-900 border border-slate-800 text-slate-350 font-display font-bold text-xs uppercase tracking-wider hover:bg-slate-800 transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
           >
             {copied ? (
               <span className="text-emerald-400">Copied!</span>

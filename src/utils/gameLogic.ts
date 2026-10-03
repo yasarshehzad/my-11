@@ -837,6 +837,40 @@ export function simulateLeagueSeason(
   let goalsFor = 0;
   let goalsAgainst = 0;
 
+  let cleanSheets = 0;
+
+  const outfieldPlayers = selectedPlayers.filter((p) => p.primaryPosition !== 'GK');
+  const playerGoalsMap = new Map<string, { player: Player; goals: number }>();
+  selectedPlayers.forEach((p) => playerGoalsMap.set(p.id, { player: p, goals: 0 }));
+
+  // Scorer weights based on position & stats
+  const scorerCandidates = outfieldPlayers.map((p) => {
+    let weight = 1;
+    const pos = p.primaryPosition;
+    if (['ST', 'CF', 'LW', 'RW'].includes(pos)) {
+      weight = (p.finishing || p.attack || 75) * 2.5;
+    } else if (['CAM', 'CM', 'LM', 'RM'].includes(pos)) {
+      weight = (p.finishing || p.attack || 70) * 1.0 + (p.technique || 70) * 0.4;
+    } else if (['CDM'].includes(pos)) {
+      weight = 25;
+    } else {
+      // CB, LB, RB - occasionally score headers/corners
+      weight = (p.physical || 70) * 0.15;
+    }
+    return { player: p, weight: Math.max(5, weight) };
+  });
+
+  const totalScorerWeight = scorerCandidates.reduce((sum, c) => sum + c.weight, 0);
+
+  const pickGoalscorer = (): Player => {
+    let r = Math.random() * totalScorerWeight;
+    for (const cand of scorerCandidates) {
+      r -= cand.weight;
+      if (r <= 0) return cand.player;
+    }
+    return scorerCandidates[0]?.player || selectedPlayers[0];
+  };
+
   const opponentPool = LEAGUE_OPPONENTS[leagueId] || LEAGUE_OPPONENTS.english;
 
   // Compile 38 games (19 opponents home & away)
@@ -888,12 +922,33 @@ export function simulateLeagueSeason(
     goalsFor += ourScore;
     goalsAgainst += oppScore;
 
+    if (oppScore === 0) {
+      cleanSheets++;
+    }
+
+    const scorers: string[] = [];
+    if (ourScore > 0 && scorerCandidates.length > 0) {
+      const minutes: number[] = [];
+      for (let g = 0; g < ourScore; g++) {
+        minutes.push(Math.floor(Math.random() * 88) + 2); // 2' to 89'
+      }
+      minutes.sort((a, b) => a - b);
+      minutes.forEach((min) => {
+        const scorer = pickGoalscorer();
+        const existing = playerGoalsMap.get(scorer.id);
+        if (existing) existing.goals += 1;
+        const shortName = scorer.displayName.split(' ').pop() || scorer.displayName;
+        scorers.push(`${shortName} ${min}'`);
+      });
+    }
+
     matches.push({
       opponent: fixture.opponent,
       opponentRating: oppRating,
       ourScore,
       opponentScore: oppScore,
       outcome,
+      scorers: scorers.length > 0 ? scorers : undefined,
     });
   });
 
@@ -943,6 +998,16 @@ export function simulateLeagueSeason(
   const sortedByLowest = [...selectedPlayers].sort((a, b) => a.rating - b.rating);
   const weakLink = sortedByLowest[0];
 
+  // Top Goalscorer
+  let topScorer: { player: Player; goals: number } | undefined;
+  let maxGoals = 0;
+  for (const entry of playerGoalsMap.values()) {
+    if (entry.goals > maxGoals) {
+      maxGoals = entry.goals;
+      topScorer = entry;
+    }
+  }
+
   const summary = getResultNarrative(wins, draws, losses, stats);
   const chemistryGrade = getChemistryGrade(stats.chemistry);
   const playstyle = getPlaystyle(stats, selectedPlayers);
@@ -967,6 +1032,8 @@ export function simulateLeagueSeason(
     bestLink,
     worstLink,
     selectedLeague: leagueId,
+    cleanSheets,
+    topScorer,
   };
 }
 

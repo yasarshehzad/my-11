@@ -701,12 +701,6 @@ const playerBases: PlayerBase[] = [
     rivals: ['AC Milan', 'Juventus'],
   },
   {
-    name: 'Alessandro Nesta', lastName: 'Nesta', nationality: 'Italy',
-    primaryPosition: 'CB', secondaryPositions: [], era: '90s', club: 'AC Milan',
-    baseRating: 92, startYear: 1993, baseTrait: 'Defensive Leader', playStyle: 'Lockdown Defender',
-    rivals: ['Inter Milan', 'Juventus'],
-  },
-  {
     name: 'Carles Puyol', lastName: 'Puyol', nationality: 'Spain',
     primaryPosition: 'CB', secondaryPositions: ['RB'], era: '90s', club: 'Barcelona',
     baseRating: 90, startYear: 1999, baseTrait: 'Defensive Leader', playStyle: 'Lockdown Defender',

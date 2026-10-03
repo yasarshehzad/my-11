@@ -85,6 +85,7 @@ export interface MatchSimResult {
   ourScore: number;
   opponentScore: number;
   outcome: 'W' | 'D' | 'L';
+  scorers?: string[];
 }
 
 export type ChemistryGrade = 'S' | 'A' | 'B' | 'C' | 'D';
@@ -107,6 +108,8 @@ export interface SimulationResult {
   bestLink: string;
   worstLink: string;
   selectedLeague?: string;
+  cleanSheets?: number;
+  topScorer?: { player: Player; goals: number };
 }
 
 export type ChallengeRuleType =
