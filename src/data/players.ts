@@ -15,6 +15,7 @@ interface PlayerBase {
   playStyle: string;
   rivals: string[];
   isLegendaryPlayer?: boolean;
+  endYear?: number; // Last season start year; no cards are generated after this
 }
 
 // 116 Iconic Premier League Base Players (1992 - 2026)
@@ -1791,6 +1792,337 @@ const playerBases: PlayerBase[] = [
     baseRating: 86, startYear: 2003, baseTrait: 'Clutch Finisher', playStyle: 'Goal Machine',
     rivals: ['Marseille', 'Lyon'], isLegendaryPlayer: false,
   },
+  // --- EXPANSION: 55 additional players (mixed skill levels) ---
+  {
+    name: 'Dennis Bergkamp', lastName: 'Bergkamp', nationality: 'Netherlands',
+    primaryPosition: 'CF', secondaryPositions: ['CAM', 'ST'], era: '90s', club: 'Arsenal',
+    baseRating: 90, startYear: 1995, endYear: 2005, baseTrait: 'Creator Supreme', playStyle: 'Deep Lying Forward',
+    rivals: ['Tottenham', 'Manchester United'], isLegendaryPlayer: true,
+  },
+  {
+    name: 'Eric Cantona', lastName: 'Cantona', nationality: 'France',
+    primaryPosition: 'CF', secondaryPositions: ['CAM', 'ST'], era: '90s', club: 'Manchester United',
+    baseRating: 91, startYear: 1992, endYear: 1996, baseTrait: 'Clutch Finisher', playStyle: 'Deep Lying Forward',
+    rivals: ['Liverpool', 'Leeds United'], isLegendaryPlayer: true,
+  },
+  {
+    name: 'Ole Gunnar Solskjaer', lastName: 'Solskjaer', nationality: 'Norway',
+    primaryPosition: 'ST', secondaryPositions: ['RW'], era: '90s', club: 'Manchester United',
+    baseRating: 83, startYear: 1996, endYear: 2006, baseTrait: 'Clutch Finisher', playStyle: 'Goal Machine',
+    rivals: ['Arsenal', 'Liverpool'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Dwight Yorke', lastName: 'Yorke', nationality: 'Trinidad and Tobago',
+    primaryPosition: 'ST', secondaryPositions: ['CF', 'CAM'], era: '90s', club: 'Aston Villa',
+    baseRating: 85, startYear: 1996, endYear: 2006, baseTrait: 'Clutch Finisher', playStyle: 'Inside Forward',
+    rivals: ['Birmingham', 'Arsenal'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Nicolas Anelka', lastName: 'Anelka', nationality: 'France',
+    primaryPosition: 'ST', secondaryPositions: ['LW'], era: '90s', club: 'Arsenal',
+    baseRating: 85, startYear: 1997, endYear: 2007, baseTrait: 'Athletic Runner', playStyle: 'Explosive Runner',
+    rivals: ['Tottenham', 'Chelsea'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Emmanuel Petit', lastName: 'Petit', nationality: 'France',
+    primaryPosition: 'CM', secondaryPositions: ['CDM'], era: '90s', club: 'Arsenal',
+    baseRating: 84, startYear: 1997, endYear: 2004, baseTrait: 'Engine Room', playStyle: 'Box-to-Box Midfielder',
+    rivals: ['Tottenham', 'Manchester United'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Marc Overmars', lastName: 'Overmars', nationality: 'Netherlands',
+    primaryPosition: 'LW', secondaryPositions: ['LM'], era: '90s', club: 'Arsenal',
+    baseRating: 85, startYear: 1997, endYear: 2003, baseTrait: 'Wing Wizard', playStyle: 'Explosive Runner',
+    rivals: ['Tottenham', 'Manchester United'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Freddie Ljungberg', lastName: 'Ljungberg', nationality: 'Sweden',
+    primaryPosition: 'RM', secondaryPositions: ['RW', 'CAM'], era: '90s', club: 'Arsenal',
+    baseRating: 83, startYear: 1998, endYear: 2007, baseTrait: 'Box-to-Box Engine', playStyle: 'Inside Forward',
+    rivals: ['Tottenham', 'Chelsea'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Ray Parlour', lastName: 'Parlour', nationality: 'England',
+    primaryPosition: 'CM', secondaryPositions: ['RM'], era: '90s', club: 'Arsenal',
+    baseRating: 79, startYear: 1993, endYear: 2003, baseTrait: 'Engine Room', playStyle: 'Box-to-Box Midfielder',
+    rivals: ['Tottenham', 'Manchester United'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Lee Dixon', lastName: 'Dixon', nationality: 'England',
+    primaryPosition: 'RB', secondaryPositions: [], era: '90s', club: 'Arsenal',
+    baseRating: 80, startYear: 1992, endYear: 2001, baseTrait: 'Tenacious Defender', playStyle: 'Wing Back',
+    rivals: ['Tottenham', 'Manchester United'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Marcel Desailly', lastName: 'Desailly', nationality: 'France',
+    primaryPosition: 'CB', secondaryPositions: ['CDM'], era: '90s', club: 'AC Milan',
+    baseRating: 89, startYear: 1993, endYear: 2003, baseTrait: 'Defensive Anchor', playStyle: 'Stopper',
+    rivals: ['Inter Milan', 'Juventus'], isLegendaryPlayer: true,
+  },
+  {
+    name: 'Roberto Di Matteo', lastName: 'Matteo', nationality: 'Italy',
+    primaryPosition: 'CM', secondaryPositions: ['CAM'], era: '90s', club: 'Chelsea',
+    baseRating: 80, startYear: 1996, endYear: 2001, baseTrait: 'Long Shot Specialist', playStyle: 'Box to Box',
+    rivals: ['Arsenal', 'Tottenham'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Gianluca Vialli', lastName: 'Vialli', nationality: 'Italy',
+    primaryPosition: 'ST', secondaryPositions: ['CF'], era: '90s', club: 'Chelsea',
+    baseRating: 88, startYear: 1992, endYear: 1998, baseTrait: 'Clutch Finisher', playStyle: 'Goal Machine',
+    rivals: ['Arsenal', 'Tottenham'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Steve McManaman', lastName: 'McManaman', nationality: 'England',
+    primaryPosition: 'RW', secondaryPositions: ['RM', 'CAM'], era: '90s', club: 'Liverpool',
+    baseRating: 84, startYear: 1993, endYear: 2004, baseTrait: 'Dribbling Wizard', playStyle: 'Inside Forward',
+    rivals: ['Manchester United', 'Everton'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Jamie Redknapp', lastName: 'Redknapp', nationality: 'England',
+    primaryPosition: 'CM', secondaryPositions: ['CDM'], era: '90s', club: 'Liverpool',
+    baseRating: 80, startYear: 1993, endYear: 2001, baseTrait: 'Playmaker', playStyle: 'Tempo Controller',
+    rivals: ['Manchester United', 'Everton'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Michael Owen', lastName: 'Owen', nationality: 'England',
+    primaryPosition: 'ST', secondaryPositions: [], era: '90s', club: 'Liverpool',
+    baseRating: 89, startYear: 1997, endYear: 2007, baseTrait: 'Athletic Runner', playStyle: 'Goal Machine',
+    rivals: ['Manchester United', 'Everton'], isLegendaryPlayer: true,
+  },
+  {
+    name: 'Fernando Torres', lastName: 'Torres', nationality: 'Spain',
+    primaryPosition: 'ST', secondaryPositions: ['CF'], era: '00s', club: 'Liverpool',
+    baseRating: 90, startYear: 2007, endYear: 2017, baseTrait: 'Golden Boot Form', playStyle: 'Explosive Runner',
+    rivals: ['Manchester United', 'Everton'], isLegendaryPlayer: true,
+  },
+  {
+    name: 'Jermain Defoe', lastName: 'Defoe', nationality: 'England',
+    primaryPosition: 'ST', secondaryPositions: [], era: '00s', club: 'Tottenham',
+    baseRating: 80, startYear: 2004, endYear: 2012, baseTrait: 'Clutch Finisher', playStyle: 'Goal Machine',
+    rivals: ['Arsenal', 'Chelsea'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Ashley Young', lastName: 'Young', nationality: 'England',
+    primaryPosition: 'LW', secondaryPositions: ['RW', 'LM'], era: '00s', club: 'Aston Villa',
+    baseRating: 80, startYear: 2007, endYear: 2017, baseTrait: 'Wing Wizard', playStyle: 'Inside Forward',
+    rivals: ['Birmingham', 'Liverpool'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Gary Cahill', lastName: 'Cahill', nationality: 'England',
+    primaryPosition: 'CB', secondaryPositions: [], era: '00s', club: 'Chelsea',
+    baseRating: 83, startYear: 2008, endYear: 2018, baseTrait: 'Physical Warrior', playStyle: 'Stopper',
+    rivals: ['Arsenal', 'Tottenham'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Joe Hart', lastName: 'Hart', nationality: 'England',
+    primaryPosition: 'GK', secondaryPositions: [], era: '00s', club: 'Manchester City',
+    baseRating: 85, startYear: 2008, endYear: 2018, baseTrait: 'Shot Stopper', playStyle: 'Traditional GK',
+    rivals: ['Manchester United', 'Liverpool'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Robbie Keane', lastName: 'Keane', nationality: 'Ireland',
+    primaryPosition: 'ST', secondaryPositions: ['CF', 'CAM'], era: '00s', club: 'Tottenham',
+    baseRating: 82, startYear: 2002, endYear: 2012, baseTrait: 'Clutch Finisher', playStyle: 'Inside Forward',
+    rivals: ['Arsenal', 'Chelsea'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Dimitar Berbatov', lastName: 'Berbatov', nationality: 'Bulgaria',
+    primaryPosition: 'CF', secondaryPositions: ['ST', 'CAM'], era: '00s', club: 'Tottenham',
+    baseRating: 86, startYear: 2006, endYear: 2013, baseTrait: 'Technique Master', playStyle: 'Deep Lying Forward',
+    rivals: ['Arsenal', 'Chelsea'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Stewart Downing', lastName: 'Downing', nationality: 'England',
+    primaryPosition: 'LM', secondaryPositions: ['LW'], era: '00s', club: 'Middlesbrough',
+    baseRating: 78, startYear: 2005, endYear: 2015, baseTrait: 'Wing Wizard', playStyle: 'Inside Forward',
+    rivals: ['Sunderland', 'Newcastle'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Mikel Arteta', lastName: 'Arteta', nationality: 'Spain',
+    primaryPosition: 'CM', secondaryPositions: ['CDM', 'CAM'], era: '00s', club: 'Everton',
+    baseRating: 83, startYear: 2005, endYear: 2015, baseTrait: 'Playmaker', playStyle: 'Tempo Controller',
+    rivals: ['Liverpool', 'Manchester United'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Tim Cahill', lastName: 'Cahill', nationality: 'Australia',
+    primaryPosition: 'CM', secondaryPositions: ['CAM', 'ST'], era: '00s', club: 'Everton',
+    baseRating: 79, startYear: 2004, endYear: 2011, baseTrait: 'Box-to-Box Engine', playStyle: 'Box-to-Box Midfielder',
+    rivals: ['Liverpool', 'Manchester United'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Phil Neville', lastName: 'Neville', nationality: 'England',
+    primaryPosition: 'RB', secondaryPositions: ['CM'], era: '90s', club: 'Manchester United',
+    baseRating: 77, startYear: 1996, endYear: 2006, baseTrait: 'Tenacious Defender', playStyle: 'Wing Back',
+    rivals: ['Liverpool', 'Arsenal'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Jonny Evans', lastName: 'Evans', nationality: 'Northern Ireland',
+    primaryPosition: 'CB', secondaryPositions: [], era: '00s', club: 'Manchester United',
+    baseRating: 78, startYear: 2008, endYear: 2018, baseTrait: 'Ball Playing Defender', playStyle: 'Build-up Leader',
+    rivals: ['Liverpool', 'Manchester City'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Per Mertesacker', lastName: 'Mertesacker', nationality: 'Germany',
+    primaryPosition: 'CB', secondaryPositions: [], era: '00s', club: 'Arsenal',
+    baseRating: 82, startYear: 2008, endYear: 2018, baseTrait: 'Tactical Interceptor', playStyle: 'Stopper',
+    rivals: ['Tottenham', 'Chelsea'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Laurent Koscielny', lastName: 'Koscielny', nationality: 'France',
+    primaryPosition: 'CB', secondaryPositions: [], era: '10s', club: 'Arsenal',
+    baseRating: 84, startYear: 2010, endYear: 2020, baseTrait: 'Ball Playing Defender', playStyle: 'Stopper',
+    rivals: ['Tottenham', 'Chelsea'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Thomas Vermaelen', lastName: 'Vermaelen', nationality: 'Belgium',
+    primaryPosition: 'CB', secondaryPositions: ['LB'], era: '00s', club: 'Arsenal',
+    baseRating: 83, startYear: 2009, endYear: 2019, baseTrait: 'Physical Warrior', playStyle: 'Stopper',
+    rivals: ['Tottenham', 'Chelsea'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Edgar Davids', lastName: 'Davids', nationality: 'Netherlands',
+    primaryPosition: 'CM', secondaryPositions: ['CDM'], era: '90s', club: 'Juventus',
+    baseRating: 88, startYear: 1994, endYear: 2002, baseTrait: 'Tenacious Presser', playStyle: 'Ball Winning Midfielder',
+    rivals: ['Inter Milan', 'AC Milan'], isLegendaryPlayer: true,
+  },
+  {
+    name: 'Patrick Kluivert', lastName: 'Kluivert', nationality: 'Netherlands',
+    primaryPosition: 'ST', secondaryPositions: ['CF'], era: '90s', club: 'Barcelona',
+    baseRating: 86, startYear: 1994, endYear: 2004, baseTrait: 'Clutch Finisher', playStyle: 'Goal Machine',
+    rivals: ['Real Madrid', 'Espanyol'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Hristo Stoichkov', lastName: 'Stoichkov', nationality: 'Bulgaria',
+    primaryPosition: 'ST', secondaryPositions: ['LW', 'CF'], era: '90s', club: 'Barcelona',
+    baseRating: 90, startYear: 1992, endYear: 1997, baseTrait: 'Spectacular Scorer', playStyle: 'Inside Forward',
+    rivals: ['Real Madrid', 'Espanyol'], isLegendaryPlayer: true,
+  },
+  {
+    name: 'Jari Litmanen', lastName: 'Litmanen', nationality: 'Finland',
+    primaryPosition: 'CAM', secondaryPositions: ['CF'], era: '90s', club: 'Ajax',
+    baseRating: 87, startYear: 1993, endYear: 2001, baseTrait: 'Creator Supreme', playStyle: 'Pocket Playmaker',
+    rivals: ['Feyenoord', 'PSV'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Gheorghe Hagi', lastName: 'Hagi', nationality: 'Romania',
+    primaryPosition: 'CAM', secondaryPositions: ['LW'], era: '90s', club: 'Barcelona',
+    baseRating: 89, startYear: 1994, endYear: 2000, baseTrait: 'Creator Supreme', playStyle: 'Pocket Playmaker',
+    rivals: ['Real Madrid', 'Fenerbahce'], isLegendaryPlayer: true,
+  },
+  {
+    name: 'Rui Costa', lastName: 'Costa', nationality: 'Portugal',
+    primaryPosition: 'CAM', secondaryPositions: ['CM'], era: '90s', club: 'Fiorentina',
+    baseRating: 88, startYear: 1996, endYear: 2006, baseTrait: 'Creator Supreme', playStyle: 'Playmaker',
+    rivals: ['Roma', 'Juventus'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Deco', lastName: 'Deco', nationality: 'Portugal',
+    primaryPosition: 'CAM', secondaryPositions: ['CM'], era: '00s', club: 'Porto',
+    baseRating: 87, startYear: 2002, endYear: 2009, baseTrait: 'Creator Supreme', playStyle: 'Creative Playmaker',
+    rivals: ['Benfica', 'Sporting CP'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Juan Roman Riquelme', lastName: 'Riquelme', nationality: 'Argentina',
+    primaryPosition: 'CAM', secondaryPositions: ['CM'], era: '00s', club: 'Villarreal',
+    baseRating: 88, startYear: 2003, endYear: 2012, baseTrait: 'Creator Supreme', playStyle: 'Tempo Controller',
+    rivals: ['Valencia', 'Real Madrid'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Fabrizio Ravanelli', lastName: 'Ravanelli', nationality: 'Italy',
+    primaryPosition: 'ST', secondaryPositions: [], era: '90s', club: 'Juventus',
+    baseRating: 84, startYear: 1993, endYear: 2000, baseTrait: 'Clutch Finisher', playStyle: 'Goal Machine',
+    rivals: ['Inter Milan', 'AC Milan'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Marco Materazzi', lastName: 'Materazzi', nationality: 'Italy',
+    primaryPosition: 'CB', secondaryPositions: [], era: '00s', club: 'Inter Milan',
+    baseRating: 83, startYear: 2001, endYear: 2010, baseTrait: 'Physical Warrior', playStyle: 'Hard Tackler',
+    rivals: ['AC Milan', 'Juventus'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Daniele De Rossi', lastName: 'Rossi', nationality: 'Italy',
+    primaryPosition: 'CDM', secondaryPositions: ['CM'], era: '00s', club: 'Roma',
+    baseRating: 86, startYear: 2003, endYear: 2013, baseTrait: 'Tenacious Presser', playStyle: 'Ball Winning Midfielder',
+    rivals: ['Lazio', 'Juventus'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Antonio Conte', lastName: 'Conte', nationality: 'Italy',
+    primaryPosition: 'CM', secondaryPositions: ['CDM'], era: '90s', club: 'Juventus',
+    baseRating: 83, startYear: 1992, endYear: 2002, baseTrait: 'Engine Room', playStyle: 'Box to Box',
+    rivals: ['Inter Milan', 'AC Milan'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Fernando Hierro', lastName: 'Hierro', nationality: 'Spain',
+    primaryPosition: 'CB', secondaryPositions: ['CDM'], era: '90s', club: 'Real Madrid',
+    baseRating: 87, startYear: 1992, endYear: 2002, baseTrait: 'Ball Playing Defender', playStyle: 'Libero',
+    rivals: ['Barcelona', 'Atletico Madrid'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Jurgen Klinsmann', lastName: 'Klinsmann', nationality: 'Germany',
+    primaryPosition: 'ST', secondaryPositions: ['CF'], era: '90s', club: 'Monaco',
+    baseRating: 89, startYear: 1992, endYear: 1998, baseTrait: 'Clutch Finisher', playStyle: 'Goal Machine',
+    rivals: ['PSG', 'Marseille'], isLegendaryPlayer: true,
+  },
+  {
+    name: 'Sami Khedira', lastName: 'Khedira', nationality: 'Germany',
+    primaryPosition: 'CM', secondaryPositions: ['CDM'], era: '00s', club: 'Stuttgart',
+    baseRating: 85, startYear: 2008, endYear: 2018, baseTrait: 'Engine Room', playStyle: 'Box-to-Box Midfielder',
+    rivals: ['Bayern Munich', 'Dortmund'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Lilian Thuram', lastName: 'Thuram', nationality: 'France',
+    primaryPosition: 'CB', secondaryPositions: ['RB'], era: '90s', club: 'Monaco',
+    baseRating: 87, startYear: 1993, endYear: 2003, baseTrait: 'Defensive Anchor', playStyle: 'Stopper',
+    rivals: ['PSG', 'Marseille'], isLegendaryPlayer: true,
+  },
+  {
+    name: 'Raphael Varane', lastName: 'Varane', nationality: 'France',
+    primaryPosition: 'CB', secondaryPositions: [], era: '10s', club: 'Real Madrid',
+    baseRating: 87, startYear: 2011, endYear: 2021, baseTrait: 'Ball Playing Defender', playStyle: 'Stopper',
+    rivals: ['Barcelona', 'Atletico Madrid'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Paul Pogba', lastName: 'Pogba', nationality: 'France',
+    primaryPosition: 'CM', secondaryPositions: ['CAM', 'CDM'], era: '10s', club: 'Juventus',
+    baseRating: 88, startYear: 2012, endYear: 2022, baseTrait: 'Box-to-Box Engine', playStyle: 'Box-to-Box Midfielder',
+    rivals: ['Inter Milan', 'AC Milan'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Jay-Jay Okocha', lastName: 'Okocha', nationality: 'Nigeria',
+    primaryPosition: 'CAM', secondaryPositions: ['LW', 'CM'], era: '90s', club: 'Fenerbahce',
+    baseRating: 86, startYear: 1996, endYear: 2006, baseTrait: 'Dribbling Wizard', playStyle: 'Creative Playmaker',
+    rivals: ['Galatasaray', 'Besiktas'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Nwankwo Kanu', lastName: 'Kanu', nationality: 'Nigeria',
+    primaryPosition: 'ST', secondaryPositions: ['CF'], era: '90s', club: 'Inter Milan',
+    baseRating: 82, startYear: 1996, endYear: 2006, baseTrait: 'Technique Master', playStyle: 'Deep Lying Forward',
+    rivals: ['AC Milan', 'Juventus'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'George Weah', lastName: 'Weah', nationality: 'Liberia',
+    primaryPosition: 'ST', secondaryPositions: ['CF'], era: '90s', club: 'PSG',
+    baseRating: 90, startYear: 1992, endYear: 2000, baseTrait: 'Athletic Runner', playStyle: 'Inside Forward',
+    rivals: ['Marseille', 'Lyon'], isLegendaryPlayer: true,
+  },
+  {
+    name: 'Paolo Di Canio', lastName: 'Canio', nationality: 'Italy',
+    primaryPosition: 'ST', secondaryPositions: ['CAM', 'CF'], era: '90s', club: 'Celtic',
+    baseRating: 83, startYear: 1996, endYear: 2004, baseTrait: 'Spectacular Scorer', playStyle: 'Inside Forward',
+    rivals: ['Rangers', 'Arsenal'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Craig Bellamy', lastName: 'Bellamy', nationality: 'Wales',
+    primaryPosition: 'ST', secondaryPositions: ['RW'], era: '00s', club: 'Newcastle',
+    baseRating: 80, startYear: 2002, endYear: 2010, baseTrait: 'Athletic Runner', playStyle: 'Explosive Runner',
+    rivals: ['Sunderland', 'Liverpool'], isLegendaryPlayer: false,
+  },
+  {
+    name: 'Kevin Phillips', lastName: 'Phillips', nationality: 'England',
+    primaryPosition: 'ST', secondaryPositions: [], era: '90s', club: 'Sunderland',
+    baseRating: 80, startYear: 1999, endYear: 2006, baseTrait: 'Clutch Finisher', playStyle: 'Goal Machine',
+    rivals: ['Newcastle', 'Middlesbrough'], isLegendaryPlayer: false,
+  },
 ];
 
 function getLeagueForClub(clubName: string): string {
@@ -1921,6 +2253,9 @@ function getLeagueForClub(clubName: string): string {
   ) {
     return 'Brasileirao';
   }
+  if (c.includes('torino')) return 'Serie A';
+  if (c.includes('vissel kobe')) return 'J1 League';
+  if (c.includes('boca juniors')) return 'Argentine Primera';
   // Default to Premier League
   return 'Premier League';
 }
@@ -1946,6 +2281,53 @@ const careerStages = [
   { stepYear: 8, ratingOffset: -3, rarity: 'rare' as Rarity, trait: 'Leadership', bio: 'Crucial veteran leader providing tactical wisdom and stability.' },
   { stepYear: 10, ratingOffset: -6, rarity: 'cult' as Rarity, trait: 'Luxury Player', bio: 'Farewell campaign showing nostalgic flashes of standard brilliance.' },
 ];
+
+// Transfer timelines for the expansion players: year -> club (undefined keeps the base club)
+const careerPaths: Record<string, (y: number) => string | undefined> = {
+  'Eric Cantona': (y) => y === 1992 ? 'Leeds United' : undefined,
+  'Dwight Yorke': (y) => y >= 1998 && y <= 2001 ? 'Manchester United' : (y === 2002 || y === 2003) ? 'Blackburn' : (y >= 2004 && y <= 2005) ? 'Birmingham' : y >= 2006 ? 'Sunderland' : undefined,
+  'Nicolas Anelka': (y) => y === 1999 ? 'Real Madrid' : (y === 2000 || y === 2001) ? 'PSG' : (y >= 2002 && y <= 2004) ? 'Manchester City' : y === 2005 ? 'Fenerbahce' : y >= 2006 ? 'Bolton' : undefined,
+  'Emmanuel Petit': (y) => y === 2000 ? 'Barcelona' : y >= 2001 ? 'Chelsea' : undefined,
+  'Marc Overmars': (y) => y >= 2000 ? 'Barcelona' : undefined,
+  'Marcel Desailly': (y) => y >= 1998 ? 'Chelsea' : undefined,
+  'Gianluca Vialli': (y) => y < 1996 ? 'Juventus' : undefined,
+  'Steve McManaman': (y) => (y >= 1999 && y < 2003) ? 'Real Madrid' : y >= 2003 ? 'Manchester City' : undefined,
+  'Michael Owen': (y) => y === 2004 ? 'Real Madrid' : y >= 2005 ? 'Newcastle' : undefined,
+  'Fernando Torres': (y) => (y >= 2011 && y <= 2013) ? 'Chelsea' : y === 2014 ? 'AC Milan' : y >= 2015 ? 'Atletico Madrid' : undefined,
+  'Jermain Defoe': (y) => y === 2008 ? 'Portsmouth' : undefined,
+  'Ashley Young': (y) => y >= 2011 ? 'Manchester United' : undefined,
+  'Gary Cahill': (y) => y < 2012 ? 'Bolton' : undefined,
+  'Joe Hart': (y) => y === 2016 ? 'Torino' : y >= 2018 ? 'Burnley' : undefined,
+  'Robbie Keane': (y) => y === 2008 ? 'Liverpool' : y >= 2012 ? 'LA Galaxy' : undefined,
+  'Dimitar Berbatov': (y) => (y >= 2008 && y <= 2011) ? 'Manchester United' : y >= 2012 ? 'Fulham' : undefined,
+  'Stewart Downing': (y) => (y === 2009 || y === 2010) ? 'Aston Villa' : (y === 2011 || y === 2012) ? 'Liverpool' : y === 2013 ? 'West Ham' : undefined,
+  'Mikel Arteta': (y) => y >= 2011 ? 'Arsenal' : undefined,
+  'Phil Neville': (y) => y >= 2005 ? 'Everton' : undefined,
+  'Jonny Evans': (y) => (y >= 2015 && y <= 2017) ? 'West Brom' : y >= 2018 ? 'Leicester' : undefined,
+  'Per Mertesacker': (y) => y < 2011 ? 'Werder Bremen' : undefined,
+  'Laurent Koscielny': (y) => y >= 2019 ? 'Bordeaux' : undefined,
+  'Thomas Vermaelen': (y) => y >= 2019 ? 'Vissel Kobe' : y >= 2014 ? 'Barcelona' : undefined,
+  'Edgar Davids': (y) => y < 1996 ? 'Ajax' : y === 1996 ? 'AC Milan' : undefined,
+  'Patrick Kluivert': (y) => y < 1997 ? 'Ajax' : y === 1997 ? 'AC Milan' : y >= 2004 ? 'Newcastle' : undefined,
+  'Hristo Stoichkov': (y) => y === 1995 ? 'Parma' : undefined,
+  'Jari Litmanen': (y) => (y === 1999 || y === 2000) ? 'Barcelona' : y >= 2001 ? 'Liverpool' : undefined,
+  'Gheorghe Hagi': (y) => y >= 1996 ? 'Galatasaray' : undefined,
+  'Rui Costa': (y) => (y >= 2001 && y < 2006) ? 'AC Milan' : y >= 2006 ? 'Benfica' : undefined,
+  'Deco': (y) => (y >= 2004 && y <= 2007) ? 'Barcelona' : y >= 2008 ? 'Chelsea' : undefined,
+  'Juan Roman Riquelme': (y) => y >= 2007 ? 'Boca Juniors' : undefined,
+  'Fabrizio Ravanelli': (y) => y === 1996 ? 'Middlesbrough' : y === 1997 ? 'Marseille' : y >= 1998 ? 'Lazio' : undefined,
+  'Jurgen Klinsmann': (y) => y === 1994 || y === 1998 ? 'Tottenham' : (y === 1995 || y === 1996) ? 'Bayern Munich' : y === 1997 ? 'Sampdoria' : undefined,
+  'Sami Khedira': (y) => (y >= 2010 && y <= 2014) ? 'Real Madrid' : y >= 2015 ? 'Juventus' : undefined,
+  'Lilian Thuram': (y) => (y >= 1996 && y <= 2000) ? 'Parma' : y >= 2001 ? 'Juventus' : undefined,
+  'Raphael Varane': (y) => y >= 2021 ? 'Manchester United' : undefined,
+  'Paul Pogba': (y) => (y >= 2016 && y <= 2020) ? 'Manchester United' : undefined,
+  'Jay-Jay Okocha': (y) => (y >= 1998 && y <= 2001) ? 'PSG' : y >= 2002 ? 'Bolton' : undefined,
+  'Nwankwo Kanu': (y) => (y >= 1999 && y <= 2003) ? 'Arsenal' : y === 2004 ? 'West Brom' : y >= 2006 ? 'Portsmouth' : undefined,
+  'George Weah': (y) => (y >= 1995 && y <= 1999) ? 'AC Milan' : y >= 2000 ? 'Manchester City' : undefined,
+  'Paolo Di Canio': (y) => (y === 1997 || y === 1998) ? 'Sheffield Wednesday' : (y >= 1999 && y <= 2002) ? 'West Ham' : y >= 2003 ? 'Charlton' : undefined,
+  'Craig Bellamy': (y) => y === 2005 ? 'Blackburn' : y === 2006 ? 'Liverpool' : y === 2007 ? 'West Ham' : y >= 2008 ? 'Manchester City' : undefined,
+  'Kevin Phillips': (y) => (y === 2003 || y === 2004) ? 'Southampton' : y === 2005 ? 'Aston Villa' : y === 2006 ? 'West Brom' : undefined,
+};
 
 // Known real-world profiles. Values are pre-scale baselines (they are multiplied by rating/84),
 // so a value of 80 on a 90-rated card ends up around 86. Unlisted players use the position defaults.
@@ -2019,7 +2401,58 @@ const statOverrides: Record<string, StatOverride> = {
   'Dimitri Payet': { pace: 70, passing: 90, creativity: 90 },
   'James Ward-Prowse': { pace: 64, passing: 90, creativity: 86 },
   'Christian Eriksen': { pace: 66, passing: 92, creativity: 92 },
+  // Expansion profiles
+  'Dennis Bergkamp': { pace: 70, passing: 94, creativity: 94, finishing: 90 },
+  'Eric Cantona': { pace: 72, passing: 88, creativity: 90, finishing: 90 },
+  'Ole Gunnar Solskjaer': { pace: 82, finishing: 88 },
+  'Dwight Yorke': { pace: 82, finishing: 86 },
+  'Nicolas Anelka': { pace: 92, finishing: 86 },
+  'Marc Overmars': { pace: 95, dribbling: 90 },
+  'Freddie Ljungberg': { pace: 86 },
+  'Ray Parlour': { pace: 72, defending: 66 },
+  'Lee Dixon': { pace: 76, defending: 84 },
+  'Marcel Desailly': { pace: 78, defending: 92, physical: 94 },
+  'Gianluca Vialli': { pace: 78, finishing: 90 },
+  'Steve McManaman': { pace: 82, dribbling: 90 },
+  'Michael Owen': { pace: 95, finishing: 92 },
+  'Fernando Torres': { pace: 92, finishing: 92 },
+  'Jermain Defoe': { pace: 88, finishing: 88 },
+  'Ashley Young': { pace: 86, dribbling: 86 },
+  'Gary Cahill': { pace: 64, defending: 88, aerial: 88 },
+  'Robbie Keane': { pace: 80, finishing: 88 },
+  'Dimitar Berbatov': { pace: 64, passing: 88, creativity: 88, finishing: 88 },
+  'Mikel Arteta': { pace: 60, passing: 90, defending: 74 },
+  'Tim Cahill': { pace: 72, aerial: 92 },
+  'Jonny Evans': { pace: 66, defending: 86, aerial: 86 },
+  'Per Mertesacker': { pace: 40, defending: 90, aerial: 92 },
+  'Laurent Koscielny': { pace: 76, defending: 90 },
+  'Thomas Vermaelen': { pace: 70, defending: 88, aerial: 88 },
+  'Edgar Davids': { pace: 80, defending: 88, physical: 94 },
+  'Patrick Kluivert': { pace: 80, finishing: 90, aerial: 86 },
+  'Hristo Stoichkov': { pace: 84, finishing: 92 },
+  'Jari Litmanen': { pace: 70, passing: 92, creativity: 94 },
+  'Gheorghe Hagi': { pace: 64, passing: 94, creativity: 96, finishing: 86 },
+  'Rui Costa': { pace: 68, passing: 94, creativity: 94 },
+  'Deco': { pace: 72, passing: 92, creativity: 94, dribbling: 90 },
+  'Juan Roman Riquelme': { pace: 50, passing: 96, creativity: 97 },
+  'Fabrizio Ravanelli': { pace: 76, finishing: 88 },
+  'Marco Materazzi': { pace: 62, defending: 88, aerial: 90, physical: 94 },
+  'Daniele De Rossi': { pace: 70, defending: 90, passing: 86 },
+  'Antonio Conte': { pace: 74, defending: 84 },
+  'Fernando Hierro': { pace: 66, defending: 92, passing: 88 },
+  'Jurgen Klinsmann': { pace: 84, finishing: 92, aerial: 88 },
+  'Sami Khedira': { pace: 74, defending: 82 },
+  'Lilian Thuram': { pace: 82, defending: 92 },
+  'Raphael Varane': { pace: 84, defending: 92, aerial: 90 },
+  'Paul Pogba': { pace: 78, passing: 88, physical: 92 },
+  'Jay-Jay Okocha': { pace: 78, dribbling: 96, creativity: 94 },
+  'Nwankwo Kanu': { pace: 76, dribbling: 88 },
+  'George Weah': { pace: 94, finishing: 92, dribbling: 92 },
+  'Paolo Di Canio': { pace: 78, finishing: 88, dribbling: 90 },
+  'Craig Bellamy': { pace: 92, finishing: 80 },
+  'Kevin Phillips': { pace: 78, finishing: 90 },
 };
+
 
 // Dynamically generate the 800+ player seasons database
 function generatePlayersDatabase(): Player[] {
@@ -2031,6 +2464,7 @@ function generatePlayersDatabase(): Player[] {
       
       // Prevent generating future seasons beyond 2026/27
       if (year > 2026) return;
+      if (base.endYear !== undefined && year > base.endYear) return;
 
       const seasonLabel = formatSeason(year);
       const rating = Math.min(99, Math.max(70, base.baseRating + stage.ratingOffset));
@@ -2782,6 +3216,12 @@ function generatePlayersDatabase(): Player[] {
       } else if (base.name === 'Alan Hutton') {
         if (year < 2008) club = 'Rangers';
         else if (year < 2011) club = 'Tottenham';
+      }
+
+      const careerPath = careerPaths[base.name];
+      if (careerPath) {
+        const resolved = careerPath(year);
+        if (resolved) club = resolved;
       }
 
       // Generate unique player card ID based on player name, resolved club, and year
