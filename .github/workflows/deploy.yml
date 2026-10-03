@@ -31,6 +31,7 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
           local-dir: ./out/
           server-dir: public_html/ # Default public folder on Krystal. Change if using an addon domain directory.
           dangerous-clean-slate: false # Set to true if you want to wipe files not in the repo, but false is safer initially.
