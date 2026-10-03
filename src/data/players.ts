@@ -1947,6 +1947,80 @@ const careerStages = [
   { stepYear: 10, ratingOffset: -6, rarity: 'cult' as Rarity, trait: 'Luxury Player', bio: 'Farewell campaign showing nostalgic flashes of standard brilliance.' },
 ];
 
+// Known real-world profiles. Values are pre-scale baselines (they are multiplied by rating/84),
+// so a value of 80 on a 90-rated card ends up around 86. Unlisted players use the position defaults.
+type StatOverride = Partial<Record<
+  'pace' | 'defence' | 'defending' | 'passing' | 'creativity' | 'finishing' | 'dribbling' | 'physical' | 'aerial',
+  number
+>>;
+const statOverrides: Record<string, StatOverride> = {
+  // Playmaking full-backs: elite passing and crossing, modest pace and defending
+  'Trent Alexander-Arnold': { pace: 72, defence: 64, defending: 60, passing: 94, creativity: 90 },
+  'Joao Cancelo': { pace: 78, defence: 68, defending: 66, passing: 88, dribbling: 84 },
+  'Dani Alves': { pace: 80, defence: 70, defending: 68, passing: 86, creativity: 86 },
+  'Roberto Carlos': { pace: 86, defence: 70, defending: 66, finishing: 70 },
+  'Andy Robertson': { pace: 82, defence: 74, defending: 72, passing: 84 },
+  'Kyle Walker': { pace: 92, defence: 82, defending: 84 },
+  'Cafu': { pace: 84, defence: 76 },
+  'Maicon': { pace: 86, defence: 76 },
+  'Patrice Evra': { pace: 82, defence: 76 },
+  'Ashley Cole': { pace: 84, defence: 86, defending: 88 },
+  'Paolo Maldini': { pace: 78, defence: 94, defending: 95 },
+  'Philipp Lahm': { pace: 78, defence: 84, defending: 84, passing: 84 },
+  // Slower but intelligent defenders
+  'Jamie Carragher': { pace: 62, defending: 92, aerial: 86 },
+  'John Terry': { pace: 62, defending: 92, aerial: 90 },
+  'Nemanja Vidic': { pace: 66, defending: 92, aerial: 92, physical: 90 },
+  'Rio Ferdinand': { pace: 74, defending: 90, passing: 78 },
+  'Sergio Ramos': { pace: 76, defending: 90, aerial: 90 },
+  'Ledley King': { pace: 74, defending: 90 },
+  'Jaap Stam': { pace: 72, defending: 92, physical: 94 },
+  'Virgil van Dijk': { pace: 74, defending: 92, aerial: 92 },
+  'Franco Baresi': { pace: 68, defending: 96 },
+  'Sami Hyypia': { pace: 56, defending: 88, aerial: 94 },
+  'Wes Morgan': { pace: 58, defending: 84, aerial: 90 },
+  'Ryan Shawcross': { pace: 62, defending: 82, aerial: 86 },
+  // Quick forwards and wingers
+  'Kylian Mbappe': { pace: 98, dribbling: 92, finishing: 90 },
+  'Thierry Henry': { pace: 94, finishing: 92, dribbling: 90 },
+  'Erling Haaland': { pace: 91, finishing: 95, physical: 95, aerial: 86 },
+  'Mohamed Salah': { pace: 92, finishing: 90, dribbling: 90 },
+  'Sadio Mane': { pace: 92, dribbling: 90 },
+  'Jamie Vardy': { pace: 94, finishing: 86, physical: 78 },
+  'Gareth Bale': { pace: 95, physical: 86 },
+  'Arjen Robben': { pace: 93, dribbling: 94 },
+  'Wilfried Zaha': { pace: 90, dribbling: 90 },
+  'Cristiano Ronaldo': { pace: 92, finishing: 94, aerial: 90 },
+  'Ronaldo Nazario': { pace: 92, finishing: 96, dribbling: 96 },
+  'Neymar Jr': { pace: 90, dribbling: 96 },
+  'Lionel Messi': { pace: 86, dribbling: 98, finishing: 94, physical: 66 },
+  'Son Heung-min': { pace: 90, finishing: 88 },
+  'Sergio Aguero': { pace: 84, finishing: 94 },
+  'Victor Osimhen': { pace: 92, aerial: 88 },
+  'Luis Suarez': { pace: 82, finishing: 93, dribbling: 90 },
+  // Slower creators and target men
+  'Andrea Pirlo': { pace: 52, passing: 98, creativity: 94, defending: 58 },
+  'Xavi Hernandez': { pace: 60, passing: 98, creativity: 92 },
+  'Paul Scholes': { pace: 62, passing: 94, defending: 62 },
+  'Michael Carrick': { pace: 60, passing: 90, defending: 78 },
+  'Luka Modric': { pace: 72, passing: 92, dribbling: 90 },
+  'Toni Kroos': { pace: 56, passing: 96, creativity: 90 },
+  'Xabi Alonso': { pace: 56, passing: 95, defending: 76 },
+  'Peter Crouch': { pace: 58, aerial: 96, finishing: 82 },
+  'Didier Drogba': { pace: 80, aerial: 90, physical: 96 },
+  'Alan Shearer': { pace: 74, finishing: 95, aerial: 92 },
+  'Harry Kane': { pace: 68, finishing: 94, passing: 86, aerial: 82 },
+  'Zlatan Ibrahimovic': { pace: 74, aerial: 90, physical: 92 },
+  'Miroslav Klose': { pace: 74, aerial: 94 },
+  // Set-piece and range passers
+  'David Beckham': { pace: 74, passing: 94, creativity: 92 },
+  'Kevin De Bruyne': { pace: 76, passing: 96, creativity: 96 },
+  'Mesut Ozil': { pace: 68, passing: 94, creativity: 98 },
+  'Dimitri Payet': { pace: 70, passing: 90, creativity: 90 },
+  'James Ward-Prowse': { pace: 64, passing: 90, creativity: 86 },
+  'Christian Eriksen': { pace: 66, passing: 92, creativity: 92 },
+};
+
 // Dynamically generate the 800+ player seasons database
 function generatePlayersDatabase(): Player[] {
   const allPlayerSeasons: Player[] = [];
@@ -2853,11 +2927,28 @@ function generatePlayersDatabase(): Player[] {
         basePhysicalVal = Math.max(basePhysicalVal, 84);
       }
 
+      // 4. Known real-world profiles override the generic position/style formulas
+      const ov = statOverrides[base.name];
+      if (ov) {
+        if (ov.pace !== undefined) basePaceVal = ov.pace;
+        if (ov.defence !== undefined) baseDefence = ov.defence;
+        if (ov.defending !== undefined) baseDefending = ov.defending;
+        if (ov.passing !== undefined) basePassing = ov.passing;
+        if (ov.creativity !== undefined) baseCreativity = ov.creativity;
+        if (ov.finishing !== undefined) baseFinishing = ov.finishing;
+        if (ov.dribbling !== undefined) baseDribbling = ov.dribbling;
+        if (ov.physical !== undefined) basePhysicalVal = ov.physical;
+        if (ov.aerial !== undefined) baseAerial = ov.aerial;
+      }
+
+      // Pace declines with age: late-career stages lose a little each season
+      basePaceVal -= Math.max(0, stageIdx - 4) * 2;
+
       const attack = scaleStat(baseAttack, scaleFactor);
       const midfield = scaleStat(baseMidfield, scaleFactor);
       const defence = scaleStat(baseDefence, scaleFactor);
 
-      const pace = scaleStat(basePaceVal, scaleFactor);
+      const pace = Math.min(base.name === 'Kylian Mbappe' ? 99 : 96, scaleStat(basePaceVal, scaleFactor));
       const technique = scaleStat(baseTechniqueVal, scaleFactor);
       const physical = scaleStat(basePhysicalVal, scaleFactor);
       const mentality = scaleStat(baseMentalityVal, scaleFactor);
