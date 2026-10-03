@@ -456,8 +456,8 @@ const playerBases: PlayerBase[] = [
   },
   {
     name: 'Eden Hazard', lastName: 'Hazard', nationality: 'Belgium',
-    primaryPosition: 'LW', secondaryPositions: ['CAM', 'RW'], era: '10s', club: 'Chelsea',
-    baseRating: 93, startYear: 2012, baseTrait: 'Wing Wizard', playStyle: 'Pocket Playmaker',
+    primaryPosition: 'LW', secondaryPositions: ['CAM', 'RW', 'LM'], era: '10s', club: 'Chelsea',
+    baseRating: 93, startYear: 2010, baseTrait: 'Wing Wizard', playStyle: 'Pocket Playmaker',
     rivals: ['Arsenal', 'Tottenham'],
   },
   {
@@ -516,8 +516,8 @@ const playerBases: PlayerBase[] = [
   },
   {
     name: 'Dimitri Payet', lastName: 'Payet', nationality: 'France',
-    primaryPosition: 'CAM', secondaryPositions: ['LW', 'LM'], era: '10s', club: 'West Ham',
-    baseRating: 87, startYear: 2015, baseTrait: 'Creator Supreme', playStyle: 'Set Piece Master',
+    primaryPosition: 'CAM', secondaryPositions: ['LW', 'LM', 'RW'], era: '10s', club: 'West Ham',
+    baseRating: 87, startYear: 2011, baseTrait: 'Creator Supreme', playStyle: 'Set Piece Master',
     rivals: ['Tottenham', 'Chelsea'],
   },
 
@@ -603,7 +603,7 @@ const playerBases: PlayerBase[] = [
   {
     name: 'Erling Haaland', lastName: 'Haaland', nationality: 'Norway',
     primaryPosition: 'ST', secondaryPositions: [], era: 'Modern', club: 'Manchester City',
-    baseRating: 92, startYear: 2022, baseTrait: 'Golden Boot Form', playStyle: 'Goal Machine',
+    baseRating: 92, startYear: 2020, baseTrait: 'Golden Boot Form', playStyle: 'Goal Machine',
     rivals: ['Manchester United', 'Liverpool'],
   },
   {
@@ -1396,12 +1396,6 @@ const playerBases: PlayerBase[] = [
     baseRating: 83, startYear: 2004, baseTrait: 'Engine Room', playStyle: 'Box-to-Box Midfielder',
     rivals: ['Marseille', 'Monaco'], isLegendaryPlayer: false,
   },
-  {
-    name: 'Dimitri Payet', lastName: 'Payet', nationality: 'France',
-    primaryPosition: 'CAM', secondaryPositions: ['LW', 'LM', 'RW'], era: '00s', club: 'Marseille',
-    baseRating: 83, startYear: 2005, baseTrait: 'Creator Supreme', playStyle: 'Clutch Playmaker',
-    rivals: ['PSG', 'Lyon'], isLegendaryPlayer: false,
-  },
   // Attackers
   {
     name: 'Iago Aspas', lastName: 'Aspas', nationality: 'Spain',
@@ -1553,12 +1547,6 @@ const playerBases: PlayerBase[] = [
     primaryPosition: 'ST', secondaryPositions: ['LW'], era: '00s', club: 'Valencia',
     baseRating: 89, startYear: 2005, baseTrait: 'Clinical Finisher', playStyle: 'Goal Machine',
     rivals: ['Levante', 'Real Madrid'], isLegendaryPlayer: false,
-  },
-  {
-    name: 'Luis Suarez', lastName: 'Suarez', nationality: 'Uruguay',
-    primaryPosition: 'ST', secondaryPositions: [], era: '10s', club: 'Barcelona',
-    baseRating: 92, startYear: 2014, baseTrait: 'Aggressive Finisher', playStyle: 'Goal Machine',
-    rivals: ['Real Madrid', 'Espanyol'], isLegendaryPlayer: false,
   },
   {
     name: 'Rivaldo', lastName: 'Rivaldo', nationality: 'Brazil',
@@ -1748,12 +1736,6 @@ const playerBases: PlayerBase[] = [
     baseRating: 84, startYear: 1999, baseTrait: 'Target Man', playStyle: 'Goal Machine',
     rivals: ['Hamburg', 'Bayern Munich'], isLegendaryPlayer: false,
   },
-  {
-    name: 'Erling Haaland', lastName: 'Haaland', nationality: 'Norway',
-    primaryPosition: 'ST', secondaryPositions: [], era: 'Modern', club: 'Dortmund',
-    baseRating: 88, startYear: 2020, baseTrait: 'Athletic Runner', playStyle: 'Goal Machine',
-    rivals: ['Schalke', 'Bayern Munich'], isLegendaryPlayer: false,
-  },
   // --- LIGUE 1 ---
   {
     name: 'Gregory Coupet', lastName: 'Coupet', nationality: 'France',
@@ -1809,12 +1791,6 @@ const playerBases: PlayerBase[] = [
     baseRating: 86, startYear: 2003, baseTrait: 'Clutch Finisher', playStyle: 'Goal Machine',
     rivals: ['Marseille', 'Lyon'], isLegendaryPlayer: false,
   },
-  {
-    name: 'Eden Hazard', lastName: 'Hazard', nationality: 'Belgium',
-    primaryPosition: 'LW', secondaryPositions: ['LM', 'CAM'], era: '00s', club: 'Lille',
-    baseRating: 88, startYear: 2007, baseTrait: 'Dribbling Wizard', playStyle: 'Inside Forward',
-    rivals: ['Lens', 'PSG'], isLegendaryPlayer: false,
-  },
 ];
 
 function getLeagueForClub(clubName: string): string {
@@ -1831,6 +1807,9 @@ function getLeagueForClub(clubName: string): string {
     c.includes('getafe') ||
     c.includes('celta vigo') ||
     c.includes('deportivo') ||
+    c.includes('zaragoza') ||
+    c.includes('mallorca') ||
+    c.includes('malaga') ||
     c.includes('almeria')
   ) {
     return 'La Liga';
@@ -1851,6 +1830,9 @@ function getLeagueForClub(clubName: string): string {
     c.includes('bochum') ||
     c.includes('hertha bsc') ||
     c.includes('bremen') ||
+    c.includes('union berlin') ||
+    c.includes('kaiserslautern') ||
+    c.includes('hamburg') ||
     c.includes('hoffenheim')
   ) {
     return 'Bundesliga';
@@ -1870,6 +1852,9 @@ function getLeagueForClub(clubName: string): string {
     c.includes('udinese') ||
     c.includes('sampdoria') ||
     c.includes('sassuolo') ||
+    c.includes('cagliari') ||
+    c.includes('chievo') ||
+    c.includes('palermo') ||
     c.includes('genoa')
   ) {
     return 'Serie A';
@@ -1883,12 +1868,24 @@ function getLeagueForClub(clubName: string): string {
     c.includes('nice') ||
     c.includes('rennes') ||
     c.includes('lens') ||
+    c.includes('bordeaux') ||
+    c.includes('auxerre') ||
     c.includes('saint-etienne') ||
     c.includes('toulouse')
   ) {
     return 'Ligue 1';
   }
-  if (c.includes('inter miami') || c.includes('la galaxy') || c.includes('lafc')) {
+  if (
+    c.includes('inter miami') ||
+    c.includes('la galaxy') ||
+    c.includes('lafc') ||
+    c.includes('nycfc') ||
+    c.includes('dc united') ||
+    c.includes('chicago fire') ||
+    c.includes('montreal impact') ||
+    c.includes('new york red bulls') ||
+    c.includes('orlando city')
+  ) {
     return 'MLS';
   }
   if (c.includes('ajax') || c.includes('psv') || c.includes('feyenoord')) {
@@ -1897,8 +1894,32 @@ function getLeagueForClub(clubName: string): string {
   if (c.includes('sporting cp') || c.includes('benfica') || c.includes('porto')) {
     return 'Primeira Liga';
   }
-  if (c.includes('galatasaray')) {
+  if (c.includes('galatasaray') || c.includes('fenerbahce') || c.includes('besiktas')) {
     return 'Super Lig';
+  }
+  if (
+    c.includes('al-ahli') ||
+    c.includes('al-nassr') ||
+    c.includes('al-hilal') ||
+    c.includes('al-ittihad') ||
+    c.includes('al-ettifaq') ||
+    c.includes('al-shabab')
+  ) {
+    return 'Saudi Pro League';
+  }
+  if (c.includes('celtic') || c.includes('rangers')) {
+    return 'Scottish Premiership';
+  }
+  if (
+    c.includes('flamengo') ||
+    c.includes('santos') ||
+    c.includes('sao paulo') ||
+    c.includes('corinthians') ||
+    c.includes('cruzeiro') ||
+    c.includes('fluminense') ||
+    c.includes('gremio')
+  ) {
+    return 'Brasileirao';
   }
   // Default to Premier League
   return 'Premier League';
@@ -1939,8 +1960,6 @@ function generatePlayersDatabase(): Player[] {
 
       const seasonLabel = formatSeason(year);
       const rating = Math.min(99, Math.max(70, base.baseRating + stage.ratingOffset));
-      
-      const id = `${base.lastName.toLowerCase().replace(/[^a-z]/g, '')}_${base.club.toLowerCase().replace(/[^a-z]/g, '')}_${year}`;
       
       // Determine era based on season year
       let era: '90s' | '00s' | '10s' | 'Modern' = base.era;
@@ -2003,35 +2022,49 @@ function generatePlayersDatabase(): Player[] {
       let club = base.club;
       if (base.name === 'Alan Shearer' && year < 1996) {
         club = 'Blackburn';
-      } else if (base.name === 'Wayne Rooney' && (year <= 2004 || year >= 2017)) {
-        club = 'Everton';
-      } else if (base.name === 'Thierry Henry' && year > 2007) {
-        club = 'Barcelona';
-      } else if (base.name === 'Robin van Persie' && year >= 2012) {
-        club = 'Manchester United';
-      } else if (base.name === 'Sol Campbell' && year < 2001) {
-        club = 'Tottenham';
-      } else if (base.name === 'Sol Campbell' && year > 2006) {
-        club = 'Portsmouth';
+      } else if (base.name === 'Wayne Rooney') {
+        if (year <= 2003) club = 'Everton';
+        else if (year >= 2017 && year < 2018) club = 'Everton';
+        else if (year >= 2018) club = 'DC United';
+      } else if (base.name === 'Thierry Henry') {
+        if (year >= 2007 && year < 2010) club = 'Barcelona';
+        else if (year >= 2010) club = 'New York Red Bulls';
+      } else if (base.name === 'Robin van Persie') {
+        if (year < 2004) club = 'Feyenoord';
+        else if (year >= 2012 && year < 2015) club = 'Manchester United';
+        else if (year >= 2015) club = 'Fenerbahce';
+      } else if (base.name === 'Sol Campbell') {
+        if (year < 2001) club = 'Tottenham';
+        else if (year > 2006) club = 'Portsmouth';
       } else if (base.name === 'Cole Palmer' && year < 2023) {
         club = 'Manchester City';
-      } else if (base.name === 'Frank Lampard' && year < 2001) {
-        club = 'West Ham';
-      } else if (base.name === 'Gareth Bale' && year >= 2013) {
-        club = 'Real Madrid';
-      } else if (base.name === 'Alexis Sanchez' && year >= 2018) {
-        club = 'Manchester United';
-      } else if (base.name === 'N\'Golo Kante' && year === 2015) {
-        club = 'Leicester';
-      } else if (base.name === 'Cristiano Ronaldo' && year >= 2009 && year < 2018) {
-        club = 'Real Madrid';
-      } else if (base.name === 'Cristiano Ronaldo' && year >= 2018 && year < 2021) {
-        club = 'Juventus';
+      } else if (base.name === 'Frank Lampard') {
+        if (year < 2001) club = 'West Ham';
+        else if (year === 2014) club = 'Manchester City';
+        else if (year >= 2015) club = 'NYCFC';
+      } else if (base.name === 'Gareth Bale') {
+        if (year >= 2013 && year < 2022) club = 'Real Madrid';
+        else if (year >= 2022) club = 'LAFC';
+      } else if (base.name === 'Alexis Sanchez') {
+        if (year < 2014) club = 'Barcelona';
+        else if (year >= 2014 && year < 2018) club = 'Arsenal';
+        else if (year >= 2018 && year < 2019) club = 'Manchester United';
+        else if (year >= 2019 && year < 2022) club = 'Inter Milan';
+        else if (year >= 2022) club = 'Marseille';
+      } else if (base.name === "N'Golo Kante") {
+        if (year <= 2015) club = 'Leicester';
+        else if (year >= 2023) club = 'Al-Ittihad';
+      } else if (base.name === 'Cristiano Ronaldo') {
+        if (year >= 2009 && year < 2018) club = 'Real Madrid';
+        else if (year >= 2018 && year < 2021) club = 'Juventus';
+        else if (year >= 2021 && year < 2023) club = 'Manchester United';
+        else if (year >= 2023) club = 'Al-Nassr';
       } else if (base.name === 'Lionel Messi') {
         if (year >= 2021 && year < 2023) club = 'PSG';
         else if (year >= 2023) club = 'Inter Miami';
       } else if (base.name === 'Zlatan Ibrahimovic') {
-        if (year >= 2018 && year <= 2019) club = 'LA Galaxy';
+        if (year >= 2020) club = 'AC Milan';
+        else if (year >= 2018 && year <= 2019) club = 'LA Galaxy';
         else if (year >= 2016 && year <= 2017) club = 'Manchester United';
         else if (year >= 2012 && year < 2016) club = 'PSG';
         else if (year >= 2010 && year < 2012) club = 'AC Milan';
@@ -2039,53 +2072,492 @@ function generatePlayersDatabase(): Player[] {
         else if (year >= 2006 && year < 2009) club = 'Inter Milan';
         else if (year >= 2004 && year < 2006) club = 'Juventus';
         else if (year < 2004) club = 'Ajax';
-      } else if (base.name === 'Zinedine Zidane' && year < 2001) {
-        club = 'Juventus';
+      } else if (base.name === 'Zinedine Zidane') {
+        if (year < 1996) club = 'Bordeaux';
+        else if (year < 2001) club = 'Juventus';
+        else club = 'Real Madrid';
       } else if (base.name === 'Ronaldinho Gaucho') {
         if (year < 2003) club = 'PSG';
-        else if (year >= 2008) club = 'AC Milan';
-      } else if (base.name === 'Kaka' && year >= 2009) {
-        club = 'Real Madrid';
-      } else if (base.name === 'Sergio Ramos' && year >= 2021) {
-        club = 'PSG';
+        else if (year >= 2003 && year < 2008) club = 'Barcelona';
+        else if (year >= 2008 && year < 2011) club = 'AC Milan';
+        else if (year >= 2011) club = 'Flamengo';
+      } else if (base.name === 'Kaka') {
+        if (year >= 2009 && year < 2013) club = 'Real Madrid';
+        else if (year === 2013) club = 'AC Milan';
+        else if (year >= 2014) club = 'Orlando City';
+      } else if (base.name === 'Sergio Ramos') {
+        if (year < 2005) club = 'Sevilla';
+        else if (year >= 2021 && year < 2023) club = 'PSG';
+        else if (year >= 2023) club = 'Sevilla';
       } else if (base.name === 'Fabio Cannavaro') {
         if (year >= 2006 && year < 2009) club = 'Real Madrid';
         else if (year >= 2004 && year < 2006) club = 'Juventus';
+        else if (year === 2009) club = 'Juventus';
+        else if (year >= 2002 && year < 2004) club = 'Inter Milan';
         else if (year < 2002) club = 'Parma';
       } else if (base.name === 'Ronaldo Nazario') {
-        if (year >= 2002) club = 'Real Madrid';
+        if (year >= 2007) club = 'AC Milan';
+        else if (year >= 2002 && year < 2007) club = 'Real Madrid';
         else if (year >= 1997 && year < 2002) club = 'Inter Milan';
         else if (year >= 1996 && year < 1997) club = 'Barcelona';
         else if (year >= 1994 && year < 1996) club = 'PSV';
-      } else if (base.name === 'Neymar Jr' && year >= 2017) {
-        club = 'PSG';
+        else if (year < 1994) club = 'Cruzeiro';
+      } else if (base.name === 'Neymar Jr') {
+        if (year < 2013) club = 'Santos';
+        else if (year >= 2013 && year < 2017) club = 'Barcelona';
+        else if (year >= 2017 && year < 2023) club = 'PSG';
+        else if (year >= 2023) club = 'Al-Hilal';
       } else if (base.name === 'Robert Lewandowski') {
         if (year < 2014) club = 'Dortmund';
+        else if (year >= 2014 && year < 2022) club = 'Bayern Munich';
         else if (year >= 2022) club = 'Barcelona';
-      } else if (base.name === 'Karim Benzema' && year < 2009) {
-        club = 'Lyon';
+      } else if (base.name === 'Karim Benzema') {
+        if (year < 2009) club = 'Lyon';
+        else if (year >= 2009 && year < 2023) club = 'Real Madrid';
+        else if (year >= 2023) club = 'Al-Ittihad';
       } else if (base.name === 'Luis Figo') {
-        if (year < 2000) club = 'Barcelona';
+        if (year < 1995) club = 'Sporting CP';
+        else if (year >= 1995 && year < 2000) club = 'Barcelona';
+        else if (year >= 2000 && year < 2005) club = 'Real Madrid';
         else if (year >= 2005) club = 'Inter Milan';
-      } else if (base.name === 'Samuel Eto\'o') {
-        if (year >= 2009 && year <= 2011) club = 'Inter Milan';
+      } else if (base.name === "Samuel Eto'o") {
+        if (year < 2004) club = 'Mallorca';
+        else if (year >= 2004 && year < 2009) club = 'Barcelona';
+        else if (year >= 2009 && year <= 2011) club = 'Inter Milan';
         else if (year >= 2013 && year <= 2014) club = 'Chelsea';
-        else if (year < 2004) club = 'Mallorca';
-      } else if (base.name === 'Gabriel Batistuta' && year >= 2000) {
-        club = 'Roma';
+        else if (year > 2014) club = 'Everton';
+      } else if (base.name === 'Gabriel Batistuta') {
+        if (year < 2000) club = 'Fiorentina';
+        else if (year >= 2000 && year < 2003) club = 'Roma';
+        else if (year >= 2003) club = 'Inter Milan';
       } else if (base.name === 'Roberto Baggio') {
-        if (year >= 1995 && year < 1997) club = 'AC Milan';
+        if (year < 1995) club = 'Juventus';
+        else if (year >= 1995 && year < 1997) club = 'AC Milan';
         else if (year >= 1997 && year < 1998) club = 'Bologna';
         else if (year >= 1998 && year < 2000) club = 'Inter Milan';
         else if (year >= 2000) club = 'Brescia';
-      } else if (base.name === 'Andrea Pirlo' && year >= 2011) {
-        club = 'Juventus';
-      } else if (base.name === 'Toni Kroos' && year < 2014) {
-        club = 'Bayern Munich';
-      } else if (base.name === 'Luka Modric' && year < 2012) {
-        club = 'Tottenham';
-      } else if (base.name === 'Philipp Lahm' && year === 2003) {
-        club = 'Stuttgart';
+      } else if (base.name === 'Andrea Pirlo') {
+        if (year < 2001) club = 'Inter Milan';
+        else if (year >= 2001 && year < 2011) club = 'AC Milan';
+        else if (year >= 2011 && year < 2015) club = 'Juventus';
+        else if (year >= 2015) club = 'NYCFC';
+      } else if (base.name === 'Toni Kroos') {
+        if (year < 2014) club = 'Bayern Munich';
+        else club = 'Real Madrid';
+      } else if (base.name === 'Luka Modric') {
+        if (year < 2012) club = 'Tottenham';
+        else club = 'Real Madrid';
+      } else if (base.name === 'Philipp Lahm') {
+        if (year >= 2003 && year < 2005) club = 'Stuttgart';
+        else club = 'Bayern Munich';
+      } else if (base.name === 'Riyad Mahrez') {
+        if (year < 2018) club = 'Leicester';
+        else if (year >= 2018 && year < 2023) club = 'Manchester City';
+        else club = 'Al-Ahli';
+      } else if (base.name === 'Declan Rice') {
+        if (year < 2023) club = 'West Ham';
+        else club = 'Arsenal';
+      } else if (base.name === 'Sadio Mane') {
+        if (year < 2016) club = 'Southampton';
+        else if (year >= 2016 && year < 2022) club = 'Liverpool';
+        else if (year === 2022) club = 'Bayern Munich';
+        else club = 'Al-Nassr';
+      } else if (base.name === 'Ashley Cole') {
+        if (year < 2006) club = 'Arsenal';
+        else if (year >= 2006 && year < 2014) club = 'Chelsea';
+        else club = 'Roma';
+      } else if (base.name === 'Cesc Fabregas') {
+        if (year < 2011) club = 'Arsenal';
+        else if (year >= 2011 && year < 2014) club = 'Barcelona';
+        else if (year >= 2014 && year < 2019) club = 'Chelsea';
+        else club = 'Monaco';
+      } else if (base.name === 'Kylian Mbappe') {
+        if (year < 2017) club = 'Monaco';
+        else if (year >= 2017 && year < 2024) club = 'PSG';
+        else club = 'Real Madrid';
+      } else if (base.name === 'Antoine Griezmann') {
+        if (year < 2014) club = 'Real Sociedad';
+        else if (year >= 2014 && year < 2019) club = 'Atletico Madrid';
+        else if (year >= 2019 && year < 2021) club = 'Barcelona';
+        else club = 'Atletico Madrid';
+      } else if (base.name === 'David Silva') {
+        if (year < 2010) club = 'Valencia';
+        else if (year >= 2010 && year < 2020) club = 'Manchester City';
+        else club = 'Real Sociedad';
+      } else if (base.name === 'Harry Kane') {
+        if (year < 2023) club = 'Tottenham';
+        else club = 'Bayern Munich';
+      } else if (base.name === 'Thibaut Courtois') {
+        if (year < 2014) club = 'Atletico Madrid';
+        else if (year >= 2014 && year < 2018) club = 'Chelsea';
+        else club = 'Real Madrid';
+      } else if (base.name === 'Christian Eriksen') {
+        if (year < 2013) club = 'Ajax';
+        else if (year >= 2013 && year < 2020) club = 'Tottenham';
+        else if (year >= 2020 && year < 2022) club = 'Inter Milan';
+        else if (year === 2022) club = 'Brentford';
+        else club = 'Manchester United';
+      } else if (base.name === 'Michael Carrick') {
+        if (year < 2004) club = 'West Ham';
+        else if (year >= 2004 && year < 2006) club = 'Tottenham';
+        else club = 'Manchester United';
+      } else if (base.name === 'Petr Cech') {
+        if (year < 2015) club = 'Chelsea';
+        else club = 'Arsenal';
+      } else if (base.name === 'Ruud van Nistelrooy') {
+        if (year < 2006) club = 'Manchester United';
+        else if (year >= 2006 && year < 2010) club = 'Real Madrid';
+        else if (year === 2010) club = 'Hamburg';
+        else club = 'Malaga';
+      } else if (base.name === 'Xabi Alonso') {
+        if (year < 2004) club = 'Real Sociedad';
+        else if (year >= 2004 && year < 2009) club = 'Liverpool';
+        else if (year >= 2009 && year < 2014) club = 'Real Madrid';
+        else club = 'Bayern Munich';
+      } else if (base.name === 'Ilkay Gündogan') {
+        if (year < 2016) club = 'Dortmund';
+        else if (year >= 2016 && year < 2023) club = 'Manchester City';
+        else if (year === 2023) club = 'Barcelona';
+        else club = 'Manchester City';
+      } else if (base.name === 'Mats Hummels') {
+        if (year < 2016) club = 'Dortmund';
+        else if (year >= 2016 && year < 2019) club = 'Bayern Munich';
+        else if (year >= 2019 && year < 2024) club = 'Dortmund';
+        else club = 'Roma';
+      } else if (base.name === 'David Alaba') {
+        if (year < 2021) club = 'Bayern Munich';
+        else club = 'Real Madrid';
+      } else if (base.name === 'Jens Lehmann') {
+        if (year < 2003) club = 'Dortmund';
+        else if (year >= 2003 && year < 2008) club = 'Arsenal';
+        else club = 'Stuttgart';
+      } else if (base.name === 'Marc-Andre ter Stegen') {
+        if (year < 2014) club = 'Monchengladbach';
+        else club = 'Barcelona';
+      } else if (base.name === 'Ivan Rakitic') {
+        if (year < 2011) club = 'Schalke';
+        else if (year >= 2011 && year < 2014) club = 'Sevilla';
+        else if (year >= 2014 && year < 2020) club = 'Barcelona';
+        else if (year >= 2020 && year < 2024) club = 'Sevilla';
+        else club = 'Hajduk Split';
+      } else if (base.name === 'David Villa') {
+        if (year < 2005) club = 'Zaragoza';
+        else if (year >= 2005 && year < 2010) club = 'Valencia';
+        else if (year >= 2010 && year < 2013) club = 'Barcelona';
+        else if (year === 2013) club = 'Atletico Madrid';
+        else club = 'NYCFC';
+      } else if (base.name === 'Alessandro Nesta') {
+        if (year < 2002) club = 'Lazio';
+        else if (year >= 2002 && year < 2012) club = 'AC Milan';
+        else club = 'Montreal Impact';
+      } else if (base.name === 'Gianluca Zambrotta') {
+        if (year < 2006) club = 'Juventus';
+        else if (year >= 2006 && year < 2008) club = 'Barcelona';
+        else club = 'AC Milan';
+      } else if (base.name === 'Filippo Inzaghi') {
+        if (year < 2001) club = 'Juventus';
+        else club = 'AC Milan';
+      } else if (base.name === 'Claudio Pizarro') {
+        if (year <= 2000) club = 'Werder Bremen';
+        else if (year >= 2001 && year < 2007) club = 'Bayern Munich';
+        else if (year === 2007) club = 'Chelsea';
+        else if (year >= 2008 && year < 2012) club = 'Werder Bremen';
+        else if (year >= 2012 && year < 2015) club = 'Bayern Munich';
+        else club = 'Werder Bremen';
+      } else if (base.name === 'Corentin Tolisso') {
+        if (year < 2017) club = 'Lyon';
+        else if (year >= 2017 && year < 2022) club = 'Bayern Munich';
+        else club = 'Lyon';
+      } else if (base.name === 'Leonardo Bonucci') {
+        if (year === 2017) club = 'AC Milan';
+        else if (year >= 2023) club = 'Union Berlin';
+        else club = 'Juventus';
+      } else if (base.name === 'Dani Alves') {
+        if (year < 2008) club = 'Sevilla';
+        else if (year >= 2008 && year < 2016) club = 'Barcelona';
+        else if (year === 2016) club = 'Juventus';
+        else if (year >= 2017 && year < 2019) club = 'PSG';
+        else club = 'Sao Paulo';
+      } else if (base.name === 'Manuel Neuer') {
+        if (year < 2011) club = 'Schalke';
+        else club = 'Bayern Munich';
+      } else if (base.name === 'Cafu') {
+        if (year < 2003) club = 'Roma';
+        else club = 'AC Milan';
+      } else if (base.name === 'Andriy Shevchenko') {
+        if (year < 1999) club = 'Dynamo Kyiv';
+        else if (year >= 1999 && year < 2006) club = 'AC Milan';
+        else if (year >= 2006 && year < 2008) club = 'Chelsea';
+        else if (year === 2008) club = 'AC Milan';
+        else club = 'Dynamo Kyiv';
+      } else if (base.name === 'Arjen Robben') {
+        if (year < 2004) club = 'PSV';
+        else if (year >= 2004 && year < 2007) club = 'Chelsea';
+        else if (year >= 2007 && year < 2009) club = 'Real Madrid';
+        else club = 'Bayern Munich';
+      } else if (base.name === 'Franck Ribery') {
+        if (year < 2005) club = 'Galatasaray';
+        else if (year >= 2005 && year < 2007) club = 'Marseille';
+        else if (year >= 2007 && year < 2019) club = 'Bayern Munich';
+        else club = 'Fiorentina';
+      } else if (base.name === 'Kyle Walker') {
+        if (year < 2017) club = 'Tottenham';
+        else club = 'Manchester City';
+      } else if (base.name === 'Kieran Trippier') {
+        if (year < 2019) club = 'Tottenham';
+        else if (year >= 2019 && year < 2022) club = 'Atletico Madrid';
+        else club = 'Newcastle';
+      } else if (base.name === 'Kolo Toure') {
+        if (year < 2009) club = 'Arsenal';
+        else if (year >= 2009 && year < 2013) club = 'Manchester City';
+        else if (year >= 2013 && year < 2016) club = 'Liverpool';
+        else club = 'Celtic';
+      } else if (base.name === 'Joao Cancelo') {
+        if (year < 2018) club = 'Valencia';
+        else if (year === 2018) club = 'Juventus';
+        else if (year >= 2019 && year < 2023) club = 'Manchester City';
+        else if (year === 2023) club = 'Barcelona';
+        else club = 'Al-Hilal';
+      } else if (base.name === 'Teddy Sheringham') {
+        if (year < 1997) club = 'Tottenham';
+        else if (year >= 1997 && year < 2001) club = 'Manchester United';
+        else if (year >= 2001 && year < 2003) club = 'Tottenham';
+        else if (year === 2003) club = 'Portsmouth';
+        else club = 'West Ham';
+      } else if (base.name === 'David Beckham') {
+        if (year < 2003) club = 'Manchester United';
+        else if (year >= 2003 && year < 2007) club = 'Real Madrid';
+        else if (year >= 2007 && year < 2013) club = 'LA Galaxy';
+        else club = 'PSG';
+      } else if (base.name === 'Jimmy Floyd Hasselbaink') {
+        if (year < 1999) club = 'Leeds United';
+        else if (year === 1999) club = 'Atletico Madrid';
+        else if (year >= 2000 && year < 2004) club = 'Chelsea';
+        else if (year >= 2004 && year < 2006) club = 'Middlesbrough';
+        else club = 'Charlton';
+      } else if (base.name === 'Michael Ballack') {
+        if (year < 1999) club = 'Kaiserslautern';
+        else if (year >= 1999 && year < 2002) club = 'Leverkusen';
+        else if (year >= 2002 && year < 2006) club = 'Bayern Munich';
+        else if (year >= 2006 && year < 2010) club = 'Chelsea';
+        else club = 'Leverkusen';
+      } else if (base.name === 'Raul Gonzalez') {
+        if (year < 2010) club = 'Real Madrid';
+        else if (year >= 2010 && year < 2012) club = 'Schalke';
+        else club = 'Al Sadd';
+      } else if (base.name === 'Bastian Schweinsteiger') {
+        if (year < 2015) club = 'Bayern Munich';
+        else if (year >= 2015 && year < 2017) club = 'Manchester United';
+        else club = 'Chicago Fire';
+      } else if (base.name === 'Erling Haaland') {
+        if (year < 2020) club = 'Salzburg';
+        else if (year >= 2020 && year < 2022) club = 'Dortmund';
+        else club = 'Manchester City';
+      } else if (base.name === 'Victor Osimhen') {
+        if (year < 2020) club = 'Lille';
+        else if (year >= 2020 && year < 2024) club = 'Napoli';
+        else club = 'Galatasaray';
+      } else if (base.name === 'Isco') {
+        if (year < 2013) club = 'Malaga';
+        else if (year >= 2013 && year < 2022) club = 'Real Madrid';
+        else if (year === 2022) club = 'Sevilla';
+        else club = 'Real Betis';
+      } else if (base.name === 'James Ward-Prowse') {
+        if (year < 2023) club = 'Southampton';
+        else if (year === 2023) club = 'West Ham';
+        else club = 'Nottingham Forest';
+      } else if (base.name === 'Pascal Gross') {
+        if (year < 2024) club = 'Brighton';
+        else club = 'Dortmund';
+      } else if (base.name === 'Salomon Kalou') {
+        if (year < 2012) club = 'Chelsea';
+        else if (year >= 2012 && year < 2014) club = 'Lille';
+        else club = 'Hertha BSC';
+      } else if (base.name === 'Andrea Barzagli') {
+        if (year < 2004) club = 'Chievo';
+        else if (year >= 2004 && year < 2008) club = 'Palermo';
+        else if (year >= 2008 && year < 2011) club = 'Wolfsburg';
+        else club = 'Juventus';
+      } else if (base.name === 'Miroslav Klose') {
+        if (year < 2004) club = 'Kaiserslautern';
+        else if (year >= 2004 && year < 2007) club = 'Werder Bremen';
+        else if (year >= 2007 && year < 2011) club = 'Bayern Munich';
+        else club = 'Lazio';
+      } else if (base.name === 'Hernan Crespo') {
+        if (year < 2000) club = 'Parma';
+        else if (year >= 2000 && year < 2002) club = 'Lazio';
+        else if (year === 2002) club = 'Inter Milan';
+        else if (year === 2003 || year === 2005) club = 'Chelsea';
+        else if (year === 2004) club = 'AC Milan';
+        else if (year >= 2006 && year < 2009) club = 'Inter Milan';
+        else club = 'Parma';
+      } else if (base.name === 'Danny Simpson') {
+        if (year < 2010) club = 'Manchester United';
+        else if (year >= 2010 && year < 2013) club = 'Newcastle';
+        else if (year === 2013) club = 'QPR';
+        else club = 'Leicester';
+      } else if (base.name === 'Sylvain Distin') {
+        if (year <= 2001) club = 'Newcastle';
+        else if (year >= 2002 && year < 2007) club = 'Manchester City';
+        else if (year >= 2007 && year < 2009) club = 'Portsmouth';
+        else if (year >= 2009 && year < 2015) club = 'Everton';
+        else club = 'Bournemouth';
+      } else if (base.name === 'Wilfried Zaha') {
+        if (year === 2013) club = 'Manchester United';
+        else if (year >= 2023) club = 'Galatasaray';
+        else club = 'Crystal Palace';
+      } else if (base.name === 'Chris Wood') {
+        if (year < 2013) club = 'West Brom';
+        else if (year >= 2013 && year < 2015) club = 'Leicester';
+        else if (year >= 2015 && year < 2017) club = 'Leeds United';
+        else if (year >= 2017 && year < 2022) club = 'Burnley';
+        else if (year === 2022) club = 'Newcastle';
+        else club = 'Nottingham Forest';
+      } else if (base.name === 'Jordan Henderson') {
+        if (year < 2011) club = 'Sunderland';
+        else if (year >= 2011 && year < 2023) club = 'Liverpool';
+        else if (year === 2023) club = 'Al-Ettifaq';
+        else club = 'Ajax';
+      } else if (base.name === 'Clarence Seedorf') {
+        if (year < 1995) club = 'Ajax';
+        else if (year === 1995) club = 'Sampdoria';
+        else if (year >= 1996 && year < 2000) club = 'Real Madrid';
+        else if (year >= 2000 && year < 2002) club = 'Inter Milan';
+        else if (year >= 2002 && year < 2012) club = 'AC Milan';
+        else club = 'Botafogo';
+      } else if (base.name === 'Eden Hazard') {
+        if (year < 2012) club = 'Lille';
+        else if (year >= 2012 && year < 2019) club = 'Chelsea';
+        else club = 'Real Madrid';
+      } else if (base.name === 'Luis Suarez') {
+        if (year < 2011) club = 'Ajax';
+        else if (year >= 2011 && year < 2014) club = 'Liverpool';
+        else if (year >= 2014 && year < 2020) club = 'Barcelona';
+        else if (year >= 2020 && year < 2022) club = 'Atletico Madrid';
+        else club = 'Inter Miami';
+      } else if (base.name === 'Virgil van Dijk') {
+        if (year < 2018) club = 'Southampton';
+        else club = 'Liverpool';
+      } else if (base.name === 'Andy Robertson') {
+        if (year < 2017) club = 'Hull City';
+        else club = 'Liverpool';
+      } else if (base.name === 'Luke Shaw') {
+        if (year < 2014) club = 'Southampton';
+        else club = 'Manchester United';
+      } else if (base.name === 'Mesut Ozil') {
+        if (year < 2013) club = 'Real Madrid';
+        else if (year >= 2013 && year < 2021) club = 'Arsenal';
+        else club = 'Fenerbahce';
+      } else if (base.name === 'Bernardo Silva') {
+        if (year < 2017) club = 'Monaco';
+        else club = 'Manchester City';
+      } else if (base.name === 'Mohamed Salah') {
+        if (year < 2017) club = 'Roma';
+        else club = 'Liverpool';
+      } else if (base.name === 'Son Heung-min') {
+        if (year < 2015) club = 'Leverkusen';
+        else club = 'Tottenham';
+      } else if (base.name === 'Rio Ferdinand') {
+        if (year < 2002) club = 'Leeds United';
+        else if (year >= 2002 && year < 2014) club = 'Manchester United';
+        else club = 'QPR';
+      } else if (base.name === 'Andy Cole') {
+        if (year < 1995) club = 'Newcastle';
+        else if (year >= 1995 && year < 2002) club = 'Manchester United';
+        else if (year >= 2002 && year < 2004) club = 'Blackburn';
+        else if (year === 2004) club = 'Fulham';
+        else club = 'Manchester City';
+      } else if (base.name === 'Robbie Fowler') {
+        if (year <= 2001) club = 'Liverpool';
+        else if (year >= 2001 && year < 2003) club = 'Leeds United';
+        else if (year >= 2003 && year < 2006) club = 'Manchester City';
+        else club = 'Liverpool';
+      } else if (base.name === 'Sergio Aguero') {
+        if (year < 2011) club = 'Atletico Madrid';
+        else if (year >= 2011 && year < 2021) club = 'Manchester City';
+        else club = 'Barcelona';
+      } else if (base.name === 'Peter Schmeichel') {
+        if (year < 1999) club = 'Manchester United';
+        else if (year >= 1999 && year < 2001) club = 'Sporting CP';
+        else if (year === 2001) club = 'Aston Villa';
+        else club = 'Manchester City';
+      } else if (base.name === 'David Seaman') {
+        if (year < 2003) club = 'Arsenal';
+        else club = 'Manchester City';
+      } else if (base.name === 'Patrick Vieira') {
+        if (year < 2005) club = 'Arsenal';
+        else if (year === 2005) club = 'Juventus';
+        else if (year >= 2006 && year < 2010) club = 'Inter Milan';
+        else club = 'Manchester City';
+      } else if (base.name === 'Claude Makelele') {
+        if (year < 2003) club = 'Real Madrid';
+        else if (year >= 2003 && year < 2008) club = 'Chelsea';
+        else club = 'PSG';
+      } else if (base.name === 'Michael Essien') {
+        if (year < 2005) club = 'Lyon';
+        else if (year >= 2005 && year < 2012) club = 'Chelsea';
+        else if (year === 2012) club = 'Real Madrid';
+        else club = 'AC Milan';
+      } else if (base.name === 'Robert Pires') {
+        if (year < 2006) club = 'Arsenal';
+        else if (year >= 2006 && year < 2010) club = 'Villarreal';
+        else club = 'Aston Villa';
+      } else if (base.name === 'Patrice Evra') {
+        if (year < 2014) club = 'Manchester United';
+        else if (year >= 2014 && year < 2017) club = 'Juventus';
+        else club = 'Marseille';
+      } else if (base.name === 'Yaya Toure') {
+        if (year < 2010) club = 'Barcelona';
+        else if (year >= 2010 && year < 2018) club = 'Manchester City';
+        else club = 'Olympiacos';
+      } else if (base.name === 'Kevin De Bruyne') {
+        if (year < 2015) club = 'Wolfsburg';
+        else club = 'Manchester City';
+      } else if (base.name === 'Rodri Hernandez') {
+        if (year < 2018) club = 'Villarreal';
+        else if (year === 2018) club = 'Atletico Madrid';
+        else club = 'Manchester City';
+      } else if (base.name === 'Bruno Fernandes') {
+        if (year < 2020) club = 'Sporting CP';
+        else club = 'Manchester United';
+      } else if (base.name === 'Martin Odegaard') {
+        if (year < 2020) club = 'Real Sociedad';
+        else if (year === 2020) club = 'Real Madrid';
+        else club = 'Arsenal';
+      } else if (base.name === 'Nemanja Vidic') {
+        if (year < 2014) club = 'Manchester United';
+        else club = 'Inter Milan';
+      } else if (base.name === 'Vincent Kompany') {
+        if (year < 2019) club = 'Manchester City';
+        else club = 'Anderlecht';
+      } else if (base.name === 'Thiago Silva') {
+        if (year < 2024) club = 'Chelsea';
+        else club = 'Fluminense';
+      } else if (base.name === 'John Terry') {
+        if (year < 2017) club = 'Chelsea';
+        else club = 'Aston Villa';
+      } else if (base.name === 'Ricardo Carvalho') {
+        if (year < 2010) club = 'Chelsea';
+        else if (year >= 2010 && year < 2013) club = 'Real Madrid';
+        else club = 'Monaco';
+      } else if (base.name === 'Jaap Stam') {
+        if (year < 2001) club = 'Manchester United';
+        else if (year >= 2001 && year < 2004) club = 'Lazio';
+        else if (year >= 2004 && year < 2006) club = 'AC Milan';
+        else club = 'Ajax';
+      } else if (base.name === 'Shay Given') {
+        if (year < 2009) club = 'Newcastle';
+        else if (year >= 2009 && year < 2011) club = 'Manchester City';
+        else club = 'Aston Villa';
+      } else if (base.name === 'David de Gea') {
+        if (year < 2023) club = 'Manchester United';
+        else club = 'Fiorentina';
+      } else if (base.name === 'Hugo Lloris') {
+        if (year < 2024) club = 'Tottenham';
+        else club = 'LAFC';
+      } else if (base.name === 'Steven Gerrard') {
+        if (year < 2015) club = 'Liverpool';
+        else club = 'LA Galaxy';
       } else if (base.name === 'Mark Schwarzer') {
         if (year >= 2015) club = 'Leicester';
         else if (year >= 2013) club = 'Chelsea';
@@ -2099,26 +2571,33 @@ function generatePlayersDatabase(): Player[] {
         if (year >= 2018) club = 'West Ham';
         else if (year < 2014) club = 'Arsenal';
       } else if (base.name === 'James Milner') {
-        if (year >= 2015) club = 'Liverpool';
+        if (year >= 2023) club = 'Brighton';
+        else if (year >= 2015) club = 'Liverpool';
         else if (year >= 2010) club = 'Manchester City';
         else if (year < 2008) club = 'Newcastle';
       } else if (base.name === 'Gareth Barry') {
-        if (year >= 2013) club = 'Everton';
+        if (year >= 2017) club = 'West Brom';
+        else if (year >= 2013) club = 'Everton';
         else if (year >= 2009) club = 'Manchester City';
       } else if (base.name === 'Peter Crouch') {
-        if (year >= 2011) club = 'Stoke City';
+        if (year >= 2019) club = 'Burnley';
+        else if (year >= 2011) club = 'Stoke City';
         else if (year >= 2009) club = 'Tottenham';
         else if (year === 2008) club = 'Portsmouth';
         else if (year >= 2005 && year < 2008) club = 'Liverpool';
         else if (year < 2005) club = 'Aston Villa';
-      } else if (base.name === 'Olivier Giroud' && year >= 2018) {
-        club = 'Chelsea';
+      } else if (base.name === 'Olivier Giroud') {
+        if (year >= 2024) club = 'LAFC';
+        else if (year >= 2021) club = 'AC Milan';
+        else if (year >= 2018) club = 'Chelsea';
+        else if (year < 2012) club = 'Montpellier';
       } else if (base.name === 'Darren Bent') {
         if (year >= 2011) club = 'Aston Villa';
         else if (year < 2009 && year >= 2007) club = 'Tottenham';
         else if (year < 2007) club = 'Charlton';
       } else if (base.name === 'Danny Ings') {
-        if (year >= 2021) club = 'Aston Villa';
+        if (year >= 2023) club = 'West Ham';
+        else if (year >= 2021) club = 'Aston Villa';
         else if (year < 2018) club = 'Liverpool';
       } else if (base.name === 'Gylfi Sigurdsson') {
         if (year >= 2017) club = 'Everton';
@@ -2129,20 +2608,24 @@ function generatePlayersDatabase(): Player[] {
         if (year >= 2011) club = 'Fulham';
         else if (year >= 2008 && year < 2011) club = 'Roma';
       } else if (base.name === 'Glen Johnson') {
-        if (year >= 2007 && year < 2009) club = 'Portsmouth';
+        if (year >= 2015) club = 'Stoke City';
+        else if (year >= 2007 && year < 2009) club = 'Portsmouth';
         else if (year >= 2003 && year < 2007) club = 'Chelsea';
-      } else if (base.name === 'Sebastian Larsson' && year < 2011) {
-        club = 'Birmingham';
+      } else if (base.name === 'Sebastian Larsson') {
+        if (year >= 2017) club = 'Hull City';
+        else if (year < 2011) club = 'Birmingham';
       } else if (base.name === 'Ben Davies' && year < 2014) {
         club = 'Swansea';
       } else if (base.name === 'Diego Alves' && year < 2011) {
         club = 'Almeria';
       } else if (base.name === 'Samir Handanovic' && year < 2012) {
         club = 'Udinese';
-      } else if (base.name === 'Steve Mandanda' && year === 2016) {
-        club = 'Crystal Palace';
-      } else if (base.name === 'Jordi Alba' && year < 2012) {
-        club = 'Valencia';
+      } else if (base.name === 'Steve Mandanda') {
+        if (year >= 2022) club = 'Rennes';
+        else if (year === 2016) club = 'Crystal Palace';
+      } else if (base.name === 'Jordi Alba') {
+        if (year >= 2023) club = 'Inter Miami';
+        else if (year < 2012) club = 'Valencia';
       } else if (base.name === 'Lucas Digne') {
         if (year >= 2022) club = 'Aston Villa';
         else if (year >= 2018) club = 'Everton';
@@ -2152,23 +2635,30 @@ function generatePlayersDatabase(): Player[] {
       } else if (base.name === 'Marquinhos' && year === 2012) {
         club = 'Roma';
       } else if (base.name === 'Ever Banega') {
-        if (year >= 2014 && year !== 2016) club = 'Sevilla';
+        if (year >= 2020) club = 'Al-Shabab';
+        else if (year >= 2017) club = 'Sevilla';
         else if (year === 2016) club = 'Inter Milan';
+        else if (year >= 2014) club = 'Sevilla';
         else if (year < 2014) club = 'Valencia';
-      } else if (base.name === 'Dani Parejo' && year < 2011) {
-        club = 'Getafe';
+      } else if (base.name === 'Dani Parejo') {
+        if (year >= 2020) club = 'Villarreal';
+        else if (year < 2011) club = 'Getafe';
       } else if (base.name === 'Radja Nainggolan') {
         if (year >= 2018) club = 'Inter Milan';
         else if (year < 2014) club = 'Cagliari';
       } else if (base.name === 'Marek Hamsik' && year < 2007) {
         club = 'Brescia';
-      } else if (base.name === 'Marco Verratti' && year < 2012) {
-        club = 'Pescara';
+      } else if (base.name === 'Marco Verratti') {
+        if (year >= 2023) club = 'Al-Arabi';
+        else if (year < 2012) club = 'Pescara';
       } else if (base.name === 'Blaise Matuidi') {
-        if (year >= 2017) club = 'Juventus';
+        if (year >= 2020) club = 'Inter Miami';
+        else if (year >= 2017) club = 'Juventus';
         else if (year < 2011) club = 'Saint-Etienne';
       } else if (base.name === 'Dimitri Payet') {
-        if (year === 2015 || year === 2016) club = 'West Ham';
+        if (year >= 2017) club = 'Marseille';
+        else if (year >= 2015 && year < 2017) club = 'West Ham';
+        else if (year >= 2013 && year < 2015) club = 'Marseille';
         else if (year >= 2011 && year < 2013) club = 'Lille';
         else if (year < 2011) club = 'Saint-Etienne';
       } else if (base.name === 'Iago Aspas') {
@@ -2182,37 +2672,46 @@ function generatePlayersDatabase(): Player[] {
         else if (year < 2016) club = 'Toulouse';
         else club = 'Sevilla';
       } else if (base.name === 'Mario Gomez') {
-        if (year >= 2016) club = 'Wolfsburg';
+        if (year >= 2018) club = 'Stuttgart';
+        else if (year >= 2016) club = 'Wolfsburg';
         else if (year === 2015) club = 'Besiktas';
         else if (year === 2013 || year === 2014) club = 'Fiorentina';
         else if (year < 2009) club = 'Stuttgart';
-      } else if (base.name === 'Alexandre Lacazette' && year >= 2017 && year < 2022) {
-        club = 'Arsenal';
+      } else if (base.name === 'Alexandre Lacazette') {
+        if (year >= 2022) club = 'Lyon';
+        else if (year >= 2017 && year < 2022) club = 'Arsenal';
       } else if (base.name === 'Loic Remy') {
         if (year >= 2014 && year <= 2016) club = 'Chelsea';
-        else if (year === 2013) club = 'QPR';
+        else if (year === 2013) club = 'Newcastle';
         else if (year < 2010) club = 'Nice';
-      } else if (base.name === 'Filipe Luis' && year === 2014) {
-        club = 'Chelsea';
+      } else if (base.name === 'Filipe Luis') {
+        if (year >= 2019) club = 'Flamengo';
+        else if (year === 2014) club = 'Chelsea';
+        else if (year < 2010) club = 'Deportivo';
       } else if (base.name === 'Lukasz Piszczek' && year < 2010) {
         club = 'Hertha BSC';
       } else if (base.name === 'Bacary Sagna') {
         if (year >= 2014) club = 'Manchester City';
         else if (year < 2007) club = 'Auxerre';
       } else if (base.name === 'Christian Fuchs') {
-        if (year >= 2011 && year < 2015) club = 'Schalke';
+        if (year >= 2021) club = 'Charlotte FC';
+        else if (year >= 2011 && year < 2015) club = 'Schalke';
         else if (year === 2010) club = 'Mainz';
         else if (year < 2010) club = 'Bochum';
       } else if (base.name === 'Patrick van Aanholt') {
         if (year >= 2021) club = 'Galatasaray';
         else if (year >= 2017) club = 'Crystal Palace';
         else if (year < 2014) club = 'Chelsea';
-      } else if (base.name === 'Kieran Gibbs' && year >= 2017) {
-        club = 'West Brom';
+      } else if (base.name === 'Kieran Gibbs') {
+        if (year >= 2021) club = 'Inter Miami';
+        else if (year >= 2017) club = 'West Brom';
       } else if (base.name === 'Alan Hutton') {
         if (year < 2008) club = 'Rangers';
         else if (year < 2011) club = 'Tottenham';
       }
+
+      // Generate unique player card ID based on player name, resolved club, and year
+      const id = `${base.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${club.toLowerCase().replace(/[^a-z0-9]/g, '')}_${year}`;
 
       // Determine Rarity
       let rarity = stage.rarity;
