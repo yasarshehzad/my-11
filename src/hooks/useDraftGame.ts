@@ -15,7 +15,8 @@ import {
   DAILY_CHALLENGES,
   createSeedableRandom,
   getDetailedChemistryLogs,
-  generateRandomSquad
+  generateRandomSquad,
+  getProjectedChemistry
 } from '../utils/gameLogic';
 import { players } from '../data/players';
 import { 
@@ -83,11 +84,12 @@ export function useDraftGame() {
     beaten: false,
   });
 
-  // --- Micro-interaction Toast ---
+  // --- Micro-interaction Toast & Active Highlights ---
   const [chemistryToast, setChemistryToast] = useState<{
     text: string;
     type: 'positive' | 'negative';
   } | null>(null);
+  const [recentlyDraftedIndex, setRecentlyDraftedIndex] = useState<number | null>(null);
 
   // --- Live Simulation Animation States ---
   const [simIndex, setSimIndex] = useState<number>(0);
@@ -372,6 +374,9 @@ export function useDraftGame() {
     setCurrentSlotIndex(targetIndex);
     setSimResult(null);
 
+    setRecentlyDraftedIndex(null);
+    setChemistryToast(null);
+
     const newStats = calculateSquadStats(updatedSelection, slots);
     setStats(newStats);
 
@@ -392,10 +397,9 @@ export function useDraftGame() {
     const slots = FORMATION_SLOTS[formation];
     logPlayerSelected(player.displayName, slots[currentSlotIndex]?.label || '');
 
-    // Compute previous chemistry logs
-    const prevLogs = getDetailedChemistryLogs(selectedPlayers, slots);
-    const prevChemistry = selectedPlayers.filter(p => p !== null).length === 0 ? 0 : calculateSquadStats(selectedPlayers, slots).chemistry;
-    
+    // Calculate prospective chemistry delta and reason before updating state
+    const proj = getProjectedChemistry(player, currentSlotIndex, selectedPlayers, slots);
+
     // Update selection
     const updatedSelection = [...selectedPlayers];
     updatedSelection[currentSlotIndex] = player;
@@ -404,31 +408,24 @@ export function useDraftGame() {
     // Compute new chemistry details
     const newStats = calculateSquadStats(updatedSelection, slots);
     setStats(newStats);
-    const newLogs = getDetailedChemistryLogs(updatedSelection, slots);
 
-    // Dynamic chemistry feedback toast calculations
-    const chemDelta = newStats.chemistry - prevChemistry;
-    if (selectedPlayers.filter(p => p !== null).length > 0 && chemDelta !== 0) {
-      let reasonMessage = '';
-      if (player.primaryPosition !== slots[currentSlotIndex].position) {
-        reasonMessage = `Out of position: -${Math.abs(chemDelta)} Chem`;
-      } else {
-        const uniqueNewLog = newLogs.find((nLog) => !prevLogs.some((pLog) => pLog.reason === nLog.reason));
-        if (uniqueNewLog) {
-          reasonMessage = `${uniqueNewLog.reason}: +${uniqueNewLog.delta} Chem`;
-        } else {
-          reasonMessage = chemDelta > 0 ? `+${chemDelta} Chemistry Link` : `-${Math.abs(chemDelta)} Chemistry`;
-        }
-      }
-
+    // Dynamic chemistry feedback toast with concise specific rationale
+    if (selectedPlayers.filter(p => p !== null).length > 0 || proj.delta !== 0) {
+      const sign = proj.delta > 0 ? '+' : '';
+      const toastText = `CHEM ${sign}${proj.delta} · ${proj.topReason}`;
       setChemistryToast({
-        text: reasonMessage,
-        type: chemDelta > 0 ? 'positive' : 'negative',
+        text: toastText,
+        type: proj.delta >= 0 ? 'positive' : 'negative',
       });
 
       // Clear toast after 2.5s
       setTimeout(() => setChemistryToast(null), 2500);
     }
+
+    // Trigger visual connection lines and glow on pitch for recently drafted slot
+    const draftedSlot = currentSlotIndex;
+    setRecentlyDraftedIndex(draftedSlot);
+    setTimeout(() => setRecentlyDraftedIndex(null), 2000);
 
     const nextIndex = currentSlotIndex + 1;
     if (nextIndex < 11) {
@@ -610,6 +607,7 @@ export function useDraftGame() {
     streakStats,
     dailyStatus,
     chemistryToast,
+    recentlyDraftedIndex,
     simIndex,
     liveWins,
     liveDraws,

@@ -824,6 +824,242 @@ export function getDetailedChemistryLogs(
   return logs;
 }
 
+export interface ProjectedChemistryInfo {
+  projectedChemistry: number;
+  currentChemistry: number;
+  delta: number;
+  topReason: string;
+  archetype: 'star' | 'system' | 'wildcard';
+  archetypeLabel: string;
+  archetypeDetail: string;
+  linkedTeammates: {
+    slotIndex: number;
+    displayName: string;
+    clubMatch: boolean;
+    nationMatch: boolean;
+    eraMatch: boolean;
+    reason: string;
+  }[];
+  positionFit: 'natural' | 'secondary' | 'out_of_position';
+  tacticalRoleNote?: string;
+}
+
+/**
+ * Calculates prospective chemistry impact and trade-offs before a card is drafted
+ */
+export function getProjectedChemistry(
+  candidate: Player,
+  targetSlotIndex: number,
+  currentSelection: (Player | null)[],
+  slots: PitchSlot[],
+  archetypeHint?: 'star' | 'system' | 'wildcard'
+): ProjectedChemistryInfo {
+  const targetSlot = slots[targetSlotIndex];
+  const activePlayers = currentSelection.filter((p): p is Player => p !== null);
+  const currentStats = calculateSquadStats(currentSelection, slots);
+  const currentChemistry = activePlayers.length === 0 ? 35 : currentStats.chemistry;
+
+  // Build hypothetical squad with candidate at targetSlotIndex
+  const hypothetical = [...currentSelection];
+  hypothetical[targetSlotIndex] = candidate;
+  const hypoStats = calculateSquadStats(hypothetical, slots);
+  const delta = hypoStats.chemistry - currentChemistry;
+
+  // Determine positional fit
+  let positionFit: 'natural' | 'secondary' | 'out_of_position' = 'out_of_position';
+  if (targetSlot) {
+    if (isNaturalPositionFit(candidate, targetSlot.position)) {
+      positionFit = 'natural';
+    } else if (candidate.secondaryPositions && candidate.secondaryPositions.includes(targetSlot.position)) {
+      positionFit = 'secondary';
+    }
+  }
+
+  // Find linked teammates currently drafted
+  const linkedTeammates: ProjectedChemistryInfo['linkedTeammates'] = [];
+  currentSelection.forEach((tm, idx) => {
+    if (!tm || idx === targetSlotIndex) return;
+    const clubMatch = tm.club === candidate.club;
+    const nationMatch = tm.nationality === candidate.nationality;
+    const eraMatch = tm.era === candidate.era;
+    if (clubMatch || nationMatch || eraMatch) {
+      const reasons: string[] = [];
+      if (clubMatch) reasons.push(tm.club);
+      if (nationMatch) reasons.push(tm.nationality);
+      if (eraMatch) reasons.push(tm.era);
+      linkedTeammates.push({
+        slotIndex: idx,
+        displayName: tm.displayName,
+        clubMatch,
+        nationMatch,
+        eraMatch,
+        reason: reasons.join(' & '),
+      });
+    }
+  });
+
+  // Determine top reason for chemistry delta
+  let topReason = 'Neutral squad fit';
+  if (positionFit === 'out_of_position') {
+    topReason = 'Played outside natural role';
+  } else if (linkedTeammates.some((t) => t.clubMatch)) {
+    const clubTm = linkedTeammates.find((t) => t.clubMatch);
+    const clubCount = linkedTeammates.filter((t) => t.clubMatch).length;
+    topReason = clubCount > 1 
+      ? `${candidate.club} link (${clubCount + 1} players)`
+      : `${candidate.club} link with ${clubTm?.displayName || ''}`;
+  } else if (linkedTeammates.some((t) => t.nationMatch)) {
+    const nationTm = linkedTeammates.find((t) => t.nationMatch);
+    const nationCount = linkedTeammates.filter((t) => t.nationMatch).length;
+    topReason = nationCount > 1
+      ? `${candidate.nationality} link (${nationCount + 1} players)`
+      : `${candidate.nationality} connection with ${nationTm?.displayName || ''}`;
+  } else if (linkedTeammates.some((t) => t.eraMatch)) {
+    topReason = `${candidate.era} generation synergy`;
+  } else if (hypoStats.hasDoublePivot && !currentStats.hasDoublePivot) {
+    topReason = 'Completes defensive double pivot';
+  } else if (hypoStats.hasPlaymaker && !currentStats.hasPlaymaker) {
+    topReason = 'Midfield creative balance completed';
+  } else if (activePlayers.length === 0) {
+    topReason = 'Squad cornerstone foundation';
+  } else if (delta < 0) {
+    topReason = 'Dressing room fragmentation';
+  }
+
+  // Determine Archetype
+  let archetype = archetypeHint || 'star';
+  if (!archetypeHint) {
+    if (candidate.rating >= 91 || candidate.isLegendaryPlayer) archetype = 'star';
+    else if (linkedTeammates.length > 0 || positionFit === 'natural') archetype = 'system';
+    else archetype = 'wildcard';
+  }
+
+  let archetypeLabel = '⭐ STAR';
+  let archetypeDetail = 'Elite Rating Anchor';
+  if (archetype === 'star') {
+    archetypeLabel = '⭐ STAR';
+    archetypeDetail = candidate.rating >= 92 ? 'World-Class Superstar' : 'Primary Rating Anchor';
+  } else if (archetype === 'system') {
+    archetypeLabel = '🔗 SYSTEM FIT';
+    if (linkedTeammates.some((t) => t.clubMatch)) {
+      archetypeDetail = `+ ${candidate.club} Core Link`;
+    } else if (linkedTeammates.some((t) => t.nationMatch)) {
+      archetypeDetail = `+ ${candidate.nationality} Link`;
+    } else if (linkedTeammates.some((t) => t.eraMatch)) {
+      archetypeDetail = `+ ${candidate.era} Era Link`;
+    } else if (candidate.primaryPosition === 'CDM' || candidate.secondaryPositions?.includes('CDM')) {
+      archetypeDetail = '+ Defensive Pivot';
+    } else {
+      archetypeDetail = 'Natural Position Fit';
+    }
+  } else {
+    archetypeLabel = '⚡ WILDCARD';
+    if (candidate.specialTrait) {
+      archetypeDetail = candidate.specialTrait;
+    } else if (candidate.rarity === 'cult') {
+      archetypeDetail = 'Cult Hero Specialist';
+    } else if (candidate.pace >= 90) {
+      archetypeDetail = `${candidate.pace} Pace Speedster`;
+    } else if (candidate.finishing >= 90) {
+      archetypeDetail = `${candidate.finishing} Finisher`;
+    } else if (candidate.technique >= 90) {
+      archetypeDetail = `${candidate.technique} Technician`;
+    } else {
+      archetypeDetail = 'Impact Specialist';
+    }
+  }
+
+  // Tactical Role Note
+  let tacticalRoleNote: string | undefined;
+  if (candidate.primaryPosition === 'CDM' || (candidate.secondaryPositions && candidate.secondaryPositions.includes('CDM'))) {
+    tacticalRoleNote = 'Defensive Shield / Anchor';
+  } else if (candidate.primaryPosition === 'CAM' || candidate.creativity >= 88) {
+    tacticalRoleNote = 'Creative Playmaker';
+  } else if (candidate.pace >= 92) {
+    tacticalRoleNote = 'Explosive Wide Threat';
+  } else if (candidate.finishing >= 90) {
+    tacticalRoleNote = 'Clinical Box Finisher';
+  } else if (candidate.primaryPosition === 'CB' && candidate.defending >= 88) {
+    tacticalRoleNote = 'Backline Leader';
+  }
+
+  return {
+    projectedChemistry: hypoStats.chemistry,
+    currentChemistry,
+    delta,
+    topReason,
+    archetype,
+    archetypeLabel,
+    archetypeDetail,
+    linkedTeammates,
+    positionFit,
+    tacticalRoleNote,
+  };
+}
+
+export interface SquadChemistryBreakdown {
+  base: number;
+  clubLinks: { count: number; delta: number; details: string[] };
+  nationLinks: { count: number; delta: number; details: string[] };
+  eraLinks: { count: number; delta: number; details: string[] };
+  tacticalBalance: { delta: number; details: string[] };
+  positionPenalties: { delta: number; count: number; details: string[] };
+  fragmentationPenalties: { delta: number; details: string[] };
+  totalChemistry: number;
+  grade: ChemistryGrade;
+}
+
+/**
+ * Inspectable categorical breakdown of current squad chemistry
+ */
+export function getSquadChemistryBreakdown(
+  selectedPlayers: (Player | null)[],
+  slots: PitchSlot[]
+): SquadChemistryBreakdown {
+  const logs = getDetailedChemistryLogs(selectedPlayers, slots);
+  const currentStats = calculateSquadStats(selectedPlayers, slots);
+
+  const breakdown: SquadChemistryBreakdown = {
+    base: 35,
+    clubLinks: { count: 0, delta: 0, details: [] },
+    nationLinks: { count: 0, delta: 0, details: [] },
+    eraLinks: { count: 0, delta: 0, details: [] },
+    tacticalBalance: { delta: 0, details: [] },
+    positionPenalties: { delta: 0, count: 0, details: [] },
+    fragmentationPenalties: { delta: 0, details: [] },
+    totalChemistry: currentStats.chemistry,
+    grade: getChemistryGrade(currentStats.chemistry),
+  };
+
+  logs.forEach((log) => {
+    const reasonLower = log.reason.toLowerCase();
+    if (reasonLower.includes('club')) {
+      breakdown.clubLinks.delta += log.delta;
+      breakdown.clubLinks.count++;
+      breakdown.clubLinks.details.push(`${log.reason} (+${log.delta})`);
+    } else if (reasonLower.includes('nation')) {
+      breakdown.nationLinks.delta += log.delta;
+      breakdown.nationLinks.count++;
+      breakdown.nationLinks.details.push(`${log.reason} (+${log.delta})`);
+    } else if (reasonLower.includes('era') || reasonLower.includes('generation')) {
+      breakdown.eraLinks.delta += log.delta;
+      breakdown.eraLinks.details.push(`${log.reason} (+${log.delta})`);
+    } else if (reasonLower.includes('midfield') && log.type === 'positive') {
+      breakdown.tacticalBalance.delta += log.delta;
+      breakdown.tacticalBalance.details.push(`${log.reason} (+${log.delta})`);
+    } else if (reasonLower.includes('out of position')) {
+      breakdown.positionPenalties.delta -= log.delta;
+      breakdown.positionPenalties.count++;
+      breakdown.positionPenalties.details.push(`${log.reason} (-${log.delta})`);
+    } else if (log.type === 'negative') {
+      breakdown.fragmentationPenalties.delta -= log.delta;
+      breakdown.fragmentationPenalties.details.push(`${log.reason} (-${log.delta})`);
+    }
+  });
+
+  return breakdown;
+}
+
 /**
  * Find the best and worst chemistry link descriptions in the drafted squad
  */

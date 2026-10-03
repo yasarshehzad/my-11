@@ -95,10 +95,10 @@ export function FormationSelection({
       <div className="w-full max-w-md p-4 rounded-2xl glass border border-slate-900 flex justify-between items-center gap-4 select-none">
         <div className="flex-1 min-w-0">
           <h4 className="text-xs font-display font-black uppercase text-foreground tracking-wider flex items-center gap-1.5 leading-none">
-            🧠 Draft IQ Mode
+            🧠 Tactical Scouting Intel
           </h4>
           <p className="text-[10px] text-slate-400 mt-1 leading-normal font-semibold">
-            Hide ratings & stats during drafting. Rely on your football knowledge to build chemistry and reveal scores at the end!
+            Enable in-depth tactical scouting intel to review prospective chemistry links, role fit, and partner chemistry on draft cards.
           </p>
         </div>
         <button

@@ -150,6 +150,7 @@ export default function DraftedXIGame() {
             isDailyChallenge={game.isDailyChallenge}
             todayChallenge={game.todayChallenge}
             chemistryToast={game.chemistryToast}
+            recentlyDraftedIndex={game.recentlyDraftedIndex}
             draftTab={game.draftTab}
             searchQuery={game.searchQuery}
             selectedClub={game.selectedClub}

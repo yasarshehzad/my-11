@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { getDraftOptions, createSeedableRandom } from '../src/utils/gameLogic';
+import { 
+  getDraftOptions, 
+  createSeedableRandom, 
+  getProjectedChemistry, 
+  getSquadChemistryBreakdown, 
+  FORMATION_SLOTS 
+} from '../src/utils/gameLogic';
 import { players } from '../src/data/players';
 import { Position, Player, Rarity } from '../src/types/game';
 
@@ -83,5 +89,52 @@ describe('Drafting Logic', () => {
     expect(pack1[0].id).toBe(pack2[0].id);
     expect(pack1[1].id).toBe(pack2[1].id);
     expect(pack1[2].id).toBe(pack2[2].id);
+  });
+
+  it('correctly projects chemistry impact and identifies links before drafting', () => {
+    const slots = FORMATION_SLOTS['4-3-3'];
+    const squad: (Player | null)[] = Array(11).fill(null);
+
+    // Find two Arsenal players and one Barcelona player
+    const henry = players.find((p) => p.club === 'Arsenal' && p.primaryPosition === 'ST');
+    const bergkamp = players.find((p) => p.club === 'Arsenal' && (p.primaryPosition === 'CAM' || p.secondaryPositions.includes('CM') || p.primaryPosition === 'CM'));
+    const xavi = players.find((p) => p.club === 'Barcelona' && p.primaryPosition === 'CM');
+
+    expect(henry).toBeDefined();
+    expect(bergkamp).toBeDefined();
+
+    // Draft Henry at ST (slot 9 in 4-3-3)
+    squad[9] = henry!;
+
+    // Project Bergkamp at CM (slot 5)
+    const projBergkamp = getProjectedChemistry(bergkamp!, 5, squad, slots, 'system');
+    expect(projBergkamp.delta).toBeGreaterThan(0);
+    expect(projBergkamp.topReason.toLowerCase()).toContain('arsenal');
+    expect(projBergkamp.linkedTeammates.length).toBeGreaterThan(0);
+    expect(projBergkamp.linkedTeammates[0].displayName).toBe(henry!.displayName);
+
+    // Project Xavi at CM (slot 5)
+    if (xavi) {
+      const projXavi = getProjectedChemistry(xavi, 5, squad, slots, 'star');
+      expect(projXavi.archetype).toBe('star');
+      expect(projXavi.projectedChemistry).toBeDefined();
+    }
+  });
+
+  it('generates an inspectable squad chemistry breakdown with categorized links', () => {
+    const slots = FORMATION_SLOTS['4-3-3'];
+    const squad: (Player | null)[] = Array(11).fill(null);
+
+    const arsenalPlayers = players.filter((p) => p.club === 'Arsenal').slice(0, 3);
+    if (arsenalPlayers.length >= 2) {
+      squad[9] = arsenalPlayers[0]; // ST
+      squad[5] = arsenalPlayers[1]; // CM
+
+      const breakdown = getSquadChemistryBreakdown(squad, slots);
+      expect(breakdown.clubLinks.delta).toBeGreaterThan(0);
+      expect(breakdown.clubLinks.count).toBeGreaterThan(0);
+      expect(breakdown.totalChemistry).toBeGreaterThanOrEqual(0);
+      expect(breakdown.grade).toBeDefined();
+    }
   });
 });

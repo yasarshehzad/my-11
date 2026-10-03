@@ -1,5 +1,6 @@
 import React from 'react';
 import { Player } from '../types/game';
+import { ProjectedChemistryInfo } from '../utils/gameLogic';
 
 interface PlayerCardProps {
   player: Player;
@@ -8,6 +9,8 @@ interface PlayerCardProps {
   selected?: boolean;
   pulse?: boolean;
   draftIQActive?: boolean;
+  projectedInfo?: ProjectedChemistryInfo;
+  onHover?: (hovering: boolean) => void;
 }
 
 export const PlayerCard: React.FC<PlayerCardProps> = ({
@@ -17,6 +20,8 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   selected = false,
   pulse = false,
   draftIQActive = false,
+  projectedInfo,
+  onHover,
 }) => {
   const {
     playerName,
@@ -37,13 +42,11 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     club,
     nationality,
     season,
-    clubSeasonLabel,
     specialTrait,
-    strengths,
     oneLineDescription,
   } = player;
 
-  // Rarity styling mapping with enhanced theme-aware colors and visual accents
+  // Rarity styling mapping
   const rarityConfig = {
     legend: {
       border: 'border-legend-border',
@@ -175,7 +178,6 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         { label: 'TEC', value: technique },
       ];
     }
-    // ST, CF, LW, RW
     return [
       { label: 'FIN', value: finishing },
       { label: 'PAC', value: pace },
@@ -183,7 +185,6 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     ];
   };
 
-  // Abbreviated Nation/Club string (e.g., Manchester Red -> MAN, Brazil -> BRA)
   const getAbbreviation = (name: string) => {
     if (name.length <= 3) return name.toUpperCase();
     return name.substring(0, 3).toUpperCase();
@@ -191,45 +192,96 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
 
   const keyStats = getTopStats();
 
-  // LARGE LAYOUT (Used in selection screen)
+  // LARGE LAYOUT (Used in draft selection)
   if (layout === 'large') {
+    const accessibleLabel = `${rating} rated ${primaryPosition}, ${displayName} for ${club} (${season}). ${
+      projectedInfo
+        ? `${projectedInfo.archetypeLabel}: ${projectedInfo.archetypeDetail}. Projected chemistry ${
+            projectedInfo.delta >= 0 ? '+' : ''
+          }${projectedInfo.delta} due to ${projectedInfo.topReason}.`
+        : ''
+    }`;
+
+    // Archetype badge styling
+    const archetypeStyle = {
+      star: 'bg-amber-500/15 border-amber-500/35 text-amber-400',
+      system: 'bg-emerald-500/15 border-emerald-500/35 text-emerald-400',
+      wildcard: 'bg-cyan-500/15 border-cyan-500/35 text-cyan-400',
+    }[projectedInfo?.archetype || 'star'];
+
+    // Projected chemistry pill styling
+    const delta = projectedInfo?.delta ?? 0;
+    const chemPillStyle =
+      delta > 0
+        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.2)]'
+        : delta < 0
+        ? 'bg-rose-500/20 text-rose-400 border-rose-500/40'
+        : 'bg-slate-900/80 text-slate-400 border-slate-800';
+
     return (
       <button
         onClick={onClick}
+        onMouseEnter={() => onHover && onHover(true)}
+        onMouseLeave={() => onHover && onHover(false)}
+        aria-label={accessibleLabel}
         className={`w-full max-w-[245px] min-h-[395px] rounded-2xl border ${rarityConfig.border} ${rarityConfig.bg} ${rarityConfig.glow} card-shine flex flex-col p-4 text-left relative transition-all duration-300 transform hover:-translate-y-2 active:scale-95 ${
           selected ? 'ring-2 ring-emerald-400 ring-offset-4 ring-offset-slate-950 scale-102' : ''
-        } ${pulse ? 'animate-pulse' : ''} cursor-pointer select-none overflow-hidden`}
+        } ${pulse ? 'animate-pulse' : ''} cursor-pointer select-none overflow-hidden focus:outline-none focus:ring-2 focus:ring-emerald-400`}
       >
         {/* Dynamic Card Overlay Light Effect */}
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none" />
 
-        {/* Top Header: Rating, Position, Rarity & Era Badge */}
+        {/* 1. Prospective Archetype & Strategic Badge Header */}
+        {projectedInfo && (
+          <div className="w-full flex justify-between items-center mb-2.5 z-10 gap-1.5 leading-none">
+            <span
+              className={`px-2 py-0.5 rounded-full text-[8.5px] font-display font-black uppercase tracking-wider border shadow-sm ${archetypeStyle}`}
+            >
+              {projectedInfo.archetypeLabel}
+            </span>
+            <span
+              className={`px-2 py-0.5 rounded-full text-[8.5px] font-display font-black uppercase tracking-wider border ${chemPillStyle}`}
+            >
+              CHEM {delta >= 0 ? `+${delta}` : delta}
+            </span>
+          </div>
+        )}
+
+        {/* 2. Top Header: Rating, Position, Rarity & Era Badge */}
         <div className="flex justify-between items-start w-full relative z-10">
           <div className="flex flex-col items-start leading-none">
             <span className={`text-4xl font-display font-black tracking-tight ${rarityConfig.ratingText}`}>
-              {draftIQActive ? '?' : rating}
+              {rating}
             </span>
-            <span className={`text-[10px] font-bold tracking-wider ${rarityConfig.textMuted} ${rarityConfig.subBg} border ${rarityConfig.subBorder} px-1.5 py-0.5 rounded mt-1 uppercase font-display leading-none`}>
+            <span
+              className={`text-[10px] font-bold tracking-wider ${rarityConfig.textMuted} ${rarityConfig.subBg} border ${rarityConfig.subBorder} px-1.5 py-0.5 rounded mt-1 uppercase font-display leading-none`}
+            >
               {primaryPosition}
             </span>
           </div>
 
           <div className="flex flex-col items-end gap-1.5">
             {/* Rarity Indicator */}
-            <span className={`text-[8.5px] font-extrabold px-2 py-0.5 rounded border uppercase tracking-wider font-display leading-none ${rarityConfig.badge}`}>
+            <span
+              className={`text-[8.5px] font-extrabold px-2 py-0.5 rounded border uppercase tracking-wider font-display leading-none ${rarityConfig.badge}`}
+            >
               {rarityConfig.label}
             </span>
             {/* Era Badge */}
-            <span className={`text-[8px] font-bold ${rarityConfig.textMuted} ${rarityConfig.subBg} px-1.5 py-0.5 rounded border ${rarityConfig.subBorder} uppercase tracking-wider leading-none`}>
+            <span
+              className={`text-[8px] font-bold ${rarityConfig.textMuted} ${rarityConfig.subBg} px-1.5 py-0.5 rounded border ${rarityConfig.subBorder} uppercase tracking-wider leading-none`}
+            >
               {era}
             </span>
           </div>
         </div>
 
-        {/* Player Name and Club/Season */}
-        <div className="mt-4 relative z-10">
+        {/* 3. Player Name and Club/Season */}
+        <div className="mt-3.5 relative z-10">
           <div className={`h-1 w-10 rounded bg-gradient-to-r ${rarityConfig.accent} mb-2`} />
-          <h3 className={`text-2xl font-display font-black leading-none ${rarityConfig.textPrimary} uppercase tracking-tight line-clamp-1`}>
+          <h3
+            className={`text-2xl font-display font-black leading-none ${rarityConfig.textPrimary} uppercase tracking-tight line-clamp-1`}
+          >
             {displayName}
           </h3>
           <p className={`text-xs font-bold ${rarityConfig.textSecondary} mt-1 truncate leading-none uppercase tracking-wide`}>
@@ -240,30 +292,74 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
           </span>
         </div>
 
-        {/* Special Trait & Strengths */}
-        <div className="mt-3.5 flex flex-col gap-2 relative z-10 flex-1 w-full">
-          {specialTrait && (
-            <div className={`${rarityConfig.subBg} border ${rarityConfig.subBorder} rounded px-2.5 py-1 w-fit flex items-center leading-none`}>
-              <span className="text-[9px] font-bold text-emerald-450 font-display tracking-wider uppercase">✨ {specialTrait}</span>
+        {/* 4. Strategic Archetype Detail or Special Trait */}
+        <div className="mt-3 flex flex-col gap-1.5 relative z-10 flex-1 w-full">
+          {projectedInfo ? (
+            <div className={`${rarityConfig.subBg} border ${rarityConfig.subBorder} rounded-xl px-2.5 py-1.5 flex flex-col gap-0.5 leading-none`}>
+              <span className="text-[8.5px] font-black font-display tracking-wider uppercase text-emerald-450">
+                {projectedInfo.archetypeDetail}
+              </span>
+              <span className="text-[8px] text-slate-400 font-semibold truncate">
+                {projectedInfo.topReason}
+              </span>
+            </div>
+          ) : specialTrait ? (
+            <div
+              className={`${rarityConfig.subBg} border ${rarityConfig.subBorder} rounded px-2.5 py-1 w-fit flex items-center leading-none`}
+            >
+              <span className="text-[9px] font-bold text-emerald-450 font-display tracking-wider uppercase">
+                ✨ {specialTrait}
+              </span>
+            </div>
+          ) : null}
+
+          {/* Draft IQ Mode Enhanced Tactical Insights Banner */}
+          {draftIQActive && projectedInfo && (
+            <div className="bg-indigo-950/40 border border-indigo-500/30 rounded-xl p-2 flex flex-col gap-1 leading-none text-left">
+              <span className="text-[7.5px] font-black uppercase tracking-widest text-indigo-300">
+                🧠 Tactical Intel
+              </span>
+              <div className="text-[8px] text-slate-350 space-y-0.5 font-medium">
+                <p>
+                  • Fit: <span className="font-bold text-foreground">{projectedInfo.positionFit === 'natural' ? 'Natural Role (100%)' : projectedInfo.positionFit === 'secondary' ? 'Secondary Position' : 'Out of Role'}</span>
+                </p>
+                {projectedInfo.linkedTeammates.length > 0 && (
+                  <p className="truncate">
+                    • Link: <span className="font-bold text-emerald-400">{projectedInfo.linkedTeammates[0].displayName} ({projectedInfo.linkedTeammates[0].reason})</span>
+                  </p>
+                )}
+                {projectedInfo.tacticalRoleNote && (
+                  <p>
+                    • Role: <span className="font-bold text-cyan-300">{projectedInfo.tacticalRoleNote}</span>
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
-          {oneLineDescription && (
-            <p className={`text-[10.5px] ${rarityConfig.textSecondary} leading-relaxed italic line-clamp-2`}>
+          {!draftIQActive && oneLineDescription && (
+            <p className={`text-[10px] ${rarityConfig.textSecondary} leading-relaxed italic line-clamp-2 mt-0.5`}>
               “{oneLineDescription}”
             </p>
           )}
         </div>
 
         {/* Divider line */}
-        <div className={`h-[1px] w-full ${rarityConfig.subBorder} my-2.5 relative z-10`} />
+        <div className={`h-[1px] w-full ${rarityConfig.subBorder} my-2 relative z-10`} />
 
-        {/* 3 Key Stat Chips Row */}
+        {/* 5. Three Key Stat Chips Row */}
         <div className="flex justify-between items-center gap-2 relative z-10 w-full">
           {keyStats.map((st, idx) => (
-            <div key={idx} className={`flex-1 ${rarityConfig.subBg} py-1.5 px-2 rounded-xl border ${rarityConfig.subBorder} flex flex-col items-center leading-none`}>
-              <span className={`text-[8px] font-semibold ${rarityConfig.textMuted} uppercase tracking-wider`}>{st.label}</span>
-              <span className={`text-sm font-display font-black ${rarityConfig.textSecondary} mt-1`}>{draftIQActive ? '?' : st.value}</span>
+            <div
+              key={idx}
+              className={`flex-1 ${rarityConfig.subBg} py-1.5 px-2 rounded-xl border ${rarityConfig.subBorder} flex flex-col items-center leading-none`}
+            >
+              <span className={`text-[8px] font-semibold ${rarityConfig.textMuted} uppercase tracking-wider`}>
+                {st.label}
+              </span>
+              <span className={`text-sm font-display font-black ${rarityConfig.textSecondary} mt-1`}>
+                {st.value}
+              </span>
             </div>
           ))}
         </div>
@@ -271,7 +367,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     );
   }
 
-  // COMPACT LAYOUT (Used for pitch slots when a player is selected)
+  // COMPACT LAYOUT (Used for pitch slots when a player is drafted)
   if (layout === 'compact') {
     return (
       <div
@@ -283,9 +379,11 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         {/* Rating and Position */}
         <div className="flex justify-between items-start leading-none relative z-10">
           <span className={`text-[12px] font-black font-display ${rarityConfig.text}`}>
-            {draftIQActive ? '?' : rating}
+            {rating}
           </span>
-          <span className={`text-[8px] font-bold ${rarityConfig.textMuted} ${rarityConfig.subBg} border ${rarityConfig.subBorder} px-0.5 py-0.2 rounded uppercase`}>
+          <span
+            className={`text-[8px] font-bold ${rarityConfig.textMuted} ${rarityConfig.subBg} border ${rarityConfig.subBorder} px-0.5 py-0.2 rounded uppercase`}
+          >
             {primaryPosition}
           </span>
         </div>
@@ -297,10 +395,22 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
           </span>
         </div>
 
-        {/* Era Tag abbreviation at the bottom */}
-        <div className={`flex justify-between items-center text-[7px] ${rarityConfig.textMuted} border-t ${rarityConfig.subBorder} pt-0.5 mt-0.5 leading-none relative z-10`}>
+        {/* Club and Season Tag at the bottom */}
+        <div
+          className={`flex justify-between items-center text-[7px] ${rarityConfig.textMuted} border-t ${rarityConfig.subBorder} pt-0.5 mt-0.5 leading-none relative z-10`}
+        >
           <span className="truncate max-w-[30px] font-semibold">{getAbbreviation(club)}</span>
-          <span className={`${rarity === 'legend' ? 'text-amber-500 font-bold dark:text-amber-400' : rarity === 'elite' ? 'text-purple-600 dark:text-purple-400' : rarity === 'cult' ? 'text-emerald-600 dark:text-emerald-400' : rarityConfig.text}`}>
+          <span
+            className={`${
+              rarity === 'legend'
+                ? 'text-amber-500 font-bold dark:text-amber-400'
+                : rarity === 'elite'
+                ? 'text-purple-600 dark:text-purple-400'
+                : rarity === 'cult'
+                ? 'text-emerald-600 dark:text-emerald-400'
+                : rarityConfig.text
+            }`}
+          >
             {season.split('/')[0].substring(2)}
           </span>
         </div>
@@ -314,14 +424,20 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
       className={`flex items-center justify-between p-2.5 rounded-xl border ${rarityConfig.border} ${rarityConfig.bg} select-none overflow-hidden`}
     >
       <div className="flex items-center gap-3 min-w-0 flex-1">
-        <div className={`w-9 h-9 rounded-full flex items-center justify-center border font-display font-black text-sm flex-shrink-0 ${rarityConfig.border} ${rarityConfig.subBg} ${rarityConfig.text}`}>
-          {draftIQActive ? '?' : rating}
+        <div
+          className={`w-9 h-9 rounded-full flex items-center justify-center border font-display font-black text-sm flex-shrink-0 ${rarityConfig.border} ${rarityConfig.subBg} ${rarityConfig.text}`}
+        >
+          {rating}
         </div>
         
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <h4 className={`text-sm font-bold ${rarityConfig.textPrimary} truncate uppercase font-display leading-tight`}>{displayName}</h4>
-            <span className={`text-[8.5px] font-bold px-1 py-0.2 ${rarityConfig.subBg} rounded border ${rarityConfig.subBorder} ${rarityConfig.textMuted} uppercase leading-none`}>
+            <h4 className={`text-sm font-bold ${rarityConfig.textPrimary} truncate uppercase font-display leading-tight`}>
+              {displayName}
+            </h4>
+            <span
+              className={`text-[8.5px] font-bold px-1 py-0.2 ${rarityConfig.subBg} rounded border ${rarityConfig.subBorder} ${rarityConfig.textMuted} uppercase leading-none`}
+            >
               {primaryPosition}
             </span>
           </div>
@@ -331,12 +447,14 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         </div>
       </div>
 
-      {/* 3 Key Stats displayed in right side instead of generic grid */}
       <div className="flex gap-2 text-right items-center ml-2">
         {keyStats.map((st, idx) => (
-          <div key={idx} className={`flex flex-col text-[10px] items-center px-1.5 py-0.5 ${rarityConfig.subBg} rounded border ${rarityConfig.subBorder} leading-none`}>
+          <div
+            key={idx}
+            className={`flex flex-col text-[10px] items-center px-1.5 py-0.5 ${rarityConfig.subBg} rounded border ${rarityConfig.subBorder} leading-none`}
+          >
             <span className={`${rarityConfig.textMuted} font-semibold uppercase text-[7px]`}>{st.label}</span>
-            <span className={`font-bold ${rarityConfig.textSecondary} mt-0.5`}>{draftIQActive ? '?' : st.value}</span>
+            <span className={`font-bold ${rarityConfig.textSecondary} mt-0.5`}>{st.value}</span>
           </div>
         ))}
       </div>

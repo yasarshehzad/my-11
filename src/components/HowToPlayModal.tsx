@@ -39,7 +39,7 @@ export function HowToPlayModal({ isOpen, onClose }: HowToPlayModalProps) {
             <span className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-450 flex items-center justify-center font-display font-black flex-shrink-0">1</span>
             <div>
               <h4 className="text-foreground uppercase font-display font-black leading-none mb-1">Set Your Strategy</h4>
-              <p className="text-[11px] text-slate-400 font-medium">Choose your team formation and match league. Toggle <b>Draft IQ Mode</b> to test your memory without seeing player stats!</p>
+              <p className="text-[11px] text-slate-400 font-medium">Choose your team formation and match league. Toggle <b>Draft IQ Mode</b> to view in-depth tactical scouting intel and chemistry projections!</p>
             </div>
           </div>
 

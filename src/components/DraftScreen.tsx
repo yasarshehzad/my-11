@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Player, FormationType, SimulationResult, ChallengeTemplate } from '../types/game';
-import { FORMATION_SLOTS, getDetailedChemistryLogs } from '../utils/gameLogic';
+import { FORMATION_SLOTS, getDetailedChemistryLogs, getSquadChemistryBreakdown } from '../utils/gameLogic';
 import { PitchLayout } from './PitchLayout';
 import { StatsDisplay } from './StatsDisplay';
 import { DraftOptions } from './DraftOptions';
@@ -18,6 +18,7 @@ interface DraftScreenProps {
   isDailyChallenge: boolean;
   todayChallenge: ChallengeTemplate | null;
   chemistryToast: { text: string; type: 'positive' | 'negative' } | null;
+  recentlyDraftedIndex?: number | null;
   draftTab: 'recommended' | 'search';
   searchQuery: string;
   selectedClub: string;
@@ -50,6 +51,7 @@ export function DraftScreen({
   isDailyChallenge,
   todayChallenge,
   chemistryToast,
+  recentlyDraftedIndex,
   draftTab,
   searchQuery,
   selectedClub,
@@ -68,9 +70,11 @@ export function DraftScreen({
   onSetSelectedEra,
   onSetOnlyMatchingPosition,
 }: DraftScreenProps) {
+  const [hoveredCandidate, setHoveredCandidate] = useState<Player | null>(null);
   const slots = FORMATION_SLOTS[formation];
   const isFinished = currentSlotIndex >= 11 || selectedPlayers.every((p) => p !== null);
   const activeLogs = getDetailedChemistryLogs(selectedPlayers, slots);
+  const squadBreakdown = getSquadChemistryBreakdown(selectedPlayers, slots);
 
   return (
     <div className={`flex flex-col gap-6 px-4 sm:px-6 py-6 w-full max-w-lg mx-auto min-h-[90vh] relative overflow-hidden ${isFinished ? 'pb-24' : ''}`}>
@@ -135,6 +139,8 @@ export function DraftScreen({
         selectedPlayers={selectedPlayers}
         currentSlotIndex={isFinished ? -1 : currentSlotIndex}
         draftIQActive={draftIQMode}
+        highlightedCandidate={hoveredCandidate}
+        recentlyDraftedIndex={recentlyDraftedIndex}
       />
 
       {/* 2. Interactive Stats Display */}
@@ -146,6 +152,7 @@ export function DraftScreen({
         overall={stats.overall}
         logs={activeLogs}
         draftIQActive={draftIQMode}
+        breakdown={squadBreakdown}
       />
 
       {/* 3. Three Player Card Options / Custom Search (Horizontal slider with edge padding) */}
@@ -154,6 +161,8 @@ export function DraftScreen({
           currentSlot={slots[currentSlotIndex]}
           currentSlotIndex={currentSlotIndex}
           draftOptions={draftOptions}
+          selectedPlayers={selectedPlayers}
+          slots={slots}
           draftIQMode={draftIQMode}
           rerollsRemaining={rerollsRemaining}
           freeSearchEnabled={freeSearchEnabled}
@@ -168,6 +177,7 @@ export function DraftScreen({
           onSelectPlayer={onSelectPlayer}
           onRerollOptions={onRerollOptions}
           onUndoPick={onUndoPick}
+          onCandidateHover={setHoveredCandidate}
           onSetDraftTab={onSetDraftTab}
           onSetSearchQuery={onSetSearchQuery}
           onSetSelectedClub={onSetSelectedClub}

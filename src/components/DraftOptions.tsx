@@ -1,11 +1,14 @@
 import React from 'react';
 import { Player, PitchSlot } from '../types/game';
+import { getProjectedChemistry } from '../utils/gameLogic';
 import { PlayerCard } from './PlayerCard';
 
 interface DraftOptionsProps {
   currentSlot: PitchSlot | undefined;
   currentSlotIndex: number;
   draftOptions: [Player, Player, Player] | null;
+  selectedPlayers: (Player | null)[];
+  slots: PitchSlot[];
   draftIQMode: boolean;
   rerollsRemaining: number;
   freeSearchEnabled: boolean;
@@ -20,6 +23,7 @@ interface DraftOptionsProps {
   onSelectPlayer: (player: Player) => void;
   onRerollOptions: () => void;
   onUndoPick: () => void;
+  onCandidateHover?: (candidate: Player | null) => void;
   onSetDraftTab: (tab: 'recommended' | 'search') => void;
   onSetSearchQuery: (query: string) => void;
   onSetSelectedClub: (club: string) => void;
@@ -31,6 +35,8 @@ export function DraftOptions({
   currentSlot,
   currentSlotIndex,
   draftOptions,
+  selectedPlayers,
+  slots,
   draftIQMode,
   rerollsRemaining,
   freeSearchEnabled,
@@ -45,12 +51,22 @@ export function DraftOptions({
   onSelectPlayer,
   onRerollOptions,
   onUndoPick,
+  onCandidateHover,
   onSetDraftTab,
   onSetSearchQuery,
   onSetSelectedClub,
   onSetSelectedEra,
   onSetOnlyMatchingPosition,
 }: DraftOptionsProps) {
+  // Compute prospective chemistry for the 3 scout choices
+  const scoutProjections = React.useMemo(() => {
+    if (!draftOptions) return [];
+    const hints: ('star' | 'system' | 'wildcard')[] = ['star', 'system', 'wildcard'];
+    return draftOptions.map((player, idx) =>
+      getProjectedChemistry(player, currentSlotIndex, selectedPlayers, slots, hints[idx])
+    );
+  }, [draftOptions, currentSlotIndex, selectedPlayers, slots]);
+
   return (
     <div className="flex flex-col gap-3.5 w-full">
       {/* Header / Info bar with Rerolls */}
@@ -126,7 +142,7 @@ export function DraftOptions({
             onClick={() => onSetDraftTab('search')}
             className={`flex-grow py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
               draftTab === 'search'
-                ? 'bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/25 text-emerald-450 font-black shadow-md'
+                ? 'bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/25 text-emerald-400 font-black shadow-md'
                 : 'border border-transparent text-slate-405 hover:text-foreground'
             }`}
           >
@@ -138,13 +154,15 @@ export function DraftOptions({
       {/* Scout Recommended Picks */}
       {draftTab === 'recommended' && draftOptions && (
         <div className="flex justify-start gap-4 overflow-x-auto pb-4 pt-1.5 snap-x scroll-px-4 scrollbar-thin px-4 w-full">
-          {draftOptions.map((player) => (
+          {draftOptions.map((player, idx) => (
             <div key={player.id} className="snap-start flex-shrink-0 animate-card-deal">
               <PlayerCard
                 player={player}
                 layout="large"
                 onClick={() => onSelectPlayer(player)}
                 draftIQActive={draftIQMode}
+                projectedInfo={scoutProjections[idx]}
+                onHover={(hovering) => onCandidateHover && onCandidateHover(hovering ? player : null)}
               />
             </div>
           ))}
@@ -243,16 +261,26 @@ export function DraftOptions({
             
             {filteredPlayers.length > 0 ? (
               <div className="flex justify-start gap-4 overflow-x-auto pb-4 pt-1 snap-x scroll-px-4 scrollbar-thin px-4 w-full">
-                {filteredPlayers.map((player) => (
-                  <div key={player.id} className="snap-start flex-shrink-0 animate-card-deal">
-                    <PlayerCard
-                      player={player}
-                      layout="large"
-                      onClick={() => onSelectPlayer(player)}
-                      draftIQActive={draftIQMode}
-                    />
-                  </div>
-                ))}
+                {filteredPlayers.map((player) => {
+                  const projected = getProjectedChemistry(
+                    player,
+                    currentSlotIndex,
+                    selectedPlayers,
+                    slots
+                  );
+                  return (
+                    <div key={player.id} className="snap-start flex-shrink-0 animate-card-deal">
+                      <PlayerCard
+                        player={player}
+                        layout="large"
+                        onClick={() => onSelectPlayer(player)}
+                        draftIQActive={draftIQMode}
+                        projectedInfo={projected}
+                        onHover={(hovering) => onCandidateHover && onCandidateHover(hovering ? player : null)}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <div className="border border-dashed border-slate-900 rounded-3xl py-10 px-4 text-center">
