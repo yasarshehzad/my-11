@@ -117,7 +117,7 @@ export function HomeScreen({
                 Can You Beat {incomingChallenge.targetWins} Wins?
               </h3>
               <p className="text-xs text-slate-300 font-medium mt-1">
-                A manager challenged you to top <strong className="text-amber-300">{incomingChallenge.targetWins} wins</strong> ({incomingChallenge.targetPoints} pts) using <strong className="text-emerald-400">{incomingChallenge.formation || '4-3-3'}</strong>.
+                A manager challenged you to top <strong className="text-amber-300">{incomingChallenge.targetWins} wins</strong>{incomingChallenge.targetPoints !== undefined ? ` (${incomingChallenge.targetPoints} pts)` : ''} using <strong className="text-emerald-400">{incomingChallenge.formation || 'any formation'}</strong>.
               </p>
             </div>
 
@@ -144,7 +144,7 @@ export function HomeScreen({
         </div>
         
         <h1 className="text-5xl md:text-6xl font-display font-black tracking-tight text-foreground uppercase leading-none">
-          MY DRAFTED <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">XI</span>
+          MY-<span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">11</span>
         </h1>
 
         <p className="text-slate-400 text-xs md:text-sm max-w-md font-medium leading-relaxed">

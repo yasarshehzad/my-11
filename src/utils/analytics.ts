@@ -1,5 +1,5 @@
 /**
- * MY DRAFTED XI Analytics Utility (Placeholder Hooks)
+ * MY-11 Analytics Utility (Placeholder Hooks)
  * Logs events to console in development. Replace with your chosen
  * analytics provider (Google Analytics, Plausible, Mixpanel, etc.) in production.
  */

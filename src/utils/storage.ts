@@ -193,7 +193,27 @@ export function getSavedCampaignHistory(): CampaignHistoryEntry[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
-      return parsed;
+      const seenIds = new Set<string>();
+      return parsed
+        .filter((item): item is CampaignHistoryEntry => {
+          if (!item || typeof item !== 'object') return false;
+          if (typeof item.id !== 'string' || !item.id) return false;
+          if (seenIds.has(item.id)) return false;
+          seenIds.add(item.id);
+          if (typeof item.wins !== 'number' || isNaN(item.wins)) return false;
+          if (typeof item.points !== 'number' || isNaN(item.points)) return false;
+          return true;
+        })
+        .map((item) => ({
+          ...item,
+          formation: item.formation || '4-3-3',
+          draftMode: item.draftMode || 'classic',
+          draws: typeof item.draws === 'number' && !isNaN(item.draws) ? item.draws : 0,
+          losses: typeof item.losses === 'number' && !isNaN(item.losses) ? item.losses : 0,
+          squad: Array.isArray(item.squad) ? item.squad : [],
+          mvp: item.mvp && typeof item.mvp === 'object' && item.mvp.name ? item.mvp : { name: 'Squad Star', rating: 88, season: 'Iconic', club: 'Club' },
+        }))
+        .slice(0, MAX_CAMPAIGN_HISTORY);
     }
     return [];
   } catch (e) {
@@ -428,50 +448,58 @@ export function createCampaignPlayerSnapshot(
 /**
  * Rehydrates a minimal Player object from a CampaignPlayerSnapshot for pitch display
  */
-export function snapshotToPlayer(s: CampaignPlayerSnapshot): Player {
+export function snapshotToPlayer(s: Partial<CampaignPlayerSnapshot>): Player {
+  const name = s.name || 'Unknown Player';
+  const rating = typeof s.rating === 'number' && !isNaN(s.rating) ? s.rating : 80;
+  const club = s.club || 'Club';
+  const nationality = s.nationality || 'Nation';
+  const season = s.season || 'Iconic';
+  const pos = (s.primaryPosition || s.selectedPosition || 'CM') as any;
+  const rarity = (s.rarity as any) || 'common';
+
   return {
-    id: s.id,
-    playerName: s.name,
-    displayName: s.name,
-    season: s.season,
-    club: s.club,
+    id: s.id || `rehydrated_${Math.random()}`,
+    playerName: name,
+    displayName: name,
+    season,
+    club,
     league: '',
-    nationality: s.nationality,
-    primaryPosition: s.primaryPosition as any,
+    nationality,
+    primaryPosition: pos,
     secondaryPositions: [],
     era: 'Modern',
-    rating: s.rating,
-    attack: s.rating,
-    midfield: s.rating,
-    defence: s.rating,
-    pace: s.rating,
-    technique: s.rating,
-    physical: s.rating,
-    mentality: s.rating,
-    finishing: s.rating,
-    creativity: s.rating,
-    passing: s.rating,
-    dribbling: s.rating,
-    defending: s.rating,
-    aerial: s.rating,
-    pressing: s.rating,
-    leadership: s.rating,
-    bigGame: s.rating,
-    consistency: s.rating,
-    chemistryTags: [s.club, s.nationality],
-    clubTags: [s.club],
-    nationalityTag: s.nationality,
+    rating,
+    attack: rating,
+    midfield: rating,
+    defence: rating,
+    pace: rating,
+    technique: rating,
+    physical: rating,
+    mentality: rating,
+    finishing: rating,
+    creativity: rating,
+    passing: rating,
+    dribbling: rating,
+    defending: rating,
+    aerial: rating,
+    pressing: rating,
+    leadership: rating,
+    bigGame: rating,
+    consistency: rating,
+    chemistryTags: [club, nationality],
+    clubTags: [club],
+    nationalityTag: nationality,
     eraTag: '',
     playStyleTags: [],
     rivalryTags: [],
-    rarity: (s.rarity as any) || 'common',
-    seasonLabel: s.season,
-    clubSeasonLabel: `${s.club} ${s.season}`,
-    oneLineDescription: `${s.season} • ${s.club}`,
+    rarity,
+    seasonLabel: season,
+    clubSeasonLabel: `${club} ${season}`,
+    oneLineDescription: `${season} • ${club}`,
     strengths: [],
     weaknesses: [],
     bestRole: '',
-    chemistryBoosts: [s.club, s.nationality],
+    chemistryBoosts: [club, nationality],
     specialTrait: '',
     shortBio: '',
     whyIncluded: '',

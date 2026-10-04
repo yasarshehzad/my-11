@@ -10,33 +10,36 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://my-11.com"),
-  title: "MY DRAFTED XI — Build Your Ultimate Football Team",
-  description: "Draft your dream football XI from iconic player seasons, simulate a 38-game season, and see if your squad can go unbeaten.",
-  keywords: ["football draft", "football game", "squad builder", "football simulation", "Premier League", "legends", "MY DRAFTED XI"],
-  authors: [{ name: "MY DRAFTED XI Fans" }],
+  alternates: {
+    canonical: "https://my-11.com",
+  },
+  title: "MY-11 — Draft Your XI. Survive 38 Games.",
+  description: "Draft your dream football XI from iconic player seasons, make tactical chemistry choices, simulate a 38-game season, and see if your squad can go unbeaten.",
+  keywords: ["MY-11", "football draft", "football game", "squad builder", "football simulation", "tactics", "38-game season", "legends"],
+  authors: [{ name: "MY-11" }],
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "MY DRAFTED XI",
+    title: "MY-11",
   },
   openGraph: {
-    title: "MY DRAFTED XI — Build Your Ultimate Football Team",
+    title: "MY-11 — Draft Your XI. Survive 38 Games.",
     description: "Draft your dream football XI from iconic player seasons, simulate a 38-game season, and see if your squad can go unbeaten.",
     url: "https://my-11.com",
-    siteName: "MY DRAFTED XI",
+    siteName: "MY-11",
     type: "website",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "MY DRAFTED XI — Build Your Ultimate Football Team",
+        alt: "MY-11 — Draft Your XI. Survive 38 Games.",
       }
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "MY DRAFTED XI — Build Your Ultimate Football Team",
+    title: "MY-11 — Draft Your XI. Survive 38 Games.",
     description: "Draft your dream football XI from iconic player seasons, simulate a 38-game season, and see if your squad can go unbeaten.",
     images: ["/og-image.png"],
   },

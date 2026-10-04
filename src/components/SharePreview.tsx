@@ -199,7 +199,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
         <div className="flex justify-between items-start mb-5 relative z-10">
           <div>
             <h2 className="text-2xl font-display font-black tracking-tight text-foreground uppercase leading-none">
-              MY DRAFTED <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">XI</span>
+              MY-<span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">11</span>
             </h2>
             <p className="text-[9px] font-bold text-slate-500 tracking-widest uppercase mt-1">
               {isDailyChallenge 

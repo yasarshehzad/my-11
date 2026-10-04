@@ -56,7 +56,7 @@ export default function DraftedXIGame() {
             Database Loading Error
           </h1>
           <p className="text-sm text-slate-350 leading-relaxed font-semibold">
-            We couldn't load the MY DRAFTED XI player database. This might be due to a corrupt build or missing database assets.
+            We couldn't load the MY-11 player database. This might be due to a corrupt build or missing database assets.
           </p>
           <p className="text-xs text-slate-500 font-medium">
             Please refresh the page if the issue persists.
@@ -79,7 +79,7 @@ export default function DraftedXIGame() {
           }}
           className="text-lg font-display font-black tracking-tight text-foreground uppercase hover:text-emerald-400 transition-colors cursor-pointer"
         >
-          MY DRAFTED <span className="text-emerald-400">XI</span>
+          MY-<span className="text-emerald-400">11</span>
         </button>
         
         <div className="flex items-center gap-3 select-none">
@@ -256,7 +256,7 @@ export default function DraftedXIGame() {
           <Link href="/terms" className="hover:text-emerald-400 transition-colors">Terms of Service</Link>
         </div>
         <p className="text-slate-600">
-          MY DRAFTED XI © 2026 • CREATED FOR FANS
+          MY-11 © 2026 • CREATED FOR FANS
         </p>
       </footer>
 

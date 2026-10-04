@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormationType, DraftModifier } from '../types/game';
+import { FormationType, DraftModifier, QUICK_DRAFT_TIMER_SECONDS } from '../types/game';
 
 interface FormationSelectionProps {
   formation: FormationType | null;
@@ -105,7 +105,7 @@ export function FormationSelection({
         <div className="grid grid-cols-3 gap-2.5">
           {([
             { id: 'classic' as const, label: 'Classic', icon: '⏱️', badge: 'Standard', desc: 'Standard strategic draft with full tactical intel and no clock.' },
-            { id: 'quick' as const, label: 'Quick', icon: '⚡', badge: '10s Timer', desc: 'Fast-paced draft with 10s timer and auto-pick fallback.' },
+            { id: 'quick' as const, label: 'Quick', icon: '⚡', badge: `${QUICK_DRAFT_TIMER_SECONDS}s Timer`, desc: `Fast-paced draft with ${QUICK_DRAFT_TIMER_SECONDS}s timer and auto-pick fallback.` },
             { id: 'mystery' as const, label: 'Mystery', icon: '❓', badge: '3 Blind', desc: '3 concealed rounds with scout clues and dramatic reveal.' },
           ]).map((mode) => {
             const active = draftModifier === mode.id;

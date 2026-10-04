@@ -1,4 +1,4 @@
-import { ChallengeTarget, FormationType, DraftModifier } from '../types/game';
+import { ChallengeTarget, FormationType, DraftModifier, QUICK_DRAFT_TIMER_SECONDS } from '../types/game';
 
 const VALID_FORMATIONS: FormationType[] = ['4-3-3', '4-4-2', '3-5-2', '4-2-3-1'];
 const VALID_MODES: DraftModifier[] = ['classic', 'quick', 'mystery'];
@@ -141,7 +141,7 @@ export function generateChallengeShareText({
   } else if (mode === 'mystery') {
     hook = `I took on the Mystery Draft and got ${wins} wins. Beat that.`;
   } else if (mode === 'quick') {
-    hook = `I raced the clock in Quick Draft and went ${wins}–${draws}–${losses}. Can you beat ${wins} wins?`;
+    hook = `${QUICK_DRAFT_TIMER_SECONDS}-second timer per pick and still reached ${wins} wins on MY-11. Think you can beat it?`;
   } else if (isDailyChallenge) {
     hook = `I completed today's Daily Challenge "${dailyChallengeTitle}" with ${wins} wins. Can you beat this?`;
   } else {

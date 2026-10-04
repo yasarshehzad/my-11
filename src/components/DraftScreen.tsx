@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Player, FormationType, SimulationResult, ChallengeTemplate, DraftModifier, ChallengeTarget } from '../types/game';
+import { Player, FormationType, SimulationResult, ChallengeTemplate, DraftModifier, ChallengeTarget, QUICK_DRAFT_TIMER_SECONDS } from '../types/game';
 import { FORMATION_SLOTS, getDetailedChemistryLogs, getSquadChemistryBreakdown, isMysteryRound, getProjectedChemistry, ProjectedChemistryInfo } from '../utils/gameLogic';
 import { logQuickTimerExpired, logMysteryRoundStarted, logMysteryPlayerRevealed } from '../utils/analytics';
 import { PitchLayout } from './PitchLayout';
@@ -103,7 +103,7 @@ export function DraftScreen({
   } | null>(null);
 
   // Quick Draft Timer State
-  const ROUND_SECONDS = 10;
+  const ROUND_SECONDS = QUICK_DRAFT_TIMER_SECONDS;
   const [timeLeft, setTimeLeft] = useState<number>(ROUND_SECONDS);
   const [isTabVisible, setIsTabVisible] = useState(true);
 
@@ -121,15 +121,15 @@ export function DraftScreen({
     return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, []);
 
-  // Throttled polite Quick timer announcements (at 10s, 3s, and timeout)
+  // Throttled polite Quick timer announcements (at start, 3s, and timeout)
   useEffect(() => {
     if (!isQuick || isFinished) return;
-    if (timeLeft === 10) {
-      setTimerAnnouncement('Quick draft round: 10 seconds remaining.');
+    if (timeLeft === ROUND_SECONDS) {
+      setTimerAnnouncement(`Quick draft round: ${ROUND_SECONDS} seconds remaining.`);
     } else if (timeLeft === 3) {
       setTimerAnnouncement('3 seconds remaining. Time running out!');
     }
-  }, [isQuick, isFinished, timeLeft]);
+  }, [isQuick, isFinished, timeLeft, ROUND_SECONDS]);
 
   // Quick Draft countdown ticker
   useEffect(() => {

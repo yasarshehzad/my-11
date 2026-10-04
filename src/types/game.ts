@@ -152,6 +152,8 @@ export type ChemistryGrade = 'S' | 'A' | 'B' | 'C' | 'D';
 
 export type DraftModifier = 'classic' | 'quick' | 'mystery';
 
+export const QUICK_DRAFT_TIMER_SECONDS = 10;
+
 export interface SimulationResult {
   wins: number;
   draws: number;

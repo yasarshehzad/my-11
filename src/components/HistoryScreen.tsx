@@ -132,7 +132,7 @@ export function HistoryScreen({
         <div className="space-y-3">
           <div className="flex justify-between items-center px-1">
             <h3 className="text-xs font-display font-black text-foreground uppercase tracking-wider">
-              Drafted XI ({activeEntry.formation})
+              Squad XI ({activeEntry.formation})
             </h3>
             <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
               11 Players Recorded

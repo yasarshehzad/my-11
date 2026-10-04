@@ -12,7 +12,10 @@ import {
   updatePlayStreak,
   getSavedStreaks,
   saveStreaks,
+  getSavedCampaignHistory,
+  snapshotToPlayer,
 } from '../src/utils/storage';
+import { QUICK_DRAFT_TIMER_SECONDS } from '../src/types/game';
 import { getMysteryClues } from '../src/utils/gameLogic';
 import { players } from '../src/data/players';
 let mockStorage: Record<string, string> = {};
@@ -127,8 +130,9 @@ describe('Sharing & Challenge URL System', () => {
       mode: 'quick',
       challengeUrl: sampleUrl,
     });
-    expect(quickText).toContain('Quick Draft');
-    expect(quickText).toContain('Can you beat 25 wins?');
+    expect(quickText).toContain('10-second timer per pick');
+    expect(quickText).not.toContain('30-second');
+    expect(quickText).toContain('25 wins');
 
     // Mystery Draft mode
     const mysteryText = generateChallengeShareText({
@@ -237,5 +241,133 @@ describe('Mystery Round Accessibility & Information Leakage', () => {
     expect(clueString).not.toContain(samplePlayer.displayName);
     expect(clueString).not.toContain(samplePlayer.playerName);
     expect(clueString).not.toContain(`"rating":${samplePlayer.rating}`);
+  });
+});
+
+describe('Quick Draft Timer Consistency & Branding', () => {
+  it('canonical QUICK_DRAFT_TIMER_SECONDS is exactly 10 seconds', () => {
+    expect(QUICK_DRAFT_TIMER_SECONDS).toBe(10);
+  });
+
+  it('share copy for Quick Draft uses canonical timer duration and never 30 seconds', () => {
+    const text = generateChallengeShareText({
+      wins: 27,
+      draws: 6,
+      losses: 5,
+      points: 87,
+      mode: 'quick',
+      challengeUrl: 'https://my-11.com/?challenge=1&wins=27',
+    });
+
+    expect(text).toContain(`${QUICK_DRAFT_TIMER_SECONDS}-second timer per pick`);
+    expect(text).not.toContain('30-second');
+    expect(text).not.toContain('30 seconds');
+    expect(text).toContain('MY-11');
+  });
+});
+
+describe('Challenge URL Torture Testing', () => {
+  it('safely handles extreme parameter values and malformed query strings without crashing', () => {
+    // Extreme non-numbers
+    expect(parseChallengeFromUrl('?challenge=1&wins=hello&pts=world')).toBeNull();
+
+    // Out-of-bounds numbers clamp to legal boundaries [0..38] and [0..114]
+    const clampedMax = parseChallengeFromUrl('?challenge=1&wins=999999&pts=999999');
+    expect(clampedMax?.targetWins).toBe(38);
+    expect(clampedMax?.targetPoints).toBe(114);
+
+    const clampedMin = parseChallengeFromUrl('?challenge=1&wins=-999&pts=-999');
+    expect(clampedMin?.targetWins).toBe(0);
+    expect(clampedMin?.targetPoints).toBe(0);
+
+    // Unsupported formations fall back to undefined (allowing user choice)
+    const badForm = parseChallengeFromUrl('?challenge=1&wins=20&formation=1-1-8');
+    expect(badForm?.formation).toBeUndefined();
+
+    // Unsupported modes fall back to classic
+    const badMode = parseChallengeFromUrl('?challenge=1&wins=20&mode=ultra_speed');
+    expect(badMode?.draftMode).toBe('classic');
+
+    // Unsupported leagues fall back to english
+    const badLeague = parseChallengeFromUrl('?challenge=1&wins=20&league=antarctica');
+    expect(badLeague?.leagueId).toBe('english');
+
+    // Malformed URLs or empty strings return null safely
+    expect(parseChallengeFromUrl('')).toBeNull();
+    expect(parseChallengeFromUrl('not_a_url')).toBeNull();
+    expect(parseChallengeFromUrl('?random_param=123')).toBeNull();
+
+    // XSS / script injection strings in params never get injected or crash parser
+    const injection = parseChallengeFromUrl('?challenge=1&wins=20&formation=<script>alert("xss")</script>&mode="><svg/onload=alert(1)>');
+    expect(injection).not.toBeNull();
+    expect(injection?.targetWins).toBe(20);
+    expect(injection?.formation).toBeUndefined();
+    expect(injection?.draftMode).toBe('classic');
+  });
+
+  it('validates every supported formation, mode, and league correctly', () => {
+    const formations = ['4-3-3', '4-4-2', '3-5-2', '4-2-3-1'];
+    const modes = ['classic', 'quick', 'mystery'];
+    const leagues = ['english', 'spanish', 'german', 'italian', 'french'];
+
+    for (const f of formations) {
+      const parsed = parseChallengeFromUrl(`?challenge=1&wins=25&formation=${f}`);
+      expect(parsed?.formation).toBe(f);
+    }
+
+    for (const m of modes) {
+      const parsed = parseChallengeFromUrl(`?challenge=1&wins=25&mode=${m}`);
+      expect(parsed?.draftMode).toBe(m);
+    }
+
+    for (const l of leagues) {
+      const parsed = parseChallengeFromUrl(`?challenge=1&wins=25&league=${l}`);
+      expect(parsed?.leagueId).toBe(l);
+    }
+  });
+});
+
+describe('LocalStorage Corruption & Migration Robustness', () => {
+  it('gracefully recovers when localStorage contains corrupted JSON', () => {
+    localStorage.setItem('drafted_xi_campaign_history_v1', 'NOT_VALID_JSON{[[{');
+    const history = getSavedCampaignHistory();
+    expect(Array.isArray(history)).toBe(true);
+    expect(history.length).toBe(0);
+  });
+
+  it('filters out invalid, corrupted, or duplicate items without wiping valid history entries', () => {
+    const badArray = [
+      null,
+      'just a string',
+      { id: '', wins: 20, points: 60 }, // empty id
+      { id: 'valid_1', wins: 28, points: 85, draftMode: 'classic', squad: [] },
+      { id: 'valid_1', wins: 28, points: 85 }, // duplicate id
+      { id: 'corrupt_numbers', wins: NaN, points: 'bad' }, // NaN wins
+      { id: 'valid_2', wins: 22, points: 70 }, // missing squad & draftMode
+    ];
+    localStorage.setItem('drafted_xi_campaign_history_v1', JSON.stringify(badArray));
+
+    const recovered = getSavedCampaignHistory();
+    expect(recovered.length).toBe(2);
+    expect(recovered[0].id).toBe('valid_1');
+    expect(recovered[1].id).toBe('valid_2');
+    expect(recovered[1].draftMode).toBe('classic');
+    expect(Array.isArray(recovered[1].squad)).toBe(true);
+  });
+
+  it('snapshotToPlayer provides safe fallbacks for missing or partial snapshot fields', () => {
+    const partialSnapshot = {
+      id: 'snap_partial',
+      name: 'Partial Star',
+      rating: 89,
+    };
+
+    const rehydrated = snapshotToPlayer(partialSnapshot);
+    expect(rehydrated.id).toBe('snap_partial');
+    expect(rehydrated.displayName).toBe('Partial Star');
+    expect(rehydrated.rating).toBe(89);
+    expect(rehydrated.club).toBe('Club');
+    expect(rehydrated.primaryPosition).toBe('CM');
+    expect(rehydrated.season).toBe('Iconic');
   });
 });

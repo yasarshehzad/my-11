@@ -23,7 +23,7 @@ export function HowToPlayModal({ isOpen, onClose }: HowToPlayModalProps) {
         {/* Modal Header */}
         <div className="flex justify-between items-center pb-3 border-b border-slate-900">
           <h3 className="text-md font-display font-black text-foreground uppercase tracking-wider flex items-center gap-1.5 leading-none">
-            ⚽ How to Play MY DRAFTED XI
+            ⚽ How to Play MY-11
           </h3>
           <button
             onClick={() => onClose(false)}
