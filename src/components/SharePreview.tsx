@@ -52,6 +52,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
   // Helper: Copy result summary text to clipboard
   const handleCopyText = () => {
     const modeLabel = simResult.draftModifier === 'quick' ? 'Quick Draft ⚡' : simResult.draftModifier === 'mystery' ? 'Mystery Draft ❓' : 'Classic Draft';
+    const storyHook = simResult.seasonStory ? ` [${simResult.seasonStory.title} · ${simResult.seasonStory.longestStreak.description}]` : '';
     const text = isDailyChallenge
       ? `🎮 I completed today's Daily Challenge "${dailyChallengeTitle}" on MY DRAFTED XI!
 🏆 Formation: ${formation} | OVR: ${stats.overall} | Chem: ${stats.chemistry} (${simResult.chemistryGrade})
@@ -59,7 +60,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
 ⭐ Outcome: ${dailyChallengeBeaten ? 'CHALLENGE CLEARED! ✅' : 'CHALLENGE FAILED ❌'}
 📊 Global Tier: Top ${simResult.percentile}%
 Can you beat this? Play now at https://my-11.com`
-      : `🎮 I built a ${simResult.wins}-${simResult.draws}-${simResult.losses} MY DRAFTED XI (${modeLabel}). MVP: ${simResult.mvp.displayName} (${simResult.mvp.rating}). Chemistry Grade: ${simResult.chemistryGrade}. Playstyle: ${simResult.playstyle}. Can you beat me? Play now at https://my-11.com`;
+      : `🎮 I built a ${simResult.wins}-${simResult.draws}-${simResult.losses} MY DRAFTED XI (${modeLabel})${storyHook}. MVP: ${simResult.mvp.displayName} (${simResult.mvp.rating}). Chemistry Grade: ${simResult.chemistryGrade}. Playstyle: ${simResult.playstyle}. Can you beat me? Play now at https://my-11.com`;
 
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
@@ -248,6 +249,17 @@ Can you beat this? Play now at https://my-11.com`
               {simResult.playstyle}
             </span>
           </div>
+
+          {simResult.seasonStory && (
+            <div className="mt-2 pt-2 border-t border-slate-900/60 flex justify-between items-center text-[8.5px]">
+              <span className="font-extrabold uppercase text-emerald-450 tracking-wider font-display">
+                {simResult.seasonStory.title}
+              </span>
+              <span className="text-slate-450 font-medium truncate max-w-[170px]">
+                {simResult.seasonStory.longestStreak.description}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Categories grid */}

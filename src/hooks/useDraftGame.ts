@@ -503,6 +503,19 @@ export function useDraftGame() {
     }
   }, [phase, simIndex, simResult]);
 
+  // --- Fast-forward simulation directly to completion ---
+  const handleSkipSimulation = useCallback(() => {
+    if (!simResult) return;
+    setSimIndex(38);
+    setLiveWins(simResult.wins);
+    setLiveDraws(simResult.draws);
+    setLiveLosses(simResult.losses);
+    setLivePoints(simResult.points);
+    setLiveGoalsFor(simResult.goalsFor);
+    setLiveGoalsAgainst(simResult.goalsAgainst);
+    setLiveMatches([...simResult.matches].reverse());
+  }, [simResult]);
+
   // --- Save Campaign Results ---
   const handleSaveCampaignResults = useCallback(() => {
     if (!simResult) return;
@@ -649,6 +662,7 @@ export function useDraftGame() {
     handleUndoPick,
     handleSelectPlayer,
     startSimulation,
+    handleSkipSimulation,
     handleSaveCampaignResults,
     proceedToResults,
     returnHome,

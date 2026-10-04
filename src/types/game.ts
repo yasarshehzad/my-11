@@ -79,6 +79,26 @@ export interface PitchSlot {
   y: number; // percentage from top (0-100) for positioning on the pitch
 }
 
+export interface MatchEvent {
+  minute: number;
+  displayMinute: string;
+  type: 'goal' | 'save' | 'tackle' | 'chance' | 'counter' | 'set_piece';
+  description: string;
+  playerName?: string;
+}
+
+export interface GoalDetail {
+  minute: number;
+  displayMinute: string;
+  scorer: string;
+  isOpponent?: boolean;
+}
+
+export interface MOTMInfo {
+  player: Player;
+  reason: string;
+}
+
 export interface MatchSimResult {
   opponent: string;
   opponentRating: number;
@@ -86,6 +106,46 @@ export interface MatchSimResult {
   opponentScore: number;
   outcome: 'W' | 'D' | 'L';
   scorers?: string[];
+  goalDetails?: GoalDetail[];
+  keyEvents?: MatchEvent[];
+  motm?: MOTMInfo;
+  headline?: string;
+  summary?: string;
+}
+
+export type HighlightCategory =
+  | 'biggest_win'
+  | 'worst_defeat'
+  | 'highest_scoring'
+  | 'dramatic_comeback'
+  | 'late_winner'
+  | 'title_defining'
+  | 'giant_killing'
+  | 'dropped_points'
+  | 'clean_sheet_masterclass';
+
+export interface SeasonHighlight {
+  category: HighlightCategory;
+  categoryLabel: string;
+  matchIndex: number;
+  match: MatchSimResult;
+  description: string;
+}
+
+export interface SeasonStory {
+  title: string;
+  verdict: 'Exceeded expectations' | 'About as expected' | 'Underperformed';
+  expectedWinsBand: string;
+  howStarted: string;
+  turningPoint?: string;
+  longestStreak: {
+    type: 'win' | 'unbeaten' | 'winless' | 'loss' | 'clean_sheet';
+    count: number;
+    description: string;
+  };
+  whyItWorked: string;
+  whatHeldBack: string;
+  howEnded: string;
 }
 
 export type ChemistryGrade = 'S' | 'A' | 'B' | 'C' | 'D';
@@ -113,6 +173,8 @@ export interface SimulationResult {
   cleanSheets?: number;
   topScorer?: { player: Player; goals: number };
   draftModifier?: DraftModifier;
+  highlights?: SeasonHighlight[];
+  seasonStory?: SeasonStory;
 }
 
 export type ChallengeRuleType =

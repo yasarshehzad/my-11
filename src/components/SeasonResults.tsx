@@ -308,7 +308,144 @@ export function SeasonResults({
         <p className="text-xs font-semibold text-slate-400 max-w-sm leading-relaxed italic">
           "{simResult.summary}"
         </p>
+
+        {/* Season Verdict & Expectation Band */}
+        {simResult.seasonStory && (
+          <div className="flex flex-wrap items-center justify-center gap-2 mt-4 pt-3 border-t border-slate-900/60 w-full">
+            <span className={`text-[9px] font-black px-3 py-1 rounded-full border uppercase tracking-wider font-display leading-none ${
+              simResult.seasonStory.verdict === 'Exceeded expectations'
+                ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                : simResult.seasonStory.verdict === 'Underperformed'
+                ? 'bg-rose-500/15 text-rose-400 border-rose-500/30'
+                : 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30'
+            }`}>
+              VERDICT: {simResult.seasonStory.verdict}
+            </span>
+            <span className="text-[9px] font-bold text-slate-450 bg-slate-950/70 border border-slate-900 px-2.5 py-1 rounded-full uppercase tracking-wider font-display">
+              Expected: {simResult.seasonStory.expectedWinsBand}
+            </span>
+          </div>
+        )}
       </div>
+
+      {/* Season Narrative & Story Review Card */}
+      {simResult.seasonStory && (
+        <div className="w-full p-6 rounded-[32px] glass border border-slate-900 z-10 flex flex-col gap-4 shadow-xl select-none">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-900 pb-3">
+            <div>
+              <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">
+                Official Season Review
+              </span>
+              <h3 className="text-lg font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400 uppercase tracking-tight mt-0.5">
+                {simResult.seasonStory.title}
+              </h3>
+            </div>
+            <span className="text-[9px] font-extrabold px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-slate-350 font-display">
+              {simResult.seasonStory.longestStreak.description}
+            </span>
+          </div>
+
+          <div className="flex flex-col gap-3 text-xs leading-relaxed text-slate-350">
+            <div className="p-3.5 rounded-2xl bg-slate-950/40 border border-slate-900/60">
+              <span className="text-[9.5px] font-extrabold text-emerald-450 uppercase tracking-wider font-display block mb-1">
+                🏁 The Opening 10 Matchdays
+              </span>
+              <p className="text-slate-400 font-medium">{simResult.seasonStory.howStarted}</p>
+            </div>
+
+            {simResult.seasonStory.turningPoint && (
+              <div className="p-3.5 rounded-2xl bg-slate-950/40 border border-slate-900/60">
+                <span className="text-[9.5px] font-extrabold text-amber-400 uppercase tracking-wider font-display block mb-1">
+                  ⚡ The Turning Point
+                </span>
+                <p className="text-slate-400 font-medium">{simResult.seasonStory.turningPoint}</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="p-3.5 rounded-2xl bg-emerald-950/10 border border-emerald-500/20">
+                <span className="text-[9.5px] font-extrabold text-emerald-400 uppercase tracking-wider font-display block mb-1">
+                  💪 Why It Worked
+                </span>
+                <p className="text-slate-400 font-medium text-[11px]">{simResult.seasonStory.whyItWorked}</p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-rose-950/10 border border-rose-500/20">
+                <span className="text-[9.5px] font-extrabold text-rose-400 uppercase tracking-wider font-display block mb-1">
+                  ⚠️ What Held You Back
+                </span>
+                <p className="text-slate-400 font-medium text-[11px]">{simResult.seasonStory.whatHeldBack}</p>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-slate-950/40 border border-slate-900/60">
+              <span className="text-[9.5px] font-extrabold text-indigo-400 uppercase tracking-wider font-display block mb-1">
+                🏆 Final Campaign Appraisal
+              </span>
+              <p className="text-slate-400 font-medium">{simResult.seasonStory.howEnded}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Season Key Match Highlights */}
+      {simResult.highlights && simResult.highlights.length > 0 && (
+        <div className="w-full flex flex-col gap-3 z-10">
+          <div className="flex justify-between items-center px-1">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">
+              Key Fixture Highlights ({simResult.highlights.length} Spotlight Matches)
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {simResult.highlights.map((hl, i) => (
+              <div
+                key={i}
+                className="p-4 rounded-2xl glass border border-slate-900 flex flex-col justify-between gap-3 text-left"
+              >
+                <div>
+                  <div className="flex justify-between items-center mb-1.5 leading-none">
+                    <span className="text-[8.5px] font-black uppercase text-amber-400 font-display tracking-wider">
+                      {hl.categoryLabel}
+                    </span>
+                    <span className="text-[9px] font-extrabold text-slate-500 font-display">
+                      MD {hl.matchIndex + 1}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-baseline mb-1">
+                    <h4 className="text-sm font-display font-black text-foreground uppercase truncate">
+                      vs {hl.match.opponent}
+                    </h4>
+                    <span className="text-sm font-display font-black text-emerald-400">
+                      {hl.match.ourScore} - {hl.match.opponentScore}
+                    </span>
+                  </div>
+                  {hl.match.headline && (
+                    <p className="text-[11px] font-bold text-slate-300 leading-snug">
+                      "{hl.match.headline}"
+                    </p>
+                  )}
+                  {hl.match.scorers && hl.match.scorers.length > 0 && (
+                    <p className="text-[9.5px] text-emerald-450 font-semibold mt-1">
+                      ⚽ {hl.match.scorers.join(', ')}
+                    </p>
+                  )}
+                </div>
+
+                <div className="pt-2 border-t border-slate-900/60 flex flex-col gap-1">
+                  {hl.match.motm && (
+                    <span className="text-[8.5px] text-slate-400 font-medium">
+                      ⭐ <span className="font-bold text-foreground">{hl.match.motm.player.displayName}</span>: {hl.match.motm.reason}
+                    </span>
+                  )}
+                  <p className="text-[9.5px] text-slate-500 font-normal leading-normal italic">
+                    {hl.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 2. Premium Share Card Preview (Streaks inside) */}
       <SharePreview
@@ -480,13 +617,23 @@ export function SeasonResults({
                     <h4 className="text-sm font-display font-black text-foreground mt-1.5 leading-none uppercase">
                       vs {match.opponent}
                     </h4>
+                    {match.headline && (
+                      <p className="text-[11px] font-bold text-slate-300 leading-snug mt-1">
+                        "{match.headline}"
+                      </p>
+                    )}
                     {match.scorers && match.scorers.length > 0 && (
                       <p className="text-[10px] text-emerald-450 font-bold leading-normal mt-1 flex items-center gap-1 flex-wrap">
                         <span>⚽</span> {match.scorers.join(', ')}
                       </p>
                     )}
+                    {match.motm && (
+                      <p className="text-[9.5px] text-amber-400 font-semibold mt-1">
+                        ⭐ MOTM: {match.motm.player.displayName} ({match.motm.reason})
+                      </p>
+                    )}
                     <p className="text-[10px] text-slate-400 leading-normal mt-1 italic">
-                      {getMatchCommentary(match)}
+                      {match.summary || getMatchCommentary(match)}
                     </p>
                   </div>
 

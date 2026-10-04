@@ -186,6 +186,7 @@ export default function DraftedXIGame() {
             liveGoalsAgainst={game.liveGoalsAgainst}
             liveMatches={game.liveMatches}
             onProceedToResults={game.proceedToResults}
+            onSkipSimulation={game.handleSkipSimulation}
           />
         )}
 

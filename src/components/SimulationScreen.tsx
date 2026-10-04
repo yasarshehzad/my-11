@@ -12,6 +12,7 @@ interface SimulationScreenProps {
   liveGoalsAgainst: number;
   liveMatches: MatchSimResult[];
   onProceedToResults: () => void;
+  onSkipSimulation?: () => void;
 }
 
 export function SimulationScreen({
@@ -25,9 +26,25 @@ export function SimulationScreen({
   liveGoalsAgainst,
   liveMatches,
   onProceedToResults,
+  onSkipSimulation,
 }: SimulationScreenProps) {
   const simTickerRef = useRef<HTMLDivElement>(null);
   const progressPercent = Math.round((simIndex / 38) * 100);
+
+  // Derive meaningful live highlight from latest match
+  const latestMatch = liveMatches[0];
+  let liveMoment: { badge: string; text: string } | null = null;
+  if (latestMatch) {
+    if (liveWins > 0 && liveWins % 5 === 0 && latestMatch.outcome === 'W') {
+      liveMoment = { badge: '🔥 STREAK', text: `${liveWins} wins on the board!` };
+    } else if (latestMatch.keyEvents && latestMatch.keyEvents.length > 0) {
+      const ev = latestMatch.keyEvents[latestMatch.keyEvents.length - 1];
+      const icon = ev.type === 'goal' ? '⚽ GOAL' : ev.type === 'save' ? '🧤 BIG SAVE' : '⚡ CHANCE';
+      liveMoment = { badge: icon, text: `${ev.displayMinute} · ${ev.description}` };
+    } else if (latestMatch.scorers && latestMatch.scorers.length > 0) {
+      liveMoment = { badge: '⚽ GOAL', text: `${latestMatch.scorers[0]} vs ${latestMatch.opponent}` };
+    }
+  }
 
   // Auto-scroll ticker on new matches
   useEffect(() => {
@@ -133,10 +150,38 @@ export function SimulationScreen({
       </div>
 
       {/* Live Ticker Feed */}
-      <div className="w-full flex-1 flex flex-col mt-4 overflow-hidden max-h-[280px]">
-        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1">
-          Live matches feed ticker
-        </span>
+      <div className="w-full flex-1 flex flex-col mt-3 overflow-hidden max-h-[280px]">
+        <div className="flex justify-between items-center mb-2 px-1">
+          <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+            Live matches feed ticker
+          </span>
+          {simIndex < 38 && onSkipSimulation && (
+            <button
+              onClick={onSkipSimulation}
+              type="button"
+              className="text-[9px] font-bold text-slate-400 hover:text-emerald-400 transition-colors uppercase tracking-wider flex items-center gap-1 cursor-pointer active:scale-95"
+            >
+              Skip to Results ⏩
+            </button>
+          )}
+        </div>
+
+        {/* Dynamic Key Moment Callout */}
+        {liveMoment && (
+          <div 
+            aria-live="polite"
+            className="w-full mb-2 px-3 py-2 rounded-xl bg-slate-900/90 border border-emerald-500/25 flex items-center justify-between text-[10px] text-slate-200 animate-fade-in shadow-sm select-none"
+          >
+            <div className="flex items-center gap-1.5 truncate">
+              <span className="text-emerald-400 font-extrabold font-display uppercase tracking-wider flex-shrink-0">
+                {liveMoment.badge}:
+              </span>
+              <span className="truncate text-slate-300 font-medium">
+                {liveMoment.text}
+              </span>
+            </div>
+          </div>
+        )}
         
         <div
           ref={simTickerRef}
@@ -168,6 +213,11 @@ export function SimulationScreen({
                     <span className="text-xs font-bold text-foreground uppercase mt-1">
                       vs {match.opponent}
                     </span>
+                    {match.headline && (
+                      <span className="text-[8.5px] text-slate-400 font-medium mt-1 truncate max-w-[200px]">
+                        {match.headline}
+                      </span>
+                    )}
                     {match.scorers && match.scorers.length > 0 && (
                       <span className="text-[8.5px] text-emerald-450 font-bold mt-1 flex items-center gap-1">
                         ⚽ {match.scorers.join(', ')}
@@ -204,6 +254,18 @@ export function SimulationScreen({
             className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-300 ease-out"
           />
         </div>
+
+        {simIndex < 38 && onSkipSimulation && (
+          <div className="flex justify-center">
+            <button
+              onClick={onSkipSimulation}
+              type="button"
+              className="py-2 px-4 rounded-xl text-slate-400 hover:text-white border border-slate-900 bg-slate-950/60 hover:bg-slate-900/60 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer active:scale-95 flex items-center gap-1.5"
+            >
+              <span>⏩</span> Skip Simulation
+            </button>
+          </div>
+        )}
 
         {simIndex === 38 && (
           <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent border-t border-slate-900/30 md:relative md:bg-none md:border-none md:p-0 z-40 flex justify-center">
