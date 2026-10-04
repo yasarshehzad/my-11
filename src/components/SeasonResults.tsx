@@ -276,6 +276,59 @@ export function SeasonResults({
         </div>
       )}
 
+      {/* Target Replay Outcome Banner */}
+      {simResult.beatTargetResult && (
+        <div className={`w-full p-4 rounded-3xl border relative z-10 text-center shadow-xl ${
+          simResult.beatTargetResult.beaten
+            ? 'bg-gradient-to-r from-emerald-950/80 to-slate-950/80 border-emerald-500/40 text-emerald-400'
+            : simResult.beatTargetResult.matched
+            ? 'bg-gradient-to-r from-amber-950/80 to-slate-950/80 border-amber-500/40 text-amber-400'
+            : 'bg-gradient-to-r from-slate-900/80 to-slate-950/80 border-slate-800 text-slate-400'
+        }`}>
+          <div className="flex items-center justify-center gap-1.5">
+            <span className="text-lg">
+              {simResult.beatTargetResult.beaten ? '🎯' : simResult.beatTargetResult.matched ? '🤝' : '⏱️'}
+            </span>
+            <h3 className="text-xs font-display font-black uppercase tracking-wider">
+              {simResult.beatTargetResult.beaten
+                ? 'TARGET SURPASSED!'
+                : simResult.beatTargetResult.matched
+                ? 'TARGET MATCHED!'
+                : 'TARGET MISSED'}
+            </h3>
+          </div>
+          <p className="text-[10px] text-slate-300 mt-1 font-semibold">
+            {simResult.beatTargetResult.beaten
+              ? `You racked up ${simResult.wins} wins to conquer your previous target of ${simResult.beatTargetResult.targetWins} wins!`
+              : simResult.beatTargetResult.matched
+              ? `You equalled the target of ${simResult.beatTargetResult.targetWins} wins.`
+              : `Finished with ${simResult.wins} wins (Target was > ${simResult.beatTargetResult.targetWins} wins).`}
+          </p>
+        </div>
+      )}
+
+      {/* New Personal Best Banner */}
+      {simResult.newPersonalBests && simResult.newPersonalBests.length > 0 && (
+        <div className="w-full p-4 rounded-3xl bg-gradient-to-r from-emerald-950/70 via-slate-950/90 to-emerald-950/70 border border-emerald-500/40 relative z-10 text-center shadow-2xl animate-pulse">
+          <div className="flex items-center justify-center gap-1.5">
+            <span className="text-lg">🏆</span>
+            <h3 className="text-xs font-display font-black text-emerald-400 uppercase tracking-widest">
+              NEW PERSONAL BEST!
+            </h3>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-2 mt-1.5">
+            {simResult.newPersonalBests.map((record, idx) => (
+              <span
+                key={idx}
+                className="text-[9px] font-display font-black uppercase px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300"
+              >
+                {record}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* 1. Main League Outcome Card */}
       <div className="w-full flex flex-col items-center p-6 rounded-[32px] glass border border-emerald-500/10 relative overflow-hidden text-center z-10 shadow-2xl">
         <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent pointer-events-none" />

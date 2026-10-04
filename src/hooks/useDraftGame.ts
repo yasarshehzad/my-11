@@ -6,7 +6,10 @@ import {
   MatchSimResult, 
   ChallengeTemplate, 
   StreakStats,
-  DraftModifier 
+  DraftModifier,
+  CampaignHistoryEntry,
+  PersonalBests,
+  CampaignPlayerSnapshot
 } from '../types/game';
 import { 
   FORMATION_SLOTS, 
@@ -34,10 +37,17 @@ import {
   saveStreaks, 
   getDailyChallengeStatus, 
   saveDailyChallengeStatus, 
-  DailyChallengeStatus 
+  DailyChallengeStatus,
+  getSavedCampaignHistory,
+  saveCampaignHistoryEntry,
+  clearCampaignHistory,
+  getSavedPersonalBests,
+  checkAndApplyPersonalBests,
+  updatePlayStreak,
+  createCampaignPlayerSnapshot
 } from '../utils/storage';
 
-export type GamePhase = 'home' | 'formation' | 'draft' | 'simulating' | 'results';
+export type GamePhase = 'home' | 'formation' | 'draft' | 'simulating' | 'results' | 'history';
 
 export function useDraftGame() {
   // --- Game Lifecycle State ---
@@ -85,6 +95,14 @@ export function useDraftGame() {
     currentDailyStreak: 0,
     lastPlayedDate: '',
   });
+
+  const [campaignHistory, setCampaignHistory] = useState<CampaignHistoryEntry[]>([]);
+  const [personalBests, setPersonalBests] = useState<PersonalBests>({});
+  const [targetToBeat, setTargetToBeat] = useState<{
+    targetWins: number;
+    targetPoints: number;
+    runId: string;
+  } | null>(null);
 
   const [dailyStatus, setDailyStatus] = useState<DailyChallengeStatus>({
     completed: false,
@@ -134,8 +152,10 @@ export function useDraftGame() {
     const day = today.getDay(); // 0 = Sun, ..., 6 = Sat
     setTodayChallenge(DAILY_CHALLENGES[day]);
 
-    // 3. Load stats, streaks and daily status via storage utility
+    // 3. Load stats, streaks, history, personal bests and daily status via storage utility
     setStreakStats(getSavedStreaks());
+    setCampaignHistory(getSavedCampaignHistory());
+    setPersonalBests(getSavedPersonalBests());
     setDailyStatus(getDailyChallengeStatus(dateStr));
 
     // 4. Select a random legend for showcase
@@ -244,8 +264,11 @@ export function useDraftGame() {
   // ==========================================
 
   // --- Start Draft (Standard Mode) ---
-  const handleStartDraft = useCallback(() => {
+  const handleStartDraft = useCallback((clearTarget = true) => {
     logGameStarted();
+    if (clearTarget) {
+      setTargetToBeat(null);
+    }
     transitionDOM(() => {
       setIsDailyChallenge(false);
       setFormation(null);
@@ -518,7 +541,7 @@ export function useDraftGame() {
 
   // --- Save Campaign Results ---
   const handleSaveCampaignResults = useCallback(() => {
-    if (!simResult) return;
+    if (!simResult || !formation) return;
 
     // 1. Calculate challenge beaten status
     let isBeaten = false;
@@ -533,9 +556,99 @@ export function useDraftGame() {
       setChallengeBeaten(isBeaten);
     }
 
-    // 2. Load latest streaks object and increment
-    const newStreakStats = { ...streakStats };
+    // 2. Build Campaign Player Snapshots
+    const slots = FORMATION_SLOTS[formation] || [];
+    const squadSnapshots: CampaignPlayerSnapshot[] = selectedPlayers
+      .map((player, idx) => {
+        if (!player) return null;
+        return createCampaignPlayerSnapshot(player, slots[idx]?.position);
+      })
+      .filter((p): p is CampaignPlayerSnapshot => p !== null);
+
+    // Title honour calculation
+    const titleHonour =
+      simResult.wins === 38
+        ? 'Invincibles'
+        : simResult.leaguePosition === 1
+        ? 'League Champions'
+        : simResult.leaguePosition <= 4
+        ? 'Top 4'
+        : `#${simResult.leaguePosition} Finish`;
+
+    // 3. Create Campaign History Entry
+    const runId = `run_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const historyEntry: CampaignHistoryEntry = {
+      id: runId,
+      completedAt: new Date().toISOString(),
+      draftMode: isDailyChallenge ? 'daily_challenge' : (draftModifier || 'classic'),
+      formation,
+      wins: simResult.wins,
+      draws: simResult.draws,
+      losses: simResult.losses,
+      points: simResult.points,
+      goalsFor: simResult.goalsFor,
+      goalsAgainst: simResult.goalsAgainst,
+      leaguePosition: simResult.leaguePosition,
+      chemistryScore: stats.chemistry,
+      chemistryGrade: simResult.chemistryGrade,
+      squadRating: stats.overall,
+      mvp: {
+        name: simResult.mvp.playerName || simResult.mvp.displayName,
+        rating: simResult.mvp.rating,
+        season: simResult.mvp.season,
+        club: simResult.mvp.club,
+      },
+      weakLink: simResult.weakLink
+        ? {
+            name: simResult.weakLink.playerName || simResult.weakLink.displayName,
+            rating: simResult.weakLink.rating,
+          }
+        : undefined,
+      topScorer: simResult.topScorer
+        ? {
+            name: simResult.topScorer.player.playerName || simResult.topScorer.player.displayName,
+            goals: simResult.topScorer.goals,
+          }
+        : undefined,
+      cleanSheets: simResult.cleanSheets || 0,
+      squad: squadSnapshots,
+      titleHonour,
+      challengeId: isDailyChallenge ? todayChallenge?.id : undefined,
+      targetWinsToBeat: targetToBeat ? targetToBeat.targetWins : undefined,
+      beatTarget: targetToBeat ? simResult.wins > targetToBeat.targetWins : undefined,
+    };
+
+    // Save history entry (capped at 50)
+    const updatedHistory = saveCampaignHistoryEntry(historyEntry);
+    setCampaignHistory(updatedHistory);
+
+    // 4. Personal Bests evaluation (skips Daily Challenges)
+    const { updatedBests, brokenRecords } = checkAndApplyPersonalBests(historyEntry, personalBests);
+    setPersonalBests(updatedBests);
+    if (brokenRecords.length > 0) {
+      simResult.newPersonalBests = brokenRecords;
+    }
+
+    // 5. Target To Beat evaluation
+    if (targetToBeat) {
+      simResult.beatTargetResult = {
+        targetWins: targetToBeat.targetWins,
+        beaten: simResult.wins > targetToBeat.targetWins,
+        matched: simResult.wins === targetToBeat.targetWins,
+      };
+    }
+
+    // 6. Streak & Lifetime statistics
+    const newStreakStats = updatePlayStreak(streakStats, todayDateStr);
     newStreakStats.gamesPlayed += 1;
+    newStreakStats.totalWins = (newStreakStats.totalWins || 0) + simResult.wins;
+    if (simResult.leaguePosition === 1) {
+      newStreakStats.totalChampionships = (newStreakStats.totalChampionships || 0) + 1;
+    }
+    if (simResult.losses === 0) {
+      newStreakStats.totalUnbeaten = (newStreakStats.totalUnbeaten || 0) + 1;
+    }
+
     if (draftModifier === 'quick') {
       newStreakStats.quickGamesPlayed = (newStreakStats.quickGamesPlayed || 0) + 1;
     } else if (draftModifier === 'mystery') {
@@ -544,36 +657,17 @@ export function useDraftGame() {
       newStreakStats.classicGamesPlayed = (newStreakStats.classicGamesPlayed || 0) + 1;
     }
 
-    if (simResult.points > newStreakStats.bestPoints) {
+    if (simResult.points > (newStreakStats.bestPoints || 0)) {
       newStreakStats.bestPoints = simResult.points;
     }
     if (simResult.wins === 38) {
-      newStreakStats.perfectSeasons += 1;
+      newStreakStats.perfectSeasons = (newStreakStats.perfectSeasons || 0) + 1;
     }
 
-    // 3. Daily Streak calculations
     if (isDailyChallenge && todayChallenge) {
-      const today = todayDateStr;
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const YYYY = yesterday.getFullYear();
-      const MM = String(yesterday.getMonth() + 1).padStart(2, '0');
-      const DD = String(yesterday.getDate()).padStart(2, '0');
-      const yesterdayStr = `${YYYY}-${MM}-${DD}`;
-
-      if (newStreakStats.lastPlayedDate === yesterdayStr) {
-        newStreakStats.currentDailyStreak += 1;
-      } else if (newStreakStats.lastPlayedDate !== today) {
-        newStreakStats.currentDailyStreak = 1;
-      }
-
-      newStreakStats.lastPlayedDate = today;
-
       if (isBeaten && !dailyStatus.beaten) {
         newStreakStats.dailyChallengesCompleted += 1;
       }
-
-      // Save today's challenge score
       const challengeScore = stats.overall + simResult.points + (isBeaten ? 50 : 0);
       const statusUpdate: DailyChallengeStatus = { completed: true, score: challengeScore, beaten: isBeaten };
       setDailyStatus(statusUpdate);
@@ -581,10 +675,23 @@ export function useDraftGame() {
       saveDailyChallengeStatus(todayDateStr, statusUpdate);
     }
 
-    // 4. Save and set state
+    // Save and set streak stats
     setStreakStats(newStreakStats);
     saveStreaks(newStreakStats);
-  }, [simResult, isDailyChallenge, todayChallenge, stats.defence, stats.overall, streakStats, todayDateStr, dailyStatus.beaten, draftModifier]);
+  }, [
+    simResult,
+    formation,
+    selectedPlayers,
+    isDailyChallenge,
+    todayChallenge,
+    stats,
+    streakStats,
+    personalBests,
+    targetToBeat,
+    todayDateStr,
+    dailyStatus.beaten,
+    draftModifier,
+  ]);
 
   // Return to homepage
   const returnHome = useCallback(() => {
@@ -599,6 +706,32 @@ export function useDraftGame() {
       setPhase('results');
     });
   }, [handleSaveCampaignResults, transitionDOM]);
+
+  const handleViewHistory = useCallback(() => {
+    transitionDOM(() => {
+      setPhase('history');
+    });
+  }, [transitionDOM]);
+
+  const handleTryToBeat = useCallback((entry: CampaignHistoryEntry) => {
+    setTargetToBeat({
+      targetWins: entry.wins,
+      targetPoints: entry.points,
+      runId: entry.id,
+    });
+    if (['4-3-3', '4-4-2', '3-5-2', '4-2-3-1'].includes(entry.formation)) {
+      setFormation(entry.formation as FormationType);
+    }
+    if (entry.draftMode === 'quick' || entry.draftMode === 'mystery' || entry.draftMode === 'classic') {
+      setDraftModifier(entry.draftMode);
+    }
+    handleStartDraft(false);
+  }, [handleStartDraft, setDraftModifier]);
+
+  const handleClearHistory = useCallback(() => {
+    clearCampaignHistory();
+    setCampaignHistory([]);
+  }, []);
 
   return {
     // State
@@ -651,6 +784,9 @@ export function useDraftGame() {
     allClubs,
     allEras,
     getFilteredPlayers,
+    campaignHistory,
+    personalBests,
+    targetToBeat,
 
     // Handlers
     handleStartDraft,
@@ -666,5 +802,8 @@ export function useDraftGame() {
     handleSaveCampaignResults,
     proceedToResults,
     returnHome,
+    handleViewHistory,
+    handleTryToBeat,
+    handleClearHistory,
   };
 }

@@ -175,6 +175,12 @@ export interface SimulationResult {
   draftModifier?: DraftModifier;
   highlights?: SeasonHighlight[];
   seasonStory?: SeasonStory;
+  newPersonalBests?: string[];
+  beatTargetResult?: {
+    targetWins: number;
+    beaten: boolean;
+    matched: boolean;
+  };
 }
 
 export type ChallengeRuleType =
@@ -200,7 +206,11 @@ export interface StreakStats {
   perfectSeasons: number;
   dailyChallengesCompleted: number;
   currentDailyStreak: number;
+  bestDailyStreak?: number;
   lastPlayedDate: string; // YYYY-MM-DD
+  totalWins?: number;
+  totalChampionships?: number;
+  totalUnbeaten?: number;
   classicGamesPlayed?: number;
   quickGamesPlayed?: number;
   mysteryGamesPlayed?: number;
@@ -210,5 +220,71 @@ export interface ChemistryLog {
   delta: number;
   reason: string;
   type: 'positive' | 'negative';
+}
+
+export interface CampaignPlayerSnapshot {
+  id: string;
+  name: string;
+  season: string;
+  club: string;
+  nationality: string;
+  primaryPosition: string;
+  rating: number;
+  rarity: string;
+  selectedPosition?: string;
+}
+
+export interface CampaignHistoryEntry {
+  id: string;
+  completedAt: string; // ISO date string
+  draftMode: DraftModifier | 'daily_challenge';
+  formation: string;
+  wins: number;
+  draws: number;
+  losses: number;
+  points: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  leaguePosition: number;
+  chemistryScore: number;
+  chemistryGrade: ChemistryGrade;
+  squadRating: number;
+  mvp: {
+    name: string;
+    rating: number;
+    season: string;
+    club: string;
+  };
+  weakLink?: {
+    name: string;
+    rating: number;
+  };
+  topScorer?: {
+    name: string;
+    goals: number;
+  };
+  cleanSheets: number;
+  squad: CampaignPlayerSnapshot[];
+  titleHonour?: string;
+  challengeId?: string;
+  targetWinsToBeat?: number;
+  beatTarget?: boolean;
+}
+
+export interface ModePersonalBest {
+  bestWins: number;
+  bestPoints: number;
+  bestGoalDiff: number;
+  bestChemistry: number;
+  bestSquadRating: number;
+  runId: string;
+  completedAt: string;
+}
+
+export interface PersonalBests {
+  overall?: ModePersonalBest;
+  classic?: ModePersonalBest;
+  quick?: ModePersonalBest;
+  mystery?: ModePersonalBest;
 }
 

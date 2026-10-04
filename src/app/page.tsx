@@ -9,6 +9,7 @@ import { FormationSelection } from '../components/FormationSelection';
 import { DraftScreen } from '../components/DraftScreen';
 import { SimulationScreen } from '../components/SimulationScreen';
 import { SeasonResults } from '../components/SeasonResults';
+import { HistoryScreen } from '../components/HistoryScreen';
 import { HowToPlayModal } from '../components/HowToPlayModal';
 import { ShareCardExport } from '../components/ShareCardExport';
 import { players } from '../data/players';
@@ -88,6 +89,21 @@ export default function DraftedXIGame() {
             </span>
           )}
           
+          {/* History Screen Trigger Button */}
+          <button
+            onClick={() => {
+              if (game.phase === 'history') {
+                game.returnHome();
+              } else if (game.phase === 'home' || game.phase === 'results' || window.confirm('Leave current draft and view history?')) {
+                game.handleViewHistory();
+              }
+            }}
+            title="View Squad History & Personal Bests"
+            className="w-7 h-7 rounded-full flex items-center justify-center border border-slate-900 bg-slate-950/60 text-[10px] text-slate-400 hover:text-white hover:border-slate-800 hover:bg-slate-900/60 cursor-pointer active:scale-95 transition-all leading-none"
+          >
+            📜
+          </button>
+
           {/* Help Tutorial Trigger Button */}
           <button
             onClick={() => setShowTutorial(true)}
@@ -114,6 +130,8 @@ export default function DraftedXIGame() {
           <HomeScreen
             showcasePlayer={game.showcasePlayer}
             streakStats={game.streakStats}
+            campaignHistory={game.campaignHistory}
+            personalBests={game.personalBests}
             todayChallenge={game.todayChallenge}
             dailyStatus={game.dailyStatus}
             freeSearchEnabled={game.freeSearchEnabled}
@@ -121,6 +139,17 @@ export default function DraftedXIGame() {
             onStartDraft={game.handleStartDraft}
             onPlayDailyChallenge={game.handlePlayDailyChallenge}
             onRandomDraft={() => game.handleRandomDraft(false)}
+            onViewHistory={game.handleViewHistory}
+          />
+        )}
+
+        {game.phase === 'history' && (
+          <HistoryScreen
+            history={game.campaignHistory}
+            personalBests={game.personalBests}
+            onBackToHome={game.returnHome}
+            onTryToBeat={game.handleTryToBeat}
+            onClearHistory={game.handleClearHistory}
           />
         )}
 
@@ -152,6 +181,7 @@ export default function DraftedXIGame() {
             freeSearchEnabled={game.freeSearchEnabled}
             isDailyChallenge={game.isDailyChallenge}
             todayChallenge={game.todayChallenge}
+            targetToBeat={game.targetToBeat}
             chemistryToast={game.chemistryToast}
             recentlyDraftedIndex={game.recentlyDraftedIndex}
             draftTab={game.draftTab}

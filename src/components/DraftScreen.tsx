@@ -20,6 +20,7 @@ interface DraftScreenProps {
   freeSearchEnabled: boolean;
   isDailyChallenge: boolean;
   todayChallenge: ChallengeTemplate | null;
+  targetToBeat?: { targetWins: number; targetPoints: number; runId: string } | null;
   chemistryToast: { text: string; type: 'positive' | 'negative' } | null;
   recentlyDraftedIndex?: number | null;
   draftTab: 'recommended' | 'search';
@@ -54,6 +55,7 @@ export function DraftScreen({
   freeSearchEnabled,
   isDailyChallenge,
   todayChallenge,
+  targetToBeat,
   chemistryToast,
   recentlyDraftedIndex,
   draftTab,
@@ -163,6 +165,18 @@ export function DraftScreen({
         }`}>
           {chemistryToast.type === 'positive' ? '💚 ' : '💔 '}
           {chemistryToast.text}
+        </div>
+      )}
+
+      {/* Replay Target Banner */}
+      {targetToBeat && (
+        <div className="w-full py-2.5 px-4 rounded-2xl bg-amber-950/50 border border-amber-500/35 text-amber-300 text-[10px] font-display font-black uppercase tracking-wider flex items-center justify-between shadow-lg shadow-amber-950/30">
+          <span className="flex items-center gap-1.5">
+            <span>🎯</span> TARGET TO BEAT: <span className="text-white font-black">{targetToBeat.targetWins} WINS</span> ({targetToBeat.targetPoints} PTS)
+          </span>
+          <span className="text-[8px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-black border border-amber-500/30">
+            REPLAY
+          </span>
         </div>
       )}
 

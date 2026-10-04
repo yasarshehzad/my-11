@@ -1,5 +1,5 @@
 import React from 'react';
-import { Player, ChallengeTemplate, StreakStats } from '../types/game';
+import { Player, ChallengeTemplate, StreakStats, CampaignHistoryEntry, PersonalBests } from '../types/game';
 import { DailyChallengeStatus } from '../utils/storage';
 import { PlayerCard } from './PlayerCard';
 import { DailyChallengeBanner } from './DailyChallengeBanner';
@@ -56,6 +56,8 @@ const PELE_FALLBACK: Player = {
 interface HomeScreenProps {
   showcasePlayer: Player | null;
   streakStats: StreakStats;
+  campaignHistory?: CampaignHistoryEntry[];
+  personalBests?: PersonalBests;
   todayChallenge: ChallengeTemplate | null;
   dailyStatus: DailyChallengeStatus;
   freeSearchEnabled: boolean;
@@ -63,11 +65,14 @@ interface HomeScreenProps {
   onStartDraft: () => void;
   onPlayDailyChallenge: () => void;
   onRandomDraft: () => void;
+  onViewHistory?: () => void;
 }
 
 export function HomeScreen({
   showcasePlayer,
   streakStats,
+  campaignHistory = [],
+  personalBests = {},
   todayChallenge,
   dailyStatus,
   freeSearchEnabled,
@@ -75,8 +80,10 @@ export function HomeScreen({
   onStartDraft,
   onPlayDailyChallenge,
   onRandomDraft,
+  onViewHistory,
 }: HomeScreenProps) {
   const activeShowcase = showcasePlayer || PELE_FALLBACK;
+  const lastRun = campaignHistory.length > 0 ? campaignHistory[0] : null;
 
   return (
     <div className="flex flex-col items-center min-h-[80vh] text-center px-4 sm:px-6 py-8 relative space-y-6 w-full max-w-sm mx-auto overflow-hidden">
@@ -96,29 +103,57 @@ export function HomeScreen({
           Build your ultimate football XI. Draft iconic player seasons, simulate a 38-game season, and see if your squad can go unbeaten.
         </p>
 
-        {/* Streaks Widget */}
+        {/* Retention Summary & Streaks Widget */}
         {streakStats.gamesPlayed > 0 && (
-          <div className="w-full max-w-[340px] rounded-2xl border border-slate-900 bg-slate-950/70 p-3.5 flex justify-between text-center glass">
-            <div className="flex-1">
-              <span className="text-[7.5px] font-bold text-slate-500 uppercase tracking-widest block">Runs</span>
-              <p className="text-sm font-display font-black text-foreground mt-1">{streakStats.gamesPlayed}</p>
+          <div className="w-full max-w-[340px] rounded-2xl border border-slate-900 bg-slate-950/70 p-3.5 flex flex-col gap-2.5 text-center glass">
+            <div className="flex justify-between items-center text-center">
+              <div className="flex-1">
+                <span className="text-[7.5px] font-bold text-slate-500 uppercase tracking-widest block">Drafts</span>
+                <p className="text-sm font-display font-black text-foreground mt-0.5">{streakStats.gamesPlayed}</p>
+              </div>
+              <div className="w-[1px] h-6 bg-slate-900" />
+              <div className="flex-grow flex-shrink-0 px-2">
+                <span className="text-[7.5px] font-bold text-slate-500 uppercase tracking-widest block">Best Wins</span>
+                <p className="text-sm font-display font-black text-emerald-400 mt-0.5">
+                  {personalBests.overall ? `${personalBests.overall.bestWins}W` : `${streakStats.bestPoints} pts`}
+                </p>
+              </div>
+              <div className="w-[1px] h-6 bg-slate-900" />
+              <div className="flex-1">
+                <span className="text-[7.5px] font-bold text-slate-500 uppercase tracking-widest block">Streak</span>
+                <p className="text-sm font-display font-black text-indigo-400 mt-0.5" title={`Best: ${streakStats.bestDailyStreak || streakStats.currentDailyStreak} days`}>
+                  ⚡ {streakStats.currentDailyStreak}D
+                </p>
+              </div>
+              <div className="w-[1px] h-6 bg-slate-900" />
+              <div className="flex-1">
+                <span className="text-[7.5px] font-bold text-slate-500 uppercase tracking-widest block">Total Wins</span>
+                <p className="text-sm font-display font-black text-amber-400 mt-0.5">
+                  🏆 {streakStats.totalWins || 0}
+                </p>
+              </div>
             </div>
-            <div className="w-[1px] bg-slate-900" />
-            <div className="flex-grow flex-shrink-0 px-2">
-              <span className="text-[7.5px] font-bold text-slate-500 uppercase tracking-widest block">Best Score</span>
-              <p className="text-sm font-display font-black text-emerald-400 mt-1">{streakStats.bestPoints} pts</p>
-            </div>
-            <div className="w-[1px] bg-slate-900" />
-            <div className="flex-1">
-              <span className="text-[7.5px] font-bold text-slate-500 uppercase tracking-widest block">Challenges</span>
-              <p className="text-sm font-display font-black text-amber-400 mt-1">🏆 {streakStats.dailyChallengesCompleted}</p>
-            </div>
-            <div className="w-[1px] bg-slate-900" />
-            <div className="flex-1">
-              <span className="text-[7.5px] font-bold text-slate-500 uppercase tracking-widest block">Streak</span>
-              <p className="text-sm font-display font-black text-indigo-400 mt-1">⚡ {streakStats.currentDailyStreak}</p>
-            </div>
+
+            {/* Last Run Preview */}
+            {lastRun && (
+              <div className="pt-2 border-t border-slate-900/80 flex justify-between items-center text-[9px] text-slate-400 font-semibold px-1">
+                <span>Last Run:</span>
+                <span className="text-slate-300 font-bold">
+                  {lastRun.wins}W-{lastRun.draws}D-{lastRun.losses}L ({lastRun.points} pts) • {lastRun.draftMode === 'quick' ? 'Quick' : lastRun.draftMode === 'mystery' ? 'Mystery' : lastRun.draftMode === 'daily_challenge' ? 'Challenge' : 'Classic'}
+                </span>
+              </div>
+            )}
           </div>
+        )}
+
+        {/* History CTA */}
+        {onViewHistory && (
+          <button
+            onClick={onViewHistory}
+            className="w-full max-w-[340px] py-2.5 px-4 rounded-xl border border-slate-850 bg-slate-900/50 hover:bg-slate-900 hover:border-emerald-500/30 text-slate-300 hover:text-white font-display font-black text-[11px] uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 active:scale-98"
+          >
+            <span>📜</span> My Squads & History {campaignHistory.length > 0 && `(${campaignHistory.length})`}
+          </button>
         )}
 
         {/* Daily Challenge Card */}

@@ -263,9 +263,12 @@ export function generateMatchStory({
   let summary = '';
 
   if (outcome === 'W') {
-    if (ourScore >= 4) {
+    if (ourScore >= 5) {
       headline = `${motmLastName} inspires five-star rout of ${opponent}`;
       summary = `MY-11 turned on the style in an unstoppable attacking display, overwhelming ${opponent} with wave after wave of incisive counters.`;
+    } else if (ourScore === 4) {
+      headline = `${motmLastName} inspires four-goal masterclass against ${opponent}`;
+      summary = `A ruthless four-goal display saw MY-11 take full control, tearing through ${opponent} with incisive passing and sharp finishing.`;
     } else if (isClutchWinner || ourGoalList.some((g) => g.minute >= 85)) {
       headline = `Late drama! ${motmLastName} snatches dramatic winner against ${opponent}`;
       summary = `In a nail-biting finish, MY-11 held their nerve as ${motmLastName} struck in the dying moments to send the travelling support into raptures.`;
@@ -643,7 +646,7 @@ export function generateSeasonNarrative({
   } else if (cleanSheets >= 16 && goalsAgainst <= 28) {
     title = 'BUILT ON THE BACK FOUR';
   } else if (leaguePosition <= 7) {
-    title = 'EUROPEAN CHANCELLS';
+    title = 'EUROPEAN CHALLENGERS';
   } else {
     title = 'REBUILDING CAMPAIGN';
   }
