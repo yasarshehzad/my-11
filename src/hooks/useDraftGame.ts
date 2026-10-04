@@ -9,7 +9,8 @@ import {
   DraftModifier,
   CampaignHistoryEntry,
   PersonalBests,
-  CampaignPlayerSnapshot
+  CampaignPlayerSnapshot,
+  ChallengeTarget
 } from '../types/game';
 import { 
   FORMATION_SLOTS, 
@@ -23,6 +24,7 @@ import {
   getProjectedChemistry
 } from '../utils/gameLogic';
 import { players } from '../data/players';
+import { parseChallengeFromUrl } from '../utils/challengeUrl';
 import { 
   logGameStarted, 
   logFormationSelected, 
@@ -30,7 +32,15 @@ import {
   logDraftCompleted, 
   logDailyChallengeStarted, 
   logDailyChallengeCompleted,
-  logDraftModeSelected 
+  logDraftModeSelected,
+  logChallengeLinkOpened,
+  logChallengeAccepted,
+  logChallengeCompleted,
+  logChallengeBeaten,
+  logOnboardingStarted,
+  logOnboardingStepCompleted,
+  logOnboardingSkipped,
+  logOnboardingCompleted
 } from '../utils/analytics';
 import { 
   getSavedStreaks, 
@@ -44,7 +54,9 @@ import {
   getSavedPersonalBests,
   checkAndApplyPersonalBests,
   updatePlayStreak,
-  createCampaignPlayerSnapshot
+  createCampaignPlayerSnapshot,
+  getOnboardingCompleted,
+  saveOnboardingCompleted
 } from '../utils/storage';
 
 export type GamePhase = 'home' | 'formation' | 'draft' | 'simulating' | 'results' | 'history';
@@ -98,11 +110,9 @@ export function useDraftGame() {
 
   const [campaignHistory, setCampaignHistory] = useState<CampaignHistoryEntry[]>([]);
   const [personalBests, setPersonalBests] = useState<PersonalBests>({});
-  const [targetToBeat, setTargetToBeat] = useState<{
-    targetWins: number;
-    targetPoints: number;
-    runId: string;
-  } | null>(null);
+  const [targetToBeat, setTargetToBeat] = useState<ChallengeTarget | null>(null);
+  const [incomingChallenge, setIncomingChallenge] = useState<ChallengeTarget | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
 
   const [dailyStatus, setDailyStatus] = useState<DailyChallengeStatus>({
     completed: false,
@@ -163,6 +173,22 @@ export function useDraftGame() {
     if (legends.length > 0) {
       const randomIndex = Math.floor(Math.random() * legends.length);
       setShowcasePlayer(legends[randomIndex]);
+    }
+
+    // 5. Parse incoming URL challenge if present
+    if (typeof window !== 'undefined' && window.location.search) {
+      const parsed = parseChallengeFromUrl(window.location.search);
+      if (parsed) {
+        setIncomingChallenge(parsed);
+        logChallengeLinkOpened(parsed.targetWins, parsed.targetPoints);
+      }
+    }
+
+    // 6. Check first-run onboarding status
+    const onboardingDone = getOnboardingCompleted();
+    if (!onboardingDone) {
+      setShowOnboarding(true);
+      logOnboardingStarted();
     }
   }, []);
 
@@ -459,6 +485,14 @@ export function useDraftGame() {
     setTimeout(() => setRecentlyDraftedIndex(null), 2000);
 
     const nextIndex = currentSlotIndex + 1;
+    if (showOnboarding) {
+      if (currentSlotIndex === 0) {
+        logOnboardingStepCompleted(1);
+      } else if (nextIndex >= 11) {
+        logOnboardingStepCompleted(2);
+      }
+    }
+
     if (nextIndex < 11) {
       setCurrentSlotIndex(nextIndex);
       
@@ -480,12 +514,19 @@ export function useDraftGame() {
       logDraftCompleted(newStats.overall, newStats.chemistry);
       setSimResult(result);
     }
-  }, [formation, currentSlotIndex, selectedPlayers, isDailyChallenge, todayChallenge, todayDateStr, selectedLeague, draftModifier]);
+  }, [formation, currentSlotIndex, selectedPlayers, isDailyChallenge, todayChallenge, todayDateStr, selectedLeague, draftModifier, showOnboarding]);
 
   // --- Begin League Season Simulation ---
   const startSimulation = useCallback(() => {
     if (!simResult) return;
     
+    if (showOnboarding) {
+      logOnboardingStepCompleted(3);
+      setShowOnboarding(false);
+      saveOnboardingCompleted(true);
+      logOnboardingCompleted();
+    }
+
     setPhase('simulating');
     setSimIndex(0);
     setLiveWins(0);
@@ -495,7 +536,7 @@ export function useDraftGame() {
     setLiveGoalsFor(0);
     setLiveGoalsAgainst(0);
     setLiveMatches([]);
-  }, [simResult]);
+  }, [simResult, showOnboarding]);
 
   // --- Simulation ticking loop ---
   useEffect(() => {
@@ -582,6 +623,7 @@ export function useDraftGame() {
       completedAt: new Date().toISOString(),
       draftMode: isDailyChallenge ? 'daily_challenge' : (draftModifier || 'classic'),
       formation,
+      leagueId: selectedLeague || 'english',
       wins: simResult.wins,
       draws: simResult.draws,
       losses: simResult.losses,
@@ -631,11 +673,17 @@ export function useDraftGame() {
 
     // 5. Target To Beat evaluation
     if (targetToBeat) {
+      const isBeaten = simResult.wins > targetToBeat.targetWins;
+      const isMatched = simResult.wins === targetToBeat.targetWins;
       simResult.beatTargetResult = {
         targetWins: targetToBeat.targetWins,
-        beaten: simResult.wins > targetToBeat.targetWins,
-        matched: simResult.wins === targetToBeat.targetWins,
+        beaten: isBeaten,
+        matched: isMatched,
       };
+      logChallengeCompleted(targetToBeat.targetWins, simResult.wins, isBeaten);
+      if (isBeaten) {
+        logChallengeBeaten(targetToBeat.targetWins, simResult.wins);
+      }
     }
 
     // 6. Streak & Lifetime statistics
@@ -713,24 +761,80 @@ export function useDraftGame() {
     });
   }, [transitionDOM]);
 
+  // --- Challenge Actions ---
+  const handleAcceptChallenge = useCallback((challenge: ChallengeTarget) => {
+    logChallengeAccepted(challenge.targetWins, challenge.targetPoints);
+    setTargetToBeat(challenge);
+    if (challenge.draftMode) {
+      setDraftModifierState(challenge.draftMode);
+    }
+    if (challenge.leagueId) {
+      setSelectedLeague(challenge.leagueId);
+    }
+    setIsDailyChallenge(false);
+    setSelectedPlayers(Array(11).fill(null));
+    setCurrentSlotIndex(0);
+    setDraftOptions(null);
+    setRerollsRemaining(3);
+    setStats({ attack: 0, midfield: 0, defence: 0, chemistry: 0, overall: 0 });
+    setSimResult(null);
+
+    if (challenge.formation) {
+      setFormation(challenge.formation);
+      const slots = FORMATION_SLOTS[challenge.formation];
+      const initialOptions = getDraftOptions(
+        slots[0].position,
+        Array(11).fill(null),
+        undefined,
+        undefined,
+        challenge.leagueId || 'english'
+      );
+      setDraftOptions(initialOptions);
+      setIncomingChallenge(null);
+      transitionDOM(() => {
+        setPhase('draft');
+      });
+    } else {
+      setFormation(null);
+      setIncomingChallenge(null);
+      transitionDOM(() => {
+        setPhase('formation');
+      });
+    }
+  }, [transitionDOM]);
+
+  const handleDismissChallenge = useCallback(() => {
+    setIncomingChallenge(null);
+  }, []);
+
   const handleTryToBeat = useCallback((entry: CampaignHistoryEntry) => {
-    setTargetToBeat({
+    const target: ChallengeTarget = {
       targetWins: entry.wins,
       targetPoints: entry.points,
+      draftMode: (entry.draftMode === 'quick' || entry.draftMode === 'mystery' || entry.draftMode === 'classic') ? entry.draftMode : 'classic',
+      formation: (['4-3-3', '4-4-2', '3-5-2', '4-2-3-1'].includes(entry.formation) ? entry.formation : undefined) as FormationType,
+      leagueId: entry.leagueId,
       runId: entry.id,
-    });
-    if (['4-3-3', '4-4-2', '3-5-2', '4-2-3-1'].includes(entry.formation)) {
-      setFormation(entry.formation as FormationType);
-    }
-    if (entry.draftMode === 'quick' || entry.draftMode === 'mystery' || entry.draftMode === 'classic') {
-      setDraftModifier(entry.draftMode);
-    }
-    handleStartDraft(false);
-  }, [handleStartDraft, setDraftModifier]);
+    };
+    handleAcceptChallenge(target);
+  }, [handleAcceptChallenge]);
 
   const handleClearHistory = useCallback(() => {
     clearCampaignHistory();
     setCampaignHistory([]);
+  }, []);
+
+  // --- Onboarding Handlers ---
+  const handleSkipOnboarding = useCallback(() => {
+    setShowOnboarding(false);
+    saveOnboardingCompleted(true);
+    logOnboardingSkipped();
+  }, []);
+
+  const handleCompleteOnboarding = useCallback(() => {
+    setShowOnboarding(false);
+    saveOnboardingCompleted(true);
+    logOnboardingCompleted();
   }, []);
 
   return {
@@ -787,6 +891,8 @@ export function useDraftGame() {
     campaignHistory,
     personalBests,
     targetToBeat,
+    incomingChallenge,
+    showOnboarding,
 
     // Handlers
     handleStartDraft,
@@ -805,5 +911,9 @@ export function useDraftGame() {
     handleViewHistory,
     handleTryToBeat,
     handleClearHistory,
+    handleAcceptChallenge,
+    handleDismissChallenge,
+    handleSkipOnboarding,
+    handleCompleteOnboarding,
   };
 }

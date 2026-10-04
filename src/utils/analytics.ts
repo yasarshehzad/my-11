@@ -63,3 +63,49 @@ export const logMysteryPlayerRevealed = (playerName: string, rating: number) => 
   trackEvent('mystery_player_revealed', { player: playerName, rating });
 };
 
+// Sharing & Growth Events
+export const logShareOpened = (wins: number, points?: number, mode?: string) => {
+  trackEvent('share_opened', { wins, points, mode });
+};
+
+export const logNativeShareTriggered = (wins: number, points?: number) => {
+  trackEvent('native_share_triggered', { wins, points });
+};
+
+export const logChallengeLinkCopied = (wins: number, points?: number) => {
+  trackEvent('challenge_link_copied', { wins, points });
+};
+
+export const logChallengeLinkOpened = (targetWins: number, pointsOrMode?: number | string) => {
+  trackEvent('challenge_link_opened', { targetWins, detail: pointsOrMode });
+};
+
+export const logChallengeAccepted = (targetWins: number, pointsOrMode?: number | string) => {
+  trackEvent('challenge_accepted', { targetWins, detail: pointsOrMode });
+};
+
+export const logChallengeCompleted = (targetWins: number, userWins: number, beaten: boolean) => {
+  trackEvent('challenge_completed', { targetWins, userWins, beaten });
+};
+
+export const logChallengeBeaten = (targetWins: number, userWins: number) => {
+  trackEvent('challenge_beaten', { targetWins, userWins });
+};
+
+// Onboarding Events
+export const logOnboardingStarted = () => {
+  trackEvent('onboarding_started');
+};
+
+export const logOnboardingStepCompleted = (step: number) => {
+  trackEvent('onboarding_step_completed', { step });
+};
+
+export const logOnboardingSkipped = (step?: number) => {
+  trackEvent('onboarding_skipped', { step });
+};
+
+export const logOnboardingCompleted = () => {
+  trackEvent('onboarding_completed');
+};
+

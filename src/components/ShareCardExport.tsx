@@ -348,7 +348,7 @@ export const ShareCardExport: React.FC<ShareCardExportProps> = ({
       <div className="flex justify-between items-center border-t-2 border-slate-900 pt-8 mt-6 relative z-10">
         <div>
           <p className="text-2xl font-display font-black tracking-tight text-white uppercase leading-none">
-            CAN YOU BEAT THIS?
+            CAN YOU BEAT {simResult.wins} WINS?
           </p>
           <p className="text-xs text-emerald-450 mt-2 font-black uppercase leading-none tracking-widest font-display">
             PLAY NOW AT MY-11.COM

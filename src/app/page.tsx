@@ -140,6 +140,9 @@ export default function DraftedXIGame() {
             onPlayDailyChallenge={game.handlePlayDailyChallenge}
             onRandomDraft={() => game.handleRandomDraft(false)}
             onViewHistory={game.handleViewHistory}
+            incomingChallenge={game.incomingChallenge}
+            onAcceptChallenge={game.handleAcceptChallenge}
+            onDismissChallenge={game.handleDismissChallenge}
           />
         )}
 
@@ -182,6 +185,9 @@ export default function DraftedXIGame() {
             isDailyChallenge={game.isDailyChallenge}
             todayChallenge={game.todayChallenge}
             targetToBeat={game.targetToBeat}
+            showOnboarding={game.showOnboarding}
+            onSkipOnboarding={game.handleSkipOnboarding}
+            onCompleteOnboarding={game.handleCompleteOnboarding}
             chemistryToast={game.chemistryToast}
             recentlyDraftedIndex={game.recentlyDraftedIndex}
             draftTab={game.draftTab}

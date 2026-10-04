@@ -2,6 +2,7 @@ import { StreakStats, CampaignHistoryEntry, PersonalBests, ModePersonalBest, Cam
 
 const THEME_KEY = 'drafted_xi_theme';
 const HIDE_TUTORIAL_KEY = 'drafted_xi_hide_tutorial';
+const ONBOARDING_COMPLETED_KEY = 'drafted_xi_onboarding_completed_v1';
 const STREAKS_KEY = 'drafted_xi_streaks';
 const CHALLENGE_PREFIX = 'drafted_xi_challenge_';
 export const CAMPAIGN_HISTORY_KEY = 'drafted_xi_campaign_history_v1';
@@ -81,6 +82,49 @@ export function saveHideTutorial(hide: boolean): void {
     localStorage.setItem(HIDE_TUTORIAL_KEY, hide ? 'true' : 'false');
   } catch (e) {
     console.warn('Failed to save tutorial preference to localStorage:', e);
+  }
+}
+
+/**
+ * Safe retrieval of first-run guided draft onboarding status.
+ * Returning users who have played runs or dismissed old tutorials
+ * are automatically treated as having completed onboarding.
+ */
+export function getOnboardingCompleted(): boolean {
+  if (!isClient()) return false;
+  try {
+    const direct = localStorage.getItem(ONBOARDING_COMPLETED_KEY);
+    if (direct === 'true') return true;
+
+    // Backward compatibility: If user previously dismissed the old tutorial or has existing runs
+    const hideOldTutorial =
+      localStorage.getItem(HIDE_TUTORIAL_KEY) === 'true' ||
+      localStorage.getItem('my11_hide_tutorial') === 'true';
+    if (hideOldTutorial) return true;
+
+    const streaksRaw = localStorage.getItem(STREAKS_KEY);
+    if (streaksRaw) {
+      const parsed = JSON.parse(streaksRaw);
+      if (parsed && typeof parsed.gamesPlayed === 'number' && parsed.gamesPlayed > 0) {
+        return true;
+      }
+    }
+
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Safe saving of onboarding completion status
+ */
+export function saveOnboardingCompleted(completed: boolean = true): void {
+  if (!isClient()) return;
+  try {
+    localStorage.setItem(ONBOARDING_COMPLETED_KEY, completed ? 'true' : 'false');
+  } catch (e) {
+    console.warn('Failed to save onboarding preference to localStorage:', e);
   }
 }
 
@@ -292,15 +336,43 @@ export function checkAndApplyPersonalBests(
 }
 
 /**
- * Calendar-day based streak updater.
- * - Same calendar day: maintains current streak (no double-increment).
- * - Consecutive calendar day: increments current streak by 1.
- * - Missed 1+ days: resets current streak to 1.
+ * Returns the user's local calendar date as YYYY-MM-DD.
+ */
+export function getLocalCalendarDateString(date: Date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Checks whether two local date strings YYYY-MM-DD represent consecutive local calendar days.
+ * Compares at local noon to avoid daylight saving time hour shifts.
+ */
+export function isConsecutiveLocalDay(prevDateStr: string, nextDateStr: string): boolean {
+  if (!prevDateStr || !nextDateStr) return false;
+  const [y1, m1, d1] = prevDateStr.split('-').map(Number);
+  const [y2, m2, d2] = nextDateStr.split('-').map(Number);
+  if (!y1 || !m1 || !d1 || !y2 || !m2 || !d2) return false;
+
+  const prevDate = new Date(y1, m1 - 1, d1, 12, 0, 0);
+  const nextDate = new Date(y2, m2 - 1, d2, 12, 0, 0);
+
+  const diffMs = nextDate.getTime() - prevDate.getTime();
+  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+  return diffDays === 1;
+}
+
+/**
+ * User local-calendar-day based streak updater.
+ * - Same local calendar day: maintains current streak (no double-increment).
+ * - Consecutive local calendar day: increments current streak by 1.
+ * - Missed 1+ local calendar days: resets current streak to 1.
  * - Preserves bestDailyStreak across resets.
  */
 export function updatePlayStreak(
   currentStats: StreakStats,
-  todayDateStr: string = new Date().toISOString().split('T')[0]
+  todayDateStr: string = getLocalCalendarDateString()
 ): StreakStats {
   const updated: StreakStats = {
     ...currentStats,
@@ -313,17 +385,13 @@ export function updatePlayStreak(
   const lastPlayed = updated.lastPlayedDate;
 
   if (lastPlayed === todayDateStr) {
-    // Already played today: maintain streak without incrementing
+    // Already played today in local timezone: maintain streak without incrementing
     return updated;
   }
 
   let newStreak = 1;
   if (lastPlayed) {
-    // Compare dates in UTC to avoid daylight savings / timezone shift
-    const prevTime = new Date(lastPlayed + 'T00:00:00Z').getTime();
-    const currTime = new Date(todayDateStr + 'T00:00:00Z').getTime();
-    const diffDays = Math.round((currTime - prevTime) / (1000 * 60 * 60 * 24));
-    if (diffDays === 1) {
+    if (isConsecutiveLocalDay(lastPlayed, todayDateStr)) {
       newStreak = (updated.currentDailyStreak || 0) + 1;
     } else {
       newStreak = 1;

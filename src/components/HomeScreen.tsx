@@ -1,5 +1,5 @@
 import React from 'react';
-import { Player, ChallengeTemplate, StreakStats, CampaignHistoryEntry, PersonalBests } from '../types/game';
+import { Player, ChallengeTemplate, StreakStats, CampaignHistoryEntry, PersonalBests, ChallengeTarget } from '../types/game';
 import { DailyChallengeStatus } from '../utils/storage';
 import { PlayerCard } from './PlayerCard';
 import { DailyChallengeBanner } from './DailyChallengeBanner';
@@ -66,6 +66,9 @@ interface HomeScreenProps {
   onPlayDailyChallenge: () => void;
   onRandomDraft: () => void;
   onViewHistory?: () => void;
+  incomingChallenge?: ChallengeTarget | null;
+  onAcceptChallenge?: (target: ChallengeTarget) => void;
+  onDismissChallenge?: () => void;
 }
 
 export function HomeScreen({
@@ -81,6 +84,9 @@ export function HomeScreen({
   onPlayDailyChallenge,
   onRandomDraft,
   onViewHistory,
+  incomingChallenge,
+  onAcceptChallenge,
+  onDismissChallenge,
 }: HomeScreenProps) {
   const activeShowcase = showcasePlayer || PELE_FALLBACK;
   const lastRun = campaignHistory.length > 0 ? campaignHistory[0] : null;
@@ -91,6 +97,48 @@ export function HomeScreen({
 
       {/* Hero Title */}
       <div className="flex flex-col items-center justify-center mt-2 w-full space-y-4">
+        {/* Incoming Challenge Invitation Banner */}
+        {incomingChallenge && (
+          <div className="w-full max-w-[340px] rounded-2xl border-2 border-amber-500/50 bg-gradient-to-b from-amber-950/70 via-slate-950 to-slate-950 p-4 shadow-2xl shadow-amber-950/40 flex flex-col gap-3 animate-card-deal text-left">
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-1.5">
+                <span className="text-base">🎯</span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 font-display">
+                  Challenge Invitation
+                </span>
+              </div>
+              <span className="text-[8.5px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold uppercase">
+                {(incomingChallenge.draftMode || 'classic').toUpperCase()}
+              </span>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-display font-black text-white leading-tight uppercase">
+                Can You Beat {incomingChallenge.targetWins} Wins?
+              </h3>
+              <p className="text-xs text-slate-300 font-medium mt-1">
+                A manager challenged you to top <strong className="text-amber-300">{incomingChallenge.targetWins} wins</strong> ({incomingChallenge.targetPoints} pts) using <strong className="text-emerald-400">{incomingChallenge.formation || '4-3-3'}</strong>.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2 pt-1">
+              <button
+                onClick={() => onAcceptChallenge && onAcceptChallenge(incomingChallenge)}
+                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 cursor-pointer transition-all active:scale-98"
+              >
+                Accept Challenge ➔
+              </button>
+
+              <button
+                onClick={onDismissChallenge}
+                className="w-full py-2 px-3 rounded-lg text-slate-400 hover:text-slate-200 text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer text-center"
+              >
+                Play normally instead
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/25 text-emerald-450 text-[10px] font-bold uppercase tracking-widest leading-none">
           ⚽ ALL-TIME DRAFT CHALLENGE
         </div>

@@ -200,6 +200,18 @@ export interface ChallengeTemplate {
   modifier?: DraftModifier;
 }
 
+export interface ChallengeTarget {
+  targetWins: number;
+  targetPoints?: number;
+  formation?: FormationType;
+  draftMode?: DraftModifier;
+  leagueId?: string;
+  selectedLeague?: string;
+  source?: 'url' | 'history';
+  title?: string;
+  runId?: string;
+}
+
 export interface StreakStats {
   gamesPlayed: number;
   bestPoints: number;
@@ -239,6 +251,7 @@ export interface CampaignHistoryEntry {
   completedAt: string; // ISO date string
   draftMode: DraftModifier | 'daily_challenge';
   formation: string;
+  leagueId?: string;
   wins: number;
   draws: number;
   losses: number;

@@ -153,8 +153,27 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
         }
       }}
     >
+      {/* Screen-reader only semantic lineup list */}
+      <div className="sr-only">
+        <h3>Starting XI ({formation})</h3>
+        <ol>
+          {slots.map((slot, index) => {
+            const player = selectedPlayers[index];
+            const linkCount = getPlayerLinkCount(index);
+            return (
+              <li key={slot.id}>
+                {slot.label}:{' '}
+                {player
+                  ? `${player.displayName}, ${player.rating} OVR, ${player.season}, ${player.club}, ${player.nationality}. ${linkCount} teammate chemistry link${linkCount !== 1 ? 's' : ''}.`
+                  : 'Empty slot'}
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+
       {/* 1. Tactical Pitch Lines overlay */}
-      <div className="absolute inset-0 p-4 opacity-75 pointer-events-none">
+      <div className="absolute inset-0 p-4 opacity-75 pointer-events-none" aria-hidden="true">
         <div className="w-full h-full border-2 border-emerald-500/10 rounded-2xl relative">
           {/* Halfway Line */}
           <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-emerald-500/10 transform -translate-y-1/2" />
@@ -175,7 +194,7 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
       </div>
 
       {/* 2. Pitch grass striping effect */}
-      <div className="absolute inset-0 flex flex-col pointer-events-none opacity-25">
+      <div className="absolute inset-0 flex flex-col pointer-events-none opacity-25" aria-hidden="true">
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
@@ -291,7 +310,7 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
             {player ? (
               // Player card is drafted for this slot
               <div
-                className="relative cursor-pointer group"
+                className="relative cursor-pointer group rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
                 role="button"
                 tabIndex={0}
                 aria-label={accessibleLabel}
@@ -328,7 +347,7 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
               <button
                 onClick={() => handleSlotClick(index)}
                 aria-label={accessibleLabel}
-                className={`w-[68px] h-[100px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition-all duration-300 relative focus:outline-none focus:ring-2 focus:ring-emerald-400 cursor-pointer ${
+                className={`w-[68px] h-[100px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition-all duration-300 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:outline-none cursor-pointer ${
                   isActive
                     ? 'border-emerald-400 bg-emerald-950/45 text-emerald-300 shadow-[0_0_15px_rgba(52,211,153,0.3)] scale-105 ring-2 ring-emerald-400/40 motion-safe:animate-pulse'
                     : 'border-slate-800 bg-slate-950/40 text-slate-500 hover:border-slate-700 hover:text-slate-400 hover:scale-102'

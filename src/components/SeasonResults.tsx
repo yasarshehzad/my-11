@@ -278,7 +278,7 @@ export function SeasonResults({
 
       {/* Target Replay Outcome Banner */}
       {simResult.beatTargetResult && (
-        <div className={`w-full p-4 rounded-3xl border relative z-10 text-center shadow-xl ${
+        <div className={`w-full p-4.5 rounded-3xl border relative z-10 text-center shadow-xl ${
           simResult.beatTargetResult.beaten
             ? 'bg-gradient-to-r from-emerald-950/80 to-slate-950/80 border-emerald-500/40 text-emerald-400'
             : simResult.beatTargetResult.matched
@@ -287,22 +287,22 @@ export function SeasonResults({
         }`}>
           <div className="flex items-center justify-center gap-1.5">
             <span className="text-lg">
-              {simResult.beatTargetResult.beaten ? '🎯' : simResult.beatTargetResult.matched ? '🤝' : '⏱️'}
+              {simResult.beatTargetResult.beaten ? '🏆' : simResult.beatTargetResult.matched ? '🤝' : '⏱️'}
             </span>
             <h3 className="text-xs font-display font-black uppercase tracking-wider">
               {simResult.beatTargetResult.beaten
-                ? 'TARGET SURPASSED!'
+                ? `🏆 TARGET BEATEN (${simResult.wins} wins vs target ${simResult.beatTargetResult.targetWins})`
                 : simResult.beatTargetResult.matched
-                ? 'TARGET MATCHED!'
-                : 'TARGET MISSED'}
+                ? `TARGET MATCHED (${simResult.wins} wins)`
+                : `SO CLOSE (${simResult.wins} wins vs target ${simResult.beatTargetResult.targetWins})`}
             </h3>
           </div>
           <p className="text-[10px] text-slate-300 mt-1 font-semibold">
             {simResult.beatTargetResult.beaten
-              ? `You racked up ${simResult.wins} wins to conquer your previous target of ${simResult.beatTargetResult.targetWins} wins!`
+              ? `You conquered the challenge target of ${simResult.beatTargetResult.targetWins} wins with ${simResult.wins} wins!`
               : simResult.beatTargetResult.matched
-              ? `You equalled the target of ${simResult.beatTargetResult.targetWins} wins.`
-              : `Finished with ${simResult.wins} wins (Target was > ${simResult.beatTargetResult.targetWins} wins).`}
+              ? `You matched the target of ${simResult.beatTargetResult.targetWins} wins.`
+              : `Finished with ${simResult.wins} wins (Target was ${simResult.beatTargetResult.targetWins} wins). Share your score or try again!`}
           </p>
         </div>
       )}

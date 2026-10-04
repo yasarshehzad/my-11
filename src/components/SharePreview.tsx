@@ -1,7 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Player, SimulationResult, StreakStats } from '../types/game';
 import { toPng } from 'html-to-image';
-import { logResultShared, logShareCardDownloaded } from '../utils/analytics';
+import { generateChallengeUrl, generateChallengeShareText } from '../utils/challengeUrl';
+import {
+  logResultShared,
+  logShareCardDownloaded,
+  logShareOpened,
+  logNativeShareTriggered,
+  logChallengeLinkCopied,
+} from '../utils/analytics';
 
 interface SharePreviewProps {
   formation: string;
@@ -32,43 +39,66 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
   dailyChallengeBeaten = false,
   exportRef,
 }) => {
-  const [copied, setCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Helper: Convert DataURL to Blob for Navigator File sharing
-  const dataURLtoBlob = (dataurl: string): Blob => {
-    const arr = dataurl.split(',');
-    const mime = arr[0].match(/:(.*?);/)![1];
-    const bstr = atob(arr[1]);
-    let n = bstr.length;
-    const u8arr = new Uint8Array(n);
-    while (n--) {
-      u8arr[n] = bstr.charCodeAt(n);
-    }
-    return new Blob([u8arr], { type: mime });
-  };
+  // Track share view on mount
+  useEffect(() => {
+    logShareOpened(simResult.wins, simResult.points, simResult.draftModifier || 'classic');
+  }, [simResult.wins, simResult.points, simResult.draftModifier]);
 
-  // Helper: Copy result summary text to clipboard
-  const handleCopyText = () => {
-    const modeLabel = simResult.draftModifier === 'quick' ? 'Quick Draft ⚡' : simResult.draftModifier === 'mystery' ? 'Mystery Draft ❓' : 'Classic Draft';
-    const storyHook = simResult.seasonStory ? ` [${simResult.seasonStory.title} · ${simResult.seasonStory.longestStreak.description}]` : '';
-    const text = isDailyChallenge
-      ? `🎮 I completed today's Daily Challenge "${dailyChallengeTitle}" on MY DRAFTED XI!
-🏆 Formation: ${formation} | OVR: ${stats.overall} | Chem: ${stats.chemistry} (${simResult.chemistryGrade})
-📊 Record: ${simResult.wins}W - ${simResult.draws}D - ${simResult.losses}L (${simResult.points} PTS)
-⭐ Outcome: ${dailyChallengeBeaten ? 'CHALLENGE CLEARED! ✅' : 'CHALLENGE FAILED ❌'}
-📊 Global Tier: Top ${simResult.percentile}%
-Can you beat this? Play now at https://my-11.com`
-      : `🎮 I built a ${simResult.wins}-${simResult.draws}-${simResult.losses} MY DRAFTED XI (${modeLabel})${storyHook}. MVP: ${simResult.mvp.displayName} (${simResult.mvp.rating}). Chemistry Grade: ${simResult.chemistryGrade}. Playstyle: ${simResult.playstyle}. Can you beat me? Play now at https://my-11.com`;
-
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+  // Generate lightweight challenge URL & adaptive football share text
+  const challengeUrl = React.useMemo(() => {
+    return generateChallengeUrl({
+      targetWins: simResult.wins,
+      targetPoints: simResult.points,
+      draftMode: simResult.draftModifier || 'classic',
+      formation: formation as any,
+      leagueId: simResult.selectedLeague || 'english',
     });
+  }, [simResult.wins, simResult.points, simResult.draftModifier, formation, simResult.selectedLeague]);
+
+  const shareText = React.useMemo(() => {
+    return generateChallengeShareText({
+      wins: simResult.wins,
+      draws: simResult.draws,
+      losses: simResult.losses,
+      points: simResult.points,
+      mode: simResult.draftModifier || 'classic',
+      challengeUrl,
+      isDailyChallenge,
+      dailyChallengeTitle,
+    });
+  }, [simResult.wins, simResult.draws, simResult.losses, simResult.points, simResult.draftModifier, challengeUrl, isDailyChallenge, dailyChallengeTitle]);
+
+  // Helper: Copy challenge link specifically
+  const handleCopyChallengeLink = async () => {
+    try {
+      await navigator.clipboard.writeText(challengeUrl);
+      logChallengeLinkCopied(simResult.wins, simResult.points);
+      setFeedbackMessage('Copied challenge link to clipboard!');
+      setTimeout(() => setFeedbackMessage(null), 3000);
+    } catch (e) {
+      setErrorMessage('Could not copy to clipboard.');
+      setTimeout(() => setErrorMessage(null), 3000);
+    }
   };
 
-  // 1. Download PNG Fallback
+  // Helper: Copy formatted challenge text with link
+  const handleCopyText = async () => {
+    try {
+      await navigator.clipboard.writeText(shareText);
+      logChallengeLinkCopied(simResult.wins, simResult.points);
+      setFeedbackMessage('Copied challenge summary & link to clipboard!');
+      setTimeout(() => setFeedbackMessage(null), 3000);
+    } catch (e) {
+      setErrorMessage('Could not copy to clipboard.');
+      setTimeout(() => setErrorMessage(null), 3000);
+    }
+  };
+
+  // 1. Download PNG Graphic
   const handleDownloadImage = async () => {
     if (!exportRef.current) return;
     setGenerating(true);
@@ -86,55 +116,41 @@ Can you beat this? Play now at https://my-11.com`
       });
 
       const link = document.createElement('a');
-      link.download = `drafted_xi_${isDailyChallenge ? 'challenge' : 'season'}.png`;
+      link.download = `my11_challenge_${simResult.wins}wins.png`;
       link.href = dataUrl;
       link.click();
+      setFeedbackMessage('Downloaded 1080x1920 card!');
+      setTimeout(() => setFeedbackMessage(null), 3000);
     } catch (error) {
       console.error('Failed to generate image', error);
-      setErrorMessage('Failed to generate image. Please try copying the result text instead.');
+      setErrorMessage('Failed to generate image. Please try copying the challenge link instead.');
     } finally {
       setGenerating(false);
     }
   };
 
-  // 2. Native Share using Web Share API (with PNG blob)
+  // 2. Native Share using Web Share API
   const handleShareResult = async () => {
-    if (!exportRef.current) return;
-    setGenerating(true);
-    setErrorMessage(null);
+    logNativeShareTriggered(simResult.wins, simResult.points);
     logResultShared(simResult.wins, simResult.points);
 
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    try {
-      const dataUrl = await toPng(exportRef.current, {
-        cacheBust: true,
-        width: 1080,
-        height: 1920,
-      });
-
-      const blob = dataURLtoBlob(dataUrl);
-      const file = new File([blob], 'drafted_xi_result.png', { type: 'image/png' });
-
-      // Check if navigator.share and file sharing are supported
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    if (navigator.share) {
+      try {
         await navigator.share({
-          files: [file],
-          title: 'MY DRAFTED XI Campaign',
-          text: `Check out my simulated campaign on MY DRAFTED XI! Formation: ${formation}, Playstyle: ${simResult.playstyle}. Play now at https://my-11.com`,
+          title: `Beat My Score on MY-11 (${simResult.wins} Wins)`,
+          text: shareText,
+          url: challengeUrl,
         });
-      } else {
-        // Fallback: Copy summary text to clipboard
-        handleCopyText();
-        alert('Native image sharing not supported on this browser. Summary text has been copied to your clipboard!');
+        setFeedbackMessage('Shared successfully!');
+        setTimeout(() => setFeedbackMessage(null), 3000);
+      } catch (error: any) {
+        if (error.name !== 'AbortError') {
+          await handleCopyChallengeLink();
+        }
       }
-    } catch (error) {
-      console.error('Failed to share results', error);
-      // Fallback: Copy summary text
-      handleCopyText();
-      alert('Native sharing failed. Summary text has been copied to your clipboard!');
-    } finally {
-      setGenerating(false);
+    } else {
+      // Fallback: Copy challenge link to clipboard
+      await handleCopyChallengeLink();
     }
   };
 
@@ -343,42 +359,64 @@ Can you beat this? Play now at https://my-11.com`
         </div>
       </div>
 
-      {/* Exporter Action Buttons */}
-      <div className="flex flex-col gap-2 w-full max-w-sm mt-1 px-4 sm:px-0">
-        <button
-          onClick={handleShareResult}
-          className="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-zinc-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/10 hover:from-emerald-400 hover:to-teal-400 transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center justify-center gap-2"
-        >
-          <span>🔗</span> Share Result Card
-        </button>
-
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={handleDownloadImage}
-            className="py-3 px-4 rounded-2xl bg-slate-900 border border-slate-800 text-slate-350 font-display font-bold text-xs uppercase tracking-wider hover:bg-slate-800 transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+      {/* Beat My Score Challenge Callout & Actions */}
+      <div className="flex flex-col gap-3 w-full max-w-sm mt-1 px-4 sm:px-0">
+        {/* Status Toast */}
+        {feedbackMessage && (
+          <div
+            className="w-full py-2.5 px-4 rounded-2xl bg-emerald-950/90 border border-emerald-500/40 text-emerald-400 font-display font-black text-xs uppercase tracking-wider text-center shadow-lg shadow-emerald-950/50 animate-card-deal"
+            role="status"
           >
-            <span>📥</span> Download Image
-          </button>
-          
-          <button
-            onClick={handleCopyText}
-            className="py-3 px-4 rounded-2xl bg-slate-900 border border-slate-800 text-slate-350 font-display font-bold text-xs uppercase tracking-wider hover:bg-slate-800 transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
-          >
-            {copied ? (
-              <span className="text-emerald-400">Copied!</span>
-            ) : (
-              <>
-                <span>📋</span> Copy Text
-              </>
-            )}
-          </button>
-        </div>
+            ✓ {feedbackMessage}
+          </div>
+        )}
 
         {errorMessage && (
-          <p className="text-[10px] text-rose-400 font-semibold text-center mt-1 uppercase tracking-wide leading-relaxed">
-            {errorMessage}
-          </p>
+          <div
+            className="w-full py-2.5 px-4 rounded-2xl bg-rose-950/90 border border-rose-500/40 text-rose-400 font-display font-black text-xs uppercase tracking-wider text-center shadow-lg shadow-rose-950/50 animate-card-deal"
+            role="alert"
+          >
+            ⚠️ {errorMessage}
+          </div>
         )}
+
+        {/* Primary Action: Copy Challenge Link */}
+        <button
+          onClick={handleCopyChallengeLink}
+          className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-zinc-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 hover:-translate-y-0.5 transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+        >
+          <span>🎯</span> Copy Challenge Link ({simResult.wins} Wins)
+        </button>
+
+        {/* Secondary Actions */}
+        <div className="grid grid-cols-3 gap-2">
+          <button
+            onClick={handleShareResult}
+            title="Share via native share menu or apps"
+            className="py-3 px-2 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white font-display font-bold text-[11px] uppercase tracking-wider hover:bg-slate-800 transition-all duration-300 transform active:scale-95 cursor-pointer flex flex-col items-center justify-center gap-1"
+          >
+            <span className="text-sm">📱</span>
+            <span>Share App</span>
+          </button>
+
+          <button
+            onClick={handleCopyText}
+            title="Copy full campaign report with link"
+            className="py-3 px-2 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white font-display font-bold text-[11px] uppercase tracking-wider hover:bg-slate-800 transition-all duration-300 transform active:scale-95 cursor-pointer flex flex-col items-center justify-center gap-1"
+          >
+            <span className="text-sm">📋</span>
+            <span>Copy Text</span>
+          </button>
+
+          <button
+            onClick={handleDownloadImage}
+            title="Download high-resolution 1080x1920 graphic"
+            className="py-3 px-2 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white font-display font-bold text-[11px] uppercase tracking-wider hover:bg-slate-800 transition-all duration-300 transform active:scale-95 cursor-pointer flex flex-col items-center justify-center gap-1"
+          >
+            <span className="text-sm">📥</span>
+            <span>Graphic</span>
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Player, FormationType, SimulationResult, ChallengeTemplate, DraftModifier } from '../types/game';
+import { Player, FormationType, SimulationResult, ChallengeTemplate, DraftModifier, ChallengeTarget } from '../types/game';
 import { FORMATION_SLOTS, getDetailedChemistryLogs, getSquadChemistryBreakdown, isMysteryRound, getProjectedChemistry, ProjectedChemistryInfo } from '../utils/gameLogic';
 import { logQuickTimerExpired, logMysteryRoundStarted, logMysteryPlayerRevealed } from '../utils/analytics';
 import { PitchLayout } from './PitchLayout';
 import { StatsDisplay } from './StatsDisplay';
 import { DraftOptions } from './DraftOptions';
 import { PlayerCard } from './PlayerCard';
+import { DraftOnboardingGuide } from './DraftOnboardingGuide';
 
 interface DraftScreenProps {
   formation: FormationType;
@@ -20,7 +21,10 @@ interface DraftScreenProps {
   freeSearchEnabled: boolean;
   isDailyChallenge: boolean;
   todayChallenge: ChallengeTemplate | null;
-  targetToBeat?: { targetWins: number; targetPoints: number; runId: string } | null;
+  targetToBeat?: ChallengeTarget | null;
+  showOnboarding?: boolean;
+  onSkipOnboarding?: () => void;
+  onCompleteOnboarding?: () => void;
   chemistryToast: { text: string; type: 'positive' | 'negative' } | null;
   recentlyDraftedIndex?: number | null;
   draftTab: 'recommended' | 'search';
@@ -56,6 +60,9 @@ export function DraftScreen({
   isDailyChallenge,
   todayChallenge,
   targetToBeat,
+  showOnboarding = false,
+  onSkipOnboarding,
+  onCompleteOnboarding,
   chemistryToast,
   recentlyDraftedIndex,
   draftTab,
@@ -85,6 +92,10 @@ export function DraftScreen({
   const isMystery = isMysteryRound(currentSlotIndex, draftModifier);
   const isQuick = draftModifier === 'quick' && !isFinished;
 
+  // Screen reader announcements for throttled timer and mystery reveal
+  const [timerAnnouncement, setTimerAnnouncement] = useState<string>('');
+  const [mysteryAnnouncement, setMysteryAnnouncement] = useState<string>('');
+
   // Mystery Reveal Modal state
   const [revealedPlayer, setRevealedPlayer] = useState<{
     player: Player;
@@ -110,6 +121,16 @@ export function DraftScreen({
     return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, []);
 
+  // Throttled polite Quick timer announcements (at 10s, 3s, and timeout)
+  useEffect(() => {
+    if (!isQuick || isFinished) return;
+    if (timeLeft === 10) {
+      setTimerAnnouncement('Quick draft round: 10 seconds remaining.');
+    } else if (timeLeft === 3) {
+      setTimerAnnouncement('3 seconds remaining. Time running out!');
+    }
+  }, [isQuick, isFinished, timeLeft]);
+
   // Quick Draft countdown ticker
   useEffect(() => {
     if (!isQuick || isFinished || !draftOptions || revealedPlayer !== null || !isTabVisible) {
@@ -124,6 +145,7 @@ export function DraftScreen({
           const randomIdx = Math.floor(Math.random() * draftOptions.length);
           const autoCard = draftOptions[randomIdx];
           logQuickTimerExpired(currentSlotIndex, autoCard.displayName);
+          setTimerAnnouncement('Time expired. A player was automatically drafted.');
           onSelectPlayer(autoCard);
           return ROUND_SECONDS;
         }
@@ -139,6 +161,9 @@ export function DraftScreen({
     if (isMystery && !isFinished) {
       const proj = getProjectedChemistry(player, currentSlotIndex, selectedPlayers, slots);
       logMysteryRoundStarted(currentSlotIndex);
+      setMysteryAnnouncement(
+        `Mystery player revealed: ${player.displayName}, rated ${player.rating}, ${player.season}.`
+      );
       setRevealedPlayer({ player, projected: proj });
     } else {
       onSelectPlayer(player);
@@ -153,8 +178,36 @@ export function DraftScreen({
     onSelectPlayer(player);
   };
 
+  // Keyboard accessibility: Escape closes mystery modal
+  useEffect(() => {
+    if (!revealedPlayer) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleConfirmMysteryReveal();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [revealedPlayer]);
+
   return (
     <div className={`flex flex-col gap-6 px-4 sm:px-6 py-6 w-full max-w-lg mx-auto min-h-[90vh] relative overflow-hidden ${isFinished ? 'pb-24' : ''}`}>
+      {/* Polite screen reader live announcements */}
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {timerAnnouncement}
+      </div>
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {mysteryAnnouncement}
+      </div>
+
+      {/* First-Run Onboarding Guide (Step 1 on pick 0, Step 2 on mid-draft, Step 3 on completion) */}
+      {showOnboarding && (
+        <DraftOnboardingGuide
+          currentStep={currentSlotIndex === 0 ? 1 : !isFinished ? 2 : 3}
+          onSkip={onSkipOnboarding || (() => {})}
+          onComplete={onCompleteOnboarding || (() => {})}
+        />
+      )}
       
       {/* Floating Chemistry Toast Notification (Micro-interaction) */}
       {chemistryToast && (
@@ -261,7 +314,7 @@ export function DraftScreen({
         <div 
           className="w-full glass rounded-2xl p-3 border border-amber-500/20 bg-amber-950/10 flex flex-col gap-2 select-none animate-card-deal"
           role="timer"
-          aria-live="polite"
+          aria-live="off"
           aria-label={`Draft Timer: ${timeLeft} seconds remaining`}
         >
           <div className="flex justify-between items-center text-xs">
