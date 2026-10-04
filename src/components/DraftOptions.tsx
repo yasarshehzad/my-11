@@ -1,6 +1,6 @@
 import React from 'react';
-import { Player, PitchSlot } from '../types/game';
-import { getProjectedChemistry } from '../utils/gameLogic';
+import { Player, PitchSlot, DraftModifier } from '../types/game';
+import { getProjectedChemistry, getMysteryClues } from '../utils/gameLogic';
 import { PlayerCard } from './PlayerCard';
 
 interface DraftOptionsProps {
@@ -10,6 +10,8 @@ interface DraftOptionsProps {
   selectedPlayers: (Player | null)[];
   slots: PitchSlot[];
   draftIQMode: boolean;
+  draftModifier?: DraftModifier;
+  isMysteryRound?: boolean;
   rerollsRemaining: number;
   freeSearchEnabled: boolean;
   draftTab: 'recommended' | 'search';
@@ -38,6 +40,8 @@ export function DraftOptions({
   selectedPlayers,
   slots,
   draftIQMode,
+  draftModifier = 'classic',
+  isMysteryRound = false,
   rerollsRemaining,
   freeSearchEnabled,
   draftTab,
@@ -67,16 +71,30 @@ export function DraftOptions({
     );
   }, [draftOptions, currentSlotIndex, selectedPlayers, slots]);
 
+  // Compute honest clues for mystery rounds
+  const mysteryCluesList = React.useMemo(() => {
+    if (!draftOptions || !isMysteryRound) return [];
+    const hints: ('star' | 'system' | 'wildcard')[] = ['star', 'system', 'wildcard'];
+    return draftOptions.map((player, idx) => getMysteryClues(player, hints[idx]));
+  }, [draftOptions, isMysteryRound]);
+
   return (
     <div className="flex flex-col gap-3.5 w-full">
       {/* Header / Info bar with Rerolls */}
       <div className="flex flex-col sm:flex-row justify-between items-center bg-slate-900/40 px-4 py-3 rounded-2xl border border-slate-900/60 gap-3">
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">
-          Choose Player for:{' '}
-          <span className="text-emerald-400 font-display font-black">
-            {currentSlot?.label}
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">
+            Choose Player for:{' '}
+            <span className="text-emerald-400 font-display font-black">
+              {currentSlot?.label}
+            </span>
           </span>
-        </span>
+          {isMysteryRound && (
+            <span className="text-[8px] px-2 py-0.5 rounded-full bg-purple-950/80 border border-purple-500/40 text-purple-300 font-display font-black tracking-wider uppercase animate-pulse">
+              ❓ Mystery Round
+            </span>
+          )}
+        </div>
 
         <div className="flex items-center gap-2.5 select-none">
           {currentSlotIndex > 0 && (
@@ -126,7 +144,7 @@ export function DraftOptions({
       </div>
 
       {/* Tab Swapper */}
-      {freeSearchEnabled && (
+      {freeSearchEnabled && !isMysteryRound && (
         <div className="flex bg-slate-950/70 p-1 rounded-2xl border border-slate-900 w-full mb-1">
           <button
             onClick={() => onSetDraftTab('recommended')}
@@ -152,7 +170,7 @@ export function DraftOptions({
       )}
 
       {/* Scout Recommended Picks */}
-      {draftTab === 'recommended' && draftOptions && (
+      {(draftTab === 'recommended' || isMysteryRound) && draftOptions && (
         <div className="flex justify-start gap-4 overflow-x-auto pb-4 pt-1.5 snap-x scroll-px-4 scrollbar-thin px-4 w-full">
           {draftOptions.map((player, idx) => (
             <div key={player.id} className="snap-start flex-shrink-0 animate-card-deal">
@@ -163,6 +181,8 @@ export function DraftOptions({
                 draftIQActive={draftIQMode}
                 projectedInfo={scoutProjections[idx]}
                 onHover={(hovering) => onCandidateHover && onCandidateHover(hovering ? player : null)}
+                isMystery={isMysteryRound}
+                mysteryClues={isMysteryRound ? mysteryCluesList[idx] : undefined}
               />
             </div>
           ))}

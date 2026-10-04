@@ -232,19 +232,27 @@ export function SeasonResults({
             Daily Challenge: <span className="text-emerald-450 font-display">{todayChallenge.title}</span>
           </p>
         )}
-        <p className="text-[10px] text-slate-450 font-bold tracking-widest uppercase mt-1.5">
-          League: <span className="text-emerald-450 font-display">
-            {
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mt-1.5">
+          <p className="text-[10px] text-slate-450 font-bold tracking-widest uppercase">
+            League: <span className="text-emerald-450 font-display">
               {
-                english: 'English Premier League 🇬🇧',
-                spanish: 'La Liga 🇪🇸',
-                german: 'Bundesliga 🇩🇪',
-                italian: 'Serie A 🇮🇹',
-                french: 'Ligue 1 🇫🇷',
-              }[simResult.selectedLeague || 'english']
-            }
-          </span>
-        </p>
+                {
+                  english: 'English Premier League 🇬🇧',
+                  spanish: 'La Liga 🇪🇸',
+                  german: 'Bundesliga 🇩🇪',
+                  italian: 'Serie A 🇮🇹',
+                  french: 'Ligue 1 🇫🇷',
+                }[simResult.selectedLeague || 'english']
+              }
+            </span>
+          </p>
+          <span className="text-slate-700 hidden sm:inline">•</span>
+          <p className="text-[10px] text-slate-450 font-bold tracking-widest uppercase">
+            Mode: <span className="text-emerald-450 font-display">
+              {simResult.draftModifier === 'quick' ? '⚡ QUICK DRAFT' : simResult.draftModifier === 'mystery' ? '❓ MYSTERY DRAFT' : '⏱️ CLASSIC DRAFT'}
+            </span>
+          </p>
+        </div>
       </div>
 
       {/* Heartbreak / Celebratory Banner */}

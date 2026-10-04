@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { Player, FormationType, SimulationResult, ChallengeTemplate } from '../types/game';
-import { FORMATION_SLOTS, getDetailedChemistryLogs, getSquadChemistryBreakdown } from '../utils/gameLogic';
+import React, { useState, useEffect } from 'react';
+import { Player, FormationType, SimulationResult, ChallengeTemplate, DraftModifier } from '../types/game';
+import { FORMATION_SLOTS, getDetailedChemistryLogs, getSquadChemistryBreakdown, isMysteryRound, getProjectedChemistry, ProjectedChemistryInfo } from '../utils/gameLogic';
+import { logQuickTimerExpired, logMysteryRoundStarted, logMysteryPlayerRevealed } from '../utils/analytics';
 import { PitchLayout } from './PitchLayout';
 import { StatsDisplay } from './StatsDisplay';
 import { DraftOptions } from './DraftOptions';
+import { PlayerCard } from './PlayerCard';
 
 interface DraftScreenProps {
   formation: FormationType;
@@ -13,6 +15,7 @@ interface DraftScreenProps {
   stats: { attack: number; midfield: number; defence: number; chemistry: number; overall: number };
   simResult: SimulationResult | null;
   draftIQMode: boolean;
+  draftModifier?: DraftModifier;
   rerollsRemaining: number;
   freeSearchEnabled: boolean;
   isDailyChallenge: boolean;
@@ -46,6 +49,7 @@ export function DraftScreen({
   stats,
   simResult,
   draftIQMode,
+  draftModifier = 'classic',
   rerollsRemaining,
   freeSearchEnabled,
   isDailyChallenge,
@@ -76,6 +80,77 @@ export function DraftScreen({
   const activeLogs = getDetailedChemistryLogs(selectedPlayers, slots);
   const squadBreakdown = getSquadChemistryBreakdown(selectedPlayers, slots);
 
+  const isMystery = isMysteryRound(currentSlotIndex, draftModifier);
+  const isQuick = draftModifier === 'quick' && !isFinished;
+
+  // Mystery Reveal Modal state
+  const [revealedPlayer, setRevealedPlayer] = useState<{
+    player: Player;
+    projected: ProjectedChemistryInfo;
+  } | null>(null);
+
+  // Quick Draft Timer State
+  const ROUND_SECONDS = 10;
+  const [timeLeft, setTimeLeft] = useState<number>(ROUND_SECONDS);
+  const [isTabVisible, setIsTabVisible] = useState(true);
+
+  // Reset timer on new slot or new options
+  useEffect(() => {
+    setTimeLeft(ROUND_SECONDS);
+  }, [currentSlotIndex, draftOptions]);
+
+  // Tab visibility listener to pause timer when user switches away
+  useEffect(() => {
+    const handleVisibility = () => {
+      setIsTabVisible(document.visibilityState === 'visible');
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, []);
+
+  // Quick Draft countdown ticker
+  useEffect(() => {
+    if (!isQuick || isFinished || !draftOptions || revealedPlayer !== null || !isTabVisible) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          // Timeout! Fairly pick one of the available 3 options
+          const randomIdx = Math.floor(Math.random() * draftOptions.length);
+          const autoCard = draftOptions[randomIdx];
+          logQuickTimerExpired(currentSlotIndex, autoCard.displayName);
+          onSelectPlayer(autoCard);
+          return ROUND_SECONDS;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isQuick, isFinished, draftOptions, revealedPlayer, isTabVisible, currentSlotIndex, onSelectPlayer]);
+
+  // Handle card selection with Mystery Reveal interception
+  const handleCardSelection = (player: Player) => {
+    if (isMystery && !isFinished) {
+      const proj = getProjectedChemistry(player, currentSlotIndex, selectedPlayers, slots);
+      logMysteryRoundStarted(currentSlotIndex);
+      setRevealedPlayer({ player, projected: proj });
+    } else {
+      onSelectPlayer(player);
+    }
+  };
+
+  const handleConfirmMysteryReveal = () => {
+    if (!revealedPlayer) return;
+    const { player } = revealedPlayer;
+    logMysteryPlayerRevealed(player.displayName, player.rating);
+    setRevealedPlayer(null);
+    onSelectPlayer(player);
+  };
+
   return (
     <div className={`flex flex-col gap-6 px-4 sm:px-6 py-6 w-full max-w-lg mx-auto min-h-[90vh] relative overflow-hidden ${isFinished ? 'pb-24' : ''}`}>
       
@@ -94,9 +169,21 @@ export function DraftScreen({
       {/* Progress Header */}
       <div className="flex justify-between items-center w-full leading-none">
         <div>
-          <span className="text-[9px] font-black text-emerald-450 uppercase tracking-widest block mb-1">
-            {isDailyChallenge ? `🏆 CHALLENGE: ${todayChallenge?.title}` : '⚽ CLASSIC LEAGUE RUN'}
-          </span>
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="text-[9px] font-black text-emerald-450 uppercase tracking-widest block">
+              {isDailyChallenge ? `🏆 CHALLENGE: ${todayChallenge?.title}` : '⚽ CLASSIC LEAGUE RUN'}
+            </span>
+            {draftModifier === 'quick' && (
+              <span className="text-[8px] font-display font-black uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                ⚡ Quick
+              </span>
+            )}
+            {draftModifier === 'mystery' && (
+              <span className="text-[8px] font-display font-black uppercase px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                ❓ Mystery
+              </span>
+            )}
+          </div>
           <h2 className="text-lg font-display font-black text-foreground uppercase tracking-wider">
             {isFinished ? 'Draft Completed!' : `Pick #${currentSlotIndex + 1} of 11`}
           </h2>
@@ -139,7 +226,7 @@ export function DraftScreen({
         selectedPlayers={selectedPlayers}
         currentSlotIndex={isFinished ? -1 : currentSlotIndex}
         draftIQActive={draftIQMode}
-        highlightedCandidate={hoveredCandidate}
+        highlightedCandidate={isMystery ? null : hoveredCandidate}
         recentlyDraftedIndex={recentlyDraftedIndex}
       />
 
@@ -155,6 +242,47 @@ export function DraftScreen({
         breakdown={squadBreakdown}
       />
 
+      {/* Quick Draft Countdown Timer Bar */}
+      {isQuick && (
+        <div 
+          className="w-full glass rounded-2xl p-3 border border-amber-500/20 bg-amber-950/10 flex flex-col gap-2 select-none animate-card-deal"
+          role="timer"
+          aria-live="polite"
+          aria-label={`Draft Timer: ${timeLeft} seconds remaining`}
+        >
+          <div className="flex justify-between items-center text-xs">
+            <span className="font-display font-black uppercase tracking-wider flex items-center gap-1.5 text-foreground text-[11px]">
+              <span>⏱️</span>
+              <span>QUICK DRAFT TIMER</span>
+              {timeLeft <= 3 && (
+                <span className="text-[8.5px] bg-rose-500/20 text-rose-400 border border-rose-500/40 px-1.5 py-0.2 rounded font-sans uppercase font-bold animate-pulse">
+                  ⚠️ TIME RUNNING OUT!
+                </span>
+              )}
+            </span>
+            <span className={`font-display font-black text-sm tracking-tight ${
+              timeLeft <= 3 ? 'text-rose-400 animate-pulse text-base' : timeLeft <= 5 ? 'text-amber-400' : 'text-emerald-400'
+            }`}>
+              00:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}
+            </span>
+          </div>
+          
+          {/* Progress Bar */}
+          <div className="h-2 w-full bg-slate-950/80 rounded-full overflow-hidden border border-slate-900">
+            <div 
+              style={{ width: `${(timeLeft / ROUND_SECONDS) * 100}%` }}
+              className={`h-full transition-all duration-1000 ease-linear rounded-full ${
+                timeLeft <= 3 
+                  ? 'bg-gradient-to-r from-rose-600 to-rose-400 shadow-[0_0_10px_rgba(244,63,94,0.5)]'
+                  : timeLeft <= 5 
+                  ? 'bg-gradient-to-r from-amber-600 to-amber-400'
+                  : 'bg-gradient-to-r from-emerald-600 to-emerald-400'
+              }`}
+            />
+          </div>
+        </div>
+      )}
+
       {/* 3. Three Player Card Options / Custom Search (Horizontal slider with edge padding) */}
       {!isFinished && (
         <DraftOptions
@@ -164,6 +292,8 @@ export function DraftScreen({
           selectedPlayers={selectedPlayers}
           slots={slots}
           draftIQMode={draftIQMode}
+          draftModifier={draftModifier}
+          isMysteryRound={isMystery}
           rerollsRemaining={rerollsRemaining}
           freeSearchEnabled={freeSearchEnabled}
           draftTab={draftTab}
@@ -174,7 +304,7 @@ export function DraftScreen({
           allClubs={allClubs}
           allEras={allEras}
           filteredPlayers={filteredPlayers}
-          onSelectPlayer={onSelectPlayer}
+          onSelectPlayer={handleCardSelection}
           onRerollOptions={onRerollOptions}
           onUndoPick={onUndoPick}
           onCandidateHover={setHoveredCandidate}
@@ -184,6 +314,64 @@ export function DraftScreen({
           onSetSelectedEra={onSetSelectedEra}
           onSetOnlyMatchingPosition={onSetOnlyMatchingPosition}
         />
+      )}
+
+      {/* Mystery Reveal Modal */}
+      {revealedPlayer && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-card-deal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="mystery-reveal-title"
+        >
+          <div className="bg-slate-950 border border-purple-500/40 rounded-3xl p-6 w-full max-w-sm shadow-2xl flex flex-col items-center gap-4 text-center relative overflow-hidden">
+            {/* Glow */}
+            <div className="absolute inset-0 bg-gradient-to-b from-purple-500/10 via-transparent to-transparent pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col items-center">
+              <span className="text-[10px] font-black text-purple-400 tracking-widest uppercase mb-1">
+                ✨ MYSTERY SCOUT UNLOCKED
+              </span>
+              <h3 id="mystery-reveal-title" className="text-xl font-display font-black text-foreground uppercase tracking-tight">
+                You Drafted...
+              </h3>
+            </div>
+
+            {/* Revealed Card Preview */}
+            <div className="relative z-10 scale-95 my-1">
+              <PlayerCard
+                player={revealedPlayer.player}
+                layout="large"
+                projectedInfo={revealedPlayer.projected}
+              />
+            </div>
+
+            {/* Chemistry Impact Summary */}
+            <div className="w-full relative z-10 bg-purple-950/30 border border-purple-500/20 rounded-2xl p-3 flex justify-between items-center text-xs">
+              <div className="text-left">
+                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Chemistry Impact</span>
+                <span className="text-slate-300 font-medium truncate max-w-[190px] block text-[11px]">
+                  {revealedPlayer.projected.topReason}
+                </span>
+              </div>
+              <span className={`text-base font-display font-black ${
+                revealedPlayer.projected.delta >= 0 ? 'text-emerald-400' : 'text-rose-400'
+              }`}>
+                {revealedPlayer.projected.delta >= 0 ? `+${revealedPlayer.projected.delta}` : revealedPlayer.projected.delta} CHEM
+              </span>
+            </div>
+
+            {/* Confirm Button */}
+            <button
+              type="button"
+              onClick={handleConfirmMysteryReveal}
+              autoFocus
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-purple-500/20 cursor-pointer active:scale-98 transition-all relative z-10"
+            >
+              Add to Squad ➔
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Sticky Proceed Button for Mobile (Bottom of screen) */}

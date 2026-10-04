@@ -1,6 +1,6 @@
 import React from 'react';
 import { Player } from '../types/game';
-import { ProjectedChemistryInfo } from '../utils/gameLogic';
+import { ProjectedChemistryInfo, MysteryClues } from '../utils/gameLogic';
 
 interface PlayerCardProps {
   player: Player;
@@ -11,6 +11,8 @@ interface PlayerCardProps {
   draftIQActive?: boolean;
   projectedInfo?: ProjectedChemistryInfo;
   onHover?: (hovering: boolean) => void;
+  isMystery?: boolean;
+  mysteryClues?: MysteryClues;
 }
 
 export const PlayerCard: React.FC<PlayerCardProps> = ({
@@ -22,6 +24,8 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   draftIQActive = false,
   projectedInfo,
   onHover,
+  isMystery = false,
+  mysteryClues,
 }) => {
   const {
     playerName,
@@ -217,6 +221,99 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         : delta < 0
         ? 'bg-rose-500/20 text-rose-400 border-rose-500/40'
         : 'bg-slate-900/80 text-slate-400 border-slate-800';
+
+    if (isMystery && mysteryClues) {
+      return (
+        <button
+          type="button"
+          onClick={onClick}
+          onMouseEnter={() => onHover && onHover(true)}
+          onMouseLeave={() => onHover && onHover(false)}
+          aria-label={`Mystery Option: Position ${mysteryClues.position}, ${mysteryClues.era} Era, Top Attribute ${mysteryClues.topAttribute.name} (${mysteryClues.topAttribute.tier}), ${mysteryClues.affiliationHint.label}, ${mysteryClues.rarityTier} tier`}
+          className={`w-full max-w-[245px] min-h-[395px] rounded-2xl border border-purple-500/40 bg-gradient-to-b from-purple-950/40 via-slate-950 to-slate-950 shadow-[0_0_15px_rgba(168,85,247,0.15)] card-shine flex flex-col p-4 text-left relative transition-all duration-300 transform hover:-translate-y-2 active:scale-95 cursor-pointer select-none overflow-hidden focus:outline-none focus:ring-2 focus:ring-purple-400 group ${
+            selected ? 'ring-2 ring-purple-400 ring-offset-4 ring-offset-slate-950 scale-102' : ''
+          }`}
+        >
+          {/* Holographic light sheen */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-purple-500/10 via-transparent to-cyan-500/5 pointer-events-none" />
+
+          {/* 1. Header: Archetype & Dossier Label */}
+          <div className="w-full flex justify-between items-center mb-2.5 z-10 gap-1.5 leading-none">
+            <span className="px-2 py-0.5 rounded-full text-[8.5px] font-display font-black uppercase tracking-wider border border-purple-500/30 bg-purple-950/50 text-purple-300 shadow-sm">
+              {mysteryClues.archetypeHint}
+            </span>
+            <span className="text-[8px] font-extrabold uppercase tracking-wider text-purple-400 font-display">
+              ❓ CONCEALED
+            </span>
+          </div>
+
+          {/* 2. Mystery Position & Era */}
+          <div className="flex justify-between items-start w-full relative z-10">
+            <div className="flex flex-col items-start leading-none">
+              <span className="text-4xl font-display font-black tracking-tight text-purple-200">
+                ??
+              </span>
+              <span className="text-[10px] font-bold tracking-wider text-purple-300 bg-purple-950/80 border border-purple-800/40 px-1.5 py-0.5 rounded mt-1 uppercase font-display leading-none">
+                {mysteryClues.position}
+              </span>
+            </div>
+
+            <div className="flex flex-col items-end gap-1.5">
+              <span className="text-[8.5px] font-extrabold px-2 py-0.5 rounded border uppercase tracking-wider font-display leading-none bg-purple-950 text-purple-300 border-purple-700/50">
+                {mysteryClues.rarityTier}
+              </span>
+              <span className="text-[8px] font-bold text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 uppercase tracking-wider leading-none">
+                {mysteryClues.era} Era
+              </span>
+            </div>
+          </div>
+
+          {/* 3. Center Silhouette */}
+          <div className="my-auto py-3 flex flex-col items-center justify-center relative z-10 text-center">
+            <div className="w-14 h-14 rounded-full bg-purple-950/60 border border-purple-500/30 flex items-center justify-center mb-1.5 shadow-inner group-hover:scale-105 transition-transform">
+              <span className="text-2xl">🕵️</span>
+            </div>
+            <span className="text-xs font-display font-black text-purple-200 uppercase tracking-wider leading-none">
+              Identity Hidden
+            </span>
+            <span className="text-[9px] text-slate-400 mt-1 leading-tight font-medium">
+              Revealed upon selection
+            </span>
+          </div>
+
+          {/* 4. Honest Scouting Intel Clues */}
+          <div className="relative z-10 flex flex-col gap-1.5 bg-slate-950/80 border border-purple-900/30 rounded-xl p-2.5 text-[9.5px]">
+            <div className="flex justify-between items-center text-slate-300">
+              <span className="text-slate-400 font-semibold">⚡ Top Stat:</span>
+              <span className="font-display font-bold text-cyan-300">
+                {mysteryClues.topAttribute.name} ({mysteryClues.topAttribute.tier})
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-slate-300">
+              <span className="text-slate-400 font-semibold">
+                {mysteryClues.affiliationHint.type === 'nation' ? '🌍 Country:' : '🛡️ Club:'}
+              </span>
+              <span className="font-display font-bold text-emerald-400">
+                {mysteryClues.affiliationHint.label}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-slate-300">
+              <span className="text-slate-400 font-semibold">🎭 Trait:</span>
+              <span className="font-display font-bold text-amber-300 truncate max-w-[120px]">
+                {mysteryClues.traitHint}
+              </span>
+            </div>
+          </div>
+
+          {/* 5. Bottom Action Pill */}
+          <div className="relative z-10 mt-2.5">
+            <div className="w-full py-2 rounded-xl bg-purple-900/40 group-hover:bg-purple-800/60 border border-purple-500/30 group-hover:border-purple-400 text-purple-200 group-hover:text-white font-display font-black text-[9.5px] uppercase tracking-wider text-center transition-all">
+              Draft Blind ➔
+            </div>
+          </div>
+        </button>
+      );
+    }
 
     return (
       <button

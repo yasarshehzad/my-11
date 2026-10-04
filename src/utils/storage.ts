@@ -11,13 +11,16 @@ export interface DailyChallengeStatus {
   beaten: boolean;
 }
 
-const DEFAULT_STREAKS: StreakStats = {
+export const DEFAULT_STREAKS: StreakStats = {
   gamesPlayed: 0,
   bestPoints: 0,
   perfectSeasons: 0,
   dailyChallengesCompleted: 0,
   currentDailyStreak: 0,
   lastPlayedDate: '',
+  classicGamesPlayed: 0,
+  quickGamesPlayed: 0,
+  mysteryGamesPlayed: 0,
 };
 
 const isClient = typeof window !== 'undefined';

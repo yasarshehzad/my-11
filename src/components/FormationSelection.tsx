@@ -1,13 +1,15 @@
 import React from 'react';
-import { FormationType } from '../types/game';
+import { FormationType, DraftModifier } from '../types/game';
 
 interface FormationSelectionProps {
   formation: FormationType | null;
   selectedLeague: string;
   draftIQMode: boolean;
+  draftModifier?: DraftModifier;
   onSelectFormation: (form: FormationType) => void;
   onSelectLeague: (league: string) => void;
   onToggleDraftIQMode: () => void;
+  onSelectDraftModifier?: (modifier: DraftModifier) => void;
   onConfirmTactics: () => void;
 }
 
@@ -15,9 +17,11 @@ export function FormationSelection({
   formation,
   selectedLeague,
   draftIQMode,
+  draftModifier = 'classic',
   onSelectFormation,
   onSelectLeague,
   onToggleDraftIQMode,
+  onSelectDraftModifier,
   onConfirmTactics,
 }: FormationSelectionProps) {
   const formations: { type: FormationType; label: string; desc: string }[] = [
@@ -84,6 +88,52 @@ export function FormationSelection({
                 </div>
                 {active && (
                   <div className="absolute right-3.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Draft Mode Selector */}
+      <div className="w-full max-w-md space-y-3">
+        <div className="text-center sm:text-left">
+          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">
+            Choose Draft Mode
+          </span>
+        </div>
+        <div className="grid grid-cols-3 gap-2.5">
+          {([
+            { id: 'classic' as const, label: 'Classic', icon: '⏱️', badge: 'Standard', desc: 'Standard strategic draft with full tactical intel and no clock.' },
+            { id: 'quick' as const, label: 'Quick', icon: '⚡', badge: '10s Timer', desc: 'Fast-paced draft with 10s timer and auto-pick fallback.' },
+            { id: 'mystery' as const, label: 'Mystery', icon: '❓', badge: '3 Blind', desc: '3 concealed rounds with scout clues and dramatic reveal.' },
+          ]).map((mode) => {
+            const active = draftModifier === mode.id;
+            return (
+              <button
+                key={mode.id}
+                type="button"
+                onClick={() => onSelectDraftModifier?.(mode.id)}
+                className={`p-3 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center justify-between gap-1.5 cursor-pointer relative active:scale-98 ${
+                  active
+                    ? 'border-emerald-500 bg-emerald-950/25 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.12)] ring-1 ring-emerald-500/40'
+                    : 'border-slate-900 bg-slate-950/40 text-slate-400 hover:border-slate-800 hover:bg-slate-900/40'
+                }`}
+              >
+                <div className="text-xl leading-none">{mode.icon}</div>
+                <div className="font-display font-black text-xs uppercase tracking-wide text-foreground">
+                  {mode.label}
+                </div>
+                <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase leading-none font-display border ${
+                  active ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' : 'bg-slate-900 text-slate-500 border-slate-800'
+                }`}>
+                  {mode.badge}
+                </span>
+                <p className="text-[8.5px] text-slate-400 line-clamp-2 leading-tight font-medium hidden sm:block mt-0.5">
+                  {mode.desc}
+                </p>
+                {active && (
+                  <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
                 )}
               </button>
             );

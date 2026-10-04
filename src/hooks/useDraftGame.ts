@@ -5,7 +5,8 @@ import {
   SimulationResult, 
   MatchSimResult, 
   ChallengeTemplate, 
-  StreakStats 
+  StreakStats,
+  DraftModifier 
 } from '../types/game';
 import { 
   FORMATION_SLOTS, 
@@ -25,7 +26,8 @@ import {
   logPlayerSelected, 
   logDraftCompleted, 
   logDailyChallengeStarted, 
-  logDailyChallengeCompleted 
+  logDailyChallengeCompleted,
+  logDraftModeSelected 
 } from '../utils/analytics';
 import { 
   getSavedStreaks, 
@@ -49,10 +51,16 @@ export function useDraftGame() {
   const [simResult, setSimResult] = useState<SimulationResult | null>(null);
 
   // --- Toggles & Modes ---
+  const [draftModifier, setDraftModifierState] = useState<DraftModifier>('classic');
   const [draftIQMode, setDraftIQMode] = useState<boolean>(false);
   const [rerollsRemaining, setRerollsRemaining] = useState<number>(3);
   const [freeSearchEnabled, setFreeSearchEnabled] = useState<boolean>(false);
   const [showcasePlayer, setShowcasePlayer] = useState<Player | null>(null);
+
+  const setDraftModifier = useCallback((modifier: DraftModifier) => {
+    setDraftModifierState(modifier);
+    logDraftModeSelected(modifier);
+  }, []);
 
   // --- Daily Challenge & Streaks ---
   const [isDailyChallenge, setIsDailyChallenge] = useState(false);
@@ -445,10 +453,11 @@ export function useDraftGame() {
       // Draft complete! Compile final results
       const finalPlayers = updatedSelection.filter((p): p is Player => p !== null);
       const result = simulateLeagueSeason(finalPlayers, newStats, selectedLeague, undefined, slots);
+      result.draftModifier = draftModifier;
       logDraftCompleted(newStats.overall, newStats.chemistry);
       setSimResult(result);
     }
-  }, [formation, currentSlotIndex, selectedPlayers, isDailyChallenge, todayChallenge, todayDateStr, selectedLeague]);
+  }, [formation, currentSlotIndex, selectedPlayers, isDailyChallenge, todayChallenge, todayDateStr, selectedLeague, draftModifier]);
 
   // --- Begin League Season Simulation ---
   const startSimulation = useCallback(() => {
@@ -514,6 +523,14 @@ export function useDraftGame() {
     // 2. Load latest streaks object and increment
     const newStreakStats = { ...streakStats };
     newStreakStats.gamesPlayed += 1;
+    if (draftModifier === 'quick') {
+      newStreakStats.quickGamesPlayed = (newStreakStats.quickGamesPlayed || 0) + 1;
+    } else if (draftModifier === 'mystery') {
+      newStreakStats.mysteryGamesPlayed = (newStreakStats.mysteryGamesPlayed || 0) + 1;
+    } else {
+      newStreakStats.classicGamesPlayed = (newStreakStats.classicGamesPlayed || 0) + 1;
+    }
+
     if (simResult.points > newStreakStats.bestPoints) {
       newStreakStats.bestPoints = simResult.points;
     }
@@ -554,7 +571,7 @@ export function useDraftGame() {
     // 4. Save and set state
     setStreakStats(newStreakStats);
     saveStreaks(newStreakStats);
-  }, [simResult, isDailyChallenge, todayChallenge, stats.defence, stats.overall, streakStats, todayDateStr, dailyStatus.beaten]);
+  }, [simResult, isDailyChallenge, todayChallenge, stats.defence, stats.overall, streakStats, todayDateStr, dailyStatus.beaten, draftModifier]);
 
   // Return to homepage
   const returnHome = useCallback(() => {
@@ -582,6 +599,8 @@ export function useDraftGame() {
     draftOptions,
     stats,
     simResult,
+    draftModifier,
+    setDraftModifier,
     draftIQMode,
     setDraftIQMode,
     rerollsRemaining,

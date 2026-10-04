@@ -46,3 +46,20 @@ export const logDailyChallengeCompleted = (challengeTitle: string, beaten: boole
 export const logShareCardDownloaded = () => {
   trackEvent('share_card_downloaded');
 };
+
+export const logDraftModeSelected = (mode: string) => {
+  trackEvent('draft_mode_selected', { mode });
+};
+
+export const logQuickTimerExpired = (slotIndex: number, playerChosen: string) => {
+  trackEvent('quick_timer_expired', { slotIndex, player: playerChosen });
+};
+
+export const logMysteryRoundStarted = (slotIndex: number) => {
+  trackEvent('mystery_round_started', { slotIndex });
+};
+
+export const logMysteryPlayerRevealed = (playerName: string, rating: number) => {
+  trackEvent('mystery_player_revealed', { player: playerName, rating });
+};
+

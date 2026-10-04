@@ -51,6 +51,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
 
   // Helper: Copy result summary text to clipboard
   const handleCopyText = () => {
+    const modeLabel = simResult.draftModifier === 'quick' ? 'Quick Draft ⚡' : simResult.draftModifier === 'mystery' ? 'Mystery Draft ❓' : 'Classic Draft';
     const text = isDailyChallenge
       ? `🎮 I completed today's Daily Challenge "${dailyChallengeTitle}" on MY DRAFTED XI!
 🏆 Formation: ${formation} | OVR: ${stats.overall} | Chem: ${stats.chemistry} (${simResult.chemistryGrade})
@@ -58,7 +59,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
 ⭐ Outcome: ${dailyChallengeBeaten ? 'CHALLENGE CLEARED! ✅' : 'CHALLENGE FAILED ❌'}
 📊 Global Tier: Top ${simResult.percentile}%
 Can you beat this? Play now at https://my-11.com`
-      : `🎮 I built a ${simResult.wins}-${simResult.draws}-${simResult.losses} MY DRAFTED XI. MVP: ${simResult.mvp.displayName} (${simResult.mvp.rating}). Chemistry Grade: ${simResult.chemistryGrade}. Playstyle: ${simResult.playstyle}. Can you beat me? Play now at https://my-11.com`;
+      : `🎮 I built a ${simResult.wins}-${simResult.draws}-${simResult.losses} MY DRAFTED XI (${modeLabel}). MVP: ${simResult.mvp.displayName} (${simResult.mvp.rating}). Chemistry Grade: ${simResult.chemistryGrade}. Playstyle: ${simResult.playstyle}. Can you beat me? Play now at https://my-11.com`;
 
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
@@ -184,7 +185,9 @@ Can you beat this? Play now at https://my-11.com`
               MY DRAFTED <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">XI</span>
             </h2>
             <p className="text-[9px] font-bold text-slate-500 tracking-widest uppercase mt-1">
-              {isDailyChallenge ? `Daily Challenge: ${dailyChallengeTitle}` : 'Football Draft League'}
+              {isDailyChallenge 
+                ? `Daily Challenge: ${dailyChallengeTitle}` 
+                : `${simResult.draftModifier === 'quick' ? '⚡ Quick Draft' : simResult.draftModifier === 'mystery' ? '❓ Mystery Draft' : 'Classic Draft'} • League Season`}
             </p>
           </div>
           

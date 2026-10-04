@@ -129,9 +129,11 @@ export default function DraftedXIGame() {
             formation={game.formation}
             selectedLeague={game.selectedLeague}
             draftIQMode={game.draftIQMode}
+            draftModifier={game.draftModifier}
             onSelectFormation={game.handleSelectFormation}
             onSelectLeague={game.setSelectedLeague}
             onToggleDraftIQMode={() => game.setDraftIQMode(!game.draftIQMode)}
+            onSelectDraftModifier={game.setDraftModifier}
             onConfirmTactics={game.handleConfirmTactics}
           />
         )}
@@ -145,6 +147,7 @@ export default function DraftedXIGame() {
             stats={game.stats}
             simResult={game.simResult}
             draftIQMode={game.draftIQMode}
+            draftModifier={game.draftModifier}
             rerollsRemaining={game.rerollsRemaining}
             freeSearchEnabled={game.freeSearchEnabled}
             isDailyChallenge={game.isDailyChallenge}

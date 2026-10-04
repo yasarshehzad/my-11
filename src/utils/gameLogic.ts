@@ -9,7 +9,8 @@ import {
   ChallengeRuleType, 
   ChemistryLog, 
   ChemistryGrade,
-  Rarity 
+  Rarity,
+  DraftModifier
 } from '../types/game';
 import { players } from '../data/players';
 
@@ -947,7 +948,11 @@ export function getProjectedChemistry(
       archetypeDetail = `+ ${candidate.nationality} Link`;
     } else if (linkedTeammates.some((t) => t.eraMatch)) {
       archetypeDetail = `+ ${candidate.era} Era Link`;
-    } else if (candidate.primaryPosition === 'CDM' || candidate.secondaryPositions?.includes('CDM')) {
+    } else if (candidate.primaryPosition === 'CDM' && candidate.defending >= 75) {
+      archetypeDetail = '+ Defensive Pivot';
+    } else if (candidate.primaryPosition === 'CAM' || candidate.creativity >= 86) {
+      archetypeDetail = '+ Playmaker Engine';
+    } else if (candidate.secondaryPositions?.includes('CDM') && candidate.defending >= 78) {
       archetypeDetail = '+ Defensive Pivot';
     } else {
       archetypeDetail = 'Natural Position Fit';
@@ -969,18 +974,60 @@ export function getProjectedChemistry(
     }
   }
 
-  // Tactical Role Note
+  // Tactical Role Note (Sensible classification avoiding contradictory descriptions)
   let tacticalRoleNote: string | undefined;
-  if (candidate.primaryPosition === 'CDM' || (candidate.secondaryPositions && candidate.secondaryPositions.includes('CDM'))) {
-    tacticalRoleNote = 'Defensive Shield / Anchor';
-  } else if (candidate.primaryPosition === 'CAM' || candidate.creativity >= 88) {
-    tacticalRoleNote = 'Creative Playmaker';
-  } else if (candidate.pace >= 92) {
-    tacticalRoleNote = 'Explosive Wide Threat';
-  } else if (candidate.finishing >= 90) {
-    tacticalRoleNote = 'Clinical Box Finisher';
-  } else if (candidate.primaryPosition === 'CB' && candidate.defending >= 88) {
-    tacticalRoleNote = 'Backline Leader';
+
+  const isMidfielder = ['CDM', 'CM', 'CAM'].includes(candidate.primaryPosition);
+  const isDefender = ['CB', 'LB', 'RB'].includes(candidate.primaryPosition);
+  const isAttacker = ['ST', 'CF', 'LW', 'RW'].includes(candidate.primaryPosition);
+
+  // 1. Set-piece / Long-range trait priority
+  if (
+    candidate.specialTrait &&
+    (candidate.specialTrait.toLowerCase().includes('free kick') ||
+      candidate.specialTrait.toLowerCase().includes('long range'))
+  ) {
+    tacticalRoleNote = 'Set-Piece & Distance Specialist';
+  }
+  // 2. Midfielders
+  else if (isMidfielder) {
+    if (candidate.primaryPosition === 'CDM' || candidate.secondaryPositions?.includes('CDM')) {
+      if (candidate.creativity >= 86 && candidate.defending < 80) {
+        tacticalRoleNote = 'Deep-Lying Playmaker';
+      } else if (candidate.defending >= 80 || candidate.physical >= 84) {
+        tacticalRoleNote = 'Defensive Shield / Anchor';
+      } else if (candidate.creativity >= 84) {
+        tacticalRoleNote = 'Creative Playmaker';
+      } else {
+        tacticalRoleNote = 'Midfield Controller';
+      }
+    } else if (candidate.primaryPosition === 'CAM' || candidate.creativity >= 86) {
+      tacticalRoleNote = 'Creative Playmaker';
+    } else if (candidate.defending >= 78 && candidate.attack >= 78) {
+      tacticalRoleNote = 'Box-to-Box Engine';
+    } else {
+      tacticalRoleNote = 'Midfield Controller';
+    }
+  }
+  // 3. Defenders
+  else if (isDefender) {
+    if (candidate.primaryPosition === 'CB') {
+      tacticalRoleNote = candidate.defending >= 88 ? 'Backline Leader' : 'Stopper / Enforcer';
+    } else {
+      tacticalRoleNote = candidate.pace >= 86 ? 'Overlapping Wing-Back' : 'Defensive Full-Back';
+    }
+  }
+  // 4. Attackers
+  else if (isAttacker) {
+    if (candidate.finishing >= 88 || candidate.primaryPosition === 'ST' || candidate.primaryPosition === 'CF') {
+      tacticalRoleNote = candidate.pace >= 90 ? 'Dynamic Goal Threat' : 'Clinical Box Finisher';
+    } else {
+      tacticalRoleNote = 'Explosive Wide Threat';
+    }
+  }
+  // 5. Goalkeeper
+  else if (candidate.primaryPosition === 'GK') {
+    tacticalRoleNote = 'Shot Stopper / Last Line';
   }
 
   return {
@@ -995,6 +1042,84 @@ export function getProjectedChemistry(
     positionFit,
     tacticalRoleNote,
   };
+}
+
+export interface MysteryClues {
+  position: Position;
+  era: '90s' | '00s' | '10s' | 'Modern';
+  topAttribute: { name: string; tier: string };
+  rarityTier: string;
+  archetypeHint: string;
+  affiliationHint: { type: 'nation' | 'club'; label: string };
+  traitHint: string;
+}
+
+/**
+ * Honest, non-leaking clues derived directly from real player card data for Mystery Draft rounds
+ */
+export function getMysteryClues(
+  candidate: Player,
+  archetypeHint?: 'star' | 'system' | 'wildcard'
+): MysteryClues {
+  const attrs = [
+    { name: 'Pace', val: candidate.pace },
+    { name: 'Passing', val: candidate.passing },
+    { name: 'Dribbling', val: candidate.dribbling },
+    { name: 'Defending', val: candidate.defending },
+    { name: 'Physical', val: candidate.physical },
+    { name: 'Finishing', val: candidate.finishing },
+  ];
+  attrs.sort((a, b) => b.val - a.val);
+  const best = attrs[0];
+  const tier = best.val >= 88 ? 'Elite (88+)' : best.val >= 82 ? 'Strong (82-87)' : 'Solid (75-81)';
+
+  // Affiliation: Deterministically choose nationality OR club (never both!)
+  const showNation = candidate.id.charCodeAt(candidate.id.length - 1) % 2 === 0;
+  const affiliationHint: { type: 'nation' | 'club'; label: string } = showNation
+    ? { type: 'nation', label: candidate.nationality }
+    : { type: 'club', label: candidate.club };
+
+  const archLabel =
+    archetypeHint === 'star'
+      ? '⭐ Star Caliber'
+      : archetypeHint === 'system'
+      ? '🔗 System Fit'
+      : '⚡ Wildcard Specialist';
+
+  const traitHint = candidate.specialTrait || candidate.playStyleTags?.[0] || 'Technical Contributor';
+
+  return {
+    position: candidate.primaryPosition,
+    era: candidate.era,
+    topAttribute: { name: best.name, tier },
+    rarityTier: candidate.rarity.toUpperCase(),
+    archetypeHint: archLabel,
+    affiliationHint,
+    traitHint,
+  };
+}
+
+/**
+ * Deterministically selects exactly 3 mystery rounds across the 11-round draft
+ * (1 defender, 1 midfielder, 1 attacker; never slot 0 GK)
+ */
+export function getMysteryRoundIndices(modifier?: DraftModifier, seed?: number): Set<number> {
+  if (modifier !== 'mystery') return new Set();
+  if (seed !== undefined) {
+    const s = Math.abs(seed);
+    const def = 2 + (s % 2); // 2 or 3
+    const mid = 5 + (Math.floor(s / 10) % 2); // 5 or 6
+    const att = 8 + (Math.floor(s / 100) % 2); // 8 or 9
+    return new Set([def, mid, att]);
+  }
+  return new Set([3, 6, 9]);
+}
+
+/**
+ * Checks if a slot index is a Mystery Round
+ */
+export function isMysteryRound(slotIndex: number, modifier?: DraftModifier, seed?: number): boolean {
+  return getMysteryRoundIndices(modifier, seed).has(slotIndex);
 }
 
 export interface SquadChemistryBreakdown {

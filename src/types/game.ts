@@ -90,6 +90,8 @@ export interface MatchSimResult {
 
 export type ChemistryGrade = 'S' | 'A' | 'B' | 'C' | 'D';
 
+export type DraftModifier = 'classic' | 'quick' | 'mystery';
+
 export interface SimulationResult {
   wins: number;
   draws: number;
@@ -110,6 +112,7 @@ export interface SimulationResult {
   selectedLeague?: string;
   cleanSheets?: number;
   topScorer?: { player: Player; goals: number };
+  draftModifier?: DraftModifier;
 }
 
 export type ChallengeRuleType =
@@ -126,6 +129,7 @@ export interface ChallengeTemplate {
   title: string;
   description: string;
   rule: ChallengeRuleType;
+  modifier?: DraftModifier;
 }
 
 export interface StreakStats {
@@ -135,6 +139,9 @@ export interface StreakStats {
   dailyChallengesCompleted: number;
   currentDailyStreak: number;
   lastPlayedDate: string; // YYYY-MM-DD
+  classicGamesPlayed?: number;
+  quickGamesPlayed?: number;
+  mysteryGamesPlayed?: number;
 }
 
 export interface ChemistryLog {
@@ -142,3 +149,4 @@ export interface ChemistryLog {
   reason: string;
   type: 'positive' | 'negative';
 }
+
