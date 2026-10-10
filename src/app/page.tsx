@@ -89,6 +89,15 @@ export default function DraftedXIGame() {
             </span>
           )}
           
+          {/* Career Mode Navigation Link */}
+          <Link
+            href="/career"
+            title="Enter Football Management Career Mode"
+            className="text-[10px] font-display font-black tracking-wider uppercase px-2.5 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-950/40 text-emerald-300 hover:bg-emerald-900/50 hover:text-white transition-all cursor-pointer flex items-center gap-1 leading-none shadow-sm"
+          >
+            🏆 Career
+          </Link>
+
           {/* History Screen Trigger Button */}
           <button
             onClick={() => {

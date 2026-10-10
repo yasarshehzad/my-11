@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { Player, ChallengeTemplate, StreakStats, CampaignHistoryEntry, PersonalBests, ChallengeTarget } from '../types/game';
 import { DailyChallengeStatus } from '../utils/storage';
 import { PlayerCard } from './PlayerCard';
@@ -193,6 +194,14 @@ export function HomeScreen({
             )}
           </div>
         )}
+
+        {/* Career Mode CTA */}
+        <Link
+          href="/career"
+          className="w-full max-w-[340px] py-2.5 px-4 rounded-xl border border-emerald-500/40 bg-gradient-to-r from-emerald-950/40 via-teal-950/40 to-slate-900/50 hover:from-emerald-900/60 hover:to-teal-900/60 hover:border-emerald-400 text-emerald-300 hover:text-white font-display font-black text-[11px] uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 active:scale-98 shadow-md shadow-emerald-950/30"
+        >
+          <span>🏆</span> Career Mode (Football Sim)
+        </Link>
 
         {/* History CTA */}
         {onViewHistory && (
