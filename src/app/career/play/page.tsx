@@ -13,6 +13,7 @@ import { FixturesCalendar } from '../../../components/career/FixturesCalendar';
 import { LeagueTable } from '../../../components/career/LeagueTable';
 import { TournamentsHub } from '../../../components/career/TournamentsHub';
 import { TransferHub } from '../../../components/career/TransferHub';
+import { isSeasonComplete } from '../../../career/seasons';
 
 function CareerPlayHubContent() {
   const router = useRouter();
@@ -24,6 +25,7 @@ function CareerPlayHubContent() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [activeTab, setActiveTab] = useState<'overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings'>('overview');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [dismissedSackedModal, setDismissedSackedModal] = useState(false);
 
   // Settings editing state (when not locked)
   const [editableSettings, setEditableSettings] = useState<CareerSettings | null>(null);
@@ -242,6 +244,29 @@ function CareerPlayHubContent() {
         {/* TAB 1: OVERVIEW / MANAGER OFFICE */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
+            {/* Season Complete Alert Banner */}
+            {isSeasonComplete(save.fixtures) && (
+              <aside
+                aria-label="Season Completed Notice"
+                className="bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-transparent border border-amber-500/40 rounded-3xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-xl"
+              >
+                <div className="space-y-0.5">
+                  <div className="text-xs font-display font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>🏆</span> Season {save.season.seasonNumber} Complete!
+                  </div>
+                  <p className="text-xs text-slate-300">
+                    All 38 matchdays have concluded. View final league standings, awards, and advance to Season {save.season.seasonNumber + 1}.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setActiveTab('fixtures')}
+                  className="py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer whitespace-nowrap"
+                >
+                  Go to Season Review ➔
+                </button>
+              </aside>
+            )}
+
             {/* Hero Welcome Banner */}
             <section className="bg-gradient-to-r from-slate-900/80 via-slate-900/50 to-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
               <div
@@ -575,6 +600,64 @@ function CareerPlayHubContent() {
           </div>
         )}
       </main>
+
+      {/* Sacked Board Dismissal Modal */}
+      {save.boardStatus?.status === 'sacked' && save.settings.boardCanSack && !dismissedSackedModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4"
+        >
+          <div className="bg-slate-950 border border-rose-500/40 rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-6 shadow-2xl text-center relative">
+            <span className="text-5xl block">⚠️</span>
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase text-rose-400 tracking-wider">
+                Board of Directors Executive Notice
+              </span>
+              <h3 className="text-2xl font-display font-black text-white uppercase tracking-tight">
+                Contract Terminated
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed pt-1">
+                The Board of Directors of {effectiveClubName} has officially relieved you of your duties as first-team manager following an unacceptable run of league results and failure to meet seasonal expectations.
+              </p>
+            </div>
+
+            <div className="bg-rose-950/20 border border-rose-500/30 rounded-2xl p-4 text-xs space-y-1">
+              <div className="text-[10px] uppercase font-bold text-slate-500">Board Confidence</div>
+              <div className="text-xl font-display font-black text-rose-400">0% (Dismissed)</div>
+              <div className="text-[10px] text-slate-400 font-medium">Club Objective Failed</div>
+            </div>
+
+            <div className="flex flex-col gap-2.5 pt-2">
+              <Link
+                href="/career"
+                className="w-full py-3 px-4 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-850 text-slate-300 font-display font-black text-xs uppercase tracking-wider transition-all"
+              >
+                Accept Dismissal & Resign
+              </Link>
+              <button
+                onClick={() => {
+                  const restoredSave: CareerSaveFile = {
+                    ...save,
+                    boardStatus: {
+                      confidence: 45,
+                      expectation: 'Urgent Results Required',
+                      status: 'under_pressure',
+                      warningsCount: 2,
+                    },
+                  };
+                  handleUpdateSave(restoredSave);
+                  setDismissedSackedModal(true);
+                  showToast('Board granted one final probation period. Deliver results immediately.');
+                }}
+                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer"
+              >
+                Appeal to Board (One Final Chance)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
