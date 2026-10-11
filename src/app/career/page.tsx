@@ -119,13 +119,20 @@ export default function CareerEntryPage() {
 
       {/* Header */}
       <header className="w-full py-4 px-6 border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center select-none shadow-lg">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <Link
             href="/"
             className="text-xs font-bold text-slate-400 hover:text-white px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900/60 hover:bg-slate-800 transition-colors flex items-center gap-1.5"
-            title="Return to Classic Draft"
+            title="Return to Home"
           >
-            ← <span>Draft Mode</span>
+            ← <span>Home</span>
+          </Link>
+          <Link
+            href="/draft"
+            className="text-xs font-bold text-slate-400 hover:text-white px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900/60 hover:bg-slate-800 transition-colors flex items-center gap-1.5"
+            title="Play Draft Mode"
+          >
+            <span>Draft</span>
           </Link>
           <div className="h-4 w-px bg-slate-800" />
           <h1 className="text-lg font-display font-black tracking-tight text-foreground uppercase">

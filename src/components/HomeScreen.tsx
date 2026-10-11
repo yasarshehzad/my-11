@@ -138,10 +138,10 @@ export function HomeScreen({
             </div>
           </div>
 
-          <div className="mt-3.5 pt-3 border-t border-slate-800/80 flex flex-col gap-2">
+          <div className="mt-3.5 pt-3 border-t border-slate-800/80 flex flex-col gap-2.5">
             <button
               onClick={onStartDraft}
-              className="w-full py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider transition-colors cursor-pointer text-center"
+              className="w-full py-3.5 sm:py-4 px-6 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-slate-950 font-display font-black text-sm sm:text-base uppercase tracking-wider transition-all duration-200 cursor-pointer text-center shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 flex items-center justify-center gap-2"
             >
               Play Draft Mode ➔
             </button>
@@ -149,28 +149,35 @@ export function HomeScreen({
             {todayChallenge && (
               <button
                 onClick={onPlayDailyChallenge}
-                className="w-full py-1.5 px-2.5 rounded-lg border border-slate-800 bg-slate-900/40 hover:bg-slate-800/60 text-slate-300 hover:text-white text-[10.5px] font-medium flex items-center justify-between transition-colors cursor-pointer"
+                className="w-full py-2 px-3 rounded-lg border border-slate-800 bg-slate-900/40 hover:bg-slate-800/60 text-slate-300 hover:text-white text-[11px] font-medium flex items-center justify-between transition-colors cursor-pointer"
               >
                 <span className="truncate">
                   Daily Challenge: <strong className="text-amber-400">{todayChallenge.title}</strong>
                 </span>
-                <span className="text-[9px] text-slate-400 font-mono ml-2 uppercase shrink-0">
+                <span className="text-[9.5px] text-slate-400 font-mono ml-2 uppercase shrink-0">
                   {dailyStatus?.completed ? (dailyStatus.beaten ? 'Beaten ✓' : 'Completed ✓') : 'Play ➔'}
                 </span>
               </button>
             )}
 
-            {onRandomDraft && (
-              <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-900/40 border border-slate-800 text-[10.5px]">
-                <span className="text-slate-400 truncate">Quick Simulation</span>
+            <div className="grid grid-cols-2 gap-2 text-[10.5px]">
+              {onRandomDraft && (
                 <button
                   onClick={onRandomDraft}
-                  className="text-[9.5px] font-mono uppercase text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer font-bold shrink-0 ml-2"
+                  className="py-2 px-2.5 rounded-lg bg-slate-900/40 hover:bg-slate-800/80 border border-slate-800 text-slate-300 hover:text-emerald-400 font-mono uppercase text-[9.5px] font-bold text-center transition-colors cursor-pointer"
                 >
-                  Instant Random Draft ➔
+                  Instant Draft ➔
                 </button>
-              </div>
-            )}
+              )}
+              {onViewHistory && (
+                <button
+                  onClick={onViewHistory}
+                  className="py-2 px-2.5 rounded-lg bg-slate-900/40 hover:bg-slate-800/80 border border-slate-800 text-slate-300 hover:text-emerald-400 font-mono uppercase text-[9.5px] font-bold text-center transition-colors cursor-pointer"
+                >
+                  Squad History ➔
+                </button>
+              )}
+            </div>
           </div>
         </article>
 
@@ -206,24 +213,24 @@ export function HomeScreen({
             </div>
           </div>
 
-          <div className="mt-3.5 pt-3 border-t border-slate-800/80 flex flex-col gap-2">
+          <div className="mt-3.5 pt-3 border-t border-slate-800/80 flex flex-col gap-2.5">
             {onSelectCareerMode ? (
               <button
                 onClick={onSelectCareerMode}
-                className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider transition-colors cursor-pointer text-center"
+                className="w-full py-3.5 sm:py-4 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-display font-black text-sm sm:text-base uppercase tracking-wider transition-all duration-200 cursor-pointer text-center shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 flex items-center justify-center gap-2"
               >
                 Enter Career Mode ➔
               </button>
             ) : (
               <Link
                 href="/career"
-                className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider transition-colors cursor-pointer text-center"
+                className="w-full py-3.5 sm:py-4 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-display font-black text-sm sm:text-base uppercase tracking-wider transition-all duration-200 cursor-pointer text-center shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 flex items-center justify-center gap-2"
               >
                 Enter Career Mode ➔
               </Link>
             )}
 
-            <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-900/40 border border-slate-800 text-[10.5px]">
+            <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-900/40 border border-slate-800 text-[11px]">
               <span className="text-slate-400 truncate">
                 {activeCareerSave ? (
                   <>Save: <strong className="text-indigo-300">{activeCareerSave.clubName}</strong> (S{activeCareerSave.seasonNumber})</>
@@ -233,26 +240,29 @@ export function HomeScreen({
               </span>
               <Link
                 href="/career"
-                className="text-[9.5px] font-mono uppercase text-indigo-400 hover:text-indigo-300 transition-colors ml-2"
+                className="text-[9.5px] font-mono uppercase text-indigo-400 hover:text-indigo-300 transition-colors ml-2 font-bold shrink-0"
               >
                 Load ➔
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-[10.5px]">
+              <Link
+                href="/career/setup"
+                className="py-2 px-2.5 rounded-lg bg-slate-900/40 hover:bg-slate-800/80 border border-slate-800 text-slate-300 hover:text-indigo-400 font-mono uppercase text-[9.5px] font-bold text-center transition-colors"
+              >
+                New Career ➔
+              </Link>
+              <Link
+                href="/career"
+                className="py-2 px-2.5 rounded-lg bg-slate-900/40 hover:bg-slate-800/80 border border-slate-800 text-slate-300 hover:text-indigo-400 font-mono uppercase text-[9.5px] font-bold text-center transition-colors"
+              >
+                Save Slots (3) ➔
               </Link>
             </div>
           </div>
         </article>
       </section>
-
-      {/* Auxiliary quick links */}
-      {onViewHistory && (
-        <footer className="mt-4 flex items-center justify-center text-xs font-semibold text-slate-500">
-          <button
-            onClick={onViewHistory}
-            className="hover:text-emerald-400 transition-colors cursor-pointer"
-          >
-            My Squads History & Records ➔
-          </button>
-        </footer>
-      )}
     </div>
   );
 }

@@ -61,9 +61,9 @@ import {
 
 export type GamePhase = 'home' | 'formation' | 'draft' | 'simulating' | 'results' | 'history';
 
-export function useDraftGame() {
+export function useDraftGame(initialPhase: GamePhase = 'home') {
   // --- Game Lifecycle State ---
-  const [phase, setPhase] = useState<GamePhase>('home');
+  const [phase, setPhase] = useState<GamePhase>(initialPhase);
   const [formation, setFormation] = useState<FormationType | null>(null);
   const [selectedLeague, setSelectedLeague] = useState<string>('english');
   const [selectedPlayers, setSelectedPlayers] = useState<(Player | null)[]>(Array(11).fill(null));

@@ -52,7 +52,7 @@ export default function DraftedXIGame() {
       setTutorialMode('draft');
       setShowTutorial(true);
     } else {
-      game.handleStartDraft();
+      router.push('/draft');
     }
   };
 
@@ -67,7 +67,7 @@ export default function DraftedXIGame() {
   };
 
   const handleOpenHelpModal = () => {
-    setTutorialMode(game.phase === 'home' ? 'all' : 'draft');
+    setTutorialMode('all');
     setShowTutorial(true);
   };
 
@@ -83,8 +83,9 @@ export default function DraftedXIGame() {
   };
 
   const handleProceedTutorial = () => {
+    setShowTutorial(false);
     if (tutorialMode === 'draft') {
-      game.handleStartDraft();
+      router.push('/draft');
     } else if (tutorialMode === 'career') {
       router.push('/career');
     }
@@ -188,11 +189,11 @@ export default function DraftedXIGame() {
             todayChallenge={game.todayChallenge}
             dailyStatus={game.dailyStatus}
             onStartDraft={handleStartDraftWithTutorialCheck}
-            onPlayDailyChallenge={game.handlePlayDailyChallenge}
-            onRandomDraft={() => game.handleRandomDraft(false)}
-            onViewHistory={game.handleViewHistory}
+            onPlayDailyChallenge={() => router.push('/draft?mode=daily_challenge')}
+            onRandomDraft={() => router.push('/draft?mode=random')}
+            onViewHistory={() => router.push('/draft?phase=history')}
             incomingChallenge={game.incomingChallenge}
-            onAcceptChallenge={game.handleAcceptChallenge}
+            onAcceptChallenge={() => router.push(`/draft${typeof window !== 'undefined' ? window.location.search : ''}`)}
             onDismissChallenge={game.handleDismissChallenge}
             onSelectCareerMode={handleSelectCareerModeWithTutorialCheck}
           />
