@@ -308,6 +308,8 @@ export const RELEGATED_CLUBS_2024_25: Club[] = [
   },
 ];
 
+export const PROMOTED_CLUBS_2025_26: Club[] = PROMOTED_CLUBS_2026_27;
+
 export const ENGLISH_TOP_FLIGHT_CLUBS_2026_27: Club[] = [
   ...SHARED_17_CLUBS,
   ...PROMOTED_CLUBS_2026_27,
@@ -315,7 +317,7 @@ export const ENGLISH_TOP_FLIGHT_CLUBS_2026_27: Club[] = [
 
 export const ENGLISH_TOP_FLIGHT_CLUBS_2025_26: Club[] = [
   ...SHARED_17_CLUBS,
-  ...PROMOTED_CLUBS_2026_27,
+  ...PROMOTED_CLUBS_2025_26,
 ];
 
 export const ENGLISH_TOP_FLIGHT_CLUBS_2024_25: Club[] = [

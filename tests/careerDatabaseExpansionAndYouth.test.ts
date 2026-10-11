@@ -18,6 +18,7 @@ import {
   ENGLISH_TOP_FLIGHT_CLUBS_2026_27,
   ENGLISH_TOP_FLIGHT_CLUBS_2025_26,
   ENGLISH_TOP_FLIGHT_CLUBS_2024_25,
+  PROMOTED_CLUBS_2025_26,
   getClubsForSeason,
   getClubById,
 } from '../src/career/clubs';
@@ -43,13 +44,36 @@ describe('Phase 7: Career Database Expansion & Supplemental Players', () => {
     });
   });
 
-  it('contains at least 440 supplemental players for 2025/26 previous season database', () => {
+  it('contains at least 440 supplemental players for 2025/26 previous season database with Leeds, Sunderland and Burnley', () => {
     expect(SUPPLEMENTAL_PLAYERS_2025_26.length).toBeGreaterThanOrEqual(440);
 
     for (const club of ENGLISH_TOP_FLIGHT_CLUBS_2025_26) {
       const clubPlayers = SUPPLEMENTAL_PLAYERS_2025_26.filter((p) => p.clubId === club.id);
       expect(clubPlayers.length).toBeGreaterThanOrEqual(22);
     }
+
+    // Verify Leeds, Sunderland, Burnley have full squads for 2025/26
+    ['yorkshire_whites', 'wearside_red_white', 'east_lancs_claret'].forEach((clubId) => {
+      const players = getSupplementalPlayersForClub(clubId, '2025/26');
+      expect(players.length).toBeGreaterThanOrEqual(22);
+    });
+
+    // Verify authentic 2025 ratings and ages for promoted and breakthrough players
+    const sunPlayers = getSupplementalPlayersForClub('wearside_red_white', '2025/26');
+    const rigg = sunPlayers.find((p) => p.name === 'Chris Rigg');
+    expect(rigg?.age).toBe(18);
+    expect(rigg?.rating).toBe(75);
+    expect(rigg?.potential).toBe(89);
+
+    const jobe = sunPlayers.find((p) => p.name === 'Jobe Bellingham');
+    expect(jobe?.age).toBe(20);
+    expect(jobe?.rating).toBe(77);
+    expect(jobe?.potential).toBe(87);
+
+    const chelseaPlayers = getSupplementalPlayersForClub('london_west', '2025/26');
+    const palmer = chelseaPlayers.find((p) => p.name === 'Cole Palmer');
+    expect(palmer?.age).toBe(23);
+    expect(palmer?.rating).toBe(88);
   });
 
   it('contains at least 440 supplemental players for 2024/25 classic database across all 20 previous clubs', () => {

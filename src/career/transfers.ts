@@ -53,9 +53,18 @@ function getDeterministicAge(id: string): number {
  */
 export function getScoutingMarketPool(
   userSquad: CareerPlayer[] = [],
-  filters?: ScoutingFilters,
+  filters?: ScoutingFilters | DatabaseSeason,
   databaseSeason: DatabaseSeason = '2026/27'
 ): MarketPlayer[] {
+  let effectiveSeason: DatabaseSeason = databaseSeason;
+  let effectiveFilters: ScoutingFilters | undefined = undefined;
+
+  if (typeof filters === 'string') {
+    effectiveSeason = filters as DatabaseSeason;
+  } else if (filters && typeof filters === 'object') {
+    effectiveFilters = filters;
+  }
+
   const userPlayerIds = new Set(userSquad.map((p) => p.id));
   const userPlayerNames = new Set(
     userSquad.map((p) => (p.name || '').toLowerCase()).filter(Boolean)
@@ -100,7 +109,7 @@ export function getScoutingMarketPool(
   }
 
   // Include supplemental database expansion players
-  const supplementalPlayers = getAllSupplementalPlayers(databaseSeason);
+  const supplementalPlayers = getAllSupplementalPlayers(effectiveSeason);
   for (const supp of supplementalPlayers) {
     const lowerName = supp.name.toLowerCase();
     if (
@@ -129,37 +138,37 @@ export function getScoutingMarketPool(
   }
 
   // Apply filters
-  if (filters) {
-    if (filters.positionCategory && filters.positionCategory !== 'ALL') {
+  if (effectiveFilters) {
+    if (effectiveFilters.positionCategory && effectiveFilters.positionCategory !== 'ALL') {
       pool = pool.filter(
-        (p) => categorizePosition(p.position) === filters.positionCategory
+        (p) => categorizePosition(p.position) === effectiveFilters.positionCategory
       );
     }
 
-    if (filters.minRating !== undefined) {
-      pool = pool.filter((p) => p.rating >= filters.minRating!);
+    if (effectiveFilters.minRating !== undefined) {
+      pool = pool.filter((p) => p.rating >= effectiveFilters.minRating!);
     }
 
-    if (filters.maxRating !== undefined) {
-      pool = pool.filter((p) => p.rating <= filters.maxRating!);
+    if (effectiveFilters.maxRating !== undefined) {
+      pool = pool.filter((p) => p.rating <= effectiveFilters.maxRating!);
     }
 
-    if (filters.maxPrice !== undefined) {
-      pool = pool.filter((p) => p.value <= filters.maxPrice!);
+    if (effectiveFilters.maxPrice !== undefined) {
+      pool = pool.filter((p) => p.value <= effectiveFilters.maxPrice!);
     }
 
-    if (filters.nationality) {
+    if (effectiveFilters.nationality) {
       pool = pool.filter((p) =>
-        p.nationality.toLowerCase().includes(filters.nationality!.toLowerCase())
+        p.nationality.toLowerCase().includes(effectiveFilters.nationality!.toLowerCase())
       );
     }
 
-    if (filters.homegrownOnly) {
+    if (effectiveFilters.homegrownOnly) {
       pool = pool.filter((p) => p.isHomegrown);
     }
 
-    if (filters.searchTerm) {
-      const term = filters.searchTerm.toLowerCase();
+    if (effectiveFilters.searchTerm) {
+      const term = effectiveFilters.searchTerm.toLowerCase();
       pool = pool.filter(
         (p) =>
           p.name.toLowerCase().includes(term) ||

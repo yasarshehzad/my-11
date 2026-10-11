@@ -65,9 +65,11 @@ export function TransferHub({
     [selectedPosCategory, minRating, maxPrice, homegrownOnly, searchTerm]
   );
 
+  const dbSeason = save.settings?.databaseSeason || save.season?.databaseSeason || '2026/27';
+
   const marketPlayers = useMemo(
-    () => getScoutingMarketPool(save.squad, filters),
-    [save.squad, filters]
+    () => getScoutingMarketPool(save.squad, filters, dbSeason),
+    [save.squad, filters, dbSeason]
   );
 
   const shortlistIdsSet = useMemo(
@@ -77,10 +79,10 @@ export function TransferHub({
 
   const shortlistedPlayers = useMemo(
     () =>
-      getScoutingMarketPool(save.squad).filter((p) =>
+      getScoutingMarketPool(save.squad, undefined, dbSeason).filter((p) =>
         shortlistIdsSet.has(p.id)
       ),
-    [save.squad, shortlistIdsSet]
+    [save.squad, shortlistIdsSet, dbSeason]
   );
 
   const boardStatus = useMemo(
