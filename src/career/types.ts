@@ -101,6 +101,56 @@ export interface TrophyRecord {
   year: number;
 }
 
+export interface GoalScorer {
+  name: string;
+  minute: number;
+  clubId: string;
+  cardId?: string;
+}
+
+export interface LeagueFixture {
+  id: string;
+  competitionId: string;
+  round: number; // 1 to 38
+  date: string; // YYYY-MM-DD
+  homeClubId: string;
+  awayClubId: string;
+  played: boolean;
+  homeScore?: number;
+  awayScore?: number;
+  scorers?: GoalScorer[];
+}
+
+export interface ClubStanding {
+  clubId: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDifference: number;
+  points: number;
+  form: ('W' | 'D' | 'L')[];
+}
+
+export interface CalendarEvent {
+  id: string;
+  date: string;
+  type:
+    | 'friendly'
+    | 'league_match'
+    | 'cup_match'
+    | 'transfer_deadline'
+    | 'winter_window_open'
+    | 'winter_window_close'
+    | 'season_end'
+    | 'international_break';
+  title: string;
+  fixtureId?: string;
+  processed: boolean;
+}
+
 export interface CareerLineup {
   formation: string;
   starterIds: string[];
@@ -119,6 +169,9 @@ export interface CareerSaveFile {
   finances: CareerFinances;
   squad: CareerPlayer[];
   lineup?: CareerLineup;
+  fixtures?: LeagueFixture[];
+  standings?: ClubStanding[];
+  calendar?: CalendarEvent[];
   trophies: TrophyRecord[];
   phase: 'preseason' | 'transfer_window' | 'regular_season' | 'season_review';
 }

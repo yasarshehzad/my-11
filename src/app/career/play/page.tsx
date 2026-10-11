@@ -9,6 +9,8 @@ import { getEffectiveClubName } from '../../../career/clubs';
 import { validateSettings } from '../../../career/settings';
 import { getSavedTheme, saveTheme } from '../../../utils/storage';
 import { SquadManagement } from '../../../components/career/SquadManagement';
+import { FixturesCalendar } from '../../../components/career/FixturesCalendar';
+import { LeagueTable } from '../../../components/career/LeagueTable';
 
 function CareerPlayHubContent() {
   const router = useRouter();
@@ -343,18 +345,18 @@ function CareerPlayHubContent() {
                   </p>
                 </div>
 
-                <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/30 space-y-1">
-                  <div className="font-display font-black text-slate-300 flex items-center gap-2">
-                    <span>⏳</span> Phase 3: Calendar & League Simulation (Up Next)
+                <div className="p-4 rounded-xl border border-emerald-900/40 bg-emerald-950/10 space-y-1">
+                  <div className="font-display font-black text-emerald-300 flex items-center gap-2">
+                    <span>✓</span> Phase 3: Calendar, 38 Fixtures & Live Table (Active)
                   </div>
                   <p className="text-slate-400 text-[11px]">
-                    38-game fixture generator, round-by-round time skip controller, smart pause, and live standings table.
+                    38-game round-robin calendar, matchday simulator, time-skip controller with smart pause, and live standings.
                   </p>
                 </div>
 
                 <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/30 space-y-1">
                   <div className="font-display font-black text-slate-300 flex items-center gap-2">
-                    <span>⏳</span> Phase 4: Match Sim & In-Game Bench
+                    <span>⏳</span> Phase 4: Match Sim & In-Game Bench (Up Next)
                   </div>
                   <p className="text-slate-400 text-[11px]">
                     5–9 player substitutes bench, 5 substitutions, match engine with fatigue, fitness, and injury severity.
@@ -372,31 +374,19 @@ function CareerPlayHubContent() {
 
         {/* TAB 3: FIXTURES */}
         {activeTab === 'fixtures' && (
-          <section className="bg-slate-900/30 border border-slate-850 rounded-3xl p-8 text-center space-y-4">
-            <span className="text-4xl">📅</span>
-            <h3 className="text-xl font-display font-black uppercase text-white">
-              Season Fixtures & Calendar (Phase 3)
-            </h3>
-            <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-              The round-robin 38-fixture calendar engine and date progression controller will be activated in Phase 3.
-            </p>
-            <div className="inline-block bg-slate-950 border border-slate-850 px-4 py-2 rounded-xl text-xs font-semibold text-slate-300">
-              Season Status: <span className="text-emerald-400 font-bold uppercase">{save.phase}</span>
-            </div>
-          </section>
+          <FixturesCalendar
+            save={save}
+            onUpdateSave={handleUpdateSave}
+            onNotification={showToast}
+          />
         )}
 
         {/* TAB 4: TABLE */}
         {activeTab === 'table' && (
-          <section className="bg-slate-900/30 border border-slate-850 rounded-3xl p-8 text-center space-y-4">
-            <span className="text-4xl">🏆</span>
-            <h3 className="text-xl font-display font-black uppercase text-white">
-              English Top Flight Standings (Phase 3)
-            </h3>
-            <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-              20 clubs, 38 games. Standings table with European spots and relegation zone tracking.
-            </p>
-          </section>
+          <LeagueTable
+            standings={save.standings || []}
+            userClubId={save.club.id}
+          />
         )}
 
         {/* TAB 5: TRANSFERS */}

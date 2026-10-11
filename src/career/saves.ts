@@ -1,8 +1,10 @@
 import { CareerSaveFile, CareerSettings, Club, ManagerProfile, SaveSlotMeta } from './types';
-import { getEffectiveClubName } from './clubs';
+import { getEffectiveClubName, getAllClubs } from './clubs';
 import { validateSettings } from './settings';
 import { generateClubSquad } from './squadGenerator';
 import { getBestStartingLineup } from './squad';
+import { generateRoundRobinFixtures } from './calendar';
+import { createInitialStandings } from './table';
 
 export const VALID_SLOT_IDS = ['slot_1', 'slot_2', 'slot_3'] as const;
 export type ValidSlotId = (typeof VALID_SLOT_IDS)[number];
@@ -36,6 +38,15 @@ export function loadCareerSave(slotId: string): CareerSaveFile | null {
 
     // Validate settings integrity
     parsed.settings = validateSettings(parsed.settings);
+
+    // Backfill fixtures and standings if created in earlier phase
+    if (!parsed.fixtures || parsed.fixtures.length === 0) {
+      const { fixtures, calendar } = generateRoundRobinFixtures(getAllClubs(), parsed.season?.yearStart || 2026);
+      parsed.fixtures = fixtures;
+      parsed.calendar = calendar;
+      parsed.standings = createInitialStandings(getAllClubs());
+    }
+
     return parsed as CareerSaveFile;
   } catch (err) {
     console.error(`Failed to load career save for slot ${slotId}:`, err);
@@ -123,6 +134,9 @@ export function createNewCareerSave(params: {
   const currentWeeklyWages = squad.reduce((sum, p) => sum + (p.wageWeekly || 0), 0);
   const lineup = getBestStartingLineup(squad);
 
+  const { fixtures, calendar } = generateRoundRobinFixtures(getAllClubs(), 2026);
+  const standings = createInitialStandings(getAllClubs());
+
   const initialSave: CareerSaveFile = {
     version: CURRENT_CAREER_SAVE_VERSION,
     id: params.slotId,
@@ -151,6 +165,9 @@ export function createNewCareerSave(params: {
     },
     squad,
     lineup,
+    fixtures,
+    standings,
+    calendar,
     trophies: [],
     phase: 'preseason',
   };
