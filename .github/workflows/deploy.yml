@@ -26,6 +26,8 @@ jobs:
         run: npm run build
 
       - name: 🚀 Deploy to Krystal via FTP
+        id: deploy-1
+        continue-on-error: true
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -34,4 +36,18 @@ jobs:
           protocol: ftps
           local-dir: ./out/
           server-dir: my-11.com/
+          timeout: 600000
           dangerous-clean-slate: false # Set to true if you want to wipe files not in the repo, but false is safer initially.
+
+      - name: 🔁 Retry Deploy to Krystal via FTP (if first attempt timed out)
+        if: steps.deploy-1.outcome == 'failure'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: ./out/
+          server-dir: my-11.com/
+          timeout: 600000
+          dangerous-clean-slate: false
