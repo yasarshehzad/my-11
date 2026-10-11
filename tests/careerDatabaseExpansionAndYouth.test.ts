@@ -18,18 +18,18 @@ import { getPresetSettings } from '../src/career/settings';
 import { CareerPlayer, CareerSaveFile, YouthProspect } from '../src/career/types';
 
 describe('Phase 7: Career Database Expansion & Supplemental Players', () => {
-  it('contains exactly 100 supplemental players mapped across all 20 English clubs (5 per club)', () => {
-    expect(SUPPLEMENTAL_PLAYERS_DATA.length).toBe(100);
+  it('contains at least 440 supplemental players mapped across all 20 English clubs (at least 22 per club)', () => {
+    expect(SUPPLEMENTAL_PLAYERS_DATA.length).toBeGreaterThanOrEqual(440);
 
     for (const club of ENGLISH_TOP_FLIGHT_CLUBS) {
       const clubPlayers = SUPPLEMENTAL_PLAYERS_DATA.filter((p) => p.clubId === club.id);
-      expect(clubPlayers.length).toBe(5);
+      expect(clubPlayers.length).toBeGreaterThanOrEqual(22);
     }
   });
 
   it('converts supplemental definitions into fully populated CareerPlayer objects', () => {
     const manBlueSupp = getSupplementalPlayersForClub('man_blue');
-    expect(manBlueSupp.length).toBe(5);
+    expect(manBlueSupp.length).toBeGreaterThanOrEqual(22);
 
     const ricoLewis = manBlueSupp.find((p) => p.name === 'Rico Lewis');
     expect(ricoLewis).toBeDefined();
@@ -43,9 +43,9 @@ describe('Phase 7: Career Database Expansion & Supplemental Players', () => {
     expect(ricoLewis?.contractYears).toBe(3);
   });
 
-  it('provides getAllSupplementalPlayers returning all 100 converted players', () => {
+  it('provides getAllSupplementalPlayers returning all converted players', () => {
     const all = getAllSupplementalPlayers();
-    expect(all.length).toBe(100);
+    expect(all.length).toBeGreaterThanOrEqual(440);
     expect(all.every((p) => p.value > 0 && p.wageWeekly > 0 && p.potential !== undefined)).toBe(true);
   });
 });
@@ -289,13 +289,28 @@ describe('Phase 7: Youth Academy Engine', () => {
 });
 
 describe('Phase 7: Squad Generation with Supplemental Players and Potentials', () => {
-  it('generates a 21-22 player club squad with potential ratings assigned to all players', () => {
-    for (const club of ENGLISH_TOP_FLIGHT_CLUBS.slice(0, 3)) {
+  it('generates complete authentic squads for all 20 English clubs with zero procedural fallback players', () => {
+    for (const club of ENGLISH_TOP_FLIGHT_CLUBS) {
       const squad = generateClubSquad(club);
-      expect(squad.length).toBeGreaterThanOrEqual(21);
+      expect(squad.length).toBe(22);
       expect(squad.every((p) => typeof p.potential === 'number' && p.potential >= p.rating)).toBe(true);
 
-      // Verify at least some players have supplemental IDs or realistic young potentials
+      // Verify zero generic procedural fallback players ('Talent X')
+      const procedural = squad.filter((p) => p.name.includes('Talent'));
+      expect(procedural.length).toBe(0);
+
+      // Verify all players belong to this club
+      expect(squad.every((p) => p.club === club.id)).toBe(true);
+
+      // Verify at least 8 homegrown players
+      const homegrown = squad.filter((p) => p.isHomegrown);
+      expect(homegrown.length).toBeGreaterThanOrEqual(8);
+    }
+  });
+
+  it('generates a 21-22 player club squad with young prospects having growth potential', () => {
+    for (const club of ENGLISH_TOP_FLIGHT_CLUBS.slice(0, 5)) {
+      const squad = generateClubSquad(club);
       const youngProspects = squad.filter((p) => p.age <= 21);
       expect(youngProspects.length).toBeGreaterThan(0);
       for (const yp of youngProspects) {

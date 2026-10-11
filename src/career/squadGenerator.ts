@@ -94,7 +94,7 @@ export function generateClubSquad(club: Club): CareerPlayer[] {
   const clubKeywords = CLUB_KEYWORD_MAP[club.id] || [];
   const supplementalPool = getSupplementalPlayersForClub(club.id);
 
-  // Filter pool from player database
+  // Filter pool from player database belonging strictly to this club
   const clubMatchedCards = players.filter((p) =>
     clubKeywords.some((kw) => p.club.toLowerCase().includes(kw.toLowerCase()))
   );
@@ -105,32 +105,40 @@ export function generateClubSquad(club: Club): CareerPlayer[] {
     const targetOvr = getTargetRating(club.tier, slot.role);
     const posGroup = categorizePosition(slot.pos);
 
-    // 1. For bench/reserve slots, prioritize authentic club youth & supplemental players
-    if (slot.role === 'bench' || slot.role === 'reserve') {
-      const suppCandidate = supplementalPool.find(
+    // 1. Try finding exact position match from this club's supplemental pool
+    let suppCandidate = supplementalPool.find(
+      (sp) =>
+        !usedNames.has(sp.name) &&
+        !usedCardIds.has(sp.id) &&
+        sp.position === slot.pos
+    );
+
+    // 2. If no exact position match, try position group match from supplemental pool
+    if (!suppCandidate) {
+      suppCandidate = supplementalPool.find(
         (sp) =>
           !usedNames.has(sp.name) &&
           !usedCardIds.has(sp.id) &&
           categorizePosition(sp.position) === posGroup
       );
-
-      if (suppCandidate) {
-        usedCardIds.add(suppCandidate.id);
-        usedNames.add(suppCandidate.name);
-        generatedSquad.push({
-          ...suppCandidate,
-          id: `cp_${club.id}_${counter}`,
-          cardId: suppCandidate.id,
-          club: club.id,
-          contractYears: 2 + (counter % 3),
-        });
-        counter++;
-        continue;
-      }
     }
 
-    // 2. Try finding a card from this club with matching position
-    let candidate = clubMatchedCards.find(
+    if (suppCandidate) {
+      usedCardIds.add(suppCandidate.id);
+      usedNames.add(suppCandidate.name);
+      generatedSquad.push({
+        ...suppCandidate,
+        id: `cp_${club.id}_${counter}`,
+        cardId: suppCandidate.id,
+        club: club.id,
+        contractYears: 2 + (counter % 3),
+      });
+      counter++;
+      continue;
+    }
+
+    // 3. Try finding a card from this club (players.ts) with matching position group
+    let clubCard = clubMatchedCards.find(
       (c) =>
         !usedCardIds.has(c.id) &&
         !usedNames.has(c.displayName) &&
@@ -138,20 +146,8 @@ export function generateClubSquad(club: Club): CareerPlayer[] {
         Math.abs(c.rating - targetOvr) <= 5
     );
 
-    // 3. If not found, find from global player database with closest rating
-    if (!candidate) {
-      candidate = players.find(
-        (c) =>
-          !usedCardIds.has(c.id) &&
-          !usedNames.has(c.displayName) &&
-          categorizePosition(c.primaryPosition) === posGroup &&
-          Math.abs(c.rating - targetOvr) <= 3
-      );
-    }
-
-    // 4. Fallback: any matching position group from database
-    if (!candidate) {
-      candidate = players.find(
+    if (!clubCard) {
+      clubCard = clubMatchedCards.find(
         (c) =>
           !usedCardIds.has(c.id) &&
           !usedNames.has(c.displayName) &&
@@ -159,24 +155,24 @@ export function generateClubSquad(club: Club): CareerPlayer[] {
       );
     }
 
-    if (candidate) {
-      usedCardIds.add(candidate.id);
-      usedNames.add(candidate.displayName);
+    if (clubCard) {
+      usedCardIds.add(clubCard.id);
+      usedNames.add(clubCard.displayName);
 
-      // Realistic age curve
+      const cleanName = clubCard.displayName.replace(/\s+\d{2}\/\d{2}$/, '');
       const age = slot.role === 'starter' ? 24 + (counter % 7) : 20 + (counter % 12);
-      const rating = Math.min(96, Math.max(70, candidate.rating));
+      const rating = Math.min(96, Math.max(70, clubCard.rating));
       const value = calculatePlayerValue(rating, age, slot.pos);
       const wageWeekly = calculateWeeklyWage(rating, value);
       const potential = Math.max(rating, rating + (age <= 21 ? 6 : age <= 24 ? 3 : 0));
 
       generatedSquad.push({
         id: `cp_${club.id}_${counter}`,
-        cardId: candidate.id,
-        name: candidate.displayName,
+        cardId: clubCard.id,
+        name: cleanName,
         rating,
-        position: candidate.primaryPosition || slot.pos,
-        secondaryPositions: candidate.secondaryPositions || [],
+        position: clubCard.primaryPosition || slot.pos,
+        secondaryPositions: clubCard.secondaryPositions || [],
         age,
         value,
         wageWeekly,
@@ -185,63 +181,63 @@ export function generateClubSquad(club: Club): CareerPlayer[] {
         morale: 88,
         form: 7.0,
         injured: false,
-        isHomegrown: isHomegrownPlayer({ nationality: candidate.nationality }),
+        isHomegrown: isHomegrownPlayer({ nationality: clubCard.nationality }),
         club: club.id,
-        nationality: candidate.nationality,
+        nationality: clubCard.nationality,
         potential,
       });
-    } else {
-      // 5. Try any unused supplemental player for this club before procedural
-      const leftoverSupp = supplementalPool.find(
-        (sp) =>
-          !usedNames.has(sp.name) &&
-          !usedCardIds.has(sp.id) &&
-          categorizePosition(sp.position) === posGroup
-      );
-
-      if (leftoverSupp) {
-        usedCardIds.add(leftoverSupp.id);
-        usedNames.add(leftoverSupp.name);
-        generatedSquad.push({
-          ...leftoverSupp,
-          id: `cp_${club.id}_${counter}`,
-          cardId: leftoverSupp.id,
-          club: club.id,
-          contractYears: 2 + (counter % 3),
-        });
-      } else {
-        // 6. Procedural fallback player to ensure guaranteed 22 players
-        const isDomestic = generatedSquad.filter((p) => p.isHomegrown).length < 9;
-        const nationality = isDomestic ? 'England' : 'France';
-        const rating = targetOvr;
-        const age = slot.role === 'starter' ? 26 : 22;
-        const value = calculatePlayerValue(rating, age, slot.pos);
-        const wageWeekly = calculateWeeklyWage(rating, value);
-        const potential = Math.max(rating, rating + 4);
-
-        generatedSquad.push({
-          id: `cp_${club.id}_${counter}`,
-          cardId: `gen_${club.id}_${counter}`,
-          name: `${slot.pos} Talent ${counter}`,
-          rating,
-          position: slot.pos,
-          secondaryPositions: [],
-          age,
-          value,
-          wageWeekly,
-          contractYears: 3,
-          fitness: 100,
-          morale: 85,
-          form: 7.0,
-          injured: false,
-          isHomegrown: isDomestic,
-          club: club.id,
-          nationality,
-          potential,
-        });
-      }
+      counter++;
+      continue;
     }
 
+    // 4. Try any remaining unused player from this club's supplemental pool
+    const leftoverSupp = supplementalPool.find(
+      (sp) => !usedNames.has(sp.name) && !usedCardIds.has(sp.id)
+    );
+
+    if (leftoverSupp) {
+      usedCardIds.add(leftoverSupp.id);
+      usedNames.add(leftoverSupp.name);
+      generatedSquad.push({
+        ...leftoverSupp,
+        id: `cp_${club.id}_${counter}`,
+        cardId: leftoverSupp.id,
+        club: club.id,
+        contractYears: 2 + (counter % 3),
+      });
+      counter++;
+      continue;
+    }
+
+    // 5. Procedural fallback player (safety fallback only, not reached when club has 22+ players)
+    const isDomestic = generatedSquad.filter((p) => p.isHomegrown).length < 8;
+    const nationality = isDomestic ? 'England' : 'France';
+    const rating = targetOvr;
+    const age = slot.role === 'starter' ? 26 : 22;
+    const value = calculatePlayerValue(rating, age, slot.pos);
+    const wageWeekly = calculateWeeklyWage(rating, value);
+    const potential = Math.max(rating, rating + 4);
+
+    generatedSquad.push({
+      id: `cp_${club.id}_${counter}`,
+      cardId: `gen_${club.id}_${counter}`,
+      name: `${slot.pos} Talent ${counter}`,
+      rating,
+      position: slot.pos,
+      secondaryPositions: [],
+      age,
+      value,
+      wageWeekly,
+      contractYears: 3,
+      fitness: 100,
+      morale: 85,
+      form: 7.0,
+      injured: false,
+      isHomegrown: isDomestic,
+      club: club.id,
+      nationality,
+      potential,
+    });
     counter++;
   }
 
@@ -253,7 +249,6 @@ export function generateClubSquad(club: Club): CareerPlayer[] {
       if (needed <= 0) break;
       if (!player.isHomegrown) {
         player.isHomegrown = true;
-        player.nationality = 'England';
         needed--;
       }
     }
