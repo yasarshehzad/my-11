@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { listSaveSlots, deleteCareerSave, exportCareerSaveAsJson, importCareerSaveFromJson, ValidSlotId } from '../../career/saves';
 import { SaveSlotMeta } from '../../career/types';
-import { getSavedTheme, saveTheme } from '../../utils/storage';
+import { getSavedTheme, saveTheme, getHideCareerTutorial, saveHideCareerTutorial } from '../../utils/storage';
+import { HowToPlayModal } from '../../components/HowToPlayModal';
 
 export default function CareerEntryPage() {
   const [slots, setSlots] = useState<SaveSlotMeta[]>(() => {
@@ -19,6 +20,7 @@ export default function CareerEntryPage() {
   const [importJsonText, setImportJsonText] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [showGuide, setShowGuide] = useState(false);
 
   const refreshSlots = () => {
     setSlots(listSaveSlots());
@@ -135,6 +137,13 @@ export default function CareerEntryPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowGuide(true)}
+            title="Career Mode Guide & Rules"
+            className="w-8 h-8 rounded-full flex items-center justify-center border border-slate-900 bg-slate-950/60 text-slate-400 hover:text-white hover:border-slate-800 hover:bg-slate-900/60 cursor-pointer active:scale-95 transition-all text-xs font-bold"
+          >
+            ❓
+          </button>
           <button
             onClick={toggleTheme}
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
@@ -418,6 +427,18 @@ export default function CareerEntryPage() {
           </div>
         </div>
       )}
+
+      {/* Career Guide Modal */}
+      <HowToPlayModal
+        isOpen={showGuide}
+        mode="career"
+        onClose={(dontShowAgain) => {
+          setShowGuide(false);
+          if (dontShowAgain) {
+            saveHideCareerTutorial(true);
+          }
+        }}
+      />
     </div>
   );
 }

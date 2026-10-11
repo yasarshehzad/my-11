@@ -2,8 +2,16 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useDraftGame } from '../hooks/useDraftGame';
-import { getSavedTheme, saveTheme, getHideTutorial, saveHideTutorial } from '../utils/storage';
+import {
+  getSavedTheme,
+  saveTheme,
+  getHideTutorial,
+  saveHideTutorial,
+  getHideCareerTutorial,
+  saveHideCareerTutorial,
+} from '../utils/storage';
 import { HomeScreen } from '../components/HomeScreen';
 import { FormationSelection } from '../components/FormationSelection';
 import { DraftScreen } from '../components/DraftScreen';
@@ -16,21 +24,20 @@ import { players } from '../data/players';
 
 export default function DraftedXIGame() {
   const game = useDraftGame();
+  const router = useRouter();
 
   // --- Theme & Tutorial Modal States ---
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [showTutorial, setShowTutorial] = useState(false);
+  const [tutorialMode, setTutorialMode] = useState<'draft' | 'career' | 'all'>('draft');
   const exportRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const saved = getSavedTheme();
     setTheme(saved);
     saveTheme(saved);
-
-    const hideTutorial = getHideTutorial();
-    if (!hideTutorial) {
-      setShowTutorial(true);
-    }
+    // NOTE: Intentionally do NOT show introductory popup immediately on initial landing.
+    // It is saved for later when a user chooses an avenue (Draft Mode or Career Mode).
   }, []);
 
   const toggleTheme = () => {
@@ -39,10 +46,47 @@ export default function DraftedXIGame() {
     saveTheme(next);
   };
 
+  const handleStartDraftWithTutorialCheck = () => {
+    const hide = getHideTutorial();
+    if (!hide) {
+      setTutorialMode('draft');
+      setShowTutorial(true);
+    } else {
+      game.handleStartDraft();
+    }
+  };
+
+  const handleSelectCareerModeWithTutorialCheck = () => {
+    const hide = getHideCareerTutorial();
+    if (!hide) {
+      setTutorialMode('career');
+      setShowTutorial(true);
+    } else {
+      router.push('/career');
+    }
+  };
+
+  const handleOpenHelpModal = () => {
+    setTutorialMode(game.phase === 'home' ? 'all' : 'draft');
+    setShowTutorial(true);
+  };
+
   const handleCloseTutorial = (dontShowAgain: boolean) => {
     setShowTutorial(false);
     if (dontShowAgain) {
-      saveHideTutorial(true);
+      if (tutorialMode === 'draft') {
+        saveHideTutorial(true);
+      } else if (tutorialMode === 'career') {
+        saveHideCareerTutorial(true);
+      }
+    }
+  };
+
+  const handleProceedTutorial = () => {
+    if (tutorialMode === 'draft') {
+      game.handleStartDraft();
+    } else if (tutorialMode === 'career') {
+      router.push('/career');
     }
   };
 
@@ -93,7 +137,7 @@ export default function DraftedXIGame() {
           <Link
             href="/career"
             title="Enter Football Management Career Mode"
-            className="text-[10px] font-display font-black tracking-wider uppercase px-2.5 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-950/40 text-emerald-300 hover:bg-emerald-900/50 hover:text-white transition-all cursor-pointer flex items-center gap-1 leading-none shadow-sm"
+            className="text-[10px] font-display font-black tracking-wider uppercase px-2.5 py-1.5 rounded-lg border border-indigo-500/30 bg-indigo-950/40 text-indigo-300 hover:bg-indigo-900/50 hover:text-white transition-all cursor-pointer flex items-center gap-1 leading-none shadow-sm"
           >
             🏆 Career
           </Link>
@@ -115,8 +159,8 @@ export default function DraftedXIGame() {
 
           {/* Help Tutorial Trigger Button */}
           <button
-            onClick={() => setShowTutorial(true)}
-            title="How to Play"
+            onClick={handleOpenHelpModal}
+            title="How to Play & Game Guides"
             className="w-7 h-7 rounded-full flex items-center justify-center border border-slate-900 bg-slate-950/60 text-[9px] text-slate-400 hover:text-white hover:border-slate-800 hover:bg-slate-900/60 cursor-pointer active:scale-95 transition-all leading-none"
           >
             ❓
@@ -134,7 +178,7 @@ export default function DraftedXIGame() {
       </header>
 
       {/* Screen Coordinator */}
-      <main className="flex-1 w-full max-w-lg mx-auto flex flex-col justify-center">
+      <main className={`flex-1 w-full mx-auto flex flex-col justify-center ${game.phase === 'home' ? 'max-w-4xl' : 'max-w-lg'}`}>
         {game.phase === 'home' && (
           <HomeScreen
             showcasePlayer={game.showcasePlayer}
@@ -145,13 +189,14 @@ export default function DraftedXIGame() {
             dailyStatus={game.dailyStatus}
             freeSearchEnabled={game.freeSearchEnabled}
             onToggleFreeSearch={() => game.setFreeSearchEnabled(!game.freeSearchEnabled)}
-            onStartDraft={game.handleStartDraft}
+            onStartDraft={handleStartDraftWithTutorialCheck}
             onPlayDailyChallenge={game.handlePlayDailyChallenge}
             onRandomDraft={() => game.handleRandomDraft(false)}
             onViewHistory={game.handleViewHistory}
             incomingChallenge={game.incomingChallenge}
             onAcceptChallenge={game.handleAcceptChallenge}
             onDismissChallenge={game.handleDismissChallenge}
+            onSelectCareerMode={handleSelectCareerModeWithTutorialCheck}
           />
         )}
 
@@ -289,7 +334,9 @@ export default function DraftedXIGame() {
       {/* How to Play Tutorial Modal */}
       <HowToPlayModal
         isOpen={showTutorial}
+        mode={tutorialMode}
         onClose={handleCloseTutorial}
+        onProceed={handleProceedTutorial}
       />
     </div>
   );

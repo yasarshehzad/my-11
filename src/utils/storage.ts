@@ -2,6 +2,7 @@ import { StreakStats, CampaignHistoryEntry, PersonalBests, ModePersonalBest, Cam
 
 const THEME_KEY = 'drafted_xi_theme';
 const HIDE_TUTORIAL_KEY = 'drafted_xi_hide_tutorial';
+const HIDE_CAREER_TUTORIAL_KEY = 'drafted_xi_hide_career_tutorial';
 const ONBOARDING_COMPLETED_KEY = 'drafted_xi_onboarding_completed_v1';
 const STREAKS_KEY = 'drafted_xi_streaks';
 const CHALLENGE_PREFIX = 'drafted_xi_challenge_';
@@ -82,6 +83,31 @@ export function saveHideTutorial(hide: boolean): void {
     localStorage.setItem(HIDE_TUTORIAL_KEY, hide ? 'true' : 'false');
   } catch (e) {
     console.warn('Failed to save tutorial preference to localStorage:', e);
+  }
+}
+
+/**
+ * Safe retrieval of career tutorial hide preference
+ */
+export function getHideCareerTutorial(): boolean {
+  if (!isClient()) return false;
+  try {
+    return localStorage.getItem(HIDE_CAREER_TUTORIAL_KEY) === 'true';
+  } catch (e) {
+    console.warn('Failed to read career tutorial preference from localStorage:', e);
+    return false;
+  }
+}
+
+/**
+ * Safe saving of career tutorial hide preference
+ */
+export function saveHideCareerTutorial(hide: boolean): void {
+  if (!isClient()) return;
+  try {
+    localStorage.setItem(HIDE_CAREER_TUTORIAL_KEY, hide ? 'true' : 'false');
+  } catch (e) {
+    console.warn('Failed to save career tutorial preference to localStorage:', e);
   }
 }
 
