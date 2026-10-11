@@ -15,6 +15,7 @@ import {
   simulateRound,
 } from '../../career/sim';
 import { calculateStandings } from '../../career/table';
+import { MatchDayModal } from './MatchDayModal';
 
 interface FixturesCalendarProps {
   save: CareerSaveFile;
@@ -26,6 +27,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification }: Fixture
   const [filterScope, setFilterScope] = useState<'my_club' | 'all'>('my_club');
   const [selectedRound, setSelectedRound] = useState<number | 'all'>('all');
   const [simulating, setSimulating] = useState(false);
+  const [activeMatchFixture, setActiveMatchFixture] = useState<LeagueFixture | null>(null);
 
   const fixtures = save.fixtures || [];
   const userClubId = save.club.id;
@@ -237,11 +239,20 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification }: Fixture
 
               <div className="flex justify-center gap-2 pt-1">
                 <button
-                  onClick={handlePlayNextMatch}
+                  onClick={() => setActiveMatchFixture(nextFixture)}
                   disabled={simulating}
-                  className="py-2.5 px-5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all hover:scale-102"
+                  className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all hover:scale-102 cursor-pointer"
+                  title="Enter interactive matchday command center"
                 >
                   ▶ Play Match
+                </button>
+                <button
+                  onClick={handlePlayNextMatch}
+                  disabled={simulating}
+                  className="py-2.5 px-3 rounded-xl border border-slate-700 hover:border-slate-600 bg-slate-900/60 hover:bg-slate-800 text-slate-300 font-display font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
+                  title="Instant match result simulation"
+                >
+                  ⚡ Instant
                 </button>
               </div>
             </div>
@@ -406,6 +417,19 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification }: Fixture
           );
         })}
       </div>
+
+      {/* Live Matchday Interactive Command Center */}
+      {activeMatchFixture && (
+        <MatchDayModal
+          fixture={activeMatchFixture}
+          save={save}
+          onClose={() => setActiveMatchFixture(null)}
+          onSaveMatchResult={(updated) => {
+            onUpdateSave(updated);
+            setActiveMatchFixture(null);
+          }}
+        />
+      )}
     </div>
   );
 }

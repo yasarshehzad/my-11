@@ -354,12 +354,12 @@ function CareerPlayHubContent() {
                   </p>
                 </div>
 
-                <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/30 space-y-1">
-                  <div className="font-display font-black text-slate-300 flex items-center gap-2">
-                    <span>⏳</span> Phase 4: Match Sim & In-Game Bench (Up Next)
+                <div className="p-4 rounded-xl border border-emerald-900/40 bg-emerald-950/10 space-y-1">
+                  <div className="font-display font-black text-emerald-300 flex items-center gap-2">
+                    <span>✓</span> Phase 4: Match Experience & Simulation Engine (Active)
                   </div>
                   <p className="text-slate-400 text-[11px]">
-                    5–9 player substitutes bench, 5 substitutions, match engine with fatigue, fitness, and injury severity.
+                    5–9 player substitutes bench, 5 in-match substitutions, live commentary clock, fatigue drain, injuries, and retry protection.
                   </p>
                 </div>
               </div>

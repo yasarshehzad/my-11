@@ -108,6 +108,30 @@ export interface GoalScorer {
   cardId?: string;
 }
 
+export type TacticalMentality = 'defensive' | 'balanced' | 'attacking';
+
+export interface MatchEvent {
+  minute: number;
+  type: 'goal' | 'yellow_card' | 'red_card' | 'injury' | 'substitution';
+  clubId: string;
+  playerName: string;
+  subPlayerIn?: string;
+  detail?: string;
+}
+
+export interface MatchStats {
+  homePossession: number;
+  awayPossession: number;
+  homeShots: number;
+  awayShots: number;
+  homeShotsOnTarget: number;
+  awayShotsOnTarget: number;
+  homeFouls: number;
+  awayFouls: number;
+  homeCorners: number;
+  awayCorners: number;
+}
+
 export interface LeagueFixture {
   id: string;
   competitionId: string;
@@ -119,6 +143,9 @@ export interface LeagueFixture {
   homeScore?: number;
   awayScore?: number;
   scorers?: GoalScorer[];
+  events?: MatchEvent[];
+  stats?: MatchStats;
+  manOfTheMatch?: { name: string; clubId: string; rating: number };
 }
 
 export interface ClubStanding {
