@@ -4,11 +4,11 @@ export type InjurySeverity = 'low' | 'medium' | 'high';
 
 export type PlayerPoolFilter = 'all' | 'modern' | 'legends';
 
-export type DatabaseSeason = '2026/27' | '2024/25';
+export type DatabaseSeason = '2026/27' | '2025/26' | '2024/25';
 
 export interface CareerSettings {
   preset: DifficultyPreset;
-  /** Starting roster database season mode ('2026/27' current or '2024/25' classic) */
+  /** Starting roster database season mode ('2026/27' current, '2025/26' previous, or '2024/25' classic) */
   databaseSeason?: DatabaseSeason;
   /** Whether gameplay settings can be edited after career creation */
   editSettingsMidSave: boolean;

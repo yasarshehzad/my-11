@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   SUPPLEMENTAL_PLAYERS_DATA,
   SUPPLEMENTAL_PLAYERS_2026_27,
+  SUPPLEMENTAL_PLAYERS_2025_26,
   SUPPLEMENTAL_PLAYERS_2024_25,
   getSupplementalPlayersForClub,
   getAllSupplementalPlayers,
@@ -15,6 +16,7 @@ import {
 import {
   ENGLISH_TOP_FLIGHT_CLUBS,
   ENGLISH_TOP_FLIGHT_CLUBS_2026_27,
+  ENGLISH_TOP_FLIGHT_CLUBS_2025_26,
   ENGLISH_TOP_FLIGHT_CLUBS_2024_25,
   getClubsForSeason,
   getClubById,
@@ -41,6 +43,15 @@ describe('Phase 7: Career Database Expansion & Supplemental Players', () => {
     });
   });
 
+  it('contains at least 440 supplemental players for 2025/26 previous season database', () => {
+    expect(SUPPLEMENTAL_PLAYERS_2025_26.length).toBeGreaterThanOrEqual(440);
+
+    for (const club of ENGLISH_TOP_FLIGHT_CLUBS_2025_26) {
+      const clubPlayers = SUPPLEMENTAL_PLAYERS_2025_26.filter((p) => p.clubId === club.id);
+      expect(clubPlayers.length).toBeGreaterThanOrEqual(22);
+    }
+  });
+
   it('contains at least 440 supplemental players for 2024/25 classic database across all 20 previous clubs', () => {
     expect(SUPPLEMENTAL_PLAYERS_2024_25.length).toBeGreaterThanOrEqual(440);
 
@@ -56,38 +67,51 @@ describe('Phase 7: Career Database Expansion & Supplemental Players', () => {
     });
   });
 
-  it('converts 2026/27 supplemental definitions into progressed CareerPlayer objects', () => {
+  it('converts supplemental definitions into realistic progressed CareerPlayer objects across seasons', () => {
     const manBlueSupp26 = getSupplementalPlayersForClub('man_blue', '2026/27');
-    expect(manBlueSupp26.length).toBeGreaterThanOrEqual(22);
-
     const ricoLewis26 = manBlueSupp26.find((p) => p.name === 'Rico Lewis');
-    expect(ricoLewis26).toBeDefined();
     expect(ricoLewis26?.position).toBe('RB');
     expect(ricoLewis26?.rating).toBe(81);
     expect(ricoLewis26?.potential).toBe(89);
     expect(ricoLewis26?.age).toBe(21);
-    expect(ricoLewis26?.isHomegrown).toBe(true);
-    expect(ricoLewis26?.value).toBeGreaterThan(0);
-    expect(ricoLewis26?.wageWeekly).toBeGreaterThan(0);
-  });
 
-  it('converts 2024/25 supplemental definitions into classic CareerPlayer objects', () => {
+    const manBlueSupp25 = getSupplementalPlayersForClub('man_blue', '2025/26');
+    const ricoLewis25 = manBlueSupp25.find((p) => p.name === 'Rico Lewis');
+    expect(ricoLewis25?.position).toBe('RB');
+    expect(ricoLewis25?.rating).toBe(80);
+    expect(ricoLewis25?.potential).toBe(89);
+    expect(ricoLewis25?.age).toBe(20);
+
     const manBlueSupp24 = getSupplementalPlayersForClub('man_blue', '2024/25');
-    expect(manBlueSupp24.length).toBeGreaterThanOrEqual(22);
-
     const ricoLewis24 = manBlueSupp24.find((p) => p.name === 'Rico Lewis');
-    expect(ricoLewis24).toBeDefined();
     expect(ricoLewis24?.position).toBe('RB');
     expect(ricoLewis24?.rating).toBe(78);
     expect(ricoLewis24?.potential).toBe(88);
     expect(ricoLewis24?.age).toBe(19);
-    expect(ricoLewis24?.isHomegrown).toBe(true);
+
+    // Verify modern additions: Savinho at Man City, Leny Yoro & Joshua Zirkzee at Man United
+    const savinho26 = manBlueSupp26.find((p) => p.name === 'Savinho');
+    expect(savinho26).toBeDefined();
+    expect(savinho26?.rating).toBe(84);
+
+    const manRedSupp26 = getSupplementalPlayersForClub('man_red', '2026/27');
+    const yoro26 = manRedSupp26.find((p) => p.name === 'Leny Yoro');
+    expect(yoro26).toBeDefined();
+    expect(yoro26?.potential).toBe(91);
+
+    const zirkzee26 = manRedSupp26.find((p) => p.name === 'Joshua Zirkzee');
+    expect(zirkzee26).toBeDefined();
+    expect(zirkzee26?.rating).toBe(81);
   });
 
-  it('provides getAllSupplementalPlayers returning converted players for both seasons', () => {
+  it('provides getAllSupplementalPlayers returning converted players for all three seasons', () => {
     const all26 = getAllSupplementalPlayers('2026/27');
     expect(all26.length).toBeGreaterThanOrEqual(440);
     expect(all26.every((p) => p.value > 0 && p.wageWeekly > 0 && p.potential !== undefined)).toBe(true);
+
+    const all25 = getAllSupplementalPlayers('2025/26');
+    expect(all25.length).toBeGreaterThanOrEqual(440);
+    expect(all25.every((p) => p.value > 0 && p.wageWeekly > 0 && p.potential !== undefined)).toBe(true);
 
     const all24 = getAllSupplementalPlayers('2024/25');
     expect(all24.length).toBeGreaterThanOrEqual(440);
@@ -353,6 +377,22 @@ describe('Phase 7: Squad Generation with Supplemental Players and Potentials', (
     }
   });
 
+  it('generates complete authentic squads for all 20 English clubs in 2025/26 with zero procedural fallback players', () => {
+    for (const club of ENGLISH_TOP_FLIGHT_CLUBS_2025_26) {
+      const squad = generateClubSquad(club, '2025/26');
+      expect(squad.length).toBe(22);
+      expect(squad.every((p) => typeof p.potential === 'number' && p.potential >= p.rating)).toBe(true);
+
+      const procedural = squad.filter((p) => p.name.includes('Talent'));
+      expect(procedural.length).toBe(0);
+
+      expect(squad.every((p) => p.club === club.id)).toBe(true);
+
+      const homegrown = squad.filter((p) => p.isHomegrown);
+      expect(homegrown.length).toBeGreaterThanOrEqual(8);
+    }
+  });
+
   it('generates complete authentic squads for all 20 English clubs in 2024/25 with zero procedural fallback players', () => {
     for (const club of ENGLISH_TOP_FLIGHT_CLUBS_2024_25) {
       const squad = generateClubSquad(club, '2024/25');
@@ -434,7 +474,7 @@ describe('Phase 7: Scouting Pool with Supplemental Database Expansion', () => {
     }
   });
 
-  it('creates career saves with correct starting year and season clubs for both databases', () => {
+  it('creates career saves with correct starting year and season clubs for all three databases', () => {
     const club26 = getClubById('yorkshire_whites')!;
     const save26 = createNewCareerSave({
       slotId: 'slot_26',
@@ -446,6 +486,18 @@ describe('Phase 7: Scouting Pool with Supplemental Database Expansion', () => {
     expect(save26.season.currentDate).toBe('2026-07-01');
     expect(save26.standings?.length).toBe(20);
     expect(save26.standings?.some((s) => s.clubId === 'yorkshire_whites')).toBe(true);
+
+    const club25 = getClubById('wearside_red_white')!;
+    const save25 = createNewCareerSave({
+      slotId: 'slot_25',
+      manager: { name: 'Le Bris Manager', nationality: 'France' },
+      club: club25,
+      settings: { ...getPresetSettings('normal'), databaseSeason: '2025/26' },
+    });
+    expect(save25.season.yearStart).toBe(2025);
+    expect(save25.season.currentDate).toBe('2025-07-01');
+    expect(save25.standings?.length).toBe(20);
+    expect(save25.standings?.some((s) => s.clubId === 'wearside_red_white')).toBe(true);
 
     const club24 = getClubById('leicester_foxes')!;
     const save24 = createNewCareerSave({

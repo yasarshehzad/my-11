@@ -139,7 +139,7 @@ export function createNewCareerSave(params: {
   const validatedSettings = validateSettings(params.settings);
   const now = new Date().toISOString();
   const dbSeason = validatedSettings.databaseSeason || '2026/27';
-  const yearStart = dbSeason === '2024/25' ? 2024 : 2026;
+  const yearStart = dbSeason === '2024/25' ? 2024 : dbSeason === '2025/26' ? 2025 : 2026;
   const currentDate = `${yearStart}-07-01`;
   const seasonClubs = getClubsForSeason(dbSeason);
 

@@ -313,6 +313,11 @@ export const ENGLISH_TOP_FLIGHT_CLUBS_2026_27: Club[] = [
   ...PROMOTED_CLUBS_2026_27,
 ];
 
+export const ENGLISH_TOP_FLIGHT_CLUBS_2025_26: Club[] = [
+  ...SHARED_17_CLUBS,
+  ...PROMOTED_CLUBS_2026_27,
+];
+
 export const ENGLISH_TOP_FLIGHT_CLUBS_2024_25: Club[] = [
   ...SHARED_17_CLUBS,
   ...RELEGATED_CLUBS_2024_25,
@@ -327,9 +332,13 @@ export const ALL_CAREER_CLUBS: Club[] = [
 export const ENGLISH_TOP_FLIGHT_CLUBS: Club[] = ENGLISH_TOP_FLIGHT_CLUBS_2026_27;
 
 export function getClubsForSeason(season: DatabaseSeason = '2026/27'): Club[] {
-  return season === '2024/25'
-    ? [...ENGLISH_TOP_FLIGHT_CLUBS_2024_25]
-    : [...ENGLISH_TOP_FLIGHT_CLUBS_2026_27];
+  if (season === '2024/25') {
+    return [...ENGLISH_TOP_FLIGHT_CLUBS_2024_25];
+  }
+  if (season === '2025/26') {
+    return [...ENGLISH_TOP_FLIGHT_CLUBS_2025_26];
+  }
+  return [...ENGLISH_TOP_FLIGHT_CLUBS_2026_27];
 }
 
 export function getAllClubs(season: DatabaseSeason = '2026/27'): Club[] {

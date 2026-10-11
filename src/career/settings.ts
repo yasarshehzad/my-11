@@ -105,7 +105,11 @@ export function validateSettings(settings?: Partial<CareerSettings> | null): Car
       : defaultBase.startingBudgetMultiplier;
 
   const databaseSeason =
-    settings.databaseSeason === '2024/25' ? '2024/25' : '2026/27';
+    settings.databaseSeason === '2024/25'
+      ? '2024/25'
+      : settings.databaseSeason === '2025/26'
+      ? '2025/26'
+      : '2026/27';
 
   return {
     preset,

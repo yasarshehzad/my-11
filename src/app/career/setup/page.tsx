@@ -239,18 +239,18 @@ function SetupWizardContent() {
             </header>
 
             {/* Roster Database Season Selector */}
-            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 max-w-xl mx-auto flex flex-col gap-3 shadow-md">
+            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 max-w-3xl mx-auto flex flex-col gap-3 shadow-md">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                   <span>📅</span>
                   <span>Roster Database Season</span>
                 </span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold">
-                  {databaseSeason === '2026/27' ? 'Current 26/27' : 'Classic 24/25'}
+                  {databaseSeason === '2026/27' ? 'Current 26/27' : databaseSeason === '2025/26' ? 'Previous 25/26' : 'Classic 24/25'}
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <button
                   type="button"
                   onClick={() => handleDatabaseSeasonChange('2026/27')}
@@ -261,11 +261,31 @@ function SetupWizardContent() {
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-black uppercase text-foreground">2026/27 Season</span>
+                    <span className="text-xs font-black uppercase text-foreground">2026/27</span>
                     {databaseSeason === '2026/27' && <span className="text-emerald-400 text-xs font-bold">✓ Active</span>}
                   </div>
+                  <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Current Season</span>
                   <p className="text-[11px] text-slate-400 leading-snug">
-                    Current season with modern squads, 2026 ages & ratings, plus promoted sides Leeds, Sunderland & Burnley.
+                    Current squads with 2026 ages & ratings, modern breakout stars, plus Leeds, Sunderland & Burnley.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleDatabaseSeasonChange('2025/26')}
+                  className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all ${
+                    databaseSeason === '2025/26'
+                      ? 'bg-emerald-500/10 border-emerald-500 text-white shadow-md'
+                      : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase text-foreground">2025/26</span>
+                    {databaseSeason === '2025/26' && <span className="text-emerald-400 text-xs font-bold">✓ Active</span>}
+                  </div>
+                  <span className="text-[10px] font-bold text-sky-400 uppercase tracking-wider">Previous Season</span>
+                  <p className="text-[11px] text-slate-400 leading-snug">
+                    Calibrated 25/26 ratings & 2025 player ages, featuring Leeds, Sunderland & Burnley.
                   </p>
                 </button>
 
@@ -279,11 +299,12 @@ function SetupWizardContent() {
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-black uppercase text-foreground">2024/25 Season</span>
+                    <span className="text-xs font-black uppercase text-foreground">2024/25</span>
                     {databaseSeason === '2024/25' && <span className="text-emerald-400 text-xs font-bold">✓ Active</span>}
                   </div>
+                  <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Classic Season</span>
                   <p className="text-[11px] text-slate-400 leading-snug">
-                    Classic previous season with Leicester City, Southampton & Ipswich Town authentic squads.
+                    Classic campaign featuring Leicester City, Southampton & Ipswich Town authentic rosters.
                   </p>
                 </button>
               </div>
