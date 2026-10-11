@@ -28,6 +28,10 @@ export function isHomegrownPlayer(player: { nationality: string; isHomegrown?: b
   return DOMESTIC_NATIONS.includes(player.nationality);
 }
 
+export function getSquadHomegrownCount(squad: CareerPlayer[]): number {
+  return squad.filter((p) => isHomegrownPlayer(p)).length;
+}
+
 export function categorizePosition(position: string): GeneralPositionGroup {
   const pos = position.toUpperCase();
   if (pos === 'GK') return 'GK';

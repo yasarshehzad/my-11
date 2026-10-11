@@ -16,6 +16,11 @@ import {
   findAnyClub,
   advanceCupTournament,
 } from './cups';
+import {
+  isTransferWindowOpen,
+  generateIncomingAiBids,
+  evaluateBoardConfidence,
+} from './transfers';
 
 /**
  * Simulates a single league fixture with realistic football scorelines and goalscorers.
@@ -329,11 +334,27 @@ export function advanceTimeSkip(
   // Recalculate standings
   const updatedStandings = calculateStandings(fixtures, getAllClubs());
 
+  const windowOpen = isTransferWindowOpen(curIso, save.season.yearStart);
+
+  const updatedBoardStatus = evaluateBoardConfidence({
+    ...save,
+    standings: updatedStandings,
+  });
+
+  const incomingOffers = windowOpen
+    ? generateIncomingAiBids({ ...save, season: { ...save.season, currentDate: curIso } })
+    : (save.incomingOffers || []);
+
+  if (updatedBoardStatus.status === 'sacked' && save.settings.boardCanSack && !pausedReason) {
+    pausedReason = 'Emergency Board Meeting: Sacked due to poor league results';
+  }
+
   const updatedSave: CareerSaveFile = {
     ...save,
     season: {
       ...save.season,
       currentDate: curIso,
+      transferWindowOpen: windowOpen,
     },
     fixtures,
     standings: updatedStandings,
@@ -341,6 +362,8 @@ export function advanceTimeSkip(
     cups,
     trophies,
     finances,
+    incomingOffers,
+    boardStatus: updatedBoardStatus,
   };
 
   return {

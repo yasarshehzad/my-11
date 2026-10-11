@@ -270,7 +270,7 @@ export function simulateFullMatch(
     manOfTheMatch: {
       name: motm.player.name,
       clubId: motm.player.club,
-      rating: Math.round(motm.matchRating * 10) / 10,
+      rating: Math.min(10.0, Math.round(motm.matchRating * 10) / 10),
     },
   };
 
@@ -283,7 +283,7 @@ export function simulateFullMatch(
     manOfTheMatch: {
       name: motm.player.name,
       clubId: motm.player.club,
-      rating: Math.round(motm.matchRating * 10) / 10,
+      rating: Math.min(10.0, Math.round(motm.matchRating * 10) / 10),
     },
     homePlayerStates: homeStates,
     awayPlayerStates: awayStates,

@@ -1,0 +1,542 @@
+import {
+  CareerSaveFile,
+  CareerPlayer,
+  MarketPlayer,
+  ScoutingFilters,
+  TransferRecord,
+  IncomingTransferOffer,
+  BoardStatus,
+  Club,
+} from './types';
+import { players } from '../data/players';
+import { calculatePlayerValue, calculateWeeklyWage, formatCurrency } from './finance';
+import { categorizePosition, isHomegrownPlayer, getSquadHomegrownCount } from './squad';
+import { getAllClubs, getClubById } from './clubs';
+import { CONTINENTAL_EUROPEAN_CLUBS } from './continentalClubs';
+
+/**
+ * Checks whether the transfer window is open on a given date.
+ * Summer Window: July 1 to Sept 1
+ * Winter Window: Jan 1 to Feb 1
+ */
+export function isTransferWindowOpen(
+  dateStr: string,
+  yearStart: number = 2026
+): boolean {
+  const summerStart = `${yearStart}-07-01`;
+  const summerEnd = `${yearStart}-09-01`;
+  const winterStart = `${yearStart + 1}-01-01`;
+  const winterEnd = `${yearStart + 1}-02-01`;
+
+  return (
+    (dateStr >= summerStart && dateStr <= summerEnd) ||
+    (dateStr >= winterStart && dateStr <= winterEnd)
+  );
+}
+
+/**
+ * Generates deterministic age from player ID so values and ages don't fluctuate on re-renders.
+ */
+function getDeterministicAge(id: string): number {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash << 5) - hash + id.charCodeAt(i);
+    hash |= 0;
+  }
+  return 20 + (Math.abs(hash) % 13); // 20 to 32
+}
+
+/**
+ * Returns scouting market players available for transfer, excluding players in the user's squad.
+ */
+export function getScoutingMarketPool(
+  userSquad: CareerPlayer[] = [],
+  filters?: ScoutingFilters
+): MarketPlayer[] {
+  const userPlayerIds = new Set(userSquad.map((p) => p.id));
+  const userPlayerNames = new Set(
+    userSquad.map((p) => (p.name || '').toLowerCase()).filter(Boolean)
+  );
+
+  const seenPlayerNames = new Set<string>();
+  let pool: MarketPlayer[] = [];
+
+  for (const base of players) {
+    const pName = base.displayName || base.playerName || base.id;
+    const lowerName = pName.toLowerCase();
+
+    if (
+      userPlayerIds.has(base.id) ||
+      userPlayerNames.has(lowerName) ||
+      seenPlayerNames.has(lowerName)
+    ) {
+      continue;
+    }
+
+    seenPlayerNames.add(lowerName);
+
+    const age = getDeterministicAge(base.id);
+    const value = calculatePlayerValue(base.rating, age, base.primaryPosition);
+    const wageDemand = calculateWeeklyWage(base.rating, value);
+    const isHomegrown = isHomegrownPlayer({ nationality: base.nationality });
+
+    pool.push({
+      id: base.id,
+      cardId: `${base.id}_career`,
+      name: pName,
+      rating: base.rating,
+      position: base.primaryPosition,
+      age,
+      value,
+      wageDemand,
+      club: base.club,
+      nationality: base.nationality,
+      isHomegrown,
+      rarity: base.rarity,
+    });
+  }
+
+  // Apply filters
+  if (filters) {
+    if (filters.positionCategory && filters.positionCategory !== 'ALL') {
+      pool = pool.filter(
+        (p) => categorizePosition(p.position) === filters.positionCategory
+      );
+    }
+
+    if (filters.minRating !== undefined) {
+      pool = pool.filter((p) => p.rating >= filters.minRating!);
+    }
+
+    if (filters.maxRating !== undefined) {
+      pool = pool.filter((p) => p.rating <= filters.maxRating!);
+    }
+
+    if (filters.maxPrice !== undefined) {
+      pool = pool.filter((p) => p.value <= filters.maxPrice!);
+    }
+
+    if (filters.nationality) {
+      pool = pool.filter((p) =>
+        p.nationality.toLowerCase().includes(filters.nationality!.toLowerCase())
+      );
+    }
+
+    if (filters.homegrownOnly) {
+      pool = pool.filter((p) => p.isHomegrown);
+    }
+
+    if (filters.searchTerm) {
+      const term = filters.searchTerm.toLowerCase();
+      pool = pool.filter(
+        (p) =>
+          p.name.toLowerCase().includes(term) ||
+          p.club.toLowerCase().includes(term) ||
+          p.nationality.toLowerCase().includes(term)
+      );
+    }
+  }
+
+  // Sort by rating descending by default
+  pool.sort((a, b) => b.rating - a.rating);
+
+  return pool;
+}
+
+export interface OfferEvaluationResult {
+  status: 'accepted' | 'fee_rejected' | 'wage_rejected' | 'counter_offer';
+  message: string;
+  counterFee?: number;
+}
+
+/**
+ * Evaluates a transfer bid against club valuation and player wage expectations.
+ */
+export function evaluateTransferOffer(
+  targetPlayer: MarketPlayer,
+  offeredFee: number,
+  offeredWage: number
+): OfferEvaluationResult {
+  // 1. Fee evaluation by selling club
+  if (offeredFee < targetPlayer.value * 0.85) {
+    return {
+      status: 'fee_rejected',
+      message: `The selling club has rejected your offer. An offer of ${formatCurrency(offeredFee)} is insulting for a player valued at ${formatCurrency(targetPlayer.value)}.`,
+    };
+  }
+
+  if (offeredFee < targetPlayer.value * 1.0) {
+    const counterFee = Math.round((targetPlayer.value * 1.08) / 100_000) * 100_000;
+    return {
+      status: 'counter_offer',
+      message: `The club is open to negotiations, but demands ${formatCurrency(counterFee)} to release ${targetPlayer.name}.`,
+      counterFee,
+    };
+  }
+
+  // 2. Personal terms evaluation by player
+  if (offeredWage < targetPlayer.wageDemand * 0.92) {
+    return {
+      status: 'wage_rejected',
+      message: `${targetPlayer.name}'s agent has rejected the contract terms. The player demands at least £${(targetPlayer.wageDemand / 1_000).toFixed(0)}k/week.`,
+    };
+  }
+
+  return {
+    status: 'accepted',
+    message: `Agreement reached! Both the selling club and ${targetPlayer.name} have agreed terms.`,
+  };
+}
+
+/**
+ * Executes player signing, applying budget deductions and homegrown quota validation.
+ */
+export function executePlayerSigning(
+  save: CareerSaveFile,
+  targetPlayer: MarketPlayer,
+  fee: number,
+  wage: number,
+  contractYears: number = 3
+): { success: boolean; updatedSave: CareerSaveFile; error?: string } {
+  // Validate transfer window
+  if (!isTransferWindowOpen(save.season.currentDate, save.season.yearStart)) {
+    return {
+      success: false,
+      updatedSave: save,
+      error: 'The transfer window is currently closed. Signings can only be registered during transfer windows.',
+    };
+  }
+
+  // Validate squad size maximum (25 players)
+  if (save.squad.length >= 25) {
+    return {
+      success: false,
+      updatedSave: save,
+      error: 'Squad limit reached! Maximum squad size is 25 players. You must sell or release a player first.',
+    };
+  }
+
+  // Validate transfer budget
+  if (fee > save.finances.transferBudget) {
+    return {
+      success: false,
+      updatedSave: save,
+      error: `Insufficient transfer budget. You have ${formatCurrency(save.finances.transferBudget)} available, but need ${formatCurrency(fee)}.`,
+    };
+  }
+
+  // Validate weekly wage budget
+  if (save.finances.currentWeeklyWages + wage > save.finances.weeklyWageBudget) {
+    return {
+      success: false,
+      updatedSave: save,
+      error: `Wage budget exceeded! Adding £${(wage / 1_000).toFixed(0)}k/w would surpass your weekly limit of £${(save.finances.weeklyWageBudget / 1_000).toFixed(0)}k.`,
+    };
+  }
+
+  // Validate Homegrown Rule if enabled
+  if (save.settings.homegrownRule && !targetPlayer.isHomegrown) {
+    const currentHomegrown = getSquadHomegrownCount(save.squad);
+    const futureSquadSize = save.squad.length + 1;
+    // In a full 25 player squad, at least 8 must be homegrown (meaning max 17 non-homegrown)
+    const nonHomegrownCount = save.squad.filter((p) => !p.isHomegrown).length + 1;
+    if (nonHomegrownCount > 17) {
+      return {
+        success: false,
+        updatedSave: save,
+        error: `Homegrown rule violation! A 25-man squad must contain at least 8 domestic players (current: ${currentHomegrown}). You cannot register another foreign player.`,
+      };
+    }
+  }
+
+  const newPlayer: CareerPlayer = {
+    id: `cp_${targetPlayer.id}_${Date.now()}`,
+    cardId: targetPlayer.cardId,
+    name: targetPlayer.name,
+    rating: targetPlayer.rating,
+    position: targetPlayer.position,
+    age: targetPlayer.age,
+    value: targetPlayer.value,
+    wageWeekly: wage,
+    contractYears,
+    fitness: 100,
+    morale: 90,
+    form: 7.2,
+    injured: false,
+    isHomegrown: targetPlayer.isHomegrown,
+    club: save.club.defaultName,
+    nationality: targetPlayer.nationality,
+  };
+
+  const updatedSquad = [...save.squad, newPlayer];
+
+  const transferRecord: TransferRecord = {
+    id: `tx_${Date.now()}`,
+    playerId: newPlayer.id,
+    playerName: newPlayer.name,
+    rating: newPlayer.rating,
+    position: newPlayer.position,
+    fromClubName: targetPlayer.club,
+    toClubName: save.club.customName || save.club.defaultName,
+    fee,
+    wage,
+    date: save.season.currentDate,
+    type: 'signing',
+  };
+
+  const updatedHistory = [transferRecord, ...(save.transfersHistory || [])];
+
+  const updatedSave: CareerSaveFile = {
+    ...save,
+    squad: updatedSquad,
+    finances: {
+      ...save.finances,
+      transferBudget: save.finances.transferBudget - fee,
+      balance: save.finances.balance - fee,
+      currentWeeklyWages: save.finances.currentWeeklyWages + wage,
+    },
+    transfersHistory: updatedHistory,
+  };
+
+  return { success: true, updatedSave };
+}
+
+/**
+ * Executes a player sale from the user squad to another club.
+ */
+export function executePlayerSale(
+  save: CareerSaveFile,
+  playerId: string,
+  fee: number,
+  buyingClubName: string
+): { success: boolean; updatedSave: CareerSaveFile; error?: string } {
+  // Validate squad size minimum (18 players)
+  if (save.squad.length <= 18) {
+    return {
+      success: false,
+      updatedSave: save,
+      error: 'Squad size cannot fall below 18 players. Sign a replacement before selling.',
+    };
+  }
+
+  const playerToSell = save.squad.find((p) => p.id === playerId);
+  if (!playerToSell) {
+    return {
+      success: false,
+      updatedSave: save,
+      error: 'Player not found in your squad.',
+    };
+  }
+
+  const updatedSquad = save.squad.filter((p) => p.id !== playerId);
+
+  // Remove from lineup if present
+  let updatedLineup = save.lineup;
+  if (updatedLineup) {
+    updatedLineup = {
+      ...updatedLineup,
+      starterIds: updatedLineup.starterIds.filter((id) => id !== playerId),
+      benchIds: updatedLineup.benchIds.filter((id) => id !== playerId),
+    };
+  }
+
+  const transferRecord: TransferRecord = {
+    id: `tx_sale_${Date.now()}`,
+    playerId: playerToSell.id,
+    playerName: playerToSell.name,
+    rating: playerToSell.rating,
+    position: playerToSell.position,
+    fromClubName: save.club.customName || save.club.defaultName,
+    toClubName: buyingClubName,
+    fee,
+    wage: playerToSell.wageWeekly,
+    date: save.season.currentDate,
+    type: 'sale',
+  };
+
+  const updatedHistory = [transferRecord, ...(save.transfersHistory || [])];
+
+  // Remove from incoming offers
+  const updatedOffers = (save.incomingOffers || []).filter(
+    (o) => o.playerId !== playerId
+  );
+
+  const updatedSave: CareerSaveFile = {
+    ...save,
+    squad: updatedSquad,
+    lineup: updatedLineup,
+    finances: {
+      ...save.finances,
+      transferBudget: save.finances.transferBudget + fee,
+      balance: save.finances.balance + fee,
+      currentWeeklyWages: Math.max(0, save.finances.currentWeeklyWages - playerToSell.wageWeekly),
+    },
+    transfersHistory: updatedHistory,
+    incomingOffers: updatedOffers,
+  };
+
+  return { success: true, updatedSave };
+}
+
+/**
+ * Generates incoming bids from AI clubs for squad players during open transfer windows.
+ */
+export function generateIncomingAiBids(save: CareerSaveFile): IncomingTransferOffer[] {
+  if (!isTransferWindowOpen(save.season.currentDate, save.season.yearStart)) {
+    return [];
+  }
+
+  const eligiblePlayers = save.squad.filter((p) => !p.injured && p.rating >= 74);
+  if (eligiblePlayers.length === 0) return [];
+
+  const existingOffers = save.incomingOffers || [];
+  const existingPlayerIds = new Set(existingOffers.map((o) => o.playerId));
+
+  const availableToBidOn = eligiblePlayers.filter((p) => !existingPlayerIds.has(p.id));
+  if (availableToBidOn.length === 0) return existingOffers;
+
+  // Pick 1-2 targets
+  const allPotentialBuyers = [
+    ...getAllClubs().filter((c) => c.id !== save.club.id),
+    ...CONTINENTAL_EUROPEAN_CLUBS,
+  ];
+
+  const pickedPlayer =
+    availableToBidOn[Math.floor(Math.random() * availableToBidOn.length)];
+  const buyer =
+    allPotentialBuyers[Math.floor(Math.random() * allPotentialBuyers.length)];
+
+  // Offer between 0.95x and 1.25x market value
+  const multiplier = 0.95 + Math.random() * 0.3;
+  const offeredFee = Math.round((pickedPlayer.value * multiplier) / 100_000) * 100_000;
+
+  const newOffer: IncomingTransferOffer = {
+    id: `offer_${Date.now()}_${pickedPlayer.id}`,
+    playerId: pickedPlayer.id,
+    playerName: pickedPlayer.name,
+    rating: pickedPlayer.rating,
+    position: pickedPlayer.position,
+    buyingClubId: buyer.id,
+    buyingClubName: buyer.defaultName,
+    offeredFee,
+    date: save.season.currentDate,
+    status: 'pending',
+  };
+
+  return [newOffer, ...existingOffers];
+}
+
+/**
+ * Renews a player's contract with wage adjustment and morale boost.
+ */
+export function renewPlayerContract(
+  save: CareerSaveFile,
+  playerId: string,
+  newWage: number,
+  newYears: number
+): { success: boolean; updatedSave: CareerSaveFile; error?: string } {
+  const player = save.squad.find((p) => p.id === playerId);
+  if (!player) {
+    return { success: false, updatedSave: save, error: 'Player not found.' };
+  }
+
+  const wageDifference = newWage - player.wageWeekly;
+  if (save.finances.currentWeeklyWages + wageDifference > save.finances.weeklyWageBudget) {
+    return {
+      success: false,
+      updatedSave: save,
+      error: `Wage budget exceeded! Increasing wage by £${(wageDifference / 1_000).toFixed(0)}k/w would exceed weekly budget.`,
+    };
+  }
+
+  const updatedSquad = save.squad.map((p) => {
+    if (p.id !== playerId) return p;
+    return {
+      ...p,
+      wageWeekly: newWage,
+      contractYears: newYears,
+      morale: Math.min(100, p.morale + 12),
+    };
+  });
+
+  const updatedSave: CareerSaveFile = {
+    ...save,
+    squad: updatedSquad,
+    finances: {
+      ...save.finances,
+      currentWeeklyWages: save.finances.currentWeeklyWages + wageDifference,
+    },
+  };
+
+  return { success: true, updatedSave };
+}
+
+/**
+ * Evaluates board satisfaction and sacking risk based on club tier and league standing.
+ */
+export function evaluateBoardConfidence(save: CareerSaveFile): BoardStatus {
+  const standings = save.standings || [];
+  const userRankIdx = standings.findIndex((s) => s.clubId === save.club.id);
+  const currentRank = userRankIdx >= 0 ? userRankIdx + 1 : 10;
+  const matchesPlayed = standings[userRankIdx]?.played || 0;
+
+  // Target rank based on club tier
+  let targetRank = 10;
+  let expectation = 'Top Half Finish';
+
+  switch (save.club.tier) {
+    case 'elite':
+      targetRank = 4;
+      expectation = 'Title Challenge & Top 4';
+      break;
+    case 'upper':
+      targetRank = 7;
+      expectation = 'European Qualification';
+      break;
+    case 'mid':
+      targetRank = 12;
+      expectation = 'Mid-table Safety & Top 10';
+      break;
+    case 'lower':
+      targetRank = 17;
+      expectation = 'Avoid Relegation';
+      break;
+  }
+
+  // Calculate baseline confidence
+  // If rank is better than target, confidence goes above 80
+  const rankDelta = targetRank - currentRank; // positive = better than target
+  let confidence = Math.round(75 + rankDelta * 5);
+
+  // If few matches played, keep confidence neutral
+  if (matchesPlayed < 5) {
+    confidence = Math.max(70, confidence);
+  }
+
+  // If sackings are disabled in settings, board confidence never drops below safe threshold
+  if (!save.settings.boardCanSack) {
+    confidence = Math.max(65, confidence);
+  }
+
+  confidence = Math.max(5, Math.min(100, confidence));
+
+  let status: BoardStatus['status'] = 'secure';
+  if (confidence >= 80) {
+    status = 'secure';
+  } else if (confidence >= 60) {
+    status = 'stable';
+  } else if (confidence >= 35) {
+    status = 'under_pressure';
+  } else if (confidence >= 15) {
+    status = 'critical';
+  } else {
+    status = save.settings.boardCanSack && matchesPlayed >= 10 ? 'sacked' : 'critical';
+  }
+
+  return {
+    confidence,
+    expectation,
+    status,
+    warningsCount: status === 'critical' ? 2 : status === 'under_pressure' ? 1 : 0,
+  };
+}

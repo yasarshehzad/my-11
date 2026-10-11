@@ -12,6 +12,7 @@ import { SquadManagement } from '../../../components/career/SquadManagement';
 import { FixturesCalendar } from '../../../components/career/FixturesCalendar';
 import { LeagueTable } from '../../../components/career/LeagueTable';
 import { TournamentsHub } from '../../../components/career/TournamentsHub';
+import { TransferHub } from '../../../components/career/TransferHub';
 
 function CareerPlayHubContent() {
   const router = useRouter();
@@ -373,6 +374,15 @@ function CareerPlayHubContent() {
                     6 tournaments (The English Cup, League Cup, Shield, Champions Cup, Challenge Cup, Plate), penalty shootouts, continental giants, and trophy cabinet.
                   </p>
                 </div>
+
+                <div className="p-4 rounded-xl border border-emerald-900/40 bg-emerald-950/10 space-y-1">
+                  <div className="font-display font-black text-emerald-300 flex items-center gap-2">
+                    <span>✓</span> Phase 6: Transfer Market & Negotiations (Active)
+                  </div>
+                  <p className="text-slate-400 text-[11px]">
+                    Player scouting search & filters, contract bidding, AI incoming offers, player sales, transfer history ledger, and board room confidence.
+                  </p>
+                </div>
               </div>
             </section>
           </div>
@@ -411,15 +421,11 @@ function CareerPlayHubContent() {
 
         {/* TAB 6: TRANSFERS */}
         {activeTab === 'transfers' && (
-          <section className="bg-slate-900/30 border border-slate-850 rounded-3xl p-8 text-center space-y-4">
-            <span className="text-4xl">💱</span>
-            <h3 className="text-xl font-display font-black uppercase text-white">
-              Transfer Market & Scouting (Phase 6)
-            </h3>
-            <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-              Scout players from the database, bid on stars, and balance your £{(save.finances.transferBudget / 1_000_000).toFixed(1)}M budget.
-            </p>
-          </section>
+          <TransferHub
+            save={save}
+            onUpdateSave={handleUpdateSave}
+            onNotification={showToast}
+          />
         )}
 
         {/* TAB 6: SETTINGS & EDITING */}

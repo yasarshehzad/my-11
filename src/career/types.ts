@@ -205,6 +205,65 @@ export interface CupTournament {
   prizeMoney: number;
 }
 
+export interface TransferRecord {
+  id: string;
+  playerId: string;
+  playerName: string;
+  rating: number;
+  position: string;
+  fromClubName: string;
+  toClubName: string;
+  fee: number;
+  wage: number;
+  date: string;
+  type: 'signing' | 'sale';
+}
+
+export interface IncomingTransferOffer {
+  id: string;
+  playerId: string;
+  playerName: string;
+  rating: number;
+  position: string;
+  buyingClubId: string;
+  buyingClubName: string;
+  offeredFee: number;
+  date: string;
+  status: 'pending' | 'accepted' | 'rejected';
+}
+
+export interface BoardStatus {
+  confidence: number; // 0 to 100
+  expectation: string;
+  status: 'secure' | 'stable' | 'under_pressure' | 'critical' | 'sacked';
+  warningsCount: number;
+}
+
+export interface MarketPlayer {
+  id: string;
+  cardId: string;
+  name: string;
+  rating: number;
+  position: string;
+  age: number;
+  value: number;
+  wageDemand: number;
+  club: string;
+  nationality: string;
+  isHomegrown: boolean;
+  rarity: string;
+}
+
+export interface ScoutingFilters {
+  positionCategory?: 'ALL' | 'GK' | 'DEF' | 'MID' | 'FWD';
+  minRating?: number;
+  maxRating?: number;
+  maxPrice?: number;
+  nationality?: string;
+  homegrownOnly?: boolean;
+  searchTerm?: string;
+}
+
 export interface CareerSaveFile {
   version: number;
   id: string; // 'slot_1' | 'slot_2' | 'slot_3'
@@ -222,6 +281,10 @@ export interface CareerSaveFile {
   calendar?: CalendarEvent[];
   cups?: Record<string, CupTournament>;
   trophies: TrophyRecord[];
+  transfersHistory?: TransferRecord[];
+  incomingOffers?: IncomingTransferOffer[];
+  shortlistPlayerIds?: string[];
+  boardStatus?: BoardStatus;
   phase: 'preseason' | 'transfer_window' | 'regular_season' | 'season_review';
 }
 
