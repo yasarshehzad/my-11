@@ -71,6 +71,7 @@ export interface CareerPlayer {
   isHomegrown: boolean;
   club: string;
   nationality: string;
+  potential?: number; // Career wonderkid potential rating
 }
 
 export interface Competition {
@@ -264,6 +265,20 @@ export interface ScoutingFilters {
   searchTerm?: string;
 }
 
+export interface YouthProspect {
+  id: string;
+  name: string;
+  age: number; // 16 to 19
+  position: string;
+  rating: number; // 63 to 75
+  potential: number; // 78 to 92
+  nationality: string;
+  isHomegrown: boolean;
+  scoutReport: string;
+  wageWeekly: number;
+  value: number;
+}
+
 export interface CareerSaveFile {
   version: number;
   id: string; // 'slot_1' | 'slot_2' | 'slot_3'
@@ -284,6 +299,7 @@ export interface CareerSaveFile {
   transfersHistory?: TransferRecord[];
   incomingOffers?: IncomingTransferOffer[];
   shortlistPlayerIds?: string[];
+  youthAcademy?: YouthProspect[];
   boardStatus?: BoardStatus;
   phase: 'preseason' | 'transfer_window' | 'regular_season' | 'season_review';
 }

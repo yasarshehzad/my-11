@@ -6,6 +6,7 @@ import { getBestStartingLineup } from './squad';
 import { generateRoundRobinFixtures } from './calendar';
 import { createInitialStandings } from './table';
 import { initializeSeasonCups } from './cups';
+import { generateYouthIntake } from './youthAcademy';
 
 export const VALID_SLOT_IDS = ['slot_1', 'slot_2', 'slot_3'] as const;
 export type ValidSlotId = (typeof VALID_SLOT_IDS)[number];
@@ -48,12 +49,15 @@ export function loadCareerSave(slotId: string): CareerSaveFile | null {
       parsed.standings = createInitialStandings(getAllClubs());
     }
 
-    // Backfill cups and trophies if missing
+    // Backfill cups, trophies, and youth academy if missing
     if (!parsed.cups) {
       parsed.cups = initializeSeasonCups(parsed.club, parsed.season?.yearStart || 2026);
     }
     if (!parsed.trophies) {
       parsed.trophies = [];
+    }
+    if (!parsed.youthAcademy) {
+      parsed.youthAcademy = generateYouthIntake(parsed.club, parsed.season?.yearStart || 2026);
     }
 
     return parsed as CareerSaveFile;
@@ -180,6 +184,7 @@ export function createNewCareerSave(params: {
     calendar,
     cups,
     trophies: [],
+    youthAcademy: generateYouthIntake(params.club, 2026),
     phase: 'preseason',
   };
 

@@ -383,6 +383,15 @@ function CareerPlayHubContent() {
                     Player scouting search & filters, contract bidding, AI incoming offers, player sales, transfer history ledger, and board room confidence.
                   </p>
                 </div>
+
+                <div className="p-4 rounded-xl border border-emerald-900/40 bg-emerald-950/10 space-y-1 md:col-span-2">
+                  <div className="font-display font-black text-emerald-300 flex items-center gap-2">
+                    <span>✓</span> Phase 7: Database Expansion & Youth Academy (Active)
+                  </div>
+                  <p className="text-slate-400 text-[11px]">
+                    100+ supplemental club players across all 20 clubs, wonderkid potential tracking, annual youth intakes, senior promotions, and seasonal development progression.
+                  </p>
+                </div>
               </div>
             </section>
           </div>

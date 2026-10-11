@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { CareerPlayer, CareerSaveFile, CareerLineup } from '../../career/types';
+import { CareerPlayer, CareerSaveFile, CareerLineup, YouthProspect } from '../../career/types';
 import {
   validateSquad,
   categorizePosition,
@@ -12,6 +12,7 @@ import {
   isHomegrownPlayer,
 } from '../../career/squad';
 import { formatCurrency, formatWage } from '../../career/finance';
+import { generateYouthIntake, promoteYouthProspect, releaseYouthProspect } from '../../career/youthAcademy';
 
 interface SquadManagementProps {
   save: CareerSaveFile;
@@ -19,14 +20,45 @@ interface SquadManagementProps {
 }
 
 export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
-  const [viewMode, setViewMode] = useState<'pitch' | 'list'>('pitch');
+  const [viewMode, setViewMode] = useState<'pitch' | 'list' | 'academy'>('pitch');
   const [filterGroup, setFilterGroup] = useState<'ALL' | GeneralPositionGroup>('ALL');
   const [selectedPlayer, setSelectedPlayer] = useState<CareerPlayer | null>(null);
   const [swapSourceId, setSwapSourceId] = useState<string | null>(null);
+  const [academyToast, setAcademyToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const squad = save.squad || [];
+  const academy: YouthProspect[] = save.youthAcademy || [];
   const lineup: CareerLineup = save.lineup || getBestStartingLineup(squad);
   const currentFormation = lineup.formation || '4-3-3';
+
+  const handlePromoteProspect = (prospectId: string) => {
+    const result = promoteYouthProspect(save, prospectId);
+    if (!result.success) {
+      setAcademyToast({ message: result.error || 'Promotion failed.', type: 'error' });
+      setTimeout(() => setAcademyToast(null), 4000);
+      return;
+    }
+    onUpdateSave(result.updatedSave);
+    setAcademyToast({ message: 'Promoted prospect to first team squad successfully!', type: 'success' });
+    setTimeout(() => setAcademyToast(null), 3000);
+  };
+
+  const handleReleaseProspect = (prospectId: string) => {
+    const result = releaseYouthProspect(save, prospectId);
+    onUpdateSave(result.updatedSave);
+    setAcademyToast({ message: 'Released prospect from Youth Academy.', type: 'success' });
+    setTimeout(() => setAcademyToast(null), 3000);
+  };
+
+  const handleGenerateIntake = () => {
+    const newIntake = generateYouthIntake(save.club, save.season.yearStart);
+    onUpdateSave({
+      ...save,
+      youthAcademy: [...(save.youthAcademy || []), ...newIntake],
+    });
+    setAcademyToast({ message: `Scouted ${newIntake.length} new prospects into the Academy!`, type: 'success' });
+    setTimeout(() => setAcademyToast(null), 3000);
+  };
 
   const validation = validateSquad(squad, save.settings);
 
@@ -289,6 +321,25 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
             >
               List
             </button>
+            <button
+              onClick={() => setViewMode('academy')}
+              className={`py-1 px-3 rounded-lg text-xs font-display font-black uppercase transition-all flex items-center gap-1.5 ${
+                viewMode === 'academy'
+                  ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <span>Academy</span>
+              <span
+                className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                  viewMode === 'academy'
+                    ? 'bg-slate-950/20 text-slate-950'
+                    : 'bg-slate-800 text-slate-300'
+                }`}
+              >
+                {academy.length}
+              </span>
+            </button>
           </div>
         </div>
       </section>
@@ -454,6 +505,7 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
                     <th className="py-3 px-3">Role</th>
                     <th className="py-3 px-3 text-center">Pos</th>
                     <th className="py-3 px-3 text-center">OVR</th>
+                    <th className="py-3 px-3 text-center">POT</th>
                     <th className="py-3 px-3 text-center">Age</th>
                     <th className="py-3 px-3">Value</th>
                     <th className="py-3 px-3">Wage</th>
@@ -505,6 +557,10 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
 
                         <td className="py-3 px-3 text-center font-display font-black text-sm text-emerald-400">
                           {player.rating}
+                        </td>
+
+                        <td className="py-3 px-3 text-center font-display font-bold text-xs text-amber-400">
+                          {player.potential ? `⭐ ${player.potential}` : '-'}
                         </td>
 
                         <td className="py-3 px-3 text-center text-slate-400">
@@ -578,6 +634,170 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
         </section>
       )}
 
+      {/* YOUTH ACADEMY VIEW */}
+      {viewMode === 'academy' && (
+        <section className="space-y-6" aria-label="Youth Academy">
+          {/* Academy Status & Scout Action Banner */}
+          <div className="bg-gradient-to-r from-emerald-950/40 via-slate-900/60 to-slate-950/80 border border-emerald-900/40 rounded-3xl p-6 shadow-xl relative overflow-hidden flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="space-y-1 z-10">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🌟</span>
+                <h3 className="text-lg font-display font-black text-white uppercase tracking-tight">
+                  Youth Academy & Wonderkid Pipeline
+                </h3>
+              </div>
+              <p className="text-xs text-slate-400 font-medium max-w-xl">
+                Scout and nurture homegrown prodigies. Under-23 prospects gain rapid development (+1 to +3 OVR annually) towards their wonderkid ceiling. Senior squad capacity: {squad.length}/25.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 z-10 w-full sm:w-auto">
+              <button
+                onClick={handleGenerateIntake}
+                className="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-display font-black uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>🔍</span>
+                <span>Scout New Intake</span>
+              </button>
+            </div>
+          </div>
+
+          {academyToast && (
+            <div
+              role="alert"
+              className={`p-3.5 rounded-2xl border text-xs font-bold flex items-center justify-between ${
+                academyToast.type === 'success'
+                  ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300'
+                  : 'bg-rose-950/60 border-rose-500/40 text-rose-300'
+              }`}
+            >
+              <span>{academyToast.message}</span>
+              <button onClick={() => setAcademyToast(null)} className="text-xs opacity-70 hover:opacity-100 cursor-pointer">✕</button>
+            </div>
+          )}
+
+          {academy.length === 0 ? (
+            <div className="bg-slate-900/40 border border-slate-800 rounded-3xl p-12 text-center space-y-4">
+              <span className="text-4xl block">🌱</span>
+              <h4 className="text-base font-display font-black text-white uppercase">
+                No Prospects Currently in Academy
+              </h4>
+              <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+                Send out your scouting network to discover promising young talents across England and the British Isles.
+              </p>
+              <button
+                onClick={handleGenerateIntake}
+                className="py-2.5 px-6 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-display font-black uppercase tracking-wider transition-all font-bold shadow-lg cursor-pointer"
+              >
+                Run Annual Youth Intake
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {academy.map((prospect) => {
+                const isWonderkid = prospect.potential >= 88;
+                const isHighPotential = prospect.potential >= 84;
+
+                return (
+                  <article
+                    key={prospect.id}
+                    className="bg-slate-900/60 border border-slate-850 hover:border-slate-750 rounded-2xl p-5 space-y-4 transition-all flex flex-col justify-between relative group"
+                  >
+                    <div className="space-y-3">
+                      {/* Top Badges */}
+                      <div className="flex justify-between items-center text-xs">
+                        <div className="flex items-center gap-1.5">
+                          <span className="bg-slate-950 border border-slate-800 text-emerald-400 font-display font-black px-2 py-0.5 rounded-md text-[10px]">
+                            {prospect.position}
+                          </span>
+                          <span className="text-slate-400 text-[11px] font-medium">
+                            {prospect.age} yrs • {prospect.nationality}
+                          </span>
+                        </div>
+                        <span className="text-[10px] bg-emerald-950/60 border border-emerald-800/40 text-emerald-300 font-bold px-1.5 py-0.5 rounded">
+                          Homegrown
+                        </span>
+                      </div>
+
+                      {/* Name & OVR/Potential */}
+                      <div className="flex justify-between items-start gap-2">
+                        <div>
+                          <h4 className="text-base font-display font-black text-white leading-tight">
+                            {prospect.name}
+                          </h4>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs font-display font-black text-emerald-400">
+                              {prospect.rating} OVR
+                            </span>
+                            <span className="text-[10px] text-slate-500">•</span>
+                            <span
+                              className={`text-[10px] font-display font-black px-1.5 py-0.5 rounded ${
+                                isWonderkid
+                                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                                  : isHighPotential
+                                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                                  : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                              }`}
+                            >
+                              ⭐ POT: {prospect.potential}
+                            </span>
+                          </div>
+                        </div>
+                        {isWonderkid && (
+                          <span className="text-xs" title="Wonderkid Talent">✨</span>
+                        )}
+                      </div>
+
+                      {/* Valuation & Wage */}
+                      <div className="grid grid-cols-2 gap-2 text-[11px] py-1 bg-slate-950/50 rounded-xl px-2.5 border border-slate-850/60">
+                        <div>
+                          <span className="text-[9px] uppercase font-bold text-slate-500 block">Valuation</span>
+                          <span className="font-semibold text-slate-200">{formatCurrency(prospect.value)}</span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] uppercase font-bold text-slate-500 block">Wage Demand</span>
+                          <span className="font-semibold text-slate-200">{formatWage(prospect.wageWeekly)}</span>
+                        </div>
+                      </div>
+
+                      {/* Scout Report Note */}
+                      <div className="text-[11px] text-slate-400 italic bg-slate-950/30 p-2.5 rounded-xl border border-slate-850/40 leading-relaxed">
+                        &ldquo;{prospect.scoutReport}&rdquo;
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 pt-2 border-t border-slate-850/60">
+                      <button
+                        onClick={() => handlePromoteProspect(prospect.id)}
+                        disabled={squad.length >= 25}
+                        className={`flex-1 py-2 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                          squad.length >= 25
+                            ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
+                            : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md'
+                        }`}
+                        title={squad.length >= 25 ? 'Senior squad is full (25/25)' : 'Promote to First Team'}
+                      >
+                        <span>Promote</span>
+                        <span className="text-[10px]">({squad.length}/25)</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleReleaseProspect(prospect.id)}
+                        className="py-2 px-3 rounded-xl border border-slate-800 hover:border-rose-900/60 bg-slate-950 hover:bg-rose-950/30 text-slate-500 hover:text-rose-400 text-xs font-bold transition-all cursor-pointer"
+                        title="Release prospect"
+                      >
+                        Release
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
       {/* PLAYER DETAIL MODAL */}
       {selectedPlayer && (
         <div
@@ -588,7 +808,7 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
           <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 max-w-sm w-full space-y-5 shadow-2xl relative">
             <button
               onClick={() => setSelectedPlayer(null)}
-              className="absolute top-4 right-4 text-slate-500 hover:text-white text-sm"
+              className="absolute top-4 right-4 text-slate-500 hover:text-white text-sm cursor-pointer"
             >
               ✕
             </button>
@@ -607,9 +827,15 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
 
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="bg-slate-900/60 border border-slate-850 p-3 rounded-xl">
-                <div className="text-[9px] uppercase font-bold text-slate-500">Rating</div>
+                <div className="text-[9px] uppercase font-bold text-slate-500">Overall Rating</div>
                 <div className="text-xl font-display font-black text-emerald-400">
                   {selectedPlayer.rating}
+                </div>
+              </div>
+              <div className="bg-slate-900/60 border border-slate-850 p-3 rounded-xl">
+                <div className="text-[9px] uppercase font-bold text-slate-500">Potential</div>
+                <div className="text-xl font-display font-black text-amber-400">
+                  {selectedPlayer.potential ? `⭐ ${selectedPlayer.potential}` : `${selectedPlayer.rating}`}
                 </div>
               </div>
               <div className="bg-slate-900/60 border border-slate-850 p-3 rounded-xl">
@@ -624,11 +850,16 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
                   {formatWage(selectedPlayer.wageWeekly)}
                 </div>
               </div>
-              <div className="bg-slate-900/60 border border-slate-850 p-3 rounded-xl">
-                <div className="text-[9px] uppercase font-bold text-slate-500">Homegrown</div>
-                <div className="text-sm font-display font-bold text-slate-200">
-                  {selectedPlayer.isHomegrown ? 'Domestic (HG)' : 'International'}
-                </div>
+            </div>
+
+            <div className="bg-slate-900/40 border border-slate-850/80 p-3 rounded-xl space-y-1">
+              <span className="text-[9px] uppercase font-bold text-slate-500">Development Stage</span>
+              <div className="text-xs font-bold text-slate-300">
+                {selectedPlayer.age <= 22
+                  ? '🌱 Rapid Growth Phase (Under-23 development priority)'
+                  : selectedPlayer.age <= 28
+                  ? '⭐ Peak Career Prime (Maximum performance capability)'
+                  : '📉 Veteran Stage (Physical decline offset by tactical experience)'}
               </div>
             </div>
 
@@ -638,13 +869,13 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
                   setSwapSourceId(selectedPlayer.id);
                   setSelectedPlayer(null);
                 }}
-                className="flex-1 py-2.5 rounded-xl border border-amber-500/40 bg-amber-950/30 hover:bg-amber-950/60 text-amber-300 font-display font-black text-xs uppercase tracking-wider"
+                className="flex-1 py-2.5 rounded-xl border border-amber-500/40 bg-amber-950/30 hover:bg-amber-950/60 text-amber-300 font-display font-black text-xs uppercase tracking-wider cursor-pointer"
               >
                 🔄 Swap on Pitch
               </button>
               <button
                 onClick={() => setSelectedPlayer(null)}
-                className="py-2.5 px-4 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 text-xs font-bold"
+                className="py-2.5 px-4 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 text-xs font-bold cursor-pointer"
               >
                 Close
               </button>

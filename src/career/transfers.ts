@@ -13,6 +13,7 @@ import { calculatePlayerValue, calculateWeeklyWage, formatCurrency } from './fin
 import { categorizePosition, isHomegrownPlayer, getSquadHomegrownCount } from './squad';
 import { getAllClubs, getClubById } from './clubs';
 import { CONTINENTAL_EUROPEAN_CLUBS } from './continentalClubs';
+import { getAllSupplementalPlayers } from './databaseExpansion';
 
 /**
  * Checks whether the transfer window is open on a given date.
@@ -93,6 +94,35 @@ export function getScoutingMarketPool(
       nationality: base.nationality,
       isHomegrown,
       rarity: base.rarity,
+    });
+  }
+
+  // Include supplemental database expansion players
+  const supplementalPlayers = getAllSupplementalPlayers();
+  for (const supp of supplementalPlayers) {
+    const lowerName = supp.name.toLowerCase();
+    if (
+      userPlayerIds.has(supp.id) ||
+      userPlayerNames.has(lowerName) ||
+      seenPlayerNames.has(lowerName)
+    ) {
+      continue;
+    }
+    seenPlayerNames.add(lowerName);
+
+    pool.push({
+      id: supp.id,
+      cardId: supp.cardId,
+      name: supp.name,
+      rating: supp.rating,
+      position: supp.position,
+      age: supp.age,
+      value: supp.value,
+      wageDemand: supp.wageWeekly,
+      club: supp.club,
+      nationality: supp.nationality,
+      isHomegrown: supp.isHomegrown,
+      rarity: supp.potential && supp.potential >= 86 ? 'Wonderkid' : 'Standard',
     });
   }
 
@@ -266,6 +296,9 @@ export function executePlayerSigning(
     isHomegrown: targetPlayer.isHomegrown,
     club: save.club.defaultName,
     nationality: targetPlayer.nationality,
+    potential:
+      getAllSupplementalPlayers().find((sp) => sp.id === targetPlayer.id)?.potential ||
+      Math.max(targetPlayer.rating, targetPlayer.rating + (targetPlayer.age <= 21 ? 6 : targetPlayer.age <= 24 ? 3 : 0)),
   };
 
   const updatedSquad = [...save.squad, newPlayer];
