@@ -35,7 +35,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
           local-dir: ./out/
-          server-dir: my-11.com/
+          server-dir: ./
           timeout: 600000
           dangerous-clean-slate: false # Set to true if you want to wipe files not in the repo, but false is safer initially.
 
@@ -48,6 +48,6 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
           local-dir: ./out/
-          server-dir: my-11.com/
+          server-dir: ./
           timeout: 600000
           dangerous-clean-slate: false
