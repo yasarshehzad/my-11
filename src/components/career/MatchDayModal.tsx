@@ -4,11 +4,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   CareerSaveFile,
   LeagueFixture,
+  CupFixture,
+  CupTournament,
   CareerPlayer,
   TacticalMentality,
   Club,
 } from '../../career/types';
 import { getAllClubs, getEffectiveClubName } from '../../career/clubs';
+import { findAnyClub, advanceCupTournament } from '../../career/cups';
 import {
   simulateFullMatch,
   applyPostMatchSquadImpact,
@@ -45,8 +48,8 @@ export function MatchDayModal({
   const allClubs = getAllClubs();
   const clubsMap = new Map(allClubs.map((c) => [c.id, c]));
 
-  const homeClub = clubsMap.get(fixture.homeClubId) || allClubs[0];
-  const awayClub = clubsMap.get(fixture.awayClubId) || allClubs[1];
+  const homeClub = findAnyClub(fixture.homeClubId) || allClubs[0];
+  const awayClub = findAnyClub(fixture.awayClubId) || allClubs[1];
 
   const isUserHome = fixture.homeClubId === save.club.id;
   const userClub = isUserHome ? homeClub : awayClub;
@@ -137,10 +140,59 @@ export function MatchDayModal({
       save.settings
     );
 
-    // Update fixture in calendar
+    // Update fixture in league fixtures OR cup tournament
     const updatedFixtures = (save.fixtures || []).map((f) =>
       f.id === fixture.id ? simResult.fixture : f
     );
+
+    const cups: Record<string, CupTournament> = {};
+    if (save.cups) {
+      for (const [k, v] of Object.entries(save.cups)) {
+        cups[k] = { ...v, fixtures: [...v.fixtures] };
+      }
+    }
+
+    const trophies = [...(save.trophies || [])];
+    const finances = { ...(save.finances) };
+
+    for (const [tId, tourney] of Object.entries(cups)) {
+      const idx = tourney.fixtures.findIndex((f) => f.id === fixture.id);
+      if (idx >= 0) {
+        let cupSimFix: CupFixture = {
+          ...tourney.fixtures[idx],
+          ...simResult.fixture,
+          isKnockout: true,
+        };
+
+        if (cupSimFix.homeScore === cupSimFix.awayScore) {
+          let hp = Math.floor(Math.random() * 2) + 4;
+          let ap = Math.floor(Math.random() * 2) + 3;
+          if (hp === ap) {
+            if (Math.random() < 0.5) hp += 1;
+            else ap += 1;
+          }
+          cupSimFix.penalties = { homePenalties: hp, awayPenalties: ap };
+        }
+
+        tourney.fixtures[idx] = cupSimFix;
+        const adv = advanceCupTournament(tourney, save.season.yearStart);
+        cups[tId] = adv.updatedTournament;
+
+        if (adv.updatedTournament.isCompleted && adv.updatedTournament.winnerClubId === save.club.id) {
+          const trophyYear = save.season.yearStart + 1;
+          if (!trophies.some((t) => t.competitionId === tId && t.year === trophyYear)) {
+            trophies.push({
+              competitionId: tId,
+              competitionName: adv.updatedTournament.name,
+              year: trophyYear,
+            });
+            finances.transferBudget += adv.updatedTournament.prizeMoney;
+            finances.balance += adv.updatedTournament.prizeMoney;
+          }
+        }
+        break;
+      }
+    }
 
     // Recalculate standings
     const updatedStandings = calculateStandings(updatedFixtures, allClubs);
@@ -150,6 +202,9 @@ export function MatchDayModal({
       squad: updatedSquad,
       fixtures: updatedFixtures,
       standings: updatedStandings,
+      cups,
+      trophies,
+      finances,
       season: {
         ...save.season,
         currentDate: fixture.date,
@@ -187,10 +242,16 @@ export function MatchDayModal({
         <header className="flex justify-between items-center border-b border-slate-900 pb-3">
           <div className="flex items-center gap-2">
             <span className="text-emerald-400 font-display font-black text-xs uppercase tracking-wider">
-              Matchday {fixture.round}
+              {'competitionName' in fixture
+                ? (fixture as CupFixture).roundName
+                : `Matchday ${fixture.round}`}
             </span>
             <span className="text-slate-600">•</span>
-            <span className="text-xs text-slate-400 font-medium">English Top Flight</span>
+            <span className="text-xs text-slate-400 font-medium">
+              {'competitionName' in fixture
+                ? (fixture as CupFixture).competitionName
+                : 'English Top Flight'}
+            </span>
           </div>
 
           {matchState === 'prematch' && (

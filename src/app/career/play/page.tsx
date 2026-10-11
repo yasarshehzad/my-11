@@ -11,6 +11,7 @@ import { getSavedTheme, saveTheme } from '../../../utils/storage';
 import { SquadManagement } from '../../../components/career/SquadManagement';
 import { FixturesCalendar } from '../../../components/career/FixturesCalendar';
 import { LeagueTable } from '../../../components/career/LeagueTable';
+import { TournamentsHub } from '../../../components/career/TournamentsHub';
 
 function CareerPlayHubContent() {
   const router = useRouter();
@@ -20,7 +21,7 @@ function CareerPlayHubContent() {
 
   const [save, setSave] = useState<CareerSaveFile | null>(null);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-  const [activeTab, setActiveTab] = useState<'overview' | 'squad' | 'fixtures' | 'table' | 'transfers' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings'>('overview');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Settings editing state (when not locked)
@@ -214,7 +215,8 @@ function CareerPlayHubContent() {
             { id: 'overview', label: 'Office', icon: '👔' },
             { id: 'squad', label: 'Squad', icon: '👥' },
             { id: 'fixtures', label: 'Fixtures', icon: '📅' },
-            { id: 'table', label: 'Table', icon: '🏆' },
+            { id: 'table', label: 'Table', icon: '📊' },
+            { id: 'cups', label: 'Cups & Europe', icon: '🏆' },
             { id: 'transfers', label: 'Transfers', icon: '💱' },
             { id: 'settings', label: 'Settings', icon: '⚙️' },
           ].map((tab) => {
@@ -356,10 +358,19 @@ function CareerPlayHubContent() {
 
                 <div className="p-4 rounded-xl border border-emerald-900/40 bg-emerald-950/10 space-y-1">
                   <div className="font-display font-black text-emerald-300 flex items-center gap-2">
-                    <span>✓</span> Phase 4: Match Experience & Simulation Engine (Active)
+                    <span>✓</span> Phase 4: Match Engine & Live Commentary (Active)
                   </div>
                   <p className="text-slate-400 text-[11px]">
                     5–9 player substitutes bench, 5 in-match substitutions, live commentary clock, fatigue drain, injuries, and retry protection.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-xl border border-emerald-900/40 bg-emerald-950/10 space-y-1">
+                  <div className="font-display font-black text-emerald-300 flex items-center gap-2">
+                    <span>✓</span> Phase 5: Cups & European Competitions (Active)
+                  </div>
+                  <p className="text-slate-400 text-[11px]">
+                    6 tournaments (The English Cup, League Cup, Shield, Champions Cup, Challenge Cup, Plate), penalty shootouts, continental giants, and trophy cabinet.
                   </p>
                 </div>
               </div>
@@ -389,7 +400,16 @@ function CareerPlayHubContent() {
           />
         )}
 
-        {/* TAB 5: TRANSFERS */}
+        {/* TAB 5: CUPS & EUROPE */}
+        {activeTab === 'cups' && (
+          <TournamentsHub
+            save={save}
+            onUpdateSave={handleUpdateSave}
+            onNotification={showToast}
+          />
+        )}
+
+        {/* TAB 6: TRANSFERS */}
         {activeTab === 'transfers' && (
           <section className="bg-slate-900/30 border border-slate-850 rounded-3xl p-8 text-center space-y-4">
             <span className="text-4xl">💱</span>

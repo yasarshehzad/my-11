@@ -1,6 +1,8 @@
 import {
   CareerSaveFile,
   LeagueFixture,
+  CupTournament,
+  CupFixture,
   CareerPlayer,
   Club,
   GoalScorer,
@@ -9,6 +11,11 @@ import {
 import { getClubById, getAllClubs } from './clubs';
 import { calculateStandings } from './table';
 import { categorizePosition } from './squad';
+import {
+  simulateKnockoutCupFixture,
+  findAnyClub,
+  advanceCupTournament,
+} from './cups';
 
 /**
  * Simulates a single league fixture with realistic football scorelines and goalscorers.
@@ -160,8 +167,18 @@ export function advanceTimeSkip(
 ): TimeSkipResult {
   const fixtures = [...(save.fixtures || [])];
   const calendar = [...(save.calendar || [])];
+  const trophies = [...(save.trophies || [])];
+  const finances = { ...(save.finances) };
   const userClubId = save.club.id;
   const userSquad = save.squad || [];
+
+  // Deep clone cups map
+  const cups: Record<string, CupTournament> = {};
+  if (save.cups) {
+    for (const [k, v] of Object.entries(save.cups)) {
+      cups[k] = { ...v, fixtures: [...v.fixtures] };
+    }
+  }
 
   let currentDate = new Date(save.season.currentDate);
   let matchesPlayedCount = 0;
@@ -185,20 +202,43 @@ export function advanceTimeSkip(
     }
   }
 
-  // 2. Step forward day by day or fixture by fixture
-  const unplayedFixtures = fixtures.filter((f) => !f.played);
+  // 2. Build combined chronological queue of unplayed league & cup fixtures
+  type QueueItem =
+    | { type: 'league'; fixture: LeagueFixture; index: number }
+    | { type: 'cup'; fixture: CupFixture; tournamentId: string; index: number };
 
-  for (const fix of unplayedFixtures) {
-    const fixDate = new Date(fix.date);
+  const queue: QueueItem[] = [];
 
-    // If target is next_match, we stop right before or at the user's next match
-    if (target === 'next_match') {
-      const isUserMatch = fix.homeClubId === userClubId || fix.awayClubId === userClubId;
-      if (isUserMatch) {
-        pausedReason = `Upcoming Matchday: Round ${fix.round}`;
-        currentDate = fixDate;
-        break;
+  fixtures.forEach((f, idx) => {
+    if (!f.played) {
+      queue.push({ type: 'league', fixture: f, index: idx });
+    }
+  });
+
+  for (const [tId, tourney] of Object.entries(cups)) {
+    tourney.fixtures.forEach((f, idx) => {
+      if (!f.played) {
+        queue.push({ type: 'cup', fixture: f, tournamentId: tId, index: idx });
       }
+    });
+  }
+
+  queue.sort((a, b) => new Date(a.fixture.date).getTime() - new Date(b.fixture.date).getTime());
+
+  // 3. Step forward day by day through fixtures
+  for (const item of queue) {
+    const fixDate = new Date(item.fixture.date);
+    const isUserMatch =
+      item.fixture.homeClubId === userClubId || item.fixture.awayClubId === userClubId;
+
+    // If target is next_match, stop before or at user's next match
+    if (target === 'next_match' && isUserMatch) {
+      pausedReason =
+        item.type === 'league'
+          ? `Upcoming Matchday: Round ${item.fixture.round}`
+          : `Upcoming Cup Match: ${(item.fixture as CupFixture).competitionName} (${(item.fixture as CupFixture).roundName})`;
+      currentDate = fixDate;
+      break;
     }
 
     // Check if fixture is beyond our target date
@@ -206,33 +246,70 @@ export function advanceTimeSkip(
       break;
     }
 
-    // Check smart pause on user match when skipping time (if smartPause is enabled)
-    const isUserMatch = fix.homeClubId === userClubId || fix.awayClubId === userClubId;
+    // Check smart pause on user match when skipping time
     if (isUserMatch && save.settings.smartPause && target !== 'season_end') {
-      pausedReason = `Smart Pause: Matchday ${fix.round} reached`;
+      pausedReason =
+        item.type === 'league'
+          ? `Smart Pause: Matchday ${item.fixture.round} reached`
+          : `Smart Pause: ${(item.fixture as CupFixture).competitionName} (${(item.fixture as CupFixture).roundName})`;
       currentDate = fixDate;
       break;
     }
 
-    // Simulate this fixture
-    const homeClub = getClubById(fix.homeClubId) || getAllClubs()[0];
-    const awayClub = getClubById(fix.awayClubId) || getAllClubs()[1];
+    // Simulate fixture
+    if (item.type === 'league') {
+      const homeClub = getClubById(item.fixture.homeClubId) || getAllClubs()[0];
+      const awayClub = getClubById(item.fixture.awayClubId) || getAllClubs()[1];
 
-    const simmed = simulateMatchFixture(
-      fix,
-      homeClub,
-      awayClub,
-      fix.homeClubId === userClubId ? userSquad : undefined,
-      fix.awayClubId === userClubId ? userSquad : undefined
-    );
+      const simmed = simulateMatchFixture(
+        item.fixture,
+        homeClub,
+        awayClub,
+        item.fixture.homeClubId === userClubId ? userSquad : undefined,
+        item.fixture.awayClubId === userClubId ? userSquad : undefined
+      );
 
-    const fIdx = fixtures.findIndex((f) => f.id === fix.id);
-    if (fIdx >= 0) {
-      fixtures[fIdx] = simmed;
+      fixtures[item.index] = simmed;
+    } else {
+      const homeClub = findAnyClub(item.fixture.homeClubId) || getAllClubs()[0];
+      const awayClub = findAnyClub(item.fixture.awayClubId) || getAllClubs()[1];
+
+      const simmed = simulateKnockoutCupFixture(
+        item.fixture,
+        homeClub,
+        awayClub,
+        item.fixture.homeClubId === userClubId ? userSquad : undefined,
+        item.fixture.awayClubId === userClubId ? userSquad : undefined
+      );
+
+      cups[item.tournamentId].fixtures[item.index] = simmed;
     }
 
     matchesPlayedCount++;
     currentDate = fixDate;
+  }
+
+  // 4. Advance completed cup rounds & award trophies/prizes
+  for (const [tId, tourney] of Object.entries(cups)) {
+    const { updatedTournament } = advanceCupTournament(tourney, save.season.yearStart);
+    cups[tId] = updatedTournament;
+
+    if (updatedTournament.isCompleted && updatedTournament.winnerClubId === userClubId) {
+      const trophyYear = save.season.yearStart + 1;
+      const alreadyAwarded = trophies.some(
+        (t) => t.competitionId === tId && t.year === trophyYear
+      );
+
+      if (!alreadyAwarded) {
+        trophies.push({
+          competitionId: tId,
+          competitionName: updatedTournament.name,
+          year: trophyYear,
+        });
+        finances.transferBudget += updatedTournament.prizeMoney;
+        finances.balance += updatedTournament.prizeMoney;
+      }
+    }
   }
 
   // Check milestone calendar events reached
@@ -261,6 +338,9 @@ export function advanceTimeSkip(
     fixtures,
     standings: updatedStandings,
     calendar,
+    cups,
+    trophies,
+    finances,
   };
 
   return {

@@ -239,7 +239,7 @@ describe('Match Simulator & Time-Skip Controller', () => {
 
     const skipRes = advanceTimeSkip(save, 'next_match');
 
-    expect(skipRes.pausedReason).toContain('Upcoming Matchday');
+    expect(skipRes.pausedReason).toMatch(/Upcoming (Matchday|Cup Match)/);
     expect(skipRes.updatedSave.season.currentDate).toBeDefined();
     expect(skipRes.updatedSave.standings?.length).toBe(20);
   });

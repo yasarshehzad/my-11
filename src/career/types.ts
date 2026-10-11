@@ -184,6 +184,27 @@ export interface CareerLineup {
   benchIds: string[];
 }
 
+export interface CupFixture extends LeagueFixture {
+  competitionName: string;
+  roundName: string;
+  isKnockout: boolean;
+  penalties?: {
+    homePenalties: number;
+    awayPenalties: number;
+  };
+}
+
+export interface CupTournament {
+  id: string;
+  name: string;
+  currentRound: string;
+  fixtures: CupFixture[];
+  isCompleted: boolean;
+  winnerClubId?: string;
+  runnerUpClubId?: string;
+  prizeMoney: number;
+}
+
 export interface CareerSaveFile {
   version: number;
   id: string; // 'slot_1' | 'slot_2' | 'slot_3'
@@ -199,6 +220,7 @@ export interface CareerSaveFile {
   fixtures?: LeagueFixture[];
   standings?: ClubStanding[];
   calendar?: CalendarEvent[];
+  cups?: Record<string, CupTournament>;
   trophies: TrophyRecord[];
   phase: 'preseason' | 'transfer_window' | 'regular_season' | 'season_review';
 }
