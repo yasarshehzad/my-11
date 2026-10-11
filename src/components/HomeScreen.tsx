@@ -86,16 +86,16 @@ export function HomeScreen({
         </section>
       )}
 
-      {/* Hero Header - compact, clean, no AI slop */}
-      <header className="mb-4 sm:mb-5">
-        <p className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-slate-400 font-semibold">
+      {/* Hero Header - compact, focused, no duplicate logo */}
+      <header className="mb-3 sm:mb-4">
+        <p className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-emerald-400 font-bold">
           Football Draft & Management
         </p>
-        <h1 className="text-3xl sm:text-4xl font-display font-black tracking-tight text-foreground uppercase mt-0.5">
-          MY-<span className="text-emerald-400">11</span>
+        <h1 className="text-xl sm:text-2xl font-display font-black tracking-tight text-foreground uppercase mt-0.5">
+          Select Game Mode
         </h1>
-        <p className="text-xs text-slate-400 font-medium mt-1">
-          Select your game mode to begin
+        <p className="text-xs text-slate-400 font-medium mt-0.5">
+          Choose a draft campaign or lead a Premier League club in career mode
         </p>
       </header>
 
@@ -149,7 +149,7 @@ export function HomeScreen({
             {todayChallenge && (
               <button
                 onClick={onPlayDailyChallenge}
-                className="w-full py-2 px-2.5 rounded-lg border border-slate-800 bg-slate-900/40 hover:bg-slate-800/60 text-slate-300 hover:text-white text-[10.5px] font-medium flex items-center justify-between transition-colors cursor-pointer"
+                className="w-full py-1.5 px-2.5 rounded-lg border border-slate-800 bg-slate-900/40 hover:bg-slate-800/60 text-slate-300 hover:text-white text-[10.5px] font-medium flex items-center justify-between transition-colors cursor-pointer"
               >
                 <span className="truncate">
                   Daily Challenge: <strong className="text-amber-400">{todayChallenge.title}</strong>
@@ -158,6 +158,18 @@ export function HomeScreen({
                   {dailyStatus?.completed ? (dailyStatus.beaten ? 'Beaten ✓' : 'Completed ✓') : 'Play ➔'}
                 </span>
               </button>
+            )}
+
+            {onRandomDraft && (
+              <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-900/40 border border-slate-800 text-[10.5px]">
+                <span className="text-slate-400 truncate">Quick Simulation</span>
+                <button
+                  onClick={onRandomDraft}
+                  className="text-[9.5px] font-mono uppercase text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer font-bold shrink-0 ml-2"
+                >
+                  Instant Random Draft ➔
+                </button>
+              </div>
             )}
           </div>
         </article>
@@ -231,25 +243,16 @@ export function HomeScreen({
       </section>
 
       {/* Auxiliary quick links */}
-      <footer className="mt-4 flex items-center justify-center gap-4 text-xs font-semibold text-slate-400">
-        {onRandomDraft && (
-          <button
-            onClick={onRandomDraft}
-            className="hover:text-emerald-400 transition-colors cursor-pointer"
-          >
-            Instant Random Draft
-          </button>
-        )}
-        {onRandomDraft && onViewHistory && <span>•</span>}
-        {onViewHistory && (
+      {onViewHistory && (
+        <footer className="mt-4 flex items-center justify-center text-xs font-semibold text-slate-500">
           <button
             onClick={onViewHistory}
             className="hover:text-emerald-400 transition-colors cursor-pointer"
           >
-            My Squads History
+            My Squads History & Records ➔
           </button>
-        )}
-      </footer>
+        </footer>
+      )}
     </div>
   );
 }
