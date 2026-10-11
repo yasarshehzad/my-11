@@ -2,6 +2,7 @@ import { CareerSettings, DifficultyPreset } from './types';
 
 export const EASY_SETTINGS: CareerSettings = {
   preset: 'easy',
+  databaseSeason: '2026/27',
   editSettingsMidSave: true,
   boardCanSack: false,
   retryMatch: true,
@@ -17,6 +18,7 @@ export const EASY_SETTINGS: CareerSettings = {
 
 export const HARD_SETTINGS: CareerSettings = {
   preset: 'hard',
+  databaseSeason: '2026/27',
   editSettingsMidSave: false,
   boardCanSack: true,
   retryMatch: false,
@@ -32,6 +34,7 @@ export const HARD_SETTINGS: CareerSettings = {
 
 export const DEFAULT_CUSTOM_SETTINGS: CareerSettings = {
   preset: 'custom',
+  databaseSeason: '2026/27',
   editSettingsMidSave: true,
   boardCanSack: true,
   retryMatch: false,
@@ -101,8 +104,12 @@ export function validateSettings(settings?: Partial<CareerSettings> | null): Car
       ? settings.startingBudgetMultiplier
       : defaultBase.startingBudgetMultiplier;
 
+  const databaseSeason =
+    settings.databaseSeason === '2024/25' ? '2024/25' : '2026/27';
+
   return {
     preset,
+    databaseSeason,
     editSettingsMidSave,
     boardCanSack: typeof settings.boardCanSack === 'boolean' ? settings.boardCanSack : defaultBase.boardCanSack,
     retryMatch: typeof settings.retryMatch === 'boolean' ? settings.retryMatch : defaultBase.retryMatch,

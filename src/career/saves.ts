@@ -1,5 +1,5 @@
 import { CareerSaveFile, CareerSettings, Club, ManagerProfile, SaveSlotMeta } from './types';
-import { getEffectiveClubName, getAllClubs } from './clubs';
+import { getEffectiveClubName, getAllClubs, getClubsForSeason } from './clubs';
 import { validateSettings } from './settings';
 import { generateClubSquad } from './squadGenerator';
 import { getBestStartingLineup } from './squad';
@@ -138,18 +138,22 @@ export function createNewCareerSave(params: {
 }): CareerSaveFile {
   const validatedSettings = validateSettings(params.settings);
   const now = new Date().toISOString();
+  const dbSeason = validatedSettings.databaseSeason || '2026/27';
+  const yearStart = dbSeason === '2024/25' ? 2024 : 2026;
+  const currentDate = `${yearStart}-07-01`;
+  const seasonClubs = getClubsForSeason(dbSeason);
 
   const adjustedBudget = Math.round(
     params.club.startingBudget * (validatedSettings.startingBudgetMultiplier || 1.0)
   );
 
-  const squad = generateClubSquad(params.club);
+  const squad = generateClubSquad(params.club, dbSeason);
   const currentWeeklyWages = squad.reduce((sum, p) => sum + (p.wageWeekly || 0), 0);
   const lineup = getBestStartingLineup(squad);
 
-  const { fixtures, calendar } = generateRoundRobinFixtures(getAllClubs(), 2026);
-  const standings = createInitialStandings(getAllClubs());
-  const cups = initializeSeasonCups(params.club, 2026);
+  const { fixtures, calendar } = generateRoundRobinFixtures(seasonClubs, yearStart);
+  const standings = createInitialStandings(seasonClubs);
+  const cups = initializeSeasonCups(params.club, yearStart);
 
   const initialSave: CareerSaveFile = {
     version: CURRENT_CAREER_SAVE_VERSION,
@@ -167,9 +171,10 @@ export function createNewCareerSave(params: {
     settings: validatedSettings,
     season: {
       seasonNumber: 1,
-      yearStart: 2026,
-      currentDate: '2026-07-01',
+      yearStart,
+      currentDate,
       transferWindowOpen: true,
+      databaseSeason: dbSeason,
     },
     finances: {
       transferBudget: adjustedBudget,
@@ -184,7 +189,7 @@ export function createNewCareerSave(params: {
     calendar,
     cups,
     trophies: [],
-    youthAcademy: generateYouthIntake(params.club, 2026),
+    youthAcademy: generateYouthIntake(params.club, yearStart),
     phase: 'preseason',
   };
 

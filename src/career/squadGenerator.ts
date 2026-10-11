@@ -1,4 +1,4 @@
-import { Club, CareerPlayer, ClubTier } from './types';
+import { Club, CareerPlayer, ClubTier, DatabaseSeason } from './types';
 import { players } from '../data/players';
 import { calculatePlayerValue, calculateWeeklyWage } from './finance';
 import { categorizePosition, isHomegrownPlayer } from './squad';
@@ -84,15 +84,18 @@ const CLUB_KEYWORD_MAP: Record<string, string[]> = {
   leicester_foxes: ['Leicester'],
   south_coast_saints: ['Southampton'],
   suffolk_tractors: ['Ipswich'],
+  yorkshire_whites: ['Leeds', 'Leeds United'],
+  wearside_red_white: ['Sunderland'],
+  east_lancs_claret: ['Burnley'],
 };
 
-export function generateClubSquad(club: Club): CareerPlayer[] {
+export function generateClubSquad(club: Club, season: DatabaseSeason = '2026/27'): CareerPlayer[] {
   const generatedSquad: CareerPlayer[] = [];
   const usedCardIds = new Set<string>();
   const usedNames = new Set<string>();
 
   const clubKeywords = CLUB_KEYWORD_MAP[club.id] || [];
-  const supplementalPool = getSupplementalPlayersForClub(club.id);
+  const supplementalPool = getSupplementalPlayersForClub(club.id, season);
 
   // Filter pool from player database belonging strictly to this club
   const clubMatchedCards = players.filter((p) =>

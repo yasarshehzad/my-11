@@ -4,8 +4,12 @@ export type InjurySeverity = 'low' | 'medium' | 'high';
 
 export type PlayerPoolFilter = 'all' | 'modern' | 'legends';
 
+export type DatabaseSeason = '2026/27' | '2024/25';
+
 export interface CareerSettings {
   preset: DifficultyPreset;
+  /** Starting roster database season mode ('2026/27' current or '2024/25' classic) */
+  databaseSeason?: DatabaseSeason;
   /** Whether gameplay settings can be edited after career creation */
   editSettingsMidSave: boolean;
   /** Whether the board can sack the manager for poor results */
@@ -87,6 +91,7 @@ export interface SeasonSummary {
   yearStart: number;
   currentDate: string; // ISO or YYYY-MM-DD e.g. '2026-07-01'
   transferWindowOpen: boolean;
+  databaseSeason?: DatabaseSeason;
 }
 
 export interface CareerFinances {

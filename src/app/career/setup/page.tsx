@@ -3,10 +3,10 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ENGLISH_TOP_FLIGHT_CLUBS, getAllClubs } from '../../../career/clubs';
+import { ENGLISH_TOP_FLIGHT_CLUBS, getAllClubs, getClubsForSeason } from '../../../career/clubs';
 import { getPresetSettings, cloneSettings, validateSettings } from '../../../career/settings';
 import { createNewCareerSave, isValidSlotId, ValidSlotId } from '../../../career/saves';
-import { CareerSettings, Club, ClubTier, DifficultyPreset, InjurySeverity, PlayerPoolFilter } from '../../../career/types';
+import { CareerSettings, Club, ClubTier, DatabaseSeason, DifficultyPreset, InjurySeverity, PlayerPoolFilter } from '../../../career/types';
 import { getSavedTheme, saveTheme } from '../../../utils/storage';
 
 const NATIONALITIES = [
@@ -28,7 +28,8 @@ function SetupWizardContent() {
   const [managerName, setManagerName] = useState('Alex Manager');
   const [nationality, setNationality] = useState('England');
 
-  // Step 2: Club
+  // Step 2: Club & Season
+  const [databaseSeason, setDatabaseSeason] = useState<DatabaseSeason>('2026/27');
   const [selectedClubId, setSelectedClubId] = useState<string>('london_red');
   const [tierFilter, setTierFilter] = useState<'all' | ClubTier>('all');
   const [customClubNames, setCustomClubNames] = useState<Record<string, string>>({});
@@ -61,7 +62,15 @@ function SetupWizardContent() {
     }));
   };
 
-  const allClubs = getAllClubs();
+  const handleDatabaseSeasonChange = (newSeason: DatabaseSeason) => {
+    setDatabaseSeason(newSeason);
+    const newSeasonClubs = getClubsForSeason(newSeason);
+    if (!newSeasonClubs.some((c) => c.id === selectedClubId)) {
+      setSelectedClubId(newSeasonClubs[0]?.id || 'london_red');
+    }
+  };
+
+  const allClubs = getClubsForSeason(databaseSeason);
   const filteredClubs = tierFilter === 'all'
     ? allClubs
     : allClubs.filter((c) => c.tier === tierFilter);
@@ -77,6 +86,7 @@ function SetupWizardContent() {
     const finalSettings = validateSettings({
       ...customSettings,
       preset,
+      databaseSeason,
     });
 
     createNewCareerSave({
@@ -227,6 +237,57 @@ function SetupWizardContent() {
                 Select one of the 20 English Top Flight sides. You can also customize any club's display name to match your personal preference.
               </p>
             </header>
+
+            {/* Roster Database Season Selector */}
+            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 max-w-xl mx-auto flex flex-col gap-3 shadow-md">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <span>📅</span>
+                  <span>Roster Database Season</span>
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold">
+                  {databaseSeason === '2026/27' ? 'Current 26/27' : 'Classic 24/25'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleDatabaseSeasonChange('2026/27')}
+                  className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all ${
+                    databaseSeason === '2026/27'
+                      ? 'bg-emerald-500/10 border-emerald-500 text-white shadow-md'
+                      : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase text-foreground">2026/27 Season</span>
+                    {databaseSeason === '2026/27' && <span className="text-emerald-400 text-xs font-bold">✓ Active</span>}
+                  </div>
+                  <p className="text-[11px] text-slate-400 leading-snug">
+                    Current season with modern squads, 2026 ages & ratings, plus promoted sides Leeds, Sunderland & Burnley.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleDatabaseSeasonChange('2024/25')}
+                  className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all ${
+                    databaseSeason === '2024/25'
+                      ? 'bg-emerald-500/10 border-emerald-500 text-white shadow-md'
+                      : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase text-foreground">2024/25 Season</span>
+                    {databaseSeason === '2024/25' && <span className="text-emerald-400 text-xs font-bold">✓ Active</span>}
+                  </div>
+                  <p className="text-[11px] text-slate-400 leading-snug">
+                    Classic previous season with Leicester City, Southampton & Ipswich Town authentic squads.
+                  </p>
+                </button>
+              </div>
+            </div>
 
             {/* Tier Filters */}
             <div className="flex justify-center gap-2 flex-wrap">

@@ -169,7 +169,7 @@ describe('League Table & Standings Engine', () => {
         round: 1,
         date: '2026-08-15',
         homeClubId: 'london_red',
-        awayClubId: 'suffolk_tractors',
+        awayClubId: clubs[1].id,
         played: true,
         homeScore: 5,
         awayScore: 0,

@@ -7,6 +7,7 @@ import {
   IncomingTransferOffer,
   BoardStatus,
   Club,
+  DatabaseSeason,
 } from './types';
 import { players } from '../data/players';
 import { calculatePlayerValue, calculateWeeklyWage, formatCurrency } from './finance';
@@ -52,7 +53,8 @@ function getDeterministicAge(id: string): number {
  */
 export function getScoutingMarketPool(
   userSquad: CareerPlayer[] = [],
-  filters?: ScoutingFilters
+  filters?: ScoutingFilters,
+  databaseSeason: DatabaseSeason = '2026/27'
 ): MarketPlayer[] {
   const userPlayerIds = new Set(userSquad.map((p) => p.id));
   const userPlayerNames = new Set(
@@ -98,7 +100,7 @@ export function getScoutingMarketPool(
   }
 
   // Include supplemental database expansion players
-  const supplementalPlayers = getAllSupplementalPlayers();
+  const supplementalPlayers = getAllSupplementalPlayers(databaseSeason);
   for (const supp of supplementalPlayers) {
     const lowerName = supp.name.toLowerCase();
     if (

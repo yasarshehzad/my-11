@@ -141,7 +141,8 @@ export function advanceToNextSeason(save: CareerSaveFile): {
   const updatedAcademy = [...(save.youthAcademy || []), ...newIntake];
 
   // 4. Generate new season calendar and 38-game fixtures
-  const allClubs = getAllClubs();
+  const dbSeason = save.settings.databaseSeason || '2026/27';
+  const allClubs = getAllClubs(dbSeason);
   const { fixtures, calendar } = generateRoundRobinFixtures(allClubs, nextYearStart);
   const standings = createInitialStandings(allClubs);
   const cups = initializeSeasonCups(save.club, nextYearStart);

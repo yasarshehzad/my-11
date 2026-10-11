@@ -1,6 +1,6 @@
-import { Club } from './types';
+import { Club, DatabaseSeason } from './types';
 
-export const ENGLISH_TOP_FLIGHT_CLUBS: Club[] = [
+export const SHARED_17_CLUBS: Club[] = [
   {
     id: 'man_blue',
     defaultName: 'Manchester Blue',
@@ -222,6 +222,51 @@ export const ENGLISH_TOP_FLIGHT_CLUBS: Club[] = [
     stadiumCapacity: 17250,
     reputation: 76,
   },
+];
+
+export const PROMOTED_CLUBS_2026_27: Club[] = [
+  {
+    id: 'yorkshire_whites',
+    defaultName: 'Yorkshire Whites',
+    shortName: 'LEE',
+    tier: 'lower',
+    startingBudget: 32_000_000,
+    wageBudgetWeekly: 1_100_000,
+    primaryColor: '#FFFFFF',
+    secondaryColor: '#FFCD00',
+    stadiumName: 'Elland Field',
+    stadiumCapacity: 37890,
+    reputation: 76,
+  },
+  {
+    id: 'wearside_red_white',
+    defaultName: 'Wearside Red-White',
+    shortName: 'SUN',
+    tier: 'lower',
+    startingBudget: 28_000_000,
+    wageBudgetWeekly: 950_000,
+    primaryColor: '#EB172B',
+    secondaryColor: '#000000',
+    stadiumName: 'Wearside Stadium',
+    stadiumCapacity: 48700,
+    reputation: 75,
+  },
+  {
+    id: 'east_lancs_claret',
+    defaultName: 'East Lancs Claret',
+    shortName: 'BUR',
+    tier: 'lower',
+    startingBudget: 30_000_000,
+    wageBudgetWeekly: 1_050_000,
+    primaryColor: '#6C1D45',
+    secondaryColor: '#99D6EA',
+    stadiumName: 'Turf Moor Ground',
+    stadiumCapacity: 21940,
+    reputation: 74,
+  },
+];
+
+export const RELEGATED_CLUBS_2024_25: Club[] = [
   {
     id: 'leicester_foxes',
     defaultName: 'East Midlands Blue',
@@ -263,12 +308,40 @@ export const ENGLISH_TOP_FLIGHT_CLUBS: Club[] = [
   },
 ];
 
-export function getAllClubs(): Club[] {
-  return [...ENGLISH_TOP_FLIGHT_CLUBS];
+export const ENGLISH_TOP_FLIGHT_CLUBS_2026_27: Club[] = [
+  ...SHARED_17_CLUBS,
+  ...PROMOTED_CLUBS_2026_27,
+];
+
+export const ENGLISH_TOP_FLIGHT_CLUBS_2024_25: Club[] = [
+  ...SHARED_17_CLUBS,
+  ...RELEGATED_CLUBS_2024_25,
+];
+
+export const ALL_CAREER_CLUBS: Club[] = [
+  ...SHARED_17_CLUBS,
+  ...PROMOTED_CLUBS_2026_27,
+  ...RELEGATED_CLUBS_2024_25,
+];
+
+export const ENGLISH_TOP_FLIGHT_CLUBS: Club[] = ENGLISH_TOP_FLIGHT_CLUBS_2026_27;
+
+export function getClubsForSeason(season: DatabaseSeason = '2026/27'): Club[] {
+  return season === '2024/25'
+    ? [...ENGLISH_TOP_FLIGHT_CLUBS_2024_25]
+    : [...ENGLISH_TOP_FLIGHT_CLUBS_2026_27];
+}
+
+export function getAllClubs(season: DatabaseSeason = '2026/27'): Club[] {
+  return getClubsForSeason(season);
+}
+
+export function getAllKnownClubs(): Club[] {
+  return [...ALL_CAREER_CLUBS];
 }
 
 export function getClubById(id: string): Club | undefined {
-  const found = ENGLISH_TOP_FLIGHT_CLUBS.find((c) => c.id === id);
+  const found = ALL_CAREER_CLUBS.find((c) => c.id === id);
   return found ? { ...found } : undefined;
 }
 
