@@ -1,6 +1,6 @@
 import { CareerPlayer, CareerSaveFile, Club, YouthProspect } from './types';
 import { calculatePlayerValue, calculateWeeklyWage } from './finance';
-import { isHomegrownPlayer } from './squad';
+import { isHomegrownPlayer, MAX_SQUAD_SIZE } from './squad';
 
 const FIRST_NAMES = [
   'Jack', 'Harry', 'Oliver', 'Leo', 'Noah', 'George', 'Charlie', 'Freddie',
@@ -81,11 +81,11 @@ export function promoteYouthProspect(
     return { success: false, updatedSave: save, error: 'Prospect not found in Youth Academy.' };
   }
 
-  if (save.squad.length >= 25) {
+  if (save.squad.length >= MAX_SQUAD_SIZE) {
     return {
       success: false,
       updatedSave: save,
-      error: 'First team squad is at maximum capacity (25 players). Sell or release a senior player first.',
+      error: `First team squad is at maximum capacity (${MAX_SQUAD_SIZE} players). Sell or release a senior player first.`,
     };
   }
 

@@ -230,7 +230,7 @@ describe('Phase 7: Youth Academy Engine', () => {
     expect(promoted?.isHomegrown).toBe(true);
   });
 
-  it('blocks youth promotion when senior squad is full at 25 players', () => {
+  it('blocks youth promotion when club squad is at maximum capacity (35 players)', () => {
     const baseSave = createNewCareerSave({
       slotId: 'slot_1',
       manager: { name: 'Pep Manager', nationality: 'Spain' },
@@ -238,9 +238,9 @@ describe('Phase 7: Youth Academy Engine', () => {
       settings: getPresetSettings('easy'),
     });
 
-    // Artificially pack squad to 25 players
+    // Artificially pack squad to 35 players (MAX_SQUAD_SIZE)
     const fullSquad: CareerPlayer[] = [...baseSave.squad];
-    while (fullSquad.length < 25) {
+    while (fullSquad.length < 35) {
       fullSquad.push({
         ...baseSave.squad[0],
         id: `filler_${fullSquad.length}`,
@@ -270,8 +270,8 @@ describe('Phase 7: Youth Academy Engine', () => {
 
     const result = promoteYouthProspect(saveFull, 'youth_test_full');
     expect(result.success).toBe(false);
-    expect(result.error).toContain('maximum capacity (25 players)');
-    expect(result.updatedSave.squad.length).toBe(25);
+    expect(result.error).toContain('maximum capacity (35 players)');
+    expect(result.updatedSave.squad.length).toBe(35);
   });
 
   it('releases a youth prospect from the academy', () => {
@@ -385,7 +385,8 @@ describe('Phase 7: Squad Generation with Supplemental Players and Potentials', (
   it('generates complete authentic squads for all 20 English clubs in 2026/27 with zero procedural fallback players', () => {
     for (const club of ENGLISH_TOP_FLIGHT_CLUBS_2026_27) {
       const squad = generateClubSquad(club, '2026/27');
-      expect(squad.length).toBe(22);
+      expect(squad.length).toBeGreaterThanOrEqual(25);
+      expect(squad.length).toBeLessThanOrEqual(35);
       expect(squad.every((p) => typeof p.potential === 'number' && p.potential >= p.rating)).toBe(true);
 
       // Verify zero generic procedural fallback players ('Talent X')
@@ -404,7 +405,8 @@ describe('Phase 7: Squad Generation with Supplemental Players and Potentials', (
   it('generates complete authentic squads for all 20 English clubs in 2025/26 with zero procedural fallback players', () => {
     for (const club of ENGLISH_TOP_FLIGHT_CLUBS_2025_26) {
       const squad = generateClubSquad(club, '2025/26');
-      expect(squad.length).toBe(22);
+      expect(squad.length).toBeGreaterThanOrEqual(25);
+      expect(squad.length).toBeLessThanOrEqual(35);
       expect(squad.every((p) => typeof p.potential === 'number' && p.potential >= p.rating)).toBe(true);
 
       const procedural = squad.filter((p) => p.name.includes('Talent'));
@@ -420,7 +422,8 @@ describe('Phase 7: Squad Generation with Supplemental Players and Potentials', (
   it('generates complete authentic squads for all 20 English clubs in 2024/25 with zero procedural fallback players', () => {
     for (const club of ENGLISH_TOP_FLIGHT_CLUBS_2024_25) {
       const squad = generateClubSquad(club, '2024/25');
-      expect(squad.length).toBe(22);
+      expect(squad.length).toBeGreaterThanOrEqual(25);
+      expect(squad.length).toBeLessThanOrEqual(35);
       expect(squad.every((p) => typeof p.potential === 'number' && p.potential >= p.rating)).toBe(true);
 
       const procedural = squad.filter((p) => p.name.includes('Talent'));
@@ -433,9 +436,10 @@ describe('Phase 7: Squad Generation with Supplemental Players and Potentials', (
     }
   });
 
-  it('generates a 21-22 player club squad with young prospects having growth potential', () => {
+  it('generates a deep 25-27 player authentic club squad with young prospects having growth potential', () => {
     for (const club of ENGLISH_TOP_FLIGHT_CLUBS_2026_27.slice(0, 5)) {
       const squad = generateClubSquad(club, '2026/27');
+      expect(squad.length).toBeGreaterThanOrEqual(25);
       const youngProspects = squad.filter((p) => p.age <= 21);
       expect(youngProspects.length).toBeGreaterThan(0);
       for (const yp of youngProspects) {

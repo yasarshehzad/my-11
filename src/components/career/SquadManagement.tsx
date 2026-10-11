@@ -195,14 +195,16 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
             <span className="text-base font-display font-black text-white">
               {squad.length}
             </span>
-            <span className="text-xs text-slate-500">/ 25</span>
-            {squad.length >= 18 && squad.length <= 25 ? (
+            <span className="text-xs text-slate-500">/ 35</span>
+            {squad.length >= 18 && squad.length <= 35 && validation.seniorCount <= 25 ? (
               <span className="text-xs text-emerald-400" title="Squad size compliant">✓</span>
             ) : (
               <span className="text-xs text-rose-400" title="Invalid squad size">⚠️</span>
             )}
           </div>
-          <div className="text-[9px] text-slate-400 font-medium">Min 18 • Max 25</div>
+          <div className="text-[9px] text-slate-400 font-medium">
+            Senior: {validation.seniorCount}/25 • U21: {validation.u21Count}
+          </div>
         </div>
 
         <div className="bg-slate-900/60 border border-slate-850 rounded-2xl p-3.5 space-y-1">
@@ -647,7 +649,7 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
                 </h3>
               </div>
               <p className="text-xs text-slate-400 font-medium max-w-xl">
-                Scout and nurture homegrown prodigies. Under-23 prospects gain rapid development (+1 to +3 OVR annually) towards their wonderkid ceiling. Senior squad capacity: {squad.length}/25.
+                Scout and nurture homegrown prodigies. Under-21 prospects are exempt from the 25-man senior squad cap and gain rapid development (+1 to +3 OVR annually) towards their wonderkid ceiling. Total club capacity: {squad.length}/35.
               </p>
             </div>
 
@@ -770,16 +772,16 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
                     <div className="flex gap-2 pt-2 border-t border-slate-850/60">
                       <button
                         onClick={() => handlePromoteProspect(prospect.id)}
-                        disabled={squad.length >= 25}
+                        disabled={squad.length >= 35}
                         className={`flex-1 py-2 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                          squad.length >= 25
+                          squad.length >= 35
                             ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
                             : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md'
                         }`}
-                        title={squad.length >= 25 ? 'Senior squad is full (25/25)' : 'Promote to First Team'}
+                        title={squad.length >= 35 ? 'Club squad is at full capacity (35/35)' : 'Promote to First Team'}
                       >
                         <span>Promote</span>
-                        <span className="text-[10px]">({squad.length}/25)</span>
+                        <span className="text-[10px]">({squad.length}/35)</span>
                       </button>
 
                       <button

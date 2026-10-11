@@ -39,8 +39,12 @@ export const SUPPLEMENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
   { id: 'sup_mci_20', name: 'Jeremy Doku', clubId: 'man_blue', position: 'LW', rating: 84, age: 24, potential: 87, nationality: 'Belgium' },
   { id: 'sup_mci_21', name: 'Phil Foden', clubId: 'man_blue', position: 'CF', rating: 89, age: 26, potential: 91, nationality: 'England' },
   { id: 'sup_mci_22', name: 'Erling Haaland', clubId: 'man_blue', position: 'ST', rating: 92, age: 26, potential: 94, nationality: 'Norway' },
+  { id: 'sup_mci_23', name: 'Nathan Ake', clubId: 'man_blue', position: 'CB', rating: 83, age: 31, potential: 84, nationality: 'Netherlands', isHomegrown: true },
+  { id: 'sup_mci_24', name: 'Claudio Echeverri', clubId: 'man_blue', position: 'CAM', rating: 79, age: 20, potential: 89, nationality: 'Argentina' },
+  { id: 'sup_mci_25', name: 'Jahmai Simpson-Pusey', clubId: 'man_blue', position: 'CB', rating: 74, age: 20, potential: 85, nationality: 'England', isHomegrown: true },
+  { id: 'sup_mci_26', name: 'Max Alleyne', clubId: 'man_blue', position: 'CB', rating: 73, age: 21, potential: 84, nationality: 'England', isHomegrown: true },
 
-  // Club: london_red
+// Club: london_red
   { id: 'sup_ars_1', name: 'Jakub Kiwior', clubId: 'london_red', position: 'CB', rating: 80, age: 26, potential: 83, nationality: 'Poland' },
   { id: 'sup_ars_2', name: 'Ethan Nwaneri', clubId: 'london_red', position: 'CAM', rating: 80, age: 19, potential: 92, nationality: 'England' },
   { id: 'sup_ars_3', name: 'Myles Lewis-Skelly', clubId: 'london_red', position: 'LB', rating: 78, age: 19, potential: 90, nationality: 'England' },
@@ -63,8 +67,12 @@ export const SUPPLEMENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
   { id: 'sup_ars_20', name: 'Leandro Trossard', clubId: 'london_red', position: 'LW', rating: 83, age: 31, potential: 83, nationality: 'Belgium' },
   { id: 'sup_ars_21', name: 'Kai Havertz', clubId: 'london_red', position: 'ST', rating: 84, age: 27, potential: 86, nationality: 'Germany' },
   { id: 'sup_ars_22', name: 'Gabriel Jesus', clubId: 'london_red', position: 'CF', rating: 83, age: 29, potential: 83, nationality: 'Brazil' },
+  { id: 'sup_ars_23', name: 'Oleksandr Zinchenko', clubId: 'london_red', position: 'LB', rating: 80, age: 29, potential: 82, nationality: 'Ukraine' },
+  { id: 'sup_ars_24', name: 'Takehiro Tomiyasu', clubId: 'london_red', position: 'RB', rating: 80, age: 27, potential: 82, nationality: 'Japan' },
+  { id: 'sup_ars_25', name: 'Raheem Sterling', clubId: 'london_red', position: 'LW', rating: 80, age: 31, potential: 82, nationality: 'England', isHomegrown: true },
+  { id: 'sup_ars_26', name: 'Kieran Tierney', clubId: 'london_red', position: 'LB', rating: 78, age: 29, potential: 80, nationality: 'Scotland', isHomegrown: true },
 
-  // Club: merseyside_red
+// Club: merseyside_red
   { id: 'sup_liv_1', name: 'Caoimhin Kelleher', clubId: 'merseyside_red', position: 'GK', rating: 81, age: 27, potential: 85, nationality: 'Republic of Ireland' },
   { id: 'sup_liv_2', name: 'Jarell Quansah', clubId: 'merseyside_red', position: 'CB', rating: 81, age: 23, potential: 88, nationality: 'England' },
   { id: 'sup_liv_3', name: 'Conor Bradley', clubId: 'merseyside_red', position: 'RB', rating: 81, age: 23, potential: 88, nationality: 'Northern Ireland' },
@@ -87,8 +95,12 @@ export const SUPPLEMENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
   { id: 'sup_liv_20', name: 'Mohamed Salah', clubId: 'merseyside_red', position: 'RW', rating: 89, age: 34, potential: 89, nationality: 'Egypt' },
   { id: 'sup_liv_21', name: 'Darwin Nunez', clubId: 'merseyside_red', position: 'ST', rating: 83, age: 27, potential: 86, nationality: 'Uruguay' },
   { id: 'sup_liv_22', name: 'Diogo Jota', clubId: 'merseyside_red', position: 'CF', rating: 84, age: 29, potential: 84, nationality: 'Portugal' },
+  { id: 'sup_liv_23', name: 'Federico Chiesa', clubId: 'merseyside_red', position: 'RW', rating: 83, age: 28, potential: 84, nationality: 'Italy' },
+  { id: 'sup_liv_24', name: 'Joe Gomez', clubId: 'merseyside_red', position: 'CB', rating: 80, age: 29, potential: 81, nationality: 'England', isHomegrown: true },
+  { id: 'sup_liv_25', name: 'Tyler Morton', clubId: 'merseyside_red', position: 'CM', rating: 77, age: 23, potential: 84, nationality: 'England', isHomegrown: true },
+  { id: 'sup_liv_26', name: 'Trey Nyoni', clubId: 'merseyside_red', position: 'CM', rating: 75, age: 19, potential: 89, nationality: 'England', isHomegrown: true },
 
-  // Club: man_red
+// Club: man_red
   { id: 'sup_mun_1', name: 'Altay Bayindir', clubId: 'man_red', position: 'GK', rating: 77, age: 28, potential: 80, nationality: 'Turkey' },
   { id: 'sup_mun_2', name: 'Kobbie Mainoo', clubId: 'man_red', position: 'CM', rating: 84, age: 21, potential: 91, nationality: 'England' },
   { id: 'sup_mun_3', name: 'Leny Yoro', clubId: 'man_red', position: 'CB', rating: 81, age: 20, potential: 91, nationality: 'France' },
@@ -111,8 +123,12 @@ export const SUPPLEMENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
   { id: 'sup_mun_20', name: 'Marcus Rashford', clubId: 'man_red', position: 'LW', rating: 82, age: 28, potential: 83, nationality: 'England' },
   { id: 'sup_mun_21', name: 'Alejandro Garnacho', clubId: 'man_red', position: 'RW', rating: 84, age: 22, potential: 90, nationality: 'Argentina' },
   { id: 'sup_mun_22', name: 'Rasmus Hojlund', clubId: 'man_red', position: 'ST', rating: 82, age: 23, potential: 88, nationality: 'Denmark' },
+  { id: 'sup_mun_23', name: 'Harry Maguire', clubId: 'man_red', position: 'CB', rating: 79, age: 33, potential: 80, nationality: 'England', isHomegrown: true },
+  { id: 'sup_mun_24', name: 'Victor Lindelof', clubId: 'man_red', position: 'CB', rating: 78, age: 32, potential: 79, nationality: 'Sweden' },
+  { id: 'sup_mun_25', name: 'Antony', clubId: 'man_red', position: 'RW', rating: 78, age: 26, potential: 81, nationality: 'Brazil' },
+  { id: 'sup_mun_26', name: 'Jonny Evans', clubId: 'man_red', position: 'CB', rating: 75, age: 38, potential: 77, nationality: 'Northern Ireland', isHomegrown: true },
 
-  // Club: london_west
+// Club: london_west
   { id: 'sup_che_1', name: 'Filip Jorgensen', clubId: 'london_west', position: 'GK', rating: 79, age: 24, potential: 84, nationality: 'Denmark' },
   { id: 'sup_che_2', name: 'Malo Gusto', clubId: 'london_west', position: 'RB', rating: 82, age: 23, potential: 88, nationality: 'France' },
   { id: 'sup_che_3', name: 'Romeo Lavia', clubId: 'london_west', position: 'CDM', rating: 80, age: 22, potential: 87, nationality: 'Belgium' },
@@ -135,8 +151,12 @@ export const SUPPLEMENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
   { id: 'sup_che_20', name: 'Pedro Neto', clubId: 'london_west', position: 'RW', rating: 83, age: 26, potential: 85, nationality: 'Portugal' },
   { id: 'sup_che_21', name: 'Nicolas Jackson', clubId: 'london_west', position: 'ST', rating: 84, age: 25, potential: 88, nationality: 'Senegal' },
   { id: 'sup_che_22', name: 'Christopher Nkunku', clubId: 'london_west', position: 'CF', rating: 84, age: 28, potential: 85, nationality: 'France' },
+  { id: 'sup_che_23', name: 'Joao Felix', clubId: 'london_west', position: 'CF', rating: 82, age: 26, potential: 84, nationality: 'Portugal' },
+  { id: 'sup_che_24', name: 'Tosin Adarabioyo', clubId: 'london_west', position: 'CB', rating: 80, age: 28, potential: 81, nationality: 'England', isHomegrown: true },
+  { id: 'sup_che_25', name: 'Benoit Badiashile', clubId: 'london_west', position: 'CB', rating: 79, age: 25, potential: 84, nationality: 'France' },
+  { id: 'sup_che_26', name: 'Marc Guiu', clubId: 'london_west', position: 'ST', rating: 77, age: 20, potential: 86, nationality: 'Spain' },
 
-  // Club: north_london_white
+// Club: north_london_white
   { id: 'sup_tot_1', name: 'Fraser Forster', clubId: 'north_london_white', position: 'GK', rating: 75, age: 38, potential: 76, nationality: 'England' },
   { id: 'sup_tot_2', name: 'Radu Dragusin', clubId: 'north_london_white', position: 'CB', rating: 79, age: 24, potential: 84, nationality: 'Romania' },
   { id: 'sup_tot_3', name: 'Archie Gray', clubId: 'north_london_white', position: 'CM', rating: 80, age: 20, potential: 90, nationality: 'England' },
@@ -159,8 +179,12 @@ export const SUPPLEMENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
   { id: 'sup_tot_20', name: 'Brennan Johnson', clubId: 'north_london_white', position: 'RW', rating: 82, age: 25, potential: 86, nationality: 'Wales' },
   { id: 'sup_tot_21', name: 'Dominic Solanke', clubId: 'north_london_white', position: 'ST', rating: 82, age: 29, potential: 83, nationality: 'England' },
   { id: 'sup_tot_22', name: 'Richarlison', clubId: 'north_london_white', position: 'CF', rating: 80, age: 29, potential: 80, nationality: 'Brazil' },
+  { id: 'sup_tot_23', name: 'Timo Werner', clubId: 'north_london_white', position: 'LW', rating: 79, age: 30, potential: 80, nationality: 'Germany' },
+  { id: 'sup_tot_24', name: 'Wilson Odobert', clubId: 'north_london_white', position: 'RW', rating: 80, age: 21, potential: 87, nationality: 'France' },
+  { id: 'sup_tot_25', name: 'Sergio Reguilon', clubId: 'north_london_white', position: 'LB', rating: 77, age: 29, potential: 78, nationality: 'Spain' },
+  { id: 'sup_tot_26', name: 'Alfie Dorrington', clubId: 'north_london_white', position: 'CB', rating: 73, age: 21, potential: 83, nationality: 'England', isHomegrown: true },
 
-  // Club: tyneside_stripes
+// Club: tyneside_stripes
   { id: 'sup_new_1', name: 'Martin Dubravka', clubId: 'tyneside_stripes', position: 'GK', rating: 78, age: 37, potential: 79, nationality: 'Slovakia' },
   { id: 'sup_new_2', name: 'Lewis Hall', clubId: 'tyneside_stripes', position: 'LB', rating: 79, age: 21, potential: 87, nationality: 'England' },
   { id: 'sup_new_3', name: 'Tino Livramento', clubId: 'tyneside_stripes', position: 'RB', rating: 81, age: 23, potential: 87, nationality: 'England' },
@@ -183,8 +207,12 @@ export const SUPPLEMENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
   { id: 'sup_new_20', name: 'Anthony Gordon', clubId: 'tyneside_stripes', position: 'LW', rating: 85, age: 25, potential: 89, nationality: 'England' },
   { id: 'sup_new_21', name: 'Alexander Isak', clubId: 'tyneside_stripes', position: 'ST', rating: 87, age: 27, potential: 90, nationality: 'Sweden' },
   { id: 'sup_new_22', name: 'Callum Wilson', clubId: 'tyneside_stripes', position: 'CF', rating: 80, age: 34, potential: 80, nationality: 'England' },
+  { id: 'sup_new_23', name: 'Lloyd Kelly', clubId: 'tyneside_stripes', position: 'CB', rating: 80, age: 27, potential: 82, nationality: 'England', isHomegrown: true },
+  { id: 'sup_new_24', name: 'William Osula', clubId: 'tyneside_stripes', position: 'ST', rating: 77, age: 23, potential: 84, nationality: 'Denmark', isHomegrown: true },
+  { id: 'sup_new_25', name: 'Emil Krafth', clubId: 'tyneside_stripes', position: 'RB', rating: 76, age: 32, potential: 76, nationality: 'Sweden' },
+  { id: 'sup_new_26', name: 'Garang Kuol', clubId: 'tyneside_stripes', position: 'RW', rating: 74, age: 21, potential: 83, nationality: 'Australia' },
 
-  // Club: west_midlands_claret
+// Club: west_midlands_claret
   { id: 'sup_avl_1', name: 'Joe Gauci', clubId: 'west_midlands_claret', position: 'GK', rating: 74, age: 26, potential: 79, nationality: 'Australia' },
   { id: 'sup_avl_2', name: 'Kosta Nedeljkovic', clubId: 'west_midlands_claret', position: 'RB', rating: 76, age: 20, potential: 85, nationality: 'Serbia' },
   { id: 'sup_avl_3', name: 'Jhon Duran', clubId: 'west_midlands_claret', position: 'ST', rating: 83, age: 22, potential: 89, nationality: 'Colombia' },
@@ -207,8 +235,12 @@ export const SUPPLEMENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
   { id: 'sup_avl_20', name: 'Leon Bailey', clubId: 'west_midlands_claret', position: 'RM', rating: 82, age: 29, potential: 82, nationality: 'Jamaica' },
   { id: 'sup_avl_21', name: 'Morgan Rogers', clubId: 'west_midlands_claret', position: 'LW', rating: 82, age: 24, potential: 88, nationality: 'England' },
   { id: 'sup_avl_22', name: 'Ollie Watkins', clubId: 'west_midlands_claret', position: 'ST', rating: 85, age: 30, potential: 85, nationality: 'England' },
+  { id: 'sup_avl_23', name: 'Tyrone Mings', clubId: 'west_midlands_claret', position: 'CB', rating: 78, age: 33, potential: 79, nationality: 'England', isHomegrown: true },
+  { id: 'sup_avl_24', name: 'Emiliano Buendia', clubId: 'west_midlands_claret', position: 'CAM', rating: 80, age: 29, potential: 81, nationality: 'Argentina' },
+  { id: 'sup_avl_25', name: 'Jaden Philogene', clubId: 'west_midlands_claret', position: 'LW', rating: 79, age: 24, potential: 84, nationality: 'England', isHomegrown: true },
+  { id: 'sup_avl_26', name: 'Kortney Hause', clubId: 'west_midlands_claret', position: 'CB', rating: 74, age: 31, potential: 75, nationality: 'England', isHomegrown: true },
 
-  // Club: brighton_seagulls
+// Club: brighton_seagulls
   { id: 'sup_bha_1', name: 'Bart Verbruggen', clubId: 'brighton_seagulls', position: 'GK', rating: 80, age: 24, potential: 86, nationality: 'Netherlands' },
   { id: 'sup_bha_2', name: 'Jan Paul van Hecke', clubId: 'brighton_seagulls', position: 'CB', rating: 80, age: 26, potential: 84, nationality: 'Netherlands' },
   { id: 'sup_bha_3', name: 'Carlos Baleba', clubId: 'brighton_seagulls', position: 'CDM', rating: 81, age: 22, potential: 88, nationality: 'Cameroon' },
@@ -231,8 +263,12 @@ export const SUPPLEMENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
   { id: 'sup_bha_20', name: 'Joao Pedro', clubId: 'brighton_seagulls', position: 'CF', rating: 82, age: 24, potential: 86, nationality: 'Brazil' },
   { id: 'sup_bha_21', name: 'Georginio Rutter', clubId: 'brighton_seagulls', position: 'RW', rating: 80, age: 24, potential: 85, nationality: 'France' },
   { id: 'sup_bha_22', name: 'Danny Welbeck', clubId: 'brighton_seagulls', position: 'ST', rating: 78, age: 35, potential: 79, nationality: 'England' },
+  { id: 'sup_bha_23', name: 'Solly March', clubId: 'brighton_seagulls', position: 'RW', rating: 78, age: 32, potential: 79, nationality: 'England', isHomegrown: true },
+  { id: 'sup_bha_24', name: 'Tariq Lamptey', clubId: 'brighton_seagulls', position: 'RB', rating: 78, age: 25, potential: 81, nationality: 'Ghana', isHomegrown: true },
+  { id: 'sup_bha_25', name: 'Brajan Gruda', clubId: 'brighton_seagulls', position: 'CAM', rating: 80, age: 22, potential: 87, nationality: 'Germany' },
+  { id: 'sup_bha_26', name: 'Adam Webster', clubId: 'brighton_seagulls', position: 'CB', rating: 77, age: 31, potential: 78, nationality: 'England', isHomegrown: true },
 
-  // Club: west_ham_claret
+// Club: west_ham_claret
   { id: 'sup_whu_1', name: 'Wes Foderingham', clubId: 'west_ham_claret', position: 'GK', rating: 73, age: 35, potential: 74, nationality: 'England' },
   { id: 'sup_whu_2', name: 'Max Kilman', clubId: 'west_ham_claret', position: 'CB', rating: 80, age: 29, potential: 82, nationality: 'England' },
   { id: 'sup_whu_3', name: 'Kaelan Casey', clubId: 'west_ham_claret', position: 'CB', rating: 71, age: 21, potential: 80, nationality: 'England' },
@@ -255,8 +291,12 @@ export const SUPPLEMENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
   { id: 'sup_whu_20', name: 'Jarrod Bowen', clubId: 'west_ham_claret', position: 'RW', rating: 83, age: 29, potential: 83, nationality: 'England' },
   { id: 'sup_whu_21', name: 'Niclas Fullkrug', clubId: 'west_ham_claret', position: 'ST', rating: 80, age: 33, potential: 80, nationality: 'Germany' },
   { id: 'sup_whu_22', name: 'Michail Antonio', clubId: 'west_ham_claret', position: 'CF', rating: 76, age: 36, potential: 77, nationality: 'Jamaica' },
+  { id: 'sup_whu_23', name: 'Danny Ings', clubId: 'west_ham_claret', position: 'ST', rating: 75, age: 34, potential: 77, nationality: 'England', isHomegrown: true },
+  { id: 'sup_whu_24', name: 'Luis Guilherme', clubId: 'west_ham_claret', position: 'RW', rating: 79, age: 20, potential: 88, nationality: 'Brazil' },
+  { id: 'sup_whu_25', name: 'Aaron Cresswell', clubId: 'west_ham_claret', position: 'LB', rating: 74, age: 36, potential: 76, nationality: 'England', isHomegrown: true },
+  { id: 'sup_whu_26', name: 'Andy Irving', clubId: 'west_ham_claret', position: 'CM', rating: 73, age: 26, potential: 76, nationality: 'Scotland', isHomegrown: true },
 
-  // Club: west_london_whites
+// Club: west_london_whites
   { id: 'sup_ful_1', name: 'Steven Benda', clubId: 'west_london_whites', position: 'GK', rating: 73, age: 27, potential: 77, nationality: 'Germany' },
   { id: 'sup_ful_2', name: 'Jorge Cuenca', clubId: 'west_london_whites', position: 'CB', rating: 78, age: 26, potential: 81, nationality: 'Spain' },
   { id: 'sup_ful_3', name: 'Luke Harris', clubId: 'west_london_whites', position: 'CAM', rating: 73, age: 21, potential: 83, nationality: 'Wales' },
@@ -279,8 +319,12 @@ export const SUPPLEMENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
   { id: 'sup_ful_20', name: 'Harry Wilson', clubId: 'west_london_whites', position: 'RM', rating: 78, age: 29, potential: 78, nationality: 'Wales' },
   { id: 'sup_ful_21', name: 'Adama Traore', clubId: 'west_london_whites', position: 'RW', rating: 77, age: 30, potential: 77, nationality: 'Spain' },
   { id: 'sup_ful_22', name: 'Rodrigo Muniz', clubId: 'west_london_whites', position: 'ST', rating: 80, age: 25, potential: 85, nationality: 'Brazil' },
+  { id: 'sup_ful_23', name: 'Tom Cairney', clubId: 'west_london_whites', position: 'CM', rating: 75, age: 35, potential: 76, nationality: 'Scotland', isHomegrown: true },
+  { id: 'sup_ful_24', name: 'Issa Diop', clubId: 'west_london_whites', position: 'CB', rating: 77, age: 29, potential: 78, nationality: 'France' },
+  { id: 'sup_ful_25', name: 'Reiss Nelson', clubId: 'west_london_whites', position: 'RW', rating: 78, age: 26, potential: 80, nationality: 'England', isHomegrown: true },
+  { id: 'sup_ful_26', name: 'Carlos Vinicius', clubId: 'west_london_whites', position: 'ST', rating: 74, age: 31, potential: 75, nationality: 'Brazil' },
 
-  // Club: bournemouth_cherries
+// Club: bournemouth_cherries
   { id: 'sup_bou_1', name: 'Will Dennis', clubId: 'bournemouth_cherries', position: 'GK', rating: 72, age: 26, potential: 77, nationality: 'England' },
   { id: 'sup_bou_2', name: 'Illia Zabarnyi', clubId: 'bournemouth_cherries', position: 'CB', rating: 83, age: 24, potential: 88, nationality: 'Ukraine' },
   { id: 'sup_bou_3', name: 'Alex Scott', clubId: 'bournemouth_cherries', position: 'CM', rating: 79, age: 23, potential: 87, nationality: 'England' },
@@ -303,8 +347,12 @@ export const SUPPLEMENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
   { id: 'sup_bou_20', name: 'Antoine Semenyo', clubId: 'bournemouth_cherries', position: 'RW', rating: 82, age: 26, potential: 86, nationality: 'Ghana' },
   { id: 'sup_bou_21', name: 'Evanilson', clubId: 'bournemouth_cherries', position: 'ST', rating: 82, age: 26, potential: 87, nationality: 'Brazil' },
   { id: 'sup_bou_22', name: 'Enes Unal', clubId: 'bournemouth_cherries', position: 'CF', rating: 77, age: 29, potential: 78, nationality: 'Turkey' },
+  { id: 'sup_bou_23', name: 'Philip Billing', clubId: 'bournemouth_cherries', position: 'CM', rating: 77, age: 30, potential: 78, nationality: 'Denmark', isHomegrown: true },
+  { id: 'sup_bou_24', name: 'David Brooks', clubId: 'bournemouth_cherries', position: 'RW', rating: 76, age: 29, potential: 77, nationality: 'Wales', isHomegrown: true },
+  { id: 'sup_bou_25', name: 'Max Aarons', clubId: 'bournemouth_cherries', position: 'RB', rating: 76, age: 26, potential: 79, nationality: 'England', isHomegrown: true },
+  { id: 'sup_bou_26', name: 'Alex Paulsen', clubId: 'bournemouth_cherries', position: 'GK', rating: 73, age: 24, potential: 80, nationality: 'New Zealand' },
 
-  // Club: south_london_eagles
+// Club: south_london_eagles
   { id: 'sup_cry_1', name: 'Remi Matthews', clubId: 'south_london_eagles', position: 'GK', rating: 71, age: 32, potential: 71, nationality: 'England' },
   { id: 'sup_cry_2', name: 'Chris Richards', clubId: 'south_london_eagles', position: 'CB', rating: 78, age: 26, potential: 82, nationality: 'United States' },
   { id: 'sup_cry_3', name: 'David Ozoh', clubId: 'south_london_eagles', position: 'CDM', rating: 74, age: 21, potential: 84, nationality: 'England' },
@@ -327,8 +375,12 @@ export const SUPPLEMENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
   { id: 'sup_cry_20', name: 'Ismaila Sarr', clubId: 'south_london_eagles', position: 'RM', rating: 78, age: 28, potential: 79, nationality: 'Senegal' },
   { id: 'sup_cry_21', name: 'Eberechi Eze', clubId: 'south_london_eagles', position: 'LW', rating: 83, age: 28, potential: 87, nationality: 'England' },
   { id: 'sup_cry_22', name: 'Jean-Philippe Mateta', clubId: 'south_london_eagles', position: 'ST', rating: 80, age: 29, potential: 81, nationality: 'France' },
+  { id: 'sup_cry_23', name: 'Nathaniel Clyne', clubId: 'south_london_eagles', position: 'RB', rating: 73, age: 35, potential: 75, nationality: 'England', isHomegrown: true },
+  { id: 'sup_cry_24', name: 'Joel Ward', clubId: 'south_london_eagles', position: 'CB', rating: 72, age: 36, potential: 74, nationality: 'England', isHomegrown: true },
+  { id: 'sup_cry_25', name: 'Rob Holding', clubId: 'south_london_eagles', position: 'CB', rating: 74, age: 30, potential: 76, nationality: 'England', isHomegrown: true },
+  { id: 'sup_cry_26', name: 'Franco Umeh', clubId: 'south_london_eagles', position: 'LW', rating: 73, age: 21, potential: 83, nationality: 'Republic of Ireland', isHomegrown: true },
 
-  // Club: black_country_gold
+// Club: black_country_gold
   { id: 'sup_wol_1', name: 'Dan Bentley', clubId: 'black_country_gold', position: 'GK', rating: 74, age: 33, potential: 74, nationality: 'England' },
   { id: 'sup_wol_2', name: 'Toti Gomes', clubId: 'black_country_gold', position: 'CB', rating: 78, age: 27, potential: 82, nationality: 'Portugal' },
   { id: 'sup_wol_3', name: 'Hugo Bueno', clubId: 'black_country_gold', position: 'LB', rating: 77, age: 23, potential: 83, nationality: 'Spain' },
@@ -351,8 +403,12 @@ export const SUPPLEMENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
   { id: 'sup_wol_20', name: 'Carlos Forbs', clubId: 'black_country_gold', position: 'RW', rating: 76, age: 22, potential: 85, nationality: 'Portugal' },
   { id: 'sup_wol_21', name: 'Matheus Cunha', clubId: 'black_country_gold', position: 'CF', rating: 84, age: 27, potential: 86, nationality: 'Brazil' },
   { id: 'sup_wol_22', name: 'Jorgen Strand Larsen', clubId: 'black_country_gold', position: 'ST', rating: 80, age: 26, potential: 84, nationality: 'Norway' },
+  { id: 'sup_wol_23', name: 'Pedro Lima', clubId: 'black_country_gold', position: 'RB', rating: 77, age: 20, potential: 86, nationality: 'Brazil' },
+  { id: 'sup_wol_24', name: 'Sasa Kalajdzic', clubId: 'black_country_gold', position: 'ST', rating: 76, age: 29, potential: 77, nationality: 'Austria' },
+  { id: 'sup_wol_25', name: 'Enso Gonzalez', clubId: 'black_country_gold', position: 'LW', rating: 74, age: 21, potential: 83, nationality: 'Paraguay' },
+  { id: 'sup_wol_26', name: 'Luke Cundle', clubId: 'black_country_gold', position: 'CM', rating: 75, age: 24, potential: 79, nationality: 'England', isHomegrown: true },
 
-  // Club: merseyside_blue
+// Club: merseyside_blue
   { id: 'sup_eve_1', name: 'Joao Virginia', clubId: 'merseyside_blue', position: 'GK', rating: 74, age: 26, potential: 78, nationality: 'Portugal' },
   { id: 'sup_eve_2', name: 'Jake O Brien', clubId: 'merseyside_blue', position: 'CB', rating: 78, age: 25, potential: 83, nationality: 'Republic of Ireland' },
   { id: 'sup_eve_3', name: 'Nathan Patterson', clubId: 'merseyside_blue', position: 'RB', rating: 77, age: 24, potential: 83, nationality: 'Scotland' },
@@ -375,8 +431,12 @@ export const SUPPLEMENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
   { id: 'sup_eve_20', name: 'Jesper Lindstrom', clubId: 'merseyside_blue', position: 'RW', rating: 78, age: 26, potential: 83, nationality: 'Denmark' },
   { id: 'sup_eve_21', name: 'Dominic Calvert-Lewin', clubId: 'merseyside_blue', position: 'ST', rating: 79, age: 29, potential: 79, nationality: 'England' },
   { id: 'sup_eve_22', name: 'Beto', clubId: 'merseyside_blue', position: 'CF', rating: 77, age: 28, potential: 79, nationality: 'Portugal' },
+  { id: 'sup_eve_23', name: 'Michael Keane', clubId: 'merseyside_blue', position: 'CB', rating: 75, age: 33, potential: 76, nationality: 'England', isHomegrown: true },
+  { id: 'sup_eve_24', name: 'Armando Broja', clubId: 'merseyside_blue', position: 'ST', rating: 77, age: 24, potential: 82, nationality: 'Albania', isHomegrown: true },
+  { id: 'sup_eve_25', name: 'Roman Dixon', clubId: 'merseyside_blue', position: 'RB', rating: 73, age: 21, potential: 83, nationality: 'England', isHomegrown: true },
+  { id: 'sup_eve_26', name: 'Harrison Armstrong', clubId: 'merseyside_blue', position: 'CM', rating: 72, age: 19, potential: 84, nationality: 'England', isHomegrown: true },
 
-  // Club: west_london_bees
+// Club: west_london_bees
   { id: 'sup_bre_1', name: 'Hakon Valdimarsson', clubId: 'west_london_bees', position: 'GK', rating: 75, age: 24, potential: 81, nationality: 'Iceland' },
   { id: 'sup_bre_2', name: 'Fin Stevens', clubId: 'west_london_bees', position: 'RB', rating: 73, age: 23, potential: 80, nationality: 'Wales' },
   { id: 'sup_bre_3', name: 'Yehor Yarmoliuk', clubId: 'west_london_bees', position: 'CM', rating: 76, age: 22, potential: 84, nationality: 'Ukraine' },
@@ -399,8 +459,12 @@ export const SUPPLEMENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
   { id: 'sup_bre_20', name: 'Kevin Schade', clubId: 'west_london_bees', position: 'LW', rating: 77, age: 24, potential: 83, nationality: 'Germany' },
   { id: 'sup_bre_21', name: 'Yoane Wissa', clubId: 'west_london_bees', position: 'ST', rating: 80, age: 30, potential: 80, nationality: 'DR Congo' },
   { id: 'sup_bre_22', name: 'Igor Thiago', clubId: 'west_london_bees', position: 'CF', rating: 78, age: 25, potential: 83, nationality: 'Brazil' },
+  { id: 'sup_bre_23', name: 'Ben Mee', clubId: 'west_london_bees', position: 'CB', rating: 76, age: 36, potential: 78, nationality: 'England', isHomegrown: true },
+  { id: 'sup_bre_24', name: 'Josh Dasilva', clubId: 'west_london_bees', position: 'CM', rating: 75, age: 27, potential: 78, nationality: 'England', isHomegrown: true },
+  { id: 'sup_bre_25', name: 'Gustavo Nunes', clubId: 'west_london_bees', position: 'LW', rating: 77, age: 20, potential: 86, nationality: 'Brazil' },
+  { id: 'sup_bre_26', name: 'Yunus Emre Konak', clubId: 'west_london_bees', position: 'CDM', rating: 75, age: 20, potential: 84, nationality: 'Turkey' },
 
-  // Club: nottingham_forest_red
+// Club: nottingham_forest_red
   { id: 'sup_nfo_1', name: 'Carlos Miguel', clubId: 'nottingham_forest_red', position: 'GK', rating: 76, age: 27, potential: 81, nationality: 'Brazil' },
   { id: 'sup_nfo_2', name: 'Murillo', clubId: 'nottingham_forest_red', position: 'CB', rating: 83, age: 24, potential: 89, nationality: 'Brazil' },
   { id: 'sup_nfo_3', name: 'Neco Williams', clubId: 'nottingham_forest_red', position: 'RB', rating: 78, age: 25, potential: 82, nationality: 'Wales' },
@@ -423,8 +487,12 @@ export const SUPPLEMENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
   { id: 'sup_nfo_20', name: 'Callum Hudson-Odoi', clubId: 'nottingham_forest_red', position: 'LW', rating: 80, age: 25, potential: 85, nationality: 'England' },
   { id: 'sup_nfo_21', name: 'Chris Wood', clubId: 'nottingham_forest_red', position: 'ST', rating: 80, age: 34, potential: 80, nationality: 'New Zealand' },
   { id: 'sup_nfo_22', name: 'Taiwo Awoniyi', clubId: 'nottingham_forest_red', position: 'CF', rating: 78, age: 29, potential: 80, nationality: 'Nigeria' },
+  { id: 'sup_nfo_23', name: 'Ramon Sosa', clubId: 'nottingham_forest_red', position: 'LW', rating: 79, age: 27, potential: 81, nationality: 'Paraguay' },
+  { id: 'sup_nfo_24', name: 'Jota Silva', clubId: 'nottingham_forest_red', position: 'RW', rating: 78, age: 27, potential: 79, nationality: 'Portugal' },
+  { id: 'sup_nfo_25', name: 'Willy Boly', clubId: 'nottingham_forest_red', position: 'CB', rating: 75, age: 35, potential: 76, nationality: 'Ivory Coast' },
+  { id: 'sup_nfo_26', name: 'Emmanuel Dennis', clubId: 'nottingham_forest_red', position: 'ST', rating: 75, age: 28, potential: 76, nationality: 'Nigeria' },
 
-  // Club: yorkshire_whites
+// Club: yorkshire_whites
   { id: 'sup_lee_1', name: 'Illan Meslier', clubId: 'yorkshire_whites', position: 'GK', rating: 78, age: 26, potential: 82, nationality: 'France' },
   { id: 'sup_lee_2', name: 'Karl Darlow', clubId: 'yorkshire_whites', position: 'GK', rating: 73, age: 35, potential: 74, nationality: 'Wales' },
   { id: 'sup_lee_3', name: 'Alex Cairns', clubId: 'yorkshire_whites', position: 'GK', rating: 68, age: 33, potential: 68, nationality: 'England' },
@@ -447,8 +515,12 @@ export const SUPPLEMENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
   { id: 'sup_lee_20', name: 'Mateo Joseph', clubId: 'yorkshire_whites', position: 'ST', rating: 76, age: 22, potential: 85, nationality: 'Spain' },
   { id: 'sup_lee_21', name: 'Joel Piroe', clubId: 'yorkshire_whites', position: 'ST', rating: 76, age: 27, potential: 78, nationality: 'Netherlands' },
   { id: 'sup_lee_22', name: 'Joe Gelhardt', clubId: 'yorkshire_whites', position: 'CF', rating: 74, age: 24, potential: 79, nationality: 'England' },
+  { id: 'sup_lee_23', name: 'Patrick Bamford', clubId: 'yorkshire_whites', position: 'ST', rating: 75, age: 32, potential: 76, nationality: 'England', isHomegrown: true },
+  { id: 'sup_lee_24', name: 'Charlie Crew', clubId: 'yorkshire_whites', position: 'CM', rating: 73, age: 20, potential: 83, nationality: 'Wales', isHomegrown: true },
+  { id: 'sup_lee_25', name: 'Harry Gray', clubId: 'yorkshire_whites', position: 'ST', rating: 70, age: 17, potential: 87, nationality: 'England', isHomegrown: true },
+  { id: 'sup_lee_26', name: 'James Debayo', clubId: 'yorkshire_whites', position: 'CB', rating: 72, age: 21, potential: 82, nationality: 'England', isHomegrown: true },
 
-  // Club: wearside_red_white
+// Club: wearside_red_white
   { id: 'sup_sun_1', name: 'Anthony Patterson', clubId: 'wearside_red_white', position: 'GK', rating: 77, age: 26, potential: 84, nationality: 'England' },
   { id: 'sup_sun_2', name: 'Simon Moore', clubId: 'wearside_red_white', position: 'GK', rating: 71, age: 36, potential: 72, nationality: 'England' },
   { id: 'sup_sun_3', name: 'Blondy Nna Noukeu', clubId: 'wearside_red_white', position: 'GK', rating: 68, age: 25, potential: 74, nationality: 'Cameroon' },
@@ -471,8 +543,12 @@ export const SUPPLEMENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
   { id: 'sup_sun_20', name: 'Wilson Isidor', clubId: 'wearside_red_white', position: 'ST', rating: 77, age: 26, potential: 81, nationality: 'France' },
   { id: 'sup_sun_21', name: 'Eliezer Mayenda', clubId: 'wearside_red_white', position: 'ST', rating: 75, age: 21, potential: 85, nationality: 'Spain' },
   { id: 'sup_sun_22', name: 'Nazariy Rusyn', clubId: 'wearside_red_white', position: 'CF', rating: 73, age: 27, potential: 75, nationality: 'Ukraine' },
+  { id: 'sup_sun_23', name: 'Aaron Connolly', clubId: 'wearside_red_white', position: 'ST', rating: 74, age: 26, potential: 77, nationality: 'Republic of Ireland', isHomegrown: true },
+  { id: 'sup_sun_24', name: 'Ian Poveda', clubId: 'wearside_red_white', position: 'RW', rating: 73, age: 26, potential: 76, nationality: 'Colombia', isHomegrown: true },
+  { id: 'sup_sun_25', name: 'Aji Alese', clubId: 'wearside_red_white', position: 'CB', rating: 74, age: 25, potential: 78, nationality: 'England', isHomegrown: true },
+  { id: 'sup_sun_26', name: 'Zak Johnson', clubId: 'wearside_red_white', position: 'CB', rating: 71, age: 21, potential: 81, nationality: 'England', isHomegrown: true },
 
-  // Club: east_lancs_claret
+// Club: east_lancs_claret
   { id: 'sup_bur_1', name: 'James Trafford', clubId: 'east_lancs_claret', position: 'GK', rating: 79, age: 23, potential: 86, nationality: 'England' },
   { id: 'sup_bur_2', name: 'Etienne Green', clubId: 'east_lancs_claret', position: 'GK', rating: 74, age: 26, potential: 78, nationality: 'England' },
   { id: 'sup_bur_3', name: 'Vaclav Hladky', clubId: 'east_lancs_claret', position: 'GK', rating: 72, age: 35, potential: 73, nationality: 'Czech Republic' },
@@ -495,6 +571,11 @@ export const SUPPLEMENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
   { id: 'sup_bur_20', name: 'Lyle Foster', clubId: 'east_lancs_claret', position: 'ST', rating: 77, age: 26, potential: 81, nationality: 'South Africa' },
   { id: 'sup_bur_21', name: 'Zian Flemming', clubId: 'east_lancs_claret', position: 'ST', rating: 76, age: 28, potential: 78, nationality: 'Netherlands' },
   { id: 'sup_bur_22', name: 'Jay Rodriguez', clubId: 'east_lancs_claret', position: 'CF', rating: 73, age: 37, potential: 74, nationality: 'England' },
+  { id: 'sup_bur_23', name: 'Nathan Redmond', clubId: 'east_lancs_claret', position: 'LW', rating: 74, age: 32, potential: 75, nationality: 'England', isHomegrown: true },
+  { id: 'sup_bur_24', name: 'Hjalmar Ekdal', clubId: 'east_lancs_claret', position: 'CB', rating: 74, age: 27, potential: 77, nationality: 'Sweden' },
+  { id: 'sup_bur_25', name: 'Bashir Humphreys', clubId: 'east_lancs_claret', position: 'CB', rating: 76, age: 23, potential: 83, nationality: 'England', isHomegrown: true },
+  { id: 'sup_bur_26', name: 'Mike Tresor', clubId: 'east_lancs_claret', position: 'CAM', rating: 75, age: 27, potential: 78, nationality: 'Belgium' },
+
 
 ];
 
@@ -523,8 +604,12 @@ export const SUPPLEMENTAL_PLAYERS_2025_26: SupplementalPlayerDef[] = [
   { id: 'sup_mci_20', name: 'Jeremy Doku', clubId: 'man_blue', position: 'LW', rating: 84, age: 23, potential: 87, nationality: 'Belgium' },
   { id: 'sup_mci_21', name: 'Phil Foden', clubId: 'man_blue', position: 'CF', rating: 88, age: 25, potential: 91, nationality: 'England' },
   { id: 'sup_mci_22', name: 'Erling Haaland', clubId: 'man_blue', position: 'ST', rating: 92, age: 25, potential: 94, nationality: 'Norway' },
+  { id: 'sup_mci_23', name: 'Nathan Ake', clubId: 'man_blue', position: 'CB', rating: 84, age: 30, potential: 84, nationality: 'Netherlands', isHomegrown: true },
+  { id: 'sup_mci_24', name: 'Claudio Echeverri', clubId: 'man_blue', position: 'CAM', rating: 76, age: 19, potential: 89, nationality: 'Argentina' },
+  { id: 'sup_mci_25', name: 'Jahmai Simpson-Pusey', clubId: 'man_blue', position: 'CB', rating: 70, age: 19, potential: 85, nationality: 'England', isHomegrown: true },
+  { id: 'sup_mci_26', name: 'Max Alleyne', clubId: 'man_blue', position: 'CB', rating: 70, age: 20, potential: 84, nationality: 'England', isHomegrown: true },
 
-  // Club: london_red
+// Club: london_red
   { id: 'sup_ars_1', name: 'Jakub Kiwior', clubId: 'london_red', position: 'CB', rating: 80, age: 25, potential: 83, nationality: 'Poland' },
   { id: 'sup_ars_2', name: 'Ethan Nwaneri', clubId: 'london_red', position: 'CAM', rating: 78, age: 18, potential: 92, nationality: 'England' },
   { id: 'sup_ars_3', name: 'Myles Lewis-Skelly', clubId: 'london_red', position: 'LB', rating: 76, age: 18, potential: 90, nationality: 'England' },
@@ -547,8 +632,12 @@ export const SUPPLEMENTAL_PLAYERS_2025_26: SupplementalPlayerDef[] = [
   { id: 'sup_ars_20', name: 'Leandro Trossard', clubId: 'london_red', position: 'LW', rating: 83, age: 30, potential: 83, nationality: 'Belgium' },
   { id: 'sup_ars_21', name: 'Kai Havertz', clubId: 'london_red', position: 'ST', rating: 84, age: 26, potential: 86, nationality: 'Germany' },
   { id: 'sup_ars_22', name: 'Gabriel Jesus', clubId: 'london_red', position: 'CF', rating: 83, age: 28, potential: 83, nationality: 'Brazil' },
+  { id: 'sup_ars_23', name: 'Oleksandr Zinchenko', clubId: 'london_red', position: 'LB', rating: 81, age: 28, potential: 82, nationality: 'Ukraine' },
+  { id: 'sup_ars_24', name: 'Takehiro Tomiyasu', clubId: 'london_red', position: 'RB', rating: 81, age: 26, potential: 82, nationality: 'Japan' },
+  { id: 'sup_ars_25', name: 'Raheem Sterling', clubId: 'london_red', position: 'LW', rating: 81, age: 30, potential: 82, nationality: 'England', isHomegrown: true },
+  { id: 'sup_ars_26', name: 'Kieran Tierney', clubId: 'london_red', position: 'LB', rating: 79, age: 28, potential: 80, nationality: 'Scotland', isHomegrown: true },
 
-  // Club: merseyside_red
+// Club: merseyside_red
   { id: 'sup_liv_1', name: 'Caoimhin Kelleher', clubId: 'merseyside_red', position: 'GK', rating: 81, age: 26, potential: 85, nationality: 'Republic of Ireland' },
   { id: 'sup_liv_2', name: 'Jarell Quansah', clubId: 'merseyside_red', position: 'CB', rating: 80, age: 22, potential: 88, nationality: 'England' },
   { id: 'sup_liv_3', name: 'Conor Bradley', clubId: 'merseyside_red', position: 'RB', rating: 80, age: 22, potential: 88, nationality: 'Northern Ireland' },
@@ -571,8 +660,12 @@ export const SUPPLEMENTAL_PLAYERS_2025_26: SupplementalPlayerDef[] = [
   { id: 'sup_liv_20', name: 'Mohamed Salah', clubId: 'merseyside_red', position: 'RW', rating: 89, age: 33, potential: 89, nationality: 'Egypt' },
   { id: 'sup_liv_21', name: 'Darwin Nunez', clubId: 'merseyside_red', position: 'ST', rating: 83, age: 26, potential: 86, nationality: 'Uruguay' },
   { id: 'sup_liv_22', name: 'Diogo Jota', clubId: 'merseyside_red', position: 'CF', rating: 84, age: 28, potential: 84, nationality: 'Portugal' },
+  { id: 'sup_liv_23', name: 'Federico Chiesa', clubId: 'merseyside_red', position: 'RW', rating: 84, age: 27, potential: 84, nationality: 'Italy' },
+  { id: 'sup_liv_24', name: 'Joe Gomez', clubId: 'merseyside_red', position: 'CB', rating: 80, age: 28, potential: 81, nationality: 'England', isHomegrown: true },
+  { id: 'sup_liv_25', name: 'Tyler Morton', clubId: 'merseyside_red', position: 'CM', rating: 75, age: 22, potential: 84, nationality: 'England', isHomegrown: true },
+  { id: 'sup_liv_26', name: 'Trey Nyoni', clubId: 'merseyside_red', position: 'CM', rating: 71, age: 18, potential: 89, nationality: 'England', isHomegrown: true },
 
-  // Club: man_red
+// Club: man_red
   { id: 'sup_mun_1', name: 'Altay Bayindir', clubId: 'man_red', position: 'GK', rating: 77, age: 27, potential: 80, nationality: 'Turkey' },
   { id: 'sup_mun_2', name: 'Kobbie Mainoo', clubId: 'man_red', position: 'CM', rating: 82, age: 20, potential: 91, nationality: 'England' },
   { id: 'sup_mun_3', name: 'Leny Yoro', clubId: 'man_red', position: 'CB', rating: 79, age: 19, potential: 90, nationality: 'France' },
@@ -595,8 +688,12 @@ export const SUPPLEMENTAL_PLAYERS_2025_26: SupplementalPlayerDef[] = [
   { id: 'sup_mun_20', name: 'Marcus Rashford', clubId: 'man_red', position: 'LW', rating: 82, age: 27, potential: 83, nationality: 'England' },
   { id: 'sup_mun_21', name: 'Alejandro Garnacho', clubId: 'man_red', position: 'RW', rating: 83, age: 21, potential: 90, nationality: 'Argentina' },
   { id: 'sup_mun_22', name: 'Rasmus Hojlund', clubId: 'man_red', position: 'ST', rating: 81, age: 22, potential: 87, nationality: 'Denmark' },
+  { id: 'sup_mun_23', name: 'Harry Maguire', clubId: 'man_red', position: 'CB', rating: 80, age: 32, potential: 80, nationality: 'England', isHomegrown: true },
+  { id: 'sup_mun_24', name: 'Victor Lindelof', clubId: 'man_red', position: 'CB', rating: 79, age: 31, potential: 79, nationality: 'Sweden' },
+  { id: 'sup_mun_25', name: 'Antony', clubId: 'man_red', position: 'RW', rating: 79, age: 25, potential: 81, nationality: 'Brazil' },
+  { id: 'sup_mun_26', name: 'Jonny Evans', clubId: 'man_red', position: 'CB', rating: 76, age: 37, potential: 77, nationality: 'Northern Ireland', isHomegrown: true },
 
-  // Club: london_west
+// Club: london_west
   { id: 'sup_che_1', name: 'Filip Jorgensen', clubId: 'london_west', position: 'GK', rating: 79, age: 23, potential: 84, nationality: 'Denmark' },
   { id: 'sup_che_2', name: 'Malo Gusto', clubId: 'london_west', position: 'RB', rating: 81, age: 22, potential: 87, nationality: 'France' },
   { id: 'sup_che_3', name: 'Romeo Lavia', clubId: 'london_west', position: 'CDM', rating: 79, age: 21, potential: 86, nationality: 'Belgium' },
@@ -619,8 +716,12 @@ export const SUPPLEMENTAL_PLAYERS_2025_26: SupplementalPlayerDef[] = [
   { id: 'sup_che_20', name: 'Pedro Neto', clubId: 'london_west', position: 'RW', rating: 83, age: 25, potential: 85, nationality: 'Portugal' },
   { id: 'sup_che_21', name: 'Nicolas Jackson', clubId: 'london_west', position: 'ST', rating: 83, age: 24, potential: 88, nationality: 'Senegal' },
   { id: 'sup_che_22', name: 'Christopher Nkunku', clubId: 'london_west', position: 'CF', rating: 84, age: 27, potential: 85, nationality: 'France' },
+  { id: 'sup_che_23', name: 'Joao Felix', clubId: 'london_west', position: 'CF', rating: 82, age: 25, potential: 84, nationality: 'Portugal' },
+  { id: 'sup_che_24', name: 'Tosin Adarabioyo', clubId: 'london_west', position: 'CB', rating: 80, age: 27, potential: 81, nationality: 'England', isHomegrown: true },
+  { id: 'sup_che_25', name: 'Benoit Badiashile', clubId: 'london_west', position: 'CB', rating: 79, age: 24, potential: 84, nationality: 'France' },
+  { id: 'sup_che_26', name: 'Marc Guiu', clubId: 'london_west', position: 'ST', rating: 74, age: 19, potential: 86, nationality: 'Spain' },
 
-  // Club: north_london_white
+// Club: north_london_white
   { id: 'sup_tot_1', name: 'Fraser Forster', clubId: 'north_london_white', position: 'GK', rating: 76, age: 37, potential: 76, nationality: 'England' },
   { id: 'sup_tot_2', name: 'Radu Dragusin', clubId: 'north_london_white', position: 'CB', rating: 79, age: 23, potential: 84, nationality: 'Romania' },
   { id: 'sup_tot_3', name: 'Archie Gray', clubId: 'north_london_white', position: 'CM', rating: 78, age: 19, potential: 90, nationality: 'England' },
@@ -643,8 +744,12 @@ export const SUPPLEMENTAL_PLAYERS_2025_26: SupplementalPlayerDef[] = [
   { id: 'sup_tot_20', name: 'Brennan Johnson', clubId: 'north_london_white', position: 'RW', rating: 82, age: 24, potential: 86, nationality: 'Wales' },
   { id: 'sup_tot_21', name: 'Dominic Solanke', clubId: 'north_london_white', position: 'ST', rating: 82, age: 28, potential: 83, nationality: 'England' },
   { id: 'sup_tot_22', name: 'Richarlison', clubId: 'north_london_white', position: 'CF', rating: 80, age: 28, potential: 80, nationality: 'Brazil' },
+  { id: 'sup_tot_23', name: 'Timo Werner', clubId: 'north_london_white', position: 'LW', rating: 79, age: 29, potential: 80, nationality: 'Germany' },
+  { id: 'sup_tot_24', name: 'Wilson Odobert', clubId: 'north_london_white', position: 'RW', rating: 77, age: 20, potential: 87, nationality: 'France' },
+  { id: 'sup_tot_25', name: 'Sergio Reguilon', clubId: 'north_london_white', position: 'LB', rating: 78, age: 28, potential: 78, nationality: 'Spain' },
+  { id: 'sup_tot_26', name: 'Alfie Dorrington', clubId: 'north_london_white', position: 'CB', rating: 69, age: 20, potential: 83, nationality: 'England', isHomegrown: true },
 
-  // Club: tyneside_stripes
+// Club: tyneside_stripes
   { id: 'sup_new_1', name: 'Martin Dubravka', clubId: 'tyneside_stripes', position: 'GK', rating: 79, age: 36, potential: 79, nationality: 'Slovakia' },
   { id: 'sup_new_2', name: 'Lewis Hall', clubId: 'tyneside_stripes', position: 'LB', rating: 78, age: 20, potential: 86, nationality: 'England' },
   { id: 'sup_new_3', name: 'Tino Livramento', clubId: 'tyneside_stripes', position: 'RB', rating: 80, age: 22, potential: 86, nationality: 'England' },
@@ -667,8 +772,12 @@ export const SUPPLEMENTAL_PLAYERS_2025_26: SupplementalPlayerDef[] = [
   { id: 'sup_new_20', name: 'Anthony Gordon', clubId: 'tyneside_stripes', position: 'LW', rating: 84, age: 24, potential: 89, nationality: 'England' },
   { id: 'sup_new_21', name: 'Alexander Isak', clubId: 'tyneside_stripes', position: 'ST', rating: 86, age: 26, potential: 90, nationality: 'Sweden' },
   { id: 'sup_new_22', name: 'Callum Wilson', clubId: 'tyneside_stripes', position: 'CF', rating: 80, age: 33, potential: 80, nationality: 'England' },
+  { id: 'sup_new_23', name: 'Lloyd Kelly', clubId: 'tyneside_stripes', position: 'CB', rating: 79, age: 26, potential: 82, nationality: 'England', isHomegrown: true },
+  { id: 'sup_new_24', name: 'William Osula', clubId: 'tyneside_stripes', position: 'ST', rating: 74, age: 22, potential: 84, nationality: 'Denmark', isHomegrown: true },
+  { id: 'sup_new_25', name: 'Emil Krafth', clubId: 'tyneside_stripes', position: 'RB', rating: 76, age: 31, potential: 76, nationality: 'Sweden' },
+  { id: 'sup_new_26', name: 'Garang Kuol', clubId: 'tyneside_stripes', position: 'RW', rating: 71, age: 20, potential: 83, nationality: 'Australia' },
 
-  // Club: west_midlands_claret
+// Club: west_midlands_claret
   { id: 'sup_avl_1', name: 'Joe Gauci', clubId: 'west_midlands_claret', position: 'GK', rating: 74, age: 25, potential: 79, nationality: 'Australia' },
   { id: 'sup_avl_2', name: 'Kosta Nedeljkovic', clubId: 'west_midlands_claret', position: 'RB', rating: 75, age: 19, potential: 84, nationality: 'Serbia' },
   { id: 'sup_avl_3', name: 'Jhon Duran', clubId: 'west_midlands_claret', position: 'ST', rating: 81, age: 21, potential: 89, nationality: 'Colombia' },
@@ -691,8 +800,12 @@ export const SUPPLEMENTAL_PLAYERS_2025_26: SupplementalPlayerDef[] = [
   { id: 'sup_avl_20', name: 'Leon Bailey', clubId: 'west_midlands_claret', position: 'RM', rating: 82, age: 28, potential: 82, nationality: 'Jamaica' },
   { id: 'sup_avl_21', name: 'Morgan Rogers', clubId: 'west_midlands_claret', position: 'LW', rating: 81, age: 23, potential: 88, nationality: 'England' },
   { id: 'sup_avl_22', name: 'Ollie Watkins', clubId: 'west_midlands_claret', position: 'ST', rating: 85, age: 29, potential: 85, nationality: 'England' },
+  { id: 'sup_avl_23', name: 'Tyrone Mings', clubId: 'west_midlands_claret', position: 'CB', rating: 78, age: 32, potential: 79, nationality: 'England', isHomegrown: true },
+  { id: 'sup_avl_24', name: 'Emiliano Buendia', clubId: 'west_midlands_claret', position: 'CAM', rating: 80, age: 28, potential: 81, nationality: 'Argentina' },
+  { id: 'sup_avl_25', name: 'Jaden Philogene', clubId: 'west_midlands_claret', position: 'LW', rating: 77, age: 23, potential: 84, nationality: 'England', isHomegrown: true },
+  { id: 'sup_avl_26', name: 'Kortney Hause', clubId: 'west_midlands_claret', position: 'CB', rating: 74, age: 30, potential: 75, nationality: 'England', isHomegrown: true },
 
-  // Club: brighton_seagulls
+// Club: brighton_seagulls
   { id: 'sup_bha_1', name: 'Bart Verbruggen', clubId: 'brighton_seagulls', position: 'GK', rating: 80, age: 23, potential: 86, nationality: 'Netherlands' },
   { id: 'sup_bha_2', name: 'Jan Paul van Hecke', clubId: 'brighton_seagulls', position: 'CB', rating: 80, age: 25, potential: 84, nationality: 'Netherlands' },
   { id: 'sup_bha_3', name: 'Carlos Baleba', clubId: 'brighton_seagulls', position: 'CDM', rating: 79, age: 21, potential: 88, nationality: 'Cameroon' },
@@ -715,8 +828,12 @@ export const SUPPLEMENTAL_PLAYERS_2025_26: SupplementalPlayerDef[] = [
   { id: 'sup_bha_20', name: 'Joao Pedro', clubId: 'brighton_seagulls', position: 'CF', rating: 82, age: 23, potential: 86, nationality: 'Brazil' },
   { id: 'sup_bha_21', name: 'Georginio Rutter', clubId: 'brighton_seagulls', position: 'RW', rating: 80, age: 23, potential: 85, nationality: 'France' },
   { id: 'sup_bha_22', name: 'Danny Welbeck', clubId: 'brighton_seagulls', position: 'ST', rating: 79, age: 34, potential: 79, nationality: 'England' },
+  { id: 'sup_bha_23', name: 'Solly March', clubId: 'brighton_seagulls', position: 'RW', rating: 79, age: 31, potential: 79, nationality: 'England', isHomegrown: true },
+  { id: 'sup_bha_24', name: 'Tariq Lamptey', clubId: 'brighton_seagulls', position: 'RB', rating: 78, age: 24, potential: 81, nationality: 'Ghana', isHomegrown: true },
+  { id: 'sup_bha_25', name: 'Brajan Gruda', clubId: 'brighton_seagulls', position: 'CAM', rating: 77, age: 21, potential: 87, nationality: 'Germany' },
+  { id: 'sup_bha_26', name: 'Adam Webster', clubId: 'brighton_seagulls', position: 'CB', rating: 77, age: 30, potential: 78, nationality: 'England', isHomegrown: true },
 
-  // Club: west_ham_claret
+// Club: west_ham_claret
   { id: 'sup_whu_1', name: 'Wes Foderingham', clubId: 'west_ham_claret', position: 'GK', rating: 74, age: 34, potential: 74, nationality: 'England' },
   { id: 'sup_whu_2', name: 'Max Kilman', clubId: 'west_ham_claret', position: 'CB', rating: 80, age: 28, potential: 82, nationality: 'England' },
   { id: 'sup_whu_3', name: 'Kaelan Casey', clubId: 'west_ham_claret', position: 'CB', rating: 70, age: 20, potential: 79, nationality: 'England' },
@@ -739,8 +856,12 @@ export const SUPPLEMENTAL_PLAYERS_2025_26: SupplementalPlayerDef[] = [
   { id: 'sup_whu_20', name: 'Jarrod Bowen', clubId: 'west_ham_claret', position: 'RW', rating: 83, age: 28, potential: 83, nationality: 'England' },
   { id: 'sup_whu_21', name: 'Niclas Fullkrug', clubId: 'west_ham_claret', position: 'ST', rating: 80, age: 32, potential: 80, nationality: 'Germany' },
   { id: 'sup_whu_22', name: 'Michail Antonio', clubId: 'west_ham_claret', position: 'CF', rating: 77, age: 35, potential: 77, nationality: 'Jamaica' },
+  { id: 'sup_whu_23', name: 'Danny Ings', clubId: 'west_ham_claret', position: 'ST', rating: 76, age: 33, potential: 77, nationality: 'England', isHomegrown: true },
+  { id: 'sup_whu_24', name: 'Luis Guilherme', clubId: 'west_ham_claret', position: 'RW', rating: 76, age: 19, potential: 88, nationality: 'Brazil' },
+  { id: 'sup_whu_25', name: 'Aaron Cresswell', clubId: 'west_ham_claret', position: 'LB', rating: 75, age: 35, potential: 76, nationality: 'England', isHomegrown: true },
+  { id: 'sup_whu_26', name: 'Andy Irving', clubId: 'west_ham_claret', position: 'CM', rating: 72, age: 25, potential: 76, nationality: 'Scotland', isHomegrown: true },
 
-  // Club: west_london_whites
+// Club: west_london_whites
   { id: 'sup_ful_1', name: 'Steven Benda', clubId: 'west_london_whites', position: 'GK', rating: 73, age: 26, potential: 77, nationality: 'Germany' },
   { id: 'sup_ful_2', name: 'Jorge Cuenca', clubId: 'west_london_whites', position: 'CB', rating: 78, age: 25, potential: 81, nationality: 'Spain' },
   { id: 'sup_ful_3', name: 'Luke Harris', clubId: 'west_london_whites', position: 'CAM', rating: 72, age: 20, potential: 82, nationality: 'Wales' },
@@ -763,8 +884,12 @@ export const SUPPLEMENTAL_PLAYERS_2025_26: SupplementalPlayerDef[] = [
   { id: 'sup_ful_20', name: 'Harry Wilson', clubId: 'west_london_whites', position: 'RM', rating: 78, age: 28, potential: 78, nationality: 'Wales' },
   { id: 'sup_ful_21', name: 'Adama Traore', clubId: 'west_london_whites', position: 'RW', rating: 77, age: 29, potential: 77, nationality: 'Spain' },
   { id: 'sup_ful_22', name: 'Rodrigo Muniz', clubId: 'west_london_whites', position: 'ST', rating: 80, age: 24, potential: 85, nationality: 'Brazil' },
+  { id: 'sup_ful_23', name: 'Tom Cairney', clubId: 'west_london_whites', position: 'CM', rating: 76, age: 34, potential: 76, nationality: 'Scotland', isHomegrown: true },
+  { id: 'sup_ful_24', name: 'Issa Diop', clubId: 'west_london_whites', position: 'CB', rating: 77, age: 28, potential: 78, nationality: 'France' },
+  { id: 'sup_ful_25', name: 'Reiss Nelson', clubId: 'west_london_whites', position: 'RW', rating: 77, age: 25, potential: 80, nationality: 'England', isHomegrown: true },
+  { id: 'sup_ful_26', name: 'Carlos Vinicius', clubId: 'west_london_whites', position: 'ST', rating: 75, age: 30, potential: 75, nationality: 'Brazil' },
 
-  // Club: bournemouth_cherries
+// Club: bournemouth_cherries
   { id: 'sup_bou_1', name: 'Will Dennis', clubId: 'bournemouth_cherries', position: 'GK', rating: 72, age: 25, potential: 77, nationality: 'England' },
   { id: 'sup_bou_2', name: 'Illia Zabarnyi', clubId: 'bournemouth_cherries', position: 'CB', rating: 81, age: 23, potential: 88, nationality: 'Ukraine' },
   { id: 'sup_bou_3', name: 'Alex Scott', clubId: 'bournemouth_cherries', position: 'CM', rating: 78, age: 22, potential: 86, nationality: 'England' },
@@ -787,8 +912,12 @@ export const SUPPLEMENTAL_PLAYERS_2025_26: SupplementalPlayerDef[] = [
   { id: 'sup_bou_20', name: 'Antoine Semenyo', clubId: 'bournemouth_cherries', position: 'RW', rating: 81, age: 25, potential: 86, nationality: 'Ghana' },
   { id: 'sup_bou_21', name: 'Evanilson', clubId: 'bournemouth_cherries', position: 'ST', rating: 81, age: 25, potential: 87, nationality: 'Brazil' },
   { id: 'sup_bou_22', name: 'Enes Unal', clubId: 'bournemouth_cherries', position: 'CF', rating: 77, age: 28, potential: 78, nationality: 'Turkey' },
+  { id: 'sup_bou_23', name: 'Philip Billing', clubId: 'bournemouth_cherries', position: 'CM', rating: 78, age: 29, potential: 78, nationality: 'Denmark', isHomegrown: true },
+  { id: 'sup_bou_24', name: 'David Brooks', clubId: 'bournemouth_cherries', position: 'RW', rating: 76, age: 28, potential: 77, nationality: 'Wales', isHomegrown: true },
+  { id: 'sup_bou_25', name: 'Max Aarons', clubId: 'bournemouth_cherries', position: 'RB', rating: 76, age: 25, potential: 79, nationality: 'England', isHomegrown: true },
+  { id: 'sup_bou_26', name: 'Alex Paulsen', clubId: 'bournemouth_cherries', position: 'GK', rating: 71, age: 23, potential: 80, nationality: 'New Zealand' },
 
-  // Club: south_london_eagles
+// Club: south_london_eagles
   { id: 'sup_cry_1', name: 'Remi Matthews', clubId: 'south_london_eagles', position: 'GK', rating: 71, age: 31, potential: 71, nationality: 'England' },
   { id: 'sup_cry_2', name: 'Chris Richards', clubId: 'south_london_eagles', position: 'CB', rating: 78, age: 25, potential: 82, nationality: 'United States' },
   { id: 'sup_cry_3', name: 'David Ozoh', clubId: 'south_london_eagles', position: 'CDM', rating: 73, age: 20, potential: 83, nationality: 'England' },
@@ -811,8 +940,12 @@ export const SUPPLEMENTAL_PLAYERS_2025_26: SupplementalPlayerDef[] = [
   { id: 'sup_cry_20', name: 'Ismaila Sarr', clubId: 'south_london_eagles', position: 'RM', rating: 78, age: 27, potential: 79, nationality: 'Senegal' },
   { id: 'sup_cry_21', name: 'Eberechi Eze', clubId: 'south_london_eagles', position: 'LW', rating: 83, age: 27, potential: 87, nationality: 'England' },
   { id: 'sup_cry_22', name: 'Jean-Philippe Mateta', clubId: 'south_london_eagles', position: 'ST', rating: 80, age: 28, potential: 81, nationality: 'France' },
+  { id: 'sup_cry_23', name: 'Nathaniel Clyne', clubId: 'south_london_eagles', position: 'RB', rating: 74, age: 34, potential: 75, nationality: 'England', isHomegrown: true },
+  { id: 'sup_cry_24', name: 'Joel Ward', clubId: 'south_london_eagles', position: 'CB', rating: 73, age: 35, potential: 74, nationality: 'England', isHomegrown: true },
+  { id: 'sup_cry_25', name: 'Rob Holding', clubId: 'south_london_eagles', position: 'CB', rating: 75, age: 29, potential: 76, nationality: 'England', isHomegrown: true },
+  { id: 'sup_cry_26', name: 'Franco Umeh', clubId: 'south_london_eagles', position: 'LW', rating: 69, age: 20, potential: 83, nationality: 'Republic of Ireland', isHomegrown: true },
 
-  // Club: black_country_gold
+// Club: black_country_gold
   { id: 'sup_wol_1', name: 'Dan Bentley', clubId: 'black_country_gold', position: 'GK', rating: 74, age: 32, potential: 74, nationality: 'England' },
   { id: 'sup_wol_2', name: 'Toti Gomes', clubId: 'black_country_gold', position: 'CB', rating: 78, age: 26, potential: 82, nationality: 'Portugal' },
   { id: 'sup_wol_3', name: 'Hugo Bueno', clubId: 'black_country_gold', position: 'LB', rating: 76, age: 22, potential: 82, nationality: 'Spain' },
@@ -835,8 +968,12 @@ export const SUPPLEMENTAL_PLAYERS_2025_26: SupplementalPlayerDef[] = [
   { id: 'sup_wol_20', name: 'Carlos Forbs', clubId: 'black_country_gold', position: 'RW', rating: 75, age: 21, potential: 84, nationality: 'Portugal' },
   { id: 'sup_wol_21', name: 'Matheus Cunha', clubId: 'black_country_gold', position: 'CF', rating: 83, age: 26, potential: 86, nationality: 'Brazil' },
   { id: 'sup_wol_22', name: 'Jorgen Strand Larsen', clubId: 'black_country_gold', position: 'ST', rating: 80, age: 25, potential: 84, nationality: 'Norway' },
+  { id: 'sup_wol_23', name: 'Pedro Lima', clubId: 'black_country_gold', position: 'RB', rating: 74, age: 19, potential: 86, nationality: 'Brazil' },
+  { id: 'sup_wol_24', name: 'Sasa Kalajdzic', clubId: 'black_country_gold', position: 'ST', rating: 76, age: 28, potential: 77, nationality: 'Austria' },
+  { id: 'sup_wol_25', name: 'Enso Gonzalez', clubId: 'black_country_gold', position: 'LW', rating: 71, age: 20, potential: 83, nationality: 'Paraguay' },
+  { id: 'sup_wol_26', name: 'Luke Cundle', clubId: 'black_country_gold', position: 'CM', rating: 73, age: 23, potential: 79, nationality: 'England', isHomegrown: true },
 
-  // Club: merseyside_blue
+// Club: merseyside_blue
   { id: 'sup_eve_1', name: 'Joao Virginia', clubId: 'merseyside_blue', position: 'GK', rating: 74, age: 25, potential: 78, nationality: 'Portugal' },
   { id: 'sup_eve_2', name: 'Jake O Brien', clubId: 'merseyside_blue', position: 'CB', rating: 78, age: 24, potential: 83, nationality: 'Republic of Ireland' },
   { id: 'sup_eve_3', name: 'Nathan Patterson', clubId: 'merseyside_blue', position: 'RB', rating: 77, age: 23, potential: 83, nationality: 'Scotland' },
@@ -859,8 +996,12 @@ export const SUPPLEMENTAL_PLAYERS_2025_26: SupplementalPlayerDef[] = [
   { id: 'sup_eve_20', name: 'Jesper Lindstrom', clubId: 'merseyside_blue', position: 'RW', rating: 78, age: 25, potential: 83, nationality: 'Denmark' },
   { id: 'sup_eve_21', name: 'Dominic Calvert-Lewin', clubId: 'merseyside_blue', position: 'ST', rating: 79, age: 28, potential: 79, nationality: 'England' },
   { id: 'sup_eve_22', name: 'Beto', clubId: 'merseyside_blue', position: 'CF', rating: 77, age: 27, potential: 79, nationality: 'Portugal' },
+  { id: 'sup_eve_23', name: 'Michael Keane', clubId: 'merseyside_blue', position: 'CB', rating: 76, age: 32, potential: 76, nationality: 'England', isHomegrown: true },
+  { id: 'sup_eve_24', name: 'Armando Broja', clubId: 'merseyside_blue', position: 'ST', rating: 76, age: 23, potential: 82, nationality: 'Albania', isHomegrown: true },
+  { id: 'sup_eve_25', name: 'Roman Dixon', clubId: 'merseyside_blue', position: 'RB', rating: 69, age: 20, potential: 83, nationality: 'England', isHomegrown: true },
+  { id: 'sup_eve_26', name: 'Harrison Armstrong', clubId: 'merseyside_blue', position: 'CM', rating: 68, age: 18, potential: 84, nationality: 'England', isHomegrown: true },
 
-  // Club: west_london_bees
+// Club: west_london_bees
   { id: 'sup_bre_1', name: 'Hakon Valdimarsson', clubId: 'west_london_bees', position: 'GK', rating: 75, age: 23, potential: 81, nationality: 'Iceland' },
   { id: 'sup_bre_2', name: 'Fin Stevens', clubId: 'west_london_bees', position: 'RB', rating: 72, age: 22, potential: 79, nationality: 'Wales' },
   { id: 'sup_bre_3', name: 'Yehor Yarmoliuk', clubId: 'west_london_bees', position: 'CM', rating: 75, age: 21, potential: 83, nationality: 'Ukraine' },
@@ -883,8 +1024,12 @@ export const SUPPLEMENTAL_PLAYERS_2025_26: SupplementalPlayerDef[] = [
   { id: 'sup_bre_20', name: 'Kevin Schade', clubId: 'west_london_bees', position: 'LW', rating: 77, age: 23, potential: 83, nationality: 'Germany' },
   { id: 'sup_bre_21', name: 'Yoane Wissa', clubId: 'west_london_bees', position: 'ST', rating: 80, age: 29, potential: 80, nationality: 'DR Congo' },
   { id: 'sup_bre_22', name: 'Igor Thiago', clubId: 'west_london_bees', position: 'CF', rating: 78, age: 24, potential: 83, nationality: 'Brazil' },
+  { id: 'sup_bre_23', name: 'Ben Mee', clubId: 'west_london_bees', position: 'CB', rating: 77, age: 35, potential: 78, nationality: 'England', isHomegrown: true },
+  { id: 'sup_bre_24', name: 'Josh Dasilva', clubId: 'west_london_bees', position: 'CM', rating: 75, age: 26, potential: 78, nationality: 'England', isHomegrown: true },
+  { id: 'sup_bre_25', name: 'Gustavo Nunes', clubId: 'west_london_bees', position: 'LW', rating: 74, age: 19, potential: 86, nationality: 'Brazil' },
+  { id: 'sup_bre_26', name: 'Yunus Emre Konak', clubId: 'west_london_bees', position: 'CDM', rating: 72, age: 19, potential: 84, nationality: 'Turkey' },
 
-  // Club: nottingham_forest_red
+// Club: nottingham_forest_red
   { id: 'sup_nfo_1', name: 'Carlos Miguel', clubId: 'nottingham_forest_red', position: 'GK', rating: 76, age: 26, potential: 81, nationality: 'Brazil' },
   { id: 'sup_nfo_2', name: 'Murillo', clubId: 'nottingham_forest_red', position: 'CB', rating: 82, age: 23, potential: 89, nationality: 'Brazil' },
   { id: 'sup_nfo_3', name: 'Neco Williams', clubId: 'nottingham_forest_red', position: 'RB', rating: 78, age: 24, potential: 82, nationality: 'Wales' },
@@ -907,8 +1052,12 @@ export const SUPPLEMENTAL_PLAYERS_2025_26: SupplementalPlayerDef[] = [
   { id: 'sup_nfo_20', name: 'Callum Hudson-Odoi', clubId: 'nottingham_forest_red', position: 'LW', rating: 80, age: 24, potential: 85, nationality: 'England' },
   { id: 'sup_nfo_21', name: 'Chris Wood', clubId: 'nottingham_forest_red', position: 'ST', rating: 80, age: 33, potential: 80, nationality: 'New Zealand' },
   { id: 'sup_nfo_22', name: 'Taiwo Awoniyi', clubId: 'nottingham_forest_red', position: 'CF', rating: 78, age: 28, potential: 80, nationality: 'Nigeria' },
+  { id: 'sup_nfo_23', name: 'Ramon Sosa', clubId: 'nottingham_forest_red', position: 'LW', rating: 77, age: 26, potential: 81, nationality: 'Paraguay' },
+  { id: 'sup_nfo_24', name: 'Jota Silva', clubId: 'nottingham_forest_red', position: 'RW', rating: 76, age: 26, potential: 79, nationality: 'Portugal' },
+  { id: 'sup_nfo_25', name: 'Willy Boly', clubId: 'nottingham_forest_red', position: 'CB', rating: 76, age: 34, potential: 76, nationality: 'Ivory Coast' },
+  { id: 'sup_nfo_26', name: 'Emmanuel Dennis', clubId: 'nottingham_forest_red', position: 'ST', rating: 75, age: 27, potential: 76, nationality: 'Nigeria' },
 
-  // Club: yorkshire_whites
+// Club: yorkshire_whites
   { id: 'sup_lee_1', name: 'Illan Meslier', clubId: 'yorkshire_whites', position: 'GK', rating: 78, age: 25, potential: 82, nationality: 'France' },
   { id: 'sup_lee_2', name: 'Karl Darlow', clubId: 'yorkshire_whites', position: 'GK', rating: 74, age: 34, potential: 74, nationality: 'Wales' },
   { id: 'sup_lee_3', name: 'Alex Cairns', clubId: 'yorkshire_whites', position: 'GK', rating: 68, age: 32, potential: 68, nationality: 'England' },
@@ -931,8 +1080,12 @@ export const SUPPLEMENTAL_PLAYERS_2025_26: SupplementalPlayerDef[] = [
   { id: 'sup_lee_20', name: 'Mateo Joseph', clubId: 'yorkshire_whites', position: 'ST', rating: 75, age: 21, potential: 84, nationality: 'Spain' },
   { id: 'sup_lee_21', name: 'Joel Piroe', clubId: 'yorkshire_whites', position: 'ST', rating: 76, age: 26, potential: 78, nationality: 'Netherlands' },
   { id: 'sup_lee_22', name: 'Joe Gelhardt', clubId: 'yorkshire_whites', position: 'CF', rating: 74, age: 23, potential: 79, nationality: 'England' },
+  { id: 'sup_lee_23', name: 'Patrick Bamford', clubId: 'yorkshire_whites', position: 'ST', rating: 76, age: 31, potential: 76, nationality: 'England', isHomegrown: true },
+  { id: 'sup_lee_24', name: 'Charlie Crew', clubId: 'yorkshire_whites', position: 'CM', rating: 70, age: 19, potential: 83, nationality: 'Wales', isHomegrown: true },
+  { id: 'sup_lee_25', name: 'Harry Gray', clubId: 'yorkshire_whites', position: 'ST', rating: 66, age: 16, potential: 87, nationality: 'England', isHomegrown: true },
+  { id: 'sup_lee_26', name: 'James Debayo', clubId: 'yorkshire_whites', position: 'CB', rating: 68, age: 20, potential: 82, nationality: 'England', isHomegrown: true },
 
-  // Club: wearside_red_white
+// Club: wearside_red_white
   { id: 'sup_sun_1', name: 'Anthony Patterson', clubId: 'wearside_red_white', position: 'GK', rating: 77, age: 25, potential: 84, nationality: 'England' },
   { id: 'sup_sun_2', name: 'Simon Moore', clubId: 'wearside_red_white', position: 'GK', rating: 72, age: 35, potential: 72, nationality: 'England' },
   { id: 'sup_sun_3', name: 'Blondy Nna Noukeu', clubId: 'wearside_red_white', position: 'GK', rating: 68, age: 24, potential: 74, nationality: 'Cameroon' },
@@ -955,8 +1108,12 @@ export const SUPPLEMENTAL_PLAYERS_2025_26: SupplementalPlayerDef[] = [
   { id: 'sup_sun_20', name: 'Wilson Isidor', clubId: 'wearside_red_white', position: 'ST', rating: 77, age: 25, potential: 81, nationality: 'France' },
   { id: 'sup_sun_21', name: 'Eliezer Mayenda', clubId: 'wearside_red_white', position: 'ST', rating: 74, age: 20, potential: 84, nationality: 'Spain' },
   { id: 'sup_sun_22', name: 'Nazariy Rusyn', clubId: 'wearside_red_white', position: 'CF', rating: 73, age: 26, potential: 75, nationality: 'Ukraine' },
+  { id: 'sup_sun_23', name: 'Aaron Connolly', clubId: 'wearside_red_white', position: 'ST', rating: 74, age: 25, potential: 77, nationality: 'Republic of Ireland', isHomegrown: true },
+  { id: 'sup_sun_24', name: 'Ian Poveda', clubId: 'wearside_red_white', position: 'RW', rating: 73, age: 25, potential: 76, nationality: 'Colombia', isHomegrown: true },
+  { id: 'sup_sun_25', name: 'Aji Alese', clubId: 'wearside_red_white', position: 'CB', rating: 72, age: 24, potential: 78, nationality: 'England', isHomegrown: true },
+  { id: 'sup_sun_26', name: 'Zak Johnson', clubId: 'wearside_red_white', position: 'CB', rating: 67, age: 20, potential: 81, nationality: 'England', isHomegrown: true },
 
-  // Club: east_lancs_claret
+// Club: east_lancs_claret
   { id: 'sup_bur_1', name: 'James Trafford', clubId: 'east_lancs_claret', position: 'GK', rating: 78, age: 22, potential: 86, nationality: 'England' },
   { id: 'sup_bur_2', name: 'Etienne Green', clubId: 'east_lancs_claret', position: 'GK', rating: 74, age: 25, potential: 78, nationality: 'England' },
   { id: 'sup_bur_3', name: 'Vaclav Hladky', clubId: 'east_lancs_claret', position: 'GK', rating: 73, age: 34, potential: 73, nationality: 'Czech Republic' },
@@ -979,6 +1136,11 @@ export const SUPPLEMENTAL_PLAYERS_2025_26: SupplementalPlayerDef[] = [
   { id: 'sup_bur_20', name: 'Lyle Foster', clubId: 'east_lancs_claret', position: 'ST', rating: 77, age: 25, potential: 81, nationality: 'South Africa' },
   { id: 'sup_bur_21', name: 'Zian Flemming', clubId: 'east_lancs_claret', position: 'ST', rating: 76, age: 27, potential: 78, nationality: 'Netherlands' },
   { id: 'sup_bur_22', name: 'Jay Rodriguez', clubId: 'east_lancs_claret', position: 'CF', rating: 74, age: 36, potential: 74, nationality: 'England' },
+  { id: 'sup_bur_23', name: 'Nathan Redmond', clubId: 'east_lancs_claret', position: 'LW', rating: 75, age: 31, potential: 75, nationality: 'England', isHomegrown: true },
+  { id: 'sup_bur_24', name: 'Hjalmar Ekdal', clubId: 'east_lancs_claret', position: 'CB', rating: 74, age: 26, potential: 77, nationality: 'Sweden' },
+  { id: 'sup_bur_25', name: 'Bashir Humphreys', clubId: 'east_lancs_claret', position: 'CB', rating: 73, age: 22, potential: 83, nationality: 'England', isHomegrown: true },
+  { id: 'sup_bur_26', name: 'Mike Tresor', clubId: 'east_lancs_claret', position: 'CAM', rating: 75, age: 26, potential: 78, nationality: 'Belgium' },
+
 
 ];
 
@@ -1007,8 +1169,12 @@ export const SUPPLEMENTAL_PLAYERS_2024_25: SupplementalPlayerDef[] = [
   { id: 'sup_mci_20', name: 'Jeremy Doku', clubId: 'man_blue', position: 'LW', rating: 83, age: 22, potential: 87, nationality: 'Belgium' },
   { id: 'sup_mci_21', name: 'Phil Foden', clubId: 'man_blue', position: 'CF', rating: 88, age: 24, potential: 90, nationality: 'England' },
   { id: 'sup_mci_22', name: 'Erling Haaland', clubId: 'man_blue', position: 'ST', rating: 91, age: 24, potential: 93, nationality: 'Norway' },
+  { id: 'sup_mci_23', name: 'Nathan Ake', clubId: 'man_blue', position: 'CB', rating: 84, age: 29, potential: 84, nationality: 'Netherlands', isHomegrown: true },
+  { id: 'sup_mci_24', name: 'Claudio Echeverri', clubId: 'man_blue', position: 'CAM', rating: 74, age: 18, potential: 89, nationality: 'Argentina' },
+  { id: 'sup_mci_25', name: 'Jahmai Simpson-Pusey', clubId: 'man_blue', position: 'CB', rating: 67, age: 18, potential: 85, nationality: 'England', isHomegrown: true },
+  { id: 'sup_mci_26', name: 'Max Alleyne', clubId: 'man_blue', position: 'CB', rating: 67, age: 19, potential: 84, nationality: 'England', isHomegrown: true },
 
-  // Club: london_red
+// Club: london_red
   { id: 'sup_ars_1', name: 'Jakub Kiwior', clubId: 'london_red', position: 'CB', rating: 79, age: 24, potential: 83, nationality: 'Poland' },
   { id: 'sup_ars_2', name: 'Ethan Nwaneri', clubId: 'london_red', position: 'CAM', rating: 75, age: 17, potential: 90, nationality: 'England' },
   { id: 'sup_ars_3', name: 'Myles Lewis-Skelly', clubId: 'london_red', position: 'LB', rating: 73, age: 17, potential: 88, nationality: 'England' },
@@ -1031,8 +1197,12 @@ export const SUPPLEMENTAL_PLAYERS_2024_25: SupplementalPlayerDef[] = [
   { id: 'sup_ars_20', name: 'Leandro Trossard', clubId: 'london_red', position: 'LW', rating: 83, age: 29, potential: 83, nationality: 'Belgium' },
   { id: 'sup_ars_21', name: 'Kai Havertz', clubId: 'london_red', position: 'ST', rating: 84, age: 25, potential: 86, nationality: 'Germany' },
   { id: 'sup_ars_22', name: 'Gabriel Jesus', clubId: 'london_red', position: 'CF', rating: 83, age: 27, potential: 83, nationality: 'Brazil' },
+  { id: 'sup_ars_23', name: 'Oleksandr Zinchenko', clubId: 'london_red', position: 'LB', rating: 82, age: 27, potential: 82, nationality: 'Ukraine' },
+  { id: 'sup_ars_24', name: 'Takehiro Tomiyasu', clubId: 'london_red', position: 'RB', rating: 81, age: 25, potential: 82, nationality: 'Japan' },
+  { id: 'sup_ars_25', name: 'Raheem Sterling', clubId: 'london_red', position: 'LW', rating: 82, age: 29, potential: 82, nationality: 'England', isHomegrown: true },
+  { id: 'sup_ars_26', name: 'Kieran Tierney', clubId: 'london_red', position: 'LB', rating: 80, age: 27, potential: 80, nationality: 'Scotland', isHomegrown: true },
 
-  // Club: merseyside_red
+// Club: merseyside_red
   { id: 'sup_liv_1', name: 'Caoimhin Kelleher', clubId: 'merseyside_red', position: 'GK', rating: 81, age: 25, potential: 85, nationality: 'Republic of Ireland' },
   { id: 'sup_liv_2', name: 'Jarell Quansah', clubId: 'merseyside_red', position: 'CB', rating: 78, age: 21, potential: 87, nationality: 'England' },
   { id: 'sup_liv_3', name: 'Conor Bradley', clubId: 'merseyside_red', position: 'RB', rating: 78, age: 21, potential: 87, nationality: 'Northern Ireland' },
@@ -1055,8 +1225,12 @@ export const SUPPLEMENTAL_PLAYERS_2024_25: SupplementalPlayerDef[] = [
   { id: 'sup_liv_20', name: 'Mohamed Salah', clubId: 'merseyside_red', position: 'RW', rating: 89, age: 32, potential: 89, nationality: 'Egypt' },
   { id: 'sup_liv_21', name: 'Darwin Nunez', clubId: 'merseyside_red', position: 'ST', rating: 83, age: 25, potential: 86, nationality: 'Uruguay' },
   { id: 'sup_liv_22', name: 'Diogo Jota', clubId: 'merseyside_red', position: 'CF', rating: 84, age: 27, potential: 84, nationality: 'Portugal' },
+  { id: 'sup_liv_23', name: 'Federico Chiesa', clubId: 'merseyside_red', position: 'RW', rating: 84, age: 26, potential: 84, nationality: 'Italy' },
+  { id: 'sup_liv_24', name: 'Joe Gomez', clubId: 'merseyside_red', position: 'CB', rating: 80, age: 27, potential: 81, nationality: 'England', isHomegrown: true },
+  { id: 'sup_liv_25', name: 'Tyler Morton', clubId: 'merseyside_red', position: 'CM', rating: 73, age: 21, potential: 84, nationality: 'England', isHomegrown: true },
+  { id: 'sup_liv_26', name: 'Trey Nyoni', clubId: 'merseyside_red', position: 'CM', rating: 67, age: 17, potential: 89, nationality: 'England', isHomegrown: true },
 
-  // Club: man_red
+// Club: man_red
   { id: 'sup_mun_1', name: 'Altay Bayindir', clubId: 'man_red', position: 'GK', rating: 77, age: 26, potential: 80, nationality: 'Turkey' },
   { id: 'sup_mun_2', name: 'Kobbie Mainoo', clubId: 'man_red', position: 'CM', rating: 80, age: 19, potential: 90, nationality: 'England' },
   { id: 'sup_mun_3', name: 'Leny Yoro', clubId: 'man_red', position: 'CB', rating: 77, age: 18, potential: 90, nationality: 'France' },
@@ -1079,8 +1253,12 @@ export const SUPPLEMENTAL_PLAYERS_2024_25: SupplementalPlayerDef[] = [
   { id: 'sup_mun_20', name: 'Marcus Rashford', clubId: 'man_red', position: 'LW', rating: 82, age: 26, potential: 83, nationality: 'England' },
   { id: 'sup_mun_21', name: 'Alejandro Garnacho', clubId: 'man_red', position: 'RW', rating: 82, age: 20, potential: 89, nationality: 'Argentina' },
   { id: 'sup_mun_22', name: 'Rasmus Hojlund', clubId: 'man_red', position: 'ST', rating: 80, age: 21, potential: 87, nationality: 'Denmark' },
+  { id: 'sup_mun_23', name: 'Harry Maguire', clubId: 'man_red', position: 'CB', rating: 80, age: 31, potential: 80, nationality: 'England', isHomegrown: true },
+  { id: 'sup_mun_24', name: 'Victor Lindelof', clubId: 'man_red', position: 'CB', rating: 79, age: 30, potential: 79, nationality: 'Sweden' },
+  { id: 'sup_mun_25', name: 'Antony', clubId: 'man_red', position: 'RW', rating: 80, age: 24, potential: 81, nationality: 'Brazil' },
+  { id: 'sup_mun_26', name: 'Jonny Evans', clubId: 'man_red', position: 'CB', rating: 77, age: 36, potential: 77, nationality: 'Northern Ireland', isHomegrown: true },
 
-  // Club: london_west
+// Club: london_west
   { id: 'sup_che_1', name: 'Filip Jorgensen', clubId: 'london_west', position: 'GK', rating: 78, age: 22, potential: 84, nationality: 'Denmark' },
   { id: 'sup_che_2', name: 'Malo Gusto', clubId: 'london_west', position: 'RB', rating: 80, age: 21, potential: 87, nationality: 'France' },
   { id: 'sup_che_3', name: 'Romeo Lavia', clubId: 'london_west', position: 'CDM', rating: 78, age: 20, potential: 86, nationality: 'Belgium' },
@@ -1103,8 +1281,12 @@ export const SUPPLEMENTAL_PLAYERS_2024_25: SupplementalPlayerDef[] = [
   { id: 'sup_che_20', name: 'Pedro Neto', clubId: 'london_west', position: 'RW', rating: 82, age: 24, potential: 85, nationality: 'Portugal' },
   { id: 'sup_che_21', name: 'Nicolas Jackson', clubId: 'london_west', position: 'ST', rating: 82, age: 23, potential: 87, nationality: 'Senegal' },
   { id: 'sup_che_22', name: 'Christopher Nkunku', clubId: 'london_west', position: 'CF', rating: 84, age: 26, potential: 85, nationality: 'France' },
+  { id: 'sup_che_23', name: 'Joao Felix', clubId: 'london_west', position: 'CF', rating: 81, age: 24, potential: 84, nationality: 'Portugal' },
+  { id: 'sup_che_24', name: 'Tosin Adarabioyo', clubId: 'london_west', position: 'CB', rating: 79, age: 26, potential: 81, nationality: 'England', isHomegrown: true },
+  { id: 'sup_che_25', name: 'Benoit Badiashile', clubId: 'london_west', position: 'CB', rating: 79, age: 23, potential: 84, nationality: 'France' },
+  { id: 'sup_che_26', name: 'Marc Guiu', clubId: 'london_west', position: 'ST', rating: 71, age: 18, potential: 86, nationality: 'Spain' },
 
-  // Club: north_london_white
+// Club: north_london_white
   { id: 'sup_tot_1', name: 'Fraser Forster', clubId: 'north_london_white', position: 'GK', rating: 76, age: 36, potential: 76, nationality: 'England' },
   { id: 'sup_tot_2', name: 'Radu Dragusin', clubId: 'north_london_white', position: 'CB', rating: 78, age: 22, potential: 84, nationality: 'Romania' },
   { id: 'sup_tot_3', name: 'Archie Gray', clubId: 'north_london_white', position: 'CM', rating: 76, age: 18, potential: 88, nationality: 'England' },
@@ -1127,8 +1309,12 @@ export const SUPPLEMENTAL_PLAYERS_2024_25: SupplementalPlayerDef[] = [
   { id: 'sup_tot_20', name: 'Brennan Johnson', clubId: 'north_london_white', position: 'RW', rating: 81, age: 23, potential: 86, nationality: 'Wales' },
   { id: 'sup_tot_21', name: 'Dominic Solanke', clubId: 'north_london_white', position: 'ST', rating: 82, age: 27, potential: 83, nationality: 'England' },
   { id: 'sup_tot_22', name: 'Richarlison', clubId: 'north_london_white', position: 'CF', rating: 80, age: 27, potential: 80, nationality: 'Brazil' },
+  { id: 'sup_tot_23', name: 'Timo Werner', clubId: 'north_london_white', position: 'LW', rating: 80, age: 28, potential: 80, nationality: 'Germany' },
+  { id: 'sup_tot_24', name: 'Wilson Odobert', clubId: 'north_london_white', position: 'RW', rating: 75, age: 19, potential: 87, nationality: 'France' },
+  { id: 'sup_tot_25', name: 'Sergio Reguilon', clubId: 'north_london_white', position: 'LB', rating: 78, age: 27, potential: 78, nationality: 'Spain' },
+  { id: 'sup_tot_26', name: 'Alfie Dorrington', clubId: 'north_london_white', position: 'CB', rating: 66, age: 19, potential: 83, nationality: 'England', isHomegrown: true },
 
-  // Club: tyneside_stripes
+// Club: tyneside_stripes
   { id: 'sup_new_1', name: 'Martin Dubravka', clubId: 'tyneside_stripes', position: 'GK', rating: 79, age: 35, potential: 79, nationality: 'Slovakia' },
   { id: 'sup_new_2', name: 'Lewis Hall', clubId: 'tyneside_stripes', position: 'LB', rating: 77, age: 19, potential: 86, nationality: 'England' },
   { id: 'sup_new_3', name: 'Tino Livramento', clubId: 'tyneside_stripes', position: 'RB', rating: 79, age: 21, potential: 86, nationality: 'England' },
@@ -1151,8 +1337,12 @@ export const SUPPLEMENTAL_PLAYERS_2024_25: SupplementalPlayerDef[] = [
   { id: 'sup_new_20', name: 'Anthony Gordon', clubId: 'tyneside_stripes', position: 'LW', rating: 83, age: 23, potential: 88, nationality: 'England' },
   { id: 'sup_new_21', name: 'Alexander Isak', clubId: 'tyneside_stripes', position: 'ST', rating: 86, age: 25, potential: 89, nationality: 'Sweden' },
   { id: 'sup_new_22', name: 'Callum Wilson', clubId: 'tyneside_stripes', position: 'CF', rating: 80, age: 32, potential: 80, nationality: 'England' },
+  { id: 'sup_new_23', name: 'Lloyd Kelly', clubId: 'tyneside_stripes', position: 'CB', rating: 78, age: 25, potential: 82, nationality: 'England', isHomegrown: true },
+  { id: 'sup_new_24', name: 'William Osula', clubId: 'tyneside_stripes', position: 'ST', rating: 72, age: 21, potential: 84, nationality: 'Denmark', isHomegrown: true },
+  { id: 'sup_new_25', name: 'Emil Krafth', clubId: 'tyneside_stripes', position: 'RB', rating: 76, age: 30, potential: 76, nationality: 'Sweden' },
+  { id: 'sup_new_26', name: 'Garang Kuol', clubId: 'tyneside_stripes', position: 'RW', rating: 68, age: 19, potential: 83, nationality: 'Australia' },
 
-  // Club: west_midlands_claret
+// Club: west_midlands_claret
   { id: 'sup_avl_1', name: 'Joe Gauci', clubId: 'west_midlands_claret', position: 'GK', rating: 73, age: 24, potential: 79, nationality: 'Australia' },
   { id: 'sup_avl_2', name: 'Kosta Nedeljkovic', clubId: 'west_midlands_claret', position: 'RB', rating: 74, age: 18, potential: 84, nationality: 'Serbia' },
   { id: 'sup_avl_3', name: 'Jhon Duran', clubId: 'west_midlands_claret', position: 'ST', rating: 79, age: 20, potential: 87, nationality: 'Colombia' },
@@ -1175,8 +1365,12 @@ export const SUPPLEMENTAL_PLAYERS_2024_25: SupplementalPlayerDef[] = [
   { id: 'sup_avl_20', name: 'Leon Bailey', clubId: 'west_midlands_claret', position: 'RM', rating: 82, age: 27, potential: 82, nationality: 'Jamaica' },
   { id: 'sup_avl_21', name: 'Morgan Rogers', clubId: 'west_midlands_claret', position: 'LW', rating: 80, age: 22, potential: 87, nationality: 'England' },
   { id: 'sup_avl_22', name: 'Ollie Watkins', clubId: 'west_midlands_claret', position: 'ST', rating: 85, age: 28, potential: 85, nationality: 'England' },
+  { id: 'sup_avl_23', name: 'Tyrone Mings', clubId: 'west_midlands_claret', position: 'CB', rating: 79, age: 31, potential: 79, nationality: 'England', isHomegrown: true },
+  { id: 'sup_avl_24', name: 'Emiliano Buendia', clubId: 'west_midlands_claret', position: 'CAM', rating: 80, age: 27, potential: 81, nationality: 'Argentina' },
+  { id: 'sup_avl_25', name: 'Jaden Philogene', clubId: 'west_midlands_claret', position: 'LW', rating: 75, age: 22, potential: 84, nationality: 'England', isHomegrown: true },
+  { id: 'sup_avl_26', name: 'Kortney Hause', clubId: 'west_midlands_claret', position: 'CB', rating: 75, age: 29, potential: 75, nationality: 'England', isHomegrown: true },
 
-  // Club: brighton_seagulls
+// Club: brighton_seagulls
   { id: 'sup_bha_1', name: 'Bart Verbruggen', clubId: 'brighton_seagulls', position: 'GK', rating: 79, age: 22, potential: 86, nationality: 'Netherlands' },
   { id: 'sup_bha_2', name: 'Jan Paul van Hecke', clubId: 'brighton_seagulls', position: 'CB', rating: 79, age: 24, potential: 84, nationality: 'Netherlands' },
   { id: 'sup_bha_3', name: 'Carlos Baleba', clubId: 'brighton_seagulls', position: 'CDM', rating: 77, age: 20, potential: 86, nationality: 'Cameroon' },
@@ -1199,8 +1393,12 @@ export const SUPPLEMENTAL_PLAYERS_2024_25: SupplementalPlayerDef[] = [
   { id: 'sup_bha_20', name: 'Joao Pedro', clubId: 'brighton_seagulls', position: 'CF', rating: 81, age: 22, potential: 86, nationality: 'Brazil' },
   { id: 'sup_bha_21', name: 'Georginio Rutter', clubId: 'brighton_seagulls', position: 'RW', rating: 79, age: 22, potential: 85, nationality: 'France' },
   { id: 'sup_bha_22', name: 'Danny Welbeck', clubId: 'brighton_seagulls', position: 'ST', rating: 79, age: 33, potential: 79, nationality: 'England' },
+  { id: 'sup_bha_23', name: 'Solly March', clubId: 'brighton_seagulls', position: 'RW', rating: 79, age: 30, potential: 79, nationality: 'England', isHomegrown: true },
+  { id: 'sup_bha_24', name: 'Tariq Lamptey', clubId: 'brighton_seagulls', position: 'RB', rating: 77, age: 23, potential: 81, nationality: 'Ghana', isHomegrown: true },
+  { id: 'sup_bha_25', name: 'Brajan Gruda', clubId: 'brighton_seagulls', position: 'CAM', rating: 75, age: 20, potential: 87, nationality: 'Germany' },
+  { id: 'sup_bha_26', name: 'Adam Webster', clubId: 'brighton_seagulls', position: 'CB', rating: 78, age: 29, potential: 78, nationality: 'England', isHomegrown: true },
 
-  // Club: west_ham_claret
+// Club: west_ham_claret
   { id: 'sup_whu_1', name: 'Wes Foderingham', clubId: 'west_ham_claret', position: 'GK', rating: 74, age: 33, potential: 74, nationality: 'England' },
   { id: 'sup_whu_2', name: 'Max Kilman', clubId: 'west_ham_claret', position: 'CB', rating: 80, age: 27, potential: 82, nationality: 'England' },
   { id: 'sup_whu_3', name: 'Kaelan Casey', clubId: 'west_ham_claret', position: 'CB', rating: 69, age: 19, potential: 79, nationality: 'England' },
@@ -1223,8 +1421,12 @@ export const SUPPLEMENTAL_PLAYERS_2024_25: SupplementalPlayerDef[] = [
   { id: 'sup_whu_20', name: 'Jarrod Bowen', clubId: 'west_ham_claret', position: 'RW', rating: 83, age: 27, potential: 83, nationality: 'England' },
   { id: 'sup_whu_21', name: 'Niclas Fullkrug', clubId: 'west_ham_claret', position: 'ST', rating: 80, age: 31, potential: 80, nationality: 'Germany' },
   { id: 'sup_whu_22', name: 'Michail Antonio', clubId: 'west_ham_claret', position: 'CF', rating: 77, age: 34, potential: 77, nationality: 'Jamaica' },
+  { id: 'sup_whu_23', name: 'Danny Ings', clubId: 'west_ham_claret', position: 'ST', rating: 77, age: 32, potential: 77, nationality: 'England', isHomegrown: true },
+  { id: 'sup_whu_24', name: 'Luis Guilherme', clubId: 'west_ham_claret', position: 'RW', rating: 74, age: 18, potential: 88, nationality: 'Brazil' },
+  { id: 'sup_whu_25', name: 'Aaron Cresswell', clubId: 'west_ham_claret', position: 'LB', rating: 76, age: 34, potential: 76, nationality: 'England', isHomegrown: true },
+  { id: 'sup_whu_26', name: 'Andy Irving', clubId: 'west_ham_claret', position: 'CM', rating: 71, age: 24, potential: 76, nationality: 'Scotland', isHomegrown: true },
 
-  // Club: west_london_whites
+// Club: west_london_whites
   { id: 'sup_ful_1', name: 'Steven Benda', clubId: 'west_london_whites', position: 'GK', rating: 73, age: 25, potential: 77, nationality: 'Germany' },
   { id: 'sup_ful_2', name: 'Jorge Cuenca', clubId: 'west_london_whites', position: 'CB', rating: 77, age: 24, potential: 81, nationality: 'Spain' },
   { id: 'sup_ful_3', name: 'Luke Harris', clubId: 'west_london_whites', position: 'CAM', rating: 71, age: 19, potential: 82, nationality: 'Wales' },
@@ -1247,8 +1449,12 @@ export const SUPPLEMENTAL_PLAYERS_2024_25: SupplementalPlayerDef[] = [
   { id: 'sup_ful_20', name: 'Harry Wilson', clubId: 'west_london_whites', position: 'RM', rating: 78, age: 27, potential: 78, nationality: 'Wales' },
   { id: 'sup_ful_21', name: 'Adama Traore', clubId: 'west_london_whites', position: 'RW', rating: 77, age: 28, potential: 77, nationality: 'Spain' },
   { id: 'sup_ful_22', name: 'Rodrigo Muniz', clubId: 'west_london_whites', position: 'ST', rating: 79, age: 23, potential: 85, nationality: 'Brazil' },
+  { id: 'sup_ful_23', name: 'Tom Cairney', clubId: 'west_london_whites', position: 'CM', rating: 76, age: 33, potential: 76, nationality: 'Scotland', isHomegrown: true },
+  { id: 'sup_ful_24', name: 'Issa Diop', clubId: 'west_london_whites', position: 'CB', rating: 77, age: 27, potential: 78, nationality: 'France' },
+  { id: 'sup_ful_25', name: 'Reiss Nelson', clubId: 'west_london_whites', position: 'RW', rating: 76, age: 24, potential: 80, nationality: 'England', isHomegrown: true },
+  { id: 'sup_ful_26', name: 'Carlos Vinicius', clubId: 'west_london_whites', position: 'ST', rating: 75, age: 29, potential: 75, nationality: 'Brazil' },
 
-  // Club: bournemouth_cherries
+// Club: bournemouth_cherries
   { id: 'sup_bou_1', name: 'Will Dennis', clubId: 'bournemouth_cherries', position: 'GK', rating: 71, age: 24, potential: 77, nationality: 'England' },
   { id: 'sup_bou_2', name: 'Illia Zabarnyi', clubId: 'bournemouth_cherries', position: 'CB', rating: 80, age: 22, potential: 86, nationality: 'Ukraine' },
   { id: 'sup_bou_3', name: 'Alex Scott', clubId: 'bournemouth_cherries', position: 'CM', rating: 77, age: 21, potential: 86, nationality: 'England' },
@@ -1271,8 +1477,12 @@ export const SUPPLEMENTAL_PLAYERS_2024_25: SupplementalPlayerDef[] = [
   { id: 'sup_bou_20', name: 'Antoine Semenyo', clubId: 'bournemouth_cherries', position: 'RW', rating: 80, age: 24, potential: 85, nationality: 'Ghana' },
   { id: 'sup_bou_21', name: 'Evanilson', clubId: 'bournemouth_cherries', position: 'ST', rating: 80, age: 24, potential: 86, nationality: 'Brazil' },
   { id: 'sup_bou_22', name: 'Enes Unal', clubId: 'bournemouth_cherries', position: 'CF', rating: 77, age: 27, potential: 78, nationality: 'Turkey' },
+  { id: 'sup_bou_23', name: 'Philip Billing', clubId: 'bournemouth_cherries', position: 'CM', rating: 78, age: 28, potential: 78, nationality: 'Denmark', isHomegrown: true },
+  { id: 'sup_bou_24', name: 'David Brooks', clubId: 'bournemouth_cherries', position: 'RW', rating: 76, age: 27, potential: 77, nationality: 'Wales', isHomegrown: true },
+  { id: 'sup_bou_25', name: 'Max Aarons', clubId: 'bournemouth_cherries', position: 'RB', rating: 76, age: 24, potential: 79, nationality: 'England', isHomegrown: true },
+  { id: 'sup_bou_26', name: 'Alex Paulsen', clubId: 'bournemouth_cherries', position: 'GK', rating: 68, age: 22, potential: 80, nationality: 'New Zealand' },
 
-  // Club: south_london_eagles
+// Club: south_london_eagles
   { id: 'sup_cry_1', name: 'Remi Matthews', clubId: 'south_london_eagles', position: 'GK', rating: 71, age: 30, potential: 71, nationality: 'England' },
   { id: 'sup_cry_2', name: 'Chris Richards', clubId: 'south_london_eagles', position: 'CB', rating: 77, age: 24, potential: 82, nationality: 'United States' },
   { id: 'sup_cry_3', name: 'David Ozoh', clubId: 'south_london_eagles', position: 'CDM', rating: 72, age: 19, potential: 83, nationality: 'England' },
@@ -1295,8 +1505,12 @@ export const SUPPLEMENTAL_PLAYERS_2024_25: SupplementalPlayerDef[] = [
   { id: 'sup_cry_20', name: 'Ismaila Sarr', clubId: 'south_london_eagles', position: 'RM', rating: 78, age: 26, potential: 79, nationality: 'Senegal' },
   { id: 'sup_cry_21', name: 'Eberechi Eze', clubId: 'south_london_eagles', position: 'LW', rating: 83, age: 26, potential: 87, nationality: 'England' },
   { id: 'sup_cry_22', name: 'Jean-Philippe Mateta', clubId: 'south_london_eagles', position: 'ST', rating: 80, age: 27, potential: 81, nationality: 'France' },
+  { id: 'sup_cry_23', name: 'Nathaniel Clyne', clubId: 'south_london_eagles', position: 'RB', rating: 75, age: 33, potential: 75, nationality: 'England', isHomegrown: true },
+  { id: 'sup_cry_24', name: 'Joel Ward', clubId: 'south_london_eagles', position: 'CB', rating: 74, age: 34, potential: 74, nationality: 'England', isHomegrown: true },
+  { id: 'sup_cry_25', name: 'Rob Holding', clubId: 'south_london_eagles', position: 'CB', rating: 75, age: 28, potential: 76, nationality: 'England', isHomegrown: true },
+  { id: 'sup_cry_26', name: 'Franco Umeh', clubId: 'south_london_eagles', position: 'LW', rating: 66, age: 19, potential: 83, nationality: 'Republic of Ireland', isHomegrown: true },
 
-  // Club: black_country_gold
+// Club: black_country_gold
   { id: 'sup_wol_1', name: 'Dan Bentley', clubId: 'black_country_gold', position: 'GK', rating: 74, age: 31, potential: 74, nationality: 'England' },
   { id: 'sup_wol_2', name: 'Toti Gomes', clubId: 'black_country_gold', position: 'CB', rating: 78, age: 25, potential: 82, nationality: 'Portugal' },
   { id: 'sup_wol_3', name: 'Hugo Bueno', clubId: 'black_country_gold', position: 'LB', rating: 75, age: 21, potential: 82, nationality: 'Spain' },
@@ -1319,8 +1533,12 @@ export const SUPPLEMENTAL_PLAYERS_2024_25: SupplementalPlayerDef[] = [
   { id: 'sup_wol_20', name: 'Carlos Forbs', clubId: 'black_country_gold', position: 'RW', rating: 74, age: 20, potential: 84, nationality: 'Portugal' },
   { id: 'sup_wol_21', name: 'Matheus Cunha', clubId: 'black_country_gold', position: 'CF', rating: 82, age: 25, potential: 85, nationality: 'Brazil' },
   { id: 'sup_wol_22', name: 'Jorgen Strand Larsen', clubId: 'black_country_gold', position: 'ST', rating: 79, age: 24, potential: 84, nationality: 'Norway' },
+  { id: 'sup_wol_23', name: 'Pedro Lima', clubId: 'black_country_gold', position: 'RB', rating: 71, age: 18, potential: 86, nationality: 'Brazil' },
+  { id: 'sup_wol_24', name: 'Sasa Kalajdzic', clubId: 'black_country_gold', position: 'ST', rating: 77, age: 27, potential: 77, nationality: 'Austria' },
+  { id: 'sup_wol_25', name: 'Enso Gonzalez', clubId: 'black_country_gold', position: 'LW', rating: 68, age: 19, potential: 83, nationality: 'Paraguay' },
+  { id: 'sup_wol_26', name: 'Luke Cundle', clubId: 'black_country_gold', position: 'CM', rating: 71, age: 22, potential: 79, nationality: 'England', isHomegrown: true },
 
-  // Club: merseyside_blue
+// Club: merseyside_blue
   { id: 'sup_eve_1', name: 'Joao Virginia', clubId: 'merseyside_blue', position: 'GK', rating: 73, age: 24, potential: 78, nationality: 'Portugal' },
   { id: 'sup_eve_2', name: 'Jake O Brien', clubId: 'merseyside_blue', position: 'CB', rating: 77, age: 23, potential: 83, nationality: 'Republic of Ireland' },
   { id: 'sup_eve_3', name: 'Nathan Patterson', clubId: 'merseyside_blue', position: 'RB', rating: 76, age: 22, potential: 83, nationality: 'Scotland' },
@@ -1343,8 +1561,12 @@ export const SUPPLEMENTAL_PLAYERS_2024_25: SupplementalPlayerDef[] = [
   { id: 'sup_eve_20', name: 'Jesper Lindstrom', clubId: 'merseyside_blue', position: 'RW', rating: 77, age: 24, potential: 83, nationality: 'Denmark' },
   { id: 'sup_eve_21', name: 'Dominic Calvert-Lewin', clubId: 'merseyside_blue', position: 'ST', rating: 79, age: 27, potential: 79, nationality: 'England' },
   { id: 'sup_eve_22', name: 'Beto', clubId: 'merseyside_blue', position: 'CF', rating: 77, age: 26, potential: 79, nationality: 'Portugal' },
+  { id: 'sup_eve_23', name: 'Michael Keane', clubId: 'merseyside_blue', position: 'CB', rating: 76, age: 31, potential: 76, nationality: 'England', isHomegrown: true },
+  { id: 'sup_eve_24', name: 'Armando Broja', clubId: 'merseyside_blue', position: 'ST', rating: 75, age: 22, potential: 82, nationality: 'Albania', isHomegrown: true },
+  { id: 'sup_eve_25', name: 'Roman Dixon', clubId: 'merseyside_blue', position: 'RB', rating: 66, age: 19, potential: 83, nationality: 'England', isHomegrown: true },
+  { id: 'sup_eve_26', name: 'Harrison Armstrong', clubId: 'merseyside_blue', position: 'CM', rating: 65, age: 17, potential: 84, nationality: 'England', isHomegrown: true },
 
-  // Club: west_london_bees
+// Club: west_london_bees
   { id: 'sup_bre_1', name: 'Hakon Valdimarsson', clubId: 'west_london_bees', position: 'GK', rating: 74, age: 22, potential: 81, nationality: 'Iceland' },
   { id: 'sup_bre_2', name: 'Fin Stevens', clubId: 'west_london_bees', position: 'RB', rating: 71, age: 21, potential: 79, nationality: 'Wales' },
   { id: 'sup_bre_3', name: 'Yehor Yarmoliuk', clubId: 'west_london_bees', position: 'CM', rating: 74, age: 20, potential: 83, nationality: 'Ukraine' },
@@ -1367,8 +1589,12 @@ export const SUPPLEMENTAL_PLAYERS_2024_25: SupplementalPlayerDef[] = [
   { id: 'sup_bre_20', name: 'Kevin Schade', clubId: 'west_london_bees', position: 'LW', rating: 76, age: 22, potential: 83, nationality: 'Germany' },
   { id: 'sup_bre_21', name: 'Yoane Wissa', clubId: 'west_london_bees', position: 'ST', rating: 80, age: 28, potential: 80, nationality: 'DR Congo' },
   { id: 'sup_bre_22', name: 'Igor Thiago', clubId: 'west_london_bees', position: 'CF', rating: 77, age: 23, potential: 83, nationality: 'Brazil' },
+  { id: 'sup_bre_23', name: 'Ben Mee', clubId: 'west_london_bees', position: 'CB', rating: 78, age: 34, potential: 78, nationality: 'England', isHomegrown: true },
+  { id: 'sup_bre_24', name: 'Josh Dasilva', clubId: 'west_london_bees', position: 'CM', rating: 75, age: 25, potential: 78, nationality: 'England', isHomegrown: true },
+  { id: 'sup_bre_25', name: 'Gustavo Nunes', clubId: 'west_london_bees', position: 'LW', rating: 71, age: 18, potential: 86, nationality: 'Brazil' },
+  { id: 'sup_bre_26', name: 'Yunus Emre Konak', clubId: 'west_london_bees', position: 'CDM', rating: 69, age: 18, potential: 84, nationality: 'Turkey' },
 
-  // Club: nottingham_forest_red
+// Club: nottingham_forest_red
   { id: 'sup_nfo_1', name: 'Carlos Miguel', clubId: 'nottingham_forest_red', position: 'GK', rating: 76, age: 25, potential: 81, nationality: 'Brazil' },
   { id: 'sup_nfo_2', name: 'Murillo', clubId: 'nottingham_forest_red', position: 'CB', rating: 80, age: 22, potential: 87, nationality: 'Brazil' },
   { id: 'sup_nfo_3', name: 'Neco Williams', clubId: 'nottingham_forest_red', position: 'RB', rating: 77, age: 23, potential: 82, nationality: 'Wales' },
@@ -1391,8 +1617,12 @@ export const SUPPLEMENTAL_PLAYERS_2024_25: SupplementalPlayerDef[] = [
   { id: 'sup_nfo_20', name: 'Callum Hudson-Odoi', clubId: 'nottingham_forest_red', position: 'LW', rating: 79, age: 23, potential: 85, nationality: 'England' },
   { id: 'sup_nfo_21', name: 'Chris Wood', clubId: 'nottingham_forest_red', position: 'ST', rating: 80, age: 32, potential: 80, nationality: 'New Zealand' },
   { id: 'sup_nfo_22', name: 'Taiwo Awoniyi', clubId: 'nottingham_forest_red', position: 'CF', rating: 78, age: 27, potential: 80, nationality: 'Nigeria' },
+  { id: 'sup_nfo_23', name: 'Ramon Sosa', clubId: 'nottingham_forest_red', position: 'LW', rating: 76, age: 25, potential: 81, nationality: 'Paraguay' },
+  { id: 'sup_nfo_24', name: 'Jota Silva', clubId: 'nottingham_forest_red', position: 'RW', rating: 75, age: 25, potential: 79, nationality: 'Portugal' },
+  { id: 'sup_nfo_25', name: 'Willy Boly', clubId: 'nottingham_forest_red', position: 'CB', rating: 76, age: 33, potential: 76, nationality: 'Ivory Coast' },
+  { id: 'sup_nfo_26', name: 'Emmanuel Dennis', clubId: 'nottingham_forest_red', position: 'ST', rating: 76, age: 26, potential: 76, nationality: 'Nigeria' },
 
-  // Club: leicester_foxes
+// Club: leicester_foxes
   { id: 'sup_lei_1', name: 'Jakub Stolarczyk', clubId: 'leicester_foxes', position: 'GK', rating: 73, age: 23, potential: 80, nationality: 'Poland' },
   { id: 'sup_lei_2', name: 'Wout Faes', clubId: 'leicester_foxes', position: 'CB', rating: 78, age: 26, potential: 81, nationality: 'Belgium' },
   { id: 'sup_lei_3', name: 'Kasey McAteer', clubId: 'leicester_foxes', position: 'RW', rating: 74, age: 22, potential: 81, nationality: 'Republic of Ireland' },
@@ -1415,8 +1645,12 @@ export const SUPPLEMENTAL_PLAYERS_2024_25: SupplementalPlayerDef[] = [
   { id: 'sup_lei_20', name: 'Abdul Fatawu', clubId: 'leicester_foxes', position: 'RM', rating: 77, age: 20, potential: 86, nationality: 'Ghana' },
   { id: 'sup_lei_21', name: 'Stephy Mavididi', clubId: 'leicester_foxes', position: 'LW', rating: 77, age: 26, potential: 79, nationality: 'England' },
   { id: 'sup_lei_22', name: 'Jamie Vardy', clubId: 'leicester_foxes', position: 'ST', rating: 78, age: 37, potential: 78, nationality: 'England' },
+  { id: 'sup_lei_23', name: 'Conor Coady', clubId: 'leicester_foxes', position: 'CB', rating: 77, age: 31, potential: 77, nationality: 'England', isHomegrown: true },
+  { id: 'sup_lei_24', name: 'Hamza Choudhury', clubId: 'leicester_foxes', position: 'CDM', rating: 75, age: 26, potential: 77, nationality: 'England', isHomegrown: true },
+  { id: 'sup_lei_25', name: 'Patson Daka', clubId: 'leicester_foxes', position: 'ST', rating: 76, age: 25, potential: 80, nationality: 'Zambia' },
+  { id: 'sup_lei_26', name: 'Jordan Ayew', clubId: 'leicester_foxes', position: 'RW', rating: 75, age: 32, potential: 75, nationality: 'Ghana' },
 
-  // Club: south_coast_saints
+// Club: south_coast_saints
   { id: 'sup_sou_1', name: 'Joe Lumley', clubId: 'south_coast_saints', position: 'GK', rating: 72, age: 29, potential: 72, nationality: 'England' },
   { id: 'sup_sou_2', name: 'Ronnie Edwards', clubId: 'south_coast_saints', position: 'CB', rating: 74, age: 21, potential: 83, nationality: 'England' },
   { id: 'sup_sou_3', name: 'Tyler Dibling', clubId: 'south_coast_saints', position: 'RW', rating: 74, age: 18, potential: 88, nationality: 'England' },
@@ -1439,8 +1673,12 @@ export const SUPPLEMENTAL_PLAYERS_2024_25: SupplementalPlayerDef[] = [
   { id: 'sup_sou_20', name: 'Kamaldeen Sulemana', clubId: 'south_coast_saints', position: 'RM', rating: 75, age: 22, potential: 82, nationality: 'Ghana' },
   { id: 'sup_sou_21', name: 'Cameron Archer', clubId: 'south_coast_saints', position: 'ST', rating: 76, age: 22, potential: 83, nationality: 'England' },
   { id: 'sup_sou_22', name: 'Adam Armstrong', clubId: 'south_coast_saints', position: 'CF', rating: 76, age: 27, potential: 77, nationality: 'England' },
+  { id: 'sup_sou_23', name: 'Jack Stephens', clubId: 'south_coast_saints', position: 'CB', rating: 75, age: 30, potential: 75, nationality: 'England', isHomegrown: true },
+  { id: 'sup_sou_24', name: 'James Bree', clubId: 'south_coast_saints', position: 'RB', rating: 74, age: 26, potential: 76, nationality: 'England', isHomegrown: true },
+  { id: 'sup_sou_25', name: 'Ross Stewart', clubId: 'south_coast_saints', position: 'ST', rating: 74, age: 28, potential: 75, nationality: 'Scotland', isHomegrown: true },
+  { id: 'sup_sou_26', name: 'Joe Aribo', clubId: 'south_coast_saints', position: 'CM', rating: 75, age: 28, potential: 76, nationality: 'Nigeria', isHomegrown: true },
 
-  // Club: suffolk_tractors
+// Club: suffolk_tractors
   { id: 'sup_ips_1', name: 'Christian Walton', clubId: 'suffolk_tractors', position: 'GK', rating: 74, age: 28, potential: 76, nationality: 'England' },
   { id: 'sup_ips_2', name: 'Leif Davis', clubId: 'suffolk_tractors', position: 'LB', rating: 77, age: 24, potential: 83, nationality: 'England' },
   { id: 'sup_ips_3', name: 'Cameron Humphreys', clubId: 'suffolk_tractors', position: 'CM', rating: 71, age: 20, potential: 81, nationality: 'England' },
@@ -1463,6 +1701,11 @@ export const SUPPLEMENTAL_PLAYERS_2024_25: SupplementalPlayerDef[] = [
   { id: 'sup_ips_20', name: 'Wes Burns', clubId: 'suffolk_tractors', position: 'RM', rating: 75, age: 29, potential: 75, nationality: 'Wales' },
   { id: 'sup_ips_21', name: 'Omari Hutchinson', clubId: 'suffolk_tractors', position: 'RW', rating: 77, age: 20, potential: 87, nationality: 'England' },
   { id: 'sup_ips_22', name: 'Liam Delap', clubId: 'suffolk_tractors', position: 'ST', rating: 77, age: 21, potential: 86, nationality: 'England' },
+  { id: 'sup_ips_23', name: 'Conor Chaplin', clubId: 'suffolk_tractors', position: 'CAM', rating: 75, age: 27, potential: 77, nationality: 'England', isHomegrown: true },
+  { id: 'sup_ips_24', name: 'George Hirst', clubId: 'suffolk_tractors', position: 'ST', rating: 73, age: 25, potential: 77, nationality: 'England', isHomegrown: true },
+  { id: 'sup_ips_25', name: 'Marcus Harness', clubId: 'suffolk_tractors', position: 'RW', rating: 72, age: 28, potential: 72, nationality: 'Republic of Ireland' },
+  { id: 'sup_ips_26', name: 'Harry Clarke', clubId: 'suffolk_tractors', position: 'RB', rating: 73, age: 23, potential: 78, nationality: 'England', isHomegrown: true },
+
 
 ];
 

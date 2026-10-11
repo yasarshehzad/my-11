@@ -11,7 +11,15 @@ import {
 } from './types';
 import { players } from '../data/players';
 import { calculatePlayerValue, calculateWeeklyWage, formatCurrency } from './finance';
-import { categorizePosition, isHomegrownPlayer, getSquadHomegrownCount } from './squad';
+import {
+  categorizePosition,
+  isHomegrownPlayer,
+  getSquadHomegrownCount,
+  MAX_SQUAD_SIZE,
+  MAX_SENIOR_SQUAD_SIZE,
+  U21_AGE_LIMIT,
+  getSeniorPlayerCount,
+} from './squad';
 import { getAllClubs, getClubById } from './clubs';
 import { CONTINENTAL_EUROPEAN_CLUBS } from './continentalClubs';
 import { getAllSupplementalPlayers } from './databaseExpansion';
@@ -248,12 +256,23 @@ export function executePlayerSigning(
     };
   }
 
-  // Validate squad size maximum (25 players)
-  if (save.squad.length >= 25) {
+  // Validate overall squad capacity (35 players)
+  if (save.squad.length >= MAX_SQUAD_SIZE) {
     return {
       success: false,
       updatedSave: save,
-      error: 'Squad limit reached! Maximum squad size is 25 players. You must sell or release a player first.',
+      error: `Squad capacity reached! Maximum squad size is ${MAX_SQUAD_SIZE} players. You must sell, loan, or release a player first.`,
+    };
+  }
+
+  // Validate senior squad limit (Premier League 25 senior players aged 22+; U21 players are exempt)
+  const isTargetSenior = targetPlayer.age > U21_AGE_LIMIT;
+  const currentSeniorCount = getSeniorPlayerCount(save.squad);
+  if (isTargetSenior && currentSeniorCount >= MAX_SENIOR_SQUAD_SIZE) {
+    return {
+      success: false,
+      updatedSave: save,
+      error: `Senior squad limit reached! Premier League rules allow a maximum of ${MAX_SENIOR_SQUAD_SIZE} senior players (aged 22+). Under-21 players are exempt. You must sell or release a senior player first.`,
     };
   }
 
@@ -275,17 +294,14 @@ export function executePlayerSigning(
     };
   }
 
-  // Validate Homegrown Rule if enabled
-  if (save.settings.homegrownRule && !targetPlayer.isHomegrown) {
-    const currentHomegrown = getSquadHomegrownCount(save.squad);
-    const futureSquadSize = save.squad.length + 1;
-    // In a full 25 player squad, at least 8 must be homegrown (meaning max 17 non-homegrown)
-    const nonHomegrownCount = save.squad.filter((p) => !p.isHomegrown).length + 1;
-    if (nonHomegrownCount > 17) {
+  // Validate Homegrown Rule if enabled (senior non-homegrown cannot exceed 17)
+  if (save.settings.homegrownRule && !targetPlayer.isHomegrown && isTargetSenior) {
+    const seniorNonHomegrownCount = save.squad.filter((p) => p.age > U21_AGE_LIMIT && !p.isHomegrown).length + 1;
+    if (seniorNonHomegrownCount > 17) {
       return {
         success: false,
         updatedSave: save,
-        error: `Homegrown rule violation! A 25-man squad must contain at least 8 domestic players (current: ${currentHomegrown}). You cannot register another foreign player.`,
+        error: `Homegrown rule violation! A 25-man senior squad can contain at most 17 foreign senior players. You cannot register another foreign senior player.`,
       };
     }
   }

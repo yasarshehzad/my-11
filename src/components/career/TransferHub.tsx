@@ -18,6 +18,12 @@ import {
 } from '../../career/transfers';
 import { formatCurrency, formatWage } from '../../career/finance';
 import { getEffectiveClubName } from '../../career/clubs';
+import {
+  getSeniorPlayerCount,
+  MAX_SQUAD_SIZE,
+  MAX_SENIOR_SQUAD_SIZE,
+  U21_AGE_LIMIT,
+} from '../../career/squad';
 
 interface TransferHubProps {
   save: CareerSaveFile;
@@ -31,6 +37,7 @@ export function TransferHub({
   onNotification,
 }: TransferHubProps) {
   const [subTab, setSubTab] = useState<'market' | 'incoming' | 'shortlist' | 'history' | 'board'>('market');
+  const seniorCount = useMemo(() => getSeniorPlayerCount(save.squad), [save.squad]);
 
   // Scouting search & filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -229,6 +236,15 @@ export function TransferHub({
               {formatCurrency(Math.max(0, save.finances.weeklyWageBudget - save.finances.currentWeeklyWages))}/w
             </span>
           </div>
+          <div className="h-6 w-px bg-slate-800" />
+          <div>
+            <span className="text-[9px] uppercase font-bold text-slate-500 block">
+              Squad / Senior
+            </span>
+            <span className="font-display font-black text-slate-300 text-base">
+              {save.squad.length}/35 <span className="text-xs text-slate-500 font-normal">({seniorCount}/25 sr)</span>
+            </span>
+          </div>
         </div>
       </section>
 
@@ -395,25 +411,36 @@ export function TransferHub({
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => handleStartNegotiation(player)}
-                      disabled={!windowIsOpen || save.squad.length >= 25}
-                      className={`w-full py-2 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1 ${
-                        !windowIsOpen
-                          ? 'bg-slate-950 border border-slate-800 text-slate-600 cursor-not-allowed'
-                          : save.squad.length >= 25
-                          ? 'bg-amber-950/60 border border-amber-900 text-amber-400 cursor-not-allowed'
-                          : canAfford
-                          ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/20'
-                          : 'bg-slate-850 hover:bg-slate-800 text-slate-300 border border-slate-700'
-                      }`}
-                    >
-                      {!windowIsOpen
-                        ? 'Window Closed'
-                        : save.squad.length >= 25
-                        ? 'Squad Full (25/25)'
-                        : 'Make Offer'}
-                    </button>
+                    {(() => {
+                      const isSenior = player.age > U21_AGE_LIMIT;
+                      const isSquadFull = save.squad.length >= MAX_SQUAD_SIZE;
+                      const isSeniorFull = isSenior && seniorCount >= MAX_SENIOR_SQUAD_SIZE;
+                      const isBlocked = !windowIsOpen || isSquadFull || isSeniorFull;
+
+                      return (
+                        <button
+                          onClick={() => handleStartNegotiation(player)}
+                          disabled={isBlocked}
+                          className={`w-full py-2 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1 ${
+                            !windowIsOpen
+                              ? 'bg-slate-950 border border-slate-800 text-slate-600 cursor-not-allowed'
+                              : isSquadFull || isSeniorFull
+                              ? 'bg-amber-950/60 border border-amber-900 text-amber-400 cursor-not-allowed'
+                              : canAfford
+                              ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/20'
+                              : 'bg-slate-850 hover:bg-slate-800 text-slate-300 border border-slate-700'
+                          }`}
+                        >
+                          {!windowIsOpen
+                            ? 'Window Closed'
+                            : isSquadFull
+                            ? 'Squad Full (35/35)'
+                            : isSeniorFull
+                            ? 'Senior Full (25/25)'
+                            : 'Make Offer'}
+                        </button>
+                      );
+                    })()}
                   </article>
                 );
               })}
@@ -550,13 +577,32 @@ export function TransferHub({
                     <span className="text-slate-400">{formatWage(player.wageDemand)}</span>
                   </div>
 
-                  <button
-                    onClick={() => handleStartNegotiation(player)}
-                    disabled={!windowIsOpen || save.squad.length >= 25}
-                    className="w-full py-2 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider"
-                  >
-                    Make Offer
-                  </button>
+                  {(() => {
+                    const isSenior = player.age > U21_AGE_LIMIT;
+                    const isSquadFull = save.squad.length >= MAX_SQUAD_SIZE;
+                    const isSeniorFull = isSenior && seniorCount >= MAX_SENIOR_SQUAD_SIZE;
+                    const isBlocked = !windowIsOpen || isSquadFull || isSeniorFull;
+
+                    return (
+                      <button
+                        onClick={() => handleStartNegotiation(player)}
+                        disabled={isBlocked}
+                        className={`w-full py-2 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all ${
+                          isBlocked
+                            ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                            : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950'
+                        }`}
+                      >
+                        {!windowIsOpen
+                          ? 'Window Closed'
+                          : isSquadFull
+                          ? 'Squad Full (35/35)'
+                          : isSeniorFull
+                          ? 'Senior Full (25/25)'
+                          : 'Make Offer'}
+                      </button>
+                    );
+                  })()}
                 </article>
               ))}
             </div>

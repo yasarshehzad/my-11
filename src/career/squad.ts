@@ -1,7 +1,10 @@
 import { CareerPlayer, CareerSettings, CareerLineup } from './types';
 
 export const MIN_SQUAD_SIZE = 18;
-export const MAX_SQUAD_SIZE = 25;
+export const MAX_SQUAD_SIZE = 35;
+export const MAX_SENIOR_SQUAD_SIZE = 25;
+export const U21_AGE_LIMIT = 21;
+export const MAX_SENIOR_NON_HOMEGROWN = 17;
 export const MIN_GOALKEEPERS = 2;
 export const MIN_DEFENDERS = 5;
 export const MIN_MIDFIELDERS = 5;
@@ -10,6 +13,14 @@ export const REQUIRED_HOMEGROWN_COUNT = 8;
 export const STARTING_XI_SIZE = 11;
 export const MIN_BENCH_SIZE = 5;
 export const MAX_BENCH_SIZE = 9;
+
+export function getSeniorPlayerCount(squad: CareerPlayer[]): number {
+  return squad.filter((p) => p.age > U21_AGE_LIMIT).length;
+}
+
+export function getU21PlayerCount(squad: CareerPlayer[]): number {
+  return squad.filter((p) => p.age <= U21_AGE_LIMIT).length;
+}
 
 export type GeneralPositionGroup = 'GK' | 'DEF' | 'MID' | 'FWD';
 
@@ -47,6 +58,8 @@ export interface SquadValidationResult {
   errors: string[];
   warnings: string[];
   squadSize: number;
+  seniorCount: number;
+  u21Count: number;
   homegrownCount: number;
   totalWagesWeekly: number;
   totalSquadValue: number;
@@ -71,6 +84,8 @@ export function validateSquad(
   let totalSquadValue = 0;
   let totalRating = 0;
   let homegrownCount = 0;
+  let seniorCount = 0;
+  let u21Count = 0;
 
   const positionCounts = {
     gk: 0,
@@ -83,6 +98,12 @@ export function validateSquad(
     totalWagesWeekly += player.wageWeekly || 0;
     totalSquadValue += player.value || 0;
     totalRating += player.rating || 75;
+
+    if (player.age > U21_AGE_LIMIT) {
+      seniorCount++;
+    } else {
+      u21Count++;
+    }
 
     if (isHomegrownPlayer(player)) {
       homegrownCount++;
@@ -104,6 +125,13 @@ export function validateSquad(
     errors.push(`Squad has ${squadSize} players (maximum ${MAX_SQUAD_SIZE} allowed).`);
   }
 
+  // Premier League 25-man senior squad cap (U21 players aged <= 21 are exempt)
+  if (seniorCount > MAX_SENIOR_SQUAD_SIZE) {
+    errors.push(
+      `Squad has ${seniorCount} senior players aged 22+ (Premier League maximum is ${MAX_SENIOR_SQUAD_SIZE}; players aged 21 and under are exempt).`
+    );
+  }
+
   if (positionCounts.gk < MIN_GOALKEEPERS) {
     errors.push(`Squad requires at least ${MIN_GOALKEEPERS} Goalkeepers (has ${positionCounts.gk}).`);
   }
@@ -117,9 +145,14 @@ export function validateSquad(
     warnings.push(`Squad has only ${positionCounts.fwd} Forwards (recommended: at least ${MIN_FORWARDS}).`);
   }
 
-  // Homegrown quota check
+  // Homegrown quota check: in Premier League, max 17 non-homegrown senior players are permitted
   const homegrownRuleActive = settings?.homegrownRule ?? false;
-  if (homegrownRuleActive && homegrownCount < REQUIRED_HOMEGROWN_COUNT) {
+  const seniorNonHomegrown = squad.filter((p) => p.age > U21_AGE_LIMIT && !isHomegrownPlayer(p)).length;
+  if (homegrownRuleActive && seniorNonHomegrown > MAX_SENIOR_NON_HOMEGROWN) {
+    errors.push(
+      `Homegrown rule violation: squad has ${seniorNonHomegrown} non-homegrown senior players (maximum ${MAX_SENIOR_NON_HOMEGROWN} allowed in 25-man senior registration).`
+    );
+  } else if (homegrownRuleActive && homegrownCount < REQUIRED_HOMEGROWN_COUNT) {
     errors.push(
       `Homegrown rule violation: squad has ${homegrownCount} domestic players (${REQUIRED_HOMEGROWN_COUNT} required).`
     );
@@ -137,6 +170,8 @@ export function validateSquad(
     errors,
     warnings,
     squadSize,
+    seniorCount,
+    u21Count,
     homegrownCount,
     totalWagesWeekly,
     totalSquadValue,

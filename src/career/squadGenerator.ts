@@ -244,6 +244,23 @@ export function generateClubSquad(club: Club, season: DatabaseSeason = '2026/27'
     counter++;
   }
 
+  // 6. Append any remaining authentic first-team, rotation, and fringe players from this club's supplemental pool
+  // This guarantees authentic players are NEVER omitted due to an arbitrary squad blueprint limit.
+  for (const suppPlayer of supplementalPool) {
+    if (!usedNames.has(suppPlayer.name) && !usedCardIds.has(suppPlayer.id)) {
+      usedCardIds.add(suppPlayer.id);
+      usedNames.add(suppPlayer.name);
+      generatedSquad.push({
+        ...suppPlayer,
+        id: `cp_${club.id}_${counter}`,
+        cardId: suppPlayer.id,
+        club: club.id,
+        contractYears: 2 + (counter % 3),
+      });
+      counter++;
+    }
+  }
+
   // Ensure at least 8 players are homegrown for Premier League rules
   const homegrownCount = generatedSquad.filter((p) => p.isHomegrown).length;
   if (homegrownCount < 8) {
@@ -253,6 +270,19 @@ export function generateClubSquad(club: Club, season: DatabaseSeason = '2026/27'
       if (!player.isHomegrown) {
         player.isHomegrown = true;
         needed--;
+      }
+    }
+  }
+
+  // Ensure senior non-homegrown count does not exceed 17 for Premier League 25-man senior squad cap
+  const seniorNonHomegrown = generatedSquad.filter((p) => p.age > 21 && !p.isHomegrown).length;
+  if (seniorNonHomegrown > 17) {
+    let neededHg = seniorNonHomegrown - 17;
+    for (const player of generatedSquad) {
+      if (neededHg <= 0) break;
+      if (player.age > 21 && !player.isHomegrown) {
+        player.isHomegrown = true;
+        neededHg--;
       }
     }
   }
