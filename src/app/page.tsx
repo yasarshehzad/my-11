@@ -126,21 +126,23 @@ export default function DraftedXIGame() {
           MY-<span className="text-emerald-400">11</span>
         </button>
         
-        <div className="flex items-center gap-3 select-none">
+        <div className="flex items-center gap-2">
           {game.streakStats.currentDailyStreak > 0 && (
-            <span className="text-[9px] font-black text-indigo-300 bg-indigo-950/60 px-3 py-1 rounded-full border border-indigo-900/60 uppercase tracking-widest flex items-center gap-1 animate-pulse leading-none font-display">
-              ⚡ STREAK: {game.streakStats.currentDailyStreak}D
+            <span className="text-[9.5px] font-mono font-bold text-slate-400 bg-slate-900/60 px-2.5 py-1 rounded-md border border-slate-800 uppercase tracking-wider leading-none">
+              Streak: {game.streakStats.currentDailyStreak}d
             </span>
           )}
           
-          {/* Career Mode Navigation Link */}
-          <Link
-            href="/career"
-            title="Enter Football Management Career Mode"
-            className="text-[10px] font-display font-black tracking-wider uppercase px-2.5 py-1.5 rounded-lg border border-indigo-500/30 bg-indigo-950/40 text-indigo-300 hover:bg-indigo-900/50 hover:text-white transition-all cursor-pointer flex items-center gap-1 leading-none shadow-sm"
-          >
-            🏆 Career
-          </Link>
+          {/* Career Mode Quick Link when inside Draft or other phases */}
+          {game.phase !== 'home' && (
+            <Link
+              href="/career"
+              title="Career Mode"
+              className="text-[10px] font-mono font-bold tracking-wider uppercase px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900/60 text-slate-300 hover:text-white transition-colors flex items-center gap-1 leading-none"
+            >
+              Career Mode
+            </Link>
+          )}
 
           {/* History Screen Trigger Button */}
           <button
@@ -181,14 +183,10 @@ export default function DraftedXIGame() {
       <main className={`flex-1 w-full mx-auto flex flex-col justify-center ${game.phase === 'home' ? 'max-w-4xl' : 'max-w-lg'}`}>
         {game.phase === 'home' && (
           <HomeScreen
-            showcasePlayer={game.showcasePlayer}
             streakStats={game.streakStats}
-            campaignHistory={game.campaignHistory}
             personalBests={game.personalBests}
             todayChallenge={game.todayChallenge}
             dailyStatus={game.dailyStatus}
-            freeSearchEnabled={game.freeSearchEnabled}
-            onToggleFreeSearch={() => game.setFreeSearchEnabled(!game.freeSearchEnabled)}
             onStartDraft={handleStartDraftWithTutorialCheck}
             onPlayDailyChallenge={game.handlePlayDailyChallenge}
             onRandomDraft={() => game.handleRandomDraft(false)}
@@ -216,10 +214,12 @@ export default function DraftedXIGame() {
             selectedLeague={game.selectedLeague}
             draftIQMode={game.draftIQMode}
             draftModifier={game.draftModifier}
+            freeSearchEnabled={game.freeSearchEnabled}
             onSelectFormation={game.handleSelectFormation}
             onSelectLeague={game.setSelectedLeague}
             onToggleDraftIQMode={() => game.setDraftIQMode(!game.draftIQMode)}
             onSelectDraftModifier={game.setDraftModifier}
+            onToggleFreeSearch={() => game.setFreeSearchEnabled(!game.freeSearchEnabled)}
             onConfirmTactics={game.handleConfirmTactics}
           />
         )}

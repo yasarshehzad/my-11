@@ -52,9 +52,6 @@ export function HowToPlayModal({
         {/* Modal Header */}
         <div className="flex justify-between items-center pb-3 border-b border-slate-850">
           <div className="flex items-center gap-2">
-            <span className="text-xl">
-              {activeTab === 'draft' ? '⚡' : '🏆'}
-            </span>
             <h3
               id="how-to-play-title"
               className="text-base font-display font-black text-foreground uppercase tracking-wider leading-none"
@@ -87,18 +84,18 @@ export function HowToPlayModal({
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              <span>⚡</span> Draft Mode
+              Draft Mode
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('career')}
               className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 activeTab === 'career'
-                  ? 'bg-indigo-500 text-white shadow-md'
+                  ? 'bg-indigo-600 text-white shadow-md'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              <span>🏆</span> Career Mode
+              Career Mode
             </button>
           </div>
         )}
@@ -238,10 +235,10 @@ export function HowToPlayModal({
               }`}
             >
               {mode === 'all'
-                ? 'Got it! ➔'
+                ? 'Got it ➔'
                 : activeTab === 'draft'
-                ? "Let's Draft! ➔"
-                : 'Launch Career Mode ➔'}
+                ? 'Start Draft ➔'
+                : 'Enter Career Mode ➔'}
             </button>
           </div>
         </div>

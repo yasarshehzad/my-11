@@ -6,10 +6,12 @@ interface FormationSelectionProps {
   selectedLeague: string;
   draftIQMode: boolean;
   draftModifier?: DraftModifier;
+  freeSearchEnabled?: boolean;
   onSelectFormation: (form: FormationType) => void;
   onSelectLeague: (league: string) => void;
   onToggleDraftIQMode: () => void;
   onSelectDraftModifier?: (modifier: DraftModifier) => void;
+  onToggleFreeSearch?: () => void;
   onConfirmTactics: () => void;
 }
 
@@ -18,10 +20,12 @@ export function FormationSelection({
   selectedLeague,
   draftIQMode,
   draftModifier = 'classic',
+  freeSearchEnabled = false,
   onSelectFormation,
   onSelectLeague,
   onToggleDraftIQMode,
   onSelectDraftModifier,
+  onToggleFreeSearch,
   onConfirmTactics,
 }: FormationSelectionProps) {
   const formations: { type: FormationType; label: string; desc: string }[] = [
@@ -144,18 +148,20 @@ export function FormationSelection({
       {/* Draft IQ Mode Toggle */}
       <div className="w-full max-w-md p-4 rounded-2xl glass border border-slate-900 flex justify-between items-center gap-4 select-none">
         <div className="flex-1 min-w-0">
-          <h4 className="text-xs font-display font-black uppercase text-foreground tracking-wider flex items-center gap-1.5 leading-none">
-            🧠 Tactical Scouting Intel
+          <h4 className="text-xs font-display font-black uppercase text-foreground tracking-wider leading-none">
+            Tactical Scouting Intel (Draft IQ)
           </h4>
           <p className="text-[10px] text-slate-400 mt-1 leading-normal font-semibold">
-            Enable in-depth tactical scouting intel to review prospective chemistry links, role fit, and partner chemistry on draft cards.
+            Display live tactical scouting intel, prospective chemistry links, and positional fit on draft cards.
           </p>
         </div>
         <button
+          type="button"
           onClick={onToggleDraftIQMode}
           className={`w-12 h-6.5 rounded-full p-1 transition-colors duration-300 focus:outline-none cursor-pointer flex-shrink-0 relative ${
             draftIQMode ? 'bg-emerald-500' : 'bg-slate-800'
           }`}
+          aria-label="Toggle Tactical Scouting Intel"
         >
           <div
             className={`bg-white w-4.5 h-4.5 rounded-full shadow-md transform transition-transform duration-300 ${
@@ -164,6 +170,34 @@ export function FormationSelection({
           />
         </button>
       </div>
+
+      {/* Free Player Database Search Toggle */}
+      {onToggleFreeSearch && (
+        <div className="w-full max-w-md p-4 rounded-2xl glass border border-slate-900 flex justify-between items-center gap-4 select-none">
+          <div className="flex-1 min-w-0">
+            <h4 className="text-xs font-display font-black uppercase text-foreground tracking-wider leading-none">
+              Free Player Search
+            </h4>
+            <p className="text-[10px] text-slate-400 mt-1 leading-normal font-semibold">
+              Search and pick any player directly from the 340+ database instead of 3-card choices (disables rerolls).
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onToggleFreeSearch}
+            className={`w-12 h-6.5 rounded-full p-1 transition-colors duration-300 focus:outline-none cursor-pointer flex-shrink-0 relative ${
+              freeSearchEnabled ? 'bg-emerald-500' : 'bg-slate-800'
+            }`}
+            aria-label="Toggle Free Player Search"
+          >
+            <div
+              className={`bg-white w-4.5 h-4.5 rounded-full shadow-md transform transition-transform duration-300 ${
+                freeSearchEnabled ? 'translate-x-5.5' : 'translate-x-0'
+              }`}
+            />
+          </button>
+        </div>
+      )}
 
       {/* Divider */}
       <div className="w-full max-w-md h-[1.5px] bg-slate-900/60" />
