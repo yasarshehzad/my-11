@@ -21,28 +21,45 @@ function CareerPlayHubContent() {
   const rawSlot = searchParams.get('slot') || 'slot_1';
   const slotId: ValidSlotId = isValidSlotId(rawSlot) ? rawSlot : 'slot_1';
 
-  const [save, setSave] = useState<CareerSaveFile | null>(null);
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [save, setSave] = useState<CareerSaveFile | null>(() => {
+    if (typeof window !== 'undefined') {
+      return loadCareerSave(slotId);
+    }
+    return null;
+  });
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => getSavedTheme());
   const [activeTab, setActiveTab] = useState<'overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings'>('overview');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [dismissedSackedModal, setDismissedSackedModal] = useState(false);
 
   // Settings editing state (when not locked)
-  const [editableSettings, setEditableSettings] = useState<CareerSettings | null>(null);
-  const [editingClubName, setEditingClubName] = useState<string>('');
+  const [editableSettings, setEditableSettings] = useState<CareerSettings | null>(() => {
+    if (typeof window !== 'undefined') {
+      const loaded = loadCareerSave(slotId);
+      return loaded?.settings || null;
+    }
+    return null;
+  });
+  const [editingClubName, setEditingClubName] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const loaded = loadCareerSave(slotId);
+      return loaded?.club.customName || loaded?.club.defaultName || '';
+    }
+    return '';
+  });
+
+  const [currentSlotId, setCurrentSlotId] = useState(slotId);
+  if (currentSlotId !== slotId) {
+    setCurrentSlotId(slotId);
+    const loaded = loadCareerSave(slotId);
+    setSave(loaded);
+    setEditableSettings(loaded?.settings || null);
+    setEditingClubName(loaded?.club.customName || loaded?.club.defaultName || '');
+  }
 
   useEffect(() => {
-    const saved = getSavedTheme();
-    setTheme(saved);
-    saveTheme(saved);
-
-    const loaded = loadCareerSave(slotId);
-    if (loaded) {
-      setSave(loaded);
-      setEditableSettings(loaded.settings);
-      setEditingClubName(loaded.club.customName || loaded.club.defaultName);
-    }
-  }, [slotId]);
+    saveTheme(getSavedTheme());
+  }, []);
 
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark';

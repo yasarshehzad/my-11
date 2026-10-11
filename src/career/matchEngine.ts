@@ -73,7 +73,7 @@ export function simulateFullMatch(
   const awayAvgRating = awayStarters.reduce((s, p) => s + p.rating, 0) / Math.max(1, awayStarters.length);
 
   // Home advantage (+2.5)
-  let homeAdvantage = 2.5;
+  const homeAdvantage = 2.5;
 
   // Tactical mentality modifiers
   const homeMentality = config.homeMentality || 'balanced';
@@ -349,7 +349,7 @@ function simulateAiSubstitutions(states: InGamePlayerState[], clubId: string, ev
 }
 
 function samplePoissonGoals(expected: number): number {
-  let L = Math.exp(-expected);
+  const L = Math.exp(-expected);
   let k = 0;
   let p = 1;
   do {

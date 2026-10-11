@@ -454,7 +454,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification }: Fixture
                   {fixture.scorers.map((s, i) => (
                     <span key={i} className="flex items-center gap-1">
                       <span>⚽</span>
-                      <span>{s.name} ({s.minute}')</span>
+                      <span>{s.name} ({s.minute}&apos;)</span>
                     </span>
                   ))}
                 </div>

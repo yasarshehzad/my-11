@@ -28,6 +28,16 @@ interface MatchDayModalProps {
   onSaveMatchResult: (updatedSave: CareerSaveFile) => void;
 }
 
+function generatePenaltyShootout(): { homePenalties: number; awayPenalties: number } {
+  let hp = Math.floor(Math.random() * 2) + 4;
+  let ap = Math.floor(Math.random() * 2) + 3;
+  if (hp === ap) {
+    if (Math.random() < 0.5) hp += 1;
+    else ap += 1;
+  }
+  return { homePenalties: hp, awayPenalties: ap };
+}
+
 export function MatchDayModal({
   fixture,
   save,
@@ -87,13 +97,18 @@ export function MatchDayModal({
     if (matchState !== 'live') return;
 
     if (currentMinute >= 90) {
-      setMatchState('fulltime');
       return;
     }
 
     const intervalMs = Math.round(180 / simSpeed);
     const timer = setTimeout(() => {
-      setCurrentMinute((prev) => Math.min(90, prev + 1));
+      setCurrentMinute((prev) => {
+        const next = Math.min(90, prev + 1);
+        if (next >= 90) {
+          setMatchState('fulltime');
+        }
+        return next;
+      });
     }, intervalMs);
 
     return () => clearTimeout(timer);
@@ -158,20 +173,14 @@ export function MatchDayModal({
     for (const [tId, tourney] of Object.entries(cups)) {
       const idx = tourney.fixtures.findIndex((f) => f.id === fixture.id);
       if (idx >= 0) {
-        let cupSimFix: CupFixture = {
+        const cupSimFix: CupFixture = {
           ...tourney.fixtures[idx],
           ...simResult.fixture,
           isKnockout: true,
         };
 
         if (cupSimFix.homeScore === cupSimFix.awayScore) {
-          let hp = Math.floor(Math.random() * 2) + 4;
-          let ap = Math.floor(Math.random() * 2) + 3;
-          if (hp === ap) {
-            if (Math.random() < 0.5) hp += 1;
-            else ap += 1;
-          }
-          cupSimFix.penalties = { homePenalties: hp, awayPenalties: ap };
+          cupSimFix.penalties = generatePenaltyShootout();
         }
 
         tourney.fixtures[idx] = cupSimFix;
@@ -450,7 +459,7 @@ export function MatchDayModal({
                     key={i}
                     className="flex items-center gap-2 text-[11px] p-1.5 rounded-lg bg-slate-950/60 border border-slate-900"
                   >
-                    <span className="font-mono font-bold text-emerald-400 w-8">{evt.minute}'</span>
+                    <span className="font-mono font-bold text-emerald-400 w-8">{evt.minute}&apos;</span>
                     <span>
                       {evt.type === 'goal'
                         ? '⚽'

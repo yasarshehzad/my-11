@@ -7,8 +7,13 @@ import { SaveSlotMeta } from '../../career/types';
 import { getSavedTheme, saveTheme } from '../../utils/storage';
 
 export default function CareerEntryPage() {
-  const [slots, setSlots] = useState<SaveSlotMeta[]>([]);
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [slots, setSlots] = useState<SaveSlotMeta[]>(() => {
+    if (typeof window !== 'undefined') {
+      return listSaveSlots();
+    }
+    return [];
+  });
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => getSavedTheme());
   const [deleteConfirmSlot, setDeleteConfirmSlot] = useState<string | null>(null);
   const [importingSlot, setImportingSlot] = useState<ValidSlotId | null>(null);
   const [importJsonText, setImportJsonText] = useState('');
@@ -20,10 +25,7 @@ export default function CareerEntryPage() {
   };
 
   useEffect(() => {
-    const saved = getSavedTheme();
-    setTheme(saved);
-    saveTheme(saved);
-    refreshSlots();
+    saveTheme(getSavedTheme());
   }, []);
 
   const toggleTheme = () => {

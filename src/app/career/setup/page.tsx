@@ -22,7 +22,7 @@ function SetupWizardContent() {
   const targetSlot: ValidSlotId = isValidSlotId(rawSlot) ? rawSlot : 'slot_1';
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => getSavedTheme());
 
   // Step 1: Manager
   const [managerName, setManagerName] = useState('Alex Manager');
@@ -39,9 +39,7 @@ function SetupWizardContent() {
   const [customSettings, setCustomSettings] = useState<CareerSettings>(getPresetSettings('easy'));
 
   useEffect(() => {
-    const saved = getSavedTheme();
-    setTheme(saved);
-    saveTheme(saved);
+    saveTheme(getSavedTheme());
   }, []);
 
   const toggleTheme = () => {
@@ -234,7 +232,7 @@ function SetupWizardContent() {
                 Choose Your Club
               </h2>
               <p className="text-xs text-slate-400 max-w-md mx-auto">
-                Select one of the 20 English Top Flight sides. You can also customize any club's display name to match your personal preference.
+                Select one of the 20 English Top Flight sides. You can also customize any club&apos;s display name to match your personal preference.
               </p>
             </header>
 
@@ -402,7 +400,7 @@ function SetupWizardContent() {
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-emerald-500 font-semibold"
               />
               <p className="text-[9px] text-slate-500">
-                You can change this or any other club's name at any point during your career.
+                You can change this or any other club&apos;s name at any point during your career.
               </p>
             </div>
 

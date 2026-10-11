@@ -90,7 +90,7 @@ export function simulateMatchFixture(
 }
 
 function sampleGoals(expected: number): number {
-  let L = Math.exp(-expected);
+  const L = Math.exp(-expected);
   let k = 0;
   let p = 1;
   do {

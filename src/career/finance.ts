@@ -10,7 +10,7 @@ export function calculatePlayerValue(rating: number, age: number = 26, position:
 
   // Base exponential curve
   // 70 OVR -> ~£2.5M, 78 OVR -> ~£8M, 84 OVR -> ~£25M, 88 OVR -> ~£55M, 92 OVR -> ~£110M
-  let baseValue = Math.round(Math.pow(1.16, clampedRating - 68) * 1_800_000);
+  const baseValue = Math.round(Math.pow(1.16, clampedRating - 68) * 1_800_000);
 
   // Age modifier:
   // Under 22: Wonderkid premium (+20% to +35%)
