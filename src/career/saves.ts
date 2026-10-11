@@ -1,6 +1,8 @@
 import { CareerSaveFile, CareerSettings, Club, ManagerProfile, SaveSlotMeta } from './types';
 import { getEffectiveClubName } from './clubs';
 import { validateSettings } from './settings';
+import { generateClubSquad } from './squadGenerator';
+import { getBestStartingLineup } from './squad';
 
 export const VALID_SLOT_IDS = ['slot_1', 'slot_2', 'slot_3'] as const;
 export type ValidSlotId = (typeof VALID_SLOT_IDS)[number];
@@ -117,6 +119,10 @@ export function createNewCareerSave(params: {
     params.club.startingBudget * (validatedSettings.startingBudgetMultiplier || 1.0)
   );
 
+  const squad = generateClubSquad(params.club);
+  const currentWeeklyWages = squad.reduce((sum, p) => sum + (p.wageWeekly || 0), 0);
+  const lineup = getBestStartingLineup(squad);
+
   const initialSave: CareerSaveFile = {
     version: CURRENT_CAREER_SAVE_VERSION,
     id: params.slotId,
@@ -140,10 +146,11 @@ export function createNewCareerSave(params: {
     finances: {
       transferBudget: adjustedBudget,
       weeklyWageBudget: params.club.wageBudgetWeekly,
-      currentWeeklyWages: Math.round(params.club.wageBudgetWeekly * 0.75),
+      currentWeeklyWages,
       balance: Math.round(adjustedBudget * 0.35),
     },
-    squad: [],
+    squad,
+    lineup,
     trophies: [],
     phase: 'preseason',
   };

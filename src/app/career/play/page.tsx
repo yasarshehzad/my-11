@@ -8,6 +8,7 @@ import { CareerSaveFile, CareerSettings } from '../../../career/types';
 import { getEffectiveClubName } from '../../../career/clubs';
 import { validateSettings } from '../../../career/settings';
 import { getSavedTheme, saveTheme } from '../../../utils/storage';
+import { SquadManagement } from '../../../components/career/SquadManagement';
 
 function CareerPlayHubContent() {
   const router = useRouter();
@@ -79,6 +80,11 @@ function CareerPlayHubContent() {
     saveCareerSave(updated);
     setSave(updated);
     showToast('Settings saved successfully.');
+  };
+
+  const handleUpdateSave = (updated: CareerSaveFile) => {
+    saveCareerSave(updated);
+    setSave(updated);
   };
 
   if (!save) {
@@ -328,18 +334,18 @@ function CareerPlayHubContent() {
                   </p>
                 </div>
 
-                <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/30 space-y-1">
-                  <div className="font-display font-black text-slate-300 flex items-center gap-2">
-                    <span>⏳</span> Phase 2: Squad Builder (Up Next)
+                <div className="p-4 rounded-xl border border-emerald-900/40 bg-emerald-950/10 space-y-1">
+                  <div className="font-display font-black text-emerald-300 flex items-center gap-2">
+                    <span>✓</span> Phase 2: Squad Management & Team Sheet (Active)
                   </div>
                   <p className="text-slate-400 text-[11px]">
-                    18–25 player squads, coin valuation, wages, homegrown quota compliance, and tactical team sheet.
+                    18–25 player squads, market valuations, weekly wage bills, homegrown quota compliance, and tactical pitch view.
                   </p>
                 </div>
 
                 <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/30 space-y-1">
                   <div className="font-display font-black text-slate-300 flex items-center gap-2">
-                    <span>⏳</span> Phase 3: Calendar & League Simulation
+                    <span>⏳</span> Phase 3: Calendar & League Simulation (Up Next)
                   </div>
                   <p className="text-slate-400 text-[11px]">
                     38-game fixture generator, round-by-round time skip controller, smart pause, and live standings table.
@@ -361,18 +367,7 @@ function CareerPlayHubContent() {
 
         {/* TAB 2: SQUAD */}
         {activeTab === 'squad' && (
-          <section className="bg-slate-900/30 border border-slate-850 rounded-3xl p-8 text-center space-y-4">
-            <span className="text-4xl">👥</span>
-            <h3 className="text-xl font-display font-black uppercase text-white">
-              Squad Management (Phase 2)
-            </h3>
-            <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-              Phase 2 will integrate the 18 to 25 player squad roster, contract valuations, weekly wage management, and homegrown compliance checks.
-            </p>
-            <div className="inline-block bg-slate-950 border border-slate-850 px-4 py-2 rounded-xl text-xs font-semibold text-slate-300">
-              Current Squad Size: <span className="text-emerald-400 font-bold">{save.squad.length}</span> / 25
-            </div>
-          </section>
+          <SquadManagement save={save} onUpdateSave={handleUpdateSave} />
         )}
 
         {/* TAB 3: FIXTURES */}

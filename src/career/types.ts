@@ -101,6 +101,12 @@ export interface TrophyRecord {
   year: number;
 }
 
+export interface CareerLineup {
+  formation: string;
+  starterIds: string[];
+  benchIds: string[];
+}
+
 export interface CareerSaveFile {
   version: number;
   id: string; // 'slot_1' | 'slot_2' | 'slot_3'
@@ -112,6 +118,7 @@ export interface CareerSaveFile {
   season: SeasonSummary;
   finances: CareerFinances;
   squad: CareerPlayer[];
+  lineup?: CareerLineup;
   trophies: TrophyRecord[];
   phase: 'preseason' | 'transfer_window' | 'regular_season' | 'season_review';
 }
