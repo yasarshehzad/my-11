@@ -255,26 +255,264 @@ export function calculatePositionFit(player: CareerPlayer, targetPos: string): P
   return 'out_of_position';
 }
 
-export const SUPPORTED_CAREER_FORMATIONS: { name: string; slots: string[] }[] = [
+export interface CareerFormationConfig {
+  name: string;
+  category: '4 at the back' | '3 at the back' | '5 at the back';
+  slots: string[];
+  lines: number[][]; // Row arrays from top (attack) to bottom (GK), containing slot indices from left to right
+}
+
+export const SUPPORTED_CAREER_FORMATIONS: CareerFormationConfig[] = [
+  // --- 4 AT THE BACK ---
   {
     name: '4-3-3',
+    category: '4 at the back',
     slots: ['GK', 'LB', 'CB', 'CB', 'RB', 'CDM', 'CM', 'CAM', 'LW', 'ST', 'RW'],
+    lines: [
+      [8, 9, 10],    // LW, ST, RW
+      [5, 6, 7],     // CDM, CM, CAM
+      [1, 2, 3, 4],  // LB, CB, CB, RB
+      [0],           // GK
+    ],
+  },
+  {
+    name: '4-3-3 Holding',
+    category: '4 at the back',
+    slots: ['GK', 'LB', 'CB', 'CB', 'RB', 'CDM', 'CM', 'CM', 'LW', 'ST', 'RW'],
+    lines: [
+      [8, 9, 10],    // LW, ST, RW
+      [6, 7],        // CM, CM
+      [5],           // CDM
+      [1, 2, 3, 4],  // LB, CB, CB, RB
+      [0],           // GK
+    ],
+  },
+  {
+    name: '4-3-3 Flat',
+    category: '4 at the back',
+    slots: ['GK', 'LB', 'CB', 'CB', 'RB', 'CM', 'CM', 'CM', 'LW', 'ST', 'RW'],
+    lines: [
+      [8, 9, 10],    // LW, ST, RW
+      [5, 6, 7],     // CM, CM, CM
+      [1, 2, 3, 4],  // LB, CB, CB, RB
+      [0],           // GK
+    ],
   },
   {
     name: '4-2-3-1',
-    slots: ['GK', 'LB', 'CB', 'CB', 'RB', 'CDM', 'CDM', 'CAM', 'LM', 'ST', 'RM'],
+    category: '4 at the back',
+    slots: ['GK', 'LB', 'CB', 'CB', 'RB', 'CDM', 'CDM', 'LM', 'CAM', 'RM', 'ST'],
+    lines: [
+      [10],          // ST
+      [7, 8, 9],     // LM, CAM, RM
+      [5, 6],        // CDM, CDM
+      [1, 2, 3, 4],  // LB, CB, CB, RB
+      [0],           // GK
+    ],
+  },
+  {
+    name: '4-2-3-1 Narrow',
+    category: '4 at the back',
+    slots: ['GK', 'LB', 'CB', 'CB', 'RB', 'CDM', 'CDM', 'CAM', 'CAM', 'CAM', 'ST'],
+    lines: [
+      [10],          // ST
+      [7, 8, 9],     // CAM, CAM, CAM
+      [5, 6],        // CDM, CDM
+      [1, 2, 3, 4],  // LB, CB, CB, RB
+      [0],           // GK
+    ],
   },
   {
     name: '4-4-2',
+    category: '4 at the back',
     slots: ['GK', 'LB', 'CB', 'CB', 'RB', 'LM', 'CM', 'CM', 'RM', 'ST', 'ST'],
+    lines: [
+      [9, 10],       // ST, ST
+      [5, 6, 7, 8],  // LM, CM, CM, RM
+      [1, 2, 3, 4],  // LB, CB, CB, RB
+      [0],           // GK
+    ],
   },
+  {
+    name: '4-1-2-1-2 Diamond',
+    category: '4 at the back',
+    slots: ['GK', 'LB', 'CB', 'CB', 'RB', 'CDM', 'LM', 'RM', 'CAM', 'ST', 'ST'],
+    lines: [
+      [9, 10],       // ST, ST
+      [8],           // CAM
+      [6, 7],        // LM, RM
+      [5],           // CDM
+      [1, 2, 3, 4],  // LB, CB, CB, RB
+      [0],           // GK
+    ],
+  },
+  {
+    name: '4-1-2-1-2 Narrow',
+    category: '4 at the back',
+    slots: ['GK', 'LB', 'CB', 'CB', 'RB', 'CDM', 'CM', 'CM', 'CAM', 'ST', 'ST'],
+    lines: [
+      [9, 10],       // ST, ST
+      [8],           // CAM
+      [6, 7],        // CM, CM
+      [5],           // CDM
+      [1, 2, 3, 4],  // LB, CB, CB, RB
+      [0],           // GK
+    ],
+  },
+  {
+    name: '4-1-4-1',
+    category: '4 at the back',
+    slots: ['GK', 'LB', 'CB', 'CB', 'RB', 'CDM', 'LM', 'CM', 'CM', 'RM', 'ST'],
+    lines: [
+      [10],          // ST
+      [6, 7, 8, 9],  // LM, CM, CM, RM
+      [5],           // CDM
+      [1, 2, 3, 4],  // LB, CB, CB, RB
+      [0],           // GK
+    ],
+  },
+  {
+    name: '4-5-1',
+    category: '4 at the back',
+    slots: ['GK', 'LB', 'CB', 'CB', 'RB', 'CM', 'CM', 'LM', 'CAM', 'RM', 'ST'],
+    lines: [
+      [10],          // ST
+      [7, 8, 9],     // LM, CAM, RM
+      [5, 6],        // CM, CM
+      [1, 2, 3, 4],  // LB, CB, CB, RB
+      [0],           // GK
+    ],
+  },
+  {
+    name: '4-2-2-2',
+    category: '4 at the back',
+    slots: ['GK', 'LB', 'CB', 'CB', 'RB', 'CDM', 'CDM', 'CAM', 'CAM', 'ST', 'ST'],
+    lines: [
+      [9, 10],       // ST, ST
+      [7, 8],        // CAM, CAM
+      [5, 6],        // CDM, CDM
+      [1, 2, 3, 4],  // LB, CB, CB, RB
+      [0],           // GK
+    ],
+  },
+  {
+    name: '4-3-2-1',
+    category: '4 at the back',
+    slots: ['GK', 'LB', 'CB', 'CB', 'RB', 'CM', 'CDM', 'CM', 'CAM', 'CAM', 'ST'],
+    lines: [
+      [10],          // ST
+      [8, 9],        // CAM, CAM
+      [5, 6, 7],     // CM, CDM, CM
+      [1, 2, 3, 4],  // LB, CB, CB, RB
+      [0],           // GK
+    ],
+  },
+  {
+    name: '4-2-4',
+    category: '4 at the back',
+    slots: ['GK', 'LB', 'CB', 'CB', 'RB', 'CM', 'CM', 'LW', 'ST', 'ST', 'RW'],
+    lines: [
+      [7, 8, 9, 10], // LW, ST, ST, RW
+      [5, 6],        // CM, CM
+      [1, 2, 3, 4],  // LB, CB, CB, RB
+      [0],           // GK
+    ],
+  },
+
+  // --- 3 AT THE BACK ---
   {
     name: '3-5-2',
-    slots: ['GK', 'CB', 'CB', 'CB', 'LWB', 'CM', 'CDM', 'CM', 'RWB', 'ST', 'ST'],
+    category: '3 at the back',
+    slots: ['GK', 'CB', 'CB', 'CB', 'LWB', 'CDM', 'CM', 'CM', 'RWB', 'ST', 'ST'],
+    lines: [
+      [9, 10],       // ST, ST
+      [6, 7],        // CM, CM
+      [4, 5, 8],     // LWB, CDM, RWB
+      [1, 2, 3],     // CB, CB, CB
+      [0],           // GK
+    ],
   },
   {
+    name: '3-4-3',
+    category: '3 at the back',
+    slots: ['GK', 'CB', 'CB', 'CB', 'LM', 'CM', 'CM', 'RM', 'LW', 'ST', 'RW'],
+    lines: [
+      [8, 9, 10],    // LW, ST, RW
+      [4, 5, 6, 7],  // LM, CM, CM, RM
+      [1, 2, 3],     // CB, CB, CB
+      [0],           // GK
+    ],
+  },
+  {
+    name: '3-4-1-2',
+    category: '3 at the back',
+    slots: ['GK', 'CB', 'CB', 'CB', 'LM', 'CM', 'CM', 'RM', 'CAM', 'ST', 'ST'],
+    lines: [
+      [9, 10],       // ST, ST
+      [8],           // CAM
+      [4, 5, 6, 7],  // LM, CM, CM, RM
+      [1, 2, 3],     // CB, CB, CB
+      [0],           // GK
+    ],
+  },
+  {
+    name: '3-4-2-1',
+    category: '3 at the back',
+    slots: ['GK', 'CB', 'CB', 'CB', 'LM', 'CM', 'CM', 'RM', 'CAM', 'CAM', 'ST'],
+    lines: [
+      [10],          // ST
+      [8, 9],        // CAM, CAM
+      [4, 5, 6, 7],  // LM, CM, CM, RM
+      [1, 2, 3],     // CB, CB, CB
+      [0],           // GK
+    ],
+  },
+
+  // --- 5 AT THE BACK ---
+  {
     name: '5-3-2',
+    category: '5 at the back',
     slots: ['GK', 'LWB', 'CB', 'CB', 'CB', 'RWB', 'CM', 'CDM', 'CM', 'ST', 'ST'],
+    lines: [
+      [9, 10],       // ST, ST
+      [6, 7, 8],     // CM, CDM, CM
+      [1, 2, 3, 4, 5], // LWB, CB, CB, CB, RWB
+      [0],           // GK
+    ],
+  },
+  {
+    name: '5-2-3',
+    category: '5 at the back',
+    slots: ['GK', 'LWB', 'CB', 'CB', 'CB', 'RWB', 'CM', 'CM', 'LW', 'ST', 'RW'],
+    lines: [
+      [8, 9, 10],    // LW, ST, RW
+      [6, 7],        // CM, CM
+      [1, 2, 3, 4, 5], // LWB, CB, CB, CB, RWB
+      [0],           // GK
+    ],
+  },
+  {
+    name: '5-4-1',
+    category: '5 at the back',
+    slots: ['GK', 'LWB', 'CB', 'CB', 'CB', 'RWB', 'LM', 'CM', 'CM', 'RM', 'ST'],
+    lines: [
+      [10],          // ST
+      [6, 7, 8, 9],  // LM, CM, CM, RM
+      [1, 2, 3, 4, 5], // LWB, CB, CB, CB, RWB
+      [0],           // GK
+    ],
+  },
+  {
+    name: '5-2-1-2',
+    category: '5 at the back',
+    slots: ['GK', 'LWB', 'CB', 'CB', 'CB', 'RWB', 'CM', 'CM', 'CAM', 'ST', 'ST'],
+    lines: [
+      [9, 10],       // ST, ST
+      [8],           // CAM
+      [6, 7],        // CM, CM
+      [1, 2, 3, 4, 5], // LWB, CB, CB, CB, RWB
+      [0],           // GK
+    ],
   },
 ];
 

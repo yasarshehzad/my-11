@@ -274,12 +274,16 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
           <select
             value={currentFormation}
             onChange={(e) => handleFormationChange(e.target.value)}
-            className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs font-display font-black text-white focus:outline-none focus:border-emerald-500"
+            className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs font-display font-black text-white focus:outline-none focus:border-emerald-500 cursor-pointer"
           >
-            {SUPPORTED_CAREER_FORMATIONS.map((f) => (
-              <option key={f.name} value={f.name}>
-                {f.name}
-              </option>
+            {(['4 at the back', '3 at the back', '5 at the back'] as const).map((cat) => (
+              <optgroup key={cat} label={cat} className="bg-slate-900 text-slate-300 font-bold">
+                {SUPPORTED_CAREER_FORMATIONS.filter((f) => f.category === cat).map((f) => (
+                  <option key={f.name} value={f.name} className="bg-slate-950 text-white font-medium">
+                    {f.name}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
 
@@ -361,51 +365,21 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
               {currentFormation} • MATCHDAY XI
             </div>
 
-            {/* Starting XI Placed in Tactical Zones */}
-            <div className="relative z-10 w-full flex flex-col justify-between h-full min-h-[440px] py-4">
-              {/* Forwards Line */}
-              <div className="flex justify-around items-center w-full px-4">
-                {activeFormationConfig.slots
-                  .map((slotPos, index) => ({ slotPos, index, playerId: lineup.starterIds[index] }))
-                  .filter((item) => categorizePosition(item.slotPos) === 'FWD')
-                  .map((item) => {
-                    const player = squad.find((p) => p.id === item.playerId);
-                    return renderPitchSlot(item.slotPos, player, item.playerId);
+            {/* Starting XI Placed in Dedicated Tactical Lines */}
+            <div className="relative z-10 w-full flex flex-col justify-between h-full min-h-[440px] py-4 gap-2">
+              {activeFormationConfig.lines.map((lineIndices, rowIndex) => (
+                <div
+                  key={rowIndex}
+                  className="flex justify-around items-center w-full px-1 sm:px-2 gap-1 sm:gap-2"
+                >
+                  {lineIndices.map((slotIndex) => {
+                    const slotPos = activeFormationConfig.slots[slotIndex];
+                    const playerId = lineup.starterIds[slotIndex];
+                    const player = squad.find((p) => p.id === playerId);
+                    return renderPitchSlot(slotPos, player, playerId);
                   })}
-              </div>
-
-              {/* Midfielders Line */}
-              <div className="flex justify-around items-center w-full px-2">
-                {activeFormationConfig.slots
-                  .map((slotPos, index) => ({ slotPos, index, playerId: lineup.starterIds[index] }))
-                  .filter((item) => categorizePosition(item.slotPos) === 'MID')
-                  .map((item) => {
-                    const player = squad.find((p) => p.id === item.playerId);
-                    return renderPitchSlot(item.slotPos, player, item.playerId);
-                  })}
-              </div>
-
-              {/* Defenders Line */}
-              <div className="flex justify-around items-center w-full px-2">
-                {activeFormationConfig.slots
-                  .map((slotPos, index) => ({ slotPos, index, playerId: lineup.starterIds[index] }))
-                  .filter((item) => categorizePosition(item.slotPos) === 'DEF')
-                  .map((item) => {
-                    const player = squad.find((p) => p.id === item.playerId);
-                    return renderPitchSlot(item.slotPos, player, item.playerId);
-                  })}
-              </div>
-
-              {/* Goalkeeper */}
-              <div className="flex justify-center items-center w-full">
-                {activeFormationConfig.slots
-                  .map((slotPos, index) => ({ slotPos, index, playerId: lineup.starterIds[index] }))
-                  .filter((item) => categorizePosition(item.slotPos) === 'GK')
-                  .map((item) => {
-                    const player = squad.find((p) => p.id === item.playerId);
-                    return renderPitchSlot(item.slotPos, player, item.playerId);
-                  })}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
 

@@ -394,83 +394,7 @@ function CareerPlayHubContent() {
               </aside>
             )}
 
-            {/* Hero Welcome Banner */}
-            <section className="bg-gradient-to-r from-slate-900/80 via-slate-900/50 to-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
-              <div
-                className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-10 filter blur-3xl pointer-events-none"
-                style={{ background: save.club.primaryColor }}
-              />
-
-              <div className="max-w-2xl space-y-3">
-                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/60 border border-emerald-900/60 px-3 py-1 rounded-full font-display">
-                  English Top Flight • Season {save.season.seasonNumber}
-                </span>
-                <h2 className="text-2xl sm:text-3xl font-display font-black text-white uppercase tracking-tight">
-                  Welcome to {effectiveClubName}, {save.manager.name}
-                </h2>
-                <p className="text-xs sm:text-sm text-slate-350 leading-relaxed font-medium">
-                  Your management tenure has officially begun. You have been appointed with a{' '}
-                  <span className="text-emerald-400 font-bold">
-                    £{(save.finances.transferBudget / 1_000_000).toFixed(1)}M
-                  </span>{' '}
-                  transfer budget and a weekly wage allocation of{' '}
-                  <span className="text-slate-200 font-bold">
-                    £{(save.finances.weeklyWageBudget / 1_000).toFixed(0)}k
-                  </span>.
-                </p>
-              </div>
-            </section>
-
-            {/* Club Vitals & Board Expectations */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-5 space-y-2">
-                <span className="text-xl">🏟️</span>
-                <h3 className="text-xs font-display font-black uppercase text-slate-300">
-                  Home Ground
-                </h3>
-                <div className="text-base font-display font-black text-white">
-                  {save.club.stadiumName}
-                </div>
-                <p className="text-[11px] text-slate-400 font-medium">
-                  Capacity: {save.club.stadiumCapacity.toLocaleString()} supporters
-                </p>
-              </div>
-
-              <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-5 space-y-2">
-                <span className="text-xl">🎯</span>
-                <h3 className="text-xs font-display font-black uppercase text-slate-300">
-                  Board Objective
-                </h3>
-                <div className="text-base font-display font-black text-white">
-                  {save.club.tier === 'elite'
-                    ? 'Compete for the Title'
-                    : save.club.tier === 'upper'
-                    ? 'European Qualification'
-                    : save.club.tier === 'mid'
-                    ? 'Top Half Finish'
-                    : 'Avoid Relegation'}
-                </div>
-                <p className="text-[11px] text-slate-400 font-medium">
-                  Reputation tier: <span className="uppercase font-bold text-emerald-400">{save.club.tier}</span> ({save.club.reputation}/100)
-                </p>
-              </div>
-
-              <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-5 space-y-2">
-                <span className="text-xl">⚖️</span>
-                <h3 className="text-xs font-display font-black uppercase text-slate-300">
-                  Career Rules
-                </h3>
-                <div className="text-base font-display font-black text-white flex items-center gap-2">
-                  <span className="capitalize">{save.settings.preset}</span>
-                  {save.settings.locked && <span title="Settings Locked">🔒</span>}
-                </div>
-                <p className="text-[11px] text-slate-400 font-medium">
-                  {save.settings.boardCanSack ? 'Board Sackings: Active' : 'No Sackings (Job Safe)'}
-                </p>
-              </div>
-            </div>
-
-            {/* MATCHDAY PROGRESSION & NEXT FIXTURE SPOTLIGHT */}
+            {/* MATCHDAY PROGRESSION & NEXT FIXTURE SPOTLIGHT (ACTION ITEM #1) */}
             {nextFixture ? (
               <section className="bg-gradient-to-r from-emerald-950/40 via-slate-900/70 to-slate-950 border border-emerald-500/30 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5">
                 <div className="flex flex-wrap justify-between items-center gap-2">
@@ -617,7 +541,7 @@ function CareerPlayHubContent() {
               </section>
             )}
 
-            {/* MANAGERIAL ACTION CENTER & INBOX */}
+            {/* MANAGERIAL ACTION CENTER & INBOX (ACTION ITEM #2) */}
             <section className="space-y-4">
               <h3 className="text-sm font-display font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
                 <span>📋</span>
@@ -760,6 +684,90 @@ function CareerPlayHubContent() {
                 </div>
               </div>
             </section>
+
+            {/* Club Profile & Board Expectations (Secondary Context) */}
+            <div className="pt-2 border-t border-slate-850 space-y-4">
+              <h3 className="text-xs font-display font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                <span>🏛️</span>
+                <span>Club Profile & Governance</span>
+              </h3>
+
+              {/* Hero Welcome Banner */}
+              <section className="bg-gradient-to-r from-slate-900/80 via-slate-900/50 to-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xl relative overflow-hidden">
+                <div
+                  className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-10 filter blur-3xl pointer-events-none"
+                  style={{ background: save.club.primaryColor }}
+                />
+
+                <div className="max-w-2xl space-y-2.5">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/60 border border-emerald-900/60 px-3 py-1 rounded-full font-display">
+                    English Top Flight • Season {save.season.seasonNumber}
+                  </span>
+                  <h2 className="text-xl sm:text-2xl font-display font-black text-white uppercase tracking-tight">
+                    Welcome to {effectiveClubName}, {save.manager.name}
+                  </h2>
+                  <p className="text-xs text-slate-350 leading-relaxed font-medium">
+                    Your management tenure has officially begun. You have been appointed with a{' '}
+                    <span className="text-emerald-400 font-bold">
+                      £{(save.finances.transferBudget / 1_000_000).toFixed(1)}M
+                    </span>{' '}
+                    transfer budget and a weekly wage allocation of{' '}
+                    <span className="text-slate-200 font-bold">
+                      £{(save.finances.weeklyWageBudget / 1_000).toFixed(0)}k
+                    </span>.
+                  </p>
+                </div>
+              </section>
+
+              {/* Club Vitals & Board Expectations */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-5 space-y-2">
+                  <span className="text-xl">🏟️</span>
+                  <h3 className="text-xs font-display font-black uppercase text-slate-300">
+                    Home Ground
+                  </h3>
+                  <div className="text-base font-display font-black text-white">
+                    {save.club.stadiumName}
+                  </div>
+                  <p className="text-[11px] text-slate-400 font-medium">
+                    Capacity: {save.club.stadiumCapacity.toLocaleString()} supporters
+                  </p>
+                </div>
+
+                <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-5 space-y-2">
+                  <span className="text-xl">🎯</span>
+                  <h3 className="text-xs font-display font-black uppercase text-slate-300">
+                    Board Objective
+                  </h3>
+                  <div className="text-base font-display font-black text-white">
+                    {save.club.tier === 'elite'
+                      ? 'Compete for the Title'
+                      : save.club.tier === 'upper'
+                      ? 'European Qualification'
+                      : save.club.tier === 'mid'
+                      ? 'Top Half Finish'
+                      : 'Avoid Relegation'}
+                  </div>
+                  <p className="text-[11px] text-slate-400 font-medium">
+                    Reputation tier: <span className="uppercase font-bold text-emerald-400">{save.club.tier}</span> ({save.club.reputation}/100)
+                  </p>
+                </div>
+
+                <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-5 space-y-2">
+                  <span className="text-xl">⚖️</span>
+                  <h3 className="text-xs font-display font-black uppercase text-slate-300">
+                    Career Rules
+                  </h3>
+                  <div className="text-base font-display font-black text-white flex items-center gap-2">
+                    <span className="capitalize">{save.settings.preset}</span>
+                    {save.settings.locked && <span title="Settings Locked">🔒</span>}
+                  </div>
+                  <p className="text-[11px] text-slate-400 font-medium">
+                    {save.settings.boardCanSack ? 'Board Sackings: Active' : 'No Sackings (Job Safe)'}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
