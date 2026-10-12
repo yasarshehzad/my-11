@@ -8,7 +8,9 @@
   /* Slate mappings for dark mode */
   --slate-950: #020617;
   --slate-900: #0f172a;
+  --slate-850: #172033;
   --slate-800: #1e293b;
+  --slate-750: #293548;
   --slate-700: #334155;
   --slate-650: #475569;
   --slate-600: #475569;
@@ -16,8 +18,12 @@
   --slate-450: #94a3b8;
   --slate-405: #94a3b8;
   --slate-400: #94a3b8;
-  --slate-350: #cbd5e1;
   --slate-355: #94a3b8;
+  --slate-350: #cbd5e1;
+  --slate-300: #cbd5e1;
+  --slate-200: #e2e8f0;
+  --slate-100: #f1f5f9;
+  --slate-50: #f8fafc;
 
   --glass-bg: rgba(15, 23, 42, 0.6);
   --glass-border: rgba(255, 255, 255, 0.06);
@@ -152,18 +158,24 @@
   --foreground: #0f172a; /* Slate-900 base */
 
   /* Slate mappings reversed for light theme */
-  --slate-950: #f8fafc; /* panels become light slate-50 */
-  --slate-900: #e2e8f0; /* borders become slate-200 */
-  --slate-800: #f1f5f9; /* hovers become slate-100 */
-  --slate-700: #cbd5e1;
+  --slate-950: #ffffff; /* primary cards / panels become crisp clean white */
+  --slate-900: #f8fafc; /* secondary containers become slate-50 */
+  --slate-850: #f1f5f9; /* card surfaces become slate-100 */
+  --slate-800: #e2e8f0; /* borders become slate-200 */
+  --slate-750: #e2e8f0;
+  --slate-700: #cbd5e1; /* medium borders become slate-300 */
   --slate-650: #94a3b8;
   --slate-600: #64748b;
-  --slate-500: #475569;
-  --slate-450: #334155;
+  --slate-500: #64748b;
+  --slate-450: #475569;
   --slate-405: #475569;
-  --slate-400: #334155;
+  --slate-400: #475569; /* muted body text */
+  --slate-355: #334155;
   --slate-350: #1e293b; /* body text becomes slate-800 */
-  --slate-355: #475569; /* subtle text becomes slate-600 */
+  --slate-300: #334155; /* secondary headings */
+  --slate-200: #1e293b; /* high contrast text */
+  --slate-100: #0f172a; /* primary titles become slate-900 */
+  --slate-50: #020617;
 
   --glass-bg: rgba(255, 255, 255, 0.75);
   --glass-border: rgba(15, 23, 42, 0.08);
@@ -299,7 +311,9 @@
 
   --color-slate-950: var(--slate-950);
   --color-slate-900: var(--slate-900);
+  --color-slate-850: var(--slate-850);
   --color-slate-800: var(--slate-800);
+  --color-slate-750: var(--slate-750);
   --color-slate-700: var(--slate-700);
   --color-slate-650: var(--slate-650);
   --color-slate-600: var(--slate-600);
@@ -307,8 +321,12 @@
   --color-slate-450: var(--slate-450);
   --color-slate-405: var(--slate-405);
   --color-slate-400: var(--slate-400);
-  --color-slate-350: var(--slate-350);
   --color-slate-355: var(--slate-355);
+  --color-slate-350: var(--slate-350);
+  --color-slate-300: var(--slate-300);
+  --color-slate-200: var(--slate-200);
+  --color-slate-100: var(--slate-100);
+  --color-slate-50: var(--slate-50);
 
   --color-pitch-green: var(--pitch-green);
   --color-pitch-green-light: var(--pitch-green-light);
@@ -564,5 +582,65 @@ body {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* Light Theme Global Readability and High-Contrast Accessibility Overrides */
+[data-theme='light'] {
+  color-scheme: light;
+}
+
+[data-theme='light'] .text-white {
+  color: var(--slate-100);
+}
+
+[data-theme='light'] [data-force-white],
+[data-theme='light'] [data-force-white] *,
+[data-theme='light'] .club-crest,
+[data-theme='light'] .club-crest *,
+[data-theme='light'] .badge-force-white,
+[data-theme='light'] .badge-force-white *,
+[data-theme='light'] button.bg-emerald-600,
+[data-theme='light'] button.bg-emerald-600 *,
+[data-theme='light'] button.bg-blue-600,
+[data-theme='light'] button.bg-blue-600 *,
+[data-theme='light'] button.bg-rose-600,
+[data-theme='light'] button.bg-rose-600 *,
+[data-theme='light'] .bg-rose-500.text-white,
+[data-theme='light'] .bg-rose-600.text-white,
+[data-theme='light'] .bg-emerald-600.text-white,
+[data-theme='light'] .bg-blue-600.text-white {
+  color: #ffffff !important;
+}
+
+[data-theme='light'] button.bg-emerald-500,
+[data-theme='light'] button.bg-emerald-500 *,
+[data-theme='light'] .bg-emerald-500.text-slate-950,
+[data-theme='light'] .bg-emerald-500.text-zinc-950,
+[data-theme='light'] .bg-amber-500.text-slate-950,
+[data-theme='light'] .bg-amber-500.text-zinc-950 {
+  color: #020617 !important;
+}
+
+[data-theme='light'] .text-slate-100 {
+  color: var(--slate-100) !important;
+}
+[data-theme='light'] .text-slate-200 {
+  color: var(--slate-200) !important;
+}
+[data-theme='light'] .text-slate-300 {
+  color: var(--slate-300) !important;
+}
+[data-theme='light'] .text-slate-400 {
+  color: var(--slate-400) !important;
+}
+[data-theme='light'] .text-slate-500 {
+  color: var(--slate-500) !important;
+}
+
+[data-theme='light'] ::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.2);
+}
+[data-theme='light'] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.35);
 }
 

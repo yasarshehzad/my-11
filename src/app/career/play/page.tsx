@@ -30,6 +30,7 @@ import { LeagueTable } from '../../../components/career/LeagueTable';
 import { TournamentsHub } from '../../../components/career/TournamentsHub';
 import { TransferHub } from '../../../components/career/TransferHub';
 import { MatchDayModal } from '../../../components/career/MatchDayModal';
+import { MatchOverviewModal } from '../../../components/career/MatchOverviewModal';
 import { isSeasonComplete } from '../../../career/seasons';
 import { getNextClubFixture } from '../../../career/calendar';
 import { simulateMatchFixture, advanceTimeSkip, TimeSkipTarget } from '../../../career/sim';
@@ -55,6 +56,10 @@ function CareerPlayHubContent() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [dismissedSackedModal, setDismissedSackedModal] = useState(false);
   const [activeMatchFixture, setActiveMatchFixture] = useState<LeagueFixture | null>(null);
+  const [matchOverviewModal, setMatchOverviewModal] = useState<{
+    type: 'result' | 'preview';
+    fixture: LeagueFixture;
+  } | null>(null);
   const [simulating, setSimulating] = useState(false);
   const [pendingFastForward, setPendingFastForward] = useState<TimeSkipTarget | null>(null);
 
@@ -503,7 +508,8 @@ function CareerPlayHubContent() {
                         {/* Home Club */}
                         <div className="flex-1 flex flex-col items-center text-center space-y-1.5 min-w-0">
                           <div
-                            className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 border-white/20 shadow-xl flex items-center justify-center text-sm sm:text-base font-black text-white shrink-0"
+                            data-force-white="true"
+                            className="club-crest w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 border-white/20 shadow-xl flex items-center justify-center text-sm sm:text-base font-black text-white shrink-0"
                             style={{
                               background: `linear-gradient(135deg, ${home.primaryColor}, ${home.secondaryColor})`,
                             }}
@@ -533,7 +539,8 @@ function CareerPlayHubContent() {
                         {/* Away Club */}
                         <div className="flex-1 flex flex-col items-center text-center space-y-1.5 min-w-0">
                           <div
-                            className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 border-white/20 shadow-xl flex items-center justify-center text-sm sm:text-base font-black text-white shrink-0"
+                            data-force-white="true"
+                            className="club-crest w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 border-white/20 shadow-xl flex items-center justify-center text-sm sm:text-base font-black text-white shrink-0"
                             style={{
                               background: `linear-gradient(135deg, ${away.primaryColor}, ${away.secondaryColor})`,
                             }}
@@ -569,38 +576,108 @@ function CareerPlayHubContent() {
                         >
                           <span>⚡ Instant Result</span>
                         </button>
+
+                        <button
+                          onClick={() => setMatchOverviewModal({ type: 'preview', fixture: nextFixture })}
+                          className="py-3 px-4 rounded-2xl border border-emerald-500/40 hover:border-emerald-400 bg-emerald-950/20 hover:bg-emerald-950/40 text-emerald-400 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                          title="View pre-match tactical dossier and opponent scouting"
+                        >
+                          <span>📋 Match Dossier</span>
+                        </button>
                       </div>
 
-                      {/* Previous Match Result Strip (Placed directly underneath the CTAs) */}
+                      {/* Previous Match Result Card (Clickable to view full stats modal) */}
                       {previousFixture ? (
-                        <div className="bg-slate-950/70 border border-slate-800/80 rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 text-xs">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 font-display">
-                              Previous Result (R{previousFixture.round}):
-                            </span>
-                            <span
-                              className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                                previousResultOutcome === 'W'
-                                  ? 'bg-emerald-500 text-slate-950'
-                                  : previousResultOutcome === 'D'
-                                  ? 'bg-amber-500 text-slate-950'
-                                  : 'bg-rose-500 text-white'
-                              }`}
-                            >
-                              {previousResultOutcome === 'W' ? 'WON' : previousResultOutcome === 'D' ? 'DRAW' : 'LOST'}
-                            </span>
+                        <div
+                          onClick={() => setMatchOverviewModal({ type: 'result', fixture: previousFixture })}
+                          className="bg-slate-950/70 border border-slate-800/80 hover:border-emerald-500/50 rounded-2xl px-4 py-3.5 flex flex-col gap-2.5 text-xs transition-all cursor-pointer shadow-md hover:shadow-emerald-500/10 group select-none"
+                          title="Click to view detailed match overview & statistics"
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 font-display">
+                                Previous Result (Matchday {previousFixture.round}):
+                              </span>
+                              <span
+                                className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                                  previousResultOutcome === 'W'
+                                    ? 'bg-emerald-500 text-slate-950'
+                                    : previousResultOutcome === 'D'
+                                    ? 'bg-amber-500 text-slate-950'
+                                    : 'bg-rose-500 text-white'
+                                }`}
+                              >
+                                {previousResultOutcome === 'W' ? 'WON' : previousResultOutcome === 'D' ? 'DRAW' : 'LOST'}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2 font-display font-bold text-white text-xs">
+                              <span className="truncate max-w-[120px] sm:max-w-none">{getEffectiveClubName(clubsMap.get(previousFixture.homeClubId) || allClubs[0], save.club)}</span>
+                              <span className="bg-slate-900 border border-slate-700 px-2.5 py-0.5 rounded-lg text-emerald-400 font-mono font-black">
+                                {previousFixture.homeScore} - {previousFixture.awayScore}
+                              </span>
+                              <span className="truncate max-w-[120px] sm:max-w-none">{getEffectiveClubName(clubsMap.get(previousFixture.awayClubId) || allClubs[1], save.club)}</span>
+                            </div>
+
+                            <div className="text-[11px] text-slate-400 font-mono flex items-center gap-2 ml-auto sm:ml-0">
+                              <span>{formatCareerDate(previousFixture.date, save.settings.dateFormat, 'medium')}</span>
+                              <span className="text-emerald-400 font-display font-black group-hover:translate-x-0.5 transition-transform text-[11px]">
+                                📊 View Stats ➔
+                              </span>
+                            </div>
                           </div>
 
-                          <div className="flex items-center gap-2 font-display font-bold text-white text-xs">
-                            <span>{getEffectiveClubName(clubsMap.get(previousFixture.homeClubId) || allClubs[0], save.club)}</span>
-                            <span className="bg-slate-900 border border-slate-700 px-2.5 py-0.5 rounded-lg text-emerald-400 font-mono font-black">
-                              {previousFixture.homeScore} - {previousFixture.awayScore}
-                            </span>
-                            <span>{getEffectiveClubName(clubsMap.get(previousFixture.awayClubId) || allClubs[1], save.club)}</span>
-                          </div>
+                          {/* Goalscorers breakdown */}
+                          <div className="pt-2 border-t border-slate-800/60 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                            {(() => {
+                              const prevHome = clubsMap.get(previousFixture.homeClubId) || allClubs[0];
+                              const prevAway = clubsMap.get(previousFixture.awayClubId) || allClubs[1];
+                              const prevHomeScorers = previousFixture.scorers?.filter((s) => s.clubId === prevHome.id) || [];
+                              const prevAwayScorers = previousFixture.scorers?.filter((s) => s.clubId === prevAway.id) || [];
+                              const totalGoals = (previousFixture.homeScore || 0) + (previousFixture.awayScore || 0);
 
-                          <div className="text-[11px] text-slate-400 font-mono ml-auto sm:ml-0">
-                            {formatCareerDate(previousFixture.date, save.settings.dateFormat, 'medium')}
+                              if (totalGoals === 0) {
+                                return (
+                                  <span className="text-slate-400 italic text-[11px]">
+                                    ⚽ Goalless Draw (0 - 0) • Tap to view match statistics
+                                  </span>
+                                );
+                              }
+
+                              return (
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 w-full text-slate-300">
+                                  {prevHomeScorers.length > 0 && (
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="text-[10px] font-bold text-slate-400 uppercase">
+                                        {prevHome.shortName}:
+                                      </span>
+                                      {prevHomeScorers.map((s, idx) => (
+                                        <span key={idx} className="font-medium text-slate-200">
+                                          ⚽ {s.name} <span className="text-slate-400 text-[10px]">({s.minute}&apos;)</span>
+                                          {idx < prevHomeScorers.length - 1 ? ',' : ''}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                  {prevHomeScorers.length > 0 && prevAwayScorers.length > 0 && (
+                                    <span className="text-slate-600 hidden sm:inline">•</span>
+                                  )}
+                                  {prevAwayScorers.length > 0 && (
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="text-[10px] font-bold text-slate-400 uppercase">
+                                        {prevAway.shortName}:
+                                      </span>
+                                      {prevAwayScorers.map((s, idx) => (
+                                        <span key={idx} className="font-medium text-slate-200">
+                                          ⚽ {s.name} <span className="text-slate-400 text-[10px]">({s.minute}&apos;)</span>
+                                          {idx < prevAwayScorers.length - 1 ? ',' : ''}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </div>
                         </div>
                       ) : (
@@ -1228,6 +1305,24 @@ function CareerPlayHubContent() {
           save={save}
           onClose={() => setActiveMatchFixture(null)}
           onSaveMatchResult={handleMatchResultSaved}
+        />
+      )}
+
+      {/* Match Overview / Statistics / Pre-Match Dossier Modal */}
+      {matchOverviewModal && (
+        <MatchOverviewModal
+          type={matchOverviewModal.type}
+          fixture={matchOverviewModal.fixture}
+          save={save}
+          onClose={() => setMatchOverviewModal(null)}
+          onPlayInteractiveMatch={() => {
+            setActiveMatchFixture(matchOverviewModal.fixture);
+            setMatchOverviewModal(null);
+          }}
+          onPlayInstantMatch={() => {
+            setMatchOverviewModal(null);
+            handlePlayNextMatchInstant();
+          }}
         />
       )}
 

@@ -19,6 +19,7 @@ import { calculateStandings } from '../../career/table';
 import { formatCurrency } from '../../career/finance';
 import { isSeasonComplete, getSeasonReviewSummary, advanceToNextSeason } from '../../career/seasons';
 import { MatchDayModal } from './MatchDayModal';
+import { MatchOverviewModal } from './MatchOverviewModal';
 
 interface FixturesCalendarProps {
   save: CareerSaveFile;
@@ -32,6 +33,10 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
   const [selectedRound, setSelectedRound] = useState<number | 'all'>('all');
   const [simulating, setSimulating] = useState(false);
   const [activeMatchFixture, setActiveMatchFixture] = useState<LeagueFixture | null>(null);
+  const [matchOverviewModal, setMatchOverviewModal] = useState<{
+    type: 'result' | 'preview';
+    fixture: LeagueFixture;
+  } | null>(null);
   const [showSeasonReviewModal, setShowSeasonReviewModal] = useState(false);
 
   const fixtures = save.fixtures || [];
@@ -250,19 +255,51 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
           const away = clubsMap.get(fixture.awayClubId) || allClubs[1];
           const isUserMatch =
             fixture.homeClubId === userClubId || fixture.awayClubId === userClubId;
+          const isPlayed = fixture.played;
+          const isUpcoming = !fixture.played && nextFixture?.id === fixture.id;
 
           return (
             <div
               key={fixture.id}
+              onClick={() => {
+                if (isPlayed) {
+                  setMatchOverviewModal({ type: 'result', fixture });
+                } else if (isUpcoming) {
+                  setMatchOverviewModal({ type: 'preview', fixture });
+                }
+              }}
               className={`p-4 rounded-2xl border transition-all ${
-                isUserMatch
-                  ? 'border-emerald-500/40 bg-slate-900/60 shadow-lg'
+                isPlayed
+                  ? 'border-slate-850 hover:border-emerald-500/50 bg-slate-900/60 shadow-md cursor-pointer hover:shadow-emerald-500/5 group'
+                  : isUpcoming
+                  ? 'border-emerald-500/60 bg-emerald-950/20 shadow-lg cursor-pointer hover:border-emerald-400 group'
+                  : isUserMatch
+                  ? 'border-slate-800 bg-slate-900/40'
                   : 'border-slate-850 bg-slate-950/40'
               }`}
             >
               <div className="flex justify-between items-center text-[10px] text-slate-500 font-bold mb-2">
-                <span>Round {fixture.round}</span>
-                <span>{formatCareerDate(fixture.date, save.settings?.dateFormat)}</span>
+                <span className="flex items-center gap-1.5">
+                  <span>Round {fixture.round}</span>
+                  {isUpcoming && (
+                    <span className="bg-emerald-500 text-slate-950 text-[9px] font-black uppercase px-1.5 py-0.5 rounded font-display">
+                      Next Match
+                    </span>
+                  )}
+                </span>
+                <span className="flex items-center gap-2">
+                  <span>{formatCareerDate(fixture.date, save.settings?.dateFormat)}</span>
+                  {isPlayed && (
+                    <span className="text-emerald-400 font-display font-black group-hover:translate-x-0.5 transition-transform text-[10px]">
+                      📊 Stats ➔
+                    </span>
+                  )}
+                  {isUpcoming && (
+                    <span className="text-emerald-400 font-display font-black group-hover:translate-x-0.5 transition-transform text-[10px]">
+                      📋 Dossier ➔
+                    </span>
+                  )}
+                </span>
               </div>
 
               {/* Clubs & Result */}
@@ -270,7 +307,8 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
                 {/* Home */}
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <div
-                    className="w-3.5 h-3.5 rounded-full border border-white/20 flex-shrink-0"
+                    data-force-white="true"
+                    className="club-crest w-3.5 h-3.5 rounded-full border border-white/20 flex-shrink-0"
                     style={{
                       background: `linear-gradient(135deg, ${home.primaryColor}, ${home.secondaryColor})`,
                     }}
@@ -280,14 +318,14 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
                       fixture.homeClubId === userClubId ? 'text-emerald-300 font-bold' : 'text-white'
                     }`}
                   >
-                    {getEffectiveClubName(home)}
+                    {getEffectiveClubName(home, save.club)}
                   </span>
                 </div>
 
                 {/* Score or Status */}
                 <div className="px-3 text-center flex-shrink-0">
                   {fixture.played ? (
-                    <div className="font-display font-black text-sm text-white px-2 py-0.5 rounded bg-slate-950 border border-slate-800">
+                    <div className="font-display font-black text-sm text-white px-2 py-0.5 rounded bg-slate-950 border border-slate-800 group-hover:border-emerald-500/40 transition-colors">
                       {fixture.homeScore} - {fixture.awayScore}
                     </div>
                   ) : (
@@ -304,10 +342,11 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
                       fixture.awayClubId === userClubId ? 'text-emerald-300 font-bold' : 'text-white'
                     }`}
                   >
-                    {getEffectiveClubName(away)}
+                    {getEffectiveClubName(away, save.club)}
                   </span>
                   <div
-                    className="w-3.5 h-3.5 rounded-full border border-white/20 flex-shrink-0"
+                    data-force-white="true"
+                    className="club-crest w-3.5 h-3.5 rounded-full border border-white/20 flex-shrink-0"
                     style={{
                       background: `linear-gradient(135deg, ${away.primaryColor}, ${away.secondaryColor})`,
                     }}
@@ -340,6 +379,24 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
           onSaveMatchResult={(updated) => {
             onUpdateSave(updated);
             setActiveMatchFixture(null);
+          }}
+        />
+      )}
+
+      {/* Match Overview / Statistics / Pre-Match Dossier Modal */}
+      {matchOverviewModal && (
+        <MatchOverviewModal
+          type={matchOverviewModal.type}
+          fixture={matchOverviewModal.fixture}
+          save={save}
+          onClose={() => setMatchOverviewModal(null)}
+          onPlayInteractiveMatch={() => {
+            setActiveMatchFixture(matchOverviewModal.fixture);
+            setMatchOverviewModal(null);
+          }}
+          onPlayInstantMatch={() => {
+            setMatchOverviewModal(null);
+            handlePlayNextMatch();
           }}
         />
       )}

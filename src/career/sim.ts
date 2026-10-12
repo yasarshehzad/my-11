@@ -7,6 +7,8 @@ import {
   Club,
   GoalScorer,
   CalendarEvent,
+  MatchStats,
+  MatchEvent,
 } from './types';
 import { getClubById, getAllClubs } from './clubs';
 import { calculateStandings } from './table';
@@ -80,12 +82,95 @@ export function simulateMatchFixture(
 
   scorers.sort((a, b) => a.minute - b.minute);
 
+  // Generate possession
+  const homePossession = Math.max(34, Math.min(66, Math.round(50 + delta * 1.4)));
+  const awayPossession = 100 - homePossession;
+
+  // Generate shots
+  const homeShots = Math.max(homeScore, Math.floor(Math.random() * 7) + 5 + Math.round(homeXg * 2));
+  const awayShots = Math.max(awayScore, Math.floor(Math.random() * 7) + 4 + Math.round(awayXg * 2));
+  const homeShotsOnTarget = Math.min(homeShots, homeScore + Math.floor(Math.random() * 4) + 1);
+  const awayShotsOnTarget = Math.min(awayShots, awayScore + Math.floor(Math.random() * 4) + 1);
+
+  // Generate fouls & corners
+  const homeFouls = Math.floor(Math.random() * 8) + 6;
+  const awayFouls = Math.floor(Math.random() * 8) + 6;
+  const homeCorners = Math.floor(Math.random() * 7) + 2;
+  const awayCorners = Math.floor(Math.random() * 7) + 2;
+
+  const stats: MatchStats = {
+    homePossession,
+    awayPossession,
+    homeShots,
+    awayShots,
+    homeShotsOnTarget,
+    awayShotsOnTarget,
+    homeFouls,
+    awayFouls,
+    homeCorners,
+    awayCorners,
+  };
+
+  // Generate events from scorers
+  const events: MatchEvent[] = scorers.map((s) => ({
+    minute: s.minute,
+    type: 'goal',
+    clubId: s.clubId,
+    playerName: s.name,
+    detail: 'Goal',
+  }));
+
+  // Add random yellow cards
+  const numCards = Math.floor(Math.random() * 3) + 1;
+  for (let c = 0; c < numCards; c++) {
+    const isHomeCard = Math.random() < 0.5;
+    const cardClub = isHomeCard ? homeClub : awayClub;
+    const cardSquad = isHomeCard ? homeSquad : awaySquad;
+    events.push({
+      minute: Math.floor(Math.random() * 85) + 5,
+      type: 'yellow_card',
+      clubId: cardClub.id,
+      playerName: pickScorerName(cardSquad, cardClub),
+      detail: 'Foul',
+    });
+  }
+  events.sort((a, b) => a.minute - b.minute);
+
+  // Pick Man of the Match
+  let motmName = '';
+  let motmClubId = homeClub.id;
+  const homeScorers = scorers.filter((s) => s.clubId === homeClub.id);
+  const awayScorers = scorers.filter((s) => s.clubId === awayClub.id);
+
+  if (homeScore > awayScore && homeScorers.length > 0) {
+    motmName = homeScorers[0].name;
+    motmClubId = homeClub.id;
+  } else if (awayScore > homeScore && awayScorers.length > 0) {
+    motmName = awayScorers[0].name;
+    motmClubId = awayClub.id;
+  } else if (scorers.length > 0) {
+    motmName = scorers[0].name;
+    motmClubId = scorers[0].clubId;
+  } else {
+    motmName = pickScorerName(homeSquad, homeClub);
+    motmClubId = homeClub.id;
+  }
+
+  const manOfTheMatch = {
+    name: motmName,
+    clubId: motmClubId,
+    rating: Number((7.8 + Math.random() * 1.6).toFixed(1)),
+  };
+
   return {
     ...fixture,
     played: true,
     homeScore,
     awayScore,
     scorers,
+    stats,
+    events,
+    manOfTheMatch,
   };
 }
 

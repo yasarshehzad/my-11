@@ -206,6 +206,14 @@ describe('Match Simulator & Time-Skip Controller', () => {
 
     const totalGoals = simmed.homeScore! + simmed.awayScore!;
     expect(simmed.scorers?.length).toBe(totalGoals);
+
+    expect(simmed.stats).toBeDefined();
+    expect(simmed.stats!.homePossession + simmed.stats!.awayPossession).toBe(100);
+    expect(simmed.stats!.homeShots).toBeGreaterThanOrEqual(simmed.homeScore!);
+    expect(simmed.stats!.awayShots).toBeGreaterThanOrEqual(simmed.awayScore!);
+    expect(simmed.manOfTheMatch).toBeDefined();
+    expect(typeof simmed.manOfTheMatch!.rating).toBe('number');
+    expect(simmed.events).toBeDefined();
   });
 
   it('simulates an entire round of matches at once', () => {
