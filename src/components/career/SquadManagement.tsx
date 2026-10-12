@@ -12,6 +12,11 @@ import {
   isHomegrownPlayer,
 } from '../../career/squad';
 import { formatCurrency, formatWage } from '../../career/finance';
+import {
+  formatCareerHeight,
+  formatCareerWeight,
+  getPlayerPhysicals,
+} from '../../career/formatters';
 import { generateYouthIntake, promoteYouthProspect, releaseYouthProspect } from '../../career/youthAcademy';
 
 interface SquadManagementProps {
@@ -817,16 +822,43 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
               <div className="bg-slate-900/60 border border-slate-850 p-3 rounded-xl">
                 <div className="text-[9px] uppercase font-bold text-slate-500">Market Value</div>
                 <div className="text-sm font-display font-black text-white">
-                  {formatCurrency(selectedPlayer.value)}
+                  {formatCurrency(selectedPlayer.value, save.settings?.currency, save.settings?.numberFormat)}
                 </div>
               </div>
               <div className="bg-slate-900/60 border border-slate-850 p-3 rounded-xl">
-                <div className="text-[9px] uppercase font-bold text-slate-500">Weekly Wage</div>
+                <div className="text-[9px] uppercase font-bold text-slate-500">Wage</div>
                 <div className="text-sm font-display font-bold text-slate-200">
-                  {formatWage(selectedPlayer.wageWeekly)}
+                  {formatWage(selectedPlayer.wageWeekly, save.settings?.wageUnit, save.settings?.currency, save.settings?.numberFormat)}
                 </div>
               </div>
             </div>
+
+            {/* Physical Attributes (FM Style) */}
+            {(() => {
+              const phys = getPlayerPhysicals(selectedPlayer);
+              return (
+                <div className="grid grid-cols-3 gap-2 bg-slate-900/50 border border-slate-850 p-3 rounded-xl text-center text-xs">
+                  <div>
+                    <div className="text-[9px] uppercase font-bold text-slate-500">Height</div>
+                    <div className="font-display font-black text-white text-xs mt-0.5">
+                      {formatCareerHeight(phys.heightCm, save.settings?.heightUnit)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] uppercase font-bold text-slate-500">Weight</div>
+                    <div className="font-display font-black text-white text-xs mt-0.5">
+                      {formatCareerWeight(phys.weightKg, save.settings?.weightUnit)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] uppercase font-bold text-slate-500">Foot</div>
+                    <div className="font-display font-black text-emerald-400 text-xs mt-0.5">
+                      {phys.preferredFoot}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="bg-slate-900/40 border border-slate-850/80 p-3 rounded-xl space-y-1">
               <span className="text-[9px] uppercase font-bold text-slate-500">Development Stage</span>

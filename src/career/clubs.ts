@@ -356,8 +356,29 @@ export function getClubById(id: string): Club | undefined {
   return found ? { ...found } : undefined;
 }
 
-export function getEffectiveClubName(club: Club): string {
+export function getEffectiveClubName(club: Club, userClub?: Club): string {
+  if (userClub && club.id === userClub.id && userClub.customName && userClub.customName.trim().length > 0) {
+    return userClub.customName.trim();
+  }
   return club.customName && club.customName.trim().length > 0
     ? club.customName.trim()
     : club.defaultName;
+}
+
+/**
+ * Returns all career clubs, merging the manager's custom club name and details
+ * so tables, fixtures, and hubs always reflect the user's custom club identity.
+ */
+export function getClubsWithUserClub(userClub?: Club): Club[] {
+  const clubs = getAllClubs();
+  if (!userClub) return clubs;
+  return clubs.map((c) =>
+    c.id === userClub.id
+      ? {
+          ...c,
+          ...userClub,
+          customName: userClub.customName || c.customName,
+        }
+      : c
+  );
 }

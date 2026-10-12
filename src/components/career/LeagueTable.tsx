@@ -3,15 +3,16 @@
 import React from 'react';
 import { ClubStanding, Club } from '../../career/types';
 import { getQualificationZone } from '../../career/table';
-import { getAllClubs, getEffectiveClubName } from '../../career/clubs';
+import { getAllClubs, getEffectiveClubName, getClubsWithUserClub } from '../../career/clubs';
 
 interface LeagueTableProps {
   standings: ClubStanding[];
   userClubId: string;
+  userClub?: Club;
 }
 
-export function LeagueTable({ standings, userClubId }: LeagueTableProps) {
-  const allClubs = getAllClubs();
+export function LeagueTable({ standings, userClubId, userClub }: LeagueTableProps) {
+  const allClubs = getClubsWithUserClub(userClub);
   const clubsMap = new Map<string, Club>(allClubs.map((c) => [c.id, c]));
 
   return (

@@ -1,4 +1,13 @@
-import { CareerSettings, DifficultyPreset } from './types';
+import {
+  CareerSettings,
+  DifficultyPreset,
+  DateFormatPreference,
+  CurrencyPreference,
+  WageUnitPreference,
+  HeightUnitPreference,
+  WeightUnitPreference,
+  NumberFormatPreference,
+} from './types';
 
 export const EASY_SETTINGS: CareerSettings = {
   preset: 'easy',
@@ -14,6 +23,12 @@ export const EASY_SETTINGS: CareerSettings = {
   smartPause: true,
   playerPool: 'modern',
   locked: false,
+  dateFormat: 'uk',
+  currency: 'GBP',
+  wageUnit: 'weekly',
+  heightUnit: 'ft_in',
+  weightUnit: 'kg',
+  numberFormat: 'comma',
 };
 
 export const HARD_SETTINGS: CareerSettings = {
@@ -30,6 +45,12 @@ export const HARD_SETTINGS: CareerSettings = {
   smartPause: true,
   playerPool: 'modern',
   locked: true,
+  dateFormat: 'uk',
+  currency: 'GBP',
+  wageUnit: 'weekly',
+  heightUnit: 'ft_in',
+  weightUnit: 'kg',
+  numberFormat: 'comma',
 };
 
 export const DEFAULT_CUSTOM_SETTINGS: CareerSettings = {
@@ -46,6 +67,12 @@ export const DEFAULT_CUSTOM_SETTINGS: CareerSettings = {
   smartPause: true,
   playerPool: 'modern',
   locked: false,
+  dateFormat: 'uk',
+  currency: 'GBP',
+  wageUnit: 'weekly',
+  heightUnit: 'ft_in',
+  weightUnit: 'kg',
+  numberFormat: 'comma',
 };
 
 export function getPresetSettings(preset: DifficultyPreset): CareerSettings {
@@ -111,6 +138,39 @@ export function validateSettings(settings?: Partial<CareerSettings> | null): Car
       ? '2025/26'
       : '2026/27';
 
+  const dateFormat: DateFormatPreference =
+    settings.dateFormat === 'uk' ||
+    settings.dateFormat === 'uk_words' ||
+    settings.dateFormat === 'us' ||
+    settings.dateFormat === 'iso'
+      ? settings.dateFormat
+      : defaultBase.dateFormat || 'uk';
+
+  const currency: CurrencyPreference =
+    settings.currency === 'GBP' || settings.currency === 'EUR' || settings.currency === 'USD'
+      ? settings.currency
+      : defaultBase.currency || 'GBP';
+
+  const wageUnit: WageUnitPreference =
+    settings.wageUnit === 'weekly' || settings.wageUnit === 'annual' || settings.wageUnit === 'monthly'
+      ? settings.wageUnit
+      : defaultBase.wageUnit || 'weekly';
+
+  const heightUnit: HeightUnitPreference =
+    settings.heightUnit === 'ft_in' || settings.heightUnit === 'cm' || settings.heightUnit === 'm'
+      ? settings.heightUnit
+      : defaultBase.heightUnit || 'ft_in';
+
+  const weightUnit: WeightUnitPreference =
+    settings.weightUnit === 'kg' || settings.weightUnit === 'st_lbs' || settings.weightUnit === 'lbs'
+      ? settings.weightUnit
+      : defaultBase.weightUnit || 'kg';
+
+  const numberFormat: NumberFormatPreference =
+    settings.numberFormat === 'comma' || settings.numberFormat === 'dot' || settings.numberFormat === 'space'
+      ? settings.numberFormat
+      : defaultBase.numberFormat || 'comma';
+
   return {
     preset,
     databaseSeason,
@@ -125,5 +185,11 @@ export function validateSettings(settings?: Partial<CareerSettings> | null): Car
     smartPause: typeof settings.smartPause === 'boolean' ? settings.smartPause : defaultBase.smartPause,
     playerPool,
     locked,
+    dateFormat,
+    currency,
+    wageUnit,
+    heightUnit,
+    weightUnit,
+    numberFormat,
   };
 }

@@ -20,6 +20,7 @@ import {
 } from '../../career/matchEngine';
 import { calculateStandings } from '../../career/table';
 import { formatCurrency } from '../../career/finance';
+import { formatCareerDate } from '../../career/formatters';
 
 interface MatchDayModalProps {
   fixture: LeagueFixture;
@@ -45,9 +46,12 @@ export function MatchDayModal({
   onSaveMatchResult,
 }: MatchDayModalProps) {
   const [mentality, setMentality] = useState<TacticalMentality>('balanced');
-  const [matchState, setMatchState] = useState<'prematch' | 'live' | 'fulltime'>('prematch');
+  const [matchState, setMatchState] = useState<'prematch' | 'live' | 'halftime' | 'fulltime'>('prematch');
   const [currentMinute, setCurrentMinute] = useState(0);
   const [simSpeed, setSimSpeed] = useState<1 | 2 | 5>(2);
+  const [isPaused, setIsPaused] = useState(false);
+  const [hasReachedHalfTime, setHasReachedHalfTime] = useState(false);
+  const [teamTalkNote, setTeamTalkNote] = useState<string | null>(null);
   const [simResult, setSimResult] = useState<MatchSimulationResult | null>(null);
 
   // In-match interactive substitution state
@@ -90,11 +94,14 @@ export function MatchDayModal({
     setLivePlayerStates(isUserHome ? result.homePlayerStates : result.awayPlayerStates);
     setMatchState('live');
     setCurrentMinute(1);
+    setHasReachedHalfTime(false);
+    setIsPaused(false);
+    setTeamTalkNote(null);
   };
 
-  // Live match ticker timer
+  // Live match ticker timer with Half-Time at minute 45
   useEffect(() => {
-    if (matchState !== 'live') return;
+    if (matchState !== 'live' || isPaused) return;
 
     if (currentMinute >= 90) {
       return;
@@ -104,6 +111,14 @@ export function MatchDayModal({
     const timer = setTimeout(() => {
       setCurrentMinute((prev) => {
         const next = Math.min(90, prev + 1);
+
+        // Pause automatically at 45' for Half-Time
+        if (next >= 45 && !hasReachedHalfTime) {
+          setHasReachedHalfTime(true);
+          setMatchState('halftime');
+          return 45;
+        }
+
         if (next >= 90) {
           setMatchState('fulltime');
         }
@@ -112,11 +127,31 @@ export function MatchDayModal({
     }, intervalMs);
 
     return () => clearTimeout(timer);
-  }, [matchState, currentMinute, simSpeed]);
+  }, [matchState, currentMinute, simSpeed, isPaused, hasReachedHalfTime]);
+
+  // Fast skips
+  const handleSkipToHalfTime = () => {
+    if (!hasReachedHalfTime && currentMinute < 45) {
+      setCurrentMinute(45);
+      setHasReachedHalfTime(true);
+      setMatchState('halftime');
+    }
+  };
+
+  const handleStartSecondHalf = () => {
+    setMatchState('live');
+    setCurrentMinute(46);
+    setIsPaused(false);
+  };
 
   const handleSkipToFullTime = () => {
     setCurrentMinute(90);
+    setHasReachedHalfTime(true);
     setMatchState('fulltime');
+  };
+
+  const handleTeamTalk = (talk: string, message: string) => {
+    setTeamTalkNote(message);
   };
 
   // User interactive in-match substitution (max 5)
@@ -249,7 +284,7 @@ export function MatchDayModal({
       <div className="bg-slate-950 border border-slate-800 rounded-3xl max-w-2xl w-full p-5 sm:p-7 space-y-6 shadow-2xl relative my-auto">
         {/* Header Bar */}
         <header className="flex justify-between items-center border-b border-slate-900 pb-3">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-emerald-400 font-display font-black text-xs uppercase tracking-wider">
               {'competitionName' in fixture
                 ? (fixture as CupFixture).roundName
@@ -261,12 +296,16 @@ export function MatchDayModal({
                 ? (fixture as CupFixture).competitionName
                 : 'English Top Flight'}
             </span>
+            <span className="text-slate-600">•</span>
+            <span className="text-xs font-mono text-slate-400 font-medium">
+              📅 {formatCareerDate(fixture.date, save.settings?.dateFormat)}
+            </span>
           </div>
 
           {matchState === 'prematch' && (
             <button
               onClick={onClose}
-              className="text-slate-500 hover:text-white text-xs font-bold"
+              className="text-slate-500 hover:text-white text-xs font-bold cursor-pointer"
             >
               ✕ Exit
             </button>
@@ -382,14 +421,28 @@ export function MatchDayModal({
           </div>
         )}
 
-        {/* LIVE MATCH & FULLTIME VIEW */}
-        {(matchState === 'live' || matchState === 'fulltime') && (
+        {/* LIVE MATCH, HALFTIME & FULLTIME VIEW */}
+        {(matchState === 'live' || matchState === 'halftime' || matchState === 'fulltime') && (
           <div className="space-y-6">
             {/* Live Scoreboard */}
             <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-5 text-center space-y-2 shadow-xl">
               <div className="flex justify-center items-center gap-2">
-                <span className="text-[11px] font-mono font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/60 px-3 py-0.5 rounded-full border border-emerald-900/60 animate-pulse">
-                  {matchState === 'fulltime' ? 'FULL TIME (90\')' : `${currentMinute}'`}
+                <span
+                  className={`text-[11px] font-mono font-black uppercase tracking-widest px-3 py-0.5 rounded-full border ${
+                    matchState === 'fulltime'
+                      ? 'text-white bg-slate-800/80 border-slate-700'
+                      : matchState === 'halftime'
+                      ? 'text-amber-300 bg-amber-950/80 border-amber-500/60 font-display'
+                      : isPaused
+                      ? 'text-amber-400 bg-amber-950/40 border-amber-800/60'
+                      : 'text-emerald-400 bg-emerald-950/60 border-emerald-900/60 animate-pulse'
+                  }`}
+                >
+                  {matchState === 'fulltime'
+                    ? 'FULL TIME (90\')'
+                    : matchState === 'halftime'
+                    ? '⏸️ HALF TIME (45\')'
+                    : `${currentMinute}' ${isPaused ? '• PAUSED' : ''}`}
                 </span>
               </div>
 
@@ -407,39 +460,56 @@ export function MatchDayModal({
                 </div>
               </div>
 
-              {/* Speed / Skip Controls during Live match */}
+              {/* Speed / Pause / Skip Controls during Live match */}
               {matchState === 'live' && (
-                <div className="flex justify-center gap-2 pt-2">
+                <div className="flex flex-wrap justify-center items-center gap-2 pt-2">
                   <button
-                    onClick={() => setSimSpeed(1)}
-                    className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${
-                      simSpeed === 1 ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-slate-400'
-                    }`}
+                    onClick={() => setIsPaused(!isPaused)}
+                    className="px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-850 hover:bg-slate-800 border border-slate-750 text-slate-200 hover:text-white cursor-pointer transition-colors"
                   >
-                    1x
+                    {isPaused ? '▶ Resume' : '⏸ Pause'}
                   </button>
-                  <button
-                    onClick={() => setSimSpeed(2)}
-                    className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${
-                      simSpeed === 2 ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-slate-400'
-                    }`}
-                  >
-                    2x
-                  </button>
-                  <button
-                    onClick={() => setSimSpeed(5)}
-                    className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${
-                      simSpeed === 5 ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-slate-400'
-                    }`}
-                  >
-                    5x
-                  </button>
-                  <button
-                    onClick={handleSkipToFullTime}
-                    className="px-3 py-1 rounded-lg text-[10px] font-display font-black uppercase bg-slate-800 text-slate-300 hover:text-white"
-                  >
-                    Skip to FT ⏩
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setSimSpeed(1)}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-bold cursor-pointer ${
+                        simSpeed === 1 ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-slate-400'
+                      }`}
+                    >
+                      1x
+                    </button>
+                    <button
+                      onClick={() => setSimSpeed(2)}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-bold cursor-pointer ${
+                        simSpeed === 2 ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-slate-400'
+                      }`}
+                    >
+                      2x
+                    </button>
+                    <button
+                      onClick={() => setSimSpeed(5)}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-bold cursor-pointer ${
+                        simSpeed === 5 ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-slate-400'
+                      }`}
+                    >
+                      5x
+                    </button>
+                  </div>
+                  {currentMinute < 45 ? (
+                    <button
+                      onClick={handleSkipToHalfTime}
+                      className="px-3 py-1 rounded-lg text-[10px] font-display font-black uppercase bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-500/30 cursor-pointer"
+                    >
+                      Skip to HT ⏸️
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleSkipToFullTime}
+                      className="px-3 py-1 rounded-lg text-[10px] font-display font-black uppercase bg-slate-800 text-slate-300 hover:text-white cursor-pointer"
+                    >
+                      Skip to FT ⏩
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -477,8 +547,101 @@ export function MatchDayModal({
               )}
             </div>
 
+            {/* HALF TIME DRESSING ROOM & TACTICAL ADJUSTMENTS */}
+            {matchState === 'halftime' && (
+              <section className="bg-gradient-to-r from-amber-950/30 via-slate-900/60 to-slate-950 border border-amber-500/40 p-5 rounded-3xl space-y-4 shadow-xl">
+                <div className="flex flex-wrap justify-between items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">⏸️</span>
+                    <div>
+                      <h4 className="font-display font-black text-sm text-white uppercase tracking-wider">
+                        Half-Time Dressing Room
+                      </h4>
+                      <p className="text-[11px] text-slate-400">
+                        Address your squad, tweak mentality, or make substitutions before second half kick-off.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-black uppercase text-amber-400 bg-amber-950/80 px-2.5 py-1 rounded-full border border-amber-800">
+                    45 Minutes Played
+                  </span>
+                </div>
+
+                {/* Half-Time Team Talk Options */}
+                <div className="bg-slate-950/60 border border-slate-850 p-3.5 rounded-2xl space-y-2">
+                  <span className="text-[10px] font-bold uppercase text-slate-400 block tracking-wider">
+                    Manager Team Talk
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                    <button
+                      onClick={() => handleTeamTalk('demand_more', '📣 You demanded more intensity! Players look fired up.')}
+                      className="p-2.5 rounded-xl border border-slate-800 bg-slate-900/70 hover:bg-slate-850 hover:border-amber-500/50 text-left text-slate-200 transition-all cursor-pointer"
+                    >
+                      <div className="font-bold text-amber-300">📣 Demand More</div>
+                      <div className="text-[10px] text-slate-400">Boosts second-half work rate</div>
+                    </button>
+                    <button
+                      onClick={() => handleTeamTalk('encourage', '👏 You praised their composure! Morale is high.')}
+                      className="p-2.5 rounded-xl border border-slate-800 bg-slate-900/70 hover:bg-slate-850 hover:border-emerald-500/50 text-left text-slate-200 transition-all cursor-pointer"
+                    >
+                      <div className="font-bold text-emerald-300">👏 Keep Composed</div>
+                      <div className="text-[10px] text-slate-400">Reinforces shape and discipline</div>
+                    </button>
+                    <button
+                      onClick={() => handleTeamTalk('tighten_up', '🛡️ You instructed them to tighten defense! Backline organized.')}
+                      className="p-2.5 rounded-xl border border-slate-800 bg-slate-900/70 hover:bg-slate-850 hover:border-teal-500/50 text-left text-slate-200 transition-all cursor-pointer"
+                    >
+                      <div className="font-bold text-teal-300">🛡️ Tighten Defense</div>
+                      <div className="text-[10px] text-slate-400">Reduces defensive lapses</div>
+                    </button>
+                  </div>
+                  {teamTalkNote && (
+                    <div className="text-[11px] font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-800/40 p-2 rounded-xl">
+                      {teamTalkNote}
+                    </div>
+                  )}
+                </div>
+
+                {/* Tactical Mentality Switcher at HT */}
+                <div className="bg-slate-950/60 border border-slate-850 p-3.5 rounded-2xl space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">
+                      Second Half Tactical Mentality
+                    </span>
+                    <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase">
+                      Current: {mentality}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['defensive', 'balanced', 'attacking'] as const).map((m) => (
+                      <button
+                        key={m}
+                        onClick={() => setMentality(m)}
+                        className={`py-2 px-3 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
+                          mentality === m
+                            ? 'bg-emerald-500 text-slate-950 shadow-md'
+                            : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        {m}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Resume Match Button */}
+                <button
+                  onClick={handleStartSecondHalf}
+                  className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-display font-black text-sm uppercase tracking-wider shadow-xl shadow-emerald-500/25 transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <span>▶ Start 2nd Half (46&apos; - 90&apos;)</span>
+                  <span>➔</span>
+                </button>
+              </section>
+            )}
+
             {/* In-Match Dugout & Substitutions (Max 5) */}
-            {matchState === 'live' && (
+            {(matchState === 'live' || matchState === 'halftime') && (
               <div className="bg-slate-900/40 border border-slate-850 p-4 rounded-2xl space-y-3">
                 <div className="flex justify-between items-center text-xs">
                   <div className="font-display font-black uppercase text-slate-300">

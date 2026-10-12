@@ -6,6 +6,13 @@ export type PlayerPoolFilter = 'all' | 'modern' | 'legends';
 
 export type DatabaseSeason = '2026/27' | '2025/26' | '2024/25';
 
+export type DateFormatPreference = 'uk' | 'uk_words' | 'us' | 'iso';
+export type CurrencyPreference = 'GBP' | 'EUR' | 'USD';
+export type WageUnitPreference = 'weekly' | 'annual' | 'monthly';
+export type HeightUnitPreference = 'ft_in' | 'cm' | 'm';
+export type WeightUnitPreference = 'kg' | 'st_lbs' | 'lbs';
+export type NumberFormatPreference = 'comma' | 'dot' | 'space';
+
 export interface CareerSettings {
   preset: DifficultyPreset;
   /** Starting roster database season mode ('2026/27' current, '2025/26' previous, or '2024/25' classic) */
@@ -32,6 +39,14 @@ export interface CareerSettings {
   playerPool: PlayerPoolFilter;
   /** Permanent lock to prevent mid-save cheating */
   locked: boolean;
+
+  /** Regional & display preferences (Football Manager style) */
+  dateFormat?: DateFormatPreference;
+  currency?: CurrencyPreference;
+  wageUnit?: WageUnitPreference;
+  heightUnit?: HeightUnitPreference;
+  weightUnit?: WeightUnitPreference;
+  numberFormat?: NumberFormatPreference;
 }
 
 export type ClubTier = 'elite' | 'upper' | 'mid' | 'lower';
@@ -76,6 +91,9 @@ export interface CareerPlayer {
   club: string;
   nationality: string;
   potential?: number; // Career wonderkid potential rating
+  heightCm?: number;
+  weightKg?: number;
+  preferredFoot?: 'Right' | 'Left' | 'Both';
 }
 
 export interface Competition {

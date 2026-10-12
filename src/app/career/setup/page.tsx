@@ -6,7 +6,21 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ENGLISH_TOP_FLIGHT_CLUBS, getAllClubs, getClubsForSeason } from '../../../career/clubs';
 import { getPresetSettings, cloneSettings, validateSettings } from '../../../career/settings';
 import { createNewCareerSave, isValidSlotId, ValidSlotId } from '../../../career/saves';
-import { CareerSettings, Club, ClubTier, DatabaseSeason, DifficultyPreset, InjurySeverity, PlayerPoolFilter } from '../../../career/types';
+import {
+  CareerSettings,
+  Club,
+  ClubTier,
+  DatabaseSeason,
+  DifficultyPreset,
+  InjurySeverity,
+  PlayerPoolFilter,
+  DateFormatPreference,
+  CurrencyPreference,
+  WageUnitPreference,
+  HeightUnitPreference,
+  WeightUnitPreference,
+  NumberFormatPreference,
+} from '../../../career/types';
 import { getSavedTheme, saveTheme } from '../../../utils/storage';
 
 const NATIONALITIES = [
@@ -50,7 +64,16 @@ function SetupWizardContent() {
 
   const handlePresetSelect = (newPreset: DifficultyPreset) => {
     setPreset(newPreset);
-    setCustomSettings(getPresetSettings(newPreset));
+    const base = getPresetSettings(newPreset);
+    setCustomSettings({
+      ...base,
+      dateFormat: customSettings.dateFormat || 'uk',
+      currency: customSettings.currency || 'GBP',
+      wageUnit: customSettings.wageUnit || 'weekly',
+      heightUnit: customSettings.heightUnit || 'ft_in',
+      weightUnit: customSettings.weightUnit || 'kg',
+      numberFormat: customSettings.numberFormat || 'comma',
+    });
   };
 
   const handleClubRename = (clubId: string, newName: string) => {
@@ -743,6 +766,151 @@ function SetupWizardContent() {
                     }
                     className="w-4 h-4 accent-amber-500 cursor-pointer"
                   />
+                </div>
+              </div>
+            </div>
+
+            {/* Regional & Display Preferences (Football Manager Style) */}
+            <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-5 space-y-4">
+              <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                <div className="space-y-0.5">
+                  <h3 className="text-xs font-display font-black uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
+                    <span>🌐</span> Regional &amp; Display Preferences (FM Style)
+                  </h3>
+                  <p className="text-[10px] text-slate-400">
+                    Default is United Kingdom format. Can also be adjusted anytime during career.
+                  </p>
+                </div>
+                <span className="text-[9px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-900/60 px-2 py-0.5 rounded-full">
+                  UK Standard
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                {/* Date Format */}
+                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-900 space-y-1.5">
+                  <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                    Date Format
+                  </label>
+                  <select
+                    value={customSettings.dateFormat || 'uk'}
+                    onChange={(e) =>
+                      setCustomSettings({
+                        ...customSettings,
+                        dateFormat: e.target.value as DateFormatPreference,
+                      })
+                    }
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                  >
+                    <option value="uk">UK (14/08/2026 - DD/MM/YYYY)</option>
+                    <option value="iso">ISO (2026-08-14 - YYYY-MM-DD)</option>
+                    <option value="us">US (08/14/2026 - MM/DD/YYYY)</option>
+                  </select>
+                </div>
+
+                {/* Currency */}
+                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-900 space-y-1.5">
+                  <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                    Currency Unit
+                  </label>
+                  <select
+                    value={customSettings.currency || 'GBP'}
+                    onChange={(e) =>
+                      setCustomSettings({
+                        ...customSettings,
+                        currency: e.target.value as CurrencyPreference,
+                      })
+                    }
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                  >
+                    <option value="GBP">GBP (£ - British Pound)</option>
+                    <option value="EUR">EUR (€ - Euro)</option>
+                    <option value="USD">USD ($ - US Dollar)</option>
+                  </select>
+                </div>
+
+                {/* Wage Unit */}
+                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-900 space-y-1.5">
+                  <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                    Wage Rate Frequency
+                  </label>
+                  <select
+                    value={customSettings.wageUnit || 'weekly'}
+                    onChange={(e) =>
+                      setCustomSettings({
+                        ...customSettings,
+                        wageUnit: e.target.value as WageUnitPreference,
+                      })
+                    }
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                  >
+                    <option value="weekly">Weekly (£/wk - FM Standard)</option>
+                    <option value="monthly">Monthly (£/mo)</option>
+                    <option value="annual">Annual (£/yr)</option>
+                  </select>
+                </div>
+
+                {/* Height Unit */}
+                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-900 space-y-1.5">
+                  <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                    Height Unit
+                  </label>
+                  <select
+                    value={customSettings.heightUnit || 'ft_in'}
+                    onChange={(e) =>
+                      setCustomSettings({
+                        ...customSettings,
+                        heightUnit: e.target.value as HeightUnitPreference,
+                      })
+                    }
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                  >
+                    <option value="ft_in">Feet &amp; Inches (5&apos; 11&quot;)</option>
+                    <option value="cm">Centimetres (180 cm)</option>
+                    <option value="m">Metres (1.80 m)</option>
+                  </select>
+                </div>
+
+                {/* Weight Unit */}
+                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-900 space-y-1.5">
+                  <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                    Weight Unit
+                  </label>
+                  <select
+                    value={customSettings.weightUnit || 'kg'}
+                    onChange={(e) =>
+                      setCustomSettings({
+                        ...customSettings,
+                        weightUnit: e.target.value as WeightUnitPreference,
+                      })
+                    }
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                  >
+                    <option value="kg">Kilograms (75 kg)</option>
+                    <option value="st_lbs">Stone &amp; Pounds (11st 11lbs)</option>
+                    <option value="lbs">Pounds (165 lbs)</option>
+                  </select>
+                </div>
+
+                {/* Number Format */}
+                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-900 space-y-1.5">
+                  <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                    Number Formatting
+                  </label>
+                  <select
+                    value={customSettings.numberFormat || 'comma'}
+                    onChange={(e) =>
+                      setCustomSettings({
+                        ...customSettings,
+                        numberFormat: e.target.value as NumberFormatPreference,
+                      })
+                    }
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                  >
+                    <option value="comma">Standard Comma (1,000,000)</option>
+                    <option value="dot">Continental Dot (1.000.000)</option>
+                    <option value="space">Space Separator (1 000 000)</option>
+                  </select>
                 </div>
               </div>
             </div>

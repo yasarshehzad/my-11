@@ -18,6 +18,7 @@ import {
   evaluateBoardConfidence,
 } from '../../career/transfers';
 import { formatCurrency, formatWage } from '../../career/finance';
+import { formatCareerDate } from '../../career/formatters';
 import { getEffectiveClubName } from '../../career/clubs';
 import {
   getSeniorPlayerCount,
@@ -963,7 +964,7 @@ export function TransferHub({
                       {formatCurrency(tx.fee)}
                     </span>
                     <span className="text-[10px] font-mono text-slate-500">
-                      {tx.date}
+                      {formatCareerDate(tx.date, save.settings?.dateFormat)}
                     </span>
                   </div>
                 </div>

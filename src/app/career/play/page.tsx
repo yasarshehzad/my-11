@@ -4,9 +4,25 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { loadCareerSave, saveCareerSave, exportCareerSaveAsJson, isValidSlotId, ValidSlotId } from '../../../career/saves';
-import { CareerSaveFile, CareerSettings, LeagueFixture, Club } from '../../../career/types';
-import { getEffectiveClubName, getAllClubs } from '../../../career/clubs';
+import {
+  CareerSaveFile,
+  CareerSettings,
+  LeagueFixture,
+  Club,
+  DateFormatPreference,
+  CurrencyPreference,
+  WageUnitPreference,
+  HeightUnitPreference,
+  WeightUnitPreference,
+  NumberFormatPreference,
+} from '../../../career/types';
+import { getEffectiveClubName, getAllClubs, getClubsWithUserClub } from '../../../career/clubs';
 import { validateSettings } from '../../../career/settings';
+import {
+  formatCareerDate,
+  formatCareerCurrency,
+  formatCareerWage,
+} from '../../../career/formatters';
 import { getSavedTheme, saveTheme } from '../../../utils/storage';
 import { SquadManagement } from '../../../components/career/SquadManagement';
 import { FixturesCalendar } from '../../../components/career/FixturesCalendar';
@@ -40,6 +56,7 @@ function CareerPlayHubContent() {
   const [dismissedSackedModal, setDismissedSackedModal] = useState(false);
   const [activeMatchFixture, setActiveMatchFixture] = useState<LeagueFixture | null>(null);
   const [simulating, setSimulating] = useState(false);
+  const [pendingFastForward, setPendingFastForward] = useState<TimeSkipTarget | null>(null);
 
   // Settings editing state (when not locked)
   const [editableSettings, setEditableSettings] = useState<CareerSettings | null>(() => {
@@ -100,28 +117,88 @@ function CareerPlayHubContent() {
   const handleSaveSettings = () => {
     if (!save || !editableSettings) return;
 
+    const updatedSettings: CareerSettings = {
+      ...(save.settings.locked ? save.settings : validateSettings(editableSettings)),
+      dateFormat: editableSettings.dateFormat || 'uk',
+      currency: editableSettings.currency || 'GBP',
+      wageUnit: editableSettings.wageUnit || 'weekly',
+      heightUnit: editableSettings.heightUnit || 'ft_in',
+      weightUnit: editableSettings.weightUnit || 'kg',
+      numberFormat: editableSettings.numberFormat || 'comma',
+    };
+
     const updated: CareerSaveFile = {
       ...save,
       club: {
         ...save.club,
         customName: editingClubName.trim() || undefined,
       },
-      settings: save.settings.locked ? save.settings : validateSettings(editableSettings),
+      settings: updatedSettings,
     };
 
     saveCareerSave(updated);
     setSave(updated);
+    setEditableSettings(updatedSettings);
     showToast('Settings saved successfully.');
   };
 
   const handleUpdateSave = (updated: CareerSaveFile) => {
     saveCareerSave(updated);
     setSave(updated);
+    setEditableSettings(updated.settings);
+    setEditingClubName(updated.club.customName || updated.club.defaultName);
   };
 
-  const allClubs = getAllClubs();
+  const allClubs = getClubsWithUserClub(save?.club);
   const clubsMap = new Map<string, Club>(allClubs.map((c) => [c.id, c]));
   const nextFixture = save ? getNextClubFixture(save.fixtures || [], save.club.id) : null;
+
+  const getFastForwardDetails = (target: TimeSkipTarget) => {
+    switch (target) {
+      case 'next_match': {
+        const nextFix = getNextClubFixture(save?.fixtures || [], save?.club.id || '');
+        const targetDate = nextFix ? formatCareerDate(nextFix.date, save?.settings.dateFormat || 'uk', 'long') : 'Next Scheduled Match';
+        return {
+          title: 'Advance to Next Match',
+          badge: '⏭️ Next Match',
+          targetDate,
+          description: `Automatically simulates all other fixtures in the league until your next matchday (${targetDate}). You will be brought to the dressing room ready for kickoff.`,
+        };
+      }
+      case 'next_week': {
+        return {
+          title: 'Fast Forward +7 Days',
+          badge: '📅 +7 Days',
+          targetDate: '1 Week Forward',
+          description: 'Advances the game calendar by 7 days, simulating all league fixtures that fall within this window and recalculating the table standings.',
+        };
+      }
+      case 'next_month': {
+        return {
+          title: 'Fast Forward +1 Month',
+          badge: '🗓️ +1 Month',
+          targetDate: '30 Days Forward',
+          description: 'Simulates approximately 30 calendar days of fixtures. Several matchday rounds will be played across the league. Check your squad fitness before proceeding.',
+        };
+      }
+      case 'transfer_deadline': {
+        return {
+          title: 'Advance to Deadline Day',
+          badge: '⏳ Deadline Day',
+          targetDate: '1 Sep / 1 Feb',
+          description: 'Simulates until the critical transfer window deadline day, allowing you to review last-minute transfer offers and finalize signings.',
+        };
+      }
+      case 'season_end': {
+        return {
+          title: 'Simulate to Season End',
+          badge: '🏁 Season End',
+          targetDate: 'Round 38 (Finale)',
+          description: `Fast forwards all remaining league matches to conclude Season ${save?.season.seasonNumber || 1}. Final standings, awards, and board review will be finalized.`,
+        };
+      }
+    }
+  };
 
   const handlePlayNextMatchInstant = () => {
     if (!save || !nextFixture) return;
@@ -252,6 +329,13 @@ function CareerPlayHubContent() {
     return 'L';
   });
 
+  const previousFixture = userPlayedFixtures.length > 0 ? userPlayedFixtures[userPlayedFixtures.length - 1] : null;
+  const previousResultOutcome = previousFixture
+    ? (previousFixture.homeClubId === save.club.id
+        ? (previousFixture.homeScore! > previousFixture.awayScore! ? 'W' : previousFixture.homeScore === previousFixture.awayScore ? 'D' : 'L')
+        : (previousFixture.awayScore! > previousFixture.homeScore! ? 'W' : previousFixture.homeScore === previousFixture.awayScore ? 'D' : 'L'))
+    : null;
+
   return (
     <div className="min-h-screen bg-slate-950 text-foreground font-sans flex flex-col pitch-bg w-full overflow-x-hidden">
       {/* Toast Alert */}
@@ -300,21 +384,21 @@ function CareerPlayHubContent() {
             <div>
               <span className="text-[9px] uppercase font-bold text-slate-500 mr-1.5">Budget</span>
               <span className="font-display font-black text-emerald-400">
-                £{(save.finances.transferBudget / 1_000_000).toFixed(1)}M
+                {formatCareerCurrency(save.finances.transferBudget, save.settings.currency)}
               </span>
             </div>
             <div className="h-3 w-px bg-slate-800" />
             <div>
               <span className="text-[9px] uppercase font-bold text-slate-500 mr-1.5">Wages</span>
               <span className="font-display font-bold text-slate-300">
-                £{(save.finances.weeklyWageBudget / 1_000).toFixed(0)}k/w
+                {formatCareerWage(save.finances.weeklyWageBudget, save.settings.wageUnit, save.settings.currency)}
               </span>
             </div>
             <div className="h-3 w-px bg-slate-800" />
             <div>
               <span className="text-[9px] uppercase font-bold text-slate-500 mr-1.5">Date</span>
               <span className="font-mono text-xs font-semibold text-slate-300">
-                {save.season.currentDate}
+                {formatCareerDate(save.season.currentDate, save.settings.dateFormat, 'medium')}
               </span>
             </div>
           </div>
@@ -399,14 +483,14 @@ function CareerPlayHubContent() {
               <section className="bg-gradient-to-r from-emerald-950/40 via-slate-900/70 to-slate-950 border border-emerald-500/30 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5">
                 <div className="flex flex-wrap justify-between items-center gap-2">
                   <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-3 py-1 rounded-full font-display">
-                    Upcoming Matchday {nextFixture.round} • {nextFixture.date}
+                    Upcoming Matchday {nextFixture.round} • {formatCareerDate(nextFixture.date, save.settings.dateFormat, 'medium')}
                   </span>
                   <span className="text-xs text-slate-400 font-medium font-sans">
                     English Top Flight • Round {nextFixture.round} of 38
                   </span>
                 </div>
 
-                {/* Match Clash */}
+                {/* Match Clash: Always Side-by-Side on all viewports */}
                 {(() => {
                   const home = clubsMap.get(nextFixture.homeClubId) || allClubs[0];
                   const away = clubsMap.get(nextFixture.awayClubId) || allClubs[1];
@@ -414,81 +498,121 @@ function CareerPlayHubContent() {
                   const isUserAway = nextFixture.awayClubId === save.club.id;
 
                   return (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-center text-center py-2">
-                      {/* Home Club */}
-                      <div className="flex flex-col items-center space-y-2">
-                        <div
-                          className="w-14 h-14 rounded-full border-2 border-white/20 shadow-xl flex items-center justify-center text-lg font-black text-white"
-                          style={{
-                            background: `linear-gradient(135deg, ${home.primaryColor}, ${home.secondaryColor})`,
-                          }}
-                        >
-                          {home.shortName}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between gap-3 sm:gap-6 py-2 px-1 sm:px-4">
+                        {/* Home Club */}
+                        <div className="flex-1 flex flex-col items-center text-center space-y-1.5 min-w-0">
+                          <div
+                            className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 border-white/20 shadow-xl flex items-center justify-center text-sm sm:text-base font-black text-white shrink-0"
+                            style={{
+                              background: `linear-gradient(135deg, ${home.primaryColor}, ${home.secondaryColor})`,
+                            }}
+                          >
+                            {home.shortName}
+                          </div>
+                          <div className="min-w-0 w-full">
+                            <h4 className="font-display font-black text-sm sm:text-lg text-white truncate">
+                              {getEffectiveClubName(home, save.club)}
+                            </h4>
+                            <span className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-400 block truncate">
+                              {isUserHome ? '★ (YOU • HOME)' : 'Home'}
+                            </span>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="font-display font-black text-lg text-white">
-                            {getEffectiveClubName(home)}
-                          </h4>
-                          <span className="text-[10px] uppercase font-bold text-slate-400">
-                            {isUserHome ? '★ (YOU • HOME)' : 'Home'}
+
+                        {/* VS & Venue */}
+                        <div className="flex flex-col items-center justify-center shrink-0 px-2 sm:px-4 space-y-1">
+                          <span className="text-xl sm:text-3xl font-display font-black text-emerald-400 tracking-wider">
+                            VS
+                          </span>
+                          <span className="text-[10px] sm:text-xs text-slate-400 font-medium truncate max-w-[120px] sm:max-w-[200px]">
+                            🏟️ {home.stadiumName}
                           </span>
                         </div>
-                      </div>
 
-                      {/* VS & Action Buttons */}
-                      <div className="space-y-3">
-                        <div className="text-3xl font-display font-black text-emerald-400 tracking-wider">
-                          VS
-                        </div>
-                        <div className="text-xs text-slate-400">
-                          🏟️ {home.stadiumName}
-                        </div>
-
-                        {/* Central Match Progress CTAs */}
-                        <div className="flex flex-col sm:flex-row justify-center gap-2.5 pt-2">
-                          <button
-                            onClick={() => setActiveMatchFixture(nextFixture)}
-                            disabled={simulating}
-                            className="py-3 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                        {/* Away Club */}
+                        <div className="flex-1 flex flex-col items-center text-center space-y-1.5 min-w-0">
+                          <div
+                            className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 border-white/20 shadow-xl flex items-center justify-center text-sm sm:text-base font-black text-white shrink-0"
+                            style={{
+                              background: `linear-gradient(135deg, ${away.primaryColor}, ${away.secondaryColor})`,
+                            }}
                           >
-                            <span>▶ Continue / Play Match</span>
-                          </button>
-
-                          <button
-                            onClick={handlePlayNextMatchInstant}
-                            disabled={simulating}
-                            className="py-3 px-4 rounded-2xl border border-slate-700 hover:border-slate-600 bg-slate-900/80 hover:bg-slate-800 text-slate-200 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer"
-                            title="Quickly simulate this matchday"
-                          >
-                            <span>⚡ Instant Result</span>
-                          </button>
+                            {away.shortName}
+                          </div>
+                          <div className="min-w-0 w-full">
+                            <h4 className="font-display font-black text-sm sm:text-lg text-white truncate">
+                              {getEffectiveClubName(away, save.club)}
+                            </h4>
+                            <span className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-400 block truncate">
+                              {isUserAway ? '★ (YOU • AWAY)' : 'Away'}
+                            </span>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Away Club */}
-                      <div className="flex flex-col items-center space-y-2">
-                        <div
-                          className="w-14 h-14 rounded-full border-2 border-white/20 shadow-xl flex items-center justify-center text-lg font-black text-white"
-                          style={{
-                            background: `linear-gradient(135deg, ${away.primaryColor}, ${away.secondaryColor})`,
-                          }}
+                      {/* Central Match Progress CTAs */}
+                      <div className="flex flex-col sm:flex-row justify-center gap-2.5 pt-1">
+                        <button
+                          onClick={() => setActiveMatchFixture(nextFixture)}
+                          disabled={simulating}
+                          className="py-3 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                         >
-                          {away.shortName}
-                        </div>
-                        <div>
-                          <h4 className="font-display font-black text-lg text-white">
-                            {getEffectiveClubName(away)}
-                          </h4>
-                          <span className="text-[10px] uppercase font-bold text-slate-400">
-                            {isUserAway ? '★ (YOU • AWAY)' : 'Away'}
-                          </span>
-                        </div>
+                          <span>▶ Continue / Play Match</span>
+                        </button>
+
+                        <button
+                          onClick={handlePlayNextMatchInstant}
+                          disabled={simulating}
+                          className="py-3 px-4 rounded-2xl border border-slate-700 hover:border-slate-600 bg-slate-900/80 hover:bg-slate-800 text-slate-200 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer"
+                          title="Quickly simulate this matchday"
+                        >
+                          <span>⚡ Instant Result</span>
+                        </button>
                       </div>
+
+                      {/* Previous Match Result Strip (Placed directly underneath the CTAs) */}
+                      {previousFixture ? (
+                        <div className="bg-slate-950/70 border border-slate-800/80 rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 font-display">
+                              Previous Result (R{previousFixture.round}):
+                            </span>
+                            <span
+                              className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                                previousResultOutcome === 'W'
+                                  ? 'bg-emerald-500 text-slate-950'
+                                  : previousResultOutcome === 'D'
+                                  ? 'bg-amber-500 text-slate-950'
+                                  : 'bg-rose-500 text-white'
+                              }`}
+                            >
+                              {previousResultOutcome === 'W' ? 'WON' : previousResultOutcome === 'D' ? 'DRAW' : 'LOST'}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2 font-display font-bold text-white text-xs">
+                            <span>{getEffectiveClubName(clubsMap.get(previousFixture.homeClubId) || allClubs[0], save.club)}</span>
+                            <span className="bg-slate-900 border border-slate-700 px-2.5 py-0.5 rounded-lg text-emerald-400 font-mono font-black">
+                              {previousFixture.homeScore} - {previousFixture.awayScore}
+                            </span>
+                            <span>{getEffectiveClubName(clubsMap.get(previousFixture.awayClubId) || allClubs[1], save.club)}</span>
+                          </div>
+
+                          <div className="text-[11px] text-slate-400 font-mono ml-auto sm:ml-0">
+                            {formatCareerDate(previousFixture.date, save.settings.dateFormat, 'medium')}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="bg-slate-950/50 border border-slate-850/80 rounded-2xl px-4 py-2.5 text-center text-xs text-slate-400">
+                          Matchday 1 Opening Fixture • No previous matches recorded this season
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
 
-                {/* Calendar Fast-Forward Controls */}
+                {/* Calendar Fast-Forward Controls with Safety Confirmation */}
                 <div className="pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
                   <div className="flex items-center gap-2 text-slate-400">
                     <span className="text-sm">⏱️</span>
@@ -496,35 +620,35 @@ function CareerPlayHubContent() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <button
-                      onClick={() => handleTimeSkipAction('next_match')}
+                      onClick={() => setPendingFastForward('next_match')}
                       disabled={simulating || !nextFixture}
                       className="py-2 px-3 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-750 text-slate-200 font-display font-bold text-[11px] uppercase transition-all cursor-pointer"
                     >
                       ⏭️ Next Match
                     </button>
                     <button
-                      onClick={() => handleTimeSkipAction('next_week')}
+                      onClick={() => setPendingFastForward('next_week')}
                       disabled={simulating}
                       className="py-2 px-3 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-slate-800 text-slate-300 font-display font-bold text-[11px] uppercase transition-all cursor-pointer"
                     >
                       +7 Days
                     </button>
                     <button
-                      onClick={() => handleTimeSkipAction('next_month')}
+                      onClick={() => setPendingFastForward('next_month')}
                       disabled={simulating}
                       className="py-2 px-3 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-slate-800 text-slate-300 font-display font-bold text-[11px] uppercase transition-all cursor-pointer"
                     >
                       +1 Month
                     </button>
                     <button
-                      onClick={() => handleTimeSkipAction('transfer_deadline')}
+                      onClick={() => setPendingFastForward('transfer_deadline')}
                       disabled={simulating}
                       className="py-2 px-3 rounded-xl bg-amber-950/20 hover:bg-amber-950/40 border border-amber-500/40 text-amber-300 font-display font-bold text-[11px] uppercase transition-all cursor-pointer"
                     >
                       ⏳ Deadline Day
                     </button>
                     <button
-                      onClick={() => handleTimeSkipAction('season_end')}
+                      onClick={() => setPendingFastForward('season_end')}
                       disabled={simulating}
                       className="py-2 px-3 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-slate-800 text-slate-400 font-display font-bold text-[11px] uppercase transition-all cursor-pointer"
                     >
@@ -567,7 +691,7 @@ function CareerPlayHubContent() {
                       )}
                     </div>
                     <p className="text-[11px] text-slate-400">
-                      Budget: <strong className="text-emerald-400">{formatCurrency(save.finances.transferBudget)}</strong> • Wage room: <strong className="text-slate-200">{formatCurrency(Math.max(0, save.finances.weeklyWageBudget - save.finances.currentWeeklyWages))}/w</strong>
+                      Budget: <strong className="text-emerald-400">{formatCareerCurrency(save.finances.transferBudget, save.settings.currency)}</strong> • Wage room: <strong className="text-slate-200">{formatCareerWage(Math.max(0, save.finances.weeklyWageBudget - save.finances.currentWeeklyWages), save.settings.wageUnit, save.settings.currency)}</strong>
                     </p>
                   </div>
                   <button
@@ -709,11 +833,11 @@ function CareerPlayHubContent() {
                   <p className="text-xs text-slate-350 leading-relaxed font-medium">
                     Your management tenure has officially begun. You have been appointed with a{' '}
                     <span className="text-emerald-400 font-bold">
-                      £{(save.finances.transferBudget / 1_000_000).toFixed(1)}M
+                      {formatCareerCurrency(save.finances.transferBudget, save.settings.currency)}
                     </span>{' '}
-                    transfer budget and a weekly wage allocation of{' '}
+                    transfer budget and a wage allocation of{' '}
                     <span className="text-slate-200 font-bold">
-                      £{(save.finances.weeklyWageBudget / 1_000).toFixed(0)}k
+                      {formatCareerWage(save.finances.weeklyWageBudget, save.settings.wageUnit, save.settings.currency)}
                     </span>.
                   </p>
                 </div>
@@ -791,6 +915,7 @@ function CareerPlayHubContent() {
           <LeagueTable
             standings={save.standings || []}
             userClubId={save.club.id}
+            userClub={save.club}
           />
         )}
 
@@ -850,6 +975,151 @@ function CareerPlayHubContent() {
               <p className="text-[10px] text-slate-500">
                 Default: {save.club.defaultName}. Renaming is permitted on all difficulties.
               </p>
+            </div>
+
+            {/* Regional & Display Preferences (Always Editable) */}
+            <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-5 space-y-4">
+              <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                <div className="space-y-0.5">
+                  <h4 className="text-xs font-display font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                    <span>🌐</span> Regional & Display Preferences
+                  </h4>
+                  <p className="text-[10px] text-slate-400">
+                    Football Manager-style units and formatting. Configurable mid-save on all difficulties.
+                  </p>
+                </div>
+                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  Always Editable
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                {/* Date Format */}
+                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-900 space-y-1.5">
+                  <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                    Date Format
+                  </label>
+                  <select
+                    value={editableSettings.dateFormat || 'uk'}
+                    onChange={(e) =>
+                      setEditableSettings({
+                        ...editableSettings,
+                        dateFormat: e.target.value as DateFormatPreference,
+                      })
+                    }
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                  >
+                    <option value="uk">UK (14/08/2026 - DD/MM/YYYY)</option>
+                    <option value="iso">ISO (2026-08-14 - YYYY-MM-DD)</option>
+                    <option value="us">US (08/14/2026 - MM/DD/YYYY)</option>
+                  </select>
+                </div>
+
+                {/* Currency */}
+                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-900 space-y-1.5">
+                  <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                    Currency Unit
+                  </label>
+                  <select
+                    value={editableSettings.currency || 'GBP'}
+                    onChange={(e) =>
+                      setEditableSettings({
+                        ...editableSettings,
+                        currency: e.target.value as CurrencyPreference,
+                      })
+                    }
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                  >
+                    <option value="GBP">GBP (£ - British Pound)</option>
+                    <option value="EUR">EUR (€ - Euro)</option>
+                    <option value="USD">USD ($ - US Dollar)</option>
+                  </select>
+                </div>
+
+                {/* Wage Unit */}
+                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-900 space-y-1.5">
+                  <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                    Wage Rate Frequency
+                  </label>
+                  <select
+                    value={editableSettings.wageUnit || 'weekly'}
+                    onChange={(e) =>
+                      setEditableSettings({
+                        ...editableSettings,
+                        wageUnit: e.target.value as WageUnitPreference,
+                      })
+                    }
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                  >
+                    <option value="weekly">Weekly (£/wk - FM Standard)</option>
+                    <option value="monthly">Monthly (£/mo)</option>
+                    <option value="annual">Annual (£/yr)</option>
+                  </select>
+                </div>
+
+                {/* Height Unit */}
+                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-900 space-y-1.5">
+                  <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                    Height Unit
+                  </label>
+                  <select
+                    value={editableSettings.heightUnit || 'ft_in'}
+                    onChange={(e) =>
+                      setEditableSettings({
+                        ...editableSettings,
+                        heightUnit: e.target.value as HeightUnitPreference,
+                      })
+                    }
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                  >
+                    <option value="ft_in">Feet &amp; Inches (5&apos; 11&quot;)</option>
+                    <option value="cm">Centimetres (180 cm)</option>
+                    <option value="m">Metres (1.80 m)</option>
+                  </select>
+                </div>
+
+                {/* Weight Unit */}
+                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-900 space-y-1.5">
+                  <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                    Weight Unit
+                  </label>
+                  <select
+                    value={editableSettings.weightUnit || 'kg'}
+                    onChange={(e) =>
+                      setEditableSettings({
+                        ...editableSettings,
+                        weightUnit: e.target.value as WeightUnitPreference,
+                      })
+                    }
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                  >
+                    <option value="kg">Kilograms (75 kg)</option>
+                    <option value="st_lbs">Stone &amp; Pounds (11st 11lbs)</option>
+                    <option value="lbs">Pounds (165 lbs)</option>
+                  </select>
+                </div>
+
+                {/* Number Format */}
+                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-900 space-y-1.5">
+                  <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                    Number Formatting
+                  </label>
+                  <select
+                    value={editableSettings.numberFormat || 'comma'}
+                    onChange={(e) =>
+                      setEditableSettings({
+                        ...editableSettings,
+                        numberFormat: e.target.value as NumberFormatPreference,
+                      })
+                    }
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                  >
+                    <option value="comma">Standard Comma (1,000,000)</option>
+                    <option value="dot">Continental Dot (1.000.000)</option>
+                    <option value="space">Space Separator (1 000 000)</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
             {/* Gameplay Rules Status */}
@@ -960,6 +1230,74 @@ function CareerPlayHubContent() {
           onSaveMatchResult={handleMatchResultSaved}
         />
       )}
+
+      {/* Fast Forward Confirmation Modal */}
+      {pendingFastForward && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 motion-reduce:transition-none"
+        >
+          <div className="bg-slate-950 border border-emerald-500/40 rounded-3xl p-6 sm:p-7 max-w-md w-full space-y-5 shadow-2xl text-left relative">
+            <div className="flex justify-between items-start">
+              <div className="space-y-1">
+                <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider font-display">
+                  Calendar Fast Forward Confirmation
+                </span>
+                <h3 className="text-xl font-display font-black text-white uppercase tracking-tight">
+                  {getFastForwardDetails(pendingFastForward).title}
+                </h3>
+              </div>
+              <button
+                onClick={() => setPendingFastForward(null)}
+                className="text-slate-500 hover:text-white p-1 rounded-lg text-sm"
+                aria-label="Close modal"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 space-y-2 text-xs">
+              <div className="flex justify-between items-center text-[11px]">
+                <span className="text-slate-400 uppercase font-bold">Target Stop Date</span>
+                <span className="font-mono font-bold text-emerald-400">
+                  {getFastForwardDetails(pendingFastForward).targetDate}
+                </span>
+              </div>
+              <p className="text-slate-300 leading-relaxed pt-1">
+                {getFastForwardDetails(pendingFastForward).description}
+              </p>
+            </div>
+
+            <aside aria-label="Caution note" className="p-3 bg-amber-950/20 border border-amber-500/30 rounded-xl text-[11px] text-amber-300/90 flex items-center gap-2">
+              <span>⚠️</span>
+              <span>
+                Simulated matches are permanent unless &quot;Allow Match Retry&quot; is active in your career settings.
+              </span>
+            </aside>
+
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={() => setPendingFastForward(null)}
+                className="flex-1 py-3 px-4 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-850 text-slate-300 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const target = pendingFastForward;
+                  setPendingFastForward(null);
+                  handleTimeSkipAction(target);
+                }}
+                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
+              >
+                Confirm &amp; Fast Forward
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* Sacked Board Dismissal Modal */}
       {save.boardStatus?.status === 'sacked' && save.settings.boardCanSack && !dismissedSackedModal && (

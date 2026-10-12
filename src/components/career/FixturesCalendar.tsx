@@ -6,7 +6,8 @@ import {
   LeagueFixture,
   Club,
 } from '../../career/types';
-import { getAllClubs, getEffectiveClubName } from '../../career/clubs';
+import { getAllClubs, getEffectiveClubName, getClubsWithUserClub } from '../../career/clubs';
+import { formatCareerDate } from '../../career/formatters';
 import { getNextClubFixture } from '../../career/calendar';
 import {
   simulateMatchFixture,
@@ -37,7 +38,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
   const userClubId = save.club.id;
   const userSquad = save.squad || [];
 
-  const allClubs = getAllClubs();
+  const allClubs = getClubsWithUserClub(save.club);
   const clubsMap = new Map<string, Club>(allClubs.map((c) => [c.id, c]));
 
   const nextFixture = getNextClubFixture(fixtures, userClubId);
@@ -151,7 +152,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
             <span>📅</span>
             <span>League Fixtures & Calendar Schedule</span>
             <span className="text-[10px] font-mono text-emerald-400 font-bold ml-2">
-              (In-Game: {save.season.currentDate})
+              (In-Game: {formatCareerDate(save.season.currentDate, save.settings?.dateFormat)})
             </span>
           </div>
           <p className="text-[11px] text-slate-400">
@@ -261,7 +262,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
             >
               <div className="flex justify-between items-center text-[10px] text-slate-500 font-bold mb-2">
                 <span>Round {fixture.round}</span>
-                <span>{fixture.date}</span>
+                <span>{formatCareerDate(fixture.date, save.settings?.dateFormat)}</span>
               </div>
 
               {/* Clubs & Result */}

@@ -9,6 +9,7 @@ import {
   GoalScorer,
 } from './types';
 import { categorizePosition } from './squad';
+import { getEffectiveClubName } from './clubs';
 
 export interface InGamePlayerState {
   player: CareerPlayer;
@@ -118,7 +119,7 @@ export function simulateFullMatch(
       type: 'goal',
       clubId: homeClub.id,
       playerName: scorer.player.name,
-      detail: `GOAL! ${scorer.player.name} strikes for ${homeClub.defaultName}!`,
+      detail: `GOAL! ${scorer.player.name} strikes for ${getEffectiveClubName(homeClub)}!`,
     });
     scorers.push({
       name: scorer.player.name,
@@ -142,7 +143,7 @@ export function simulateFullMatch(
       type: 'goal',
       clubId: awayClub.id,
       playerName: scorer.player.name,
-      detail: `GOAL! ${scorer.player.name} finds the net for ${awayClub.defaultName}!`,
+      detail: `GOAL! ${scorer.player.name} finds the net for ${getEffectiveClubName(awayClub)}!`,
     });
     scorers.push({
       name: scorer.player.name,

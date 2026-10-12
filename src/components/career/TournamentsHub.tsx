@@ -8,7 +8,8 @@ import {
   Club,
 } from '../../career/types';
 import { CUP_IDS, findAnyClub, simulateKnockoutCupFixture, advanceCupTournament } from '../../career/cups';
-import { getEffectiveClubName, getAllClubs } from '../../career/clubs';
+import { getAllClubs, getEffectiveClubName } from '../../career/clubs';
+import { formatCareerDate } from '../../career/formatters';
 import { MatchDayModal } from './MatchDayModal';
 
 interface TournamentsHubProps {
@@ -89,7 +90,7 @@ export function TournamentsHub({
         });
         finances.transferBudget += adv.updatedTournament.prizeMoney;
         finances.balance += adv.updatedTournament.prizeMoney;
-        onNotification?.(`🏆 Silverware! ${save.club.defaultName} won the ${adv.updatedTournament.name}!`);
+        onNotification?.(`🏆 Silverware! ${getEffectiveClubName(save.club)} won the ${adv.updatedTournament.name}!`);
       }
     } else {
       onNotification?.(`Match completed: ${homeClub.shortName} ${simmed.homeScore} - ${simmed.awayScore} ${awayClub.shortName}`);
@@ -221,7 +222,10 @@ export function TournamentsHub({
                     Tournament Champion
                   </span>
                   <span className="text-sm font-display font-black text-white uppercase">
-                    {findAnyClub(currentTournament.winnerClubId)?.defaultName || currentTournament.winnerClubId}
+                    {(() => {
+                      const w = findAnyClub(currentTournament.winnerClubId);
+                      return w ? getEffectiveClubName(w, save.club) : currentTournament.winnerClubId;
+                    })()}
                   </span>
                 </div>
               </div>
@@ -270,7 +274,7 @@ export function TournamentsHub({
                             }`}
                           >
                             <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono mb-2">
-                              <span>📅 {fixture.date}</span>
+                              <span>📅 {formatCareerDate(fixture.date, save.settings?.dateFormat)}</span>
                               {isUserInTie && (
                                 <span className="bg-emerald-500 text-slate-950 font-display font-black px-2 py-0.5 rounded text-[9px] uppercase tracking-wider">
                                   Your Fixture
@@ -295,7 +299,7 @@ export function TournamentsHub({
                                       : 'text-white'
                                   }`}
                                 >
-                                  {home?.defaultName || fixture.homeClubId}
+                                  {home ? getEffectiveClubName(home, save.club) : fixture.homeClubId}
                                 </span>
                               </div>
 
@@ -328,7 +332,7 @@ export function TournamentsHub({
                                       : 'text-white'
                                   }`}
                                 >
-                                  {away?.defaultName || fixture.awayClubId}
+                                  {away ? getEffectiveClubName(away, save.club) : fixture.awayClubId}
                                 </span>
                                 <div
                                   className="w-5 h-5 rounded-full border border-white/20 shrink-0"

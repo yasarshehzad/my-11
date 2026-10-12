@@ -79,24 +79,32 @@ export function calculateWeeklyWage(rating: number, value: number = 0): number {
   return Math.round(weeklyWage / 1_000) * 1_000;
 }
 
+import {
+  CurrencyPreference,
+  WageUnitPreference,
+  NumberFormatPreference,
+} from './types';
+import { formatCareerCurrency, formatCareerWage } from './formatters';
+
 /**
- * Format currency amounts nicely: e.g. £140.0M or £850k
+ * Format currency amounts nicely: e.g. £140.0M, €161.0M, $175.0M, or £850k
  */
-export function formatCurrency(amount: number): string {
-  if (amount >= 1_000_000) {
-    const millions = amount / 1_000_000;
-    return `£${millions.toFixed(millions >= 100 ? 0 : 1)}M`;
-  }
-  if (amount >= 1_000) {
-    const thousands = Math.round(amount / 1_000);
-    return `£${thousands}k`;
-  }
-  return `£${amount}`;
+export function formatCurrency(
+  amount: number,
+  currency: CurrencyPreference = 'GBP',
+  numberFormat: NumberFormatPreference = 'comma'
+): string {
+  return formatCareerCurrency(amount, currency, numberFormat);
 }
 
 /**
- * Format weekly wage: e.g. £120k/w
+ * Format wage: e.g. £120k/w, £6.2M/yr, or £520k/mo
  */
-export function formatWage(weeklyAmount: number): string {
-  return `${formatCurrency(weeklyAmount)}/w`;
+export function formatWage(
+  weeklyAmount: number,
+  wageUnit: WageUnitPreference = 'weekly',
+  currency: CurrencyPreference = 'GBP',
+  numberFormat: NumberFormatPreference = 'comma'
+): string {
+  return formatCareerWage(weeklyAmount, wageUnit, currency, numberFormat);
 }
