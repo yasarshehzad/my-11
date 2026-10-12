@@ -78,45 +78,93 @@ export function getScoutingMarketPool(
     userSquad.map((p) => (p.name || '').toLowerCase()).filter(Boolean)
   );
 
-  const seenPlayerNames = new Set<string>();
-  let pool: MarketPlayer[] = [];
+  // 1. Group base players by canonical name to deduplicate historical versions of legends
+  const playerGroups = new Map<
+    string,
+    {
+      base: (typeof players)[0];
+      variants: {
+        id: string;
+        season: string;
+        displayName: string;
+        rating: number;
+        value: number;
+        wageDemand: number;
+        age: number;
+        rarity: string;
+        club: string;
+      }[];
+    }
+  >();
 
   for (const base of players) {
-    const pName = base.displayName || base.playerName || base.id;
-    const lowerName = pName.toLowerCase();
+    const rawName = (base.playerName || base.displayName || base.id)
+      .replace(/\s+\d{2}\/\d{2}$/, '')
+      .trim();
+    const lowerName = rawName.toLowerCase();
 
-    if (
-      userPlayerIds.has(base.id) ||
-      userPlayerNames.has(lowerName) ||
-      seenPlayerNames.has(lowerName)
-    ) {
+    if (userPlayerIds.has(base.id) || userPlayerNames.has(lowerName)) {
       continue;
     }
-
-    seenPlayerNames.add(lowerName);
 
     const age = getDeterministicAge(base.id);
     const value = calculatePlayerValue(base.rating, age, base.primaryPosition);
     const wageDemand = calculateWeeklyWage(base.rating, value);
-    const isHomegrown = isHomegrownPlayer({ nationality: base.nationality });
 
-    pool.push({
+    const variant = {
       id: base.id,
-      cardId: `${base.id}_career`,
-      name: pName,
+      season: base.season || 'Classic',
+      displayName: base.displayName || `${rawName} ${base.season || ''}`.trim(),
       rating: base.rating,
-      position: base.primaryPosition,
-      age,
       value,
       wageDemand,
-      club: base.club,
-      nationality: base.nationality,
-      isHomegrown,
+      age,
       rarity: base.rarity,
+      club: base.club,
+    };
+
+    if (!playerGroups.has(lowerName)) {
+      playerGroups.set(lowerName, { base, variants: [variant] });
+    } else {
+      playerGroups.get(lowerName)!.variants.push(variant);
+    }
+  }
+
+  let pool: MarketPlayer[] = [];
+  const seenPlayerNames = new Set<string>();
+
+  for (const [lowerName, group] of playerGroups.entries()) {
+    seenPlayerNames.add(lowerName);
+
+    // Sort variants by rating descending so top card represents the player
+    group.variants.sort((a, b) => b.rating - a.rating);
+    const topVariant = group.variants[0];
+    const isLegend =
+      group.base.rarity === 'legend' ||
+      group.base.era !== 'Modern' ||
+      group.variants.length > 1;
+
+    pool.push({
+      id: topVariant.id,
+      cardId: `${topVariant.id}_career`,
+      name: group.base.playerName || topVariant.displayName.replace(/\s+\d{2}\/\d{2}$/, '').trim(),
+      rating: topVariant.rating,
+      position: group.base.primaryPosition,
+      age: topVariant.age,
+      value: topVariant.value,
+      wageDemand: topVariant.wageDemand,
+      club: topVariant.club,
+      nationality: group.base.nationality,
+      isHomegrown: isHomegrownPlayer({ nationality: group.base.nationality }),
+      rarity: isLegend ? 'Legend' : topVariant.rarity,
+      isLegend,
+      era: group.base.era,
+      versions: group.variants,
+      selectedVersionId: topVariant.id,
     });
   }
 
-  // Include supplemental database expansion players
+  // 2. Include supplemental database expansion players (modern current season)
   const supplementalPlayers = getAllSupplementalPlayers(effectiveSeason);
   for (const supp of supplementalPlayers) {
     const lowerName = supp.name.toLowerCase();
@@ -142,15 +190,30 @@ export function getScoutingMarketPool(
       nationality: supp.nationality,
       isHomegrown: supp.isHomegrown,
       rarity: supp.potential && supp.potential >= 86 ? 'Wonderkid' : 'Standard',
+      isLegend: false,
+      era: 'Modern',
     });
   }
 
-  // Apply filters
+  // 3. Apply filters
   if (effectiveFilters) {
+    // Player pool era toggle
+    if (effectiveFilters.playerPoolType === 'modern') {
+      pool = pool.filter((p) => !p.isLegend);
+    } else if (effectiveFilters.playerPoolType === 'legends') {
+      pool = pool.filter((p) => p.isLegend);
+    }
+
+    // General position category
     if (effectiveFilters.positionCategory && effectiveFilters.positionCategory !== 'ALL') {
       pool = pool.filter(
         (p) => categorizePosition(p.position) === effectiveFilters.positionCategory
       );
+    }
+
+    // Specific position role
+    if (effectiveFilters.specificPosition && effectiveFilters.specificPosition !== 'ALL') {
+      pool = pool.filter((p) => p.position.toUpperCase() === effectiveFilters.specificPosition!.toUpperCase());
     }
 
     if (effectiveFilters.minRating !== undefined) {
@@ -159,6 +222,14 @@ export function getScoutingMarketPool(
 
     if (effectiveFilters.maxRating !== undefined) {
       pool = pool.filter((p) => p.rating <= effectiveFilters.maxRating!);
+    }
+
+    if (effectiveFilters.minAge !== undefined) {
+      pool = pool.filter((p) => p.age >= effectiveFilters.minAge!);
+    }
+
+    if (effectiveFilters.maxAge !== undefined) {
+      pool = pool.filter((p) => p.age <= effectiveFilters.maxAge!);
     }
 
     if (effectiveFilters.maxPrice !== undefined) {
@@ -306,14 +377,21 @@ export function executePlayerSigning(
     }
   }
 
+  const selectedVariant = targetPlayer.versions?.find((v) => v.id === targetPlayer.selectedVersionId);
+  const effectiveName = selectedVariant ? selectedVariant.displayName : targetPlayer.name;
+  const effectiveRating = selectedVariant ? selectedVariant.rating : targetPlayer.rating;
+  const effectiveValue = selectedVariant ? selectedVariant.value : targetPlayer.value;
+  const effectiveAge = selectedVariant ? selectedVariant.age : targetPlayer.age;
+  const effectiveCardId = selectedVariant ? selectedVariant.id : targetPlayer.cardId;
+
   const newPlayer: CareerPlayer = {
     id: `cp_${targetPlayer.id}_${Date.now()}`,
-    cardId: targetPlayer.cardId,
-    name: targetPlayer.name,
-    rating: targetPlayer.rating,
+    cardId: effectiveCardId,
+    name: effectiveName,
+    rating: effectiveRating,
     position: targetPlayer.position,
-    age: targetPlayer.age,
-    value: targetPlayer.value,
+    age: effectiveAge,
+    value: effectiveValue,
     wageWeekly: wage,
     contractYears,
     fitness: 100,
@@ -325,7 +403,7 @@ export function executePlayerSigning(
     nationality: targetPlayer.nationality,
     potential:
       getAllSupplementalPlayers().find((sp) => sp.id === targetPlayer.id)?.potential ||
-      Math.max(targetPlayer.rating, targetPlayer.rating + (targetPlayer.age <= 21 ? 6 : targetPlayer.age <= 24 ? 3 : 0)),
+      Math.max(effectiveRating, effectiveRating + (effectiveAge <= 21 ? 6 : effectiveAge <= 24 ? 3 : 0)),
   };
 
   const updatedSquad = [...save.squad, newPlayer];

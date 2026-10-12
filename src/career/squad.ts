@@ -192,11 +192,63 @@ export function calculatePositionFit(player: CareerPlayer, targetPos: string): P
     return 'competent';
   }
 
-  // Related adjacent roles
-  const primaryGroup = categorizePosition(primary);
-  const targetGroup = categorizePosition(target);
+  // Strict positional adjacencies:
+  // Fullbacks & Wingbacks (LB/LWB, RB/RWB)
+  if ((primary === 'LB' && target === 'LWB') || (primary === 'LWB' && target === 'LB')) {
+    return 'competent';
+  }
+  if ((primary === 'RB' && target === 'RWB') || (primary === 'RWB' && target === 'RB')) {
+    return 'competent';
+  }
+  if (['LB', 'LWB'].includes(primary) && ['RB', 'RWB'].includes(target)) {
+    return 'competent';
+  }
+  if (['RB', 'RWB'].includes(primary) && ['LB', 'LWB'].includes(target)) {
+    return 'competent';
+  }
 
-  if (primaryGroup === targetGroup && primaryGroup !== 'GK') {
+  // Central defenders (CB) can NOT play full-back (LB/RB), and full-backs can NOT play CB
+  if (primary === 'CB' || target === 'CB') {
+    return 'out_of_position';
+  }
+
+  // Central Midfielders (CDM, CM, CAM)
+  const isCentralMid = (pos: string) => ['CDM', 'CM', 'CAM'].includes(pos);
+  if (isCentralMid(primary) && isCentralMid(target)) {
+    return 'competent';
+  }
+
+  // Wide Midfielders and Wingers (LM/LW, RM/RW)
+  if (
+    (['LM', 'LW'].includes(primary) && ['LM', 'LW'].includes(target)) ||
+    (['RM', 'RW'].includes(primary) && ['RM', 'RW'].includes(target))
+  ) {
+    return 'competent';
+  }
+
+  // Wingers playing opposite flank
+  if (
+    (['LW', 'LM'].includes(primary) && ['RW', 'RM'].includes(target)) ||
+    (['RW', 'RM'].includes(primary) && ['LW', 'LM'].includes(target))
+  ) {
+    return 'competent';
+  }
+
+  // Attackers: ST and CF
+  if (['ST', 'CF'].includes(primary) && ['ST', 'CF'].includes(target)) {
+    return 'competent';
+  }
+
+  // CAM can play CF/ST in a pinch or vice versa
+  if (
+    (primary === 'CAM' && ['CF', 'ST'].includes(target)) ||
+    (['CF', 'ST'].includes(primary) && target === 'CAM')
+  ) {
+    return 'competent';
+  }
+
+  // Wingers playing CF/ST
+  if (['LW', 'RW'].includes(primary) && ['ST', 'CF'].includes(target)) {
     return 'competent';
   }
 
@@ -235,28 +287,45 @@ export function getBestStartingLineup(
     SUPPORTED_CAREER_FORMATIONS[0];
 
   const available = [...squad].sort((a, b) => b.rating - a.rating);
-  const starterIds: string[] = [];
+  const starterMap = new Map<number, string>();
   const assignedSet = new Set<string>();
 
-  // 1. Fill formation slots with highest rated matching players
-  for (const slotPos of formation.slots) {
-    // Exact or competent match
-    const candidate = available.find(
-      (p) => !assignedSet.has(p.id) && calculatePositionFit(p, slotPos) !== 'out_of_position'
+  // PASS 1: Fill slots with highest rated NATURAL position players
+  formation.slots.forEach((slotPos, index) => {
+    const naturalCandidate = available.find(
+      (p) => !assignedSet.has(p.id) && calculatePositionFit(p, slotPos) === 'natural'
     );
+    if (naturalCandidate) {
+      starterMap.set(index, naturalCandidate.id);
+      assignedSet.add(naturalCandidate.id);
+    }
+  });
 
-    if (candidate) {
-      starterIds.push(candidate.id);
-      assignedSet.add(candidate.id);
-    } else {
-      // Any remaining player if none fits position
+  // PASS 2: For any remaining empty slots, fill with highest rated COMPETENT players
+  formation.slots.forEach((slotPos, index) => {
+    if (!starterMap.has(index)) {
+      const competentCandidate = available.find(
+        (p) => !assignedSet.has(p.id) && calculatePositionFit(p, slotPos) === 'competent'
+      );
+      if (competentCandidate) {
+        starterMap.set(index, competentCandidate.id);
+        assignedSet.add(competentCandidate.id);
+      }
+    }
+  });
+
+  // PASS 3: Fallback for any slot still unassigned
+  formation.slots.forEach((_, index) => {
+    if (!starterMap.has(index)) {
       const fallback = available.find((p) => !assignedSet.has(p.id));
       if (fallback) {
-        starterIds.push(fallback.id);
+        starterMap.set(index, fallback.id);
         assignedSet.add(fallback.id);
       }
     }
-  }
+  });
+
+  const starterIds: string[] = formation.slots.map((_, index) => starterMap.get(index) || '');
 
   // 2. Fill bench (up to 7 subs) from remaining available
   const benchIds: string[] = [];

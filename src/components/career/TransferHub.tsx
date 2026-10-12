@@ -6,6 +6,7 @@ import {
   MarketPlayer,
   ScoutingFilters,
   CareerPlayer,
+  PlayerVersionVariant,
 } from '../../career/types';
 import {
   getScoutingMarketPool,
@@ -31,6 +32,8 @@ interface TransferHubProps {
   onNotification?: (msg: string) => void;
 }
 
+const PAGE_SIZE = 12;
+
 export function TransferHub({
   save,
   onUpdateSave,
@@ -39,12 +42,18 @@ export function TransferHub({
   const [subTab, setSubTab] = useState<'market' | 'incoming' | 'shortlist' | 'history' | 'board'>('market');
   const seniorCount = useMemo(() => getSeniorPlayerCount(save.squad), [save.squad]);
 
-  // Scouting search & filters
+  // Era pool toggle ('modern' default per user requirement)
+  const [playerPoolType, setPlayerPoolType] = useState<'modern' | 'legends' | 'all'>('modern');
+
+  // Rich Scouting search & filters
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPosCategory, setSelectedPosCategory] = useState<'ALL' | 'GK' | 'DEF' | 'MID' | 'FWD'>('ALL');
-  const [minRating, setMinRating] = useState<number>(75);
+  const [specificPosition, setSpecificPosition] = useState<string>('ALL');
+  const [minRating, setMinRating] = useState<number>(0);
+  const [ageCategory, setAgeCategory] = useState<'ALL' | 'U21' | 'PEAK' | 'VET'>('ALL');
   const [homegrownOnly, setHomegrownOnly] = useState<boolean>(false);
-  const [maxPrice, setMaxPrice] = useState<number | undefined>(undefined);
+  const [affordableOnly, setAffordableOnly] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Negotiation Modal
   const [negotiatingPlayer, setNegotiatingPlayer] = useState<MarketPlayer | null>(null);
@@ -61,16 +70,40 @@ export function TransferHub({
     save.season.yearStart
   );
 
-  const filters: ScoutingFilters = useMemo(
-    () => ({
+  const filters: ScoutingFilters = useMemo(() => {
+    let minAge: number | undefined;
+    let maxAge: number | undefined;
+    if (ageCategory === 'U21') {
+      maxAge = 21;
+    } else if (ageCategory === 'PEAK') {
+      minAge = 22;
+      maxAge = 29;
+    } else if (ageCategory === 'VET') {
+      minAge = 30;
+    }
+
+    return {
+      playerPoolType,
       positionCategory: selectedPosCategory,
-      minRating,
-      maxPrice,
+      specificPosition: specificPosition !== 'ALL' ? specificPosition : undefined,
+      minRating: minRating > 0 ? minRating : undefined,
+      minAge,
+      maxAge,
+      maxPrice: affordableOnly ? save.finances.transferBudget : undefined,
       homegrownOnly,
       searchTerm: searchTerm.trim() || undefined,
-    }),
-    [selectedPosCategory, minRating, maxPrice, homegrownOnly, searchTerm]
-  );
+    };
+  }, [
+    playerPoolType,
+    selectedPosCategory,
+    specificPosition,
+    minRating,
+    ageCategory,
+    affordableOnly,
+    homegrownOnly,
+    searchTerm,
+    save.finances.transferBudget,
+  ]);
 
   const dbSeason = save.settings?.databaseSeason || save.season?.databaseSeason || '2026/27';
 
@@ -78,6 +111,14 @@ export function TransferHub({
     () => getScoutingMarketPool(save.squad, filters, dbSeason),
     [save.squad, filters, dbSeason]
   );
+
+  // Total pages and paginated slice
+  const totalPages = Math.max(1, Math.ceil(marketPlayers.length / PAGE_SIZE));
+  const validPage = Math.min(currentPage, totalPages);
+  const paginatedPlayers = useMemo(() => {
+    const start = (validPage - 1) * PAGE_SIZE;
+    return marketPlayers.slice(start, start + PAGE_SIZE);
+  }, [marketPlayers, validPage]);
 
   const shortlistIdsSet = useMemo(
     () => new Set(save.shortlistPlayerIds || []),
@@ -114,11 +155,57 @@ export function TransferHub({
   };
 
   const handleStartNegotiation = (player: MarketPlayer) => {
-    setNegotiatingPlayer(player);
-    setOfferedFee(player.value);
-    setOfferedWage(player.wageDemand);
+    // If player has versions, initialize with the top version
+    const initialVersion = player.versions && player.versions.length > 0 ? player.versions[0] : null;
+    const initialPlayer: MarketPlayer = initialVersion
+      ? {
+          ...player,
+          selectedVersionId: initialVersion.id,
+          name: initialVersion.displayName,
+          rating: initialVersion.rating,
+          value: initialVersion.value,
+          wageDemand: initialVersion.wageDemand,
+          age: initialVersion.age,
+          club: initialVersion.club,
+          cardId: initialVersion.id,
+        }
+      : { ...player };
+
+    setNegotiatingPlayer(initialPlayer);
+    setOfferedFee(initialPlayer.value);
+    setOfferedWage(initialPlayer.wageDemand);
     setOfferedContractYears(3);
     setNegotiationFeedback({ status: 'idle', message: '' });
+  };
+
+  const handleSelectLegendVersion = (ver: PlayerVersionVariant) => {
+    if (!negotiatingPlayer) return;
+    const updated: MarketPlayer = {
+      ...negotiatingPlayer,
+      selectedVersionId: ver.id,
+      name: ver.displayName,
+      rating: ver.rating,
+      value: ver.value,
+      wageDemand: ver.wageDemand,
+      age: ver.age,
+      club: ver.club,
+      cardId: ver.id,
+    };
+    setNegotiatingPlayer(updated);
+    setOfferedFee(ver.value);
+    setOfferedWage(ver.wageDemand);
+    setNegotiationFeedback({ status: 'idle', message: '' });
+  };
+
+  const handleResetFilters = () => {
+    setSearchTerm('');
+    setSelectedPosCategory('ALL');
+    setSpecificPosition('ALL');
+    setMinRating(0);
+    setAgeCategory('ALL');
+    setAffordableOnly(false);
+    setHomegrownOnly(false);
+    setCurrentPage(1);
   };
 
   const handleConfirmBid = () => {
@@ -282,12 +369,71 @@ export function TransferHub({
       {subTab === 'market' && (
         <section className="space-y-4">
           {/* Search & Filter Controls */}
-          <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-4 space-y-3">
+          <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-4 sm:p-5 space-y-4">
+            {/* Era Toggle Header */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+              <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPlayerPoolType('modern');
+                    setCurrentPage(1);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-display font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
+                    playerPoolType === 'modern'
+                      ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <span>⚡</span>
+                  <span>Current Season (Modern)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPlayerPoolType('legends');
+                    setCurrentPage(1);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-display font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
+                    playerPoolType === 'legends'
+                      ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/30'
+                      : 'text-amber-400/80 hover:text-amber-300'
+                  }`}
+                >
+                  <span>👑</span>
+                  <span>Legends & Icons</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPlayerPoolType('all');
+                    setCurrentPage(1);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-display font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
+                    playerPoolType === 'all'
+                      ? 'bg-slate-700 text-white'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <span>🌐</span>
+                  <span>All Eras</span>
+                </button>
+              </div>
+
+              <span className="text-[11px] text-slate-400 font-medium">
+                Active Pool: <strong className="text-white">{marketPlayers.length}</strong> available targets
+              </span>
+            </div>
+
+            {/* Main Search & Position Category */}
             <div className="flex flex-col sm:flex-row gap-3">
               <input
                 type="text"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
                 placeholder="Search player, club, or nationality..."
                 className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-semibold"
               />
@@ -296,7 +442,11 @@ export function TransferHub({
                 {(['ALL', 'GK', 'DEF', 'MID', 'FWD'] as const).map((cat) => (
                   <button
                     key={cat}
-                    onClick={() => setSelectedPosCategory(cat)}
+                    type="button"
+                    onClick={() => {
+                      setSelectedPosCategory(cat);
+                      setCurrentPage(1);
+                    }}
                     className={`px-3 py-2 rounded-xl text-xs font-display font-black uppercase tracking-wider cursor-pointer transition-colors ${
                       selectedPosCategory === cat
                         ? 'bg-emerald-500 text-slate-950 shadow'
@@ -309,14 +459,65 @@ export function TransferHub({
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 text-xs pt-1 border-t border-slate-850/60 text-slate-400">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] uppercase font-bold text-slate-500">Min Rating:</span>
+            {/* Granular Filters Bar */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 text-xs pt-1 border-t border-slate-850/60">
+              {/* Specific Position Role */}
+              <div className="space-y-1">
+                <span className="text-[9px] uppercase font-bold text-slate-500 block">Specific Role:</span>
+                <select
+                  value={specificPosition}
+                  onChange={(e) => {
+                    setSpecificPosition(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-2 py-1.5 text-xs font-display font-black"
+                >
+                  <option value="ALL">All Roles</option>
+                  <option value="GK">GK (Goalkeeper)</option>
+                  <option value="CB">CB (Center Back)</option>
+                  <option value="LB">LB (Left Back)</option>
+                  <option value="RB">RB (Right Back)</option>
+                  <option value="CDM">CDM (Def Mid)</option>
+                  <option value="CM">CM (Center Mid)</option>
+                  <option value="CAM">CAM (Att Mid)</option>
+                  <option value="LM">LM (Left Mid)</option>
+                  <option value="RM">RM (Right Mid)</option>
+                  <option value="LW">LW (Left Wing)</option>
+                  <option value="RW">RW (Right Wing)</option>
+                  <option value="ST">ST (Striker)</option>
+                </select>
+              </div>
+
+              {/* Age Range Filter */}
+              <div className="space-y-1">
+                <span className="text-[9px] uppercase font-bold text-slate-500 block">Age Profile:</span>
+                <select
+                  value={ageCategory}
+                  onChange={(e) => {
+                    setAgeCategory(e.target.value as typeof ageCategory);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-2 py-1.5 text-xs font-display font-black"
+                >
+                  <option value="ALL">All Ages</option>
+                  <option value="U21">U21 Wonderkids (≤21)</option>
+                  <option value="PEAK">Peak Prime (22–29)</option>
+                  <option value="VET">Veterans (30+)</option>
+                </select>
+              </div>
+
+              {/* Min Rating */}
+              <div className="space-y-1">
+                <span className="text-[9px] uppercase font-bold text-slate-500 block">Min Rating:</span>
                 <select
                   value={minRating}
-                  onChange={(e) => setMinRating(Number(e.target.value))}
-                  className="bg-slate-950 border border-slate-800 text-white rounded-lg px-2.5 py-1 text-xs font-mono"
+                  onChange={(e) => {
+                    setMinRating(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-2 py-1.5 text-xs font-mono"
                 >
+                  <option value={0}>Any Rating</option>
                   <option value={70}>70+ OVR</option>
                   <option value={75}>75+ OVR</option>
                   <option value={80}>80+ OVR</option>
@@ -325,125 +526,229 @@ export function TransferHub({
                 </select>
               </div>
 
-              <label className="flex items-center gap-1.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={homegrownOnly}
-                  onChange={(e) => setHomegrownOnly(e.target.checked)}
-                  className="w-3.5 h-3.5 accent-emerald-500 rounded cursor-pointer"
-                />
-                <span className="text-[11px] font-bold text-slate-300">Homegrown Only (8+ Rule)</span>
-              </label>
+              {/* Affordable Only */}
+              <div className="flex items-end pb-1.5">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={affordableOnly}
+                    onChange={(e) => {
+                      setAffordableOnly(e.target.checked);
+                      setCurrentPage(1);
+                    }}
+                    className="w-4 h-4 accent-emerald-500 rounded cursor-pointer"
+                  />
+                  <span className="text-[11px] font-bold text-slate-300">Affordable Only</span>
+                </label>
+              </div>
 
-              <span className="text-[10px] text-slate-500 ml-auto">
-                Showing {marketPlayers.length} scouting targets
-              </span>
+              {/* Homegrown */}
+              <div className="flex items-end pb-1.5">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={homegrownOnly}
+                    onChange={(e) => {
+                      setHomegrownOnly(e.target.checked);
+                      setCurrentPage(1);
+                    }}
+                    className="w-4 h-4 accent-emerald-500 rounded cursor-pointer"
+                  />
+                  <span className="text-[11px] font-bold text-slate-300">Homegrown (8+)</span>
+                </label>
+              </div>
+
+              {/* Reset Filters */}
+              <div className="flex items-end pb-1">
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  className="w-full py-1.5 px-2 rounded-lg border border-slate-800 bg-slate-950/80 hover:bg-slate-900 text-slate-400 hover:text-white text-[11px] font-display font-bold uppercase transition-all cursor-pointer"
+                >
+                  ↺ Reset
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Market Grid */}
           {marketPlayers.length === 0 ? (
-            <div className="bg-slate-900/20 border border-slate-850 rounded-2xl p-12 text-center text-slate-500 text-xs">
-              No scouting targets found matching your criteria. Try adjusting the search term or rating filter.
+            <div className="bg-slate-900/20 border border-slate-850 rounded-2xl p-12 text-center text-slate-500 text-xs space-y-3">
+              <div>No scouting targets found matching your selected criteria.</div>
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="py-2 px-4 rounded-xl bg-emerald-500 text-slate-950 font-display font-black text-xs uppercase"
+              >
+                Reset Scouting Filters
+              </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {marketPlayers.slice(0, 30).map((player) => {
-                const isShortlisted = shortlistIdsSet.has(player.id);
-                const canAfford = player.value <= save.finances.transferBudget;
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {paginatedPlayers.map((player) => {
+                  const isShortlisted = shortlistIdsSet.has(player.id);
+                  const canAfford = player.value <= save.finances.transferBudget;
+                  const isLegend = player.isLegend;
 
-                return (
-                  <article
-                    key={player.id}
-                    className="bg-slate-900/40 border border-slate-850 hover:border-slate-800 rounded-2xl p-4 flex flex-col justify-between gap-3 transition-all"
-                  >
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-start">
-                        <div className="flex items-center gap-2">
-                          <span className="w-8 h-8 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center font-display font-black text-xs text-emerald-400">
-                            {player.rating}
-                          </span>
-                          <div>
-                            <h3 className="font-display font-black text-sm text-white leading-tight">
-                              {player.name}
-                            </h3>
-                            <div className="text-[10px] text-slate-400 font-medium flex items-center gap-1">
-                              <span className="text-emerald-400 font-bold">{player.position}</span>
-                              <span>•</span>
-                              <span>{player.age} yrs</span>
-                              <span>•</span>
-                              <span>{player.nationality}</span>
+                  return (
+                    <article
+                      key={player.id}
+                      className={`rounded-2xl p-4 flex flex-col justify-between gap-3 transition-all ${
+                        isLegend
+                          ? 'bg-gradient-to-b from-amber-950/30 via-slate-900/70 to-slate-950 border border-amber-500/50 hover:border-amber-400 shadow-lg shadow-amber-950/20 ring-1 ring-amber-400/20'
+                          : 'bg-slate-900/40 border border-slate-850 hover:border-slate-800'
+                      }`}
+                    >
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="flex items-center gap-2.5">
+                            <span
+                              className={`w-9 h-9 rounded-xl flex items-center justify-center font-display font-black text-xs ${
+                                isLegend
+                                  ? 'bg-amber-950/90 border border-amber-500/60 text-amber-300 shadow-md shadow-amber-500/20'
+                                  : 'bg-slate-950 border border-slate-800 text-emerald-400'
+                              }`}
+                            >
+                              {player.rating}
+                            </span>
+                            <div>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <h3 className="font-display font-black text-sm text-white leading-tight">
+                                  {player.name}
+                                </h3>
+                                {isLegend && (
+                                  <span className="text-[9px] font-black uppercase tracking-wider text-amber-400 bg-amber-950/80 border border-amber-600/70 px-1.5 py-0.2 rounded-full font-display">
+                                    👑 ICON ★
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-[10px] text-slate-400 font-medium flex items-center gap-1 mt-0.5">
+                                <span className={isLegend ? 'text-amber-400 font-bold' : 'text-emerald-400 font-bold'}>
+                                  {player.position}
+                                </span>
+                                <span>•</span>
+                                <span>{player.age} yrs</span>
+                                <span>•</span>
+                                <span>{player.nationality}</span>
+                              </div>
                             </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleToggleShortlist(player.id)}
+                            title={isShortlisted ? 'Remove from Shortlist' : 'Add to Shortlist'}
+                            className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-colors cursor-pointer shrink-0 ${
+                              isShortlisted
+                                ? 'bg-amber-950/80 text-amber-400 border border-amber-800'
+                                : 'bg-slate-950 text-slate-500 hover:text-white border border-slate-800'
+                            }`}
+                          >
+                            ★
+                          </button>
+                        </div>
+
+                        <div className="bg-slate-950/60 p-2.5 rounded-xl flex justify-between items-center text-xs font-mono">
+                          <div>
+                            <span className="text-[9px] uppercase text-slate-500 block">Valuation</span>
+                            <span className={`font-bold ${isLegend ? 'text-amber-300' : 'text-white'}`}>
+                              {formatCurrency(player.value)}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[9px] uppercase text-slate-500 block">Wage Demand</span>
+                            <span className="font-bold text-slate-300">{formatWage(player.wageDemand)}</span>
                           </div>
                         </div>
 
-                        <button
-                          onClick={() => handleToggleShortlist(player.id)}
-                          title={isShortlisted ? 'Remove from Shortlist' : 'Add to Shortlist'}
-                          className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-colors ${
-                            isShortlisted
-                              ? 'bg-amber-950/80 text-amber-400 border border-amber-800'
-                              : 'bg-slate-950 text-slate-500 hover:text-white border border-slate-800'
-                          }`}
-                        >
-                          ★
-                        </button>
-                      </div>
-
-                      <div className="bg-slate-950/60 p-2 rounded-xl flex justify-between items-center text-xs font-mono">
-                        <div>
-                          <span className="text-[9px] uppercase text-slate-500 block">Value</span>
-                          <span className="font-bold text-white">{formatCurrency(player.value)}</span>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-[9px] uppercase text-slate-500 block">Wages</span>
-                          <span className="font-bold text-slate-300">{formatWage(player.wageDemand)}</span>
+                        <div className="flex justify-between items-center text-[10px] text-slate-400">
+                          <span className="truncate max-w-[140px]">Club: {player.club}</span>
+                          <div className="flex items-center gap-1">
+                            {player.versions && player.versions.length > 1 && (
+                              <span className="text-[9px] font-bold text-amber-400/90 bg-amber-950/40 border border-amber-800/40 px-1.5 py-0.5 rounded">
+                                📚 {player.versions.length} Editions
+                              </span>
+                            )}
+                            {player.isHomegrown && (
+                              <span className="text-emerald-400 font-bold uppercase tracking-wider text-[9px] bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-900/60">
+                                Homegrown
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
 
-                      <div className="flex justify-between items-center text-[10px] text-slate-400">
-                        <span className="truncate max-w-[140px]">Club: {player.club}</span>
-                        {player.isHomegrown && (
-                          <span className="text-emerald-400 font-bold uppercase tracking-wider text-[9px] bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-900/60">
-                            Homegrown
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                      {(() => {
+                        const isSenior = player.age > U21_AGE_LIMIT;
+                        const isSquadFull = save.squad.length >= MAX_SQUAD_SIZE;
+                        const isSeniorFull = isSenior && seniorCount >= MAX_SENIOR_SQUAD_SIZE;
+                        const isBlocked = !windowIsOpen || isSquadFull || isSeniorFull;
 
-                    {(() => {
-                      const isSenior = player.age > U21_AGE_LIMIT;
-                      const isSquadFull = save.squad.length >= MAX_SQUAD_SIZE;
-                      const isSeniorFull = isSenior && seniorCount >= MAX_SENIOR_SQUAD_SIZE;
-                      const isBlocked = !windowIsOpen || isSquadFull || isSeniorFull;
+                        return (
+                          <button
+                            type="button"
+                            onClick={() => handleStartNegotiation(player)}
+                            disabled={isBlocked}
+                            className={`w-full py-2.5 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                              !windowIsOpen
+                                ? 'bg-slate-950 border border-slate-800 text-slate-600 cursor-not-allowed'
+                                : isSquadFull || isSeniorFull
+                                ? 'bg-amber-950/60 border border-amber-900 text-amber-400 cursor-not-allowed'
+                                : isLegend
+                                ? 'bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 shadow-md shadow-amber-500/25'
+                                : canAfford
+                                ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/20'
+                                : 'bg-slate-850 hover:bg-slate-800 text-slate-300 border border-slate-700'
+                            }`}
+                          >
+                            {!windowIsOpen
+                              ? 'Window Closed'
+                              : isSquadFull
+                              ? 'Squad Full (35/35)'
+                              : isSeniorFull
+                              ? 'Senior Full (25/25)'
+                              : isLegend
+                              ? '👑 Select Edition & Bid'
+                              : 'Make Offer'}
+                          </button>
+                        );
+                      })()}
+                    </article>
+                  );
+                })}
+              </div>
 
-                      return (
-                        <button
-                          onClick={() => handleStartNegotiation(player)}
-                          disabled={isBlocked}
-                          className={`w-full py-2 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1 ${
-                            !windowIsOpen
-                              ? 'bg-slate-950 border border-slate-800 text-slate-600 cursor-not-allowed'
-                              : isSquadFull || isSeniorFull
-                              ? 'bg-amber-950/60 border border-amber-900 text-amber-400 cursor-not-allowed'
-                              : canAfford
-                              ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/20'
-                              : 'bg-slate-850 hover:bg-slate-800 text-slate-300 border border-slate-700'
-                          }`}
-                        >
-                          {!windowIsOpen
-                            ? 'Window Closed'
-                            : isSquadFull
-                            ? 'Squad Full (35/35)'
-                            : isSeniorFull
-                            ? 'Senior Full (25/25)'
-                            : 'Make Offer'}
-                        </button>
-                      );
-                    })()}
-                  </article>
-                );
-              })}
+              {/* Pagination Controls */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-850 text-xs">
+                <span className="text-slate-400 font-medium">
+                  Showing <span className="text-white font-bold">{Math.min(marketPlayers.length, (validPage - 1) * PAGE_SIZE + 1)}</span> to{' '}
+                  <span className="text-white font-bold">{Math.min(marketPlayers.length, validPage * PAGE_SIZE)}</span> of{' '}
+                  <span className="text-emerald-400 font-bold">{marketPlayers.length}</span> scouting targets
+                </span>
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={validPage <= 1}
+                    className="px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/60 text-slate-300 hover:bg-slate-850 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed font-display font-bold text-xs uppercase cursor-pointer"
+                  >
+                    ◀ Prev
+                  </button>
+                  <span className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 font-mono text-xs">
+                    Page <span className="text-white font-bold">{validPage}</span> / {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={validPage >= totalPages}
+                    className="px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/60 text-slate-300 hover:bg-slate-850 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed font-display font-bold text-xs uppercase cursor-pointer"
+                  >
+                    Next ▶
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </section>
@@ -769,23 +1074,30 @@ export function TransferHub({
           <div className="bg-slate-950 border border-slate-800 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative my-auto">
             <header className="flex justify-between items-center border-b border-slate-900 pb-3">
               <div>
-                <span className="text-emerald-400 font-display font-black text-xs uppercase tracking-wider">
-                  Transfer Negotiations
+                <span className={`font-display font-black text-xs uppercase tracking-wider ${
+                  negotiatingPlayer.isLegend ? 'text-amber-400' : 'text-emerald-400'
+                }`}>
+                  {negotiatingPlayer.isLegend ? '👑 Legend Transfer Negotiations' : 'Transfer Negotiations'}
                 </span>
                 <h3 className="text-lg font-display font-black text-white uppercase">
                   {negotiatingPlayer.name}
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setNegotiatingPlayer(null)}
-                className="text-slate-500 hover:text-white text-xs font-bold"
+                className="text-slate-500 hover:text-white text-xs font-bold cursor-pointer"
               >
                 ✕ Cancel
               </button>
             </header>
 
             {/* Target Profile Summary */}
-            <div className="bg-slate-900/60 p-3 rounded-2xl flex justify-between items-center text-xs">
+            <div className={`p-3.5 rounded-2xl flex justify-between items-center text-xs ${
+              negotiatingPlayer.isLegend
+                ? 'bg-amber-950/20 border border-amber-500/30'
+                : 'bg-slate-900/60'
+            }`}>
               <div>
                 <span className="text-slate-500 text-[10px] uppercase font-bold block">
                   Club & Position
@@ -798,11 +1110,54 @@ export function TransferHub({
                 <span className="text-slate-500 text-[10px] uppercase font-bold block">
                   Market Valuation
                 </span>
-                <span className="text-emerald-400 font-bold font-mono">
+                <span className={`font-bold font-mono text-sm ${
+                  negotiatingPlayer.isLegend ? 'text-amber-400' : 'text-emerald-400'
+                }`}>
                   {formatCurrency(negotiatingPlayer.value)}
                 </span>
               </div>
             </div>
+
+            {/* Legend Historical Edition Selector (User requirement: select which season version to bid for) */}
+            {negotiatingPlayer.versions && negotiatingPlayer.versions.length > 1 && (
+              <div className="bg-amber-950/30 border border-amber-500/40 rounded-2xl p-3.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 flex items-center gap-1 font-display">
+                    <span>👑</span> Select Historical Edition
+                  </span>
+                  <span className="text-[10px] text-amber-300/80 font-mono">
+                    {negotiatingPlayer.versions.length} Seasons Available
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-1">
+                  {negotiatingPlayer.versions.map((ver) => {
+                    const isSelected =
+                      (negotiatingPlayer.selectedVersionId || negotiatingPlayer.cardId) === ver.id;
+                    return (
+                      <button
+                        key={ver.id}
+                        type="button"
+                        onClick={() => handleSelectLegendVersion(ver)}
+                        className={`p-2.5 rounded-xl text-left border transition-all text-xs flex justify-between items-center cursor-pointer ${
+                          isSelected
+                            ? 'bg-amber-500 text-slate-950 border-amber-300 font-bold shadow-md shadow-amber-500/30 ring-2 ring-amber-400'
+                            : 'bg-slate-950/80 border-slate-800 text-slate-300 hover:border-amber-500/50 hover:text-white'
+                        }`}
+                      >
+                        <div className="truncate mr-1">
+                          <div className="font-bold truncate">{ver.displayName}</div>
+                          <div className="text-[10px] opacity-80">{ver.club} • {ver.age} yrs</div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="font-mono font-black">{ver.rating} OVR</span>
+                          <div className="text-[9px] opacity-80 font-mono">{formatCurrency(ver.value)}</div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Negotiation Inputs */}
             <div className="space-y-4 text-xs">
@@ -819,10 +1174,11 @@ export function TransferHub({
                   step={500_000}
                   value={offeredFee}
                   onChange={(e) => setOfferedFee(Number(e.target.value))}
-                  className="w-full accent-emerald-500"
+                  className="w-full accent-emerald-500 cursor-pointer"
                 />
                 <div className="flex justify-between text-[10px] text-slate-500">
                   <span>Min: {formatCurrency(negotiatingPlayer.value * 0.5)}</span>
+                  <span>Demand: {formatCurrency(negotiatingPlayer.value)}</span>
                   <span>Max: {formatCurrency(negotiatingPlayer.value * 2.0)}</span>
                 </div>
               </div>
@@ -840,11 +1196,11 @@ export function TransferHub({
                   step={5_000}
                   value={offeredWage}
                   onChange={(e) => setOfferedWage(Number(e.target.value))}
-                  className="w-full accent-emerald-500"
+                  className="w-full accent-emerald-500 cursor-pointer"
                 />
                 <div className="flex justify-between text-[10px] text-slate-500">
                   <span>Demand: {formatWage(negotiatingPlayer.wageDemand)}</span>
-                  <span>Max Budget: {formatCurrency(save.finances.weeklyWageBudget)}/w</span>
+                  <span>Wage Ceiling: {formatCurrency(save.finances.weeklyWageBudget)}/w</span>
                 </div>
               </div>
 
@@ -857,7 +1213,7 @@ export function TransferHub({
                       key={yrs}
                       type="button"
                       onClick={() => setOfferedContractYears(yrs)}
-                      className={`py-2 rounded-xl text-xs font-bold transition-colors ${
+                      className={`py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
                         offeredContractYears === yrs
                           ? 'bg-emerald-500 text-slate-950 font-black'
                           : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
@@ -869,6 +1225,73 @@ export function TransferHub({
                 </div>
               </div>
             </div>
+
+            {/* Financial Impact Analysis (User requirement: clear budget math before submitting bid) */}
+            {(() => {
+              const currentBudget = save.finances.transferBudget;
+              const remainingBudget = currentBudget - offeredFee;
+              const isOverBudget = remainingBudget < 0;
+
+              const currentWageRoom = Math.max(0, save.finances.weeklyWageBudget - save.finances.currentWeeklyWages);
+              const remainingWageRoom = currentWageRoom - offeredWage;
+              const isOverWageRoom = remainingWageRoom < 0;
+
+              return (
+                <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 space-y-3">
+                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center justify-between font-display">
+                    <span>💼 Financial Impact Analysis</span>
+                    <span className="font-mono text-slate-500">Board Authorization</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    {/* Transfer Fee Math */}
+                    <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-850 space-y-1">
+                      <span className="text-[9px] uppercase font-bold text-slate-500 block">Transfer Budget</span>
+                      <div className="flex justify-between items-center font-mono">
+                        <span className="text-slate-400 text-[10px]">Current:</span>
+                        <span className="font-bold text-white">{formatCurrency(currentBudget)}</span>
+                      </div>
+                      <div className="flex justify-between items-center font-mono">
+                        <span className="text-slate-400 text-[10px]">Offered Fee:</span>
+                        <span className="font-bold text-rose-400">-{formatCurrency(offeredFee)}</span>
+                      </div>
+                      <div className="pt-1 border-t border-slate-850 flex justify-between items-center font-mono">
+                        <span className="text-[10px] font-bold text-slate-300">Remaining:</span>
+                        <span className={`font-bold ${isOverBudget ? 'text-rose-400' : 'text-emerald-400'}`}>
+                          {formatCurrency(remainingBudget)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Wage Room Math */}
+                    <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-850 space-y-1">
+                      <span className="text-[9px] uppercase font-bold text-slate-500 block">Wage Budget</span>
+                      <div className="flex justify-between items-center font-mono">
+                        <span className="text-slate-400 text-[10px]">Wage Room:</span>
+                        <span className="font-bold text-white">{formatCurrency(currentWageRoom)}/w</span>
+                      </div>
+                      <div className="flex justify-between items-center font-mono">
+                        <span className="text-slate-400 text-[10px]">Offered Wage:</span>
+                        <span className="font-bold text-rose-400">-{formatWage(offeredWage)}</span>
+                      </div>
+                      <div className="pt-1 border-t border-slate-850 flex justify-between items-center font-mono">
+                        <span className="text-[10px] font-bold text-slate-300">Net Room:</span>
+                        <span className={`font-bold ${isOverWageRoom ? 'text-amber-400' : 'text-emerald-400'}`}>
+                          {formatCurrency(remainingWageRoom)}/w
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {isOverBudget && (
+                    <div className="p-2.5 rounded-xl bg-rose-950/60 border border-rose-800 text-rose-300 text-xs flex items-center gap-2">
+                      <span>⚠️</span>
+                      <span>Insufficient transfer budget! Fee exceeds available funds by {formatCurrency(Math.abs(remainingBudget))}.</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Negotiation Feedback Alert */}
             {negotiationFeedback.status !== 'idle' && (
@@ -890,16 +1313,23 @@ export function TransferHub({
               <button
                 type="button"
                 onClick={() => setNegotiatingPlayer(null)}
-                className="py-3 px-4 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-xs font-bold text-slate-300 uppercase tracking-wider"
+                className="py-3 px-4 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-xs font-bold text-slate-300 uppercase tracking-wider cursor-pointer"
               >
                 Withdraw
               </button>
               <button
                 type="button"
                 onClick={handleConfirmBid}
-                className="flex-1 py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20"
+                disabled={offeredFee > save.finances.transferBudget}
+                className={`flex-1 py-3 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer ${
+                  offeredFee > save.finances.transferBudget
+                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                    : negotiatingPlayer.isLegend
+                    ? 'bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 shadow-lg shadow-amber-500/25'
+                    : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-lg shadow-emerald-500/20'
+                }`}
               >
-                Submit Formal Bid
+                {offeredFee > save.finances.transferBudget ? 'Cannot Afford Bid' : 'Submit Formal Bid'}
               </button>
             </div>
           </div>

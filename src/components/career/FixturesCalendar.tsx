@@ -23,9 +23,10 @@ interface FixturesCalendarProps {
   save: CareerSaveFile;
   onUpdateSave: (updated: CareerSaveFile) => void;
   onNotification?: (msg: string) => void;
+  onNavigateOffice?: () => void;
 }
 
-export function FixturesCalendar({ save, onUpdateSave, onNotification }: FixturesCalendarProps) {
+export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigateOffice }: FixturesCalendarProps) {
   const [filterScope, setFilterScope] = useState<'my_club' | 'all'>('my_club');
   const [selectedRound, setSelectedRound] = useState<number | 'all'>('all');
   const [simulating, setSimulating] = useState(false);
@@ -143,164 +144,29 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification }: Fixture
 
   return (
     <div className="space-y-6">
-      {/* Time-Skip Controller Toolbar */}
-      <section className="bg-slate-900/60 border border-slate-850 rounded-3xl p-4 sm:p-5 shadow-xl space-y-4">
-        <div className="flex flex-wrap justify-between items-center gap-3">
-          <div className="flex items-center gap-2.5">
-            <span className="text-xl">📅</span>
-            <div>
-              <div className="text-[10px] uppercase font-bold text-slate-500">In-Game Date</div>
-              <div className="text-sm font-mono font-black text-white">
-                {save.season.currentDate}
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Skip Buttons */}
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => handleTimeSkip('next_match')}
-              disabled={simulating || !nextFixture}
-              className="py-2 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider disabled:opacity-50 transition-all shadow-md shadow-emerald-500/20"
-              title="Fast forward to your next matchday"
-            >
-              ⏭️ Next Match
-            </button>
-
-            <button
-              onClick={() => handleTimeSkip('next_week')}
-              disabled={simulating}
-              className="py-2 px-3 rounded-xl border border-slate-800 bg-slate-950/80 hover:bg-slate-900 text-slate-300 hover:text-white font-display font-bold text-xs uppercase transition-all"
-              title="Advance 7 days"
-            >
-              +7 Days
-            </button>
-
-            <button
-              onClick={() => handleTimeSkip('next_month')}
-              disabled={simulating}
-              className="py-2 px-3 rounded-xl border border-slate-800 bg-slate-950/80 hover:bg-slate-900 text-slate-300 hover:text-white font-display font-bold text-xs uppercase transition-all"
-              title="Advance 30 days"
-            >
-              +1 Month
-            </button>
-
-            <button
-              onClick={() => handleTimeSkip('transfer_deadline')}
-              disabled={simulating}
-              className="py-2 px-3 rounded-xl border border-amber-500/40 bg-amber-950/20 hover:bg-amber-950/40 text-amber-300 font-display font-bold text-xs uppercase transition-all"
-              title="Advance directly to Deadline Day"
-            >
-              ⏳ Deadline Day
-            </button>
-
-            <button
-              onClick={() => handleTimeSkip('season_end')}
-              disabled={simulating}
-              className="py-2 px-3 rounded-xl border border-slate-800 bg-slate-950/80 hover:bg-slate-900 text-slate-400 hover:text-white font-display font-bold text-xs uppercase transition-all"
-              title="Simulate remaining fixtures to season finish"
-            >
-              🏁 Season End
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Next Fixture Spotlight Card */}
-      {nextFixture && (
-        <section className="bg-gradient-to-r from-emerald-950/30 via-slate-900/50 to-slate-950/70 border border-emerald-500/30 rounded-3xl p-6 shadow-xl space-y-4">
-          <div className="flex justify-between items-center">
-            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-3 py-1 rounded-full font-display">
-              Upcoming Matchday {nextFixture.round} • {nextFixture.date}
+      {/* Calendar Schedule Browser Notice */}
+      <section className="bg-slate-900/60 border border-slate-850 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-md">
+        <div className="space-y-0.5">
+          <div className="text-xs font-display font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+            <span>📅</span>
+            <span>League Fixtures & Calendar Schedule</span>
+            <span className="text-[10px] font-mono text-emerald-400 font-bold ml-2">
+              (In-Game: {save.season.currentDate})
             </span>
-            <span className="text-xs text-slate-400 font-medium">English Top Flight</span>
           </div>
-
-          {/* Match Clash Layout */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center text-center">
-            {/* Home Club */}
-            {(() => {
-              const home = clubsMap.get(nextFixture.homeClubId) || allClubs[0];
-              const isUser = nextFixture.homeClubId === userClubId;
-              return (
-                <div className="flex flex-col items-center space-y-2">
-                  <div
-                    className="w-12 h-12 rounded-full border-2 border-white/20 shadow-lg flex items-center justify-center text-base font-black text-white"
-                    style={{
-                      background: `linear-gradient(135deg, ${home.primaryColor}, ${home.secondaryColor})`,
-                    }}
-                  >
-                    {home.shortName}
-                  </div>
-                  <div>
-                    <h4 className="font-display font-black text-base text-white">
-                      {getEffectiveClubName(home)}
-                    </h4>
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">
-                      {isUser ? '(YOU • HOME)' : 'Home'}
-                    </span>
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* VS & Kickoff */}
-            <div className="space-y-3">
-              <div className="text-2xl font-display font-black text-emerald-400">
-                VS
-              </div>
-              <div className="text-xs text-slate-400">
-                🏟️ {clubsMap.get(nextFixture.homeClubId)?.stadiumName}
-              </div>
-
-              <div className="flex justify-center gap-2 pt-1">
-                <button
-                  onClick={() => setActiveMatchFixture(nextFixture)}
-                  disabled={simulating}
-                  className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all hover:scale-102 cursor-pointer"
-                  title="Enter interactive matchday command center"
-                >
-                  ▶ Play Match
-                </button>
-                <button
-                  onClick={handlePlayNextMatch}
-                  disabled={simulating}
-                  className="py-2.5 px-3 rounded-xl border border-slate-700 hover:border-slate-600 bg-slate-900/60 hover:bg-slate-800 text-slate-300 font-display font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
-                  title="Instant match result simulation"
-                >
-                  ⚡ Instant
-                </button>
-              </div>
-            </div>
-
-            {/* Away Club */}
-            {(() => {
-              const away = clubsMap.get(nextFixture.awayClubId) || allClubs[1];
-              const isUser = nextFixture.awayClubId === userClubId;
-              return (
-                <div className="flex flex-col items-center space-y-2">
-                  <div
-                    className="w-12 h-12 rounded-full border-2 border-white/20 shadow-lg flex items-center justify-center text-base font-black text-white"
-                    style={{
-                      background: `linear-gradient(135deg, ${away.primaryColor}, ${away.secondaryColor})`,
-                    }}
-                  >
-                    {away.shortName}
-                  </div>
-                  <div>
-                    <h4 className="font-display font-black text-base text-white">
-                      {getEffectiveClubName(away)}
-                    </h4>
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">
-                      {isUser ? '(YOU • AWAY)' : 'Away'}
-                    </span>
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-        </section>
-      )}
+          <p className="text-[11px] text-slate-400">
+            View completed match results and upcoming fixtures across all 38 rounds. Matchday simulations and calendar advancement are run directly from the <strong className="text-emerald-400">Office</strong> command hub.
+          </p>
+        </div>
+        {onNavigateOffice && (
+          <button
+            onClick={onNavigateOffice}
+            className="py-2 px-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider transition-all shadow-md shrink-0 cursor-pointer"
+          >
+            Go to Office / Play Match ➔
+          </button>
+        )}
+      </section>
 
       {/* Season Complete & Transition Spotlight */}
       {seasonFinished && seasonSummary && (

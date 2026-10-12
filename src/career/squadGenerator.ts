@@ -90,12 +90,63 @@ const CLUB_KEYWORD_MAP: Record<string, string[]> = {
 };
 
 export function generateClubSquad(club: Club, season: DatabaseSeason = '2026/27'): CareerPlayer[] {
+  const supplementalPool = getSupplementalPlayersForClub(club.id, season);
+
+  // If the club has an authentic supplemental roster (all 20 Premier League clubs have 26 players),
+  // use the authentic squad directly so no historical cards pollute the modern squad.
+  if (supplementalPool && supplementalPool.length >= 18) {
+    let counter = 1;
+    const squad: CareerPlayer[] = supplementalPool.map((sp) => {
+      const contractYears = 2 + (counter % 3);
+      const player: CareerPlayer = {
+        ...sp,
+        id: `cp_${club.id}_${counter}`,
+        cardId: sp.id,
+        club: club.id,
+        contractYears,
+        fitness: 100,
+        morale: 88,
+        form: 7.0,
+        injured: false,
+      };
+      counter++;
+      return player;
+    });
+
+    // Ensure at least 8 players are homegrown for Premier League registration rules
+    const homegrownCount = squad.filter((p) => p.isHomegrown).length;
+    if (homegrownCount < 8) {
+      let needed = 8 - homegrownCount;
+      for (const player of squad) {
+        if (needed <= 0) break;
+        if (!player.isHomegrown) {
+          player.isHomegrown = true;
+          needed--;
+        }
+      }
+    }
+
+    // Ensure senior non-homegrown count does not exceed 17 for Premier League 25-man senior squad cap
+    const seniorNonHomegrown = squad.filter((p) => p.age > 21 && !p.isHomegrown).length;
+    if (seniorNonHomegrown > 17) {
+      let neededHg = seniorNonHomegrown - 17;
+      for (const player of squad) {
+        if (neededHg <= 0) break;
+        if (player.age > 21 && !player.isHomegrown) {
+          player.isHomegrown = true;
+          neededHg--;
+        }
+      }
+    }
+
+    return squad;
+  }
+
   const generatedSquad: CareerPlayer[] = [];
   const usedCardIds = new Set<string>();
   const usedNames = new Set<string>();
 
   const clubKeywords = CLUB_KEYWORD_MAP[club.id] || [];
-  const supplementalPool = getSupplementalPlayersForClub(club.id, season);
 
   // Filter pool from player database belonging strictly to this club
   const clubMatchedCards = players.filter((p) =>

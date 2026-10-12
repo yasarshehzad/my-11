@@ -225,7 +225,7 @@ function SetupWizardContent() {
 
         {/* STEP 2: CLUB SELECTION */}
         {step === 2 && (
-          <section className="w-full space-y-6">
+          <section className="w-full space-y-6 pb-24">
             <header className="text-center space-y-2">
               <span className="text-3xl">🏟️</span>
               <h2 className="text-2xl font-display font-black uppercase text-foreground">
@@ -338,7 +338,7 @@ function SetupWizardContent() {
                     onClick={() => setSelectedClubId(club.id)}
                     className={`rounded-2xl border p-4 cursor-pointer transition-all duration-200 relative overflow-hidden flex flex-col justify-between ${
                       isSelected
-                        ? 'border-emerald-500 bg-slate-900/90 shadow-xl shadow-emerald-500/10 ring-2 ring-emerald-500/40'
+                        ? 'border-2 border-emerald-400 bg-emerald-950/40 shadow-2xl shadow-emerald-500/25 ring-4 ring-emerald-400/40 scale-[1.02]'
                         : 'border-slate-850 bg-slate-950/40 hover:bg-slate-900/40 hover:border-slate-700'
                     }`}
                   >
@@ -352,9 +352,16 @@ function SetupWizardContent() {
 
                     <div>
                       <div className="flex justify-between items-start mb-2">
-                        <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">
-                          {club.tier}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">
+                            {club.tier}
+                          </span>
+                          {isSelected && (
+                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-400 text-slate-950 flex items-center gap-1 shadow-sm font-display">
+                              ✓ SELECTED
+                            </span>
+                          )}
+                        </div>
                         <span className="text-xs font-mono font-bold text-slate-500">
                           {club.shortName}
                         </span>
@@ -366,6 +373,25 @@ function SetupWizardContent() {
                       <div className="text-[10px] text-slate-400 mt-1">
                         🏟️ {club.stadiumName}
                       </div>
+
+                      {/* Inline Custom Club Name on Selected Card */}
+                      {isSelected && (
+                        <div
+                          className="mt-3 pt-3 border-t border-emerald-500/30 bg-slate-950/80 rounded-xl p-2.5 space-y-1.5"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <label className="block text-[9px] font-bold text-emerald-400 uppercase tracking-wider">
+                            Custom Club Name (Optional)
+                          </label>
+                          <input
+                            type="text"
+                            value={customClubNames[club.id] ?? ''}
+                            onChange={(e) => handleClubRename(club.id, e.target.value)}
+                            placeholder={club.defaultName}
+                            className="w-full bg-slate-900 border border-emerald-500/40 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-400 font-semibold"
+                          />
+                        </div>
+                      )}
                     </div>
 
                     <div className="mt-4 pt-3 border-t border-slate-900/80 flex justify-between items-center text-xs">
@@ -404,6 +430,7 @@ function SetupWizardContent() {
               </p>
             </div>
 
+            {/* Standard navigation buttons */}
             <div className="flex justify-between items-center max-w-md mx-auto pt-4 gap-4">
               <button
                 onClick={() => setStep(1)}
@@ -417,6 +444,42 @@ function SetupWizardContent() {
               >
                 Rules & Difficulty →
               </button>
+            </div>
+
+            {/* Floating Sticky Bottom Action Bar for Mobile & Quick Progression */}
+            <div className="fixed bottom-0 left-0 right-0 z-50 p-3 sm:p-4 bg-slate-950/92 backdrop-blur-xl border-t border-slate-800/90 shadow-2xl">
+              <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className="w-4 h-4 rounded-full border border-white/20 shadow-sm shrink-0"
+                    style={{
+                      background: `linear-gradient(135deg, ${selectedClub.primaryColor}, ${selectedClub.secondaryColor})`,
+                    }}
+                  />
+                  <div className="min-w-0">
+                    <div className="text-[10px] uppercase font-bold text-slate-400 leading-tight">Selected Club</div>
+                    <div className="text-xs sm:text-sm font-display font-black text-white truncate">
+                      {customClubNames[selectedClub.id]?.trim() || selectedClub.defaultName}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => setStep(1)}
+                    className="px-3 py-2 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-xs font-bold text-slate-300 font-display uppercase tracking-wider"
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    onClick={() => setStep(3)}
+                    className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-display font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
+                  >
+                    <span>Next: Rules</span>
+                    <span>➔</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </section>
         )}
@@ -620,7 +683,7 @@ function SetupWizardContent() {
                     <div className="text-[10px] text-slate-500">Scales starting transfer budget</div>
                   </div>
                   <select
-                    value={customSettings.startingBudgetMultiplier}
+                    value={String(customSettings.startingBudgetMultiplier)}
                     disabled={preset !== 'custom'}
                     onChange={(e) =>
                       setCustomSettings({
@@ -631,10 +694,10 @@ function SetupWizardContent() {
                     className="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-xs text-white"
                   >
                     <option value="0.75">0.75x (Strict)</option>
-                    <option value="1.0">1.0x (Standard)</option>
+                    <option value="1">1.0x (Standard)</option>
                     <option value="1.25">1.25x (Generous)</option>
                     <option value="1.5">1.5x (Abundant)</option>
-                    <option value="2.0">2.0x (Warchest)</option>
+                    <option value="2">2.0x (Warchest)</option>
                   </select>
                 </div>
 

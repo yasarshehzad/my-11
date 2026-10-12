@@ -12,7 +12,7 @@ export const EASY_SETTINGS: CareerSettings = {
   startingBudgetMultiplier: 1.5,
   fatigueMoraleEnabled: false,
   smartPause: true,
-  playerPool: 'all',
+  playerPool: 'modern',
   locked: false,
 };
 
@@ -28,7 +28,7 @@ export const HARD_SETTINGS: CareerSettings = {
   startingBudgetMultiplier: 1.0,
   fatigueMoraleEnabled: true,
   smartPause: true,
-  playerPool: 'all',
+  playerPool: 'modern',
   locked: true,
 };
 
@@ -44,7 +44,7 @@ export const DEFAULT_CUSTOM_SETTINGS: CareerSettings = {
   startingBudgetMultiplier: 1.0,
   fatigueMoraleEnabled: true,
   smartPause: true,
-  playerPool: 'all',
+  playerPool: 'modern',
   locked: false,
 };
 

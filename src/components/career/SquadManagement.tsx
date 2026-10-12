@@ -350,7 +350,7 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
       {viewMode === 'pitch' && (
         <section className="space-y-6">
           {/* Virtual Pitch Canvas */}
-          <div className="relative rounded-3xl border border-emerald-900/50 bg-gradient-to-b from-[#064e3b] via-[#022c22] to-[#011c15] p-6 shadow-2xl overflow-hidden min-h-[480px] flex flex-col justify-between">
+          <div className="relative rounded-3xl border border-emerald-900/50 bg-gradient-to-b from-[#064e3b] via-[#022c22] to-[#011c15] p-3 sm:p-6 shadow-2xl overflow-hidden min-h-[480px] flex flex-col justify-between">
             {/* Pitch Marking Lines */}
             <div className="absolute inset-4 border-2 border-emerald-500/15 rounded-2xl pointer-events-none" />
             <div className="absolute top-1/2 left-4 right-4 h-0.5 bg-emerald-500/15 -translate-y-1/2 pointer-events-none" />
@@ -893,7 +893,7 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
       return (
         <div
           key={slotPos}
-          className="w-16 sm:w-20 rounded-xl border-2 border-dashed border-emerald-500/30 p-2 text-center text-emerald-400/60 text-[10px] font-bold"
+          className="w-16 min-w-0 sm:w-22 rounded-xl border-2 border-dashed border-emerald-500/30 p-1.5 sm:p-2 text-center text-emerald-400/60 text-[10px] font-bold"
         >
           {slotPos} (Empty)
         </div>
@@ -907,15 +907,19 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
       <div
         key={player.id}
         onClick={() => handlePlayerClick(player)}
-        className={`w-18 sm:w-22 p-2 rounded-2xl border backdrop-blur-md text-center cursor-pointer transition-all transform hover:scale-105 select-none ${
+        className={`w-16 min-w-0 sm:w-22 p-1.5 sm:p-2 rounded-2xl border backdrop-blur-md text-center cursor-pointer transition-all transform hover:scale-105 select-none ${
           isSwapping
             ? 'border-amber-400 bg-amber-950/80 ring-4 ring-amber-400/50 shadow-2xl'
+            : fit === 'out_of_position'
+            ? 'border-rose-500/60 bg-slate-950/90 hover:border-rose-400 shadow-lg'
+            : fit === 'competent'
+            ? 'border-amber-500/40 bg-slate-950/85 hover:border-amber-400 shadow-lg'
             : 'border-slate-800/80 bg-slate-950/80 hover:border-emerald-400/80 shadow-lg'
         }`}
       >
         <div className="flex justify-between items-center text-[9px] font-black leading-none mb-1">
           <span
-            className={`px-1 rounded ${
+            className={`px-1 py-0.2 rounded font-display ${
               fit === 'natural'
                 ? 'bg-emerald-950 text-emerald-300'
                 : fit === 'competent'
@@ -925,13 +929,23 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
           >
             {slotPos}
           </span>
-          <span className="font-display text-white text-xs">{player.rating}</span>
+          <span className="font-display font-black text-white text-xs">{player.rating}</span>
         </div>
-        <div className="text-[11px] font-display font-black text-white truncate leading-tight">
+        <div className="text-[10px] sm:text-[11px] font-display font-black text-white truncate leading-tight">
           {player.name}
         </div>
-        <div className="text-[8px] text-slate-400 truncate mt-0.5">
-          {player.position}
+        <div className="text-[8px] text-slate-400 truncate mt-0.5 flex items-center justify-center gap-1">
+          <span>{player.position}</span>
+          {fit === 'out_of_position' && (
+            <span className="text-[7px] font-black px-1 rounded bg-rose-950 text-rose-300 border border-rose-800">
+              OOP
+            </span>
+          )}
+          {fit === 'competent' && (
+            <span className="text-[7px] font-black px-1 rounded bg-amber-950 text-amber-300 border border-amber-800">
+              ALT
+            </span>
+          )}
         </div>
       </div>
     );

@@ -245,6 +245,18 @@ export interface BoardStatus {
   warningsCount: number;
 }
 
+export interface PlayerVersionVariant {
+  id: string;
+  season: string;
+  displayName: string;
+  rating: number;
+  value: number;
+  wageDemand: number;
+  age: number;
+  rarity: string;
+  club: string;
+}
+
 export interface MarketPlayer {
   id: string;
   cardId: string;
@@ -258,13 +270,22 @@ export interface MarketPlayer {
   nationality: string;
   isHomegrown: boolean;
   rarity: string;
+  isLegend?: boolean;
+  era?: string;
+  versions?: PlayerVersionVariant[];
+  selectedVersionId?: string;
 }
 
 export interface ScoutingFilters {
   positionCategory?: 'ALL' | 'GK' | 'DEF' | 'MID' | 'FWD';
+  specificPosition?: string;
   minRating?: number;
   maxRating?: number;
   maxPrice?: number;
+  minAge?: number;
+  maxAge?: number;
+  affordableOnly?: boolean;
+  playerPoolType?: 'modern' | 'legends' | 'all';
   nationality?: string;
   homegrownOnly?: boolean;
   searchTerm?: string;

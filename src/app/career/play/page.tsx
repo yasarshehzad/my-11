@@ -4,8 +4,8 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { loadCareerSave, saveCareerSave, exportCareerSaveAsJson, isValidSlotId, ValidSlotId } from '../../../career/saves';
-import { CareerSaveFile, CareerSettings } from '../../../career/types';
-import { getEffectiveClubName } from '../../../career/clubs';
+import { CareerSaveFile, CareerSettings, LeagueFixture, Club } from '../../../career/types';
+import { getEffectiveClubName, getAllClubs } from '../../../career/clubs';
 import { validateSettings } from '../../../career/settings';
 import { getSavedTheme, saveTheme } from '../../../utils/storage';
 import { SquadManagement } from '../../../components/career/SquadManagement';
@@ -13,7 +13,14 @@ import { FixturesCalendar } from '../../../components/career/FixturesCalendar';
 import { LeagueTable } from '../../../components/career/LeagueTable';
 import { TournamentsHub } from '../../../components/career/TournamentsHub';
 import { TransferHub } from '../../../components/career/TransferHub';
+import { MatchDayModal } from '../../../components/career/MatchDayModal';
 import { isSeasonComplete } from '../../../career/seasons';
+import { getNextClubFixture } from '../../../career/calendar';
+import { simulateMatchFixture, advanceTimeSkip, TimeSkipTarget } from '../../../career/sim';
+import { calculateStandings } from '../../../career/table';
+import { formatCurrency } from '../../../career/finance';
+import { getSeniorPlayerCount } from '../../../career/squad';
+import { evaluateBoardConfidence } from '../../../career/transfers';
 
 function CareerPlayHubContent() {
   const router = useRouter();
@@ -31,6 +38,8 @@ function CareerPlayHubContent() {
   const [activeTab, setActiveTab] = useState<'overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings'>('overview');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [dismissedSackedModal, setDismissedSackedModal] = useState(false);
+  const [activeMatchFixture, setActiveMatchFixture] = useState<LeagueFixture | null>(null);
+  const [simulating, setSimulating] = useState(false);
 
   // Settings editing state (when not locked)
   const [editableSettings, setEditableSettings] = useState<CareerSettings | null>(() => {
@@ -110,6 +119,84 @@ function CareerPlayHubContent() {
     setSave(updated);
   };
 
+  const allClubs = getAllClubs();
+  const clubsMap = new Map<string, Club>(allClubs.map((c) => [c.id, c]));
+  const nextFixture = save ? getNextClubFixture(save.fixtures || [], save.club.id) : null;
+
+  const handlePlayNextMatchInstant = () => {
+    if (!save || !nextFixture) return;
+    setSimulating(true);
+
+    const homeClub = clubsMap.get(nextFixture.homeClubId) || allClubs[0];
+    const awayClub = clubsMap.get(nextFixture.awayClubId) || allClubs[1];
+    const isUserHome = nextFixture.homeClubId === save.club.id;
+
+    const simmed = simulateMatchFixture(
+      nextFixture,
+      homeClub,
+      awayClub,
+      isUserHome ? save.squad : undefined,
+      !isUserHome ? save.squad : undefined
+    );
+
+    const currentFixtures = save.fixtures || [];
+    const updatedFixtures = currentFixtures.map((f) => {
+      if (f.id === simmed.id) return simmed;
+      if (f.round === nextFixture.round && !f.played) {
+        const h = clubsMap.get(f.homeClubId) || allClubs[0];
+        const a = clubsMap.get(f.awayClubId) || allClubs[1];
+        return simulateMatchFixture(f, h, a);
+      }
+      return f;
+    });
+
+    const updatedStandings = calculateStandings(updatedFixtures, allClubs);
+
+    const updatedSave: CareerSaveFile = {
+      ...save,
+      season: {
+        ...save.season,
+        currentDate: nextFixture.date,
+      },
+      fixtures: updatedFixtures,
+      standings: updatedStandings,
+    };
+
+    saveCareerSave(updatedSave);
+    setSave(updatedSave);
+    setSimulating(false);
+
+    const userWon = isUserHome
+      ? simmed.homeScore! > simmed.awayScore!
+      : simmed.awayScore! > simmed.homeScore!;
+    const isDraw = simmed.homeScore === simmed.awayScore;
+    const resultText = userWon ? 'Victory!' : isDraw ? 'Draw' : 'Defeat';
+
+    showToast(`Matchday ${nextFixture.round} Result: ${simmed.homeScore} - ${simmed.awayScore} (${resultText})`);
+  };
+
+  const handleTimeSkipAction = (target: TimeSkipTarget) => {
+    if (!save) return;
+    setSimulating(true);
+    const res = advanceTimeSkip(save, target);
+    saveCareerSave(res.updatedSave);
+    setSave(res.updatedSave);
+    setSimulating(false);
+
+    if (res.pausedReason) {
+      showToast(res.pausedReason);
+    } else {
+      showToast(`Calendar advanced (${res.matchesPlayedCount} matches simulated)`);
+    }
+  };
+
+  const handleMatchResultSaved = (updatedSave: CareerSaveFile) => {
+    saveCareerSave(updatedSave);
+    setSave(updatedSave);
+    setActiveMatchFixture(null);
+    showToast('Match completed and results saved!');
+  };
+
   if (!save) {
     return (
       <div className="min-h-screen bg-slate-950 text-foreground font-sans flex flex-col pitch-bg p-6 justify-center items-center">
@@ -141,6 +228,29 @@ function CareerPlayHubContent() {
   }
 
   const effectiveClubName = getEffectiveClubName(save.club);
+  const injuredCount = save.squad.filter((p) => p.injured).length;
+  const seniorCount = getSeniorPlayerCount(save.squad);
+  const incomingOffersCount = save.incomingOffers?.length || 0;
+  const boardStatus = save.boardStatus || evaluateBoardConfidence(save);
+  const boardConfidence = boardStatus.confidence;
+
+  const standings = save.standings || [];
+  const userRankIndex = standings.findIndex((s) => s.clubId === save.club.id);
+  const userRank = userRankIndex >= 0 ? userRankIndex + 1 : 1;
+  const userStanding = standings[userRankIndex];
+
+  const fixtures = save.fixtures || [];
+  const userPlayedFixtures = fixtures.filter(
+    (f) => f.played && (f.homeClubId === save.club.id || f.awayClubId === save.club.id)
+  );
+  const recentFormResults = userPlayedFixtures.slice(-5).map((f) => {
+    const isHome = f.homeClubId === save.club.id;
+    const userScore = isHome ? f.homeScore! : f.awayScore!;
+    const oppScore = isHome ? f.awayScore! : f.homeScore!;
+    if (userScore > oppScore) return 'W';
+    if (userScore === oppScore) return 'D';
+    return 'L';
+  });
 
   return (
     <div className="min-h-screen bg-slate-950 text-foreground font-sans flex flex-col pitch-bg w-full overflow-x-hidden">
@@ -360,79 +470,293 @@ function CareerPlayHubContent() {
               </div>
             </div>
 
-            {/* Career Mode Roadmap & Next Phases */}
-            <section className="bg-slate-950/60 border border-slate-850 rounded-3xl p-6 space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-sm font-display font-black uppercase tracking-wider text-white">
-                  Management Development Status
-                </h3>
-                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-900/60">
-                  Phase 1 Live
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                <div className="p-4 rounded-xl border border-emerald-900/40 bg-emerald-950/10 space-y-1">
-                  <div className="font-display font-black text-emerald-300 flex items-center gap-2">
-                    <span>✓</span> Phase 1: Foundation & Club Setup
-                  </div>
-                  <p className="text-slate-400 text-[11px]">
-                    20 English clubs, multi-slot save storage, settings engine, JSON import/export, and manager office shell.
-                  </p>
+            {/* MATCHDAY PROGRESSION & NEXT FIXTURE SPOTLIGHT */}
+            {nextFixture ? (
+              <section className="bg-gradient-to-r from-emerald-950/40 via-slate-900/70 to-slate-950 border border-emerald-500/30 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5">
+                <div className="flex flex-wrap justify-between items-center gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-3 py-1 rounded-full font-display">
+                    Upcoming Matchday {nextFixture.round} • {nextFixture.date}
+                  </span>
+                  <span className="text-xs text-slate-400 font-medium font-sans">
+                    English Top Flight • Round {nextFixture.round} of 38
+                  </span>
                 </div>
 
-                <div className="p-4 rounded-xl border border-emerald-900/40 bg-emerald-950/10 space-y-1">
-                  <div className="font-display font-black text-emerald-300 flex items-center gap-2">
-                    <span>✓</span> Phase 2: Squad Management & Team Sheet (Active)
+                {/* Match Clash */}
+                {(() => {
+                  const home = clubsMap.get(nextFixture.homeClubId) || allClubs[0];
+                  const away = clubsMap.get(nextFixture.awayClubId) || allClubs[1];
+                  const isUserHome = nextFixture.homeClubId === save.club.id;
+                  const isUserAway = nextFixture.awayClubId === save.club.id;
+
+                  return (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-center text-center py-2">
+                      {/* Home Club */}
+                      <div className="flex flex-col items-center space-y-2">
+                        <div
+                          className="w-14 h-14 rounded-full border-2 border-white/20 shadow-xl flex items-center justify-center text-lg font-black text-white"
+                          style={{
+                            background: `linear-gradient(135deg, ${home.primaryColor}, ${home.secondaryColor})`,
+                          }}
+                        >
+                          {home.shortName}
+                        </div>
+                        <div>
+                          <h4 className="font-display font-black text-lg text-white">
+                            {getEffectiveClubName(home)}
+                          </h4>
+                          <span className="text-[10px] uppercase font-bold text-slate-400">
+                            {isUserHome ? '★ (YOU • HOME)' : 'Home'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* VS & Action Buttons */}
+                      <div className="space-y-3">
+                        <div className="text-3xl font-display font-black text-emerald-400 tracking-wider">
+                          VS
+                        </div>
+                        <div className="text-xs text-slate-400">
+                          🏟️ {home.stadiumName}
+                        </div>
+
+                        {/* Central Match Progress CTAs */}
+                        <div className="flex flex-col sm:flex-row justify-center gap-2.5 pt-2">
+                          <button
+                            onClick={() => setActiveMatchFixture(nextFixture)}
+                            disabled={simulating}
+                            className="py-3 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                          >
+                            <span>▶ Continue / Play Match</span>
+                          </button>
+
+                          <button
+                            onClick={handlePlayNextMatchInstant}
+                            disabled={simulating}
+                            className="py-3 px-4 rounded-2xl border border-slate-700 hover:border-slate-600 bg-slate-900/80 hover:bg-slate-800 text-slate-200 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer"
+                            title="Quickly simulate this matchday"
+                          >
+                            <span>⚡ Instant Result</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Away Club */}
+                      <div className="flex flex-col items-center space-y-2">
+                        <div
+                          className="w-14 h-14 rounded-full border-2 border-white/20 shadow-xl flex items-center justify-center text-lg font-black text-white"
+                          style={{
+                            background: `linear-gradient(135deg, ${away.primaryColor}, ${away.secondaryColor})`,
+                          }}
+                        >
+                          {away.shortName}
+                        </div>
+                        <div>
+                          <h4 className="font-display font-black text-lg text-white">
+                            {getEffectiveClubName(away)}
+                          </h4>
+                          <span className="text-[10px] uppercase font-bold text-slate-400">
+                            {isUserAway ? '★ (YOU • AWAY)' : 'Away'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Calendar Fast-Forward Controls */}
+                <div className="pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2 text-slate-400">
+                    <span className="text-sm">⏱️</span>
+                    <span className="text-[11px] font-bold uppercase tracking-wider">Fast Forward Calendar:</span>
                   </div>
-                  <p className="text-slate-400 text-[11px]">
-                    18–25 player squads, market valuations, weekly wage bills, homegrown quota compliance, and tactical pitch view.
-                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => handleTimeSkipAction('next_match')}
+                      disabled={simulating || !nextFixture}
+                      className="py-2 px-3 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-750 text-slate-200 font-display font-bold text-[11px] uppercase transition-all cursor-pointer"
+                    >
+                      ⏭️ Next Match
+                    </button>
+                    <button
+                      onClick={() => handleTimeSkipAction('next_week')}
+                      disabled={simulating}
+                      className="py-2 px-3 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-slate-800 text-slate-300 font-display font-bold text-[11px] uppercase transition-all cursor-pointer"
+                    >
+                      +7 Days
+                    </button>
+                    <button
+                      onClick={() => handleTimeSkipAction('next_month')}
+                      disabled={simulating}
+                      className="py-2 px-3 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-slate-800 text-slate-300 font-display font-bold text-[11px] uppercase transition-all cursor-pointer"
+                    >
+                      +1 Month
+                    </button>
+                    <button
+                      onClick={() => handleTimeSkipAction('transfer_deadline')}
+                      disabled={simulating}
+                      className="py-2 px-3 rounded-xl bg-amber-950/20 hover:bg-amber-950/40 border border-amber-500/40 text-amber-300 font-display font-bold text-[11px] uppercase transition-all cursor-pointer"
+                    >
+                      ⏳ Deadline Day
+                    </button>
+                    <button
+                      onClick={() => handleTimeSkipAction('season_end')}
+                      disabled={simulating}
+                      className="py-2 px-3 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-slate-800 text-slate-400 font-display font-bold text-[11px] uppercase transition-all cursor-pointer"
+                    >
+                      🏁 Season End
+                    </button>
+                  </div>
+                </div>
+              </section>
+            ) : (
+              <section className="bg-slate-900/60 border border-slate-850 rounded-3xl p-6 text-center space-y-2">
+                <span className="text-3xl">🏁</span>
+                <h3 className="font-display font-black uppercase text-base text-white">All Fixtures Concluded</h3>
+                <p className="text-xs text-slate-400">All 38 matchdays have been played for Season {save.season.seasonNumber}.</p>
+              </section>
+            )}
+
+            {/* MANAGERIAL ACTION CENTER & INBOX */}
+            <section className="space-y-4">
+              <h3 className="text-sm font-display font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                <span>📋</span>
+                <span>Managerial Action Center & Inbox</span>
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                {/* 1. Transfers Hub Action */}
+                <div className="bg-slate-900/50 border border-slate-850 rounded-2xl p-5 flex flex-col justify-between gap-3 shadow-md hover:border-slate-750 transition-colors">
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <span className="font-display font-black text-sm text-white uppercase flex items-center gap-1.5">
+                        <span>💱</span> Transfer Market
+                      </span>
+                      {incomingOffersCount > 0 ? (
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 animate-pulse">
+                          {incomingOffersCount} Bids Waiting
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold text-slate-500">
+                          Scouting Department
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      Budget: <strong className="text-emerald-400">{formatCurrency(save.finances.transferBudget)}</strong> • Wage room: <strong className="text-slate-200">{formatCurrency(Math.max(0, save.finances.weeklyWageBudget - save.finances.currentWeeklyWages))}/w</strong>
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab('transfers')}
+                    className="w-full py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-950/80 hover:bg-slate-900 text-slate-200 hover:text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    <span>{incomingOffersCount > 0 ? 'Review Incoming Offers' : 'Open Transfer Market'}</span>
+                    <span>➔</span>
+                  </button>
                 </div>
 
-                <div className="p-4 rounded-xl border border-emerald-900/40 bg-emerald-950/10 space-y-1">
-                  <div className="font-display font-black text-emerald-300 flex items-center gap-2">
-                    <span>✓</span> Phase 3: Calendar, 38 Fixtures & Live Table (Active)
+                {/* 2. Squad Health & Selection */}
+                <div className="bg-slate-900/50 border border-slate-850 rounded-2xl p-5 flex flex-col justify-between gap-3 shadow-md hover:border-slate-750 transition-colors">
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <span className="font-display font-black text-sm text-white uppercase flex items-center gap-1.5">
+                        <span>👥</span> Squad Condition
+                      </span>
+                      {injuredCount > 0 ? (
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                          {injuredCount} Injured
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                          100% Fit
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      Total squad: <strong className="text-white">{save.squad.length}/35</strong> players • Senior: <strong className="text-slate-300">{seniorCount}/25</strong> sr
+                    </p>
                   </div>
-                  <p className="text-slate-400 text-[11px]">
-                    38-game round-robin calendar, matchday simulator, time-skip controller with smart pause, and live standings.
-                  </p>
+                  <button
+                    onClick={() => setActiveTab('squad')}
+                    className="w-full py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-950/80 hover:bg-slate-900 text-slate-200 hover:text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    <span>Adjust Team Sheet & Tactics</span>
+                    <span>➔</span>
+                  </button>
                 </div>
 
-                <div className="p-4 rounded-xl border border-emerald-900/40 bg-emerald-950/10 space-y-1">
-                  <div className="font-display font-black text-emerald-300 flex items-center gap-2">
-                    <span>✓</span> Phase 4: Match Engine & Live Commentary (Active)
+                {/* 3. League Standing & Form Guide */}
+                <div className="bg-slate-900/50 border border-slate-850 rounded-2xl p-5 flex flex-col justify-between gap-3 shadow-md hover:border-slate-750 transition-colors">
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <span className="font-display font-black text-sm text-white uppercase flex items-center gap-1.5">
+                        <span>📊</span> League Standing
+                      </span>
+                      <span className="text-sm font-display font-black text-emerald-400">
+                        Rank #{userRank}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] text-slate-400">
+                        {userStanding?.points || 0} Points • GD: {(userStanding?.goalDifference || 0) > 0 ? `+${userStanding?.goalDifference}` : (userStanding?.goalDifference || 0)}
+                      </span>
+                      {recentFormResults.length > 0 && (
+                        <div className="flex items-center gap-1 ml-auto">
+                          {recentFormResults.map((res, idx) => (
+                            <span
+                              key={idx}
+                              className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
+                                res === 'W'
+                                  ? 'bg-emerald-500 text-slate-950'
+                                  : res === 'D'
+                                  ? 'bg-amber-500 text-slate-950'
+                                  : 'bg-rose-500 text-white'
+                              }`}
+                            >
+                              {res}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-slate-400 text-[11px]">
-                    5–9 player substitutes bench, 5 in-match substitutions, live commentary clock, fatigue drain, injuries, and retry protection.
-                  </p>
+                  <button
+                    onClick={() => setActiveTab('table')}
+                    className="w-full py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-950/80 hover:bg-slate-900 text-slate-200 hover:text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    <span>View Standings & Stats</span>
+                    <span>➔</span>
+                  </button>
                 </div>
 
-                <div className="p-4 rounded-xl border border-emerald-900/40 bg-emerald-950/10 space-y-1">
-                  <div className="font-display font-black text-emerald-300 flex items-center gap-2">
-                    <span>✓</span> Phase 5: Cups & European Competitions (Active)
+                {/* 4. Board Room Confidence */}
+                <div className="bg-slate-900/50 border border-slate-850 rounded-2xl p-5 flex flex-col justify-between gap-3 shadow-md hover:border-slate-750 transition-colors">
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <span className="font-display font-black text-sm text-white uppercase flex items-center gap-1.5">
+                        <span>🏛️</span> Board Room Confidence
+                      </span>
+                      <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
+                        boardConfidence >= 70
+                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                          : boardConfidence >= 50
+                          ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                          : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                      }`}>
+                        {boardConfidence}% Satisfaction
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      Objective: <strong className="text-white">{save.club.tier === 'elite' ? 'Win Title' : save.club.tier === 'upper' ? 'European Football' : 'Safety'}</strong> • Status: <span className="text-emerald-400 font-bold">Job Safe</span>
+                    </p>
                   </div>
-                  <p className="text-slate-400 text-[11px]">
-                    6 tournaments (The English Cup, League Cup, Shield, Champions Cup, Challenge Cup, Plate), penalty shootouts, continental giants, and trophy cabinet.
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-xl border border-emerald-900/40 bg-emerald-950/10 space-y-1">
-                  <div className="font-display font-black text-emerald-300 flex items-center gap-2">
-                    <span>✓</span> Phase 6: Transfer Market & Negotiations (Active)
-                  </div>
-                  <p className="text-slate-400 text-[11px]">
-                    Player scouting search & filters, contract bidding, AI incoming offers, player sales, transfer history ledger, and board room confidence.
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-xl border border-emerald-900/40 bg-emerald-950/10 space-y-1 md:col-span-2">
-                  <div className="font-display font-black text-emerald-300 flex items-center gap-2">
-                    <span>✓</span> Phase 7: Database Expansion & Youth Academy (Active)
-                  </div>
-                  <p className="text-slate-400 text-[11px]">
-                    100+ supplemental club players across all 20 clubs, wonderkid potential tracking, annual youth intakes, senior promotions, and seasonal development progression.
-                  </p>
+                  <button
+                    onClick={() => setActiveTab('settings')}
+                    className="w-full py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-950/80 hover:bg-slate-900 text-slate-200 hover:text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    <span>Review Rules & Objectives</span>
+                    <span>➔</span>
+                  </button>
                 </div>
               </div>
             </section>
@@ -450,6 +774,7 @@ function CareerPlayHubContent() {
             save={save}
             onUpdateSave={handleUpdateSave}
             onNotification={showToast}
+            onNavigateOffice={() => setActiveTab('overview')}
           />
         )}
 
@@ -617,6 +942,16 @@ function CareerPlayHubContent() {
           </div>
         )}
       </main>
+
+      {/* Matchday Play/Sim Interactive Modal */}
+      {activeMatchFixture && (
+        <MatchDayModal
+          fixture={activeMatchFixture}
+          save={save}
+          onClose={() => setActiveMatchFixture(null)}
+          onSaveMatchResult={handleMatchResultSaved}
+        />
+      )}
 
       {/* Sacked Board Dismissal Modal */}
       {save.boardStatus?.status === 'sacked' && save.settings.boardCanSack && !dismissedSackedModal && (
