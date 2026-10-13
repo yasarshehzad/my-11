@@ -71,6 +71,18 @@ export interface ManagerProfile {
   nationality: string;
 }
 
+export interface PlayerFaceStats {
+  pac: number; // For GK: Diving (DIV)
+  sho: number; // For GK: Handling (HAN)
+  pas: number; // For GK: Kicking (KIC)
+  dri: number; // For GK: Reflexes (REF)
+  def: number; // For GK: Speed (SPD)
+  phy: number; // For GK: Positioning (POS)
+  isGoalkeeper?: boolean;
+}
+
+export type FormTrend = 'rising' | 'steady' | 'dropping';
+
 export interface CareerPlayer {
   id: string;
   cardId: string;
@@ -95,7 +107,15 @@ export interface CareerPlayer {
   heightCm?: number;
   weightKg?: number;
   preferredFoot?: 'Right' | 'Left' | 'Both';
+  // Form tracking & dynamic ratings
+  recentForm?: number[]; // Last 5 match ratings e.g. [7.5, 8.2, 7.8, 6.9, 8.4]
+  formTrend?: FormTrend;
+  formRatingBonus?: number; // -2 to +2 OVR bonus from form
+  // In-season natural progression (Under-23 development)
+  developmentProgress?: number; // 0-100 progress towards next OVR
+  faceStats?: PlayerFaceStats;
 }
+
 
 export interface Competition {
   id: string;

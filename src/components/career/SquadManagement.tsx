@@ -18,6 +18,11 @@ import {
   getPlayerPhysicals,
 } from '../../career/formatters';
 import { generateYouthIntake, promoteYouthProspect, releaseYouthProspect } from '../../career/youthAcademy';
+import { EaFcCard } from './EaFcCard';
+import {
+  calculateFormRatingBonus,
+  getEffectiveRating,
+} from '../../career/formAndProgression';
 
 interface SquadManagementProps {
   save: CareerSaveFile;
@@ -486,6 +491,7 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
                     <th className="py-3 px-3">Role</th>
                     <th className="py-3 px-3 text-center">Pos</th>
                     <th className="py-3 px-3 text-center">OVR</th>
+                    <th className="py-3 px-3 text-center">Form</th>
                     <th className="py-3 px-3 text-center">POT</th>
                     <th className="py-3 px-3 text-center">Age</th>
                     <th className="py-3 px-3">Value</th>
@@ -500,6 +506,8 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
                     const isStarter = starterIdsSet.has(player.id);
                     const isBench = benchIdsSet.has(player.id);
                     const roleLabel = isStarter ? 'Starter' : isBench ? 'Bench' : 'Reserve';
+                    const bonus = calculateFormRatingBonus(player);
+                    const effectiveRating = getEffectiveRating(player);
 
                     return (
                       <tr
@@ -509,9 +517,14 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
                         <td className="py-3 px-4 font-semibold text-white">
                           <button
                             onClick={() => setSelectedPlayer(player)}
-                            className="hover:text-emerald-400 text-left font-display font-black text-sm"
+                            className="hover:text-emerald-400 text-left font-display font-black text-sm flex items-center gap-1.5"
                           >
-                            {player.name}
+                            <span>{player.name}</span>
+                            {player.age <= 23 && (
+                              <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/60 font-mono">
+                                U23
+                              </span>
+                            )}
                           </button>
                           <div className="text-[10px] text-slate-400 font-normal">
                             {player.nationality}
@@ -536,12 +549,60 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
                           {player.position}
                         </td>
 
-                        <td className="py-3 px-3 text-center font-display font-black text-sm text-emerald-400">
-                          {player.rating}
+                        <td className="py-3 px-3 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <span className="font-display font-black text-sm text-emerald-400">
+                              {effectiveRating}
+                            </span>
+                            {bonus !== 0 && (
+                              <span
+                                className={`text-[9px] font-bold px-1 rounded ${
+                                  bonus > 0 ? 'bg-amber-950 text-amber-300' : 'bg-blue-950 text-blue-300'
+                                }`}
+                                title={`Base: ${player.rating} (${bonus > 0 ? `+${bonus}` : bonus} OVR)`}
+                              >
+                                {bonus > 0 ? `+${bonus}` : bonus}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        <td className="py-3 px-3 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            {player.recentForm && player.recentForm.length > 0 ? (
+                              <div className="flex gap-0.5 items-center justify-center">
+                                {player.recentForm.slice(-3).map((r, i) => (
+                                  <span
+                                    key={i}
+                                    className={`text-[9px] font-mono font-bold px-1 rounded ${
+                                      r >= 7.8
+                                        ? 'bg-emerald-950 text-emerald-300'
+                                        : r >= 6.4
+                                        ? 'bg-slate-800 text-slate-300'
+                                        : 'bg-rose-950 text-rose-300'
+                                    }`}
+                                  >
+                                    {r.toFixed(1)}
+                                  </span>
+                                ))}
+                                {bonus > 0 && <span className="text-[10px]" title="In-Form">🔥</span>}
+                                {bonus < 0 && <span className="text-[10px]" title="Slump">❄️</span>}
+                              </div>
+                            ) : (
+                              <span className="text-slate-400 font-mono text-[10px]">
+                                {player.form ? player.form.toFixed(1) : '7.0'}
+                              </span>
+                            )}
+                          </div>
                         </td>
 
                         <td className="py-3 px-3 text-center font-display font-bold text-xs text-amber-400">
                           {player.potential ? `⭐ ${player.potential}` : '-'}
+                          {player.age <= 23 && typeof player.developmentProgress === 'number' && player.developmentProgress > 0 && (
+                            <div className="text-[9px] font-mono text-emerald-400 font-semibold mt-0.5" title="In-season XP progress">
+                              🌱 {player.developmentProgress}%
+                            </div>
+                          )}
                         </td>
 
                         <td className="py-3 px-3 text-center text-slate-400">
@@ -567,6 +628,7 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
                             <span className="text-slate-600">-</span>
                           )}
                         </td>
+
 
                         <td className="py-3 px-4 text-right">
                           <div className="flex justify-end gap-1.5">
@@ -784,51 +846,36 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4"
         >
-          <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 max-w-sm w-full space-y-5 shadow-2xl relative">
+          <div className="bg-slate-950 border border-slate-800 rounded-3xl p-5 sm:p-6 max-w-md w-full space-y-4 shadow-2xl relative max-h-[92vh] overflow-y-auto">
             <button
               onClick={() => setSelectedPlayer(null)}
-              className="absolute top-4 right-4 text-slate-500 hover:text-white text-sm cursor-pointer"
+              className="absolute top-4 right-4 text-slate-500 hover:text-white text-sm cursor-pointer z-20"
             >
               ✕
             </button>
 
-            <header className="space-y-1">
-              <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider">
-                {selectedPlayer.position} • {selectedPlayer.nationality}
-              </span>
-              <h3 className="text-xl font-display font-black text-white">
-                {selectedPlayer.name}
-              </h3>
-              <p className="text-xs text-slate-400">
-                Age: {selectedPlayer.age} • Contract: {selectedPlayer.contractYears} Years Remaining
-              </p>
-            </header>
+            {/* Authentic EA FC Card */}
+            <EaFcCard
+              player={selectedPlayer}
+              size="standard"
+              showFormHistory={true}
+              showProgressionBar={true}
+            />
 
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="bg-slate-900/60 border border-slate-850 p-3 rounded-xl">
-                <div className="text-[9px] uppercase font-bold text-slate-500">Overall Rating</div>
-                <div className="text-xl font-display font-black text-emerald-400">
-                  {selectedPlayer.rating}
-                </div>
-              </div>
-              <div className="bg-slate-900/60 border border-slate-850 p-3 rounded-xl">
-                <div className="text-[9px] uppercase font-bold text-slate-500">Potential</div>
-                <div className="text-xl font-display font-black text-amber-400">
-                  {selectedPlayer.potential ? `⭐ ${selectedPlayer.potential}` : `${selectedPlayer.rating}`}
-                </div>
-              </div>
-              <div className="bg-slate-900/60 border border-slate-850 p-3 rounded-xl">
+            {/* Financial and Contract details */}
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="bg-slate-900/60 border border-slate-850 p-2.5 rounded-xl">
                 <div className="text-[9px] uppercase font-bold text-slate-500">Market Value</div>
                 <div className="text-sm font-display font-black text-white">
                   {formatCurrency(selectedPlayer.value, save.settings?.currency, save.settings?.numberFormat)}
                 </div>
               </div>
-              <div className="bg-slate-900/60 border border-slate-850 p-3 rounded-xl">
-                <div className="text-[9px] uppercase font-bold text-slate-500">Wage</div>
+              <div className="bg-slate-900/60 border border-slate-850 p-2.5 rounded-xl">
+                <div className="text-[9px] uppercase font-bold text-slate-500">Wage & Contract</div>
                 <div className="text-sm font-display font-bold text-slate-200">
-                  {formatWage(selectedPlayer.wageWeekly, save.settings?.wageUnit, save.settings?.currency, save.settings?.numberFormat)}
+                  {formatWage(selectedPlayer.wageWeekly, save.settings?.wageUnit, save.settings?.currency, save.settings?.numberFormat)} ({selectedPlayer.contractYears}y)
                 </div>
               </div>
             </div>
@@ -837,7 +884,7 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
             {(() => {
               const phys = getPlayerPhysicals(selectedPlayer);
               return (
-                <div className="grid grid-cols-3 gap-2 bg-slate-900/50 border border-slate-850 p-3 rounded-xl text-center text-xs">
+                <div className="grid grid-cols-3 gap-2 bg-slate-900/50 border border-slate-850 p-2.5 rounded-xl text-center text-xs">
                   <div>
                     <div className="text-[9px] uppercase font-bold text-slate-500">Height</div>
                     <div className="font-display font-black text-white text-xs mt-0.5">
@@ -860,18 +907,7 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
               );
             })()}
 
-            <div className="bg-slate-900/40 border border-slate-850/80 p-3 rounded-xl space-y-1">
-              <span className="text-[9px] uppercase font-bold text-slate-500">Development Stage</span>
-              <div className="text-xs font-bold text-slate-300">
-                {selectedPlayer.age <= 22
-                  ? '🌱 Rapid Growth Phase (Under-23 development priority)'
-                  : selectedPlayer.age <= 28
-                  ? '⭐ Peak Career Prime (Maximum performance capability)'
-                  : '📉 Veteran Stage (Physical decline offset by tactical experience)'}
-              </div>
-            </div>
-
-            <div className="flex gap-2 pt-2">
+            <div className="flex gap-2 pt-1">
               <button
                 onClick={() => {
                   setSwapSourceId(selectedPlayer.id);
@@ -891,6 +927,7 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
           </div>
         </div>
       )}
+
     </div>
   );
 
@@ -908,6 +945,8 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
 
     const fit = calculatePositionFit(player, slotPos);
     const isSwapping = swapSourceId === player.id;
+    const bonus = calculateFormRatingBonus(player);
+    const effectiveRating = getEffectiveRating(player);
 
     return (
       <div
@@ -920,6 +959,10 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
             ? 'border-rose-500/60 bg-slate-950/90 hover:border-rose-400 shadow-lg'
             : fit === 'competent'
             ? 'border-amber-500/40 bg-slate-950/85 hover:border-amber-400 shadow-lg'
+            : bonus > 0
+            ? 'border-amber-400/80 bg-slate-950/90 hover:border-amber-300 shadow-lg ring-1 ring-amber-400/30'
+            : bonus < 0
+            ? 'border-blue-500/60 bg-slate-950/90 hover:border-blue-400 shadow-lg'
             : 'border-slate-800/80 bg-slate-950/80 hover:border-emerald-400/80 shadow-lg'
         }`}
       >
@@ -935,13 +978,20 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
           >
             {slotPos}
           </span>
-          <span className="font-display font-black text-white text-xs">{player.rating}</span>
+          <div className="flex items-center gap-0.5">
+            <span className="font-display font-black text-white text-xs">{effectiveRating}</span>
+            {bonus > 0 && <span className="text-[9px]" title={`In-Form (+${bonus})`}>🔥</span>}
+            {bonus < 0 && <span className="text-[9px]" title={`Slump (${bonus})`}>❄️</span>}
+          </div>
         </div>
         <div className="text-[10px] sm:text-[11px] font-display font-black text-white truncate leading-tight">
           {player.name}
         </div>
         <div className="text-[8px] text-slate-400 truncate mt-0.5 flex items-center justify-center gap-1">
           <span>{player.position}</span>
+          {player.age <= 23 && typeof player.developmentProgress === 'number' && player.developmentProgress >= 40 && (
+            <span className="text-[8px] font-black text-emerald-400" title={`In-Season Growth: ${player.developmentProgress}%`}>🌱</span>
+          )}
           {fit === 'out_of_position' && (
             <span className="text-[7px] font-black px-1 rounded bg-rose-950 text-rose-300 border border-rose-800">
               OOP
@@ -956,4 +1006,5 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
       </div>
     );
   }
+
 }

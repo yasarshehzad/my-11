@@ -20,6 +20,8 @@ import {
 import { formatCurrency, formatWage } from '../../career/finance';
 import { formatCareerDate } from '../../career/formatters';
 import { getEffectiveClubName } from '../../career/clubs';
+import { EaFcCard } from './EaFcCard';
+import { calculateEaFcFaceStats } from '../../career/formAndProgression';
 import {
   getSeniorPlayerCount,
   MAX_SQUAD_SIZE,
@@ -663,6 +665,40 @@ export function TransferHub({
                           </div>
                         </div>
 
+                        {/* EA FC 6 Face Stats */}
+                        {(() => {
+                          const fs = calculateEaFcFaceStats(player as unknown as CareerPlayer);
+                          return (
+                            <div className="grid grid-cols-6 gap-1 bg-slate-950/70 p-1.5 rounded-xl text-center font-display border border-white/5 text-[9px]">
+                              <div>
+                                <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'DIV' : 'PAC'}</span>
+                                <span className="font-black text-white">{fs.pac}</span>
+                              </div>
+                              <div>
+                                <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'HAN' : 'SHO'}</span>
+                                <span className="font-black text-white">{fs.sho}</span>
+                              </div>
+                              <div>
+                                <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'KIC' : 'PAS'}</span>
+                                <span className="font-black text-white">{fs.pas}</span>
+                              </div>
+                              <div>
+                                <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'REF' : 'DRI'}</span>
+                                <span className="font-black text-white">{fs.dri}</span>
+                              </div>
+                              <div>
+                                <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'SPD' : 'DEF'}</span>
+                                <span className="font-black text-white">{fs.def}</span>
+                              </div>
+                              <div>
+                                <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'POS' : 'PHY'}</span>
+                                <span className="font-black text-white">{fs.phy}</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+
                         <div className="flex justify-between items-center text-[10px] text-slate-400">
                           <span className="truncate max-w-[140px]">Club: {player.club}</span>
                           <div className="flex items-center gap-1">
@@ -1094,30 +1130,39 @@ export function TransferHub({
             </header>
 
             {/* Target Profile Summary */}
-            <div className={`p-3.5 rounded-2xl flex justify-between items-center text-xs ${
-              negotiatingPlayer.isLegend
-                ? 'bg-amber-950/20 border border-amber-500/30'
-                : 'bg-slate-900/60'
-            }`}>
-              <div>
-                <span className="text-slate-500 text-[10px] uppercase font-bold block">
-                  Club & Position
-                </span>
-                <span className="text-white font-bold">
-                  {negotiatingPlayer.club} • {negotiatingPlayer.position} ({negotiatingPlayer.rating} OVR)
-                </span>
-              </div>
-              <div className="text-right">
-                <span className="text-slate-500 text-[10px] uppercase font-bold block">
-                  Market Valuation
-                </span>
-                <span className={`font-bold font-mono text-sm ${
-                  negotiatingPlayer.isLegend ? 'text-amber-400' : 'text-emerald-400'
-                }`}>
-                  {formatCurrency(negotiatingPlayer.value)}
-                </span>
+            <div className="space-y-3">
+              <EaFcCard
+                player={negotiatingPlayer as unknown as CareerPlayer}
+                size="compact"
+                showFormHistory={false}
+                showProgressionBar={false}
+              />
+              <div className={`p-3 rounded-2xl flex justify-between items-center text-xs ${
+                negotiatingPlayer.isLegend
+                  ? 'bg-amber-950/20 border border-amber-500/30'
+                  : 'bg-slate-900/60'
+              }`}>
+                <div>
+                  <span className="text-slate-500 text-[10px] uppercase font-bold block">
+                    Club & Position
+                  </span>
+                  <span className="text-white font-bold">
+                    {negotiatingPlayer.club} • {negotiatingPlayer.position} ({negotiatingPlayer.rating} OVR)
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-slate-500 text-[10px] uppercase font-bold block">
+                    Market Valuation
+                  </span>
+                  <span className={`font-bold font-mono text-sm ${
+                    negotiatingPlayer.isLegend ? 'text-amber-400' : 'text-emerald-400'
+                  }`}>
+                    {formatCurrency(negotiatingPlayer.value)}
+                  </span>
+                </div>
               </div>
             </div>
+
 
             {/* Legend Historical Edition Selector (User requirement: select which season version to bid for) */}
             {negotiatingPlayer.versions && negotiatingPlayer.versions.length > 1 && (

@@ -10,6 +10,7 @@ import {
 } from './types';
 import { categorizePosition } from './squad';
 import { getEffectiveClubName } from './clubs';
+import { updatePlayerForm, applyInSeasonMatchProgression } from './formAndProgression';
 
 export interface InGamePlayerState {
   player: CareerPlayer;
@@ -381,11 +382,6 @@ export function applyPostMatchSquadImpact(
       const fitnessDrain = Math.round(10 + (playedState.minutesPlayed / 90) * 6);
       const newFitness = Math.max(50, player.fitness - fitnessDrain);
 
-      // Form update
-      let formDelta = wonMatch ? 0.3 : -0.2;
-      if (playedState.goals > 0) formDelta += playedState.goals * 0.4;
-      const newForm = Math.max(4.0, Math.min(10.0, Math.round((player.form + formDelta) * 10) / 10));
-
       // Morale update
       const moraleDelta = wonMatch ? 5 : -3;
       const newMorale = Math.max(30, Math.min(100, player.morale + moraleDelta));
@@ -394,14 +390,27 @@ export function applyPostMatchSquadImpact(
       const isInjured = playedState.injured;
       const injuryWeeks = isInjured ? Math.floor(Math.random() * 3) + 1 : player.injuryWeeks;
 
-      return {
-        ...player,
-        fitness: newFitness,
-        form: newForm,
-        morale: newMorale,
-        injured: isInjured || player.injured,
-        injuryWeeks,
-      };
+      // 1. Update form history and dynamic ratings
+      const matchRating = playedState.matchRating || (wonMatch ? 7.6 : 6.6);
+      const playerWithUpdatedForm = updatePlayerForm(
+        {
+          ...player,
+          fitness: newFitness,
+          morale: newMorale,
+          injured: isInjured || player.injured,
+          injuryWeeks,
+        },
+        matchRating
+      );
+
+      // 2. Natural in-season youth development from match experience
+      const progression = applyInSeasonMatchProgression(
+        playerWithUpdatedForm,
+        playedState.minutesPlayed,
+        matchRating
+      );
+
+      return progression.updatedPlayer;
     } else {
       // Rested player (benched / reserve) -> recovers stamina!
       const recovery = 12;
@@ -418,12 +427,17 @@ export function applyPostMatchSquadImpact(
         }
       }
 
-      return {
+      const restedBase: CareerPlayer = {
         ...player,
         fitness: newFitness,
         injured,
         injuryWeeks,
       };
+
+      // Unused young squad members still gain training experience from matchday prep
+      const progression = applyInSeasonMatchProgression(restedBase, 0, 7.0);
+      return progression.updatedPlayer;
     }
   });
 }
+

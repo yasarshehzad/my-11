@@ -23,6 +23,11 @@ import {
   generateIncomingAiBids,
   evaluateBoardConfidence,
 } from './transfers';
+import {
+  updatePlayerForm,
+  applyInSeasonMatchProgression,
+  applyMonthlySquadTraining,
+} from './formAndProgression';
 
 /**
  * Simulates a single league fixture with realistic football scorelines and goalscorers.
@@ -260,7 +265,7 @@ export function advanceTimeSkip(
   const trophies = [...(save.trophies || [])];
   const finances = { ...(save.finances) };
   const userClubId = save.club.id;
-  const userSquad = save.squad || [];
+  let userSquad = [...(save.squad || [])];
 
   // Deep clone cups map
   const cups: Record<string, CupTournament> = {};
@@ -347,6 +352,7 @@ export function advanceTimeSkip(
     }
 
     // Simulate fixture
+    let simmedResult: { homeScore?: number; awayScore?: number } | undefined;
     if (item.type === 'league') {
       const homeClub = getClubById(item.fixture.homeClubId) || getAllClubs()[0];
       const awayClub = getClubById(item.fixture.awayClubId) || getAllClubs()[1];
@@ -360,6 +366,7 @@ export function advanceTimeSkip(
       );
 
       fixtures[item.index] = simmed;
+      simmedResult = simmed;
     } else {
       const homeClub = findAnyClub(item.fixture.homeClubId) || getAllClubs()[0];
       const awayClub = findAnyClub(item.fixture.awayClubId) || getAllClubs()[1];
@@ -373,11 +380,31 @@ export function advanceTimeSkip(
       );
 
       cups[item.tournamentId].fixtures[item.index] = simmed;
+      simmedResult = simmed;
+    }
+
+    // If user club was involved in this simulated match, update squad form and in-season progression
+    if (isUserMatch && simmedResult && typeof simmedResult.homeScore === 'number' && typeof simmedResult.awayScore === 'number') {
+      const isHome = item.fixture.homeClubId === userClubId;
+      const userGoals = isHome ? simmedResult.homeScore : simmedResult.awayScore;
+      const oppGoals = isHome ? simmedResult.awayScore : simmedResult.homeScore;
+      const won = userGoals > oppGoals;
+      const drew = userGoals === oppGoals;
+
+      userSquad = userSquad.map((player, pIdx) => {
+        const isStarter = pIdx < 11;
+        const baseRating = won ? 7.5 : drew ? 6.8 : 6.2;
+        const matchRating = Number((baseRating + (Math.random() * 1.0 - 0.3)).toFixed(1));
+        const withForm = updatePlayerForm(player, matchRating);
+        const prog = applyInSeasonMatchProgression(withForm, isStarter ? 90 : 20, matchRating);
+        return prog.updatedPlayer;
+      });
     }
 
     matchesPlayedCount++;
     currentDate = fixDate;
   }
+
 
   // 4. Advance completed cup rounds & award trophies/prizes
   for (const [tId, tourney] of Object.entries(cups)) {
@@ -434,6 +461,14 @@ export function advanceTimeSkip(
     pausedReason = 'Emergency Board Meeting: Sacked due to poor league results';
   }
 
+  // Apply monthly squad training if calendar advanced significantly
+  const initialDate = new Date(save.season.currentDate);
+  const daysElapsed = Math.round((currentDate.getTime() - initialDate.getTime()) / (1000 * 60 * 60 * 24));
+  if (daysElapsed >= 25) {
+    const trainingResult = applyMonthlySquadTraining(userSquad);
+    userSquad = trainingResult.updatedSquad;
+  }
+
   const updatedSave: CareerSaveFile = {
     ...save,
     season: {
@@ -449,7 +484,9 @@ export function advanceTimeSkip(
     finances,
     incomingOffers,
     boardStatus: updatedBoardStatus,
+    squad: userSquad,
   };
+
 
   return {
     updatedSave,
