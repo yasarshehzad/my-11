@@ -109,10 +109,18 @@ export function EaFcCard({
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-sm font-display font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-black/40 border border-white/10">
               {player.position}
             </span>
+            {player.naturalPositions && player.naturalPositions.filter((p) => p !== player.position).length > 0 && (
+              <span
+                className="text-[10px] font-bold text-emerald-300 bg-emerald-950/70 px-1.5 py-0.5 rounded border border-emerald-500/30"
+                title={`Natural positions: ${player.naturalPositions.join(', ')}`}
+              >
+                +{player.naturalPositions.filter((p) => p !== player.position).join('/')}
+              </span>
+            )}
             <span className="text-xs font-semibold opacity-80" title={player.nationality}>
               {player.nationality}
             </span>

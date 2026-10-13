@@ -549,7 +549,12 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
                         </td>
 
                         <td className="py-3 px-3 text-center font-bold text-slate-300">
-                          {player.position}
+                          <div>{player.position}</div>
+                          {player.naturalPositions && player.naturalPositions.filter((p) => p !== player.position).length > 0 && (
+                            <div className="text-[9px] font-semibold text-emerald-400" title={`Natural in: ${player.naturalPositions.join(', ')}`}>
+                              +{player.naturalPositions.filter((p) => p !== player.position).join('/')}
+                            </div>
+                          )}
                         </td>
 
                         <td className="py-3 px-3 text-center">

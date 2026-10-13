@@ -358,12 +358,15 @@ export function advanceTimeSkip(
       break;
     }
 
-    // Check smart pause on user match when skipping time
-    if (isUserMatch && save.settings.smartPause && target !== 'season_end') {
-      pausedReason =
-        item.type === 'league'
-          ? `Smart Pause: Matchday ${item.fixture.round} reached`
-          : `Smart Pause: ${(item.fixture as CupFixture).competitionName} (${(item.fixture as CupFixture).roundName})`;
+    // Smart Pause during fast-forward: only pause if user club reaches a major tournament Final
+    if (
+      isUserMatch &&
+      save.settings.smartPause &&
+      target !== 'next_match' &&
+      item.type === 'cup' &&
+      (item.fixture as CupFixture).roundName === 'Final'
+    ) {
+      pausedReason = `Smart Pause: ${(item.fixture as CupFixture).competitionName} Final reached`;
       currentDate = fixDate;
       break;
     }

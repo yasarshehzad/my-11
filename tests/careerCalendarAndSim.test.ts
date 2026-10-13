@@ -251,4 +251,57 @@ describe('Match Simulator & Time-Skip Controller', () => {
     expect(skipRes.updatedSave.season.currentDate).toBeDefined();
     expect(skipRes.updatedSave.standings?.length).toBe(20);
   });
+
+  it('does not get prematurely held back by early League Cup matches when skipping time with smartPause enabled', () => {
+    const club = getClubById('north_london_white')!;
+    const settings = getPresetSettings('normal');
+    settings.smartPause = true;
+
+    const save = createNewCareerSave({
+      slotId: 'slot_1',
+      manager: { name: 'Manager', nationality: 'England' },
+      club,
+      settings,
+    });
+
+    // Advance 1 month from July 1 into August 1
+    const skip1 = advanceTimeSkip(save, 'next_month');
+    expect(skip1.updatedSave.season.currentDate).toBe('2026-08-01');
+
+    // Fast-forward another month into September 1 (crossing Aug 26 League Cup Round of 16)
+    const skip2 = advanceTimeSkip(skip1.updatedSave, 'next_month');
+    // It should reach 2026-09-01 without being paused prematurely on Aug 26 by the League Cup Round of 16 match
+    expect(skip2.updatedSave.season.currentDate).toBe('2026-09-01');
+    expect(skip2.pausedReason).toBe('Smart Pause: Summer Transfer Deadline Day');
+
+    // The League Cup R1 match should have been simulated automatically
+    const leagueCup = skip2.updatedSave.cups?.['cup_league_cup'];
+    expect(leagueCup).toBeDefined();
+    const userLeagueCupMatch = leagueCup?.fixtures.find(
+      (f) => f.homeClubId === club.id || f.awayClubId === club.id
+    );
+    expect(userLeagueCupMatch?.played).toBe(true);
+  });
+
+  it('pauses during fast forward when reaching a tournament Final with smartPause enabled', () => {
+    const club = getClubById('london_red')!;
+    const settings = getPresetSettings('normal');
+    settings.smartPause = true;
+
+    const save = createNewCareerSave({
+      slotId: 'slot_1',
+      manager: { name: 'Manager', nationality: 'England' },
+      club,
+      settings,
+    });
+
+    // Advance 1 month from July 1 into August 1
+    const skip1 = advanceTimeSkip(save, 'next_month');
+    expect(skip1.updatedSave.season.currentDate).toBe('2026-08-01');
+
+    // London Red is in the Season Opener Shield Final on 2026-08-08
+    const skip2 = advanceTimeSkip(skip1.updatedSave, 'next_month');
+    expect(skip2.updatedSave.season.currentDate).toBe('2026-08-08');
+    expect(skip2.pausedReason).toBe('Smart Pause: Season Opener Shield Final reached');
+  });
 });

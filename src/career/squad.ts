@@ -186,13 +186,45 @@ export function calculatePositionFit(player: CareerPlayer, targetPos: string): P
   const target = targetPos.toUpperCase();
   const primary = player.position.toUpperCase();
 
+  // 1. Direct match with primary position
   if (primary === target) return 'natural';
 
+  // 2. Direct match with designated natural positions
+  if (player.naturalPositions && player.naturalPositions.map((p) => p.toUpperCase()).includes(target)) {
+    return 'natural';
+  }
+
+  // 3. Wide flank sister-role equivalence (RW <-> RM and LW <-> LM)
+  // Right wingers naturally play right midfield in 4-4-2/4-2-3-1, and left wingers naturally play left midfield
+  if (
+    (primary === 'RW' && target === 'RM') ||
+    (primary === 'RM' && target === 'RW') ||
+    (primary === 'LW' && target === 'LM') ||
+    (primary === 'LM' && target === 'LW')
+  ) {
+    return 'natural';
+  }
+
+  // Also check if any designated natural position matches the wide flank sister-role
+  if (player.naturalPositions) {
+    const hasNaturalWingPair = player.naturalPositions.some((np) => {
+      const u = np.toUpperCase();
+      return (
+        (u === 'RW' && target === 'RM') ||
+        (u === 'RM' && target === 'RW') ||
+        (u === 'LW' && target === 'LM') ||
+        (u === 'LM' && target === 'LW')
+      );
+    });
+    if (hasNaturalWingPair) return 'natural';
+  }
+
+  // 4. Secondary positions designated on player card -> competent
   if (player.secondaryPositions && player.secondaryPositions.map((p) => p.toUpperCase()).includes(target)) {
     return 'competent';
   }
 
-  // Strict positional adjacencies:
+  // 5. Strict positional adjacencies:
   // Fullbacks & Wingbacks (LB/LWB, RB/RWB)
   if ((primary === 'LB' && target === 'LWB') || (primary === 'LWB' && target === 'LB')) {
     return 'competent';
@@ -247,8 +279,11 @@ export function calculatePositionFit(player: CareerPlayer, targetPos: string): P
     return 'competent';
   }
 
-  // Wingers playing CF/ST
-  if (['LW', 'RW'].includes(primary) && ['ST', 'CF'].includes(target)) {
+  // Wingers playing CF/ST, or Strikers playing Wingers
+  if (
+    (['LW', 'RW'].includes(primary) && ['ST', 'CF'].includes(target)) ||
+    (['ST', 'CF'].includes(primary) && ['LW', 'RW'].includes(target))
+  ) {
     return 'competent';
   }
 
@@ -528,31 +563,99 @@ export function getBestStartingLineup(
   const starterMap = new Map<number, string>();
   const assignedSet = new Set<string>();
 
-  // PASS 1: Fill slots with highest rated NATURAL position players
+  // 1. Assign Goalkeeper (GK) to GK slot(s)
   formation.slots.forEach((slotPos, index) => {
-    const naturalCandidate = available.find(
-      (p) => !assignedSet.has(p.id) && calculatePositionFit(p, slotPos) === 'natural'
-    );
-    if (naturalCandidate) {
-      starterMap.set(index, naturalCandidate.id);
-      assignedSet.add(naturalCandidate.id);
-    }
-  });
-
-  // PASS 2: For any remaining empty slots, fill with highest rated COMPETENT players
-  formation.slots.forEach((slotPos, index) => {
-    if (!starterMap.has(index)) {
-      const competentCandidate = available.find(
-        (p) => !assignedSet.has(p.id) && calculatePositionFit(p, slotPos) === 'competent'
+    if (slotPos === 'GK') {
+      const gk = available.find(
+        (p) => !assignedSet.has(p.id) && categorizePosition(p.position) === 'GK'
       );
-      if (competentCandidate) {
-        starterMap.set(index, competentCandidate.id);
-        assignedSet.add(competentCandidate.id);
+      if (gk) {
+        starterMap.set(index, gk.id);
+        assignedSet.add(gk.id);
       }
     }
   });
 
-  // PASS 3: Fallback for any slot still unassigned
+  // Outfield slots to fill
+  const outfieldSlots: { index: number; slotPos: string }[] = [];
+  formation.slots.forEach((slotPos, index) => {
+    if (!starterMap.has(index)) {
+      outfieldSlots.push({ index, slotPos });
+    }
+  });
+
+  // Outfield candidate players
+  const outfieldPlayers = available.filter(
+    (p) => !assignedSet.has(p.id) && categorizePosition(p.position) !== 'GK'
+  );
+
+  // Score candidate for outfield slot:
+  // - Natural fit: player.rating
+  // - Competent fit: player.rating - 0.5 (Competent player with 1+ higher rating beats natural player)
+  // - Out of position: player.rating - 25
+  const getSlotScore = (player: CareerPlayer, slotPos: string): number => {
+    const fit = calculatePositionFit(player, slotPos);
+    if (fit === 'natural') return player.rating;
+    if (fit === 'competent') return player.rating - 0.5;
+    return player.rating - 25;
+  };
+
+  // Branch-and-bound optimal outfield matching
+  const n = outfieldSlots.length;
+  if (n > 0 && outfieldPlayers.length > 0) {
+    const scoreMatrix = outfieldSlots.map((s) =>
+      outfieldPlayers
+        .map((p) => ({ player: p, score: getSlotScore(p, s.slotPos) }))
+        .sort((a, b) => b.score - a.score)
+    );
+
+    let bestScore = -Infinity;
+    let bestAssignment: CareerPlayer[] = [];
+    const currentAssignment: CareerPlayer[] = new Array(n);
+    const usedIds = new Set<string>();
+    const maxFutureScores = scoreMatrix.map((row) => (row[0] ? row[0].score : -999));
+
+    const search = (slotIdx: number, currentScore: number) => {
+      if (slotIdx === n) {
+        if (currentScore > bestScore) {
+          bestScore = currentScore;
+          bestAssignment = [...currentAssignment];
+        }
+        return;
+      }
+
+      let remainingBound = 0;
+      for (let i = slotIdx; i < n; i++) remainingBound += maxFutureScores[i];
+      if (currentScore + remainingBound <= bestScore) return;
+
+      const candidates = scoreMatrix[slotIdx];
+      for (const cand of candidates) {
+        if (usedIds.has(cand.player.id)) continue;
+        if (currentScore + cand.score + (remainingBound - maxFutureScores[slotIdx]) <= bestScore) {
+          break; // sorted descending, subsequent candidates cannot beat bestScore
+        }
+        usedIds.add(cand.player.id);
+        currentAssignment[slotIdx] = cand.player;
+        search(slotIdx + 1, currentScore + cand.score);
+        usedIds.delete(cand.player.id);
+      }
+    };
+
+    search(0, 0);
+
+    // Apply the optimal assignment
+    if (bestAssignment.length === n) {
+      outfieldSlots.forEach((slot, idx) => {
+        const assignedPlayer = bestAssignment[idx];
+        if (assignedPlayer) {
+          starterMap.set(slot.index, assignedPlayer.id);
+          assignedSet.add(assignedPlayer.id);
+        }
+      });
+    }
+  }
+
+  // Fallback for any slot still unassigned
   formation.slots.forEach((_, index) => {
     if (!starterMap.has(index)) {
       const fallback = available.find((p) => !assignedSet.has(p.id));

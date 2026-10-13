@@ -95,6 +95,7 @@ export interface CareerPlayer {
   name: string;
   rating: number;
   position: string;
+  naturalPositions?: string[];
   secondaryPositions?: string[];
   age: number;
   value: number; // in £/coins
@@ -334,6 +335,8 @@ export interface MarketPlayer {
   name: string;
   rating: number;
   position: string;
+  naturalPositions?: string[];
+  secondaryPositions?: string[];
   age: number;
   value: number;
   wageDemand: number;

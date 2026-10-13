@@ -62,6 +62,13 @@ for (const p of players) {
   if (!validPositions.has(p.primaryPosition)) {
     errors.push(`${p.id}: invalid primary position "${p.primaryPosition}"`);
   }
+  if (Array.isArray(p.naturalPositions)) {
+    for (const nat of p.naturalPositions) {
+      if (!validPositions.has(nat)) {
+        errors.push(`${p.id}: invalid natural position "${nat}"`);
+      }
+    }
+  }
   if (Array.isArray(p.secondaryPositions)) {
     for (const sec of p.secondaryPositions) {
       if (!validPositions.has(sec)) {

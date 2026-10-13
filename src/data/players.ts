@@ -8,6 +8,7 @@ export interface PlayerBase {
   lastName: string;
   nationality: string;
   primaryPosition: Position;
+  naturalPositions?: Position[];
   secondaryPositions: Position[];
   era: '90s' | '00s' | '10s' | 'Modern';
   club: string; // Default/main club
@@ -261,13 +262,13 @@ const playerBases: PlayerBase[] = [
   },
   {
     name: 'Trent Alexander-Arnold', lastName: 'Trent', nationality: 'England',
-    primaryPosition: 'RB', secondaryPositions: ['CM', 'CDM'], era: 'Modern', club: 'Liverpool',
+    primaryPosition: 'RB', naturalPositions: ['RB', 'CM'], secondaryPositions: ['CDM', 'RM'], era: 'Modern', club: 'Liverpool',
     baseRating: 89, startYear: 2017, baseTrait: 'Creator Supreme', playStyle: 'Set Piece Master',
     rivals: ['Manchester United', 'Everton'],
   },
   {
     name: 'Joao Cancelo', lastName: 'Cancelo', nationality: 'Portugal',
-    primaryPosition: 'RB', secondaryPositions: ['LB', 'CM'], era: 'Modern', club: 'Manchester City',
+    primaryPosition: 'RB', naturalPositions: ['RB', 'LB'], secondaryPositions: ['CM', 'RM', 'LM'], era: 'Modern', club: 'Manchester City',
     baseRating: 87, startYear: 2019, baseTrait: 'Creator Supreme', playStyle: 'Inverted Playmaker',
     rivals: ['Manchester United', 'Liverpool'],
   },
@@ -335,7 +336,7 @@ const playerBases: PlayerBase[] = [
   },
   {
     name: 'Kevin De Bruyne', lastName: 'De Bruyne', nationality: 'Belgium',
-    primaryPosition: 'CM', secondaryPositions: ['CAM'], era: '10s', club: 'Manchester City',
+    primaryPosition: 'CM', naturalPositions: ['CM', 'CAM'], secondaryPositions: ['RM'], era: '10s', club: 'Manchester City',
     baseRating: 94, startYear: 2015, baseTrait: 'Creator Supreme', playStyle: 'Passing Maestro',
     rivals: ['Manchester United', 'Liverpool'],
   },
@@ -347,7 +348,7 @@ const playerBases: PlayerBase[] = [
   },
   {
     name: 'Rodri Hernandez', lastName: 'Rodri', nationality: 'Spain',
-    primaryPosition: 'CDM', secondaryPositions: ['CM'], era: 'Modern', club: 'Manchester City',
+    primaryPosition: 'CDM', naturalPositions: ['CDM', 'CM'], secondaryPositions: ['CB'], era: 'Modern', club: 'Manchester City',
     baseRating: 91, startYear: 2019, baseTrait: 'Tempo Controller', playStyle: 'Deep Lying Pivot',
     rivals: ['Manchester United', 'Liverpool'],
   },
@@ -359,19 +360,19 @@ const playerBases: PlayerBase[] = [
   },
   {
     name: 'Bruno Fernandes', lastName: 'B. Fernandes', nationality: 'Portugal',
-    primaryPosition: 'CAM', secondaryPositions: ['CM'], era: 'Modern', club: 'Manchester United',
+    primaryPosition: 'CAM', naturalPositions: ['CAM', 'CM', 'RM'], secondaryPositions: ['RW'], era: 'Modern', club: 'Manchester United',
     baseRating: 90, startYear: 2020, baseTrait: 'Creator Supreme', playStyle: 'Clutch Playmaker',
     rivals: ['Liverpool', 'Manchester City'],
   },
   {
     name: 'Martin Odegaard', lastName: 'Odegaard', nationality: 'Norway',
-    primaryPosition: 'CAM', secondaryPositions: ['CM'], era: 'Modern', club: 'Arsenal',
+    primaryPosition: 'CAM', naturalPositions: ['CAM', 'CM'], secondaryPositions: ['RM', 'RW'], era: 'Modern', club: 'Arsenal',
     baseRating: 89, startYear: 2021, baseTrait: 'Creator Supreme', playStyle: 'Pocket Playmaker',
     rivals: ['Tottenham', 'Chelsea'],
   },
   {
     name: 'Declan Rice', lastName: 'Rice', nationality: 'England',
-    primaryPosition: 'CDM', secondaryPositions: ['CM', 'CB'], era: 'Modern', club: 'Arsenal',
+    primaryPosition: 'CDM', naturalPositions: ['CDM', 'CM'], secondaryPositions: ['CB'], era: 'Modern', club: 'Arsenal',
     baseRating: 88, startYear: 2017, baseTrait: 'Engine Room', playStyle: 'Box-to-Box Destroyer',
     rivals: ['Tottenham', 'Chelsea'],
   },
@@ -425,7 +426,7 @@ const playerBases: PlayerBase[] = [
   },
   {
     name: 'Bernardo Silva', lastName: 'Bernardo', nationality: 'Portugal',
-    primaryPosition: 'CM', secondaryPositions: ['RW', 'CAM'], era: 'Modern', club: 'Manchester City',
+    primaryPosition: 'CM', naturalPositions: ['CM', 'CAM', 'RW', 'RM'], secondaryPositions: ['LW'], era: 'Modern', club: 'Manchester City',
     baseRating: 89, startYear: 2017, baseTrait: 'Tempo Controller', playStyle: 'Pocket Playmaker',
     rivals: ['Manchester United', 'Liverpool'],
   },
@@ -433,85 +434,85 @@ const playerBases: PlayerBase[] = [
   // --- WINGERS (LW/RW/LM/RM) ---
   {
     name: 'Ryan Giggs', lastName: 'Giggs', nationality: 'Wales',
-    primaryPosition: 'LW', secondaryPositions: ['LM', 'CM'], era: '90s', club: 'Manchester United',
+    primaryPosition: 'LW', naturalPositions: ['LW', 'LM'], secondaryPositions: ['CM', 'CAM'], era: '90s', club: 'Manchester United',
     baseRating: 90, startYear: 1992, baseTrait: 'Wing Wizard', playStyle: 'Dribbling Winger',
     rivals: ['Liverpool', 'Manchester City'],
   },
   {
     name: 'David Beckham', lastName: 'Beckham', nationality: 'England',
-    primaryPosition: 'RM', secondaryPositions: ['CM', 'RW'], era: '90s', club: 'Manchester United',
+    primaryPosition: 'RM', naturalPositions: ['RM', 'RW'], secondaryPositions: ['CM'], era: '90s', club: 'Manchester United',
     baseRating: 91, startYear: 1995, baseTrait: 'Creator Supreme', playStyle: 'Cross Specialist',
     rivals: ['Liverpool', 'Manchester City'],
   },
   {
     name: 'Robert Pires', lastName: 'Pires', nationality: 'France',
-    primaryPosition: 'LW', secondaryPositions: ['LM', 'CAM'], era: '00s', club: 'Arsenal',
+    primaryPosition: 'LW', naturalPositions: ['LW', 'LM'], secondaryPositions: ['CAM', 'RW'], era: '00s', club: 'Arsenal',
     baseRating: 90, startYear: 2000, baseTrait: 'Creator Supreme', playStyle: 'Inside Forward',
     rivals: ['Tottenham', 'Manchester United'],
   },
   {
     name: 'Cristiano Ronaldo', lastName: 'Ronaldo', nationality: 'Portugal',
-    primaryPosition: 'RW', secondaryPositions: ['LW', 'ST'], era: '00s', club: 'Manchester United',
+    primaryPosition: 'RW', naturalPositions: ['RW', 'RM', 'LW'], secondaryPositions: ['ST', 'CF'], era: '00s', club: 'Manchester United',
     baseRating: 93, startYear: 2003, baseTrait: 'Wing Wizard', playStyle: 'Inside Forward',
     rivals: ['Liverpool', 'Manchester City'],
   },
   {
     name: 'Gareth Bale', lastName: 'Bale', nationality: 'Wales',
-    primaryPosition: 'LW', secondaryPositions: ['RW', 'CAM', 'LB'], era: '10s', club: 'Tottenham',
+    primaryPosition: 'LW', naturalPositions: ['LW', 'LM', 'RW', 'RM'], secondaryPositions: ['CAM', 'ST', 'LB'], era: '10s', club: 'Tottenham',
     baseRating: 91, startYear: 2007, baseTrait: 'Wing Wizard', playStyle: 'Explosive Runner',
     rivals: ['Arsenal', 'Chelsea'],
   },
   {
     name: 'Eden Hazard', lastName: 'Hazard', nationality: 'Belgium',
-    primaryPosition: 'LW', secondaryPositions: ['CAM', 'RW', 'LM'], era: '10s', club: 'Chelsea',
+    primaryPosition: 'LW', naturalPositions: ['LW', 'LM'], secondaryPositions: ['CAM', 'RW'], era: '10s', club: 'Chelsea',
     baseRating: 93, startYear: 2010, baseTrait: 'Wing Wizard', playStyle: 'Pocket Playmaker',
     rivals: ['Arsenal', 'Tottenham'],
   },
   {
     name: 'Alexis Sanchez', lastName: 'Sanchez', nationality: 'Chile',
-    primaryPosition: 'LW', secondaryPositions: ['RW', 'ST', 'CAM'], era: '10s', club: 'Arsenal',
+    primaryPosition: 'LW', naturalPositions: ['LW', 'LM', 'RW'], secondaryPositions: ['ST', 'CF', 'CAM'], era: '10s', club: 'Arsenal',
     baseRating: 90, startYear: 2014, baseTrait: 'Chaos Merchant', playStyle: 'Inside Forward',
     rivals: ['Tottenham', 'Chelsea'],
   },
   {
     name: 'Mohamed Salah', lastName: 'Salah', nationality: 'Egypt',
-    primaryPosition: 'RW', secondaryPositions: ['ST', 'LW'], era: 'Modern', club: 'Liverpool',
+    primaryPosition: 'RW', naturalPositions: ['RW', 'RM'], secondaryPositions: ['ST', 'CF', 'LW'], era: 'Modern', club: 'Liverpool',
     baseRating: 93, startYear: 2017, baseTrait: 'Golden Boot Form', playStyle: 'Goal Machine',
     rivals: ['Manchester United', 'Everton'],
   },
   {
     name: 'Sadio Mane', lastName: 'Mane', nationality: 'Senegal',
-    primaryPosition: 'LW', secondaryPositions: ['RW', 'ST'], era: '10s', club: 'Liverpool',
+    primaryPosition: 'LW', naturalPositions: ['LW', 'LM', 'RW', 'RM'], secondaryPositions: ['ST', 'CF'], era: '10s', club: 'Liverpool',
     baseRating: 90, startYear: 2014, baseTrait: 'Chaos Merchant', playStyle: 'Inside Forward',
     rivals: ['Manchester United', 'Everton'],
   },
   {
     name: 'Son Heung-min', lastName: 'Son', nationality: 'South Korea',
-    primaryPosition: 'LW', secondaryPositions: ['ST', 'RW'], era: 'Modern', club: 'Tottenham',
+    primaryPosition: 'LW', naturalPositions: ['LW', 'LM', 'ST'], secondaryPositions: ['RW', 'CF'], era: 'Modern', club: 'Tottenham',
     baseRating: 89, startYear: 2015, baseTrait: 'Clutch Finisher', playStyle: 'Goal Machine',
     rivals: ['Arsenal', 'Chelsea'],
   },
   {
     name: 'Riyad Mahrez', lastName: 'Mahrez', nationality: 'Algeria',
-    primaryPosition: 'RW', secondaryPositions: ['CAM'], era: '10s', club: 'Leicester',
+    primaryPosition: 'RW', naturalPositions: ['RW', 'RM'], secondaryPositions: ['CAM', 'LW'], era: '10s', club: 'Leicester',
     baseRating: 89, startYear: 2014, baseTrait: 'Wing Wizard', playStyle: 'Pocket Playmaker',
     rivals: ['Nottingham Forest', 'Aston Villa'],
   },
   {
     name: 'Bukayo Saka', lastName: 'Saka', nationality: 'England',
-    primaryPosition: 'RW', secondaryPositions: ['LW', 'LB'], era: 'Modern', club: 'Arsenal',
+    primaryPosition: 'RW', naturalPositions: ['RW', 'RM'], secondaryPositions: ['LW', 'LM', 'LB'], era: 'Modern', club: 'Arsenal',
     baseRating: 89, startYear: 2019, baseTrait: 'Creator Supreme', playStyle: 'Inside Forward',
     rivals: ['Tottenham', 'Chelsea'],
   },
   {
     name: 'Phil Foden', lastName: 'Foden', nationality: 'England',
-    primaryPosition: 'RW', secondaryPositions: ['CAM', 'LW'], era: 'Modern', club: 'Manchester City',
+    primaryPosition: 'RW', naturalPositions: ['RW', 'RM', 'CAM', 'LW'], secondaryPositions: ['LM', 'CM'], era: 'Modern', club: 'Manchester City',
     baseRating: 89, startYear: 2017, baseTrait: 'Creator Supreme', playStyle: 'Pocket Playmaker',
     rivals: ['Manchester United', 'Liverpool'],
   },
   {
     name: 'Cole Palmer', lastName: 'Palmer', nationality: 'England',
-    primaryPosition: 'CAM', secondaryPositions: ['RW', 'ST'], era: 'Modern', club: 'Chelsea',
+    primaryPosition: 'CAM', naturalPositions: ['CAM', 'RW', 'RM'], secondaryPositions: ['ST', 'CM'], era: 'Modern', club: 'Chelsea',
     baseRating: 88, startYear: 2020, baseTrait: 'Creator Supreme', playStyle: 'Clutch Playmaker',
     rivals: ['Arsenal', 'Tottenham'],
   },
@@ -555,7 +556,7 @@ const playerBases: PlayerBase[] = [
   },
   {
     name: 'Thierry Henry', lastName: 'Henry', nationality: 'France',
-    primaryPosition: 'ST', secondaryPositions: ['LW', 'CF'], era: '00s', club: 'Arsenal',
+    primaryPosition: 'ST', naturalPositions: ['ST', 'LW'], secondaryPositions: ['CF', 'LM'], era: '00s', club: 'Arsenal',
     baseRating: 94, startYear: 1999, baseTrait: 'Golden Boot Form', playStyle: 'Inside Forward',
     rivals: ['Tottenham', 'Manchester United'],
   },
@@ -573,7 +574,7 @@ const playerBases: PlayerBase[] = [
   },
   {
     name: 'Wayne Rooney', lastName: 'Rooney', nationality: 'England',
-    primaryPosition: 'ST', secondaryPositions: ['CF', 'CAM', 'CM'], era: '00s', club: 'Manchester United',
+    primaryPosition: 'ST', naturalPositions: ['ST', 'CF', 'CAM'], secondaryPositions: ['CM', 'LW'], era: '00s', club: 'Manchester United',
     baseRating: 92, startYear: 2002, baseTrait: 'Chaos Merchant', playStyle: 'All Action Forward',
     rivals: ['Liverpool', 'Manchester City'],
   },
@@ -791,7 +792,7 @@ const playerBases: PlayerBase[] = [
   // --- INTERNATIONAL ATTACKERS ---
   {
     name: 'Lionel Messi', lastName: 'Messi', nationality: 'Argentina',
-    primaryPosition: 'RW', secondaryPositions: ['CF', 'ST', 'CAM'], era: '00s', club: 'Barcelona',
+    primaryPosition: 'RW', naturalPositions: ['RW', 'RM', 'CF', 'CAM'], secondaryPositions: ['ST'], era: '00s', club: 'Barcelona',
     baseRating: 96, startYear: 2004, baseTrait: 'Golden Boot Form', playStyle: 'Goal Machine',
     rivals: ['Real Madrid', 'Espanyol'],
   },
@@ -803,7 +804,7 @@ const playerBases: PlayerBase[] = [
   },
   {
     name: 'Neymar Jr', lastName: 'Neymar', nationality: 'Brazil',
-    primaryPosition: 'LW', secondaryPositions: ['CAM', 'LM'], era: '00s', club: 'Barcelona',
+    primaryPosition: 'LW', naturalPositions: ['LW', 'LM', 'CAM'], secondaryPositions: ['CF', 'ST'], era: '00s', club: 'Barcelona',
     baseRating: 91, startYear: 2009, baseTrait: 'Wing Wizard', playStyle: 'Dribbling Winger',
     rivals: ['Real Madrid', 'Espanyol'],
   },
@@ -839,13 +840,13 @@ const playerBases: PlayerBase[] = [
   },
   {
     name: 'Kylian Mbappe', lastName: 'Mbappe', nationality: 'France',
-    primaryPosition: 'ST', secondaryPositions: ['LW', 'RW'], era: '10s', club: 'PSG',
+    primaryPosition: 'ST', naturalPositions: ['ST', 'LW', 'LM'], secondaryPositions: ['CF', 'RW'], era: '10s', club: 'PSG',
     baseRating: 92, startYear: 2015, baseTrait: 'Golden Boot Form', playStyle: 'Goal Machine',
     rivals: ['Marseille', 'Lille'],
   },
   {
     name: 'Antoine Griezmann', lastName: 'Griezmann', nationality: 'France',
-    primaryPosition: 'CF', secondaryPositions: ['CAM', 'ST'], era: '00s', club: 'Atletico Madrid',
+    primaryPosition: 'CF', naturalPositions: ['CF', 'CAM', 'ST'], secondaryPositions: ['LW', 'RW'], era: '00s', club: 'Atletico Madrid',
     baseRating: 89, startYear: 2009, baseTrait: 'Clutch Finisher', playStyle: 'Pocket Playmaker',
     rivals: ['Real Madrid', 'Real Sociedad'],
   },
@@ -2466,9 +2467,11 @@ function getPositionForSeason(
   playerName: string,
   year: number,
   defaultPrimary: Position,
-  defaultSecondary: Position[]
-): { primaryPosition: Position; secondaryPositions: Position[] } {
+  defaultSecondary: Position[],
+  defaultNatural?: Position[]
+): { primaryPosition: Position; naturalPositions: Position[]; secondaryPositions: Position[] } {
   let primaryPosition = defaultPrimary;
+  let naturalPositions: Position[] = defaultNatural && defaultNatural.length > 0 ? [...defaultNatural] : [defaultPrimary];
   let secondaryPositions = [...defaultSecondary];
 
   if (playerName === 'Gareth Bale') {
@@ -2605,21 +2608,32 @@ function getPositionForSeason(
     }
   }
 
-  // Dynamic secondary positions compatibility
-  if (primaryPosition === 'LW' && !secondaryPositions.includes('LM')) secondaryPositions.push('LM');
-  if (primaryPosition === 'LM' && !secondaryPositions.includes('LW')) secondaryPositions.push('LW');
-  if (primaryPosition === 'RW' && !secondaryPositions.includes('RM')) secondaryPositions.push('RM');
-  if (primaryPosition === 'RM' && !secondaryPositions.includes('RW')) secondaryPositions.push('RW');
-  if (primaryPosition === 'ST' && !secondaryPositions.includes('CF')) secondaryPositions.push('CF');
-  if (primaryPosition === 'CF' && !secondaryPositions.includes('ST')) secondaryPositions.push('ST');
-  if (primaryPosition === 'CM') {
-    if (!secondaryPositions.includes('CAM')) secondaryPositions.push('CAM');
-    if (!secondaryPositions.includes('CDM')) secondaryPositions.push('CDM');
+  // Natural positions: ensure primaryPosition is included
+  if (!naturalPositions.includes(primaryPosition)) {
+    naturalPositions.unshift(primaryPosition);
   }
-  if (primaryPosition === 'CAM' && !secondaryPositions.includes('CM')) secondaryPositions.push('CM');
-  if (primaryPosition === 'CDM' && !secondaryPositions.includes('CM')) secondaryPositions.push('CM');
 
-  return { primaryPosition, secondaryPositions };
+  // Flank natural sister-roles: RW <-> RM and LW <-> LM
+  if (primaryPosition === 'RW' && !naturalPositions.includes('RM')) naturalPositions.push('RM');
+  if (primaryPosition === 'RM' && !naturalPositions.includes('RW')) naturalPositions.push('RW');
+  if (primaryPosition === 'LW' && !naturalPositions.includes('LM')) naturalPositions.push('LM');
+  if (primaryPosition === 'LM' && !naturalPositions.includes('LW')) naturalPositions.push('LW');
+
+  // Dynamic secondary positions compatibility
+  if (primaryPosition === 'ST' && !secondaryPositions.includes('CF') && !naturalPositions.includes('CF')) secondaryPositions.push('CF');
+  if (primaryPosition === 'CF' && !secondaryPositions.includes('ST') && !naturalPositions.includes('ST')) secondaryPositions.push('ST');
+  if (primaryPosition === 'CM') {
+    if (!secondaryPositions.includes('CAM') && !naturalPositions.includes('CAM')) secondaryPositions.push('CAM');
+    if (!secondaryPositions.includes('CDM') && !naturalPositions.includes('CDM')) secondaryPositions.push('CDM');
+  }
+  if (primaryPosition === 'CAM' && !secondaryPositions.includes('CM') && !naturalPositions.includes('CM')) secondaryPositions.push('CM');
+  if (primaryPosition === 'CDM' && !secondaryPositions.includes('CM') && !naturalPositions.includes('CM')) secondaryPositions.push('CM');
+
+  // Deduplicate and ensure no overlap between natural and secondary
+  secondaryPositions = Array.from(new Set(secondaryPositions.filter((pos) => !naturalPositions.includes(pos))));
+  naturalPositions = Array.from(new Set(naturalPositions));
+
+  return { primaryPosition, naturalPositions, secondaryPositions };
 }
 
 // Map override years per player for guaranteed generation
@@ -2727,10 +2741,20 @@ function generatePlayersDatabase(): Player[] {
       else era = '90s';
 
       // Resolve position transitions and dynamic secondary positions
-      const { primaryPosition: initialPos, secondaryPositions: initialSecondaries } =
-        getPositionForSeason(base.name, year, base.primaryPosition, base.secondaryPositions);
+      const {
+        primaryPosition: initialPos,
+        naturalPositions: initialNaturals,
+        secondaryPositions: initialSecondaries,
+      } = getPositionForSeason(
+        base.name,
+        year,
+        base.primaryPosition,
+        base.secondaryPositions,
+        base.naturalPositions
+      );
 
       let primaryPosition = initialPos;
+      let naturalPositions = [...initialNaturals];
       let secondaryPositions = [...initialSecondaries];
 
       // Resolve club
@@ -3816,6 +3840,7 @@ function generatePlayersDatabase(): Player[] {
         league: getLeagueForClub(club),
         nationality: base.nationality,
         primaryPosition,
+        naturalPositions,
         secondaryPositions,
         era,
         rating,

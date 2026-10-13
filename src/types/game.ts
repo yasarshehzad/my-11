@@ -24,6 +24,7 @@ export interface Player {
   league: string;
   nationality: string;
   primaryPosition: Position;
+  naturalPositions?: Position[];
   secondaryPositions: Position[];
   era: '90s' | '00s' | '10s' | 'Modern';
   rating: number;

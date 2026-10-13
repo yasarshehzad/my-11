@@ -7,6 +7,8 @@ export interface SupplementalPlayerDef {
   name: string;
   clubId: string;
   position: string;
+  naturalPositions?: string[];
+  secondaryPositions?: string[];
   rating: number;
   age: number;
   potential: number;
@@ -1728,6 +1730,8 @@ export function convertToCareerPlayer(def: SupplementalPlayerDef): CareerPlayer 
     name: def.name,
     rating: def.rating,
     position: def.position,
+    naturalPositions: def.naturalPositions,
+    secondaryPositions: def.secondaryPositions,
     age: def.age,
     value,
     wageWeekly,

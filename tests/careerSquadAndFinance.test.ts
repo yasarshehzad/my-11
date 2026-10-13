@@ -134,6 +134,91 @@ describe('Career Squad Engine & Rules', () => {
     expect(lineup352.starterIds.length).toBe(11);
     expect(lineup352.benchIds.length).toBeGreaterThanOrEqual(5);
   });
+
+  it('recognizes players with multi-position natural roles (e.g. Salah natural in both RW and RM)', () => {
+    const salah: CareerPlayer = {
+      id: 'p_salah',
+      cardId: 'c_salah',
+      name: 'Mohamed Salah',
+      rating: 93,
+      position: 'RW',
+      naturalPositions: ['RW', 'RM'],
+      secondaryPositions: ['ST', 'LW'],
+      age: 32,
+      value: 95_000_000,
+      wageWeekly: 350_000,
+      contractYears: 2,
+      fitness: 100,
+      morale: 95,
+      form: 8.5,
+      injured: false,
+      isHomegrown: false,
+      club: 'merseyside_red',
+      nationality: 'Egypt',
+    };
+
+    // Salah is natural in BOTH RW and RM
+    expect(calculatePositionFit(salah, 'RW')).toBe('natural');
+    expect(calculatePositionFit(salah, 'RM')).toBe('natural');
+    // Salah is competent in ST and LW
+    expect(calculatePositionFit(salah, 'ST')).toBe('competent');
+    expect(calculatePositionFit(salah, 'LW')).toBe('competent');
+    // Salah is out of position at CB
+    expect(calculatePositionFit(salah, 'CB')).toBe('out_of_position');
+  });
+
+  it('auto-picks competent player over natural player when rating is 1 or more points higher', () => {
+    // Construct test squad for 4-4-2 where slot 8 is RM
+    // Natural RM candidate: rating 80
+    // Competent RM candidate (e.g. ST with RM secondary or high-rated winger): rating 82 (+2)
+    const mockSquad: CareerPlayer[] = [
+      { id: 'gk', cardId: 'c_gk', name: 'Keeper', rating: 85, position: 'GK', age: 28, value: 30e6, wageWeekly: 80e3, contractYears: 3, fitness: 100, morale: 90, form: 7, injured: false, isHomegrown: true, club: 'c', nationality: 'England' },
+      { id: 'lb', cardId: 'c_lb', name: 'Left Back', rating: 82, position: 'LB', age: 26, value: 25e6, wageWeekly: 60e3, contractYears: 3, fitness: 100, morale: 90, form: 7, injured: false, isHomegrown: true, club: 'c', nationality: 'England' },
+      { id: 'cb1', cardId: 'c_cb1', name: 'Center Back 1', rating: 84, position: 'CB', age: 27, value: 35e6, wageWeekly: 70e3, contractYears: 3, fitness: 100, morale: 90, form: 7, injured: false, isHomegrown: true, club: 'c', nationality: 'England' },
+      { id: 'cb2', cardId: 'c_cb2', name: 'Center Back 2', rating: 83, position: 'CB', age: 29, value: 30e6, wageWeekly: 65e3, contractYears: 3, fitness: 100, morale: 90, form: 7, injured: false, isHomegrown: true, club: 'c', nationality: 'England' },
+      { id: 'rb', cardId: 'c_rb', name: 'Right Back', rating: 82, position: 'RB', age: 25, value: 25e6, wageWeekly: 60e3, contractYears: 3, fitness: 100, morale: 90, form: 7, injured: false, isHomegrown: true, club: 'c', nationality: 'England' },
+      { id: 'lm', cardId: 'c_lm', name: 'Left Mid', rating: 83, position: 'LM', age: 24, value: 30e6, wageWeekly: 65e3, contractYears: 3, fitness: 100, morale: 90, form: 7, injured: false, isHomegrown: true, club: 'c', nationality: 'England' },
+      { id: 'cm1', cardId: 'c_cm1', name: 'Central Mid 1', rating: 85, position: 'CM', age: 26, value: 40e6, wageWeekly: 80e3, contractYears: 3, fitness: 100, morale: 90, form: 7, injured: false, isHomegrown: true, club: 'c', nationality: 'England' },
+      { id: 'cm2', cardId: 'c_cm2', name: 'Central Mid 2', rating: 84, position: 'CM', age: 27, value: 38e6, wageWeekly: 75e3, contractYears: 3, fitness: 100, morale: 90, form: 7, injured: false, isHomegrown: true, club: 'c', nationality: 'England' },
+      { id: 'st1', cardId: 'c_st1', name: 'Striker 1', rating: 86, position: 'ST', age: 25, value: 50e6, wageWeekly: 90e3, contractYears: 3, fitness: 100, morale: 90, form: 7, injured: false, isHomegrown: true, club: 'c', nationality: 'England' },
+      { id: 'st2', cardId: 'c_st2', name: 'Striker 2', rating: 85, position: 'ST', age: 26, value: 45e6, wageWeekly: 85e3, contractYears: 3, fitness: 100, morale: 90, form: 7, injured: false, isHomegrown: true, club: 'c', nationality: 'England' },
+
+      // Two competing candidates for RM in 4-4-2:
+      // Player A: Natural RM, rating 80
+      { id: 'rm_natural', cardId: 'c_rm_nat', name: 'Natural RM', rating: 80, position: 'RM', age: 24, value: 18e6, wageWeekly: 40e3, contractYears: 3, fitness: 100, morale: 90, form: 7, injured: false, isHomegrown: true, club: 'c', nationality: 'England' },
+      // Player B: Competent in RM (e.g. CAM with RM secondary), rating 82 (+2 higher than Player A)
+      { id: 'rm_competent_higher', cardId: 'c_rm_comp', name: 'Competent Higher OVR', rating: 82, position: 'CAM', secondaryPositions: ['RM'], age: 25, value: 25e6, wageWeekly: 55e3, contractYears: 3, fitness: 100, morale: 90, form: 7, injured: false, isHomegrown: true, club: 'c', nationality: 'England' },
+    ];
+
+    const lineup = getBestStartingLineup(mockSquad, '4-4-2');
+    // In 4-4-2 slots: ['GK', 'LB', 'CB', 'CB', 'RB', 'LM', 'CM', 'CM', 'RM', 'ST', 'ST']
+    // Slot 8 is RM. The competent 82-rated player must start over the natural 80-rated player!
+    expect(lineup.starterIds).toContain('rm_competent_higher');
+    expect(lineup.starterIds).not.toContain('rm_natural');
+  });
+
+  it('favors natural player over competent player when ratings are equal', () => {
+    const mockSquad: CareerPlayer[] = [
+      { id: 'gk', cardId: 'c_gk', name: 'Keeper', rating: 85, position: 'GK', age: 28, value: 30e6, wageWeekly: 80e3, contractYears: 3, fitness: 100, morale: 90, form: 7, injured: false, isHomegrown: true, club: 'c', nationality: 'England' },
+      { id: 'lb', cardId: 'c_lb', name: 'Left Back', rating: 82, position: 'LB', age: 26, value: 25e6, wageWeekly: 60e3, contractYears: 3, fitness: 100, morale: 90, form: 7, injured: false, isHomegrown: true, club: 'c', nationality: 'England' },
+      { id: 'cb1', cardId: 'c_cb1', name: 'Center Back 1', rating: 84, position: 'CB', age: 27, value: 35e6, wageWeekly: 70e3, contractYears: 3, fitness: 100, morale: 90, form: 7, injured: false, isHomegrown: true, club: 'c', nationality: 'England' },
+      { id: 'cb2', cardId: 'c_cb2', name: 'Center Back 2', rating: 83, position: 'CB', age: 29, value: 30e6, wageWeekly: 65e3, contractYears: 3, fitness: 100, morale: 90, form: 7, injured: false, isHomegrown: true, club: 'c', nationality: 'England' },
+      { id: 'rb', cardId: 'c_rb', name: 'Right Back', rating: 82, position: 'RB', age: 25, value: 25e6, wageWeekly: 60e3, contractYears: 3, fitness: 100, morale: 90, form: 7, injured: false, isHomegrown: true, club: 'c', nationality: 'England' },
+      { id: 'lm', cardId: 'c_lm', name: 'Left Mid', rating: 83, position: 'LM', age: 24, value: 30e6, wageWeekly: 65e3, contractYears: 3, fitness: 100, morale: 90, form: 7, injured: false, isHomegrown: true, club: 'c', nationality: 'England' },
+      { id: 'cm1', cardId: 'c_cm1', name: 'Central Mid 1', rating: 85, position: 'CM', age: 26, value: 40e6, wageWeekly: 80e3, contractYears: 3, fitness: 100, morale: 90, form: 7, injured: false, isHomegrown: true, club: 'c', nationality: 'England' },
+      { id: 'cm2', cardId: 'c_cm2', name: 'Central Mid 2', rating: 84, position: 'CM', age: 27, value: 38e6, wageWeekly: 75e3, contractYears: 3, fitness: 100, morale: 90, form: 7, injured: false, isHomegrown: true, club: 'c', nationality: 'England' },
+      { id: 'st1', cardId: 'c_st1', name: 'Striker 1', rating: 86, position: 'ST', age: 25, value: 50e6, wageWeekly: 90e3, contractYears: 3, fitness: 100, morale: 90, form: 7, injured: false, isHomegrown: true, club: 'c', nationality: 'England' },
+      { id: 'st2', cardId: 'c_st2', name: 'Striker 2', rating: 85, position: 'ST', age: 26, value: 45e6, wageWeekly: 85e3, contractYears: 3, fitness: 100, morale: 90, form: 7, injured: false, isHomegrown: true, club: 'c', nationality: 'England' },
+
+      // Natural RM vs Competent RM, BOTH rated 82:
+      { id: 'rm_natural_82', cardId: 'c_rm_nat82', name: 'Natural RM 82', rating: 82, position: 'RM', age: 24, value: 25e6, wageWeekly: 55e3, contractYears: 3, fitness: 100, morale: 90, form: 7, injured: false, isHomegrown: true, club: 'c', nationality: 'England' },
+      { id: 'rm_competent_82', cardId: 'c_rm_comp82', name: 'Competent RM 82', rating: 82, position: 'CAM', secondaryPositions: ['RM'], age: 25, value: 25e6, wageWeekly: 55e3, contractYears: 3, fitness: 100, morale: 90, form: 7, injured: false, isHomegrown: true, club: 'c', nationality: 'England' },
+    ];
+
+    const lineup = getBestStartingLineup(mockSquad, '4-4-2');
+    expect(lineup.starterIds).toContain('rm_natural_82');
+    expect(lineup.starterIds).not.toContain('rm_competent_82');
+  });
 });
 
 describe('Starter Squad Generator', () => {
