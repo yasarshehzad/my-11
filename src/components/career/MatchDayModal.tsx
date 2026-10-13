@@ -11,7 +11,8 @@ import {
   Club,
 } from '../../career/types';
 import { getAllClubs, getEffectiveClubName } from '../../career/clubs';
-import { findAnyClub, advanceCupTournament } from '../../career/cups';
+import { findAnyClub, advanceCupTournament, simulateAiFixturesInCupRound } from '../../career/cups';
+import { simulateMatchFixture } from '../../career/sim';
 import {
   simulateFullMatch,
   applyPostMatchSquadImpact,
@@ -191,9 +192,16 @@ export function MatchDayModal({
     );
 
     // Update fixture in league fixtures OR cup tournament
-    const updatedFixtures = (save.fixtures || []).map((f) =>
-      f.id === fixture.id ? simResult.fixture : f
-    );
+    const isLeagueMatch = 'round' in fixture && !('isKnockout' in fixture);
+    const updatedFixtures = (save.fixtures || []).map((f) => {
+      if (f.id === fixture.id) return simResult.fixture;
+      if (isLeagueMatch && f.round === fixture.round && !f.played) {
+        const homeClub = clubsMap.get(f.homeClubId) || allClubs[0];
+        const awayClub = clubsMap.get(f.awayClubId) || allClubs[1];
+        return simulateMatchFixture(f, homeClub, awayClub);
+      }
+      return f;
+    });
 
     const cups: Record<string, CupTournament> = {};
     if (save.cups) {
@@ -219,7 +227,9 @@ export function MatchDayModal({
         }
 
         tourney.fixtures[idx] = cupSimFix;
-        const adv = advanceCupTournament(tourney, save.season.yearStart);
+        // Auto-simulate other AI matches in this cup round so the tournament advances automatically
+        const tourneyWithAiPlayed = simulateAiFixturesInCupRound(tourney, cupSimFix.roundName, save.club.id);
+        const adv = advanceCupTournament(tourneyWithAiPlayed, save.season.yearStart);
         cups[tId] = adv.updatedTournament;
 
         if (adv.updatedTournament.isCompleted && adv.updatedTournament.winnerClubId === save.club.id) {

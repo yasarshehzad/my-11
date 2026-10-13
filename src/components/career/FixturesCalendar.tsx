@@ -47,7 +47,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
   const clubsMap = new Map<string, Club>(allClubs.map((c) => [c.id, c]));
 
   const nextFixture = getNextClubFixture(fixtures, userClubId);
-  const seasonFinished = isSeasonComplete(fixtures);
+  const seasonFinished = isSeasonComplete(fixtures, userClubId);
   const seasonSummary = seasonFinished ? getSeasonReviewSummary(save) : null;
 
   const handleAdvanceSeason = () => {

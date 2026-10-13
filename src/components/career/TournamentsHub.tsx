@@ -1,13 +1,19 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CareerSaveFile,
   CupTournament,
   CupFixture,
   Club,
 } from '../../career/types';
-import { CUP_IDS, findAnyClub, simulateKnockoutCupFixture, advanceCupTournament } from '../../career/cups';
+import {
+  CUP_IDS,
+  findAnyClub,
+  simulateKnockoutCupFixture,
+  advanceCupTournament,
+  simulateAiFixturesInCupRound,
+} from '../../career/cups';
 import { getAllClubs, getEffectiveClubName } from '../../career/clubs';
 import { formatCareerDate } from '../../career/formatters';
 import { MatchDayModal } from './MatchDayModal';
@@ -31,6 +37,37 @@ export function TournamentsHub({
   const cups = save.cups || {};
   const currentTournament: CupTournament | undefined = cups[selectedTournamentId];
   const userClubId = save.club.id;
+
+  // Automatically simulate other AI matches in the active round when their scheduled date arrives or user fixture was played
+  useEffect(() => {
+    if (!currentTournament || currentTournament.isCompleted) return;
+    const roundFixtures = currentTournament.fixtures.filter(
+      (f) => f.roundName === currentTournament.currentRound
+    );
+    const unplayedAi = roundFixtures.filter(
+      (f) =>
+        !f.played &&
+        f.homeClubId !== userClubId &&
+        f.awayClubId !== userClubId &&
+        f.date <= save.season.currentDate
+    );
+    if (unplayedAi.length > 0) {
+      const updatedTourney = simulateAiFixturesInCupRound(
+        currentTournament,
+        currentTournament.currentRound,
+        userClubId
+      );
+      const adv = advanceCupTournament(updatedTourney, save.season.yearStart);
+      const nextCups = {
+        ...cups,
+        [selectedTournamentId]: adv.updatedTournament,
+      };
+      onUpdateSave({
+        ...save,
+        cups: nextCups,
+      });
+    }
+  }, [selectedTournamentId, save.season.currentDate]);
 
   const tournamentList = [
     { id: CUP_IDS.EURO_CHAMPIONS, name: 'Champions Cup', icon: '⭐', prize: '£45M' },
@@ -345,21 +382,19 @@ export function TournamentsHub({
 
                             {/* Action Buttons for Unplayed Matches */}
                             {!fixture.played && (
-                              <div className="mt-3 pt-2 border-t border-slate-850 flex gap-2">
+                              <div className="mt-3 pt-2 border-t border-slate-850 flex items-center justify-between gap-2">
                                 {isUserInTie ? (
                                   <button
                                     onClick={() => setActiveCupMatch(fixture)}
-                                    className="flex-1 py-2 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-[10px] uppercase tracking-wider flex items-center justify-center gap-1 shadow-md shadow-emerald-500/20"
+                                    className="flex-1 py-2 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-[10px] uppercase tracking-wider flex items-center justify-center gap-1 shadow-md shadow-emerald-500/20 cursor-pointer transition-all"
                                   >
                                     <span>🎮</span> Play Matchday Command Center
                                   </button>
                                 ) : (
-                                  <button
-                                    onClick={() => handleQuickSimulateFixture(fixture)}
-                                    className="flex-1 py-1.5 px-3 rounded-xl bg-slate-950 hover:bg-slate-850 text-slate-300 border border-slate-800 font-display font-bold text-[10px] uppercase tracking-wider"
-                                  >
-                                    Quick Sim
-                                  </button>
+                                  <div className="flex-1 py-1.5 px-3 rounded-xl bg-slate-950/60 border border-slate-850/80 text-slate-400 font-mono text-[10px] flex items-center justify-center gap-1.5">
+                                    <span>⏱️</span>
+                                    <span>Simulates automatically on matchday</span>
+                                  </div>
                                 )}
                               </div>
                             )}

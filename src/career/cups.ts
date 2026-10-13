@@ -377,3 +377,92 @@ export function advanceCupTournament(
 export function findAnyClub(clubId: string): Club | undefined {
   return getClubById(clubId) || getContinentalClubById(clubId);
 }
+
+/**
+ * Simulates all unplayed AI vs AI matches in a tournament's active or specified round.
+ * If userClubId is provided, any match involving userClubId is preserved unplayed.
+ */
+export function simulateAiFixturesInCupRound(
+  tournament: CupTournament,
+  roundName: string,
+  userClubId?: string
+): CupTournament {
+  const allEnglish = getAllClubs();
+  let updatedFixtures = [...tournament.fixtures];
+  let changed = false;
+
+  updatedFixtures = updatedFixtures.map((fix) => {
+    if (fix.roundName !== roundName || fix.played) return fix;
+    const isUserMatch =
+      userClubId && (fix.homeClubId === userClubId || fix.awayClubId === userClubId);
+    if (isUserMatch) return fix;
+
+    const homeClub = findAnyClub(fix.homeClubId) || allEnglish[0];
+    const awayClub = findAnyClub(fix.awayClubId) || allEnglish[1];
+    changed = true;
+    return simulateKnockoutCupFixture(fix, homeClub, awayClub);
+  });
+
+  if (!changed) return tournament;
+  return {
+    ...tournament,
+    fixtures: updatedFixtures,
+  };
+}
+
+/**
+ * Automatically simulates pending AI cup matches and advances completed cup rounds up to or past currentDate.
+ */
+export function autoResolvePendingCupFixtures(
+  cups: Record<string, CupTournament>,
+  currentDate: string,
+  yearStart: number,
+  userClubId?: string
+): { updatedCups: Record<string, CupTournament>; trophiesAwarded: { id: string; name: string }[] } {
+  const updatedCups: Record<string, CupTournament> = {};
+  const trophiesAwarded: { id: string; name: string }[] = [];
+
+  for (const [tId, tourney] of Object.entries(cups)) {
+    let current: CupTournament = { ...tourney, fixtures: [...tourney.fixtures] };
+
+    // While current round has unplayed AI matches, simulate them and advance
+    let progressed = true;
+    let safeguard = 0;
+    while (progressed && safeguard < 10) {
+      safeguard++;
+      progressed = false;
+
+      const roundFixtures = current.fixtures.filter((f) => f.roundName === current.currentRound);
+      const unplayedAi = roundFixtures.filter((f) => {
+        if (f.played) return false;
+        const isUser = userClubId && (f.homeClubId === userClubId || f.awayClubId === userClubId);
+        return !isUser && f.date <= currentDate;
+      });
+
+      if (unplayedAi.length > 0) {
+        current = simulateAiFixturesInCupRound(current, current.currentRound, userClubId);
+        progressed = true;
+      }
+
+      // Check if all fixtures in current round are played
+      const allRoundPlayed = current.fixtures
+        .filter((f) => f.roundName === current.currentRound)
+        .every((f) => f.played);
+
+      if (allRoundPlayed && !current.isCompleted) {
+        const adv = advanceCupTournament(current, yearStart);
+        if (adv.isNewRound || adv.updatedTournament.isCompleted) {
+          current = adv.updatedTournament;
+          progressed = true;
+          if (adv.updatedTournament.isCompleted && adv.winnerId === userClubId) {
+            trophiesAwarded.push({ id: tId, name: adv.updatedTournament.name });
+          }
+        }
+      }
+    }
+
+    updatedCups[tId] = current;
+  }
+
+  return { updatedCups, trophiesAwarded };
+}

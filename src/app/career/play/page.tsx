@@ -16,6 +16,7 @@ import {
   WeightUnitPreference,
   NumberFormatPreference,
   CupFixture,
+  CupTournament,
   ManagerMessage,
 } from '../../../career/types';
 import { getEffectiveClubName, getAllClubs, getClubsWithUserClub } from '../../../career/clubs';
@@ -36,7 +37,13 @@ import { MatchOverviewModal } from '../../../components/career/MatchOverviewModa
 import { isSeasonComplete, advanceToNextSeason, getSeasonReviewSummary, SeasonReviewSummary } from '../../../career/seasons';
 import { getNextClubFixture, getNextScheduledMatch, getPreviousPlayedMatch, isDateInInternationalBreak, ScheduledMatch } from '../../../career/calendar';
 import { simulateMatchFixture, advanceTimeSkip, TimeSkipTarget } from '../../../career/sim';
-import { findAnyClub, simulateKnockoutCupFixture, advanceCupTournament } from '../../../career/cups';
+import {
+  findAnyClub,
+  simulateKnockoutCupFixture,
+  advanceCupTournament,
+  simulateAiFixturesInCupRound,
+  autoResolvePendingCupFixtures,
+} from '../../../career/cups';
 import { markMessageRead, markAllMessagesRead, getInitialInboxMessages } from '../../../career/inbox';
 import { calculateStandings } from '../../../career/table';
 import { formatCurrency } from '../../../career/finance';
@@ -70,6 +77,7 @@ function CareerPlayHubContent() {
   const [simulating, setSimulating] = useState(false);
   const [pendingFastForward, setPendingFastForward] = useState<TimeSkipTarget | null>(null);
   const [fastForwardUsePreferredEleven, setFastForwardUsePreferredEleven] = useState(true);
+  const [showSeasonReviewModal, setShowSeasonReviewModal] = useState(false);
 
   // Settings editing state (when not locked)
   const [editableSettings, setEditableSettings] = useState<CareerSettings | null>(() => {
@@ -98,6 +106,55 @@ function CareerPlayHubContent() {
 
   useEffect(() => {
     saveTheme(getSavedTheme());
+
+    // Auto-resolve any pending cup ties whose scheduled date has arrived
+    if (save && save.cups) {
+      const { updatedCups, trophiesAwarded } = autoResolvePendingCupFixtures(
+        save.cups,
+        save.season.currentDate,
+        save.season.yearStart,
+        save.club.id
+      );
+
+      let hasChanges = trophiesAwarded.length > 0;
+      if (!hasChanges) {
+        for (const [k, v] of Object.entries(updatedCups)) {
+          const oldV = save.cups[k];
+          if (!oldV || oldV.currentRound !== v.currentRound || oldV.fixtures.some((f, idx) => f.played !== v.fixtures[idx]?.played)) {
+            hasChanges = true;
+            break;
+          }
+        }
+      }
+
+      if (hasChanges) {
+        const trophies = [...(save.trophies || [])];
+        const finances = { ...save.finances };
+        const nextYearStart = save.season.yearStart + 1;
+
+        for (const aw of trophiesAwarded) {
+          if (!trophies.some((t) => t.competitionId === aw.id && t.year === nextYearStart)) {
+            trophies.push({
+              competitionId: aw.id,
+              competitionName: aw.name,
+              year: nextYearStart,
+            });
+            const prize = updatedCups[aw.id]?.prizeMoney || 0;
+            finances.transferBudget += prize;
+            finances.balance += prize;
+          }
+        }
+
+        const updatedSave: CareerSaveFile = {
+          ...save,
+          cups: updatedCups,
+          trophies,
+          finances,
+        };
+        saveCareerSave(updatedSave);
+        setSave(updatedSave);
+      }
+    }
   }, []);
 
   const toggleTheme = () => {
@@ -168,7 +225,7 @@ function CareerPlayHubContent() {
   const nextFixture = nextScheduled ? nextScheduled.fixture : null;
   const prevScheduled = save ? getPreviousPlayedMatch(save) : null;
   const intlBreakStatus = save ? isDateInInternationalBreak(save.season.currentDate) : { isActive: false, name: '', resumeDate: '' };
-  const seasonCompleted = save ? isSeasonComplete(save.fixtures) : false;
+  const seasonCompleted = save ? isSeasonComplete(save.fixtures, save.club.id) : false;
   const seasonSummary = save && seasonCompleted ? getSeasonReviewSummary(save) : null;
 
   const getFastForwardDetails = (target: TimeSkipTarget) => {
@@ -244,11 +301,12 @@ function CareerPlayHubContent() {
       );
 
       const updatedFixtures = cupTourney.fixtures.map((f) => (f.id === simmed.id ? simmed : f));
-      let updatedTourney = {
+      let updatedTourney: CupTournament = {
         ...cupTourney,
         fixtures: updatedFixtures,
       };
 
+      updatedTourney = simulateAiFixturesInCupRound(updatedTourney, cupFix.roundName, save.club.id);
       const adv = advanceCupTournament(updatedTourney, save.season.yearStart);
       updatedTourney = adv.updatedTournament;
 
@@ -578,13 +636,17 @@ function CareerPlayHubContent() {
                 {formatCareerWage(save.finances.weeklyWageBudget, save.settings.wageUnit, save.settings.currency)}
               </span>
             </div>
-            <div className="hidden md:block h-3 w-px bg-slate-800" />
-            <div className="flex items-center">
-              <span className="text-[9px] uppercase font-bold text-slate-500 mr-1.5">Date</span>
-              <span className="font-mono text-xs font-semibold text-emerald-400">
-                {formatCareerDate(save.season.currentDate, save.settings.dateFormat, 'medium')}
-              </span>
-            </div>
+            {activeTab !== 'overview' && (
+              <>
+                <div className="hidden md:block h-3 w-px bg-slate-800" />
+                <div className="flex items-center">
+                  <span className="text-[9px] uppercase font-bold text-slate-500 mr-1.5">Date</span>
+                  <span className="font-mono text-xs font-semibold text-emerald-400">
+                    {formatCareerDate(save.season.currentDate, save.settings.dateFormat, 'medium')}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
 
           <button
@@ -1028,10 +1090,65 @@ function CareerPlayHubContent() {
                 </div>
               </section>
             ) : (
-              <section className="bg-slate-900/60 border border-slate-850 rounded-3xl p-6 text-center space-y-2">
-                <span className="text-3xl">🏁</span>
-                <h3 className="font-display font-black uppercase text-base text-white">All Fixtures Concluded</h3>
-                <p className="text-xs text-slate-400">All 38 matchdays and tournament fixtures have been played for Season {save.season.seasonNumber}.</p>
+              <section className="bg-gradient-to-br from-amber-950/40 via-slate-900/90 to-slate-950 border-2 border-amber-500/40 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 text-left">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="space-y-1.5">
+                    <div className="text-xs font-display font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <span>🏆</span> Season {save.season.seasonNumber} Complete!
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-display font-black text-white uppercase tracking-tight">
+                      All Fixtures Concluded • What To Do Next
+                    </h3>
+                    <p className="text-xs text-slate-300 max-w-xl leading-relaxed">
+                      All 38 league matchdays and tournaments have concluded. Advance to Season {save.season.seasonNumber + 1} to claim your merit prize money, increase your transfer budget, age your squad, and begin the new summer transfer window!
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-2 w-full sm:w-auto">
+                    <button
+                      onClick={handleAdvanceToNextSeasonAction}
+                      disabled={simulating}
+                      className="w-full sm:w-auto py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-xl shadow-amber-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer whitespace-nowrap flex items-center justify-center gap-2"
+                    >
+                      <span>🚀 Advance to Season {save.season.seasonNumber + 1} ➔</span>
+                    </button>
+                    {seasonSummary && (
+                      <button
+                        onClick={() => setShowSeasonReviewModal(true)}
+                        className="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-amber-500/30 text-amber-300 font-display font-bold text-xs uppercase tracking-wider transition-all cursor-pointer text-center"
+                      >
+                        📋 View Season Review &amp; Player Growth
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Quick Financial Payout & Standings Breakdown */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1 text-xs">
+                  <div className="bg-slate-950/70 border border-slate-800 rounded-2xl p-3.5 space-y-1">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase">League Finish</span>
+                    <div className="font-display font-black text-base text-white">
+                      {seasonSummary?.leagueTitle ? '🥇 Champions' : `Position #${seasonSummary?.finalPosition || 1}`}
+                    </div>
+                  </div>
+                  <div className="bg-slate-950/70 border border-slate-800 rounded-2xl p-3.5 space-y-1">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase">Merit Prize Money</span>
+                    <div className="font-display font-black text-base text-emerald-400">
+                      +{formatCareerCurrency(seasonSummary?.prizeMoney || 10_000_000, save.settings.currency)}
+                    </div>
+                  </div>
+                  <div className="bg-slate-950/70 border border-slate-800 rounded-2xl p-3.5 space-y-1">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase">New War Chest</span>
+                    <div className="font-display font-black text-base text-emerald-300">
+                      {formatCareerCurrency(save.finances.transferBudget + (seasonSummary?.prizeMoney || 10_000_000), save.settings.currency)}
+                    </div>
+                  </div>
+                  <div className="bg-slate-950/70 border border-slate-800 rounded-2xl p-3.5 space-y-1">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase">Europe Status</span>
+                    <div className="font-display font-bold text-xs text-blue-300 truncate" title={seasonSummary?.europeanQualification || 'Domestic'}>
+                      {seasonSummary?.europeanQualification || 'Domestic Competitions'}
+                    </div>
+                  </div>
+                </div>
               </section>
             )}
 
@@ -1831,6 +1948,129 @@ function CareerPlayHubContent() {
             handlePlayNextMatchInstant();
           }}
         />
+      )}
+
+      {/* End of Season Review & Awards Modal */}
+      {showSeasonReviewModal && seasonSummary && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 motion-reduce:transition-none"
+        >
+          <div className="bg-slate-950 border border-amber-500/40 rounded-3xl p-6 sm:p-7 max-w-xl w-full space-y-5 shadow-2xl text-left relative max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start">
+              <div className="space-y-1">
+                <span className="text-[10px] font-black uppercase text-amber-400 tracking-wider font-display">
+                  Official Season {save.season.seasonNumber} Review &amp; Board Summary
+                </span>
+                <h3 className="text-2xl font-display font-black text-white uppercase tracking-tight">
+                  {seasonSummary.leagueTitle ? '👑 League Champions!' : `Finished Position #${seasonSummary.finalPosition}`}
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowSeasonReviewModal(false)}
+                className="text-slate-500 hover:text-white p-1 rounded-lg text-sm cursor-pointer"
+                aria-label="Close modal"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Campaign Accolades Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-3 space-y-1">
+                <span className="text-[10px] font-bold text-slate-500 uppercase">League Finish</span>
+                <div className="font-display font-black text-base text-white">
+                  {seasonSummary.leagueTitle ? '🥇 1st Place' : `#${seasonSummary.finalPosition}`}
+                </div>
+              </div>
+              <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-3 space-y-1">
+                <span className="text-[10px] font-bold text-slate-500 uppercase">Silverware</span>
+                <div className="font-display font-black text-base text-amber-400">
+                  {seasonSummary.trophiesWon.length > 0 ? `${seasonSummary.trophiesWon.length} Trophies` : 'None'}
+                </div>
+              </div>
+              <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-3 space-y-1">
+                <span className="text-[10px] font-bold text-slate-500 uppercase">Prize Money</span>
+                <div className="font-display font-black text-base text-emerald-400">
+                  +{formatCareerCurrency(seasonSummary.prizeMoney, save.settings.currency)}
+                </div>
+              </div>
+              <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-3 space-y-1">
+                <span className="text-[10px] font-bold text-slate-500 uppercase">Europe</span>
+                <div className="font-display font-bold text-xs text-blue-300 truncate" title={seasonSummary.europeanQualification}>
+                  {seasonSummary.europeanQualification}
+                </div>
+              </div>
+            </div>
+
+            {/* Financial War Chest Increase Breakdown */}
+            <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-2xl p-4 space-y-2">
+              <div className="text-[11px] font-display font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                <span>💰</span> End of Season Budget Increase
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                The board of directors has credited your competition merit prize money to your war chest. Here is your updated financial war chest for Season {save.season.seasonNumber + 1}:
+              </p>
+              <div className="grid grid-cols-3 gap-2 pt-1 text-center font-mono">
+                <div className="bg-slate-950/70 border border-slate-850 p-2 rounded-xl">
+                  <span className="text-[9px] uppercase text-slate-500 block">Current Budget</span>
+                  <span className="text-xs font-bold text-slate-300">{formatCareerCurrency(save.finances.transferBudget, save.settings.currency)}</span>
+                </div>
+                <div className="bg-emerald-950/50 border border-emerald-500/40 p-2 rounded-xl">
+                  <span className="text-[9px] uppercase text-emerald-400 block">+ Prize Money</span>
+                  <span className="text-xs font-bold text-emerald-300">+{formatCareerCurrency(seasonSummary.prizeMoney, save.settings.currency)}</span>
+                </div>
+                <div className="bg-slate-950/70 border border-emerald-500/50 p-2 rounded-xl">
+                  <span className="text-[9px] uppercase text-emerald-400 block">New Season Budget</span>
+                  <span className="text-xs font-bold text-emerald-400">{formatCareerCurrency(save.finances.transferBudget + seasonSummary.prizeMoney, save.settings.currency)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Squad Progression & Veteran Aging Logs */}
+            <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-4 space-y-2">
+              <div className="text-[10px] font-black uppercase text-emerald-400 tracking-wider flex items-center gap-1.5">
+                <span>🌱</span> Squad Development &amp; Wonderkid Growth
+              </div>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Players age by 1 year. Under-23 wonderkids experience rapid attribute development, while veterans gradually decline. Summer fitness resets to 100%.
+              </p>
+              <div className="max-h-36 overflow-y-auto space-y-1 text-[11px] text-slate-300 divide-y divide-slate-850/60 pt-1">
+                {seasonSummary.progressionReport.logs.slice(0, 8).map((log, idx) => (
+                  <div key={idx} className="py-1">
+                    {log}
+                  </div>
+                ))}
+                {seasonSummary.progressionReport.logs.length > 8 && (
+                  <div className="text-[10px] text-slate-500 pt-1">
+                    + {seasonSummary.progressionReport.logs.length - 8} more player development logs
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setShowSeasonReviewModal(false)}
+                className="py-3 px-4 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-850 text-slate-400 text-xs font-bold transition-all cursor-pointer"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  setShowSeasonReviewModal(false);
+                  handleAdvanceToNextSeasonAction();
+                }}
+                disabled={simulating}
+                className="flex-1 py-3 px-5 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-xl shadow-amber-500/25 transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>🚀 Kick Off Season {save.season.seasonNumber + 1} (Collect Prize Money)</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Fast Forward Confirmation Modal */}

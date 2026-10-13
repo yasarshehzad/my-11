@@ -4,6 +4,8 @@ import {
   simulateKnockoutCupFixture,
   getCupWinner,
   advanceCupTournament,
+  simulateAiFixturesInCupRound,
+  autoResolvePendingCupFixtures,
   CUP_IDS,
   findAnyClub,
 } from '../src/career/cups';
@@ -250,6 +252,47 @@ describe('Career Mode Phase 5: Cups & European Competitions', () => {
       expect(skipRes.updatedSave.finances.transferBudget).toBe(
         initialBudget + shield.prizeMoney
       );
+    });
+
+    it('automatically simulates AI matches in a cup round without manual quick sim', () => {
+      const clubs = getAllClubs();
+      const userClub = clubs[0]; // Man Blue
+      const cups = initializeSeasonCups(userClub, 2026);
+      const championsCup = cups[CUP_IDS.EURO_CHAMPIONS];
+
+      // Quarter-Final has 4 matches
+      expect(championsCup.fixtures.length).toBe(4);
+      expect(championsCup.fixtures.every((f) => !f.played)).toBe(true);
+
+      // Simulate AI fixtures in the Quarter-Final
+      const autoPlayed = simulateAiFixturesInCupRound(championsCup, 'Quarter-Final', userClub.id);
+
+      // The AI vs AI matches should now be played automatically
+      const aiMatches = autoPlayed.fixtures.filter(
+        (f) => f.homeClubId !== userClub.id && f.awayClubId !== userClub.id
+      );
+      expect(aiMatches.every((f) => f.played)).toBe(true);
+
+      // If user's match was in this round, it remains unplayed for the user to play
+      const userMatch = autoPlayed.fixtures.find(
+        (f) => f.homeClubId === userClub.id || f.awayClubId === userClub.id
+      );
+      if (userMatch) {
+        expect(userMatch.played).toBe(false);
+      }
+    });
+
+    it('autoResolvePendingCupFixtures advances cup tournament automatically when dates have passed', () => {
+      const clubs = getAllClubs();
+      const userClub = clubs[0]; // Man Blue
+      const cups = initializeSeasonCups(userClub, 2026);
+
+      // Auto resolve cups up to May 2027
+      const { updatedCups } = autoResolvePendingCupFixtures(cups, '2027-05-20', 2026);
+
+      // Tournaments should have simulated their matches automatically
+      const leagueCup = updatedCups[CUP_IDS.LEAGUE_CUP];
+      expect(leagueCup.fixtures.some((f) => f.played)).toBe(true);
     });
   });
 });

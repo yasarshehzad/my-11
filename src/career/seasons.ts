@@ -5,9 +5,10 @@ import {
   ManagerMessage,
 } from './types';
 import { getAllClubs } from './clubs';
-import { createInitialStandings } from './table';
+import { createInitialStandings, calculateStandings } from './table';
 import { generateRoundRobinFixtures } from './calendar';
-import { initializeSeasonCups } from './cups';
+import { initializeSeasonCups, autoResolvePendingCupFixtures } from './cups';
+import { simulateMatchFixture } from './sim';
 import { applySeasonalPlayerProgression, generateYouthIntake, ProgressionReport } from './youthAcademy';
 import { generateIncomingAiBids } from './transfers';
 import { formatCareerCurrency } from './formatters';
@@ -23,10 +24,20 @@ export interface SeasonReviewSummary {
 }
 
 /**
- * Checks whether all 38 matchdays of the league season are complete.
+ * Checks whether the league season is complete.
+ * If userClubId is passed, returns true when the user's club has completed all 38 league matches.
+ * If userClubId is not passed, returns true when all fixtures in the league are played.
  */
-export function isSeasonComplete(fixtures?: LeagueFixture[]): boolean {
+export function isSeasonComplete(fixtures?: LeagueFixture[], userClubId?: string): boolean {
   if (!fixtures || fixtures.length === 0) return false;
+  if (userClubId) {
+    const userFixtures = fixtures.filter(
+      (f) => f.homeClubId === userClubId || f.awayClubId === userClubId
+    );
+    if (userFixtures.length === 38 && userFixtures.every((f) => f.played)) {
+      return true;
+    }
+  }
   return fixtures.every((f) => f.played);
 }
 
@@ -34,7 +45,22 @@ export function isSeasonComplete(fixtures?: LeagueFixture[]): boolean {
  * Evaluates the final position, European qualification, and prize money for the user's club.
  */
 export function getSeasonReviewSummary(save: CareerSaveFile): SeasonReviewSummary {
-  const standings = save.standings || [];
+  const allClubs = getAllClubs(save.settings?.databaseSeason || '2026/27');
+  const clubsMap = new Map(allClubs.map((c) => [c.id, c]));
+
+  let standings = save.standings;
+  if (!standings || standings.length !== allClubs.length) {
+    const completeFixtures = (save.fixtures || []).map((f) => {
+      if (!f.played) {
+        const h = clubsMap.get(f.homeClubId) || allClubs[0];
+        const a = clubsMap.get(f.awayClubId) || allClubs[1];
+        return simulateMatchFixture(f, h, a);
+      }
+      return f;
+    });
+    standings = calculateStandings(completeFixtures, allClubs);
+  }
+
   const userRankIdx = standings.findIndex((s) => s.clubId === save.club.id);
   const finalPosition = userRankIdx >= 0 ? userRankIdx + 1 : 10;
   const leagueTitle = finalPosition === 1;
@@ -117,7 +143,24 @@ export function advanceToNextSeason(save: CareerSaveFile): {
   }));
 
   // 2. Trophies & Finances update
+  const { updatedCups, trophiesAwarded } = autoResolvePendingCupFixtures(
+    save.cups || {},
+    save.season.currentDate,
+    save.season.yearStart,
+    save.club.id
+  );
+
   const updatedTrophies: TrophyRecord[] = [...save.trophies];
+  for (const aw of trophiesAwarded) {
+    if (!updatedTrophies.some((t) => t.competitionId === aw.id && t.year === nextYearStart)) {
+      updatedTrophies.push({
+        competitionId: aw.id,
+        competitionName: aw.name,
+        year: nextYearStart,
+      });
+    }
+  }
+
   if (summary.leagueTitle) {
     const alreadyHasTitle = updatedTrophies.some(
       (t) => t.competitionId === 'english_top_flight' && t.year === nextYearStart

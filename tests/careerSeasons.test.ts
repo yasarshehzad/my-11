@@ -50,6 +50,16 @@ describe('Career Seasons Engine & Dynasty Progression', () => {
     }));
 
     expect(isSeasonComplete(completedFixtures)).toBe(true);
+
+    // Verify user club completion check: user has completed all 38 matches even if another AI match is unplayed
+    const userCompletedFixtures = (save.fixtures || []).map((f) => {
+      const isUser = f.homeClubId === club.id || f.awayClubId === club.id;
+      return isUser ? { ...f, played: true, homeScore: 1, awayScore: 0 } : f;
+    });
+    // Globally false because some AI matches are unplayed
+    expect(isSeasonComplete(userCompletedFixtures)).toBe(false);
+    // But complete for the user club because user played all 38 matches!
+    expect(isSeasonComplete(userCompletedFixtures, club.id)).toBe(true);
   });
 
   it('evaluates season review summary with prize money and continental qualification', () => {
