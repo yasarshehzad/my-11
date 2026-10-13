@@ -590,3 +590,121 @@ export function getBestStartingLineup(
     benchIds,
   };
 }
+
+/**
+ * Adapts an existing chosen lineup to a new formation WITHOUT replacing the manager's chosen starting 11.
+ * Intelligently maps the same 11 chosen players to the tactical slots of the new formation.
+ */
+export function adaptLineupToFormation(
+  currentLineup: CareerLineup,
+  squad: CareerPlayer[],
+  newFormationName: string
+): CareerLineup {
+  const newFormation =
+    SUPPORTED_CAREER_FORMATIONS.find((f) => f.name === newFormationName) ||
+    SUPPORTED_CAREER_FORMATIONS[0];
+
+  const playerMap = new Map(squad.map((p) => [p.id, p]));
+  const existingStarters = (currentLineup.starterIds || [])
+    .map((id) => playerMap.get(id))
+    .filter((p): p is CareerPlayer => Boolean(p));
+
+  // If there aren't 11 chosen starters yet, generate best lineup
+  if (existingStarters.length < 11) {
+    return getBestStartingLineup(squad, newFormationName);
+  }
+
+  // We have the manager's chosen starting 11! Map these exact 11 players into newFormation.slots
+  const assigned = new Map<number, string>();
+  const unassigned = [...existingStarters];
+
+  // 1. Assign Goalkeeper (GK) slot
+  const gkSlotIdx = newFormation.slots.findIndex((s) => s === 'GK');
+  if (gkSlotIdx !== -1) {
+    const gkPlayerIdx = unassigned.findIndex((p) => p.position === 'GK');
+    if (gkPlayerIdx !== -1) {
+      assigned.set(gkSlotIdx, unassigned[gkPlayerIdx].id);
+      unassigned.splice(gkPlayerIdx, 1);
+    }
+  }
+
+  // 2. Natural position matches among the chosen 11
+  newFormation.slots.forEach((slotPos, slotIdx) => {
+    if (assigned.has(slotIdx)) return;
+    const matchIdx = unassigned.findIndex((p) => calculatePositionFit(p, slotPos) === 'natural');
+    if (matchIdx !== -1) {
+      assigned.set(slotIdx, unassigned[matchIdx].id);
+      unassigned.splice(matchIdx, 1);
+    }
+  });
+
+  // 3. Competent position matches among the chosen 11
+  newFormation.slots.forEach((slotPos, slotIdx) => {
+    if (assigned.has(slotIdx)) return;
+    const matchIdx = unassigned.findIndex((p) => calculatePositionFit(p, slotPos) === 'competent');
+    if (matchIdx !== -1) {
+      assigned.set(slotIdx, unassigned[matchIdx].id);
+      unassigned.splice(matchIdx, 1);
+    }
+  });
+
+  // 4. Fill any remaining unassigned slots from remaining chosen 11
+  newFormation.slots.forEach((_, slotIdx) => {
+    if (assigned.has(slotIdx)) return;
+    if (unassigned.length > 0) {
+      assigned.set(slotIdx, unassigned[0].id);
+      unassigned.splice(0, 1);
+    }
+  });
+
+  const nextStarterIds = newFormation.slots.map((_, idx) => assigned.get(idx) || '');
+
+  return {
+    formation: newFormation.name,
+    starterIds: nextStarterIds,
+    benchIds: currentLineup.benchIds || [],
+  };
+}
+
+/**
+ * Orders a squad array so that the manager's preferred starting 11 appear first (indices 0 to 10),
+ * followed by bench players, followed by reserve squad members.
+ */
+export function getSquadOrderedByLineup(
+  squad: CareerPlayer[],
+  lineup?: CareerLineup
+): CareerPlayer[] {
+  if (!lineup || !lineup.starterIds || lineup.starterIds.length === 0) {
+    return [...squad];
+  }
+
+  const playerMap = new Map(squad.map((p) => [p.id, p]));
+  const starters: CareerPlayer[] = [];
+  const startersSet = new Set<string>();
+
+  for (const id of lineup.starterIds) {
+    const p = playerMap.get(id);
+    if (p) {
+      starters.push(p);
+      startersSet.add(p.id);
+    }
+  }
+
+  const bench: CareerPlayer[] = [];
+  const benchSet = new Set<string>();
+
+  for (const id of lineup.benchIds || []) {
+    const p = playerMap.get(id);
+    if (p && !startersSet.has(p.id)) {
+      bench.push(p);
+      benchSet.add(p.id);
+    }
+  }
+
+  const reserves: CareerPlayer[] = squad.filter(
+    (p) => !startersSet.has(p.id) && !benchSet.has(p.id)
+  );
+
+  return [...starters, ...bench, ...reserves];
+}
+

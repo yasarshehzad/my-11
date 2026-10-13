@@ -7,10 +7,12 @@ import {
   categorizePosition,
   calculatePositionFit,
   getBestStartingLineup,
+  adaptLineupToFormation,
   SUPPORTED_CAREER_FORMATIONS,
   GeneralPositionGroup,
   isHomegrownPlayer,
 } from '../../career/squad';
+
 import { formatCurrency, formatWage } from '../../career/finance';
 import {
   formatCareerHeight,
@@ -86,12 +88,13 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
     SUPPORTED_CAREER_FORMATIONS[0];
 
   const handleFormationChange = (newFormation: string) => {
-    const updatedLineup = getBestStartingLineup(squad, newFormation);
+    const updatedLineup = adaptLineupToFormation(lineup, squad, newFormation);
     onUpdateSave({
       ...save,
       lineup: updatedLineup,
     });
   };
+
 
   const handleAutoPick = () => {
     const updatedLineup = getBestStartingLineup(squad, currentFormation);

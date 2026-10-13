@@ -47,7 +47,13 @@ export interface CareerSettings {
   heightUnit?: HeightUnitPreference;
   weightUnit?: WeightUnitPreference;
   numberFormat?: NumberFormatPreference;
+
+  /** Sporting Director / DoF Automation Settings */
+  sportingDirectorHandlesRenewals?: boolean;
+  /** Holiday / fast-forward lineup policy (default true: use preferred starting 11) */
+  usePreferredElevenOnHoliday?: boolean;
 }
+
 
 export type ClubTier = 'elite' | 'upper' | 'mid' | 'lower';
 
@@ -114,7 +120,33 @@ export interface CareerPlayer {
   // In-season natural progression (Under-23 development)
   developmentProgress?: number; // 0-100 progress towards next OVR
   faceStats?: PlayerFaceStats;
+  // Contract & Squad Status
+  releaseClause?: number;
+  squadRole?: SquadRole;
 }
+
+export type SquadRole = 'crucial' | 'important' | 'squad' | 'sporadic' | 'prospect';
+
+export interface PlayerPreferredTerms {
+  preferredWageWeekly: number;
+  minimumAcceptableWage: number;
+  preferredContractYears: number;
+  expectedSquadRole: SquadRole;
+  expectedSigningBonus: number;
+  releaseClausePreference?: number;
+}
+
+export interface DetailedTransferTerms {
+  baseFee: number;
+  addOnFee?: number;
+  sellOnClausePercent?: number;
+  wageWeekly: number;
+  contractYears: number;
+  signingBonus?: number;
+  squadRole?: SquadRole;
+  releaseClause?: number;
+}
+
 
 
 export interface Competition {

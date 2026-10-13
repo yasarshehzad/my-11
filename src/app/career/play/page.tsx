@@ -40,8 +40,9 @@ import { findAnyClub, simulateKnockoutCupFixture, advanceCupTournament } from '.
 import { markMessageRead, markAllMessagesRead, getInitialInboxMessages } from '../../../career/inbox';
 import { calculateStandings } from '../../../career/table';
 import { formatCurrency } from '../../../career/finance';
-import { getSeniorPlayerCount } from '../../../career/squad';
+import { getSeniorPlayerCount, getSquadOrderedByLineup } from '../../../career/squad';
 import { evaluateBoardConfidence } from '../../../career/transfers';
+import { updatePlayerForm, applyInSeasonMatchProgression } from '../../../career/formAndProgression';
 
 function CareerPlayHubContent() {
   const router = useRouter();
@@ -68,6 +69,7 @@ function CareerPlayHubContent() {
   const [expandedMessageId, setExpandedMessageId] = useState<string | null>(null);
   const [simulating, setSimulating] = useState(false);
   const [pendingFastForward, setPendingFastForward] = useState<TimeSkipTarget | null>(null);
+  const [fastForwardUsePreferredEleven, setFastForwardUsePreferredEleven] = useState(true);
 
   // Settings editing state (when not locked)
   const [editableSettings, setEditableSettings] = useState<CareerSettings | null>(() => {
@@ -222,6 +224,11 @@ function CareerPlayHubContent() {
     const isUserHome = nextScheduled.fixture.homeClubId === save.club.id;
     const isUserAway = nextScheduled.fixture.awayClubId === save.club.id;
 
+    // Use preferred starting 11 by ordering squad according to lineup starter slots
+    const activeSquad = (save.lineup && save.lineup.starterIds && save.lineup.starterIds.length > 0)
+      ? getSquadOrderedByLineup(save.squad, save.lineup)
+      : save.squad;
+
     if (nextScheduled.isCup && nextScheduled.cupId && save.cups && save.cups[nextScheduled.cupId]) {
       const cupTourney = save.cups[nextScheduled.cupId];
       const cupFix = nextScheduled.fixture as CupFixture;
@@ -232,8 +239,8 @@ function CareerPlayHubContent() {
         cupFix,
         homeClub,
         awayClub,
-        isUserHome ? save.squad : undefined,
-        isUserAway ? save.squad : undefined
+        isUserHome ? activeSquad : undefined,
+        isUserAway ? activeSquad : undefined
       );
 
       const updatedFixtures = cupTourney.fixtures.map((f) => (f.id === simmed.id ? simmed : f));
@@ -266,6 +273,22 @@ function CareerPlayHubContent() {
         }
       }
 
+      // Update player form and youth development based on cup match result
+      const userGoals = isUserHome ? simmed.homeScore! : simmed.awayScore!;
+      const oppGoals = isUserHome ? simmed.awayScore! : simmed.homeScore!;
+      const won = userGoals > oppGoals;
+      const drew = userGoals === oppGoals;
+      const starterIds = new Set(activeSquad.slice(0, 11).map((p) => p.id));
+
+      const updatedSquad = save.squad.map((player) => {
+        const isStarter = starterIds.has(player.id);
+        const baseRating = won ? 7.5 : drew ? 6.8 : 6.2;
+        const matchRating = Number((baseRating + (Math.random() * 1.0 - 0.3)).toFixed(1));
+        const withForm = updatePlayerForm(player, matchRating);
+        const prog = applyInSeasonMatchProgression(withForm, isStarter ? 90 : 20, matchRating);
+        return prog.updatedPlayer;
+      });
+
       const updatedSave: CareerSaveFile = {
         ...save,
         season: {
@@ -275,6 +298,7 @@ function CareerPlayHubContent() {
         cups: updatedCups,
         trophies,
         finances,
+        squad: updatedSquad,
       };
 
       saveCareerSave(updatedSave);
@@ -299,8 +323,8 @@ function CareerPlayHubContent() {
       leagueFix,
       homeClub,
       awayClub,
-      isUserHome ? save.squad : undefined,
-      !isUserHome ? save.squad : undefined
+      isUserHome ? activeSquad : undefined,
+      !isUserHome ? activeSquad : undefined
     );
 
     const currentFixtures = save.fixtures || [];
@@ -316,6 +340,22 @@ function CareerPlayHubContent() {
 
     const updatedStandings = calculateStandings(updatedFixtures, allClubs);
 
+    // Update player form and youth development based on league result
+    const userGoals = isUserHome ? simmed.homeScore! : simmed.awayScore!;
+    const oppGoals = isUserHome ? simmed.awayScore! : simmed.homeScore!;
+    const won = userGoals > oppGoals;
+    const drew = userGoals === oppGoals;
+    const starterIds = new Set(activeSquad.slice(0, 11).map((p) => p.id));
+
+    const updatedSquad = save.squad.map((player) => {
+      const isStarter = starterIds.has(player.id);
+      const baseRating = won ? 7.5 : drew ? 6.8 : 6.2;
+      const matchRating = Number((baseRating + (Math.random() * 1.0 - 0.3)).toFixed(1));
+      const withForm = updatePlayerForm(player, matchRating);
+      const prog = applyInSeasonMatchProgression(withForm, isStarter ? 90 : 20, matchRating);
+      return prog.updatedPlayer;
+    });
+
     const updatedSave: CareerSaveFile = {
       ...save,
       season: {
@@ -324,6 +364,7 @@ function CareerPlayHubContent() {
       },
       fixtures: updatedFixtures,
       standings: updatedStandings,
+      squad: updatedSquad,
     };
 
     saveCareerSave(updatedSave);
@@ -395,10 +436,10 @@ function CareerPlayHubContent() {
     showToast('All inbox messages marked as read.');
   };
 
-  const handleTimeSkipAction = (target: TimeSkipTarget) => {
+  const handleTimeSkipAction = (target: TimeSkipTarget, options?: { usePreferredEleven?: boolean }) => {
     if (!save) return;
     setSimulating(true);
-    const res = advanceTimeSkip(save, target);
+    const res = advanceTimeSkip(save, target, options);
     saveCareerSave(res.updatedSave);
     setSave(res.updatedSave);
     setSimulating(false);
@@ -1830,6 +1871,19 @@ function CareerPlayHubContent() {
               </p>
             </div>
 
+            <label className="flex items-start gap-3 p-3 bg-slate-900/80 border border-slate-800 rounded-xl cursor-pointer hover:border-emerald-500/40 transition-colors">
+              <input
+                type="checkbox"
+                checked={fastForwardUsePreferredEleven}
+                onChange={(e) => setFastForwardUsePreferredEleven(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500 bg-slate-800 border-slate-700 cursor-pointer"
+              />
+              <div className="flex flex-col text-left">
+                <span className="text-xs font-bold text-slate-200">Use preferred starting 11</span>
+                <span className="text-[10px] text-slate-400">Deploy your chosen starting eleven lineup for all fixtures simulated while away</span>
+              </div>
+            </label>
+
             <aside aria-label="Caution note" className="p-3 bg-amber-950/20 border border-amber-500/30 rounded-xl text-[11px] text-amber-300/90 flex items-center gap-2">
               <span>⚠️</span>
               <span>
@@ -1848,7 +1902,7 @@ function CareerPlayHubContent() {
                 onClick={() => {
                   const target = pendingFastForward;
                   setPendingFastForward(null);
-                  handleTimeSkipAction(target);
+                  handleTimeSkipAction(target, { usePreferredEleven: fastForwardUsePreferredEleven });
                 }}
                 className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
               >

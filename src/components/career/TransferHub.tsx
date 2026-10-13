@@ -7,6 +7,8 @@ import {
   ScoutingFilters,
   CareerPlayer,
   PlayerVersionVariant,
+  SquadRole,
+  DetailedTransferTerms,
 } from '../../career/types';
 import {
   getScoutingMarketPool,
@@ -16,6 +18,9 @@ import {
   executePlayerSale,
   renewPlayerContract,
   evaluateBoardConfidence,
+  getExpiringContracts,
+  getPlayerPreferredTerms,
+  processSportingDirectorRenewals,
 } from '../../career/transfers';
 import { formatCurrency, formatWage } from '../../career/finance';
 import { formatCareerDate } from '../../career/formatters';
@@ -42,8 +47,15 @@ export function TransferHub({
   onUpdateSave,
   onNotification,
 }: TransferHubProps) {
-  const [subTab, setSubTab] = useState<'market' | 'incoming' | 'shortlist' | 'history' | 'board'>('market');
+  const [subTab, setSubTab] = useState<'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board'>('market');
   const seniorCount = useMemo(() => getSeniorPlayerCount(save.squad), [save.squad]);
+
+  // Expiring contracts
+  const expiringContracts = useMemo(() => getExpiringContracts(save.squad, 2), [save.squad]);
+  const criticalExpiringCount = useMemo(
+    () => save.squad.filter((p) => (p.contractYears ?? 2) <= 1).length,
+    [save.squad]
+  );
 
   // Era pool toggle ('modern' default per user requirement)
   const [playerPoolType, setPlayerPoolType] = useState<'modern' | 'legends' | 'all'>('modern');
@@ -58,15 +70,30 @@ export function TransferHub({
   const [affordableOnly, setAffordableOnly] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-  // Negotiation Modal
+  // Transfer Negotiation Modal & Detailed Terms
   const [negotiatingPlayer, setNegotiatingPlayer] = useState<MarketPlayer | null>(null);
   const [offeredFee, setOfferedFee] = useState<number>(0);
   const [offeredWage, setOfferedWage] = useState<number>(0);
   const [offeredContractYears, setOfferedContractYears] = useState<number>(3);
+  const [offeredAddOnFee, setOfferedAddOnFee] = useState<number>(0);
+  const [offeredSellOnClause, setOfferedSellOnClause] = useState<number>(10);
+  const [offeredSquadRole, setOfferedSquadRole] = useState<SquadRole>('important');
+  const [offeredSigningBonus, setOfferedSigningBonus] = useState<number>(0);
+  const [offeredReleaseClause, setOfferedReleaseClause] = useState<number | undefined>(undefined);
   const [negotiationFeedback, setNegotiationFeedback] = useState<{
-    status: 'idle' | 'accepted' | 'counter_offer' | 'fee_rejected' | 'wage_rejected' | 'error';
+    status: 'idle' | 'accepted' | 'counter_offer' | 'fee_rejected' | 'wage_rejected' | 'role_rejected' | 'error';
     message: string;
   }>({ status: 'idle', message: '' });
+
+  // Squad Contract Renewal Modal
+  const [renewingPlayer, setRenewingPlayer] = useState<CareerPlayer | null>(null);
+  const [renewWage, setRenewWage] = useState<number>(0);
+  const [renewYears, setRenewYears] = useState<number>(3);
+  const [renewSquadRole, setRenewSquadRole] = useState<SquadRole>('important');
+  const [renewSigningBonus, setRenewSigningBonus] = useState<number>(0);
+  const [renewReleaseClause, setRenewReleaseClause] = useState<number | undefined>(undefined);
+  const [renewFeedback, setRenewFeedback] = useState<string | null>(null);
+  const [contractsFilter, setContractsFilter] = useState<'all' | 'critical' | 'two_years'>('all');
 
   const windowIsOpen = isTransferWindowOpen(
     save.season.currentDate,
@@ -174,10 +201,16 @@ export function TransferHub({
         }
       : { ...player };
 
+    const preferred = getPlayerPreferredTerms(initialPlayer as unknown as CareerPlayer);
     setNegotiatingPlayer(initialPlayer);
     setOfferedFee(initialPlayer.value);
-    setOfferedWage(initialPlayer.wageDemand);
-    setOfferedContractYears(3);
+    setOfferedWage(preferred.preferredWageWeekly);
+    setOfferedContractYears(preferred.preferredContractYears);
+    setOfferedAddOnFee(0);
+    setOfferedSellOnClause(10);
+    setOfferedSquadRole(preferred.expectedSquadRole);
+    setOfferedSigningBonus(preferred.expectedSigningBonus);
+    setOfferedReleaseClause(preferred.releaseClausePreference);
     setNegotiationFeedback({ status: 'idle', message: '' });
   };
 
@@ -194,9 +227,14 @@ export function TransferHub({
       club: ver.club,
       cardId: ver.id,
     };
+    const preferred = getPlayerPreferredTerms(updated as unknown as CareerPlayer);
     setNegotiatingPlayer(updated);
     setOfferedFee(ver.value);
-    setOfferedWage(ver.wageDemand);
+    setOfferedWage(preferred.preferredWageWeekly);
+    setOfferedContractYears(preferred.preferredContractYears);
+    setOfferedSquadRole(preferred.expectedSquadRole);
+    setOfferedSigningBonus(preferred.expectedSigningBonus);
+    setOfferedReleaseClause(preferred.releaseClausePreference);
     setNegotiationFeedback({ status: 'idle', message: '' });
   };
 
@@ -214,11 +252,23 @@ export function TransferHub({
   const handleConfirmBid = () => {
     if (!negotiatingPlayer) return;
 
+    const detailedTerms: DetailedTransferTerms = {
+      baseFee: offeredFee,
+      addOnFee: offeredAddOnFee,
+      sellOnClausePercent: offeredSellOnClause,
+      wageWeekly: offeredWage,
+      contractYears: offeredContractYears,
+      signingBonus: offeredSigningBonus,
+      squadRole: offeredSquadRole,
+      releaseClause: offeredReleaseClause,
+    };
+
     // Check offer with simulation engine
     const evalResult = evaluateTransferOffer(
       negotiatingPlayer,
       offeredFee,
-      offeredWage
+      offeredWage,
+      detailedTerms
     );
 
     if (evalResult.status !== 'accepted') {
@@ -235,7 +285,8 @@ export function TransferHub({
       negotiatingPlayer,
       offeredFee,
       offeredWage,
-      offeredContractYears
+      offeredContractYears,
+      detailedTerms
     );
 
     if (!signResult.success) {
@@ -249,6 +300,67 @@ export function TransferHub({
     onUpdateSave(signResult.updatedSave);
     onNotification?.(`✍️ Deal Complete! Signed ${negotiatingPlayer.name} for ${formatCurrency(offeredFee)}.`);
     setNegotiatingPlayer(null);
+  };
+
+  const handleToggleSportingDirectorRenewals = () => {
+    const updatedSave: CareerSaveFile = {
+      ...save,
+      settings: {
+        ...save.settings,
+        sportingDirectorHandlesRenewals: !save.settings.sportingDirectorHandlesRenewals,
+      },
+    };
+    onUpdateSave(updatedSave);
+    onNotification?.(
+      !save.settings.sportingDirectorHandlesRenewals
+        ? '👔 Sporting Director delegated to handle key contract renewals automatically.'
+        : '👤 Contract renewals set to manual manager control.'
+    );
+  };
+
+  const handleRunSportingDirectorBatchRenewals = () => {
+    const res = processSportingDirectorRenewals(save);
+    if (res.renewedCount === 0) {
+      onNotification?.('👔 Sporting Director: No urgent extensions required at this moment.');
+      return;
+    }
+    onUpdateSave(res.updatedSave);
+    onNotification?.(`👔 Sporting Director finalized ${res.renewedCount} contract extensions!`);
+  };
+
+  const handleStartRenewal = (player: CareerPlayer) => {
+    const preferred = getPlayerPreferredTerms(player);
+    setRenewingPlayer(player);
+    setRenewWage(preferred.preferredWageWeekly);
+    setRenewYears(preferred.preferredContractYears);
+    setRenewSquadRole(preferred.expectedSquadRole);
+    setRenewSigningBonus(preferred.expectedSigningBonus);
+    setRenewReleaseClause(preferred.releaseClausePreference);
+    setRenewFeedback(null);
+  };
+
+  const handleConfirmRenewal = () => {
+    if (!renewingPlayer) return;
+    const res = renewPlayerContract(
+      save,
+      renewingPlayer.id,
+      renewWage,
+      renewYears,
+      {
+        signingBonus: renewSigningBonus,
+        squadRole: renewSquadRole,
+        releaseClause: renewReleaseClause,
+      }
+    );
+
+    if (!res.success) {
+      setRenewFeedback(res.error || 'Contract renewal could not be processed.');
+      return;
+    }
+
+    onUpdateSave(res.updatedSave);
+    onNotification?.(`📝 ${renewingPlayer.name} signed a ${renewYears}-year contract extension at ${formatWage(renewWage)}!`);
+    setRenewingPlayer(null);
   };
 
   const handleAcceptIncomingOffer = (offerId: string) => {
@@ -343,6 +455,13 @@ export function TransferHub({
         {[
           { id: 'market', label: 'Player Market', icon: '🔍', badge: marketPlayers.length },
           { id: 'incoming', label: 'Incoming Bids', icon: '📬', badge: save.incomingOffers?.length || 0 },
+          {
+            id: 'contracts',
+            label: 'Contracts',
+            icon: '📝',
+            badge: criticalExpiringCount > 0 ? `${criticalExpiringCount} Due` : expiringContracts.length,
+            badgeAlert: criticalExpiringCount > 0,
+          },
           { id: 'shortlist', label: 'Shortlist', icon: '⭐', badge: shortlistedPlayers.length },
           { id: 'history', label: 'Transfer History', icon: '📜', badge: save.transfersHistory?.length || 0 },
           { id: 'board', label: 'Board Room', icon: '🏛️', badge: `${boardStatus.confidence}%` },
@@ -360,7 +479,11 @@ export function TransferHub({
             >
               <span>{tab.icon}</span>
               <span>{tab.label}</span>
-              <span className="text-[10px] font-mono opacity-80 bg-slate-950/60 px-1.5 py-0.2 rounded-md">
+              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-md ${
+                tab.badgeAlert
+                  ? 'bg-rose-950 text-rose-300 border border-rose-700/60 font-bold animate-pulse'
+                  : 'bg-slate-950/60 opacity-80'
+              }`}>
                 {tab.badge}
               </span>
             </button>
@@ -868,6 +991,244 @@ export function TransferHub({
         </section>
       )}
 
+      {/* SUB-VIEW: CONTRACTS & SPORTING DIRECTOR */}
+      {subTab === 'contracts' && (
+        <section className="space-y-6">
+          {/* Header & Sporting Director Overview */}
+          <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider font-display">
+                Contract Management Hub
+              </span>
+              <h3 className="text-xl sm:text-2xl font-display font-black text-white uppercase tracking-tight flex items-center gap-2">
+                <span>📝</span> Squad Contracts &amp; Expirations
+              </h3>
+              <p className="text-xs text-slate-400">
+                Track expiring player deals, assign squad roles, set release clauses, or delegate renewals to your Director of Football.
+              </p>
+            </div>
+
+            {/* Quick KPI Counters */}
+            <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 p-2 rounded-2xl">
+              <div className="px-3 py-1.5 rounded-xl bg-slate-950 text-center">
+                <span className="text-[9px] uppercase font-bold text-slate-500 block">Critical (&le;1y)</span>
+                <span className={`text-sm font-display font-black ${
+                  criticalExpiringCount > 0 ? 'text-rose-400 font-bold' : 'text-slate-400'
+                }`}>
+                  {criticalExpiringCount}
+                </span>
+              </div>
+              <div className="px-3 py-1.5 rounded-xl bg-slate-950 text-center">
+                <span className="text-[9px] uppercase font-bold text-slate-500 block">2 Years</span>
+                <span className="text-sm font-display font-black text-amber-400">
+                  {save.squad.filter((p) => (p.contractYears ?? 2) === 2).length}
+                </span>
+              </div>
+              <div className="px-3 py-1.5 rounded-xl bg-slate-950 text-center">
+                <span className="text-[9px] uppercase font-bold text-slate-500 block">Secured (3y+)</span>
+                <span className="text-sm font-display font-black text-emerald-400">
+                  {save.squad.filter((p) => (p.contractYears ?? 2) >= 3).length}
+                </span>
+              </div>
+            </div>
+          </header>
+
+          {/* Sporting Director Delegation Control Banner */}
+          <div className="p-5 rounded-3xl border border-indigo-500/30 bg-gradient-to-r from-indigo-950/40 via-slate-900/60 to-slate-950 shadow-xl space-y-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex items-start gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-950/80 border border-indigo-500/40 flex items-center justify-center text-2xl shrink-0 shadow-lg shadow-indigo-950/50">
+                  👔
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-display font-black text-white text-base uppercase tracking-tight">
+                      Director of Football Contract Automation
+                    </h4>
+                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md border ${
+                      save.settings.sportingDirectorHandlesRenewals
+                        ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300'
+                        : 'bg-slate-900 border-slate-700 text-slate-400'
+                    }`}>
+                      {save.settings.sportingDirectorHandlesRenewals ? 'DELEGATED (ACTIVE)' : 'MANUAL ONLY'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300/90 leading-relaxed max-w-2xl mt-1">
+                    When active, your Sporting Director automatically conducts contract renewals for expiring key squad players (&ge;74 OVR or U23 prospects) to safeguard against free agency, operating strictly within authorized weekly wage and bonus limits.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex sm:flex-col gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={handleToggleSportingDirectorRenewals}
+                  className={`py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap border ${
+                    save.settings.sportingDirectorHandlesRenewals
+                      ? 'bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-400 shadow-lg shadow-indigo-600/30'
+                      : 'bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-700'
+                  }`}
+                >
+                  {save.settings.sportingDirectorHandlesRenewals ? '✓ Delegation Enabled' : 'Delegate to Sporting Director'}
+                </button>
+                {save.settings.sportingDirectorHandlesRenewals && (
+                  <button
+                    type="button"
+                    onClick={handleRunSportingDirectorBatchRenewals}
+                    className="py-2 px-3 rounded-xl bg-slate-950/80 hover:bg-slate-900 text-slate-300 border border-slate-800 text-[11px] font-bold cursor-pointer"
+                  >
+                    ⚡ Run Director Review Now
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Filter Pills */}
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {[
+              { id: 'all', label: 'All Players', count: save.squad.length },
+              { id: 'critical', label: 'Critical (&le; 1 Yr)', count: criticalExpiringCount, alert: criticalExpiringCount > 0 },
+              { id: 'two_years', label: '2 Years Left', count: save.squad.filter((p) => (p.contractYears ?? 2) === 2).length },
+            ].map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => setContractsFilter(f.id as typeof contractsFilter)}
+                className={`py-1.5 px-3 rounded-xl border text-xs font-display font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
+                  contractsFilter === f.id
+                    ? 'bg-emerald-950/60 border-emerald-500 text-emerald-300'
+                    : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-white'
+                }`}
+              >
+                <span>{f.label}</span>
+                <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-md ${
+                  f.alert ? 'bg-rose-950 text-rose-300 font-bold' : 'bg-slate-950/80'
+                }`}>
+                  {f.count}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Contracts Grid */}
+          {(() => {
+            let filteredSquad = [...save.squad];
+            if (contractsFilter === 'critical') {
+              filteredSquad = filteredSquad.filter((p) => (p.contractYears ?? 2) <= 1);
+            } else if (contractsFilter === 'two_years') {
+              filteredSquad = filteredSquad.filter((p) => (p.contractYears ?? 2) === 2);
+            }
+            // Sort by contract years ascending (soonest expiring first), then rating descending
+            filteredSquad.sort((a, b) => {
+              const diff = (a.contractYears ?? 2) - (b.contractYears ?? 2);
+              if (diff !== 0) return diff;
+              return b.rating - a.rating;
+            });
+
+            if (filteredSquad.length === 0) {
+              return (
+                <div className="bg-slate-900/20 border border-slate-850 rounded-2xl p-12 text-center text-slate-500 text-xs">
+                  No squad players match the current contract filter criteria.
+                </div>
+              );
+            }
+
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {filteredSquad.map((player) => {
+                  const yearsLeft = player.contractYears ?? 2;
+                  const isCritical = yearsLeft <= 1;
+                  const isMedium = yearsLeft === 2;
+                  const expYear = save.season.yearStart + yearsLeft;
+
+                  return (
+                    <article
+                      key={player.id}
+                      className={`p-4 rounded-2xl border transition-all space-y-3 ${
+                        isCritical
+                          ? 'bg-gradient-to-b from-rose-950/20 to-slate-900/60 border-rose-800/60 hover:border-rose-600'
+                          : isMedium
+                          ? 'bg-gradient-to-b from-amber-950/15 to-slate-900/60 border-amber-800/40 hover:border-amber-600'
+                          : 'bg-slate-900/40 border-slate-850 hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-2.5">
+                          <span className={`w-9 h-9 rounded-xl border flex items-center justify-center font-display font-black text-xs ${
+                            player.rating >= 80
+                              ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300'
+                              : 'bg-slate-950 border-slate-800 text-slate-200'
+                          }`}>
+                            {player.rating}
+                          </span>
+                          <div>
+                            <h4 className="font-display font-black text-sm text-white truncate max-w-[170px]">
+                              {player.name}
+                            </h4>
+                            <div className="text-[10px] text-slate-400">
+                              {player.position} • {player.age} yrs • {player.nationality}
+                            </div>
+                          </div>
+                        </div>
+
+                        <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg border ${
+                          isCritical
+                            ? 'bg-rose-950 text-rose-300 border-rose-700/80 animate-pulse'
+                            : isMedium
+                            ? 'bg-amber-950/80 text-amber-300 border-amber-700/50'
+                            : 'bg-slate-950 text-emerald-400 border-slate-800'
+                        }`}>
+                          {yearsLeft} {yearsLeft === 1 ? 'Year Left' : 'Years Left'}
+                        </span>
+                      </div>
+
+                      {/* Contract Terms Matrix */}
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="bg-slate-950/70 p-2 rounded-xl border border-slate-850">
+                          <span className="text-[9px] uppercase font-bold text-slate-500 block">Weekly Wage</span>
+                          <span className="font-mono font-bold text-slate-200">{formatWage(player.wageWeekly)}</span>
+                        </div>
+                        <div className="bg-slate-950/70 p-2 rounded-xl border border-slate-850">
+                          <span className="text-[9px] uppercase font-bold text-slate-500 block">Squad Role</span>
+                          <span className="font-mono font-bold uppercase text-emerald-400 text-[11px]">
+                            {player.squadRole || (player.rating >= 82 ? 'Crucial' : player.rating >= 76 ? 'Important' : 'Squad')}
+                          </span>
+                        </div>
+                        <div className="bg-slate-950/70 p-2 rounded-xl border border-slate-850">
+                          <span className="text-[9px] uppercase font-bold text-slate-500 block">Expires</span>
+                          <span className="font-mono font-bold text-slate-300 text-[11px]">June {expYear}</span>
+                        </div>
+                        <div className="bg-slate-950/70 p-2 rounded-xl border border-slate-850">
+                          <span className="text-[9px] uppercase font-bold text-slate-500 block">Release Clause</span>
+                          <span className="font-mono font-bold text-slate-300 text-[11px]">
+                            {player.releaseClause ? formatCurrency(player.releaseClause) : 'None'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Action */}
+                      <button
+                        type="button"
+                        onClick={() => handleStartRenewal(player)}
+                        className={`w-full py-2.5 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                          isCritical
+                            ? 'bg-rose-500 hover:bg-rose-400 text-slate-950 shadow-md shadow-rose-500/20'
+                            : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/20'
+                        }`}
+                      >
+                        <span>✍️</span>
+                        <span>Negotiate Contract Extension</span>
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </section>
+      )}
+
       {/* SUB-VIEW 3: SHORTLIST */}
       {subTab === 'shortlist' && (
         <section className="space-y-4">
@@ -1101,7 +1462,234 @@ export function TransferHub({
         </section>
       )}
 
-      {/* NEGOTIATION MODAL */}
+      {/* SQUAD CONTRACT RENEWAL MODAL */}
+      {renewingPlayer && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+        >
+          <div className="bg-slate-950 border border-slate-800 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative my-auto">
+            <header className="flex justify-between items-center border-b border-slate-900 pb-3">
+              <div>
+                <span className="font-display font-black text-xs uppercase tracking-wider text-emerald-400">
+                  Contract Extension Negotiations
+                </span>
+                <h3 className="text-lg font-display font-black text-white uppercase">
+                  {renewingPlayer.name}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRenewingPlayer(null)}
+                className="text-slate-500 hover:text-white text-xs font-bold cursor-pointer"
+              >
+                ✕ Cancel
+              </button>
+            </header>
+
+            <EaFcCard
+              player={renewingPlayer}
+              size="compact"
+              showFormHistory={false}
+              showProgressionBar={false}
+            />
+
+            {/* Player & Agent Preferred Terms */}
+            {(() => {
+              const pref = getPlayerPreferredTerms(renewingPlayer);
+              return (
+                <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-2.5 text-xs">
+                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-emerald-400 font-display">
+                    <span>🎯 Player &amp; Agent Preferred Terms</span>
+                    <span className="font-mono text-slate-400">Agent Demands</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    <div className="bg-slate-950 p-2 rounded-xl border border-slate-850">
+                      <span className="text-[9px] uppercase font-bold text-slate-500 block">Preferred Wage</span>
+                      <span className="font-bold text-white font-mono">{formatWage(pref.preferredWageWeekly)}</span>
+                    </div>
+                    <div className="bg-slate-950 p-2 rounded-xl border border-slate-850">
+                      <span className="text-[9px] uppercase font-bold text-slate-500 block">Desired Length</span>
+                      <span className="font-bold text-white font-mono">{pref.preferredContractYears} Years</span>
+                    </div>
+                    <div className="bg-slate-950 p-2 rounded-xl border border-slate-850">
+                      <span className="text-[9px] uppercase font-bold text-slate-500 block">Expected Role</span>
+                      <span className="font-bold text-emerald-400 uppercase font-mono">{pref.expectedSquadRole}</span>
+                    </div>
+                    <div className="bg-slate-950 p-2 rounded-xl border border-slate-850">
+                      <span className="text-[9px] uppercase font-bold text-slate-500 block">Loyalty Bonus</span>
+                      <span className="font-bold text-slate-300 font-mono">{formatCurrency(pref.expectedSigningBonus)}</span>
+                    </div>
+                    <div className="bg-slate-950 p-2 rounded-xl border border-slate-850 col-span-2 sm:col-span-1">
+                      <span className="text-[9px] uppercase font-bold text-slate-500 block">Release Clause</span>
+                      <span className="font-bold text-slate-300 font-mono">
+                        {pref.releaseClausePreference ? formatCurrency(pref.releaseClausePreference) : 'None'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Manager Renewal Offer Controls */}
+            <div className="space-y-4 text-xs">
+              {/* Weekly Wage */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-slate-300 font-bold">
+                  <span>Weekly Wage Offer:</span>
+                  <span className="font-mono text-emerald-400">{formatWage(renewWage)}</span>
+                </div>
+                <input
+                  type="range"
+                  min={Math.round(renewingPlayer.wageWeekly * 0.7)}
+                  max={Math.round(renewingPlayer.wageWeekly * 2.5)}
+                  step={5_000}
+                  value={renewWage}
+                  onChange={(e) => setRenewWage(Number(e.target.value))}
+                  className="w-full accent-emerald-500 cursor-pointer"
+                />
+                <div className="flex justify-between text-[10px] text-slate-500">
+                  <span>Current: {formatWage(renewingPlayer.wageWeekly)}</span>
+                  <span>Agent Target: {formatWage(getPlayerPreferredTerms(renewingPlayer).preferredWageWeekly)}</span>
+                </div>
+              </div>
+
+              {/* Contract Length */}
+              <div className="space-y-1.5">
+                <label className="block text-slate-300 font-bold">Contract Duration:</label>
+                <div className="grid grid-cols-5 gap-2">
+                  {[1, 2, 3, 4, 5].map((yrs) => (
+                    <button
+                      key={yrs}
+                      type="button"
+                      onClick={() => setRenewYears(yrs)}
+                      className={`py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+                        renewYears === yrs
+                          ? 'bg-emerald-500 text-slate-950 font-black'
+                          : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      {yrs} {yrs === 1 ? 'Year' : 'Years'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Squad Role Selection */}
+              <div className="space-y-1.5">
+                <label className="block text-slate-300 font-bold">Promised Squad Role:</label>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {(['crucial', 'important', 'squad', 'sporadic', 'prospect'] as SquadRole[]).map((role) => (
+                    <button
+                      key={role}
+                      type="button"
+                      onClick={() => setRenewSquadRole(role)}
+                      className={`py-1.5 px-1 rounded-xl text-[10px] font-bold uppercase transition-colors cursor-pointer truncate ${
+                        renewSquadRole === role
+                          ? 'bg-emerald-500 text-slate-950 font-black'
+                          : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      {role}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Signing / Loyalty Bonus & Release Clause */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <span className="text-slate-400 font-bold block text-[11px]">Signing Bonus:</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={100_000}
+                    value={renewSigningBonus}
+                    onChange={(e) => setRenewSigningBonus(Math.max(0, Number(e.target.value)))}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-emerald-500"
+                  />
+                  <span className="text-[10px] text-slate-500 block">Deducted from transfer budget</span>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-slate-400 font-bold block text-[11px]">Release Clause (£):</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1_000_000}
+                    value={renewReleaseClause ?? 0}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setRenewReleaseClause(val > 0 ? val : undefined);
+                    }}
+                    placeholder="None"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-emerald-500"
+                  />
+                  <span className="text-[10px] text-slate-500 block">0 = No buy-out clause</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Financial Impact Analysis */}
+            {(() => {
+              const wageDelta = renewWage - renewingPlayer.wageWeekly;
+              const hasBudget = renewSigningBonus <= save.finances.transferBudget;
+              const hasWageRoom = wageDelta <= Math.max(0, save.finances.weeklyWageBudget - save.finances.currentWeeklyWages);
+
+              return (
+                <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5 space-y-2 text-xs">
+                  <div className="flex justify-between items-center text-[10px] uppercase font-bold text-slate-400">
+                    <span>Wage Change</span>
+                    <span className={wageDelta >= 0 ? 'text-amber-400' : 'text-emerald-400'}>
+                      {wageDelta >= 0 ? `+${formatWage(wageDelta)}` : `-${formatWage(Math.abs(wageDelta))}`}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-[10px] uppercase font-bold text-slate-400">
+                    <span>Signing Bonus Cost</span>
+                    <span className="text-rose-400">-{formatCurrency(renewSigningBonus)}</span>
+                  </div>
+                  {!hasBudget && (
+                    <div className="p-2 rounded-xl bg-rose-950/60 border border-rose-800 text-rose-300 text-[11px]">
+                      ⚠️ Insufficient transfer budget for signing bonus! Available: {formatCurrency(save.finances.transferBudget)}.
+                    </div>
+                  )}
+                  {!hasWageRoom && wageDelta > 0 && (
+                    <div className="p-2 rounded-xl bg-amber-950/60 border border-amber-800 text-amber-300 text-[11px]">
+                      ⚠️ Wage budget will be exceeded by {formatWage(wageDelta - Math.max(0, save.finances.weeklyWageBudget - save.finances.currentWeeklyWages))}.
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {renewFeedback && (
+              <div className="p-3 rounded-xl bg-rose-950/70 border border-rose-800 text-rose-300 text-xs">
+                {renewFeedback}
+              </div>
+            )}
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setRenewingPlayer(null)}
+                className="py-3 px-4 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-xs font-bold text-slate-300 uppercase tracking-wider cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmRenewal}
+                disabled={renewSigningBonus > save.finances.transferBudget}
+                className="flex-1 py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-800 disabled:text-slate-500 font-display font-black text-xs uppercase tracking-wider text-slate-950 shadow-lg shadow-emerald-500/20 cursor-pointer"
+              >
+                Sign Contract Extension
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TRANSFER TARGET NEGOTIATION MODAL */}
       {negotiatingPlayer && (
         <div
           role="dialog"
@@ -1163,6 +1751,42 @@ export function TransferHub({
               </div>
             </div>
 
+            {/* Player & Agent Preferred Terms Card */}
+            {(() => {
+              const pref = getPlayerPreferredTerms(negotiatingPlayer as unknown as CareerPlayer);
+              return (
+                <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-2.5 text-xs">
+                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-emerald-400 font-display">
+                    <span>🎯 Player &amp; Agent Preferred Terms</span>
+                    <span className="font-mono text-slate-400">Demands</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    <div className="bg-slate-950 p-2 rounded-xl border border-slate-850">
+                      <span className="text-[9px] uppercase font-bold text-slate-500 block">Preferred Wage</span>
+                      <span className="font-bold text-white font-mono">{formatWage(pref.preferredWageWeekly)}</span>
+                    </div>
+                    <div className="bg-slate-950 p-2 rounded-xl border border-slate-850">
+                      <span className="text-[9px] uppercase font-bold text-slate-500 block">Desired Length</span>
+                      <span className="font-bold text-white font-mono">{pref.preferredContractYears} Years</span>
+                    </div>
+                    <div className="bg-slate-950 p-2 rounded-xl border border-slate-850">
+                      <span className="text-[9px] uppercase font-bold text-slate-500 block">Expected Role</span>
+                      <span className="font-bold text-emerald-400 uppercase font-mono">{pref.expectedSquadRole}</span>
+                    </div>
+                    <div className="bg-slate-950 p-2 rounded-xl border border-slate-850">
+                      <span className="text-[9px] uppercase font-bold text-slate-500 block">Signing Bonus</span>
+                      <span className="font-bold text-slate-300 font-mono">{formatCurrency(pref.expectedSigningBonus)}</span>
+                    </div>
+                    <div className="bg-slate-950 p-2 rounded-xl border border-slate-850 col-span-2 sm:col-span-1">
+                      <span className="text-[9px] uppercase font-bold text-slate-500 block">Release Clause</span>
+                      <span className="font-bold text-slate-300 font-mono">
+                        {pref.releaseClausePreference ? formatCurrency(pref.releaseClausePreference) : 'Optional'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Legend Historical Edition Selector (User requirement: select which season version to bid for) */}
             {negotiatingPlayer.versions && negotiatingPlayer.versions.length > 1 && (
@@ -1205,12 +1829,12 @@ export function TransferHub({
               </div>
             )}
 
-            {/* Negotiation Inputs */}
+            {/* Detailed Negotiation Inputs */}
             <div className="space-y-4 text-xs">
-              {/* Transfer Fee */}
+              {/* Transfer Base Fee */}
               <div className="space-y-1.5">
                 <div className="flex justify-between text-slate-300 font-bold">
-                  <span>Transfer Fee Offer:</span>
+                  <span>Base Transfer Fee Offer:</span>
                   <span className="font-mono text-emerald-400">{formatCurrency(offeredFee)}</span>
                 </div>
                 <input
@@ -1226,6 +1850,43 @@ export function TransferHub({
                   <span>Min: {formatCurrency(negotiatingPlayer.value * 0.5)}</span>
                   <span>Demand: {formatCurrency(negotiatingPlayer.value)}</span>
                   <span>Max: {formatCurrency(negotiatingPlayer.value * 2.0)}</span>
+                </div>
+              </div>
+
+              {/* Structured Add-Ons & Sell-on Clause */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <div className="flex justify-between text-slate-400 text-[11px] font-bold">
+                    <span>Performance Add-ons:</span>
+                    <span className="font-mono text-slate-300">{formatCurrency(offeredAddOnFee)}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={Math.round(negotiatingPlayer.value * 0.4)}
+                    step={250_000}
+                    value={offeredAddOnFee}
+                    onChange={(e) => setOfferedAddOnFee(Number(e.target.value))}
+                    className="w-full accent-emerald-500 cursor-pointer"
+                  />
+                  <span className="text-[9px] text-slate-500 block">Sweetens deal without upfront cash</span>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex justify-between text-slate-400 text-[11px] font-bold">
+                    <span>Sell-on Clause:</span>
+                    <span className="font-mono text-slate-300">{offeredSellOnClause}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={30}
+                    step={5}
+                    value={offeredSellOnClause}
+                    onChange={(e) => setOfferedSellOnClause(Number(e.target.value))}
+                    className="w-full accent-emerald-500 cursor-pointer"
+                  />
+                  <span className="text-[9px] text-slate-500 block">Percentage of future sale</span>
                 </div>
               </div>
 
@@ -1270,12 +1931,66 @@ export function TransferHub({
                   ))}
                 </div>
               </div>
+
+              {/* Promised Squad Role */}
+              <div className="space-y-1.5">
+                <label className="block text-slate-300 font-bold">Squad Role:</label>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {(['crucial', 'important', 'squad', 'sporadic', 'prospect'] as SquadRole[]).map((role) => (
+                    <button
+                      key={role}
+                      type="button"
+                      onClick={() => setOfferedSquadRole(role)}
+                      className={`py-1.5 px-1 rounded-xl text-[10px] font-bold uppercase transition-colors cursor-pointer truncate ${
+                        offeredSquadRole === role
+                          ? 'bg-emerald-500 text-slate-950 font-black'
+                          : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      {role}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Signing Bonus & Release Clause */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <span className="text-slate-400 font-bold block text-[11px]">Signing Bonus:</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={250_000}
+                    value={offeredSigningBonus}
+                    onChange={(e) => setOfferedSigningBonus(Math.max(0, Number(e.target.value)))}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-emerald-500"
+                  />
+                  <span className="text-[10px] text-slate-500 block">Upfront loyalty payment</span>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-slate-400 font-bold block text-[11px]">Release Clause (£):</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1_000_000}
+                    value={offeredReleaseClause ?? 0}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setOfferedReleaseClause(val > 0 ? val : undefined);
+                    }}
+                    placeholder="None"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-emerald-500"
+                  />
+                  <span className="text-[10px] text-slate-500 block">0 = None</span>
+                </div>
+              </div>
             </div>
 
-            {/* Financial Impact Analysis (User requirement: clear budget math before submitting bid) */}
+            {/* Financial Impact Analysis */}
             {(() => {
               const currentBudget = save.finances.transferBudget;
-              const remainingBudget = currentBudget - offeredFee;
+              const totalUpfrontCost = offeredFee + offeredSigningBonus;
+              const remainingBudget = currentBudget - totalUpfrontCost;
               const isOverBudget = remainingBudget < 0;
 
               const currentWageRoom = Math.max(0, save.finances.weeklyWageBudget - save.finances.currentWeeklyWages);
@@ -1298,8 +2013,8 @@ export function TransferHub({
                         <span className="font-bold text-white">{formatCurrency(currentBudget)}</span>
                       </div>
                       <div className="flex justify-between items-center font-mono">
-                        <span className="text-slate-400 text-[10px]">Offered Fee:</span>
-                        <span className="font-bold text-rose-400">-{formatCurrency(offeredFee)}</span>
+                        <span className="text-slate-400 text-[10px]">Upfront Cost:</span>
+                        <span className="font-bold text-rose-400">-{formatCurrency(totalUpfrontCost)}</span>
                       </div>
                       <div className="pt-1 border-t border-slate-850 flex justify-between items-center font-mono">
                         <span className="text-[10px] font-bold text-slate-300">Remaining:</span>
@@ -1332,7 +2047,7 @@ export function TransferHub({
                   {isOverBudget && (
                     <div className="p-2.5 rounded-xl bg-rose-950/60 border border-rose-800 text-rose-300 text-xs flex items-center gap-2">
                       <span>⚠️</span>
-                      <span>Insufficient transfer budget! Fee exceeds available funds by {formatCurrency(Math.abs(remainingBudget))}.</span>
+                      <span>Insufficient transfer budget! Upfront cost exceeds available funds by {formatCurrency(Math.abs(remainingBudget))}.</span>
                     </div>
                   )}
                 </div>
@@ -1366,16 +2081,16 @@ export function TransferHub({
               <button
                 type="button"
                 onClick={handleConfirmBid}
-                disabled={offeredFee > save.finances.transferBudget}
+                disabled={offeredFee + offeredSigningBonus > save.finances.transferBudget}
                 className={`flex-1 py-3 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer ${
-                  offeredFee > save.finances.transferBudget
+                  offeredFee + offeredSigningBonus > save.finances.transferBudget
                     ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
                     : negotiatingPlayer.isLegend
                     ? 'bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 shadow-lg shadow-amber-500/25'
                     : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-lg shadow-emerald-500/20'
                 }`}
               >
-                {offeredFee > save.finances.transferBudget ? 'Cannot Afford Bid' : 'Submit Formal Bid'}
+                {offeredFee + offeredSigningBonus > save.finances.transferBudget ? 'Cannot Afford Bid' : 'Submit Formal Bid'}
               </button>
             </div>
           </div>

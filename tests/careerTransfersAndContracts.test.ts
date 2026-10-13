@@ -8,11 +8,16 @@ import {
   generateIncomingAiBids,
   renewPlayerContract,
   evaluateBoardConfidence,
+  getPlayerPreferredTerms,
+  getExpiringContracts,
+  processSportingDirectorRenewals,
 } from '../src/career/transfers';
 import { getAllClubs } from '../src/career/clubs';
 import { createNewCareerSave } from '../src/career/saves';
 import { getPresetSettings } from '../src/career/settings';
-import { CareerSaveFile, MarketPlayer } from '../src/career/types';
+import { CareerSaveFile, MarketPlayer, DetailedTransferTerms } from '../src/career/types';
+import { adaptLineupToFormation, getSquadOrderedByLineup, getBestStartingLineup } from '../src/career/squad';
+import { advanceTimeSkip } from '../src/career/sim';
 
 // Mock localStorage for node environment
 const mockStorage: Record<string, string> = {};
@@ -344,6 +349,206 @@ describe('Career Mode Phase 6: Transfers, Scouting & Contracts', () => {
       expect(status.confidence).toBeGreaterThanOrEqual(50);
       expect(status.expectation).toContain('Top 4');
       expect(['secure', 'stable']).toContain(status.status);
+    });
+  });
+
+  describe('Formation Adaptation & Lineup Starter Preservation', () => {
+    it('preserves user chosen starting 11 players when switching formation', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      const initialLineup = save.lineup;
+      const initialStarterIds = [...initialLineup.starterIds];
+      expect(initialStarterIds.length).toBe(11);
+
+      // Adapt to 3-5-2
+      const adapted352 = adaptLineupToFormation(initialLineup, save.squad, '3-5-2');
+      expect(adapted352.formation).toBe('3-5-2');
+      expect(adapted352.starterIds.length).toBe(11);
+
+      // Must contain the exact same set of 11 players
+      const adaptedSet = new Set(adapted352.starterIds);
+      for (const id of initialStarterIds) {
+        expect(adaptedSet.has(id)).toBe(true);
+      }
+
+      // Adapt to 5-3-2
+      const adapted532 = adaptLineupToFormation(adapted352, save.squad, '5-3-2');
+      expect(adapted532.formation).toBe('5-3-2');
+      expect(adapted532.starterIds.length).toBe(11);
+      const adapted532Set = new Set(adapted532.starterIds);
+      for (const id of initialStarterIds) {
+        expect(adapted532Set.has(id)).toBe(true);
+      }
+    });
+
+    it('orders squad with the 11 chosen starters at indices 0-10', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      const ordered = getSquadOrderedByLineup(save.squad, save.lineup);
+      expect(ordered.length).toBe(save.squad.length);
+
+      const top11Ids = ordered.slice(0, 11).map((p) => p.id);
+      expect(top11Ids).toEqual(save.lineup.starterIds);
+    });
+  });
+
+  describe('Player Preferred Terms & Detailed Multi-Term Negotiations', () => {
+    it('derives expected terms based on player rating and age', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      const starPlayer = save.squad.find((p) => p.rating >= 84) || save.squad[0];
+      const starTerms = getPlayerPreferredTerms(starPlayer);
+
+      expect(starTerms.preferredWageWeekly).toBeGreaterThanOrEqual(starPlayer.wageWeekly);
+      expect(starTerms.minimumAcceptableWage).toBeLessThan(starTerms.preferredWageWeekly);
+      expect(starTerms.expectedSquadRole).toMatch(/crucial|important/);
+      expect(starTerms.preferredContractYears).toBeGreaterThanOrEqual(2);
+      expect(starTerms.expectedSigningBonus).toBeGreaterThan(0);
+    });
+
+    it('evaluates and executes transfer signings with structured add-ons, role, bonus, and release clause', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      save.season.currentDate = '2026-07-15';
+      save.finances.weeklyWageBudget += 2_000_000;
+      save.finances.transferBudget += 200_000_000;
+
+      const pool = getScoutingMarketPool(save.squad);
+      const target = pool[0];
+
+      const detailedTerms: DetailedTransferTerms = {
+        baseFee: target.value,
+        addOnFee: Math.round(target.value * 0.1),
+        sellOnClausePercent: 15,
+        wageWeekly: target.wageDemand + 10_000,
+        contractYears: 4,
+        signingBonus: 1_000_000,
+        squadRole: 'important',
+        releaseClause: Math.round(target.value * 2.5),
+      };
+
+      const evalRes = evaluateTransferOffer(
+        target,
+        detailedTerms.baseFee,
+        detailedTerms.wageWeekly,
+        detailedTerms
+      );
+
+      expect(evalRes.status).toBe('accepted');
+      expect(evalRes.preferredTerms).toBeDefined();
+
+      const initialBudget = save.finances.transferBudget;
+      const initialSquadSize = save.squad.length;
+
+      const signRes = executePlayerSigning(
+        save,
+        target,
+        detailedTerms.baseFee,
+        detailedTerms.wageWeekly,
+        detailedTerms.contractYears,
+        detailedTerms
+      );
+
+      expect(signRes.success).toBe(true);
+      expect(signRes.updatedSave.squad.length).toBe(initialSquadSize + 1);
+
+      // Verify signing bonus + fee deducted from budget
+      const totalUpfront = detailedTerms.baseFee + detailedTerms.signingBonus!;
+      expect(signRes.updatedSave.finances.transferBudget).toBe(initialBudget - totalUpfront);
+
+      // Verify new player received assigned terms
+      const signedPlayer = signRes.updatedSave.squad[signRes.updatedSave.squad.length - 1];
+      expect(signedPlayer).toBeDefined();
+      expect(signedPlayer.squadRole).toBe('important');
+      expect(signedPlayer.releaseClause).toBe(detailedTerms.releaseClause);
+      expect(signedPlayer.contractYears).toBe(4);
+    });
+  });
+
+  describe('Expiring Contracts & Sporting Director Auto-Renewals', () => {
+    it('identifies players whose contracts expire within 1 or 2 years', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      save.squad[0].contractYears = 1;
+      save.squad[1].contractYears = 2;
+      save.squad[2].contractYears = 4;
+
+      const expiring1 = getExpiringContracts(save.squad, 1);
+      expect(expiring1.some((p) => p.id === save.squad[0].id)).toBe(true);
+      expect(expiring1.some((p) => p.id === save.squad[1].id)).toBe(false);
+
+      const expiring2 = getExpiringContracts(save.squad, 2);
+      expect(expiring2.some((p) => p.id === save.squad[0].id)).toBe(true);
+      expect(expiring2.some((p) => p.id === save.squad[1].id)).toBe(true);
+      expect(expiring2.some((p) => p.id === save.squad[2].id)).toBe(false);
+    });
+
+    it('delegates contract renewals to sporting director when enabled, sending inbox report', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      save.settings.sportingDirectorHandlesRenewals = true;
+      save.squad[0].contractYears = 1;
+      save.squad[0].rating = 82;
+
+      const res = processSportingDirectorRenewals(save);
+      expect(res.renewedCount).toBeGreaterThanOrEqual(1);
+
+      const renewedPlayer = res.updatedSave.squad.find((p) => p.id === save.squad[0].id)!;
+      expect(renewedPlayer.contractYears).toBeGreaterThan(1);
+
+      // Verify inbox report sent
+      const reportMsg = res.updatedSave.inbox?.find((m) => m.sender === 'Director of Football');
+      expect(reportMsg).toBeDefined();
+      expect(reportMsg?.subject).toContain('Sporting Director Contract Extensions');
+    });
+  });
+
+  describe('Calendar Simulation Transfer Window Notifications & Preferred 11', () => {
+    it('notifies manager via inbox across transfer window open, deadline day, and close milestones', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      save.season.currentDate = '2026-06-25'; // Just before summer open
+      const res = advanceTimeSkip(save, 'next_week', { usePreferredEleven: true });
+
+      const summerOpenMsg = res.updatedSave.inbox?.find((m) =>
+        m.subject.includes('Summer Transfer Window Officially Open')
+      );
+      expect(summerOpenMsg).toBeDefined();
     });
   });
 });

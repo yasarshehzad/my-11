@@ -8,9 +8,13 @@ import {
   BoardStatus,
   Club,
   DatabaseSeason,
+  SquadRole,
+  PlayerPreferredTerms,
+  DetailedTransferTerms,
 } from './types';
 import { players } from '../data/players';
 import { calculatePlayerValue, calculateWeeklyWage, formatCurrency } from './finance';
+import { addInboxMessage } from './inbox';
 import {
   categorizePosition,
   isHomegrownPlayer,
@@ -263,50 +267,159 @@ export function getScoutingMarketPool(
   return pool;
 }
 
+/**
+ * Calculates a player's preferred terms (wage, contract length, squad role, bonuses)
+ * used during transfer negotiations and contract renewals.
+ */
+export function getPlayerPreferredTerms(
+  player: CareerPlayer | MarketPlayer
+): PlayerPreferredTerms {
+  const rating = player.rating;
+  const age = player.age;
+  const value = player.value;
+
+  // Expected squad role based on rating
+  let expectedSquadRole: SquadRole = 'squad';
+  if (rating >= 84) expectedSquadRole = 'crucial';
+  else if (rating >= 80) expectedSquadRole = 'important';
+  else if (rating >= 75) expectedSquadRole = 'squad';
+  else if (age <= 21) expectedSquadRole = 'prospect';
+  else expectedSquadRole = 'sporadic';
+
+  // Base wage demand
+  const rawDemand = 'wageDemand' in player ? player.wageDemand : player.wageWeekly || Math.round(value * 0.0022);
+  const preferredWageWeekly = Math.max(8_000, Math.round(rawDemand / 5_000) * 5_000);
+  const minimumAcceptableWage = Math.round((preferredWageWeekly * 0.88) / 1_000) * 1_000;
+
+  // Preferred contract length
+  let preferredContractYears = 4;
+  if (age >= 32) preferredContractYears = 1;
+  else if (age >= 29) preferredContractYears = 2;
+  else if (age <= 20) preferredContractYears = 5;
+
+  // Expected signing loyalty bonus (approx 8-12x weekly wage)
+  const expectedSigningBonus = Math.round((preferredWageWeekly * 10) / 100_000) * 100_000;
+
+  // Release clause (for high-tier players)
+  const releaseClausePreference =
+    rating >= 82 ? Math.round((value * 1.8) / 1_000_000) * 1_000_000 : undefined;
+
+  return {
+    preferredWageWeekly,
+    minimumAcceptableWage,
+    preferredContractYears,
+    expectedSquadRole,
+    expectedSigningBonus,
+    releaseClausePreference,
+  };
+}
+
 export interface OfferEvaluationResult {
-  status: 'accepted' | 'fee_rejected' | 'wage_rejected' | 'counter_offer';
+  status: 'accepted' | 'fee_rejected' | 'wage_rejected' | 'role_rejected' | 'counter_offer';
   message: string;
   counterFee?: number;
+  counterWage?: number;
+  agentFeedback?: string;
+  preferredTerms?: PlayerPreferredTerms;
+  isAcceptableFee?: boolean;
+  isAcceptableWage?: boolean;
+  isAcceptableRole?: boolean;
 }
 
 /**
  * Evaluates a transfer bid against club valuation and player wage expectations.
+ * Supports both standard evaluation and rich multi-term negotiations.
  */
 export function evaluateTransferOffer(
   targetPlayer: MarketPlayer,
   offeredFee: number,
-  offeredWage: number
+  offeredWage: number,
+  detailedTerms?: Partial<DetailedTransferTerms>
 ): OfferEvaluationResult {
+  const preferred = getPlayerPreferredTerms(targetPlayer);
+  const addOn = detailedTerms?.addOnFee || 0;
+  const effectiveFee = offeredFee + Math.round(addOn * 0.6);
+
   // 1. Fee evaluation by selling club
-  if (offeredFee < targetPlayer.value * 0.85) {
+  if (effectiveFee < targetPlayer.value * 0.85) {
     return {
       status: 'fee_rejected',
       message: `The selling club has rejected your offer. An offer of ${formatCurrency(offeredFee)} is insulting for a player valued at ${formatCurrency(targetPlayer.value)}.`,
+      agentFeedback: 'The selling club refuses to negotiate further at this low valuation.',
+      preferredTerms: preferred,
+      isAcceptableFee: false,
+      isAcceptableWage: offeredWage >= preferred.minimumAcceptableWage,
+      isAcceptableRole: true,
     };
   }
 
-  if (offeredFee < targetPlayer.value * 1.0) {
+  if (effectiveFee < targetPlayer.value * 1.0) {
     const counterFee = Math.round((targetPlayer.value * 1.08) / 100_000) * 100_000;
     return {
       status: 'counter_offer',
       message: `The club is open to negotiations, but demands ${formatCurrency(counterFee)} to release ${targetPlayer.name}.`,
       counterFee,
+      agentFeedback: `Selling club demands at least ${formatCurrency(counterFee)} upfront or with structured add-ons.`,
+      preferredTerms: preferred,
+      isAcceptableFee: false,
+      isAcceptableWage: offeredWage >= preferred.minimumAcceptableWage,
+      isAcceptableRole: true,
     };
   }
 
-  // 2. Personal terms evaluation by player
-  if (offeredWage < targetPlayer.wageDemand * 0.92) {
+  // 2. Squad Role evaluation
+  const roleWeights: Record<SquadRole, number> = {
+    crucial: 5,
+    important: 4,
+    squad: 3,
+    sporadic: 2,
+    prospect: 1,
+  };
+
+  if (detailedTerms?.squadRole) {
+    const expectedWeight = roleWeights[preferred.expectedSquadRole];
+    const offeredWeight = roleWeights[detailedTerms.squadRole];
+    if (offeredWeight < expectedWeight - 1) {
+      return {
+        status: 'role_rejected',
+        message: `${targetPlayer.name} has rejected your squad role offer. As a ${targetPlayer.rating} OVR player, they demand to be an ${preferred.expectedSquadRole.toUpperCase()} member of the squad.`,
+        agentFeedback: `Agent: "My client will not sit on the bench. We require at least an ${preferred.expectedSquadRole} role guarantee."`,
+        preferredTerms: preferred,
+        isAcceptableFee: true,
+        isAcceptableWage: offeredWage >= preferred.minimumAcceptableWage,
+        isAcceptableRole: false,
+      };
+    }
+  }
+
+  // 3. Personal terms evaluation by player
+  const signingBonus = detailedTerms?.signingBonus || 0;
+  const bonusCompensation = signingBonus >= preferred.expectedSigningBonus * 1.2 ? preferred.preferredWageWeekly * 0.05 : 0;
+  const effectiveMinWage = preferred.minimumAcceptableWage - bonusCompensation;
+
+  if (offeredWage < effectiveMinWage) {
     return {
       status: 'wage_rejected',
-      message: `${targetPlayer.name}'s agent has rejected the contract terms. The player demands at least £${(targetPlayer.wageDemand / 1_000).toFixed(0)}k/week.`,
+      message: `${targetPlayer.name}'s agent has rejected the contract terms. The player demands at least £${(preferred.minimumAcceptableWage / 1_000).toFixed(0)}k/week.`,
+      agentFeedback: `Agent: "My client's preferred wage is ${formatCurrency(preferred.preferredWageWeekly)}/week. Your offer is below our bottom line."`,
+      preferredTerms: preferred,
+      isAcceptableFee: true,
+      isAcceptableWage: false,
+      isAcceptableRole: true,
     };
   }
 
   return {
     status: 'accepted',
     message: `Agreement reached! Both the selling club and ${targetPlayer.name} have agreed terms.`,
+    agentFeedback: 'Agent: "We are delighted with these terms and ready to put pen to paper!"',
+    preferredTerms: preferred,
+    isAcceptableFee: true,
+    isAcceptableWage: true,
+    isAcceptableRole: true,
   };
 }
+
 
 /**
  * Executes player signing, applying budget deductions and homegrown quota validation.
@@ -316,8 +429,10 @@ export function executePlayerSigning(
   targetPlayer: MarketPlayer,
   fee: number,
   wage: number,
-  contractYears: number = 3
+  contractYears: number = 3,
+  detailedTerms?: Partial<DetailedTransferTerms>
 ): { success: boolean; updatedSave: CareerSaveFile; error?: string } {
+
   // Validate transfer window
   if (!isTransferWindowOpen(save.season.currentDate, save.season.yearStart)) {
     return {
@@ -347,12 +462,15 @@ export function executePlayerSigning(
     };
   }
 
+  const signingBonus = detailedTerms?.signingBonus || 0;
+  const totalUpfrontCost = fee + signingBonus;
+
   // Validate transfer budget
-  if (fee > save.finances.transferBudget) {
+  if (totalUpfrontCost > save.finances.transferBudget) {
     return {
       success: false,
       updatedSave: save,
-      error: `Insufficient transfer budget. You have ${formatCurrency(save.finances.transferBudget)} available, but need ${formatCurrency(fee)}.`,
+      error: `Insufficient transfer budget. You have ${formatCurrency(save.finances.transferBudget)} available, but need ${formatCurrency(totalUpfrontCost)}${signingBonus > 0 ? ' (including signing bonus)' : ''}.`,
     };
   }
 
@@ -401,6 +519,8 @@ export function executePlayerSigning(
     isHomegrown: targetPlayer.isHomegrown,
     club: save.club.defaultName,
     nationality: targetPlayer.nationality,
+    squadRole: detailedTerms?.squadRole,
+    releaseClause: detailedTerms?.releaseClause,
     potential:
       getAllSupplementalPlayers().find((sp) => sp.id === targetPlayer.id)?.potential ||
       Math.max(effectiveRating, effectiveRating + (effectiveAge <= 21 ? 6 : effectiveAge <= 24 ? 3 : 0)),
@@ -429,8 +549,8 @@ export function executePlayerSigning(
     squad: updatedSquad,
     finances: {
       ...save.finances,
-      transferBudget: save.finances.transferBudget - fee,
-      balance: save.finances.balance - fee,
+      transferBudget: save.finances.transferBudget - totalUpfrontCost,
+      balance: save.finances.balance - totalUpfrontCost,
       currentWeeklyWages: save.finances.currentWeeklyWages + wage,
     },
     transfersHistory: updatedHistory,
@@ -565,13 +685,30 @@ export function generateIncomingAiBids(save: CareerSaveFile): IncomingTransferOf
 }
 
 /**
- * Renews a player's contract with wage adjustment and morale boost.
+ * Returns players whose contracts are expiring within the given years threshold.
+ */
+export function getExpiringContracts(
+  squad: CareerPlayer[],
+  yearsThreshold: number = 1
+): CareerPlayer[] {
+  return squad
+    .filter((p) => (p.contractYears ?? 2) <= yearsThreshold)
+    .sort((a, b) => b.rating - a.rating);
+}
+
+/**
+ * Renews a player's contract with wage adjustment, squad role, bonuses, and morale boost.
  */
 export function renewPlayerContract(
   save: CareerSaveFile,
   playerId: string,
   newWage: number,
-  newYears: number
+  newYears: number,
+  terms?: {
+    signingBonus?: number;
+    squadRole?: SquadRole;
+    releaseClause?: number;
+  }
 ): { success: boolean; updatedSave: CareerSaveFile; error?: string } {
   const player = save.squad.find((p) => p.id === playerId);
   if (!player) {
@@ -587,13 +724,24 @@ export function renewPlayerContract(
     };
   }
 
+  const bonus = terms?.signingBonus || 0;
+  if (bonus > save.finances.transferBudget) {
+    return {
+      success: false,
+      updatedSave: save,
+      error: `Insufficient transfer budget for signing bonus. Available: ${formatCurrency(save.finances.transferBudget)}.`,
+    };
+  }
+
   const updatedSquad = save.squad.map((p) => {
     if (p.id !== playerId) return p;
     return {
       ...p,
       wageWeekly: newWage,
       contractYears: newYears,
-      morale: Math.min(100, p.morale + 12),
+      squadRole: terms?.squadRole || p.squadRole,
+      releaseClause: terms?.releaseClause ?? p.releaseClause,
+      morale: Math.min(100, p.morale + 15),
     };
   });
 
@@ -603,11 +751,72 @@ export function renewPlayerContract(
     finances: {
       ...save.finances,
       currentWeeklyWages: save.finances.currentWeeklyWages + wageDifference,
+      transferBudget: Math.max(0, save.finances.transferBudget - bonus),
+      balance: save.finances.balance - bonus,
     },
   };
 
   return { success: true, updatedSave };
 }
+
+/**
+ * Automatically handles contract extensions for expiring key players
+ * if Sporting Director delegation is enabled by the manager.
+ */
+export function processSportingDirectorRenewals(
+  save: CareerSaveFile
+): { updatedSave: CareerSaveFile; renewedCount: number; summaryLogs: string[] } {
+  if (!save.settings.sportingDirectorHandlesRenewals) {
+    return { updatedSave: save, renewedCount: 0, summaryLogs: [] };
+  }
+
+  const expiring = getExpiringContracts(save.squad, 1);
+  if (expiring.length === 0) {
+    return { updatedSave: save, renewedCount: 0, summaryLogs: [] };
+  }
+
+  let currentSave = save;
+  const summaryLogs: string[] = [];
+  let renewedCount = 0;
+
+  for (const player of expiring) {
+    if (player.rating >= 74 || player.age <= 23) {
+      const preferred = getPlayerPreferredTerms(player);
+      const newWage = Math.max(player.wageWeekly, preferred.preferredWageWeekly);
+      const newYears = Math.min(4, Math.max(2, preferred.preferredContractYears));
+
+      const res = renewPlayerContract(currentSave, player.id, newWage, newYears, {
+        squadRole: preferred.expectedSquadRole,
+        releaseClause: preferred.releaseClausePreference,
+      });
+
+      if (res.success) {
+        currentSave = res.updatedSave;
+        renewedCount++;
+        const log = `${player.name} (${player.position}) agreed a ${newYears}-year extension at ${formatCurrency(newWage)}/wk.`;
+        summaryLogs.push(log);
+      }
+    }
+  }
+
+  if (renewedCount > 0) {
+    currentSave = addInboxMessage(currentSave, {
+      date: currentSave.season.currentDate,
+      sender: 'Director of Football',
+      senderRole: 'Sporting Operations',
+      subject: `Sporting Director Contract Extensions (${renewedCount} Deals Finalized)`,
+      body: `Boss,\n\nI have successfully finalized contract extensions for ${renewedCount} expiring squad players to prevent them from entering free agency:\n\n${summaryLogs.map((l) => `• ${l}`).join('\n')}\n\nAll wage adjustments remain within our authorized budget.`,
+      type: 'board',
+      isRead: false,
+      priority: 'urgent',
+      actionLabel: 'Inspect Squad Contracts',
+      actionTab: 'squad',
+    });
+  }
+
+  return { updatedSave: currentSave, renewedCount, summaryLogs };
+}
+
 
 /**
  * Evaluates board satisfaction and sacking risk based on club tier and league standing.

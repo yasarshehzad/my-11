@@ -9,10 +9,11 @@ import {
   CalendarEvent,
   MatchStats,
   MatchEvent,
+  ManagerMessage,
 } from './types';
 import { getClubById, getAllClubs } from './clubs';
 import { calculateStandings } from './table';
-import { categorizePosition } from './squad';
+import { categorizePosition, getSquadOrderedByLineup } from './squad';
 import {
   simulateKnockoutCupFixture,
   findAnyClub,
@@ -22,6 +23,7 @@ import {
   isTransferWindowOpen,
   generateIncomingAiBids,
   evaluateBoardConfidence,
+  processSportingDirectorRenewals,
 } from './transfers';
 import {
   updatePlayerForm,
@@ -192,11 +194,13 @@ function sampleGoals(expected: number): number {
 
 function pickScorerName(squad: CareerPlayer[] | undefined, club: Club): string {
   if (squad && squad.length > 0) {
-    const attackers = squad.filter((p) => {
+    const onPitch = squad.length >= 11 ? squad.slice(0, 11) : squad;
+    const outfieldStarters = onPitch.filter((p) => categorizePosition(p.position) !== 'GK');
+    const attackers = outfieldStarters.filter((p) => {
       const g = categorizePosition(p.position);
       return g === 'FWD' || g === 'MID';
     });
-    const pool = attackers.length > 0 ? attackers : squad;
+    const pool = attackers.length > 0 ? attackers : (outfieldStarters.length > 0 ? outfieldStarters : squad);
     const picked = pool[Math.floor(Math.random() * pool.length)];
     return picked.name;
   }
@@ -258,7 +262,10 @@ export interface TimeSkipResult {
  */
 export function advanceTimeSkip(
   save: CareerSaveFile,
-  target: TimeSkipTarget
+  target: TimeSkipTarget,
+  options?: {
+    usePreferredEleven?: boolean;
+  }
 ): TimeSkipResult {
   const fixtures = [...(save.fixtures || [])];
   const calendar = [...(save.calendar || [])];
@@ -266,6 +273,8 @@ export function advanceTimeSkip(
   const finances = { ...(save.finances) };
   const userClubId = save.club.id;
   let userSquad = [...(save.squad || [])];
+
+  const usePreferred = options?.usePreferredEleven ?? save.settings.usePreferredElevenOnHoliday ?? true;
 
   // Deep clone cups map
   const cups: Record<string, CupTournament> = {};
@@ -320,6 +329,14 @@ export function advanceTimeSkip(
 
   queue.sort((a, b) => new Date(a.fixture.date).getTime() - new Date(b.fixture.date).getTime());
 
+  // Helper to get active lineup-ordered squad for user match simulation
+  const getActiveUserSquad = () => {
+    if (usePreferred && save.lineup && save.lineup.starterIds && save.lineup.starterIds.length > 0) {
+      return getSquadOrderedByLineup(userSquad, save.lineup);
+    }
+    return userSquad;
+  };
+
   // 3. Step forward day by day through fixtures
   for (const item of queue) {
     const fixDate = new Date(item.fixture.date);
@@ -353,6 +370,8 @@ export function advanceTimeSkip(
 
     // Simulate fixture
     let simmedResult: { homeScore?: number; awayScore?: number } | undefined;
+    const activeSquad = getActiveUserSquad();
+
     if (item.type === 'league') {
       const homeClub = getClubById(item.fixture.homeClubId) || getAllClubs()[0];
       const awayClub = getClubById(item.fixture.awayClubId) || getAllClubs()[1];
@@ -361,8 +380,8 @@ export function advanceTimeSkip(
         item.fixture,
         homeClub,
         awayClub,
-        item.fixture.homeClubId === userClubId ? userSquad : undefined,
-        item.fixture.awayClubId === userClubId ? userSquad : undefined
+        item.fixture.homeClubId === userClubId ? activeSquad : undefined,
+        item.fixture.awayClubId === userClubId ? activeSquad : undefined
       );
 
       fixtures[item.index] = simmed;
@@ -375,8 +394,8 @@ export function advanceTimeSkip(
         item.fixture,
         homeClub,
         awayClub,
-        item.fixture.homeClubId === userClubId ? userSquad : undefined,
-        item.fixture.awayClubId === userClubId ? userSquad : undefined
+        item.fixture.homeClubId === userClubId ? activeSquad : undefined,
+        item.fixture.awayClubId === userClubId ? activeSquad : undefined
       );
 
       cups[item.tournamentId].fixtures[item.index] = simmed;
@@ -391,8 +410,10 @@ export function advanceTimeSkip(
       const won = userGoals > oppGoals;
       const drew = userGoals === oppGoals;
 
-      userSquad = userSquad.map((player, pIdx) => {
-        const isStarter = pIdx < 11;
+      const starterIds = new Set(activeSquad.slice(0, 11).map((p) => p.id));
+
+      userSquad = userSquad.map((player) => {
+        const isStarter = starterIds.has(player.id);
         const baseRating = won ? 7.5 : drew ? 6.8 : 6.2;
         const matchRating = Number((baseRating + (Math.random() * 1.0 - 0.3)).toFixed(1));
         const withForm = updatePlayerForm(player, matchRating);
@@ -405,6 +426,10 @@ export function advanceTimeSkip(
     currentDate = fixDate;
   }
 
+  // If no pausedReason interrupted progression and target has a specific date milestone, advance to targetDate
+  if (!pausedReason && target !== 'next_match' && targetDate > currentDate) {
+    currentDate = targetDate;
+  }
 
   // 4. Advance completed cup rounds & award trophies/prizes
   for (const [tId, tourney] of Object.entries(cups)) {
@@ -430,6 +455,7 @@ export function advanceTimeSkip(
   }
 
   // Check milestone calendar events reached
+  const initialIso = save.season.currentDate;
   const curIso = currentDate.toISOString().split('T')[0];
   for (const evt of calendar) {
     if (!evt.processed && evt.date <= curIso) {
@@ -441,6 +467,117 @@ export function advanceTimeSkip(
         pausedReason = `Smart Pause: ${evt.title}`;
       }
     }
+  }
+
+  // Transfer Window Notifications
+  let currentInbox = [...(save.inbox || [])];
+  const addNotification = (msg: Omit<ManagerMessage, 'id'>) => {
+    const alreadyExists = currentInbox.some((m) => m.subject === msg.subject && m.date === msg.date);
+    if (!alreadyExists) {
+      const newMsg: ManagerMessage = {
+        ...msg,
+        id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      };
+      currentInbox = [newMsg, ...currentInbox];
+    }
+  };
+
+  const summerOpen = `${save.season.yearStart}-07-01`;
+  const summerDeadline = `${save.season.yearStart}-09-01`;
+  const summerClosed = `${save.season.yearStart}-09-02`;
+
+  const winterOpen = `${save.season.yearStart + 1}-01-01`;
+  const winterDeadline = `${save.season.yearStart + 1}-02-01`;
+  const winterClosed = `${save.season.yearStart + 1}-02-02`;
+
+  if (initialIso < summerOpen && curIso >= summerOpen) {
+    addNotification({
+      date: summerOpen,
+      sender: 'Transfer Window Operations',
+      senderRole: 'Premier League Registration',
+      subject: 'Summer Transfer Window Officially Open',
+      body: 'The summer transfer window is now open for player registrations and contract signings. Squad recruitment is authorized until September 1st (23:00 BST).',
+      type: 'transfer',
+      isRead: false,
+      priority: 'urgent',
+      actionLabel: 'Browse Transfer Market',
+      actionTab: 'transfers',
+    });
+  }
+
+  if (initialIso < summerDeadline && curIso >= summerDeadline) {
+    addNotification({
+      date: summerDeadline,
+      sender: 'Transfer Window Operations',
+      senderRole: 'Premier League Registration',
+      subject: 'Summer Transfer Window Deadline Day (23:00 BST)',
+      body: 'Today is Deadline Day! The summer transfer window shuts tonight at 23:00. Any remaining registrations, loans, and contract extensions must be finalized before the deadline.',
+      type: 'transfer',
+      isRead: false,
+      priority: 'urgent',
+      actionLabel: 'Finalize Deals',
+      actionTab: 'transfers',
+    });
+  }
+
+  if (initialIso < summerClosed && curIso >= summerClosed) {
+    addNotification({
+      date: summerClosed,
+      sender: 'Transfer Window Operations',
+      senderRole: 'Premier League Registration',
+      subject: 'Summer Transfer Window Has Closed',
+      body: 'The summer transfer window is officially closed. Senior squad registration is locked until January 1st.',
+      type: 'transfer',
+      isRead: false,
+      priority: 'normal',
+      actionLabel: 'Inspect Senior Squad',
+      actionTab: 'squad',
+    });
+  }
+
+  if (initialIso < winterOpen && curIso >= winterOpen) {
+    addNotification({
+      date: winterOpen,
+      sender: 'Transfer Window Operations',
+      senderRole: 'Premier League Registration',
+      subject: 'Winter Transfer Window Officially Open',
+      body: 'The January transfer window has opened. Mid-season reinforcements and contract adjustments are authorized through February 1st.',
+      type: 'transfer',
+      isRead: false,
+      priority: 'urgent',
+      actionLabel: 'Browse Transfer Market',
+      actionTab: 'transfers',
+    });
+  }
+
+  if (initialIso < winterDeadline && curIso >= winterDeadline) {
+    addNotification({
+      date: winterDeadline,
+      sender: 'Transfer Window Operations',
+      senderRole: 'Premier League Registration',
+      subject: 'Winter Transfer Window Deadline Day (23:00 BST)',
+      body: 'The winter transfer window closes tonight at 23:00! Submit any last-minute bids or loan moves before the deadline.',
+      type: 'transfer',
+      isRead: false,
+      priority: 'urgent',
+      actionLabel: 'Finalize Deals',
+      actionTab: 'transfers',
+    });
+  }
+
+  if (initialIso < winterClosed && curIso >= winterClosed) {
+    addNotification({
+      date: winterClosed,
+      sender: 'Transfer Window Operations',
+      senderRole: 'Premier League Registration',
+      subject: 'Winter Transfer Window Has Closed',
+      body: 'The winter transfer window is now shut. Squad lists are confirmed for the remainder of the campaign.',
+      type: 'transfer',
+      isRead: false,
+      priority: 'normal',
+      actionLabel: 'Inspect Senior Squad',
+      actionTab: 'squad',
+    });
   }
 
   // Recalculate standings
@@ -469,6 +606,29 @@ export function advanceTimeSkip(
     userSquad = trainingResult.updatedSquad;
   }
 
+  // Sporting Director automated contract renewals
+  if (save.settings.sportingDirectorHandlesRenewals) {
+    const interimSave: CareerSaveFile = {
+      ...save,
+      season: {
+        ...save.season,
+        currentDate: curIso,
+        transferWindowOpen: windowOpen,
+      },
+      squad: userSquad,
+      finances,
+      inbox: currentInbox,
+    };
+    const renewalsRes = processSportingDirectorRenewals(interimSave);
+    if (renewalsRes.renewedCount > 0) {
+      userSquad = renewalsRes.updatedSave.squad;
+      finances.transferBudget = renewalsRes.updatedSave.finances.transferBudget;
+      finances.balance = renewalsRes.updatedSave.finances.balance;
+      finances.currentWeeklyWages = renewalsRes.updatedSave.finances.currentWeeklyWages;
+      currentInbox = renewalsRes.updatedSave.inbox || [];
+    }
+  }
+
   const updatedSave: CareerSaveFile = {
     ...save,
     season: {
@@ -485,8 +645,8 @@ export function advanceTimeSkip(
     incomingOffers,
     boardStatus: updatedBoardStatus,
     squad: userSquad,
+    inbox: currentInbox,
   };
-
 
   return {
     updatedSave,
