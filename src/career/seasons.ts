@@ -2,6 +2,7 @@ import {
   CareerSaveFile,
   LeagueFixture,
   TrophyRecord,
+  ManagerMessage,
 } from './types';
 import { getAllClubs } from './clubs';
 import { createInitialStandings } from './table';
@@ -9,6 +10,7 @@ import { generateRoundRobinFixtures } from './calendar';
 import { initializeSeasonCups } from './cups';
 import { applySeasonalPlayerProgression, generateYouthIntake, ProgressionReport } from './youthAcademy';
 import { generateIncomingAiBids } from './transfers';
+import { formatCareerCurrency } from './formatters';
 
 export interface SeasonReviewSummary {
   seasonNumber: number;
@@ -157,6 +159,20 @@ export function advanceToNextSeason(save: CareerSaveFile): {
     warningsCount: 0,
   };
 
+  const newInboxMsg: ManagerMessage = {
+    id: `msg_season_${nextSeasonNumber}_welcome`,
+    date: newCurrentDate,
+    sender: 'Board of Directors',
+    senderRole: 'Club Executive Committee',
+    subject: `Season ${nextSeasonNumber} Campaign Kickoff & Board Review`,
+    body: `Dear ${save.manager.name},\n\nCongratulations on completing Season ${save.season.seasonNumber}! You finished in position #${summary.finalPosition}${summary.leagueTitle ? ' as champions' : ''}. We have credited ${formatCareerCurrency(summary.prizeMoney, save.settings.currency)} in prize money to your transfer war chest. European qualification: ${summary.europeanQualification}. The summer window is officially open!`,
+    type: 'board',
+    isRead: false,
+    priority: 'urgent',
+    actionLabel: 'Open Transfer Market',
+    actionTab: 'transfers',
+  };
+
   const updatedSave: CareerSaveFile = {
     ...save,
     season: {
@@ -175,6 +191,7 @@ export function advanceToNextSeason(save: CareerSaveFile): {
     trophies: updatedTrophies,
     finances: updatedFinances,
     boardStatus: updatedBoardStatus,
+    inbox: [newInboxMsg, ...(save.inbox || [])],
     incomingOffers: generateIncomingAiBids({
       ...save,
       squad: summerRecoveredSquad,

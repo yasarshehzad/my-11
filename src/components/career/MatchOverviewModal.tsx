@@ -3,16 +3,18 @@
 import React from 'react';
 import {
   LeagueFixture,
+  CupFixture,
   CareerSaveFile,
   Club,
   MatchStats,
 } from '../../career/types';
 import { getEffectiveClubName, getClubsWithUserClub } from '../../career/clubs';
+import { findAnyClub } from '../../career/cups';
 import { formatCareerDate } from '../../career/formatters';
 
 export interface MatchOverviewModalProps {
   type: 'result' | 'preview';
-  fixture: LeagueFixture;
+  fixture: LeagueFixture | CupFixture;
   save: CareerSaveFile;
   onClose: () => void;
   onPlayInteractiveMatch?: () => void;
@@ -30,8 +32,13 @@ export function MatchOverviewModal({
   const allClubs = getClubsWithUserClub(save.club);
   const clubsMap = new Map<string, Club>(allClubs.map((c) => [c.id, c]));
 
-  const homeClub = clubsMap.get(fixture.homeClubId) || allClubs[0];
-  const awayClub = clubsMap.get(fixture.awayClubId) || allClubs[1];
+  const homeClub = clubsMap.get(fixture.homeClubId) || findAnyClub(fixture.homeClubId) || allClubs[0];
+  const awayClub = clubsMap.get(fixture.awayClubId) || findAnyClub(fixture.awayClubId) || allClubs[1];
+
+  const isCup = 'competitionName' in fixture;
+  const cupFixture = isCup ? (fixture as CupFixture) : null;
+  const competitionTitle = cupFixture ? cupFixture.competitionName : 'English Top Flight';
+  const roundTitle = cupFixture ? cupFixture.roundName : `Matchday ${fixture.round} of 38`;
 
   const isUserHome = fixture.homeClubId === save.club.id;
   const isUserAway = fixture.awayClubId === save.club.id;
@@ -118,7 +125,7 @@ export function MatchOverviewModal({
               {type === 'result' ? '📊 Match Result & Statistics' : '📋 Pre-Match Tactical Dossier'}
             </span>
             <h2 className="text-sm sm:text-base font-display font-black text-white uppercase tracking-tight">
-              Matchday {fixture.round} of 38 • English Top Flight
+              {roundTitle} • {competitionTitle}
             </h2>
           </div>
           <button
@@ -161,6 +168,11 @@ export function MatchOverviewModal({
                   <div className="bg-slate-950 border border-slate-750 px-3.5 py-1.5 rounded-xl font-mono font-black text-lg sm:text-2xl text-emerald-400 shadow-inner">
                     {fixture.homeScore} - {fixture.awayScore}
                   </div>
+                  {cupFixture?.penalties && (
+                    <span className="text-[10px] font-mono text-amber-400 font-bold">
+                      ({cupFixture.penalties.homePenalties} - {cupFixture.penalties.awayPenalties} pens)
+                    </span>
+                  )}
                   {isUserMatch && (
                     <span
                       className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${

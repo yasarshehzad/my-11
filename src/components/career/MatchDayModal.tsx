@@ -23,7 +23,7 @@ import { formatCurrency } from '../../career/finance';
 import { formatCareerDate } from '../../career/formatters';
 
 interface MatchDayModalProps {
-  fixture: LeagueFixture;
+  fixture: LeagueFixture | CupFixture;
   save: CareerSaveFile;
   onClose: () => void;
   onSaveMatchResult: (updatedSave: CareerSaveFile) => void;

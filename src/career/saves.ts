@@ -7,6 +7,7 @@ import { generateRoundRobinFixtures } from './calendar';
 import { createInitialStandings } from './table';
 import { initializeSeasonCups } from './cups';
 import { generateYouthIntake } from './youthAcademy';
+import { getInitialInboxMessages } from './inbox';
 
 export const VALID_SLOT_IDS = ['slot_1', 'slot_2', 'slot_3'] as const;
 export type ValidSlotId = (typeof VALID_SLOT_IDS)[number];
@@ -49,7 +50,7 @@ export function loadCareerSave(slotId: string): CareerSaveFile | null {
       parsed.standings = createInitialStandings(getAllClubs());
     }
 
-    // Backfill cups, trophies, and youth academy if missing
+    // Backfill cups, trophies, youth academy, and inbox if missing
     if (!parsed.cups) {
       parsed.cups = initializeSeasonCups(parsed.club, parsed.season?.yearStart || 2026);
     }
@@ -58,6 +59,9 @@ export function loadCareerSave(slotId: string): CareerSaveFile | null {
     }
     if (!parsed.youthAcademy) {
       parsed.youthAcademy = generateYouthIntake(parsed.club, parsed.season?.yearStart || 2026);
+    }
+    if (!parsed.inbox || parsed.inbox.length === 0) {
+      parsed.inbox = getInitialInboxMessages(parsed);
     }
 
     return parsed as CareerSaveFile;
@@ -191,6 +195,31 @@ export function createNewCareerSave(params: {
     trophies: [],
     youthAcademy: generateYouthIntake(params.club, yearStart),
     phase: 'preseason',
+    inbox: getInitialInboxMessages({
+      id: params.slotId,
+      version: CURRENT_CAREER_SAVE_VERSION,
+      createdAt: new Date().toISOString(),
+      lastSavedAt: new Date().toISOString(),
+      manager: params.manager,
+      club: params.club,
+      settings: validatedSettings,
+      season: {
+        seasonNumber: 1,
+        yearStart,
+        currentDate,
+        transferWindowOpen: true,
+        databaseSeason: dbSeason,
+      },
+      finances: {
+        transferBudget: adjustedBudget,
+        weeklyWageBudget: params.club.wageBudgetWeekly,
+        currentWeeklyWages,
+        balance: Math.round(adjustedBudget * 0.35),
+      },
+      squad,
+      trophies: [],
+      phase: 'preseason',
+    } as unknown as CareerSaveFile),
   };
 
   saveCareerSave(initialSave);

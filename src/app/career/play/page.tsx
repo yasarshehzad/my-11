@@ -15,6 +15,8 @@ import {
   HeightUnitPreference,
   WeightUnitPreference,
   NumberFormatPreference,
+  CupFixture,
+  ManagerMessage,
 } from '../../../career/types';
 import { getEffectiveClubName, getAllClubs, getClubsWithUserClub } from '../../../career/clubs';
 import { validateSettings } from '../../../career/settings';
@@ -31,9 +33,11 @@ import { TournamentsHub } from '../../../components/career/TournamentsHub';
 import { TransferHub } from '../../../components/career/TransferHub';
 import { MatchDayModal } from '../../../components/career/MatchDayModal';
 import { MatchOverviewModal } from '../../../components/career/MatchOverviewModal';
-import { isSeasonComplete } from '../../../career/seasons';
-import { getNextClubFixture } from '../../../career/calendar';
+import { isSeasonComplete, advanceToNextSeason, getSeasonReviewSummary, SeasonReviewSummary } from '../../../career/seasons';
+import { getNextClubFixture, getNextScheduledMatch, getPreviousPlayedMatch, isDateInInternationalBreak, ScheduledMatch } from '../../../career/calendar';
 import { simulateMatchFixture, advanceTimeSkip, TimeSkipTarget } from '../../../career/sim';
+import { findAnyClub, simulateKnockoutCupFixture, advanceCupTournament } from '../../../career/cups';
+import { markMessageRead, markAllMessagesRead, getInitialInboxMessages } from '../../../career/inbox';
 import { calculateStandings } from '../../../career/table';
 import { formatCurrency } from '../../../career/finance';
 import { getSeniorPlayerCount } from '../../../career/squad';
@@ -55,11 +59,13 @@ function CareerPlayHubContent() {
   const [activeTab, setActiveTab] = useState<'overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings'>('overview');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [dismissedSackedModal, setDismissedSackedModal] = useState(false);
-  const [activeMatchFixture, setActiveMatchFixture] = useState<LeagueFixture | null>(null);
+  const [activeMatchFixture, setActiveMatchFixture] = useState<LeagueFixture | CupFixture | null>(null);
   const [matchOverviewModal, setMatchOverviewModal] = useState<{
     type: 'result' | 'preview';
-    fixture: LeagueFixture;
+    fixture: LeagueFixture | CupFixture;
   } | null>(null);
+  const [inboxFilter, setInboxFilter] = useState<'all' | 'unread' | 'board' | 'injury' | 'transfer' | 'cup_draw'>('all');
+  const [expandedMessageId, setExpandedMessageId] = useState<string | null>(null);
   const [simulating, setSimulating] = useState(false);
   const [pendingFastForward, setPendingFastForward] = useState<TimeSkipTarget | null>(null);
 
@@ -156,18 +162,22 @@ function CareerPlayHubContent() {
 
   const allClubs = getClubsWithUserClub(save?.club);
   const clubsMap = new Map<string, Club>(allClubs.map((c) => [c.id, c]));
-  const nextFixture = save ? getNextClubFixture(save.fixtures || [], save.club.id) : null;
+  const nextScheduled = save ? getNextScheduledMatch(save) : null;
+  const nextFixture = nextScheduled ? nextScheduled.fixture : null;
+  const prevScheduled = save ? getPreviousPlayedMatch(save) : null;
+  const intlBreakStatus = save ? isDateInInternationalBreak(save.season.currentDate) : { isActive: false, name: '', resumeDate: '' };
+  const seasonCompleted = save ? isSeasonComplete(save.fixtures) : false;
+  const seasonSummary = save && seasonCompleted ? getSeasonReviewSummary(save) : null;
 
   const getFastForwardDetails = (target: TimeSkipTarget) => {
     switch (target) {
       case 'next_match': {
-        const nextFix = getNextClubFixture(save?.fixtures || [], save?.club.id || '');
-        const targetDate = nextFix ? formatCareerDate(nextFix.date, save?.settings.dateFormat || 'uk', 'long') : 'Next Scheduled Match';
+        const targetDate = nextScheduled ? formatCareerDate(nextScheduled.fixture.date, save?.settings.dateFormat || 'uk', 'long') : 'Next Scheduled Match';
         return {
           title: 'Advance to Next Match',
           badge: '⏭️ Next Match',
           targetDate,
-          description: `Automatically simulates all other fixtures in the league until your next matchday (${targetDate}). You will be brought to the dressing room ready for kickoff.`,
+          description: `Automatically simulates all other fixtures in the calendar until your next scheduled matchday (${targetDate}). You will be brought to the dressing room ready for kickoff.`,
         };
       }
       case 'next_week': {
@@ -206,15 +216,87 @@ function CareerPlayHubContent() {
   };
 
   const handlePlayNextMatchInstant = () => {
-    if (!save || !nextFixture) return;
+    if (!save || !nextScheduled) return;
     setSimulating(true);
 
-    const homeClub = clubsMap.get(nextFixture.homeClubId) || allClubs[0];
-    const awayClub = clubsMap.get(nextFixture.awayClubId) || allClubs[1];
-    const isUserHome = nextFixture.homeClubId === save.club.id;
+    const isUserHome = nextScheduled.fixture.homeClubId === save.club.id;
+    const isUserAway = nextScheduled.fixture.awayClubId === save.club.id;
+
+    if (nextScheduled.isCup && nextScheduled.cupId && save.cups && save.cups[nextScheduled.cupId]) {
+      const cupTourney = save.cups[nextScheduled.cupId];
+      const cupFix = nextScheduled.fixture as CupFixture;
+      const homeClub = findAnyClub(cupFix.homeClubId) || allClubs[0];
+      const awayClub = findAnyClub(cupFix.awayClubId) || allClubs[1];
+
+      const simmed = simulateKnockoutCupFixture(
+        cupFix,
+        homeClub,
+        awayClub,
+        isUserHome ? save.squad : undefined,
+        isUserAway ? save.squad : undefined
+      );
+
+      const updatedFixtures = cupTourney.fixtures.map((f) => (f.id === simmed.id ? simmed : f));
+      let updatedTourney = {
+        ...cupTourney,
+        fixtures: updatedFixtures,
+      };
+
+      const adv = advanceCupTournament(updatedTourney, save.season.yearStart);
+      updatedTourney = adv.updatedTournament;
+
+      const updatedCups = {
+        ...save.cups,
+        [nextScheduled.cupId]: updatedTourney,
+      };
+
+      const trophies = [...(save.trophies || [])];
+      const finances = { ...save.finances };
+
+      if (adv.updatedTournament.isCompleted && adv.updatedTournament.winnerClubId === save.club.id) {
+        const trophyYear = save.season.yearStart + 1;
+        if (!trophies.some((t) => t.competitionId === nextScheduled.cupId && t.year === trophyYear)) {
+          trophies.push({
+            competitionId: nextScheduled.cupId,
+            competitionName: adv.updatedTournament.name,
+            year: trophyYear,
+          });
+          finances.transferBudget += adv.updatedTournament.prizeMoney;
+          finances.balance += adv.updatedTournament.prizeMoney;
+        }
+      }
+
+      const updatedSave: CareerSaveFile = {
+        ...save,
+        season: {
+          ...save.season,
+          currentDate: cupFix.date > save.season.currentDate ? cupFix.date : save.season.currentDate,
+        },
+        cups: updatedCups,
+        trophies,
+        finances,
+      };
+
+      saveCareerSave(updatedSave);
+      setSave(updatedSave);
+      setSimulating(false);
+
+      const userWon = isUserHome
+        ? (simmed.homeScore! > simmed.awayScore! || (simmed.penalties ? simmed.penalties.homePenalties > simmed.penalties.awayPenalties : false))
+        : (simmed.awayScore! > simmed.homeScore! || (simmed.penalties ? simmed.penalties.awayPenalties > simmed.penalties.homePenalties : false));
+
+      const pensText = simmed.penalties ? ` (${simmed.penalties.homePenalties} - ${simmed.penalties.awayPenalties} pens)` : '';
+      showToast(`${nextScheduled.cupName} ${nextScheduled.roundName}: ${simmed.homeScore} - ${simmed.awayScore}${pensText} (${userWon ? 'Victory!' : 'Eliminated'})`);
+      return;
+    }
+
+    // League Match Simulation
+    const leagueFix = nextScheduled.fixture as LeagueFixture;
+    const homeClub = clubsMap.get(leagueFix.homeClubId) || allClubs[0];
+    const awayClub = clubsMap.get(leagueFix.awayClubId) || allClubs[1];
 
     const simmed = simulateMatchFixture(
-      nextFixture,
+      leagueFix,
       homeClub,
       awayClub,
       isUserHome ? save.squad : undefined,
@@ -224,7 +306,7 @@ function CareerPlayHubContent() {
     const currentFixtures = save.fixtures || [];
     const updatedFixtures = currentFixtures.map((f) => {
       if (f.id === simmed.id) return simmed;
-      if (f.round === nextFixture.round && !f.played) {
+      if (f.round === leagueFix.round && !f.played) {
         const h = clubsMap.get(f.homeClubId) || allClubs[0];
         const a = clubsMap.get(f.awayClubId) || allClubs[1];
         return simulateMatchFixture(f, h, a);
@@ -238,7 +320,7 @@ function CareerPlayHubContent() {
       ...save,
       season: {
         ...save.season,
-        currentDate: nextFixture.date,
+        currentDate: leagueFix.date > save.season.currentDate ? leagueFix.date : save.season.currentDate,
       },
       fixtures: updatedFixtures,
       standings: updatedStandings,
@@ -254,7 +336,63 @@ function CareerPlayHubContent() {
     const isDraw = simmed.homeScore === simmed.awayScore;
     const resultText = userWon ? 'Victory!' : isDraw ? 'Draw' : 'Defeat';
 
-    showToast(`Matchday ${nextFixture.round} Result: ${simmed.homeScore} - ${simmed.awayScore} (${resultText})`);
+    showToast(`Matchday ${leagueFix.round} Result: ${simmed.homeScore} - ${simmed.awayScore} (${resultText})`);
+  };
+
+  const handleSkipInternationalBreak = () => {
+    if (!save) return;
+    const intlBreak = isDateInInternationalBreak(save.season.currentDate);
+    if (!intlBreak.isActive || !intlBreak.resumeDate) return;
+
+    setSimulating(true);
+    const updatedSquad = save.squad.map((p) => {
+      if (!p.injured) return p;
+      const remaining = Math.max(0, (p.injuryWeeks || 1) - 2);
+      return {
+        ...p,
+        injured: remaining > 0,
+        injuryWeeks: remaining,
+        injuryDescription: remaining === 0 ? undefined : p.injuryDescription,
+      };
+    });
+
+    const updatedSave: CareerSaveFile = {
+      ...save,
+      season: {
+        ...save.season,
+        currentDate: intlBreak.resumeDate,
+      },
+      squad: updatedSquad,
+    };
+
+    saveCareerSave(updatedSave);
+    setSave(updatedSave);
+    setSimulating(false);
+    showToast(`Fast-forwarded past ${intlBreak.name}. Squad returned to training!`);
+  };
+
+  const handleAdvanceToNextSeasonAction = () => {
+    if (!save) return;
+    setSimulating(true);
+    const { updatedSave } = advanceToNextSeason(save);
+    saveCareerSave(updatedSave);
+    setSave(updatedSave);
+    setSimulating(false);
+    showToast(`Welcome to Season ${updatedSave.season.seasonNumber}! Summer transfer window open.`);
+  };
+
+  const handleToggleMessageRead = (msgId: string) => {
+    if (!save) return;
+    const updated = markMessageRead(save, msgId);
+    handleUpdateSave(updated);
+    setExpandedMessageId((prev) => (prev === msgId ? null : msgId));
+  };
+
+  const handleMarkAllMessagesRead = () => {
+    if (!save) return;
+    const updated = markAllMessagesRead(save);
+    handleUpdateSave(updated);
+    showToast('All inbox messages marked as read.');
   };
 
   const handleTimeSkipAction = (target: TimeSkipTarget) => {
@@ -385,24 +523,24 @@ function CareerPlayHubContent() {
 
         {/* Financial & Time Status Badges */}
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-4 bg-slate-900/60 border border-slate-800 px-3 py-1.5 rounded-xl text-xs">
-            <div>
+          <div className="flex items-center gap-2 sm:gap-4 bg-slate-900/60 border border-slate-800 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs">
+            <div className="hidden xs:block">
               <span className="text-[9px] uppercase font-bold text-slate-500 mr-1.5">Budget</span>
               <span className="font-display font-black text-emerald-400">
                 {formatCareerCurrency(save.finances.transferBudget, save.settings.currency)}
               </span>
             </div>
-            <div className="h-3 w-px bg-slate-800" />
-            <div>
+            <div className="hidden xs:block h-3 w-px bg-slate-800" />
+            <div className="hidden md:block">
               <span className="text-[9px] uppercase font-bold text-slate-500 mr-1.5">Wages</span>
               <span className="font-display font-bold text-slate-300">
                 {formatCareerWage(save.finances.weeklyWageBudget, save.settings.wageUnit, save.settings.currency)}
               </span>
             </div>
-            <div className="h-3 w-px bg-slate-800" />
-            <div>
+            <div className="hidden md:block h-3 w-px bg-slate-800" />
+            <div className="flex items-center">
               <span className="text-[9px] uppercase font-bold text-slate-500 mr-1.5">Date</span>
-              <span className="font-mono text-xs font-semibold text-slate-300">
+              <span className="font-mono text-xs font-semibold text-emerald-400">
                 {formatCareerDate(save.season.currentDate, save.settings.dateFormat, 'medium')}
               </span>
             </div>
@@ -460,47 +598,136 @@ function CareerPlayHubContent() {
         {/* TAB 1: OVERVIEW / MANAGER OFFICE */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
-            {/* Season Complete Alert Banner */}
-            {isSeasonComplete(save.fixtures) && (
-              <aside
-                aria-label="Season Completed Notice"
-                className="bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-transparent border border-amber-500/40 rounded-3xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-xl"
-              >
-                <div className="space-y-0.5">
-                  <div className="text-xs font-display font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <span>🏆</span> Season {save.season.seasonNumber} Complete!
-                  </div>
-                  <p className="text-xs text-slate-300">
-                    All 38 matchdays have concluded. View final league standings, awards, and advance to Season {save.season.seasonNumber + 1}.
-                  </p>
+            {/* PROMINENT DATE & CALENDAR TRACKER BANNER */}
+            <section className="bg-gradient-to-r from-slate-900/90 via-slate-900/60 to-slate-950 border border-slate-800 rounded-3xl p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-xl shrink-0">
+                  📅
                 </div>
-                <button
-                  onClick={() => setActiveTab('fixtures')}
-                  className="py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer whitespace-nowrap"
-                >
-                  Go to Season Review ➔
-                </button>
-              </aside>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 font-display block">
+                    TODAY&apos;S CALENDAR • SEASON {save.season.seasonNumber}
+                  </span>
+                  <span className="text-base sm:text-lg font-mono font-black text-white">
+                    {formatCareerDate(save.season.currentDate, save.settings.dateFormat, 'long')}
+                  </span>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="text-[10px] font-mono font-bold text-slate-400 bg-slate-950/70 border border-slate-800 px-3 py-1.5 rounded-xl">
+                  Format: {save.settings.dateFormat?.toUpperCase() || 'UK'}
+                </span>
+                {save.season.transferWindowOpen ? (
+                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 bg-amber-950/50 border border-amber-500/40 px-3 py-1.5 rounded-xl animate-pulse">
+                    Transfer Window Open
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-950/70 border border-slate-800 px-3 py-1.5 rounded-xl">
+                    Window Closed
+                  </span>
+                )}
+              </div>
+            </section>
+
+            {/* END-OF-SEASON TRANSITION HUB (ACTION ITEM: WHAT DO I DO NEXT?) */}
+            {seasonCompleted && (
+              <section className="bg-gradient-to-br from-amber-950/40 via-slate-900/90 to-slate-950 border-2 border-amber-500/40 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="space-y-1">
+                    <div className="text-xs font-display font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <span>🏆</span> Season {save.season.seasonNumber} Concluded!
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-display font-black text-white uppercase tracking-tight">
+                      Campaign Complete • What To Do Next
+                    </h3>
+                    <p className="text-xs text-slate-300 max-w-xl">
+                      All 38 league matchdays and cup tournaments have concluded. Advance to Season {save.season.seasonNumber + 1} to age players, award prize money, heal all injuries, and open the new summer transfer window!
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleAdvanceToNextSeasonAction}
+                    disabled={simulating}
+                    className="py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-xl shadow-amber-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer whitespace-nowrap flex items-center gap-2"
+                  >
+                    <span>Advance to Season {save.season.seasonNumber + 1} ➔</span>
+                  </button>
+                </div>
+
+                {seasonSummary && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-xs">
+                    <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-3.5 space-y-1">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase">League Finish</span>
+                      <div className="font-display font-black text-base text-white">
+                        {seasonSummary.leagueTitle ? '🥇 Champions' : `Position #${seasonSummary.finalPosition}`}
+                      </div>
+                    </div>
+                    <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-3.5 space-y-1">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase">Silverware Won</span>
+                      <div className="font-display font-black text-base text-amber-400">
+                        {seasonSummary.trophiesWon.length > 0 ? `${seasonSummary.trophiesWon.length} Trophies` : 'None'}
+                      </div>
+                    </div>
+                    <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-3.5 space-y-1">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase">Merit Prize Money</span>
+                      <div className="font-display font-black text-base text-emerald-400">
+                        {formatCareerCurrency(seasonSummary.prizeMoney, save.settings.currency)}
+                      </div>
+                    </div>
+                    <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-3.5 space-y-1">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase">Europe Qualified</span>
+                      <div className="font-display font-bold text-xs text-blue-300 truncate" title={seasonSummary.europeanQualification}>
+                        {seasonSummary.europeanQualification}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </section>
             )}
 
-            {/* MATCHDAY PROGRESSION & NEXT FIXTURE SPOTLIGHT (ACTION ITEM #1) */}
-            {nextFixture ? (
+            {/* INTERNATIONAL BREAK BANNER */}
+            {intlBreakStatus.isActive && (
+              <section className="bg-blue-950/30 border border-blue-500/40 rounded-3xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-xl">
+                <div className="flex items-center gap-3.5">
+                  <span className="text-3xl">🌍</span>
+                  <div>
+                    <div className="text-xs font-display font-black text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                      {intlBreakStatus.name} in Progress
+                    </div>
+                    <p className="text-xs text-slate-300">
+                      Club fixtures are paused while senior internationals represent their countries. Resumption date: <strong className="text-blue-300">{formatCareerDate(intlBreakStatus.resumeDate, save.settings.dateFormat, 'medium')}</strong>.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleSkipInternationalBreak}
+                  disabled={simulating}
+                  className="py-2.5 px-4 rounded-xl bg-blue-500 hover:bg-blue-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer whitespace-nowrap"
+                >
+                  Fast-Forward Past Break ➔
+                </button>
+              </section>
+            )}
+
+            {/* MULTI-COMPETITION MATCHDAY PROGRESSION & SPOTLIGHT */}
+            {nextScheduled ? (
               <section className="bg-gradient-to-r from-emerald-950/40 via-slate-900/70 to-slate-950 border border-emerald-500/30 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5">
                 <div className="flex flex-wrap justify-between items-center gap-2">
                   <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-3 py-1 rounded-full font-display">
-                    Upcoming Matchday {nextFixture.round} • {formatCareerDate(nextFixture.date, save.settings.dateFormat, 'medium')}
+                    {nextScheduled.isCup
+                      ? `🏆 ${nextScheduled.cupName} • ${nextScheduled.roundName} • ${formatCareerDate(nextScheduled.fixture.date, save.settings.dateFormat, 'medium')}`
+                      : `Upcoming Matchday ${(nextScheduled.fixture as LeagueFixture).round} • ${formatCareerDate(nextScheduled.fixture.date, save.settings.dateFormat, 'medium')}`}
                   </span>
                   <span className="text-xs text-slate-400 font-medium font-sans">
-                    English Top Flight • Round {nextFixture.round} of 38
+                    {nextScheduled.isCup ? `${nextScheduled.cupName} Knockout Tie` : `English Top Flight • Round ${(nextScheduled.fixture as LeagueFixture).round} of 38`}
                   </span>
                 </div>
 
                 {/* Match Clash: Always Side-by-Side on all viewports */}
                 {(() => {
-                  const home = clubsMap.get(nextFixture.homeClubId) || allClubs[0];
-                  const away = clubsMap.get(nextFixture.awayClubId) || allClubs[1];
-                  const isUserHome = nextFixture.homeClubId === save.club.id;
-                  const isUserAway = nextFixture.awayClubId === save.club.id;
+                  const home = findAnyClub(nextScheduled.fixture.homeClubId) || allClubs[0];
+                  const away = findAnyClub(nextScheduled.fixture.awayClubId) || allClubs[1];
+                  const isUserHome = nextScheduled.fixture.homeClubId === save.club.id;
+                  const isUserAway = nextScheduled.fixture.awayClubId === save.club.id;
 
                   return (
                     <div className="space-y-4">
@@ -532,7 +759,7 @@ function CareerPlayHubContent() {
                             VS
                           </span>
                           <span className="text-[10px] sm:text-xs text-slate-400 font-medium truncate max-w-[120px] sm:max-w-[200px]">
-                            🏟️ {home.stadiumName}
+                            🏟️ {home.stadiumName || 'Tournament Stadium'}
                           </span>
                         </div>
 
@@ -561,7 +788,7 @@ function CareerPlayHubContent() {
                       {/* Central Match Progress CTAs */}
                       <div className="flex flex-col sm:flex-row justify-center gap-2.5 pt-1">
                         <button
-                          onClick={() => setActiveMatchFixture(nextFixture)}
+                          onClick={() => setActiveMatchFixture(nextScheduled.fixture)}
                           disabled={simulating}
                           className="py-3 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                         >
@@ -578,7 +805,7 @@ function CareerPlayHubContent() {
                         </button>
 
                         <button
-                          onClick={() => setMatchOverviewModal({ type: 'preview', fixture: nextFixture })}
+                          onClick={() => setMatchOverviewModal({ type: 'preview', fixture: nextScheduled.fixture })}
                           className="py-3 px-4 rounded-2xl border border-emerald-500/40 hover:border-emerald-400 bg-emerald-950/20 hover:bg-emerald-950/40 text-emerald-400 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5"
                           title="View pre-match tactical dossier and opponent scouting"
                         >
@@ -587,40 +814,65 @@ function CareerPlayHubContent() {
                       </div>
 
                       {/* Previous Match Result Card (Clickable to view full stats modal) */}
-                      {previousFixture ? (
+                      {prevScheduled ? (
                         <div
-                          onClick={() => setMatchOverviewModal({ type: 'result', fixture: previousFixture })}
+                          onClick={() => setMatchOverviewModal({ type: 'result', fixture: prevScheduled.fixture })}
                           className="bg-slate-950/70 border border-slate-800/80 hover:border-emerald-500/50 rounded-2xl px-4 py-3.5 flex flex-col gap-2.5 text-xs transition-all cursor-pointer shadow-md hover:shadow-emerald-500/10 group select-none"
                           title="Click to view detailed match overview & statistics"
                         >
                           <div className="flex flex-wrap items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 font-display">
-                                Previous Result (Matchday {previousFixture.round}):
+                                {prevScheduled.isCup
+                                  ? `Previous Result (${prevScheduled.cupName} • ${prevScheduled.roundName}):`
+                                  : `Previous Result (Matchday ${(prevScheduled.fixture as LeagueFixture).round}):`}
                               </span>
-                              <span
-                                className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                                  previousResultOutcome === 'W'
-                                    ? 'bg-emerald-500 text-slate-950'
-                                    : previousResultOutcome === 'D'
-                                    ? 'bg-amber-500 text-slate-950'
-                                    : 'bg-rose-500 text-white'
-                                }`}
-                              >
-                                {previousResultOutcome === 'W' ? 'WON' : previousResultOutcome === 'D' ? 'DRAW' : 'LOST'}
-                              </span>
+                              {(() => {
+                                const isHome = prevScheduled.fixture.homeClubId === save.club.id;
+                                const userScore = isHome ? prevScheduled.fixture.homeScore! : prevScheduled.fixture.awayScore!;
+                                const oppScore = isHome ? prevScheduled.fixture.awayScore! : prevScheduled.fixture.homeScore!;
+                                const cupFix = prevScheduled.fixture as CupFixture;
+                                let outcome = userScore > oppScore ? 'W' : userScore === oppScore ? 'D' : 'L';
+                                if (userScore === oppScore && cupFix.penalties) {
+                                  const userPens = isHome ? cupFix.penalties.homePenalties : cupFix.penalties.awayPenalties;
+                                  const oppPens = isHome ? cupFix.penalties.awayPenalties : cupFix.penalties.homePenalties;
+                                  outcome = userPens > oppPens ? 'W' : 'L';
+                                }
+                                return (
+                                  <span
+                                    className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                                      outcome === 'W'
+                                        ? 'bg-emerald-500 text-slate-950'
+                                        : outcome === 'D'
+                                        ? 'bg-amber-500 text-slate-950'
+                                        : 'bg-rose-500 text-white'
+                                    }`}
+                                  >
+                                    {outcome === 'W' ? 'WON' : outcome === 'D' ? 'DRAW' : 'LOST'}
+                                  </span>
+                                );
+                              })()}
                             </div>
 
                             <div className="flex items-center gap-2 font-display font-bold text-white text-xs">
-                              <span className="truncate max-w-[120px] sm:max-w-none">{getEffectiveClubName(clubsMap.get(previousFixture.homeClubId) || allClubs[0], save.club)}</span>
-                              <span className="bg-slate-900 border border-slate-700 px-2.5 py-0.5 rounded-lg text-emerald-400 font-mono font-black">
-                                {previousFixture.homeScore} - {previousFixture.awayScore}
+                              <span className="truncate max-w-[120px] sm:max-w-none">
+                                {getEffectiveClubName(findAnyClub(prevScheduled.fixture.homeClubId) || allClubs[0], save.club)}
                               </span>
-                              <span className="truncate max-w-[120px] sm:max-w-none">{getEffectiveClubName(clubsMap.get(previousFixture.awayClubId) || allClubs[1], save.club)}</span>
+                              <span className="bg-slate-900 border border-slate-700 px-2.5 py-0.5 rounded-lg text-emerald-400 font-mono font-black">
+                                {prevScheduled.fixture.homeScore} - {prevScheduled.fixture.awayScore}
+                                {(prevScheduled.fixture as CupFixture).penalties && (
+                                  <span className="text-[10px] text-amber-400 font-sans font-bold ml-1">
+                                    ({(prevScheduled.fixture as CupFixture).penalties!.homePenalties} - {(prevScheduled.fixture as CupFixture).penalties!.awayPenalties}p)
+                                  </span>
+                                )}
+                              </span>
+                              <span className="truncate max-w-[120px] sm:max-w-none">
+                                {getEffectiveClubName(findAnyClub(prevScheduled.fixture.awayClubId) || allClubs[1], save.club)}
+                              </span>
                             </div>
 
                             <div className="text-[11px] text-slate-400 font-mono flex items-center gap-2 ml-auto sm:ml-0">
-                              <span>{formatCareerDate(previousFixture.date, save.settings.dateFormat, 'medium')}</span>
+                              <span>{formatCareerDate(prevScheduled.fixture.date, save.settings.dateFormat, 'medium')}</span>
                               <span className="text-emerald-400 font-display font-black group-hover:translate-x-0.5 transition-transform text-[11px]">
                                 📊 View Stats ➔
                               </span>
@@ -630,11 +882,11 @@ function CareerPlayHubContent() {
                           {/* Goalscorers breakdown */}
                           <div className="pt-2 border-t border-slate-800/60 flex flex-wrap items-center justify-between gap-2 text-[11px]">
                             {(() => {
-                              const prevHome = clubsMap.get(previousFixture.homeClubId) || allClubs[0];
-                              const prevAway = clubsMap.get(previousFixture.awayClubId) || allClubs[1];
-                              const prevHomeScorers = previousFixture.scorers?.filter((s) => s.clubId === prevHome.id) || [];
-                              const prevAwayScorers = previousFixture.scorers?.filter((s) => s.clubId === prevAway.id) || [];
-                              const totalGoals = (previousFixture.homeScore || 0) + (previousFixture.awayScore || 0);
+                              const prevHome = findAnyClub(prevScheduled.fixture.homeClubId) || allClubs[0];
+                              const prevAway = findAnyClub(prevScheduled.fixture.awayClubId) || allClubs[1];
+                              const prevHomeScorers = prevScheduled.fixture.scorers?.filter((s) => s.clubId === prevHome.id) || [];
+                              const prevAwayScorers = prevScheduled.fixture.scorers?.filter((s) => s.clubId === prevAway.id) || [];
+                              const totalGoals = (prevScheduled.fixture.homeScore || 0) + (prevScheduled.fixture.awayScore || 0);
 
                               if (totalGoals === 0) {
                                 return (
@@ -681,8 +933,8 @@ function CareerPlayHubContent() {
                           </div>
                         </div>
                       ) : (
-                        <div className="bg-slate-950/50 border border-slate-850/80 rounded-2xl px-4 py-2.5 text-center text-xs text-slate-400">
-                          Matchday 1 Opening Fixture • No previous matches recorded this season
+                        <div className="bg-slate-950/50 border border-slate-855/80 rounded-2xl px-4 py-2.5 text-center text-xs text-slate-400">
+                          Opening Fixture • No previous matches recorded this season
                         </div>
                       )}
                     </div>
@@ -698,7 +950,7 @@ function CareerPlayHubContent() {
                   <div className="flex flex-wrap gap-2">
                     <button
                       onClick={() => setPendingFastForward('next_match')}
-                      disabled={simulating || !nextFixture}
+                      disabled={simulating || !nextScheduled}
                       className="py-2 px-3 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-750 text-slate-200 font-display font-bold text-[11px] uppercase transition-all cursor-pointer"
                     >
                       ⏭️ Next Match
@@ -738,15 +990,79 @@ function CareerPlayHubContent() {
               <section className="bg-slate-900/60 border border-slate-850 rounded-3xl p-6 text-center space-y-2">
                 <span className="text-3xl">🏁</span>
                 <h3 className="font-display font-black uppercase text-base text-white">All Fixtures Concluded</h3>
-                <p className="text-xs text-slate-400">All 38 matchdays have been played for Season {save.season.seasonNumber}.</p>
+                <p className="text-xs text-slate-400">All 38 matchdays and tournament fixtures have been played for Season {save.season.seasonNumber}.</p>
               </section>
             )}
 
-            {/* MANAGERIAL ACTION CENTER & INBOX (ACTION ITEM #2) */}
+            {/* PHYSIO ROOM & MEDICAL REPORT CARD (ACTION ITEM: INJURIES) */}
+            <section className="bg-slate-900/50 border border-slate-850 rounded-3xl p-5 sm:p-6 shadow-md space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🏥</span>
+                  <h3 className="text-xs font-display font-black uppercase tracking-wider text-slate-300">
+                    Physio Room &amp; Squad Medical Report
+                  </h3>
+                </div>
+                {injuredCount > 0 ? (
+                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse">
+                    {injuredCount} First-Team {injuredCount === 1 ? 'Player' : 'Players'} Injured
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                    Clean Bill of Health (100% Fit)
+                  </span>
+                )}
+              </div>
+
+              {injuredCount > 0 ? (
+                <div className="space-y-2 pt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                    {save.squad.filter((p) => p.injured).map((player) => (
+                      <div
+                        key={player.id}
+                        className="bg-slate-950/80 border border-rose-950 rounded-2xl p-3 flex items-center justify-between gap-3 text-xs"
+                      >
+                        <div className="space-y-0.5 min-w-0">
+                          <div className="font-display font-bold text-white truncate flex items-center gap-1.5">
+                            <span>{player.name}</span>
+                            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/50 px-1 rounded">
+                              {player.position}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-rose-350 truncate">
+                            {player.injuryDescription || 'Muscular rehabilitation'}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="text-[10px] font-mono font-bold text-rose-400 bg-rose-950/40 border border-rose-800/40 px-2 py-0.5 rounded-lg block">
+                            {player.injuryWeeks || 1}w recovery
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="pt-2 flex justify-end">
+                    <button
+                      onClick={() => setActiveTab('squad')}
+                      className="text-xs font-display font-black uppercase text-emerald-400 hover:text-emerald-300 flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>Adjust Tactics &amp; Replacements in Squad</span>
+                      <span>➔</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  All first-team squad members have passed physical readiness checks. No players are currently sidelined with injuries.
+                </p>
+              )}
+            </section>
+
+            {/* MANAGERIAL ACTION CENTER */}
             <section className="space-y-4">
-              <h3 className="text-sm font-display font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
+              <h3 className="text-xs font-display font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
                 <span>📋</span>
-                <span>Managerial Action Center & Inbox</span>
+                <span>Managerial Action Center</span>
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
@@ -780,7 +1096,7 @@ function CareerPlayHubContent() {
                   </button>
                 </div>
 
-                {/* 2. Squad Health & Selection */}
+                {/* 2. Squad Condition Action */}
                 <div className="bg-slate-900/50 border border-slate-850 rounded-2xl p-5 flex flex-col justify-between gap-3 shadow-md hover:border-slate-750 transition-colors">
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center">
@@ -805,7 +1121,7 @@ function CareerPlayHubContent() {
                     onClick={() => setActiveTab('squad')}
                     className="w-full py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-950/80 hover:bg-slate-900 text-slate-200 hover:text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                   >
-                    <span>Adjust Team Sheet & Tactics</span>
+                    <span>Adjust Team Sheet &amp; Tactics</span>
                     <span>➔</span>
                   </button>
                 </div>
@@ -849,7 +1165,7 @@ function CareerPlayHubContent() {
                     onClick={() => setActiveTab('table')}
                     className="w-full py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-950/80 hover:bg-slate-900 text-slate-200 hover:text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                   >
-                    <span>View Standings & Stats</span>
+                    <span>View Standings &amp; Stats</span>
                     <span>➔</span>
                   </button>
                 </div>
@@ -879,18 +1195,168 @@ function CareerPlayHubContent() {
                     onClick={() => setActiveTab('settings')}
                     className="w-full py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-950/80 hover:bg-slate-900 text-slate-200 hover:text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                   >
-                    <span>Review Rules & Objectives</span>
+                    <span>Review Rules &amp; Objectives</span>
                     <span>➔</span>
                   </button>
                 </div>
               </div>
             </section>
 
+            {/* INTERACTIVE FOOTBALL MANAGER INBOX (ACTION ITEM: GENERAL INBOX) */}
+            {(() => {
+              const allInbox = (save.inbox && save.inbox.length > 0) ? save.inbox : getInitialInboxMessages(save);
+              const unreadInboxCount = allInbox.filter((m) => !m.isRead).length;
+
+              const filteredMessages = allInbox.filter((m) => {
+                if (inboxFilter === 'all') return true;
+                if (inboxFilter === 'unread') return !m.isRead;
+                return m.type === inboxFilter;
+              });
+
+              return (
+                <section className="bg-slate-900/50 border border-slate-850 rounded-3xl p-5 sm:p-6 shadow-md space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-lg">📬</span>
+                      <h3 className="text-sm font-display font-black uppercase tracking-wider text-white flex items-center gap-2">
+                        <span>Managerial Inbox</span>
+                        {unreadInboxCount > 0 && (
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950">
+                            {unreadInboxCount} Unread
+                          </span>
+                        )}
+                      </h3>
+                    </div>
+
+                    {unreadInboxCount > 0 && (
+                      <button
+                        onClick={handleMarkAllMessagesRead}
+                        className="text-[11px] font-bold text-slate-400 hover:text-emerald-400 transition-colors cursor-pointer"
+                      >
+                        ✓ Mark All as Read
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Filter Pills */}
+                  <nav aria-label="Inbox Filters" className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none border-b border-slate-800">
+                    {[
+                      { id: 'all', label: 'All', count: allInbox.length },
+                      { id: 'unread', label: 'Unread', count: unreadInboxCount },
+                      { id: 'board', label: 'Board', count: allInbox.filter((m) => m.type === 'board').length },
+                      { id: 'injury', label: 'Medical', count: allInbox.filter((m) => m.type === 'injury').length },
+                      { id: 'transfer', label: 'Transfers', count: allInbox.filter((m) => m.type === 'transfer').length },
+                      { id: 'cup_draw', label: 'Competitions', count: allInbox.filter((m) => m.type === 'cup_draw').length },
+                    ].map((filter) => {
+                      const active = inboxFilter === filter.id;
+                      return (
+                        <button
+                          key={filter.id}
+                          onClick={() => setInboxFilter(filter.id as typeof inboxFilter)}
+                          className={`py-1.5 px-3 rounded-xl text-xs font-display font-bold uppercase transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                            active
+                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                              : 'bg-slate-950/60 text-slate-400 border border-slate-850 hover:text-slate-200'
+                          }`}
+                        >
+                          <span>{filter.label}</span>
+                          <span className="text-[10px] opacity-75 font-mono">({filter.count})</span>
+                        </button>
+                      );
+                    })}
+                  </nav>
+
+                  {/* Messages Feed */}
+                  <div className="space-y-2.5">
+                    {filteredMessages.length === 0 ? (
+                      <div className="text-center py-6 text-xs text-slate-500">
+                        No messages found in this folder.
+                      </div>
+                    ) : (
+                      filteredMessages.map((msg) => {
+                        const isExpanded = expandedMessageId === msg.id;
+                        return (
+                          <article
+                            key={msg.id}
+                            onClick={() => handleToggleMessageRead(msg.id)}
+                            className={`rounded-2xl border p-4 transition-all cursor-pointer select-none space-y-2 ${
+                              !msg.isRead
+                                ? 'bg-slate-950/90 border-emerald-500/40 hover:border-emerald-500/70 shadow-sm'
+                                : 'bg-slate-950/40 border-slate-850 hover:border-slate-800 text-slate-300'
+                            }`}
+                          >
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                {!msg.isRead && (
+                                  <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+                                )}
+                                <span className="font-display font-bold text-xs text-white">
+                                  {msg.sender}
+                                </span>
+                                <span className="text-[10px] text-slate-500 font-sans">
+                                  • {msg.senderRole}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-2 ml-auto text-[10px]">
+                                {msg.priority === 'urgent' && (
+                                  <span className="bg-rose-500/20 text-rose-300 border border-rose-500/40 px-2 py-0.5 rounded-full font-black uppercase">
+                                    Urgent
+                                  </span>
+                                )}
+                                <span className="font-mono text-slate-400">
+                                  {formatCareerDate(msg.date, save.settings.dateFormat, 'medium')}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="font-semibold text-xs text-slate-200">
+                              {msg.subject}
+                            </div>
+
+                            {/* Message Preview or Expanded Content */}
+                            {isExpanded ? (
+                              <div className="pt-2 border-t border-slate-850 space-y-3">
+                                <p className="text-xs text-slate-300 whitespace-pre-line leading-relaxed">
+                                  {msg.body}
+                                </p>
+
+                                {msg.actionLabel && msg.actionTab && (
+                                  <div className="pt-1 flex justify-end">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (msg.actionTab) {
+                                          setActiveTab(msg.actionTab as typeof activeTab);
+                                        }
+                                      }}
+                                      className="py-2 px-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+                                    >
+                                      <span>{msg.actionLabel}</span>
+                                      <span>➔</span>
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <p className="text-[11px] text-slate-400 truncate">
+                                {msg.body.replace(/\n+/g, ' ')}
+                              </p>
+                            )}
+                          </article>
+                        );
+                      })
+                    )}
+                  </div>
+                </section>
+              );
+            })()}
+
             {/* Club Profile & Board Expectations (Secondary Context) */}
             <div className="pt-2 border-t border-slate-850 space-y-4">
               <h3 className="text-xs font-display font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
                 <span>🏛️</span>
-                <span>Club Profile & Governance</span>
+                <span>Club Profile &amp; Governance</span>
               </h3>
 
               {/* Hero Welcome Banner */}

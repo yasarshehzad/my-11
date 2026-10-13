@@ -87,6 +87,7 @@ export interface CareerPlayer {
   form: number; // 1-10
   injured: boolean;
   injuryWeeks?: number;
+  injuryDescription?: string;
   isHomegrown: boolean;
   club: string;
   nationality: string;
@@ -323,6 +324,20 @@ export interface YouthProspect {
   value: number;
 }
 
+export interface ManagerMessage {
+  id: string;
+  date: string; // YYYY-MM-DD
+  sender: string;
+  senderRole?: string;
+  subject: string;
+  body: string;
+  type: 'match_report' | 'injury' | 'transfer' | 'board' | 'cup_draw' | 'international' | 'system';
+  isRead: boolean;
+  priority?: 'normal' | 'urgent';
+  actionLabel?: string;
+  actionTab?: 'overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings';
+}
+
 export interface CareerSaveFile {
   version: number;
   id: string; // 'slot_1' | 'slot_2' | 'slot_3'
@@ -346,6 +361,7 @@ export interface CareerSaveFile {
   youthAcademy?: YouthProspect[];
   boardStatus?: BoardStatus;
   phase: 'preseason' | 'transfer_window' | 'regular_season' | 'season_review';
+  inbox?: ManagerMessage[];
 }
 
 export interface SaveSlotMeta {

@@ -1,4 +1,4 @@
-import { Club, LeagueFixture, CalendarEvent } from './types';
+import { Club, LeagueFixture, CupFixture, CalendarEvent, CareerSaveFile } from './types';
 import { getAllClubs } from './clubs';
 
 export const LEAGUE_COMPETITION_ID = 'league_english_top_flight';
@@ -226,3 +226,187 @@ export function getRoundFixtures(
 ): LeagueFixture[] {
   return fixtures.filter((f) => f.round === round);
 }
+
+export interface ScheduledMatch {
+  fixture: LeagueFixture | CupFixture;
+  isCup: boolean;
+  cupId?: string;
+  cupName?: string;
+  roundName?: string;
+  competitionName: string;
+}
+
+/**
+ * Returns the immediate next chronological match for the manager's club,
+ * seamlessly checking both English Top Flight league fixtures and active domestic/European cups.
+ */
+export function getNextScheduledMatch(
+  save: CareerSaveFile
+): ScheduledMatch | null {
+  const userClubId = save.club.id;
+  const fixtures = save.fixtures || [];
+  const cups = save.cups || {};
+
+  // 1. Next unplayed league fixture
+  const nextLeague = fixtures.find(
+    (f) => !f.played && (f.homeClubId === userClubId || f.awayClubId === userClubId)
+  );
+
+  // 2. Next unplayed cup fixture across all tournaments
+  let nextCup: { fixture: CupFixture; cupId: string; cupName: string } | null = null;
+  for (const [cupId, tourney] of Object.entries(cups)) {
+    if (tourney.isCompleted) continue;
+    const cupFix = tourney.fixtures.find(
+      (f) => !f.played && (f.homeClubId === userClubId || f.awayClubId === userClubId)
+    );
+    if (cupFix) {
+      if (!nextCup || new Date(cupFix.date).getTime() < new Date(nextCup.fixture.date).getTime()) {
+        nextCup = {
+          fixture: cupFix,
+          cupId,
+          cupName: tourney.name,
+        };
+      }
+    }
+  }
+
+  // 3. Compare chronological dates
+  if (nextLeague && nextCup) {
+    const leagueTime = new Date(nextLeague.date).getTime();
+    const cupTime = new Date(nextCup.fixture.date).getTime();
+    if (cupTime <= leagueTime) {
+      return {
+        fixture: nextCup.fixture,
+        isCup: true,
+        cupId: nextCup.cupId,
+        cupName: nextCup.cupName,
+        roundName: nextCup.fixture.roundName,
+        competitionName: nextCup.cupName,
+      };
+    } else {
+      return {
+        fixture: nextLeague,
+        isCup: false,
+        competitionName: 'English Top Flight',
+      };
+    }
+  }
+
+  if (nextCup) {
+    return {
+      fixture: nextCup.fixture,
+      isCup: true,
+      cupId: nextCup.cupId,
+      cupName: nextCup.cupName,
+      roundName: nextCup.fixture.roundName,
+      competitionName: nextCup.cupName,
+    };
+  }
+
+  if (nextLeague) {
+    return {
+      fixture: nextLeague,
+      isCup: false,
+      competitionName: 'English Top Flight',
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Returns the most recently played match for the club across both league and cups.
+ */
+export function getPreviousPlayedMatch(
+  save: CareerSaveFile
+): ScheduledMatch | null {
+  const userClubId = save.club.id;
+  const fixtures = save.fixtures || [];
+  const cups = save.cups || {};
+
+  const playedMatches: ScheduledMatch[] = [];
+
+  for (const f of fixtures) {
+    if (f.played && (f.homeClubId === userClubId || f.awayClubId === userClubId)) {
+      playedMatches.push({
+        fixture: f,
+        isCup: false,
+        competitionName: 'English Top Flight',
+      });
+    }
+  }
+
+  for (const [cupId, tourney] of Object.entries(cups)) {
+    for (const f of tourney.fixtures) {
+      if (f.played && (f.homeClubId === userClubId || f.awayClubId === userClubId)) {
+        playedMatches.push({
+          fixture: f,
+          isCup: true,
+          cupId,
+          cupName: tourney.name,
+          roundName: f.roundName,
+          competitionName: tourney.name,
+        });
+      }
+    }
+  }
+
+  if (playedMatches.length === 0) return null;
+
+  playedMatches.sort((a, b) => new Date(a.fixture.date).getTime() - new Date(b.fixture.date).getTime());
+  return playedMatches[playedMatches.length - 1];
+}
+
+/**
+ * Determines whether a date falls inside a FIFA International Window.
+ */
+export function isDateInInternationalBreak(dateStr: string): {
+  isActive: boolean;
+  name: string;
+  resumeDate: string;
+} {
+  if (!dateStr) return { isActive: false, name: '', resumeDate: '' };
+  const d = new Date(dateStr);
+  const month = d.getUTCMonth() + 1; // 1-12
+  const day = d.getUTCDate();
+  const year = d.getUTCFullYear();
+
+  // September window (early Sept)
+  if (month === 9 && day >= 1 && day <= 12) {
+    return {
+      isActive: true,
+      name: 'Autumn FIFA International Window',
+      resumeDate: `${year}-09-13`,
+    };
+  }
+
+  // October window (mid Oct)
+  if (month === 10 && day >= 6 && day <= 16) {
+    return {
+      isActive: true,
+      name: 'October European & World Qualifiers',
+      resumeDate: `${year}-10-17`,
+    };
+  }
+
+  // November window (mid Nov)
+  if (month === 11 && day >= 9 && day <= 20) {
+    return {
+      isActive: true,
+      name: 'November International Nations Break',
+      resumeDate: `${year}-11-21`,
+    };
+  }
+
+  // March window (late March)
+  if (month === 3 && day >= 18 && day <= 29) {
+    return {
+      isActive: true,
+      name: 'Spring International Championship Window',
+      resumeDate: `${year}-03-30`,
+    };
+  }
+
+  return { isActive: false, name: '', resumeDate: '' };
+}
+

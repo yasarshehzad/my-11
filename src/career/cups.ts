@@ -26,8 +26,17 @@ export function initializeSeasonCups(
   const englishClubs = getAllClubs();
 
   // 1. Season Opener Shield (Single Match in early August)
-  const shieldHome = englishClubs[0]; // Man Blue
-  const shieldAway = englishClubs[1]; // London Red
+  let shieldHome = englishClubs[0]; // Man Blue
+  let shieldAway = englishClubs[1]; // London Red
+  if (userClub.id === englishClubs[0].id) {
+    shieldHome = userClub;
+    shieldAway = englishClubs[1];
+  } else if (userClub.id === englishClubs[1].id) {
+    shieldHome = englishClubs[0];
+    shieldAway = userClub;
+  } else if (userClub.tier === 'elite') {
+    shieldAway = userClub;
+  }
 
   const shieldFixture: CupFixture = {
     id: 'fix_shield_final',
@@ -52,9 +61,12 @@ export function initializeSeasonCups(
   };
 
   // 2. League Cup (16 clubs -> R16 -> QF -> SF -> Final)
-  const lcEntrants = englishClubs.slice(0, 16);
-  const lcR1Fixtures: CupFixture[] = [];
+  const lcEntrants = [...englishClubs.slice(0, 16)];
+  if (!lcEntrants.some((c) => c.id === userClub.id)) {
+    lcEntrants[lcEntrants.length - 1] = userClub;
+  }
 
+  const lcR1Fixtures: CupFixture[] = [];
   for (let i = 0; i < 8; i++) {
     lcR1Fixtures.push({
       id: `fix_lc_r1_${i + 1}`,
@@ -80,9 +92,12 @@ export function initializeSeasonCups(
   };
 
   // 3. The English Cup (Premier domestic cup, starts January)
-  const ecEntrants = englishClubs.slice(4, 20); // 16 clubs
-  const ecR1Fixtures: CupFixture[] = [];
+  const ecEntrants = [...englishClubs.slice(4, 20)];
+  if (!ecEntrants.some((c) => c.id === userClub.id)) {
+    ecEntrants[ecEntrants.length - 1] = userClub;
+  }
 
+  const ecR1Fixtures: CupFixture[] = [];
   for (let i = 0; i < 8; i++) {
     ecR1Fixtures.push({
       id: `fix_ec_r16_${i + 1}`,
@@ -118,6 +133,10 @@ export function initializeSeasonCups(
     CONTINENTAL_EUROPEAN_CLUBS[2], // Bavarian Munich
     CONTINENTAL_EUROPEAN_CLUBS[3], // Paris Red & Blue
   ];
+
+  if ((userClub.tier === 'elite' || userClub.tier === 'upper') && !euroEntrants.some((c) => c.id === userClub.id)) {
+    euroEntrants[3] = userClub;
+  }
 
   const uclQfFixtures: CupFixture[] = [];
   for (let i = 0; i < 4; i++) {
@@ -155,6 +174,10 @@ export function initializeSeasonCups(
     englishClubs[6], // Tyneside Stripes
     englishClubs[7], // West Midlands Claret
   ];
+
+  if (!euroEntrants.some((c) => c.id === userClub.id) && !challengeEntrants.some((c) => c.id === userClub.id)) {
+    challengeEntrants[challengeEntrants.length - 1] = userClub;
+  }
 
   const challengeQfFixtures: CupFixture[] = [];
   for (let i = 0; i < 4; i++) {
