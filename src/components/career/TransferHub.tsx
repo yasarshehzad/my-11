@@ -870,7 +870,14 @@ export function TransferHub({
           return (
             <button
               key={tab.id}
-              onClick={() => setSubTab(tab.id as typeof subTab)}
+              onClick={() => {
+                if (subTab === tab.id) {
+                  window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+                } else {
+                  setSubTab(tab.id as typeof subTab);
+                  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                }
+              }}
               className={`py-1.5 px-2.5 sm:px-3 rounded-xl border text-[11px] sm:text-xs font-display font-black uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap cursor-pointer transition-all ${
                 isSelected
                   ? 'border-emerald-500 bg-emerald-950/40 text-emerald-300 shadow-sm'
@@ -893,7 +900,7 @@ export function TransferHub({
 
       {/* SUB-VIEW 1: PLAYER MARKET */}
       {subTab === 'market' && (
-        <section className="space-y-3">
+        <section id="market-section" className="space-y-3 scroll-mt-20">
           {/* Search & Filter Controls */}
           <div className="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-3 sm:p-4 space-y-2.5 shadow-md">
             {/* Top Row: Immediate Search Input + Advanced Filters Toggle */}
@@ -1432,7 +1439,7 @@ export function TransferHub({
 
       {/* SUB-VIEW 2: INCOMING OFFERS */}
       {subTab === 'incoming' && (
-        <section className="space-y-4">
+        <section id="incoming-offers-section" className="space-y-4 scroll-mt-20">
           <header className="space-y-1">
             <h3 className="text-base font-display font-black uppercase text-white">
               Bids Received from AI Clubs
@@ -1457,7 +1464,8 @@ export function TransferHub({
                 return (
                   <article
                     key={offer.id}
-                    className={`rounded-2xl p-4.5 space-y-3.5 border transition-all ${
+                    id={`incoming-offer-${offer.id}`}
+                    className={`rounded-2xl p-4.5 space-y-3.5 border transition-all scroll-mt-20 ${
                       isAccepted
                         ? 'bg-emerald-950/30 border-emerald-500/50 shadow-md'
                         : isRejected
@@ -1597,7 +1605,7 @@ export function TransferHub({
 
       {/* SUB-VIEW: CONTRACTS & SPORTING DIRECTOR */}
       {subTab === 'contracts' && (
-        <section className="space-y-6">
+        <section id="contracts-section" className="space-y-6 scroll-mt-20">
           {/* Header & Sporting Director Overview */}
           <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
@@ -1746,7 +1754,8 @@ export function TransferHub({
                   return (
                     <article
                       key={player.id}
-                      className={`p-4 rounded-2xl border transition-all space-y-3 ${
+                      id={`contract-player-${player.id}`}
+                      className={`p-4 rounded-2xl border transition-all space-y-3 scroll-mt-20 ${
                         isCritical
                           ? 'bg-gradient-to-b from-rose-950/20 to-slate-900/60 border-rose-800/60 hover:border-rose-600'
                           : isMedium
@@ -1832,7 +1841,7 @@ export function TransferHub({
 
       {/* SUB-VIEW 3: SHORTLIST */}
       {subTab === 'shortlist' && (
-        <section className="space-y-4">
+        <section id="shortlist-section" className="space-y-4 scroll-mt-20">
           <header className="space-y-1">
             <h3 className="text-base font-display font-black uppercase text-white">
               Manager Shortlist
@@ -1963,7 +1972,7 @@ export function TransferHub({
 
       {/* SUB-VIEW 4: TRANSFER HISTORY */}
       {subTab === 'history' && (
-        <section className="space-y-4">
+        <section id="history-section" className="space-y-4 scroll-mt-20">
           <header className="space-y-1">
             <h3 className="text-base font-display font-black uppercase text-white">
               Career Transfer Ledger
@@ -2071,7 +2080,7 @@ export function TransferHub({
 
       {/* SUB-VIEW 5: BOARD ROOM & JOB SECURITY (COMPACT) */}
       {subTab === 'board' && (
-        <section className="space-y-3.5">
+        <section id="board-room-section" className="space-y-3.5 scroll-mt-20">
           {/* Header */}
           <header className="bg-slate-900/40 border border-slate-800 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3">
             <div className="min-w-0">

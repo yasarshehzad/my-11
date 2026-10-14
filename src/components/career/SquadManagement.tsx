@@ -413,7 +413,14 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare }: SquadMana
 
         <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-xl p-1">
           <button
-            onClick={() => setViewMode('pitch')}
+            onClick={() => {
+              if (viewMode === 'pitch') {
+                window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+              } else {
+                setViewMode('pitch');
+                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+              }
+            }}
             className={`py-1 px-2.5 rounded-lg text-xs font-display font-black uppercase transition-all cursor-pointer ${
               viewMode === 'pitch'
                 ? 'bg-emerald-500 text-slate-950 shadow-sm'
@@ -423,7 +430,14 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare }: SquadMana
             Pitch
           </button>
           <button
-            onClick={() => setViewMode('list')}
+            onClick={() => {
+              if (viewMode === 'list') {
+                window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+              } else {
+                setViewMode('list');
+                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+              }
+            }}
             className={`py-1 px-2.5 rounded-lg text-xs font-display font-black uppercase transition-all cursor-pointer ${
               viewMode === 'list'
                 ? 'bg-emerald-500 text-slate-950 shadow-sm'
@@ -433,7 +447,14 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare }: SquadMana
             List
           </button>
           <button
-            onClick={() => setViewMode('academy')}
+            onClick={() => {
+              if (viewMode === 'academy') {
+                window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+              } else {
+                setViewMode('academy');
+                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+              }
+            }}
             className={`py-1 px-2.5 rounded-lg text-xs font-display font-black uppercase transition-all flex items-center gap-1 cursor-pointer ${
               viewMode === 'academy'
                 ? 'bg-emerald-500 text-slate-950 shadow-sm'
@@ -450,7 +471,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare }: SquadMana
 
       {/* PITCH VIEW */}
       {viewMode === 'pitch' && (
-        <section className="space-y-6">
+        <section id="squad-pitch-section" className="space-y-6 scroll-mt-20">
           {/* Virtual Pitch Canvas */}
           <div className="relative rounded-3xl border border-emerald-900/50 bg-gradient-to-b from-[#064e3b] via-[#022c22] to-[#011c15] p-3 sm:p-6 shadow-2xl overflow-hidden min-h-[480px] flex flex-col justify-between">
             {/* Pitch Marking Lines */}
@@ -572,8 +593,9 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare }: SquadMana
               {bench.map((player) => (
                 <div
                   key={player.id}
+                  id={`squad-player-bench-${player.id}`}
                   onClick={() => handlePlayerClick(player)}
-                  className={`p-2.5 rounded-xl border text-center cursor-pointer transition-all ${
+                  className={`p-2.5 rounded-xl border text-center cursor-pointer transition-all scroll-mt-20 ${
                     swapSourceId === player.id
                       ? 'border-amber-400 bg-amber-950/40 ring-2 ring-amber-400'
                       : 'border-slate-800 bg-slate-950/60 hover:border-slate-700 hover:bg-slate-900/60'
@@ -604,8 +626,9 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare }: SquadMana
                 {reserves.map((player) => (
                   <div
                     key={player.id}
+                    id={`squad-player-reserve-${player.id}`}
                     onClick={() => handlePlayerClick(player)}
-                    className="p-2.5 rounded-xl border border-slate-850/60 bg-slate-950/40 text-center cursor-pointer hover:border-slate-700 transition-all opacity-80 hover:opacity-100"
+                    className="p-2.5 rounded-xl border border-slate-850/60 bg-slate-950/40 text-center cursor-pointer hover:border-slate-700 transition-all opacity-80 hover:opacity-100 scroll-mt-20"
                   >
                     <div className="flex justify-between items-center text-[10px] font-bold mb-1">
                       <span className="text-slate-400">{player.position}</span>
@@ -664,7 +687,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare }: SquadMana
 
       {/* LIST VIEW */}
       {viewMode === 'list' && (
-        <section className="space-y-4">
+        <section id="squad-list-section" className="space-y-4 scroll-mt-20">
           {/* Group Filter Tabs */}
           <div className="flex gap-2 flex-wrap">
             {(['ALL', 'GK', 'DEF', 'MID', 'FWD'] as const).map((group) => (
@@ -713,7 +736,8 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare }: SquadMana
                     return (
                       <tr
                         key={player.id}
-                        className="hover:bg-slate-850/40 transition-colors"
+                        id={`squad-player-${player.id}`}
+                        className="hover:bg-slate-850/40 transition-colors scroll-mt-20"
                       >
                         <td className="py-3 px-4 font-semibold text-white">
                           <button
@@ -1480,10 +1504,11 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare }: SquadMana
     return (
       <div
         key={player.id}
+        id={`squad-player-pitch-${player.id}`}
         onClick={() => handlePlayerClick(player)}
         title={`${player.name} (${player.position}) • ${effectiveRating} OVR • Click to substitute`}
         aria-label={`${player.name}, position ${player.position}, rating ${effectiveRating}`}
-        className={`w-16 min-w-0 sm:w-22 p-1.5 sm:p-2 rounded-2xl border backdrop-blur-md text-center cursor-pointer transition-all transform hover:scale-105 select-none ${
+        className={`w-16 min-w-0 sm:w-22 p-1.5 sm:p-2 rounded-2xl border backdrop-blur-md text-center cursor-pointer transition-all transform hover:scale-105 select-none scroll-mt-20 ${
           isSwapping
             ? 'border-amber-400 bg-amber-950/80 ring-4 ring-amber-400/50 shadow-2xl'
             : fit === 'out_of_position'

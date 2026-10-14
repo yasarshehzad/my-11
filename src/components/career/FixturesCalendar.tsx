@@ -231,7 +231,14 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
         <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
           <button
             type="button"
-            onClick={() => setTimelineFilter('upcoming')}
+            onClick={() => {
+              if (timelineFilter === 'upcoming') {
+                window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+              } else {
+                setTimelineFilter('upcoming');
+                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+              }
+            }}
             className={`py-1.5 px-3 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
               timelineFilter === 'upcoming'
                 ? 'bg-emerald-500 text-slate-950 shadow-sm'
@@ -242,7 +249,14 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
           </button>
           <button
             type="button"
-            onClick={() => setTimelineFilter('recent')}
+            onClick={() => {
+              if (timelineFilter === 'recent') {
+                window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+              } else {
+                setTimelineFilter('recent');
+                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+              }
+            }}
             className={`py-1.5 px-3 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
               timelineFilter === 'recent'
                 ? 'bg-emerald-500 text-slate-950 shadow-sm'
@@ -253,7 +267,14 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
           </button>
           <button
             type="button"
-            onClick={() => setTimelineFilter('all')}
+            onClick={() => {
+              if (timelineFilter === 'all') {
+                window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+              } else {
+                setTimelineFilter('all');
+                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+              }
+            }}
             className={`py-1.5 px-3 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
               timelineFilter === 'all'
                 ? 'bg-slate-700 text-white'

@@ -164,7 +164,7 @@ export function TournamentsHub({
   };
 
   return (
-    <div className="space-y-6 w-full">
+    <div id="tournament-desk-section" className="space-y-6 w-full scroll-mt-20">
       {/* Tournament Selection Pills */}
       <nav
         aria-label="Cup Tournaments Selector"
@@ -175,7 +175,14 @@ export function TournamentsHub({
           return (
             <button
               key={t.id}
-              onClick={() => setSelectedTournamentId(t.id)}
+              onClick={() => {
+                if (selectedTournamentId === t.id) {
+                  window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+                } else {
+                  setSelectedTournamentId(t.id);
+                  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                }
+              }}
               className={`py-2 px-3.5 rounded-xl border text-xs font-display font-black uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap cursor-pointer transition-all ${
                 isSelected
                   ? 'border-emerald-500 bg-emerald-950/40 text-emerald-300 shadow-md shadow-emerald-950/50'
@@ -192,7 +199,7 @@ export function TournamentsHub({
 
       {/* VIEW 1: TROPHY CABINET */}
       {selectedTournamentId === 'cabinet' ? (
-        <section className="space-y-4">
+        <section id="cup-tournament-cabinet" className="space-y-4 scroll-mt-20">
           <header className="bg-slate-900/60 border border-slate-800 rounded-2xl px-4 py-3 flex justify-between items-center shadow-sm">
             <div className="flex items-center gap-2">
               <span className="text-xl">🏛️</span>
@@ -253,7 +260,7 @@ export function TournamentsHub({
         </div>
       ) : (
         /* VIEW 2: TOURNAMENT BRACKET & FIXTURES */
-        <section className="space-y-4">
+        <section id={`cup-tournament-${selectedTournamentId}`} className="space-y-4 scroll-mt-20">
           {/* Header Card */}
           <header className="bg-slate-900/50 border border-slate-800 rounded-2xl px-4 py-2.5 flex flex-wrap sm:flex-nowrap justify-between items-center gap-2 shadow-sm">
             <div className="min-w-0">

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { loadCareerSave, saveCareerSave, exportCareerSaveAsJson, isValidSlotId, ValidSlotId } from '../../../career/saves';
@@ -102,6 +102,119 @@ function CareerPlayHubContent() {
   const [focusedOfferId, setFocusedOfferId] = useState<string | undefined>(undefined);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
 
+  // Scroll management & targeted deep-linking ref
+  const pendingScrollTargetRef = useRef<{
+    id: string;
+    behavior?: ScrollBehavior;
+    block?: ScrollLogicalPosition;
+  } | null>(null);
+
+  const scrollToTarget = useCallback((
+    targetId: string,
+    options?: { behavior?: ScrollBehavior; block?: ScrollLogicalPosition }
+  ) => {
+    if (typeof window === 'undefined') return;
+    const behavior = options?.behavior ?? 'smooth';
+    const block = options?.block ?? 'center';
+
+    const tryScroll = () => {
+      const el = document.getElementById(targetId);
+      if (el) {
+        el.scrollIntoView({ behavior, block });
+        el.classList.add('ring-2', 'ring-emerald-400', 'ring-offset-2', 'ring-offset-slate-950', 'transition-all');
+        setTimeout(() => {
+          el.classList.remove('ring-2', 'ring-emerald-400', 'ring-offset-2', 'ring-offset-slate-950');
+        }, 2500);
+        return true;
+      }
+      return false;
+    };
+
+    if (!tryScroll()) {
+      setTimeout(() => {
+        if (!tryScroll()) {
+          setTimeout(() => {
+            if (!tryScroll()) {
+              // Graceful fallback to section or top
+              if (targetId.startsWith('contract-player-')) {
+                const sec = document.getElementById('contracts-section');
+                if (sec) {
+                  sec.scrollIntoView({ behavior, block: 'start' });
+                  return;
+                }
+              } else if (targetId.startsWith('incoming-offer-')) {
+                const sec = document.getElementById('incoming-offers-section');
+                if (sec) {
+                  sec.scrollIntoView({ behavior, block: 'start' });
+                  return;
+                }
+              } else if (targetId.startsWith('squad-player-')) {
+                const sec = document.getElementById('squad-list-section') || document.getElementById('squad-pitch-section');
+                if (sec) {
+                  sec.scrollIntoView({ behavior, block: 'start' });
+                  return;
+                }
+              }
+              window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+            }
+          }, 150);
+        }
+      }, 60);
+    }
+  }, []);
+
+  const navigateToSection = useCallback((
+    tab: typeof activeTab,
+    subTab?: typeof transferHubSubTab,
+    targetId?: string
+  ) => {
+    setIsMoreMenuOpen(false);
+    if (targetId) {
+      pendingScrollTargetRef.current = { id: targetId, behavior: 'smooth', block: 'center' };
+    } else {
+      pendingScrollTargetRef.current = null;
+    }
+
+    const tabChanged = activeTab !== tab;
+    const subTabChanged = subTab !== undefined && transferHubSubTab !== subTab;
+
+    if (subTab) {
+      setTransferHubSubTab(subTab);
+    }
+    if (tabChanged) {
+      setActiveTab(tab);
+    }
+
+    if (!tabChanged && !subTabChanged) {
+      if (targetId) {
+        pendingScrollTargetRef.current = null;
+        scrollToTarget(targetId);
+      } else {
+        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+      }
+    }
+  }, [activeTab, transferHubSubTab, scrollToTarget]);
+
+  const handleTabChange = useCallback((newTab: typeof activeTab) => {
+    setIsMoreMenuOpen(false);
+    if (activeTab === newTab) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+    } else {
+      pendingScrollTargetRef.current = null;
+      setActiveTab(newTab);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (pendingScrollTargetRef.current?.id) {
+      const target = pendingScrollTargetRef.current;
+      pendingScrollTargetRef.current = null;
+      scrollToTarget(target.id, { behavior: target.behavior, block: target.block });
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }
+  }, [activeTab, transferHubSubTab, scrollToTarget]);
+
   // Reusable Player Comparison state
   const [comparisonState, setComparisonState] = useState<{
     isOpen: boolean;
@@ -148,29 +261,23 @@ function CareerPlayHubContent() {
     if (alert.actionType === 'squad_registration') {
       setShowRegistrationModal(true);
     } else if (alert.actionType === 'review_offer') {
-      setTransferHubSubTab('incoming');
-      setFocusedOfferId(alert.targetId || (save?.incomingOffers && save.incomingOffers.length > 0 ? save.incomingOffers[0].id : undefined));
-      setActiveTab('transfers');
+      const offerId = alert.targetId || (save?.incomingOffers && save.incomingOffers.length > 0 ? save.incomingOffers[0].id : undefined);
+      setFocusedOfferId(offerId);
+      navigateToSection('transfers', 'incoming', offerId ? `incoming-offer-${offerId}` : 'incoming-offers-section');
     } else if (alert.actionType === 'review_contract') {
-      setTransferHubSubTab('contracts');
       setFocusedOfferId(undefined);
-      setActiveTab('transfers');
+      navigateToSection('transfers', 'contracts', alert.targetId ? `contract-player-${alert.targetId}` : 'contracts-section');
     } else if (alert.actionType === 'deadline_clock') {
-      setTransferHubSubTab('market');
       setFocusedOfferId(undefined);
-      setActiveTab('transfers');
+      navigateToSection('transfers', 'market', 'market-section');
     } else if (alert.actionType === 'open_squad' || alert.actionType === 'review_injury') {
-      setActiveTab('squad');
+      navigateToSection('squad', undefined, alert.targetId ? `squad-player-${alert.targetId}` : 'squad-pitch-section');
     } else if (alert.actionType === 'view_cup_draw') {
-      setActiveTab('cups');
+      navigateToSection('cups', undefined, alert.targetId ? `cup-tournament-${alert.targetId}` : 'tournament-desk-section');
     } else if (alert.actionType === 'respond_board') {
-      setTransferHubSubTab('board');
-      setActiveTab('transfers');
+      navigateToSection('transfers', 'board', 'board-room-section');
     } else if (alert.actionTab) {
-      if (alert.actionTab === 'transfers') {
-        setTransferHubSubTab('market');
-      }
-      setActiveTab(alert.actionTab as typeof activeTab);
+      navigateToSection(alert.actionTab as typeof activeTab, alert.actionTab === 'transfers' ? 'market' : undefined);
     }
   };
 
@@ -200,9 +307,9 @@ function CareerPlayHubContent() {
   };
 
   const navigateToIncomingOffers = (specificOfferId?: string) => {
-    setTransferHubSubTab('incoming');
-    setFocusedOfferId(specificOfferId || (save?.incomingOffers && save.incomingOffers.length > 0 ? save.incomingOffers[0].id : undefined));
-    setActiveTab('transfers');
+    const offerId = specificOfferId || (save?.incomingOffers && save.incomingOffers.length > 0 ? save.incomingOffers[0].id : undefined);
+    setFocusedOfferId(offerId);
+    navigateToSection('transfers', 'incoming', offerId ? `incoming-offer-${offerId}` : 'incoming-offers-section');
   };
 
   // Settings editing state (when not locked)
@@ -783,8 +890,7 @@ function CareerPlayHubContent() {
 
           <button
             onClick={() => {
-              setIsMoreMenuOpen(false);
-              setActiveTab('settings');
+              handleTabChange('settings');
             }}
             title="Career Settings"
             className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center border transition-colors text-xs cursor-pointer ${
@@ -830,8 +936,7 @@ function CareerPlayHubContent() {
                 <button
                   key={tab.id}
                   onClick={() => {
-                    setIsMoreMenuOpen(false);
-                    setActiveTab(tab.id as typeof activeTab);
+                    handleTabChange(tab.id as typeof activeTab);
                   }}
                   className={`py-2 px-1 sm:px-3 font-display font-black text-[11px] sm:text-xs uppercase tracking-wider rounded-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer min-h-[44px] relative ${
                     isActive
@@ -892,8 +997,7 @@ function CareerPlayHubContent() {
                     key={item.id}
                     role="menuitem"
                     onClick={() => {
-                      setActiveTab(item.id as typeof activeTab);
-                      setIsMoreMenuOpen(false);
+                      handleTabChange(item.id as typeof activeTab);
                     }}
                     className={`w-full p-2.5 rounded-xl text-left transition-all flex items-center gap-3 cursor-pointer ${
                       isItemActive
@@ -948,8 +1052,7 @@ function CareerPlayHubContent() {
               <button
                 type="button"
                 onClick={() => {
-                  setTransferHubSubTab('board');
-                  setActiveTab('transfers');
+                  navigateToSection('transfers', 'board', 'board-room-section');
                 }}
                 title="View Board Room"
                 className={`px-2 py-1 rounded-lg border text-[10px] font-display font-black uppercase flex items-center gap-1 shrink-0 shadow-sm transition-all cursor-pointer ${
@@ -976,7 +1079,7 @@ function CareerPlayHubContent() {
 
             {/* COMPACT MANAGERIAL ALERTS STRIP */}
             {managerialAlerts.length > 0 && (
-              <section aria-label="Managerial Alerts" className="bg-slate-900/80 border border-slate-800 rounded-2xl p-2.5 sm:p-3 shadow-md space-y-1.5">
+              <section id="managerial-alerts" aria-label="Managerial Alerts" className="bg-slate-900/80 border border-slate-800 rounded-2xl p-2.5 sm:p-3 shadow-md space-y-1.5 scroll-mt-20">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${actionableAlerts.length > 0 ? 'bg-amber-400 animate-pulse' : 'bg-blue-400'}`} />
@@ -996,9 +1099,10 @@ function CareerPlayHubContent() {
                   <button
                     type="button"
                     onClick={() => {
-                      const inboxEl = document.getElementById('managerial-inbox');
-                      if (inboxEl) {
-                        inboxEl.scrollIntoView({ behavior: 'smooth' });
+                      if (activeTab === 'overview') {
+                        scrollToTarget('managerial-inbox', { behavior: 'smooth', block: 'start' });
+                      } else {
+                        navigateToSection('overview', undefined, 'managerial-inbox');
                       }
                     }}
                     className="text-[9.5px] font-bold text-slate-400 hover:text-emerald-400 transition-colors uppercase tracking-wider flex items-center gap-1 cursor-pointer shrink-0"
@@ -1101,8 +1205,7 @@ function CareerPlayHubContent() {
                     <button
                       type="button"
                       onClick={() => {
-                        setTransferHubSubTab('incoming');
-                        setActiveTab('transfers');
+                        navigateToSection('transfers', 'incoming', 'incoming-offers-section');
                       }}
                       className="flex-1 sm:flex-none py-2.5 px-3.5 rounded-xl bg-slate-900/90 hover:bg-slate-850 text-amber-300 border border-amber-500/40 font-display font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap min-h-[42px]"
                     >
@@ -1271,8 +1374,7 @@ function CareerPlayHubContent() {
               {/* 1. Finances */}
               <div
                 onClick={() => {
-                  setTransferHubSubTab('market');
-                  setActiveTab('transfers');
+                  navigateToSection('transfers', 'market', 'market-section');
                 }}
                 className="bg-slate-900/60 hover:bg-slate-850/80 border border-slate-800 hover:border-emerald-500/40 p-2 sm:p-3 rounded-2xl transition-all cursor-pointer flex flex-col justify-between min-h-[64px]"
                 title="View Transfers & Finances"
@@ -1293,7 +1395,7 @@ function CareerPlayHubContent() {
 
               {/* 2. League Rank & Form */}
               <div
-                onClick={() => setActiveTab('table')}
+                onClick={() => handleTabChange('table')}
                 className="bg-slate-900/60 hover:bg-slate-850/80 border border-slate-800 hover:border-emerald-500/40 p-2 sm:p-3 rounded-2xl transition-all cursor-pointer flex flex-col justify-between min-h-[64px]"
                 title="View League Table"
               >
@@ -1348,8 +1450,11 @@ function CareerPlayHubContent() {
                   } else if (managerialAlerts.length > 0) {
                     handleExecuteAlertAction(managerialAlerts[0]);
                   } else {
-                    const inboxEl = document.getElementById('managerial-inbox');
-                    if (inboxEl) inboxEl.scrollIntoView({ behavior: 'smooth' });
+                    if (activeTab === 'overview') {
+                      scrollToTarget('managerial-inbox', { behavior: 'smooth', block: 'start' });
+                    } else {
+                      navigateToSection('overview', undefined, 'managerial-inbox');
+                    }
                   }
                 }}
                 className={`p-2 sm:p-3 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between min-h-[64px] ${
@@ -1401,14 +1506,14 @@ function CareerPlayHubContent() {
             {/* 4-COLUMN MOBILE SHORTCUT TOOLBAR */}
             <nav aria-label="Quick management actions" className="grid grid-cols-4 gap-2 text-center text-xs">
               <button
-                onClick={() => setActiveTab('squad')}
+                onClick={() => handleTabChange('squad')}
                 className="py-2.5 px-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 text-slate-200 font-display font-black uppercase text-[10.5px] flex flex-col items-center justify-center gap-1 transition-all cursor-pointer min-h-[48px]"
               >
                 <span className="text-base">👥</span>
                 <span>Squad</span>
               </button>
               <button
-                onClick={() => setActiveTab('squad')}
+                onClick={() => navigateToSection('squad', undefined, 'squad-pitch-section')}
                 className="py-2.5 px-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 text-slate-200 font-display font-black uppercase text-[10.5px] flex flex-col items-center justify-center gap-1 transition-all cursor-pointer min-h-[48px]"
               >
                 <span className="text-base">⚡</span>
@@ -1419,8 +1524,7 @@ function CareerPlayHubContent() {
                   if (incomingOffersCount > 0) {
                     navigateToIncomingOffers();
                   } else {
-                    setTransferHubSubTab('market');
-                    setActiveTab('transfers');
+                    navigateToSection('transfers', 'market', 'market-section');
                   }
                 }}
                 className="py-2.5 px-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 text-slate-200 font-display font-black uppercase text-[10.5px] flex flex-col items-center justify-center gap-1 transition-all cursor-pointer min-h-[48px] relative"
@@ -1432,7 +1536,7 @@ function CareerPlayHubContent() {
                 )}
               </button>
               <button
-                onClick={() => setActiveTab('fixtures')}
+                onClick={() => handleTabChange('fixtures')}
                 className="py-2.5 px-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 text-slate-200 font-display font-black uppercase text-[10.5px] flex flex-col items-center justify-center gap-1 transition-all cursor-pointer min-h-[48px]"
               >
                 <span className="text-base">📅</span>
@@ -1658,7 +1762,7 @@ function CareerPlayHubContent() {
                   </div>
                   <div className="pt-1 flex justify-end">
                     <button
-                      onClick={() => setActiveTab('squad')}
+                      onClick={() => handleTabChange('squad')}
                       className="text-xs font-display font-black uppercase text-emerald-400 hover:text-emerald-300 flex items-center gap-1 cursor-pointer"
                     >
                       <span>Adjust Tactics &amp; Replacements in Squad</span>
@@ -1693,7 +1797,7 @@ function CareerPlayHubContent() {
               </div>
 
               <button
-                onClick={() => setActiveTab('settings')}
+                onClick={() => navigateToSection('transfers', 'board', 'board-room-section')}
                 className="py-1.5 px-3 rounded-xl border border-slate-800 bg-slate-950/80 hover:bg-slate-900 text-slate-300 hover:text-white font-display font-bold text-[11px] uppercase tracking-wider transition-all cursor-pointer"
               >
                 Board Objectives ➔
@@ -1986,7 +2090,7 @@ function CareerPlayHubContent() {
             save={save}
             onUpdateSave={handleUpdateSave}
             onNotification={showToast}
-            onNavigateOffice={() => setActiveTab('overview')}
+            onNavigateOffice={() => handleTabChange('overview')}
           />
         )}
 
@@ -2612,13 +2716,11 @@ function CareerPlayHubContent() {
           }}
           onSelectTransferTarget={(targetPlayer: MarketPlayer) => {
             setComparisonState({ isOpen: false, playerA: undefined, playerB: undefined });
-            setTransferHubSubTab('market');
-            setActiveTab('transfers');
+            navigateToSection('transfers', 'market', 'market-section');
           }}
           onNavigateOfficeBudget={() => {
             setComparisonState({ isOpen: false, playerA: undefined, playerB: undefined });
-            setTransferHubSubTab('board');
-            setActiveTab('transfers');
+            navigateToSection('transfers', 'board', 'board-room-section');
           }}
         />
       )}

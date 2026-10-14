@@ -232,6 +232,28 @@ describe('Managerial Inbox Classification & Alert Prioritisation', () => {
     expect(alertTypes).toContain('review_offer');
     expect(alertTypes).toContain('open_squad');
     expect(alertTypes).toContain('respond_board');
+
+    const offerAlert = actionable.find((a) => a.actionType === 'review_offer');
+    expect(offerAlert?.targetId).toBe('offer_urgent');
+
+    const squadAlert = actionable.find((a) => a.actionType === 'open_squad');
+    expect(squadAlert?.targetId).toBe(starterId);
+  });
+
+  it('generates targeted review_contract alerts with player targetId for expiring contracts', () => {
+    const keyPlayer = baseSave.squad.find((p) => p.rating >= 78) || baseSave.squad[0];
+    const contractSave: CareerSaveFile = {
+      ...baseSave,
+      squad: baseSave.squad.map((p) =>
+        p.id === keyPlayer.id ? { ...p, contractYears: 1 } : p
+      ),
+    };
+
+    const alerts = getManagerialAlerts(contractSave);
+    const contractAlert = alerts.find((a) => a.actionType === 'review_contract');
+    expect(contractAlert).toBeDefined();
+    expect(contractAlert?.targetId).toBe(keyPlayer.id);
+    expect(contractAlert?.actionTab).toBe('transfers');
   });
 
   it('preserves historical inbox items when marked resolved or read', () => {

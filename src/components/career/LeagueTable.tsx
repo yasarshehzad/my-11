@@ -18,7 +18,7 @@ export function LeagueTable({ standings, userClubId, userClub }: LeagueTableProp
   const isPreSeason = totalPlayed === 0;
 
   return (
-    <div className="space-y-4">
+    <div id="league-table-section" className="space-y-4 scroll-mt-20">
       {/* Informative Pre-Season State */}
       {isPreSeason && (
         <div className="bg-gradient-to-r from-emerald-950/40 via-slate-900/60 to-slate-950 border border-emerald-500/30 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3 text-xs shadow-md">
