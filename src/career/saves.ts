@@ -8,6 +8,7 @@ import { createInitialStandings } from './table';
 import { initializeSeasonCups } from './cups';
 import { generateYouthIntake } from './youthAcademy';
 import { getInitialInboxMessages } from './inbox';
+import { calculatePlayerValue, calculateWeeklyWage } from './finance';
 
 export const VALID_SLOT_IDS = ['slot_1', 'slot_2', 'slot_3'] as const;
 export type ValidSlotId = (typeof VALID_SLOT_IDS)[number];
@@ -62,6 +63,32 @@ export function loadCareerSave(slotId: string): CareerSaveFile | null {
     }
     if (!parsed.inbox || parsed.inbox.length === 0) {
       parsed.inbox = getInitialInboxMessages(parsed);
+    }
+
+    // Refresh modern player market valuations if squad has legacy/under-priced values
+    if (parsed.squad && Array.isArray(parsed.squad)) {
+      parsed.squad = parsed.squad.map((p: any) => {
+        const modernExpected = calculatePlayerValue(p.rating, p.age, p.position);
+        if (!p.value || p.value < modernExpected * 0.75) {
+          const modernWage = p.wageWeekly && p.wageWeekly >= 15_000
+            ? p.wageWeekly
+            : calculateWeeklyWage(p.rating, modernExpected);
+          return {
+            ...p,
+            value: modernExpected,
+            wageWeekly: modernWage,
+          };
+        }
+        return p;
+      });
+
+      if (parsed.finances) {
+        const actualWeeklyWages = parsed.squad.reduce((sum: number, p: any) => sum + (p.wageWeekly || 0), 0);
+        parsed.finances.currentWeeklyWages = actualWeeklyWages;
+        if (!parsed.finances.weeklyWageBudget || parsed.finances.weeklyWageBudget < actualWeeklyWages * 1.15) {
+          parsed.finances.weeklyWageBudget = Math.round((actualWeeklyWages * 1.30) / 50_000) * 50_000;
+        }
+      }
     }
 
     return parsed as CareerSaveFile;
@@ -153,6 +180,10 @@ export function createNewCareerSave(params: {
 
   const squad = generateClubSquad(params.club, dbSeason);
   const currentWeeklyWages = squad.reduce((sum, p) => sum + (p.wageWeekly || 0), 0);
+  const weeklyWageBudget = Math.max(
+    params.club.wageBudgetWeekly || 0,
+    Math.round((currentWeeklyWages * 1.30) / 50_000) * 50_000
+  );
   const lineup = getBestStartingLineup(squad);
 
   const { fixtures, calendar } = generateRoundRobinFixtures(seasonClubs, yearStart);
@@ -182,7 +213,7 @@ export function createNewCareerSave(params: {
     },
     finances: {
       transferBudget: adjustedBudget,
-      weeklyWageBudget: params.club.wageBudgetWeekly,
+      weeklyWageBudget,
       currentWeeklyWages,
       balance: Math.round(adjustedBudget * 0.35),
     },

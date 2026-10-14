@@ -726,7 +726,7 @@ export function getBestStartingLineup(
 
   const starterIds: string[] = formation.slots.map((_, index) => starterMap.get(index) || '');
 
-  // 2. Fill bench (up to 7 subs) from remaining available
+  // 2. Fill bench (up to 9 subs) from remaining available
   const benchIds: string[] = [];
   const remaining = available.filter((p) => !assignedSet.has(p.id));
 
@@ -738,7 +738,7 @@ export function getBestStartingLineup(
   }
 
   for (const player of remaining) {
-    if (benchIds.length >= 7) break;
+    if (benchIds.length >= 9) break;
     if (!assignedSet.has(player.id)) {
       benchIds.push(player.id);
       assignedSet.add(player.id);

@@ -38,6 +38,7 @@ import { TransferHub } from '../../../components/career/TransferHub';
 import { MatchDayModal } from '../../../components/career/MatchDayModal';
 import { MatchOverviewModal } from '../../../components/career/MatchOverviewModal';
 import { InstantMatchSummaryModal } from '../../../components/career/InstantMatchSummaryModal';
+import { InstantSimLoadingModal } from '../../../components/career/InstantSimLoadingModal';
 import { PlayerComparisonModal } from '../../../components/career/PlayerComparisonModal';
 import { SquadRegistrationModal } from '../../../components/career/SquadRegistrationModal';
 import { isSeasonComplete, advanceToNextSeason, getSeasonReviewSummary, SeasonReviewSummary } from '../../../career/seasons';
@@ -94,6 +95,18 @@ function CareerPlayHubContent() {
     fixture: LeagueFixture | CupFixture;
   } | null>(null);
   const [instantSimResultModal, setInstantSimResultModal] = useState<LeagueFixture | CupFixture | null>(null);
+  const [instantSimLoadingData, setInstantSimLoadingData] = useState<{
+    simmedFixture: LeagueFixture | CupFixture;
+    updatedSave: CareerSaveFile;
+    homeClub: Club;
+    awayClub: Club;
+    competitionTitle: string;
+    roundTitle: string;
+  } | null>(null);
+  const [slideDirection, setSlideDirection] = useState<'left' | 'right' | null>(null);
+  const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
+  const touchStartTimeRef = useRef<number>(0);
   const [inboxFilter, setInboxFilter] = useState<'all' | 'action_required' | 'unread' | 'board' | 'injury' | 'transfer' | 'cup_draw'>('all');
   const [expandedMessageId, setExpandedMessageId] = useState<string | null>(null);
   const [simulating, setSimulating] = useState(false);
@@ -197,15 +210,90 @@ function CareerPlayHubContent() {
     }
   }, [activeTab, transferHubSubTab, scrollToTarget]);
 
+  const TAB_ORDER: ('overview' | 'squad' | 'fixtures' | 'transfers' | 'table' | 'cups' | 'settings')[] = useMemo(
+    () => ['overview', 'squad', 'fixtures', 'transfers', 'table', 'cups', 'settings'],
+    []
+  );
+
   const handleTabChange = useCallback((newTab: typeof activeTab) => {
     setIsMoreMenuOpen(false);
     if (activeTab === newTab) {
       window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     } else {
+      const currentIndex = TAB_ORDER.indexOf(activeTab);
+      const newIndex = TAB_ORDER.indexOf(newTab);
+      if (newIndex > currentIndex) {
+        setSlideDirection('right');
+      } else if (newIndex < currentIndex) {
+        setSlideDirection('left');
+      }
       pendingScrollTargetRef.current = null;
       setActiveTab(newTab);
     }
-  }, [activeTab]);
+  }, [activeTab, TAB_ORDER]);
+
+  const goToNextTab = useCallback(() => {
+    const currentIndex = TAB_ORDER.indexOf(activeTab);
+    if (currentIndex < TAB_ORDER.length - 1) {
+      const nextTab = TAB_ORDER[currentIndex + 1];
+      setSlideDirection('right');
+      setIsMoreMenuOpen(false);
+      pendingScrollTargetRef.current = null;
+      setActiveTab(nextTab);
+    }
+  }, [activeTab, TAB_ORDER]);
+
+  const goToPrevTab = useCallback(() => {
+    const currentIndex = TAB_ORDER.indexOf(activeTab);
+    if (currentIndex > 0) {
+      const prevTab = TAB_ORDER[currentIndex - 1];
+      setSlideDirection('left');
+      setIsMoreMenuOpen(false);
+      pendingScrollTargetRef.current = null;
+      setActiveTab(prevTab);
+    }
+  }, [activeTab, TAB_ORDER]);
+
+  const handleTouchStartCapture = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    const target = e.target as HTMLElement;
+    // Don't intercept touches inside interactive elements with their own drag or horizontal scrolling
+    if (
+      target.closest(
+        'input[type="range"], [role="dialog"], [data-no-swipe="true"], .overflow-x-auto, table, [data-player-id], button, select'
+      )
+    ) {
+      touchStartXRef.current = null;
+      touchStartYRef.current = null;
+      return;
+    }
+    touchStartXRef.current = e.touches[0].clientX;
+    touchStartYRef.current = e.touches[0].clientY;
+    touchStartTimeRef.current = Date.now();
+  };
+
+  const handleTouchEndCapture = (e: React.TouchEvent) => {
+    if (touchStartXRef.current === null || touchStartYRef.current === null) return;
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+    const deltaX = endX - touchStartXRef.current;
+    const deltaY = endY - touchStartYRef.current;
+    const duration = Date.now() - touchStartTimeRef.current;
+
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+
+    // Fast horizontal swipe gesture (distance > 45px, more horizontal than vertical by 1.35x, duration < 550ms)
+    if (duration < 550 && Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY) * 1.35) {
+      if (deltaX < 0) {
+        // Swipe left -> go to next tab
+        goToNextTab();
+      } else {
+        // Swipe right -> go to previous tab
+        goToPrevTab();
+      }
+    }
+  };
 
   useEffect(() => {
     if (pendingScrollTargetRef.current?.id) {
@@ -661,10 +749,14 @@ function CareerPlayHubContent() {
         squad: updatedSquad,
       };
 
-      saveCareerSave(updatedSave);
-      setSave(updatedSave);
-      setSimulating(false);
-      setInstantSimResultModal(simmed);
+      setInstantSimLoadingData({
+        simmedFixture: simmed,
+        updatedSave,
+        homeClub,
+        awayClub,
+        competitionTitle: adv.updatedTournament.name,
+        roundTitle: cupFix.roundName,
+      });
       return;
     }
 
@@ -721,10 +813,14 @@ function CareerPlayHubContent() {
       squad: updatedSquad,
     };
 
-    saveCareerSave(updatedSave);
-    setSave(updatedSave);
-    setSimulating(false);
-    setInstantSimResultModal(simmed);
+    setInstantSimLoadingData({
+      simmedFixture: simmed,
+      updatedSave,
+      homeClub,
+      awayClub,
+      competitionTitle: 'English Top Flight',
+      roundTitle: `Matchday ${leagueFix.round} of 38`,
+    });
   };
 
   const handleSkipInternationalBreak = () => {
@@ -964,7 +1060,11 @@ function CareerPlayHubContent() {
       </header>
 
       {/* Main Hub Layout */}
-      <main className="flex-1 w-full max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-6 flex flex-col">
+      <main
+        className="flex-1 w-full max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-6 flex flex-col"
+        onTouchStart={handleTouchStartCapture}
+        onTouchEnd={handleTouchEndCapture}
+      >
         {/* Navigation Tabs - 4 Primary + More Menu */}
         <div className="relative mb-5 z-30">
           <nav aria-label="Career management sections" className="grid grid-cols-5 border-b border-slate-850 gap-1 pb-px bg-slate-950/40 rounded-2xl p-1">
@@ -1063,6 +1163,17 @@ function CareerPlayHubContent() {
           )}
         </div>
 
+        {/* Carousel Slide Container */}
+        <div
+          key={activeTab}
+          className={`w-full will-change-transform ${
+            slideDirection === 'right'
+              ? 'animate-tab-slide-right'
+              : slideDirection === 'left'
+              ? 'animate-tab-slide-left'
+              : ''
+          }`}
+        >
         {/* TAB 1: OVERVIEW / MANAGER OFFICE */}
         {activeTab === 'overview' && (
           <div className="space-y-4">
@@ -2471,6 +2582,7 @@ function CareerPlayHubContent() {
             </div>
           </div>
         )}
+        </div>
       </main>
 
       {/* Matchday Play/Sim Interactive Modal */}
@@ -2497,6 +2609,26 @@ function CareerPlayHubContent() {
           onPlayInstantMatch={() => {
             setMatchOverviewModal(null);
             handlePlayNextMatchInstant();
+          }}
+        />
+      )}
+
+      {/* Short Instant Simulation Loading Suspense Modal */}
+      {instantSimLoadingData && (
+        <InstantSimLoadingModal
+          homeClub={instantSimLoadingData.homeClub}
+          awayClub={instantSimLoadingData.awayClub}
+          userClub={save.club}
+          competitionTitle={instantSimLoadingData.competitionTitle}
+          roundTitle={instantSimLoadingData.roundTitle}
+          durationMs={1200}
+          onComplete={() => {
+            const { updatedSave, simmedFixture } = instantSimLoadingData;
+            saveCareerSave(updatedSave);
+            setSave(updatedSave);
+            setSimulating(false);
+            setInstantSimLoadingData(null);
+            setInstantSimResultModal(simmedFixture);
           }}
         />
       )}

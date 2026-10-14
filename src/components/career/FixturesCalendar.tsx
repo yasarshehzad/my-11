@@ -21,6 +21,7 @@ import { isSeasonComplete, getSeasonReviewSummary, advanceToNextSeason } from '.
 import { MatchDayModal } from './MatchDayModal';
 import { MatchOverviewModal } from './MatchOverviewModal';
 import { InstantMatchSummaryModal } from './InstantMatchSummaryModal';
+import { InstantSimLoadingModal } from './InstantSimLoadingModal';
 
 interface FixturesCalendarProps {
   save: CareerSaveFile;
@@ -41,6 +42,14 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
     fixture: LeagueFixture;
   } | null>(null);
   const [instantSimResultModal, setInstantSimResultModal] = useState<LeagueFixture | null>(null);
+  const [instantSimLoadingData, setInstantSimLoadingData] = useState<{
+    simmedFixture: LeagueFixture;
+    updatedSave: CareerSaveFile;
+    homeClub: Club;
+    awayClub: Club;
+    competitionTitle: string;
+    roundTitle: string;
+  } | null>(null);
   const [showSeasonReviewModal, setShowSeasonReviewModal] = useState(false);
 
   const fixtures = save.fixtures || [];
@@ -107,9 +116,14 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
       standings: updatedStandings,
     };
 
-    onUpdateSave(updatedSave);
-    setSimulating(false);
-    setInstantSimResultModal(simmed);
+    setInstantSimLoadingData({
+      simmedFixture: simmed,
+      updatedSave,
+      homeClub,
+      awayClub,
+      competitionTitle: 'English Top Flight',
+      roundTitle: `Matchday ${nextFixture.round} of 38`,
+    });
   };
 
   // Time-skip advancement
@@ -502,6 +516,25 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
           onPlayInstantMatch={() => {
             setMatchOverviewModal(null);
             handlePlayNextMatch();
+          }}
+        />
+      )}
+
+      {/* Short Instant Simulation Loading Suspense Modal */}
+      {instantSimLoadingData && (
+        <InstantSimLoadingModal
+          homeClub={instantSimLoadingData.homeClub}
+          awayClub={instantSimLoadingData.awayClub}
+          userClub={save.club}
+          competitionTitle={instantSimLoadingData.competitionTitle}
+          roundTitle={instantSimLoadingData.roundTitle}
+          durationMs={1200}
+          onComplete={() => {
+            const { updatedSave, simmedFixture } = instantSimLoadingData;
+            onUpdateSave(updatedSave);
+            setSimulating(false);
+            setInstantSimLoadingData(null);
+            setInstantSimResultModal(simmedFixture);
           }}
         />
       )}

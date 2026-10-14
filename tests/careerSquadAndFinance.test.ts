@@ -484,4 +484,37 @@ describe('Starter Squad Generator', () => {
     expect(eliteAvg).toBeGreaterThan(lowerAvg);
     expect(eliteAvg).toBeGreaterThan(80);
   });
+
+  it('selects up to 9 matchday substitutes in starting lineup when squad size allows', () => {
+    const club = getClubById('merseyside_red')!;
+    const squad = generateClubSquad(club);
+    const lineup = getBestStartingLineup(squad, '4-3-3');
+
+    expect(lineup.starterIds.length).toBe(11);
+    expect(lineup.benchIds.length).toBe(9);
+  });
+
+  it('calculates modern transfer market valuations aligned with 2024-2026 standards', () => {
+    const superstarVal = calculatePlayerValue(91, 24, 'ST');
+    expect(superstarVal).toBeGreaterThanOrEqual(140_000_000);
+
+    const eliteMidVal = calculatePlayerValue(88, 25, 'CM');
+    expect(eliteMidVal).toBeGreaterThanOrEqual(80_000_000);
+
+    const starterVal = calculatePlayerValue(82, 26, 'CB');
+    expect(starterVal).toBeGreaterThanOrEqual(28_000_000);
+  });
+
+  it('ensures new career save initializes finances with healthy wage headroom above modern squad wages', () => {
+    const club = getClubById('man_blue')!;
+    const save = createNewCareerSave({
+      slotId: 'slot_1',
+      manager: { name: 'Manager', nationality: 'England' },
+      club,
+      settings: getPresetSettings('normal'),
+    });
+
+    expect(save.finances.weeklyWageBudget).toBeGreaterThan(save.finances.currentWeeklyWages);
+    expect(save.finances.weeklyWageBudget - save.finances.currentWeeklyWages).toBeGreaterThanOrEqual(300_000);
+  });
 });

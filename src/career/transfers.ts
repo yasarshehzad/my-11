@@ -652,8 +652,10 @@ export function getPlayerPreferredTerms(
   else expectedSquadRole = 'sporadic';
 
   // Base wage demand
-  const rawDemand = 'wageDemand' in player ? player.wageDemand : player.wageWeekly || Math.round(value * 0.0022);
-  const preferredWageWeekly = Math.max(8_000, Math.round(rawDemand / 5_000) * 5_000);
+  const currentWage = ('wageWeekly' in player ? player.wageWeekly : 0) || 0;
+  const rawDemand = 'wageDemand' in player ? player.wageDemand : currentWage || Math.round(value * 0.0022);
+  const roundedDemand = Math.max(8_000, Math.round(rawDemand / 5_000) * 5_000);
+  const preferredWageWeekly = Math.max(currentWage, roundedDemand);
   const minimumAcceptableWage = Math.round((preferredWageWeekly * 0.88) / 1_000) * 1_000;
 
   // Preferred contract length

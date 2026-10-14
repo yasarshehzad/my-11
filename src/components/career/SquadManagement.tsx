@@ -49,6 +49,13 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
   const [filterGroup, setFilterGroup] = useState<'ALL' | GeneralPositionGroup>('ALL');
   const [selectedPlayer, setSelectedPlayer] = useState<CareerPlayer | null>(null);
   const [swapSourceId, setSwapSourceId] = useState<string | null>(null);
+  const [draggedPlayer, setDraggedPlayer] = useState<CareerPlayer | null>(null);
+  const [dragOverPlayerId, setDragOverPlayerId] = useState<string | null>(null);
+  const [touchDragPlayer, setTouchDragPlayer] = useState<CareerPlayer | null>(null);
+  const [touchPos, setTouchPos] = useState<{ x: number; y: number } | null>(null);
+  const [showReservePickerModal, setShowReservePickerModal] = useState<boolean>(false);
+  const touchTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const touchStartPosRef = React.useRef<{ x: number; y: number } | null>(null);
   const [academyToast, setAcademyToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [showRegistrationModal, setShowRegistrationModal] = useState<boolean>(false);
 
@@ -233,80 +240,267 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
     });
   };
 
+  const executeSwap = (sourceId: string, targetId: string) => {
+    if (sourceId === targetId) return;
+
+    const sourcePlayer = squad.find((p) => p.id === sourceId);
+    const targetPlayer = squad.find((p) => p.id === targetId);
+    if (!sourcePlayer || !targetPlayer) return;
+
+    const sourceIsStarter = starterIdsSet.has(sourceId);
+    const targetIsStarter = starterIdsSet.has(targetId);
+    const sourceIsBench = benchIdsSet.has(sourceId);
+    const targetIsBench = benchIdsSet.has(targetId);
+
+    // Prevent unregistered senior players from being moved into starters or bench
+    if (!sourceIsStarter && !sourceIsBench && (targetIsStarter || targetIsBench)) {
+      if (!isPlayerRegisteredForMatch(sourcePlayer, squad, save.registeredPlayerIds, save.season?.yearStart)) {
+        onNotification?.(`${sourcePlayer.name} is unregistered. Register them in your 25-man squad before selecting for matchdays.`);
+        setSwapSourceId(null);
+        return;
+      }
+    } else if (!targetIsStarter && !targetIsBench && (sourceIsStarter || sourceIsBench)) {
+      if (!isPlayerRegisteredForMatch(targetPlayer, squad, save.registeredPlayerIds, save.season?.yearStart)) {
+        onNotification?.(`${targetPlayer.name} is unregistered. Register them in your 25-man squad before selecting for matchdays.`);
+        setSwapSourceId(null);
+        return;
+      }
+    }
+
+    let nextStarters = [...lineup.starterIds];
+    let nextBench = [...lineup.benchIds];
+
+    if (sourceIsStarter && targetIsStarter) {
+      // Swap slots inside starters
+      const idx1 = nextStarters.indexOf(sourceId);
+      const idx2 = nextStarters.indexOf(targetId);
+      nextStarters[idx1] = targetId;
+      nextStarters[idx2] = sourceId;
+    } else if (sourceIsStarter && !targetIsStarter) {
+      nextStarters = nextStarters.map((id) => (id === sourceId ? targetId : id));
+      if (targetIsBench) {
+        nextBench = nextBench.map((id) => (id === targetId ? sourceId : id));
+      } else {
+        nextBench = nextBench.filter((id) => id !== targetId);
+      }
+    } else if (!sourceIsStarter && targetIsStarter) {
+      nextStarters = nextStarters.map((id) => (id === targetId ? sourceId : id));
+      if (sourceIsBench) {
+        nextBench = nextBench.map((id) => (id === sourceId ? targetId : id));
+      }
+    } else {
+      // Both are bench or reserve
+      if (sourceIsBench && !targetIsBench) {
+        nextBench = nextBench.map((id) => (id === sourceId ? targetId : id));
+      } else if (!sourceIsBench && targetIsBench) {
+        nextBench = nextBench.map((id) => (id === targetId ? sourceId : id));
+      }
+    }
+
+    onUpdateSave({
+      ...save,
+      lineup: {
+        ...lineup,
+        starterIds: nextStarters,
+        benchIds: nextBench,
+      },
+    });
+    setSwapSourceId(null);
+    onNotification?.(`Swapped ${sourcePlayer.name} with ${targetPlayer.name}.`);
+  };
+
   const handlePlayerClick = (player: CareerPlayer) => {
     if (swapSourceId) {
       if (swapSourceId === player.id) {
         setSwapSourceId(null);
         return;
       }
-
-      // Execute swap
-      const sourceIsStarter = starterIdsSet.has(swapSourceId);
-      const targetIsStarter = starterIdsSet.has(player.id);
-      const sourceIsBench = benchIdsSet.has(swapSourceId);
-      const targetIsBench = benchIdsSet.has(player.id);
-
-      // Prevent unregistered senior players from being moved into starters or bench
-      if (!sourceIsStarter && !sourceIsBench && (targetIsStarter || targetIsBench)) {
-        const sourcePlayer = squad.find((p) => p.id === swapSourceId);
-        if (sourcePlayer && !isPlayerRegisteredForMatch(sourcePlayer, squad, save.registeredPlayerIds, save.season?.yearStart)) {
-          onNotification?.(`${sourcePlayer.name} is unregistered. Register them in your 25-man squad before selecting for matchdays.`);
-          setSwapSourceId(null);
-          return;
-        }
-      } else if (!targetIsStarter && !targetIsBench && (sourceIsStarter || sourceIsBench)) {
-        if (!isPlayerRegisteredForMatch(player, squad, save.registeredPlayerIds, save.season?.yearStart)) {
-          onNotification?.(`${player.name} is unregistered. Register them in your 25-man squad before selecting for matchdays.`);
-          setSwapSourceId(null);
-          return;
-        }
-      }
-
-      let nextStarters = [...lineup.starterIds];
-      let nextBench = [...lineup.benchIds];
-
-      if (sourceIsStarter && targetIsStarter) {
-        // Swap slots inside starters
-        const idx1 = nextStarters.indexOf(swapSourceId);
-        const idx2 = nextStarters.indexOf(player.id);
-        nextStarters[idx1] = player.id;
-        nextStarters[idx2] = swapSourceId;
-      } else if (sourceIsStarter && !targetIsStarter) {
-        nextStarters = nextStarters.map((id) => (id === swapSourceId ? player.id : id));
-        if (targetIsBench) {
-          nextBench = nextBench.map((id) => (id === player.id ? swapSourceId : id));
-        } else {
-          nextBench = nextBench.filter((id) => id !== player.id);
-        }
-      } else if (!sourceIsStarter && targetIsStarter) {
-        nextStarters = nextStarters.map((id) => (id === player.id ? swapSourceId : id));
-        if (sourceIsBench) {
-          nextBench = nextBench.map((id) => (id === swapSourceId ? player.id : id));
-        }
-      } else {
-        // Both are bench or reserve
-        if (sourceIsBench && !targetIsBench) {
-          nextBench = nextBench.map((id) => (id === swapSourceId ? player.id : id));
-        } else if (!sourceIsBench && targetIsBench) {
-          nextBench = nextBench.map((id) => (id === player.id ? swapSourceId : id));
-        }
-      }
-
-      onUpdateSave({
-        ...save,
-        lineup: {
-          ...lineup,
-          starterIds: nextStarters,
-          benchIds: nextBench,
-        },
-      });
-      setSwapSourceId(null);
+      executeSwap(swapSourceId, player.id);
     } else {
-      if (viewMode === 'pitch') {
-        setSwapSourceId(player.id);
+      handleSelectPlayerWithActions(player);
+    }
+  };
+
+  const handleMovePlayerToBench = (playerId: string) => {
+    const player = squad.find((p) => p.id === playerId);
+    if (!player) return;
+    const eligible = isPlayerRegisteredForMatch(player, squad, save.registeredPlayerIds, save.season?.yearStart);
+    if (!eligible) {
+      onNotification?.(`${player.name} is unregistered. Register them before selecting for matchdays.`);
+      return;
+    }
+    if (bench.length >= 9) {
+      onNotification?.('Substitute bench is already full (9/9).');
+      return;
+    }
+    let nextStarters = [...lineup.starterIds];
+    let nextBench = [...lineup.benchIds];
+
+    if (starterIdsSet.has(playerId)) {
+      const replacement = [...bench, ...reserves].find(
+        (p) => p.id !== playerId && isPlayerRegisteredForMatch(p, squad, save.registeredPlayerIds, save.season?.yearStart)
+      );
+      if (replacement) {
+        nextStarters = nextStarters.map((id) => (id === playerId ? replacement.id : id));
+        nextBench = nextBench.filter((id) => id !== replacement.id);
       } else {
-        handleSelectPlayerWithActions(player);
+        onNotification?.('Must maintain 11 starters.');
+        return;
       }
+    }
+    nextBench = nextBench.filter((id) => id !== playerId);
+    nextBench.push(playerId);
+
+    onUpdateSave({
+      ...save,
+      lineup: {
+        ...lineup,
+        starterIds: nextStarters,
+        benchIds: nextBench,
+      },
+    });
+    setSwapSourceId(null);
+    onNotification?.(`Added ${player.name} to matchday substitutes.`);
+  };
+
+  const handleAutoFillBench = () => {
+    const needed = 9 - bench.length;
+    if (needed <= 0) return;
+    const eligibleReserves = reserves
+      .filter((p) => isPlayerRegisteredForMatch(p, squad, save.registeredPlayerIds, save.season?.yearStart))
+      .sort((a, b) => b.rating - a.rating);
+    const toAdd = eligibleReserves.slice(0, needed).map((p) => p.id);
+    if (toAdd.length === 0) {
+      onNotification?.('No eligible reserve players available to fill bench.');
+      return;
+    }
+    onUpdateSave({
+      ...save,
+      lineup: {
+        ...lineup,
+        benchIds: [...lineup.benchIds, ...toAdd],
+      },
+    });
+    onNotification?.(`Auto-filled ${toAdd.length} player(s) into matchday substitutes.`);
+  };
+
+  const handleEmptyBenchSlotClick = () => {
+    if (swapSourceId) {
+      handleMovePlayerToBench(swapSourceId);
+    } else {
+      setShowReservePickerModal(true);
+    }
+  };
+
+  // HTML5 Desktop Drag and Drop handlers
+  const handleDragStart = (e: React.DragEvent, player: CareerPlayer) => {
+    e.dataTransfer.setData('text/plain', player.id);
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggedPlayer(player);
+  };
+
+  const handleDragOver = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverPlayerId !== targetId) {
+      setDragOverPlayerId(targetId);
+    }
+  };
+
+  const handleDragLeave = (targetId: string) => {
+    if (dragOverPlayerId === targetId) {
+      setDragOverPlayerId(null);
+    }
+  };
+
+  const handleDropOnPlayer = (e: React.DragEvent, targetPlayer: CareerPlayer) => {
+    e.preventDefault();
+    const sourceId = e.dataTransfer.getData('text/plain') || draggedPlayer?.id;
+    if (sourceId && sourceId !== targetPlayer.id) {
+      executeSwap(sourceId, targetPlayer.id);
+    }
+    setDraggedPlayer(null);
+    setDragOverPlayerId(null);
+  };
+
+  const handleDropOnEmptyBench = (e: React.DragEvent) => {
+    e.preventDefault();
+    const sourceId = e.dataTransfer.getData('text/plain') || draggedPlayer?.id;
+    if (sourceId) {
+      handleMovePlayerToBench(sourceId);
+    }
+    setDraggedPlayer(null);
+    setDragOverPlayerId(null);
+  };
+
+  // Touch Long-Press Drag & Drop handlers for Mobile
+  const handleTouchStart = (player: CareerPlayer, e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+
+    if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
+    touchTimerRef.current = setTimeout(() => {
+      setTouchDragPlayer(player);
+      setTouchPos({ x: touch.clientX, y: touch.clientY });
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate(25);
+      }
+    }, 180);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchTimerRef.current && !touchDragPlayer) {
+      const touch = e.touches[0];
+      const dx = touch.clientX - (touchStartPosRef.current?.x || 0);
+      const dy = touch.clientY - (touchStartPosRef.current?.y || 0);
+      if (Math.hypot(dx, dy) > 10) {
+        clearTimeout(touchTimerRef.current);
+        touchTimerRef.current = null;
+      }
+    }
+
+    if (touchDragPlayer && e.touches.length === 1) {
+      const touch = e.touches[0];
+      setTouchPos({ x: touch.clientX, y: touch.clientY });
+
+      const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+      const playerCard = elem?.closest('[data-player-id]');
+      const emptySlot = elem?.closest('[data-empty-bench-slot="true"]');
+      if (playerCard) {
+        const targetId = playerCard.getAttribute('data-player-id');
+        if (targetId && targetId !== touchDragPlayer.id) {
+          setDragOverPlayerId(targetId);
+        }
+      } else if (emptySlot) {
+        setDragOverPlayerId('empty-bench');
+      } else {
+        setDragOverPlayerId(null);
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (touchTimerRef.current) {
+      clearTimeout(touchTimerRef.current);
+      touchTimerRef.current = null;
+    }
+
+    if (touchDragPlayer) {
+      if (dragOverPlayerId === 'empty-bench') {
+        handleMovePlayerToBench(touchDragPlayer.id);
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          navigator.vibrate(35);
+        }
+      } else if (dragOverPlayerId && dragOverPlayerId !== touchDragPlayer.id) {
+        executeSwap(touchDragPlayer.id, dragOverPlayerId);
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          navigator.vibrate(35);
+        }
+      }
+      setTouchDragPlayer(null);
+      setTouchPos(null);
+      setDragOverPlayerId(null);
     }
   };
 
@@ -528,117 +722,103 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
             </div>
           </div>
 
-          {/* Quick Swap Drawer (Instant Touchscreen Subs without scrolling) */}
-          {swapSourceId && (
-            <div className="bg-slate-950/95 border-2 border-amber-400 rounded-3xl p-3.5 sm:p-4 shadow-2xl space-y-3 animate-in fade-in slide-in-from-bottom-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">🔁</span>
-                  <div>
-                    <span className="text-[10px] font-black uppercase text-amber-400 font-display">
-                      Substituting Starter
-                    </span>
-                    <div className="text-xs sm:text-sm font-display font-black text-white">
-                      {squad.find((p) => p.id === swapSourceId)?.name} ({squad.find((p) => p.id === swapSourceId)?.position} • {squad.find((p) => p.id === swapSourceId)?.rating} OVR)
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  {onOpenCompare && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const p = squad.find((sp) => sp.id === swapSourceId);
-                        if (p) onOpenCompare(p);
-                      }}
-                      className="py-1 px-2.5 rounded-lg bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-[11px] font-bold hover:bg-emerald-900/60 cursor-pointer flex items-center gap-1"
-                      title="Compare player with squad rivals"
-                    >
-                      <span>📊 Compare</span>
-                    </button>
-                  )}
-                  <button
-                    onClick={() => {
-                      const p = squad.find((p) => p.id === swapSourceId);
-                      if (p) handleSelectPlayerWithActions(p);
-                    }}
-                    className="py-1 px-2.5 rounded-lg bg-slate-900 border border-slate-750 text-slate-300 text-[11px] font-bold hover:text-white cursor-pointer"
-                  >
-                    Details ⚙️
-                  </button>
-                  <button
-                    onClick={() => setSwapSourceId(null)}
-                    className="py-1 px-2.5 rounded-lg bg-slate-900 border border-slate-750 text-slate-400 hover:text-white text-[11px] font-bold cursor-pointer"
-                  >
-                    ✕ Cancel
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1.5">
-                  Tap any bench player to swap immediately:
-                </span>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1.5">
-                  {bench.map((benchPlayer) => (
-                    <button
-                      key={benchPlayer.id}
-                      onClick={() => handlePlayerClick(benchPlayer)}
-                      className="p-2 rounded-xl border border-slate-800 bg-slate-900 hover:border-emerald-500/60 hover:bg-slate-850 text-left transition-all cursor-pointer flex items-center justify-between gap-1.5"
-                    >
-                      <div className="min-w-0">
-                        <div className="text-xs font-display font-black text-white truncate">
-                          {benchPlayer.name}
-                        </div>
-                        <div className="text-[9px] text-slate-400">
-                          {benchPlayer.position} • {formatCurrency(benchPlayer.value)}
-                        </div>
-                      </div>
-                      <span className="text-xs font-display font-black text-emerald-400 font-mono">
-                        {benchPlayer.rating}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Bench Row (Substitutes) */}
           <div className="bg-slate-900/40 border border-slate-850 rounded-3xl p-4 sm:p-5 space-y-3">
-            <div className="flex justify-between items-center">
-              <h4 className="text-xs font-display font-black uppercase text-slate-300">
-                Matchday Substitutes ({bench.length}/9)
-              </h4>
-              <span className="text-[10px] text-slate-500 font-medium">
-                Tap a player to sub or swap
+            <div className="flex justify-between items-center gap-2">
+              <div className="flex items-center gap-2">
+                <h4 className="text-xs font-display font-black uppercase text-slate-300">
+                  Matchday Substitutes ({bench.length}/9)
+                </h4>
+                {bench.length < 9 && (
+                  <button
+                    type="button"
+                    onClick={handleAutoFillBench}
+                    className="py-1 px-2.5 rounded-lg bg-emerald-950/70 border border-emerald-500/50 text-emerald-300 hover:bg-emerald-900 text-[10px] font-display font-black uppercase tracking-wider transition-colors cursor-pointer"
+                    title="Automatically fill remaining bench spots with top reserves"
+                  >
+                    ⚡ Auto-Fill Bench
+                  </button>
+                )}
+              </div>
+              <span className="text-[10px] text-slate-500 font-medium hidden sm:inline">
+                Drag or tap to swap
               </span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2.5">
-              {bench.map((player) => (
-                <div
-                  key={player.id}
-                  id={`squad-player-bench-${player.id}`}
-                  onClick={() => handlePlayerClick(player)}
-                  className={`p-2.5 rounded-xl border text-center cursor-pointer transition-all scroll-mt-20 ${
-                    swapSourceId === player.id
-                      ? 'border-amber-400 bg-amber-950/40 ring-2 ring-amber-400'
-                      : 'border-slate-800 bg-slate-950/60 hover:border-slate-700 hover:bg-slate-900/60'
-                  }`}
-                >
-                  <div className="flex justify-between items-center text-[10px] font-bold mb-1">
-                    <span className="text-emerald-400">{player.position}</span>
-                    <span className="text-white font-display font-black">{player.rating}</span>
+              {bench.map((player) => {
+                const isSwapping = swapSourceId === player.id;
+                const isDragTarget = dragOverPlayerId === player.id;
+                return (
+                  <div
+                    key={player.id}
+                    id={`squad-player-bench-${player.id}`}
+                    data-player-id={player.id}
+                    draggable={true}
+                    onDragStart={(e) => handleDragStart(e, player)}
+                    onDragOver={(e) => handleDragOver(e, player.id)}
+                    onDragLeave={() => handleDragLeave(player.id)}
+                    onDrop={(e) => handleDropOnPlayer(e, player)}
+                    onTouchStart={(e) => handleTouchStart(player, e)}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                    onClick={() => handlePlayerClick(player)}
+                    className={`p-2.5 rounded-xl border text-center cursor-grab active:cursor-grabbing transition-all scroll-mt-20 select-none ${
+                      isDragTarget
+                        ? 'border-emerald-400 bg-emerald-950/80 ring-4 ring-emerald-400/60 scale-105 z-10'
+                        : isSwapping
+                        ? 'border-amber-400 bg-amber-950/40 ring-2 ring-amber-400'
+                        : 'border-slate-800 bg-slate-950/60 hover:border-slate-700 hover:bg-slate-900/60'
+                    }`}
+                  >
+                    <div className="flex justify-between items-center text-[10px] font-bold mb-1">
+                      <span className="text-emerald-400">{player.position}</span>
+                      <span className="text-white font-display font-black">{player.rating}</span>
+                    </div>
+                    <div className="text-xs font-display font-black text-white truncate" title={player.name}>
+                      {player.name}
+                    </div>
+                    <div className="text-[9px] text-slate-400 mt-1">
+                      {formatCurrency(player.value)}
+                    </div>
                   </div>
-                  <div className="text-xs font-display font-black text-white truncate" title={player.name}>
-                    {player.name}
+                );
+              })}
+
+              {/* Render interactive empty bench slots up to 9 */}
+              {Array.from({ length: Math.max(0, 9 - bench.length) }).map((_, idx) => {
+                const isTarget = dragOverPlayerId === 'empty-bench';
+                return (
+                  <div
+                    key={`empty-bench-${idx}`}
+                    data-empty-bench-slot="true"
+                    onClick={handleEmptyBenchSlotClick}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = 'move';
+                      if (dragOverPlayerId !== 'empty-bench') setDragOverPlayerId('empty-bench');
+                    }}
+                    onDragLeave={() => {
+                      if (dragOverPlayerId === 'empty-bench') setDragOverPlayerId(null);
+                    }}
+                    onDrop={handleDropOnEmptyBench}
+                    className={`p-2.5 rounded-xl border-2 border-dashed text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[76px] select-none ${
+                      isTarget || (swapSourceId && !benchIdsSet.has(swapSourceId))
+                        ? 'border-amber-400/80 bg-amber-950/30 text-amber-300 animate-pulse'
+                        : 'border-slate-800/80 bg-slate-950/30 text-slate-500 hover:border-emerald-500/50 hover:text-emerald-400 hover:bg-slate-900/40'
+                    }`}
+                    title="Empty Bench Slot — Click or drop player to add to bench"
+                  >
+                    <span className="text-base leading-none mb-1">➕</span>
+                    <span className="text-[10px] font-display font-black uppercase tracking-wider">
+                      Add Sub
+                    </span>
+                    <span className="text-[8.5px] text-slate-500">
+                      Slot {bench.length + idx + 1}
+                    </span>
                   </div>
-                  <div className="text-[9px] text-slate-400 mt-1">
-                    {formatCurrency(player.value)}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -649,25 +829,44 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                 Reserves ({reserves.length})
               </h4>
               <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2.5">
-                {reserves.map((player) => (
-                  <div
-                    key={player.id}
-                    id={`squad-player-reserve-${player.id}`}
-                    onClick={() => handlePlayerClick(player)}
-                    className="p-2.5 rounded-xl border border-slate-850/60 bg-slate-950/40 text-center cursor-pointer hover:border-slate-700 transition-all opacity-80 hover:opacity-100 scroll-mt-20"
-                  >
-                    <div className="flex justify-between items-center text-[10px] font-bold mb-1">
-                      <span className="text-slate-400">{player.position}</span>
-                      <span className="text-slate-300 font-display font-black">{player.rating}</span>
+                {reserves.map((player) => {
+                  const isSwapping = swapSourceId === player.id;
+                  const isDragTarget = dragOverPlayerId === player.id;
+                  return (
+                    <div
+                      key={player.id}
+                      id={`squad-player-reserve-${player.id}`}
+                      data-player-id={player.id}
+                      draggable={true}
+                      onDragStart={(e) => handleDragStart(e, player)}
+                      onDragOver={(e) => handleDragOver(e, player.id)}
+                      onDragLeave={() => handleDragLeave(player.id)}
+                      onDrop={(e) => handleDropOnPlayer(e, player)}
+                      onTouchStart={(e) => handleTouchStart(player, e)}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={handleTouchEnd}
+                      onClick={() => handlePlayerClick(player)}
+                      className={`p-2.5 rounded-xl border text-center cursor-grab active:cursor-grabbing transition-all scroll-mt-20 select-none ${
+                        isDragTarget
+                          ? 'border-emerald-400 bg-emerald-950/80 ring-4 ring-emerald-400/60 scale-105 z-10 opacity-100'
+                          : isSwapping
+                          ? 'border-amber-400 bg-amber-950/40 ring-2 ring-amber-400 opacity-100'
+                          : 'border-slate-850/60 bg-slate-950/40 hover:border-slate-700 opacity-80 hover:opacity-100'
+                      }`}
+                    >
+                      <div className="flex justify-between items-center text-[10px] font-bold mb-1">
+                        <span className="text-slate-400">{player.position}</span>
+                        <span className="text-slate-300 font-display font-black">{player.rating}</span>
+                      </div>
+                      <div className="text-xs font-display font-black text-slate-200 truncate" title={player.name}>
+                        {player.name}
+                      </div>
+                      <div className="text-[9px] text-slate-500 mt-1">
+                        {formatCurrency(player.value)}
+                      </div>
                     </div>
-                    <div className="text-xs font-display font-black text-slate-200 truncate" title={player.name}>
-                      {player.name}
-                    </div>
-                    <div className="text-[9px] text-slate-500 mt-1">
-                      {formatCurrency(player.value)}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -1497,6 +1696,171 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
         />
       )}
 
+      {/* Floating Sticky Bottom Swap Bar */}
+      {swapSourceId && (
+        <aside
+          role="region"
+          aria-label="Active player swap"
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-lg bg-slate-950/95 border-2 border-amber-400/90 rounded-2xl p-3 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-4 flex items-center justify-between gap-2.5"
+        >
+          {(() => {
+            const p = squad.find((sp) => sp.id === swapSourceId);
+            return (
+              <>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-full bg-amber-950 border border-amber-400/60 flex items-center justify-center text-amber-300 font-bold shrink-0 text-xs">
+                    🔄
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-black uppercase text-amber-400 tracking-wider font-display truncate">
+                      Swapping Active
+                    </div>
+                    <div className="text-xs sm:text-sm font-display font-black text-white truncate">
+                      {p?.name} <span className="text-slate-400 text-[11px] font-normal">({p?.position} • {p?.rating} OVR)</span>
+                    </div>
+                    <div className="text-[9.5px] text-slate-400 truncate">
+                      Tap or drop on any player or empty bench slot
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {onOpenCompare && p && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenCompare(p)}
+                      className="py-1.5 px-2.5 rounded-xl bg-emerald-950/70 border border-emerald-500/50 text-emerald-300 hover:bg-emerald-900 text-xs font-bold cursor-pointer"
+                      title="Compare with squad rivals"
+                    >
+                      📊 Compare
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setSwapSourceId(null)}
+                    className="py-1.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-display font-black uppercase tracking-wider cursor-pointer border border-slate-700"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            );
+          })()}
+        </aside>
+      )}
+
+      {/* Mobile Touch Drag Ghost Card Follower */}
+      {touchDragPlayer && touchPos && (
+        <div
+          style={{
+            position: 'fixed',
+            left: `${touchPos.x}px`,
+            top: `${touchPos.y}px`,
+            transform: 'translate(-50%, -50%) rotate(4deg)',
+            pointerEvents: 'none',
+            zIndex: 9999,
+          }}
+          className="w-24 p-2 rounded-2xl border-2 border-emerald-400 bg-slate-950/95 shadow-2xl backdrop-blur-md opacity-90 text-center select-none"
+        >
+          <div className="flex justify-between items-center text-[9px] font-black text-emerald-400 mb-0.5">
+            <span>{touchDragPlayer.position}</span>
+            <span className="text-white font-mono">{touchDragPlayer.rating}</span>
+          </div>
+          <div className="text-[10px] font-display font-black text-white truncate">
+            {touchDragPlayer.name}
+          </div>
+          <div className="text-[8px] text-emerald-300 font-bold mt-0.5">
+            Dragging...
+          </div>
+        </div>
+      )}
+
+      {/* Reserve Picker Modal for Empty Bench Slots */}
+      {showReservePickerModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in"
+          onClick={() => setShowReservePickerModal(false)}
+        >
+          <div
+            className="bg-slate-950 border border-slate-850 rounded-3xl max-w-md w-full p-4 sm:p-5 shadow-2xl space-y-4 max-h-[85vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-850">
+              <div>
+                <h3 className="text-sm font-display font-black uppercase tracking-wider text-white">
+                  Add Substitute to Bench
+                </h3>
+                <p className="text-[11px] text-slate-400">
+                  Select an eligible reserve player ({bench.length}/9 slots filled)
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowReservePickerModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-xs font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="overflow-y-auto flex-1 space-y-1.5 pr-1">
+              {reserves
+                .filter((p) => isPlayerRegisteredForMatch(p, squad, save.registeredPlayerIds, save.season?.yearStart))
+                .sort((a, b) => b.rating - a.rating)
+                .map((player) => (
+                  <button
+                    key={player.id}
+                    type="button"
+                    onClick={() => {
+                      handleMovePlayerToBench(player.id);
+                      setShowReservePickerModal(false);
+                    }}
+                    className="w-full p-2.5 rounded-xl border border-slate-850 bg-slate-900/60 hover:bg-emerald-950/40 hover:border-emerald-500/50 flex items-center justify-between gap-2 transition-all cursor-pointer text-left"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="w-8 text-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-emerald-400 font-display">
+                        {player.position}
+                      </span>
+                      <div className="min-w-0">
+                        <div className="text-xs font-display font-black text-white truncate">
+                          {player.name}
+                        </div>
+                        <div className="text-[10px] text-slate-400">
+                          Age {player.age} • {formatCurrency(player.value)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-sm font-display font-black text-emerald-400 font-mono">
+                        {player.rating}
+                      </div>
+                      <span className="text-[9.5px] text-emerald-400/80 font-bold uppercase">
+                        + Add
+                      </span>
+                    </div>
+                  </button>
+                ))}
+
+              {reserves.filter((p) => isPlayerRegisteredForMatch(p, squad, save.registeredPlayerIds, save.season?.yearStart)).length === 0 && (
+                <div className="text-center py-6 text-xs text-slate-400">
+                  No eligible reserve players available. Register senior players in the 25-man squad first.
+                </div>
+              )}
+            </div>
+
+            <div className="pt-2 border-t border-slate-850 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowReservePickerModal(false)}
+                className="py-2 px-4 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 text-xs font-bold hover:text-white cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 
@@ -1511,12 +1875,16 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
               if (sourcePlayer) handlePlayerClick(sourcePlayer);
             }
           }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+          }}
           className={`w-16 min-w-0 sm:w-22 rounded-xl border-2 border-dashed p-1.5 sm:p-2 text-center text-[10px] font-bold cursor-pointer transition-colors ${
             swapSourceId
               ? 'border-amber-400 bg-amber-950/30 text-amber-300 animate-pulse'
               : 'border-emerald-500/30 text-emerald-400/60 hover:border-emerald-500/60'
           }`}
-          title={`${slotPos} (Empty) - Click to assign player`}
+          title={`${slotPos} (Empty) - Click or drop to assign`}
         >
           {slotPos} (Empty)
         </div>
@@ -1525,6 +1893,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
 
     const fit = calculatePositionFit(player, slotPos);
     const isSwapping = swapSourceId === player.id;
+    const isDragTarget = dragOverPlayerId === player.id;
     const bonus = calculateFormRatingBonus(player);
     const effectiveRating = getEffectiveRating(player);
 
@@ -1532,21 +1901,32 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
       <div
         key={player.id}
         id={`squad-player-pitch-${player.id}`}
+        data-player-id={player.id}
+        draggable={true}
+        onDragStart={(e) => handleDragStart(e, player)}
+        onDragOver={(e) => handleDragOver(e, player.id)}
+        onDragLeave={() => handleDragLeave(player.id)}
+        onDrop={(e) => handleDropOnPlayer(e, player)}
+        onTouchStart={(e) => handleTouchStart(player, e)}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         onClick={() => handlePlayerClick(player)}
-        title={`${player.name} (${player.position}) • ${effectiveRating} OVR • Click to substitute`}
+        title={`${player.name} (${player.position}) • ${effectiveRating} OVR • Drag or click to swap`}
         aria-label={`${player.name}, position ${player.position}, rating ${effectiveRating}`}
-        className={`w-16 min-w-0 sm:w-22 p-1.5 sm:p-2 rounded-2xl border backdrop-blur-md text-center cursor-pointer transition-all transform hover:scale-105 select-none scroll-mt-20 ${
-          isSwapping
-            ? 'border-amber-400 bg-amber-950/80 ring-4 ring-amber-400/50 shadow-2xl'
+        className={`w-16 min-w-0 sm:w-22 p-1.5 sm:p-2 rounded-2xl border backdrop-blur-md text-center cursor-grab active:cursor-grabbing transition-all transform select-none scroll-mt-20 ${
+          isDragTarget
+            ? 'border-emerald-400 bg-emerald-950/90 ring-4 ring-emerald-400 scale-110 shadow-2xl z-20'
+            : isSwapping
+            ? 'border-amber-400 bg-amber-950/80 ring-4 ring-amber-400/50 shadow-2xl scale-105 z-10'
             : fit === 'out_of_position'
-            ? 'border-rose-500/60 bg-slate-950/90 hover:border-rose-400 shadow-lg'
+            ? 'border-rose-500/60 bg-slate-950/90 hover:border-rose-400 hover:scale-105 shadow-lg'
             : fit === 'competent'
-            ? 'border-amber-500/40 bg-slate-950/85 hover:border-amber-400 shadow-lg'
+            ? 'border-amber-500/40 bg-slate-950/85 hover:border-amber-400 hover:scale-105 shadow-lg'
             : bonus > 0
-            ? 'border-amber-400/80 bg-slate-950/90 hover:border-amber-300 shadow-lg ring-1 ring-amber-400/30'
+            ? 'border-amber-400/80 bg-slate-950/90 hover:border-amber-300 hover:scale-105 shadow-lg ring-1 ring-amber-400/30'
             : bonus < 0
-            ? 'border-blue-500/60 bg-slate-950/90 hover:border-blue-400 shadow-lg'
-            : 'border-slate-800/80 bg-slate-950/80 hover:border-emerald-400/80 shadow-lg'
+            ? 'border-blue-500/60 bg-slate-950/90 hover:border-blue-400 hover:scale-105 shadow-lg'
+            : 'border-slate-800/80 bg-slate-950/80 hover:border-emerald-400/80 hover:scale-105 shadow-lg'
         }`}
       >
         <div className="flex justify-between items-center text-[9px] font-black leading-none mb-1">
