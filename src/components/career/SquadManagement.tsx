@@ -269,7 +269,11 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
       });
       setSwapSourceId(null);
     } else {
-      handleSelectPlayerWithActions(player);
+      if (viewMode === 'pitch') {
+        setSwapSourceId(player.id);
+      } else {
+        handleSelectPlayerWithActions(player);
+      }
     }
   };
 
@@ -279,95 +283,68 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
   });
 
   return (
-    <div className="space-y-6">
-      {/* Vitals Summary Strip */}
-      <section className="grid grid-cols-2 sm:grid-cols-5 gap-3" aria-label="Squad vitals">
-        <div className="bg-slate-900/60 border border-slate-850 rounded-2xl p-3.5 space-y-1">
-          <div className="text-[9px] font-bold uppercase text-slate-500">Squad Size</div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-base font-display font-black text-white">
-              {squad.length}
+    <div className="space-y-4">
+      {/* 1. Compact Squad Vitals Strip */}
+      <section className="bg-slate-900/40 border border-slate-850 rounded-2xl p-2.5 sm:p-3" aria-label="Squad vitals">
+        <div className="grid grid-cols-4 gap-2 text-center text-xs">
+          <div className="space-y-0.5">
+            <span className="text-[8.5px] sm:text-[9.5px] uppercase font-bold text-slate-500 block truncate">Avg OVR</span>
+            <span className="text-sm sm:text-base font-display font-black text-emerald-400 block">
+              {validation.averageRating}
             </span>
-            <span className="text-xs text-slate-500">/ 35</span>
-            {squad.length >= 18 && squad.length <= 35 && validation.seniorCount <= 25 ? (
-              <span className="text-xs text-emerald-400" title="Squad size compliant">✓</span>
-            ) : (
-              <span className="text-xs text-rose-400" title="Invalid squad size">⚠️</span>
-            )}
           </div>
-          <div className="text-[9px] text-slate-400 font-medium">
-            Senior: {validation.seniorCount}/25 • U21: {validation.u21Count}
-          </div>
-        </div>
 
-        <div className="bg-slate-900/60 border border-slate-850 rounded-2xl p-3.5 space-y-1">
-          <div className="text-[9px] font-bold uppercase text-slate-500">Average OVR</div>
-          <div className="text-base font-display font-black text-emerald-400">
-            {validation.averageRating}
+          <div className="space-y-0.5">
+            <span className="text-[8.5px] sm:text-[9.5px] uppercase font-bold text-slate-500 block truncate">Squad Size</span>
+            <div className="flex items-center justify-center gap-1">
+              <span className="text-sm sm:text-base font-display font-black text-white">
+                {squad.length}
+              </span>
+              <span className="text-[10px] text-slate-500">/35</span>
+            </div>
           </div>
-          <div className="text-[9px] text-slate-400 font-medium">Team Quality Rating</div>
-        </div>
 
-        <div className="bg-slate-900/60 border border-slate-850 rounded-2xl p-3.5 space-y-1">
-          <div className="text-[9px] font-bold uppercase text-slate-500">Homegrown</div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-base font-display font-black text-white">
-              {validation.homegrownCount}
+          <div className="space-y-0.5">
+            <span className="text-[8.5px] sm:text-[9.5px] uppercase font-bold text-slate-500 block truncate">Homegrown</span>
+            <div className="flex items-center justify-center gap-1">
+              <span className="text-sm sm:text-base font-display font-black text-white">
+                {validation.homegrownCount}
+              </span>
+              <span className="text-[10px] text-slate-500">/8</span>
+              {validation.homegrownCount >= 8 ? (
+                <span className="text-xs text-emerald-400">✓</span>
+              ) : (
+                <span className="text-xs text-amber-400">⚠️</span>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-0.5">
+            <span className="text-[8.5px] sm:text-[9.5px] uppercase font-bold text-slate-500 block truncate">Wage Bill</span>
+            <span className="text-xs sm:text-sm font-display font-black text-slate-200 block truncate">
+              {formatWage(validation.totalWagesWeekly)}
             </span>
-            <span className="text-xs text-slate-500">/ 8</span>
-            {validation.homegrownCount >= 8 ? (
-              <span className="text-xs text-emerald-400" title="Homegrown compliant">✓</span>
-            ) : (
-              <span className="text-xs text-amber-400" title="Under quota">⚠️</span>
-            )}
           </div>
-          <div className="text-[9px] text-slate-400 font-medium">Domestic Quota</div>
         </div>
 
-        <div className="bg-slate-900/60 border border-slate-850 rounded-2xl p-3.5 space-y-1">
-          <div className="text-[9px] font-bold uppercase text-slate-500">Squad Value</div>
-          <div className="text-base font-display font-black text-white">
-            {formatCurrency(validation.totalSquadValue)}
+        {validation.errors.length > 0 && (
+          <div className="mt-2 pt-2 border-t border-rose-950/60 flex items-center justify-between text-[11px] text-rose-300">
+            <div className="flex items-center gap-1.5">
+              <span>⚠️</span>
+              <span className="font-bold">{validation.errors[0]}</span>
+            </div>
           </div>
-          <div className="text-[9px] text-slate-400 font-medium">Total Transfer Asset</div>
-        </div>
-
-        <div className="bg-slate-900/60 border border-slate-850 rounded-2xl p-3.5 space-y-1 col-span-2 sm:col-span-1">
-          <div className="text-[9px] font-bold uppercase text-slate-500">Weekly Wages</div>
-          <div className="text-base font-display font-black text-slate-200">
-            {formatWage(validation.totalWagesWeekly)}
-          </div>
-          <div className="text-[9px] text-slate-400 font-medium">
-            Limit: {formatWage(save.finances.weeklyWageBudget)}
-          </div>
-        </div>
+        )}
       </section>
 
-      {/* Validation Warnings / Errors if any */}
-      {validation.errors.length > 0 && (
-        <aside
-          role="alert"
-          className="bg-rose-950/40 border border-rose-800/60 rounded-2xl p-4 text-xs space-y-1 text-rose-300"
-        >
-          <div className="font-display font-black uppercase flex items-center gap-1.5 text-rose-200">
-            <span>⚠️</span> Squad Registration Issues
-          </div>
-          <ul className="list-disc pl-5 space-y-0.5 text-[11px]">
-            {validation.errors.map((err, i) => (
-              <li key={i}>{err}</li>
-            ))}
-          </ul>
-        </aside>
-      )}
-
-      {/* Controls Bar: Formation, Auto Pick, View Mode */}
-      <section className="flex flex-wrap justify-between items-center gap-3 bg-slate-900/40 border border-slate-850 p-3.5 rounded-2xl">
-        <div className="flex items-center gap-3">
-          <label className="text-[11px] font-bold uppercase text-slate-400">Formation:</label>
+      {/* 2. Controls Bar: Formation, Auto Pick, View Mode */}
+      <section className="flex flex-wrap justify-between items-center gap-2.5 bg-slate-900/40 border border-slate-850 p-2.5 sm:p-3 rounded-2xl">
+        <div className="flex items-center gap-2">
+          <label className="text-[10.5px] font-bold uppercase text-slate-400">Formation:</label>
           <select
             value={currentFormation}
             onChange={(e) => handleFormationChange(e.target.value)}
-            className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs font-display font-black text-white focus:outline-none focus:border-emerald-500 cursor-pointer"
+            className="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs font-display font-black text-white focus:outline-none focus:border-emerald-500 cursor-pointer"
           >
             {(['4 at the back', '3 at the back', '5 at the back'] as const).map((cat) => (
               <optgroup key={cat} label={cat} className="bg-slate-900 text-slate-300 font-bold">
@@ -382,64 +359,47 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
 
           <button
             onClick={handleAutoPick}
-            className="py-1.5 px-3 rounded-xl border border-emerald-500/30 bg-emerald-950/30 hover:bg-emerald-900/50 text-emerald-300 hover:text-white text-xs font-display font-black uppercase tracking-wider transition-all"
+            className="py-1.5 px-2.5 rounded-xl border border-emerald-500/30 bg-emerald-950/30 hover:bg-emerald-900/50 text-emerald-300 hover:text-white text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap min-h-[36px]"
             title="Automatically pick highest-rated team sheet"
           >
             ⚡ Auto-Pick XI
           </button>
         </div>
 
-        <div className="flex items-center gap-2">
-          {swapSourceId && (
-            <button
-              onClick={() => setSwapSourceId(null)}
-              className="py-1.5 px-3 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold"
-            >
-              Cancel Swap
-            </button>
-          )}
-
-          <div className="flex bg-slate-950 border border-slate-800 rounded-xl p-1">
-            <button
-              onClick={() => setViewMode('pitch')}
-              className={`py-1 px-3 rounded-lg text-xs font-display font-black uppercase transition-all ${
-                viewMode === 'pitch'
-                  ? 'bg-emerald-500 text-slate-950 shadow-sm'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Pitch
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`py-1 px-3 rounded-lg text-xs font-display font-black uppercase transition-all ${
-                viewMode === 'list'
-                  ? 'bg-emerald-500 text-slate-950 shadow-sm'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              List
-            </button>
-            <button
-              onClick={() => setViewMode('academy')}
-              className={`py-1 px-3 rounded-lg text-xs font-display font-black uppercase transition-all flex items-center gap-1.5 ${
-                viewMode === 'academy'
-                  ? 'bg-emerald-500 text-slate-950 shadow-sm'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <span>Academy</span>
-              <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                  viewMode === 'academy'
-                    ? 'bg-slate-950/20 text-slate-950'
-                    : 'bg-slate-800 text-slate-300'
-                }`}
-              >
-                {academy.length}
-              </span>
-            </button>
-          </div>
+        <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-xl p-1">
+          <button
+            onClick={() => setViewMode('pitch')}
+            className={`py-1 px-2.5 rounded-lg text-xs font-display font-black uppercase transition-all cursor-pointer ${
+              viewMode === 'pitch'
+                ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            Pitch
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`py-1 px-2.5 rounded-lg text-xs font-display font-black uppercase transition-all cursor-pointer ${
+              viewMode === 'list'
+                ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            List
+          </button>
+          <button
+            onClick={() => setViewMode('academy')}
+            className={`py-1 px-2.5 rounded-lg text-xs font-display font-black uppercase transition-all flex items-center gap-1 cursor-pointer ${
+              viewMode === 'academy'
+                ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <span>Academy</span>
+            <span className="text-[10px] px-1 py-0.2 rounded-full font-bold bg-slate-800 text-slate-300">
+              {academy.length}
+            </span>
+          </button>
         </div>
       </section>
 
@@ -476,14 +436,77 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
             </div>
           </div>
 
+          {/* Quick Swap Drawer (Instant Touchscreen Subs without scrolling) */}
+          {swapSourceId && (
+            <div className="bg-slate-950/95 border-2 border-amber-400 rounded-3xl p-3.5 sm:p-4 shadow-2xl space-y-3 animate-in fade-in slide-in-from-bottom-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🔁</span>
+                  <div>
+                    <span className="text-[10px] font-black uppercase text-amber-400 font-display">
+                      Substituting Starter
+                    </span>
+                    <div className="text-xs sm:text-sm font-display font-black text-white">
+                      {squad.find((p) => p.id === swapSourceId)?.name} ({squad.find((p) => p.id === swapSourceId)?.position} • {squad.find((p) => p.id === swapSourceId)?.rating} OVR)
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => {
+                      const p = squad.find((p) => p.id === swapSourceId);
+                      if (p) handleSelectPlayerWithActions(p);
+                    }}
+                    className="py-1 px-2.5 rounded-lg bg-slate-900 border border-slate-750 text-slate-300 text-[11px] font-bold hover:text-white cursor-pointer"
+                  >
+                    Details ⚙️
+                  </button>
+                  <button
+                    onClick={() => setSwapSourceId(null)}
+                    className="py-1 px-2.5 rounded-lg bg-slate-900 border border-slate-750 text-slate-400 hover:text-white text-[11px] font-bold cursor-pointer"
+                  >
+                    ✕ Cancel
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1.5">
+                  Tap any bench player to swap immediately:
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1.5">
+                  {bench.map((benchPlayer) => (
+                    <button
+                      key={benchPlayer.id}
+                      onClick={() => handlePlayerClick(benchPlayer)}
+                      className="p-2 rounded-xl border border-slate-800 bg-slate-900 hover:border-emerald-500/60 hover:bg-slate-850 text-left transition-all cursor-pointer flex items-center justify-between gap-1.5"
+                    >
+                      <div className="min-w-0">
+                        <div className="text-xs font-display font-black text-white truncate">
+                          {benchPlayer.name}
+                        </div>
+                        <div className="text-[9px] text-slate-400">
+                          {benchPlayer.position} • {formatCurrency(benchPlayer.value)}
+                        </div>
+                      </div>
+                      <span className="text-xs font-display font-black text-emerald-400 font-mono">
+                        {benchPlayer.rating}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Bench Row (Substitutes) */}
-          <div className="bg-slate-900/40 border border-slate-850 rounded-3xl p-5 space-y-3">
+          <div className="bg-slate-900/40 border border-slate-850 rounded-3xl p-4 sm:p-5 space-y-3">
             <div className="flex justify-between items-center">
               <h4 className="text-xs font-display font-black uppercase text-slate-300">
                 Matchday Substitutes ({bench.length}/9)
               </h4>
               <span className="text-[10px] text-slate-500 font-medium">
-                Click a sub, then click a starter to swap
+                Tap a player to sub or swap
               </span>
             </div>
 
@@ -502,7 +525,7 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
                     <span className="text-emerald-400">{player.position}</span>
                     <span className="text-white font-display font-black">{player.rating}</span>
                   </div>
-                  <div className="text-xs font-display font-black text-white truncate">
+                  <div className="text-xs font-display font-black text-white truncate" title={player.name}>
                     {player.name}
                   </div>
                   <div className="text-[9px] text-slate-400 mt-1">
@@ -515,7 +538,7 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
 
           {/* Reserves (Non-Matchday Squad) */}
           {reserves.length > 0 && (
-            <div className="bg-slate-900/20 border border-slate-850/60 rounded-3xl p-5 space-y-3">
+            <div className="bg-slate-900/20 border border-slate-850/60 rounded-3xl p-4 sm:p-5 space-y-3">
               <h4 className="text-xs font-display font-black uppercase text-slate-400">
                 Reserves ({reserves.length})
               </h4>
@@ -530,7 +553,7 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
                       <span className="text-slate-400">{player.position}</span>
                       <span className="text-slate-300 font-display font-black">{player.rating}</span>
                     </div>
-                    <div className="text-xs font-display font-black text-slate-200 truncate">
+                    <div className="text-xs font-display font-black text-slate-200 truncate" title={player.name}>
                       {player.name}
                     </div>
                     <div className="text-[9px] text-slate-500 mt-1">
@@ -541,6 +564,43 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
               </div>
             </div>
           )}
+
+          {/* Detailed Finances & Squad Registration Rules (Football First, Stats Second) */}
+          <section className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2" aria-label="Detailed squad statistics">
+            <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-3 space-y-1">
+              <span className="text-[9px] uppercase font-bold text-slate-500 block">Total Squad Value</span>
+              <div className="text-sm sm:text-base font-display font-black text-white truncate">
+                {formatCurrency(validation.totalSquadValue)}
+              </div>
+              <div className="text-[9px] text-slate-400">Transfer Assets</div>
+            </div>
+
+            <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-3 space-y-1">
+              <span className="text-[9px] uppercase font-bold text-slate-500 block">Wage Headroom</span>
+              <div className="text-sm sm:text-base font-display font-black text-emerald-400 truncate">
+                {formatWage(Math.max(0, save.finances.weeklyWageBudget - validation.totalWagesWeekly))}
+              </div>
+              <div className="text-[9px] text-slate-400">Limit: {formatWage(save.finances.weeklyWageBudget)}</div>
+            </div>
+
+            <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-3 space-y-1">
+              <span className="text-[9px] uppercase font-bold text-slate-500 block">Roster Registration</span>
+              <div className="text-sm sm:text-base font-display font-black text-white truncate">
+                {validation.seniorCount}/25 <span className="text-xs text-slate-400 font-normal">Senior</span>
+              </div>
+              <div className="text-[9px] text-slate-400">U21 Exempt: {validation.u21Count}</div>
+            </div>
+
+            <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-3 space-y-1">
+              <span className="text-[9px] uppercase font-bold text-slate-500 block">Domestic Quota</span>
+              <div className="text-sm sm:text-base font-display font-black text-white truncate">
+                {validation.homegrownCount}/8 <span className="text-xs text-slate-400 font-normal">HG</span>
+              </div>
+              <div className="text-[9px] text-slate-400">
+                {validation.homegrownCount >= 8 ? 'Quota Met ✓' : 'Under 8 Target ⚠️'}
+              </div>
+            </div>
+          </section>
         </section>
       )}
 
@@ -1298,7 +1358,18 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
       return (
         <div
           key={slotPos}
-          className="w-16 min-w-0 sm:w-22 rounded-xl border-2 border-dashed border-emerald-500/30 p-1.5 sm:p-2 text-center text-emerald-400/60 text-[10px] font-bold"
+          onClick={() => {
+            if (swapSourceId) {
+              const sourcePlayer = squad.find((p) => p.id === swapSourceId);
+              if (sourcePlayer) handlePlayerClick(sourcePlayer);
+            }
+          }}
+          className={`w-16 min-w-0 sm:w-22 rounded-xl border-2 border-dashed p-1.5 sm:p-2 text-center text-[10px] font-bold cursor-pointer transition-colors ${
+            swapSourceId
+              ? 'border-amber-400 bg-amber-950/30 text-amber-300 animate-pulse'
+              : 'border-emerald-500/30 text-emerald-400/60 hover:border-emerald-500/60'
+          }`}
+          title={`${slotPos} (Empty) - Click to assign player`}
         >
           {slotPos} (Empty)
         </div>
@@ -1314,6 +1385,8 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
       <div
         key={player.id}
         onClick={() => handlePlayerClick(player)}
+        title={`${player.name} (${player.position}) • ${effectiveRating} OVR • Click to substitute`}
+        aria-label={`${player.name}, position ${player.position}, rating ${effectiveRating}`}
         className={`w-16 min-w-0 sm:w-22 p-1.5 sm:p-2 rounded-2xl border backdrop-blur-md text-center cursor-pointer transition-all transform hover:scale-105 select-none ${
           isSwapping
             ? 'border-amber-400 bg-amber-950/80 ring-4 ring-amber-400/50 shadow-2xl'
@@ -1346,7 +1419,7 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
             {bonus < 0 && <span className="text-[9px]" title={`Slump (${bonus})`}>❄️</span>}
           </div>
         </div>
-        <div className="text-[10px] sm:text-[11px] font-display font-black text-white truncate leading-tight">
+        <div className="text-[10px] sm:text-[11px] font-display font-black text-white truncate leading-tight" title={player.name}>
           {player.name}
         </div>
         <div className="text-[8px] text-slate-400 truncate mt-0.5 flex items-center justify-center gap-1">

@@ -30,7 +30,9 @@ interface FixturesCalendarProps {
 
 export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigateOffice }: FixturesCalendarProps) {
   const [filterScope, setFilterScope] = useState<'my_club' | 'all'>('my_club');
+  const [timelineFilter, setTimelineFilter] = useState<'upcoming' | 'recent' | 'all'>('upcoming');
   const [selectedRound, setSelectedRound] = useState<number | 'all'>('all');
+  const [expandedFixtureIds, setExpandedFixtureIds] = useState<Set<string>>(new Set());
   const [simulating, setSimulating] = useState(false);
   const [activeMatchFixture, setActiveMatchFixture] = useState<LeagueFixture | null>(null);
   const [matchOverviewModal, setMatchOverviewModal] = useState<{
@@ -135,48 +137,67 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
     }
   };
 
-  // Filter fixtures
-  let displayedFixtures = fixtures;
+  const toggleFixtureExpanded = (id: string) => {
+    setExpandedFixtureIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
+  // Base scope filter (My Fixtures vs All)
+  let baseFixtures = fixtures;
   if (filterScope === 'my_club') {
-    displayedFixtures = displayedFixtures.filter(
+    baseFixtures = baseFixtures.filter(
       (f) => f.homeClubId === userClubId || f.awayClubId === userClubId
     );
   }
 
-  if (selectedRound !== 'all') {
-    displayedFixtures = displayedFixtures.filter((f) => f.round === selectedRound);
+  // Timeline filter (Upcoming vs Recent vs All)
+  let displayedFixtures = [...baseFixtures];
+  if (timelineFilter === 'upcoming') {
+    displayedFixtures = displayedFixtures.filter((f) => !f.played);
+    displayedFixtures.sort((a, b) => a.round - b.round);
+  } else if (timelineFilter === 'recent') {
+    displayedFixtures = displayedFixtures.filter((f) => f.played);
+    displayedFixtures.sort((a, b) => b.round - a.round);
+  } else {
+    if (selectedRound !== 'all') {
+      displayedFixtures = displayedFixtures.filter((f) => f.round === selectedRound);
+    }
   }
 
+  const upcomingCount = baseFixtures.filter((f) => !f.played).length;
+  const playedCount = baseFixtures.filter((f) => f.played).length;
+
   return (
-    <div className="space-y-6">
-      {/* Calendar Schedule Browser Notice */}
-      <section className="bg-slate-900/60 border border-slate-850 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-md">
-        <div className="space-y-0.5">
-          <div className="text-xs font-display font-black text-white uppercase tracking-wider flex items-center gap-1.5">
-            <span>📅</span>
-            <span>League Fixtures & Calendar Schedule</span>
-            <span className="text-[10px] font-mono text-emerald-400 font-bold ml-2">
-              (In-Game: {formatCareerDate(save.season.currentDate, save.settings?.dateFormat)})
-            </span>
-          </div>
-          <p className="text-[11px] text-slate-400">
-            View completed match results and upcoming fixtures across all 38 rounds. Matchday simulations and calendar advancement are run directly from the <strong className="text-emerald-400">Office</strong> command hub.
-          </p>
+    <div className="space-y-4">
+      {/* Calendar Header Bar */}
+      <section className="bg-slate-900/60 border border-slate-800 rounded-2xl px-3.5 py-2.5 flex flex-wrap sm:flex-nowrap justify-between items-center gap-2 shadow-sm">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-sm">📅</span>
+          <span className="text-xs font-display font-black text-white uppercase tracking-wider">
+            Season {save.season.seasonNumber} Calendar
+          </span>
+          <span className="text-slate-600 text-xs">•</span>
+          <span className="text-[10px] font-mono text-emerald-400 font-bold">
+            {formatCareerDate(save.season.currentDate, save.settings?.dateFormat)}
+          </span>
         </div>
         {onNavigateOffice && (
           <button
             onClick={onNavigateOffice}
-            className="py-2 px-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider transition-all shadow-md shrink-0 cursor-pointer"
+            className="py-1 px-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-[11px] uppercase tracking-wider transition-all shadow-sm shrink-0 cursor-pointer ml-auto"
           >
-            Go to Office / Play Match ➔
+            Office / Next Match ➔
           </button>
         )}
       </section>
 
       {/* Season Complete & Transition Spotlight */}
       {seasonFinished && seasonSummary && (
-        <section className="bg-gradient-to-r from-amber-950/40 via-slate-900/60 to-emerald-950/40 border border-amber-500/40 rounded-3xl p-6 shadow-2xl space-y-4">
+        <section className="bg-gradient-to-r from-amber-950/40 via-slate-900/60 to-emerald-950/40 border border-amber-500/40 rounded-3xl p-5 shadow-2xl space-y-3">
           <div className="flex justify-between items-center">
             <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-950/60 border border-amber-800/60 px-3 py-1 rounded-full font-display">
               Season {save.season.seasonNumber} Complete • All 38 Matchdays Played
@@ -184,9 +205,9 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
             <span className="text-xs text-amber-300 font-bold">🏆 Season Review</span>
           </div>
 
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="space-y-1">
-              <h3 className="text-xl font-display font-black text-white">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="space-y-0.5">
+              <h3 className="text-lg font-display font-black text-white">
                 {seasonSummary.leagueTitle ? '👑 League Champions!' : `Season Completed • Finished #${seasonSummary.finalPosition}`}
               </h3>
               <p className="text-xs text-slate-300">
@@ -196,7 +217,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
 
             <button
               onClick={() => setShowSeasonReviewModal(true)}
-              className="py-3 px-5 rounded-2xl bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-xl transition-all cursor-pointer"
+              className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer"
             >
               🎉 Review & Advance to Season {save.season.seasonNumber + 1}
             </button>
@@ -204,171 +225,243 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
         </section>
       )}
 
-      {/* Filter and Round Selector */}
-      <div className="flex flex-wrap justify-between items-center gap-3">
-        <div className="flex gap-2">
+      {/* Timeline Tabs & Scope Filter */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-2">
+        {/* Timeline Quick Jump: Upcoming (default) | Recent | All */}
+        <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
           <button
-            onClick={() => setFilterScope('my_club')}
-            className={`py-1.5 px-3 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all ${
-              filterScope === 'my_club'
-                ? 'bg-emerald-500 text-slate-950 shadow-md'
-                : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+            type="button"
+            onClick={() => setTimelineFilter('upcoming')}
+            className={`py-1.5 px-3 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
+              timelineFilter === 'upcoming'
+                ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                : 'text-slate-400 hover:text-white'
             }`}
           >
-            My Fixtures ({fixtures.filter((f) => f.homeClubId === userClubId || f.awayClubId === userClubId).length})
+            Upcoming ({upcomingCount})
           </button>
           <button
-            onClick={() => setFilterScope('all')}
-            className={`py-1.5 px-3 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all ${
-              filterScope === 'all'
-                ? 'bg-emerald-500 text-slate-950 shadow-md'
-                : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+            type="button"
+            onClick={() => setTimelineFilter('recent')}
+            className={`py-1.5 px-3 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
+              timelineFilter === 'recent'
+                ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                : 'text-slate-400 hover:text-white'
             }`}
           >
-            All League Games
+            Recent ({playedCount})
+          </button>
+          <button
+            type="button"
+            onClick={() => setTimelineFilter('all')}
+            className={`py-1.5 px-3 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
+              timelineFilter === 'all'
+                ? 'bg-slate-700 text-white'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            All (38)
           </button>
         </div>
 
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-bold text-slate-400 uppercase">Round:</label>
-          <select
-            value={selectedRound}
-            onChange={(e) =>
-              setSelectedRound(e.target.value === 'all' ? 'all' : parseInt(e.target.value))
-            }
-            className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500 font-semibold"
-          >
-            <option value="all">All 38 Rounds</option>
-            {Array.from({ length: 38 }, (_, i) => i + 1).map((r) => (
-              <option key={r} value={r}>
-                Round {r}
-              </option>
-            ))}
-          </select>
+        {/* Club Scope & Round Dropdown */}
+        <div className="flex items-center gap-2 ml-auto">
+          {timelineFilter === 'all' && (
+            <select
+              value={selectedRound}
+              onChange={(e) =>
+                setSelectedRound(e.target.value === 'all' ? 'all' : parseInt(e.target.value))
+              }
+              className="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1 text-xs text-white focus:outline-none focus:border-emerald-500 font-semibold"
+            >
+              <option value="all">All Rounds</option>
+              {Array.from({ length: 38 }, (_, i) => i + 1).map((r) => (
+                <option key={r} value={r}>
+                  R{r}
+                </option>
+              ))}
+            </select>
+          )}
+
+          <div className="flex items-center gap-1 bg-slate-950/80 p-0.5 rounded-lg border border-slate-800">
+            <button
+              type="button"
+              onClick={() => setFilterScope('my_club')}
+              className={`py-1 px-2.5 rounded-md text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
+                filterScope === 'my_club'
+                  ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/60'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              My Club
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterScope('all')}
+              className={`py-1 px-2.5 rounded-md text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
+                filterScope === 'all'
+                  ? 'bg-slate-800 text-slate-200'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              All Clubs
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Fixtures List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {displayedFixtures.map((fixture) => {
-          const home = clubsMap.get(fixture.homeClubId) || allClubs[0];
-          const away = clubsMap.get(fixture.awayClubId) || allClubs[1];
-          const isUserMatch =
-            fixture.homeClubId === userClubId || fixture.awayClubId === userClubId;
-          const isPlayed = fixture.played;
-          const isUpcoming = !fixture.played && nextFixture?.id === fixture.id;
+      {displayedFixtures.length === 0 ? (
+        <div className="bg-slate-900/30 border border-slate-800 rounded-2xl p-8 text-center text-slate-500 text-xs">
+          {timelineFilter === 'upcoming'
+            ? 'No more upcoming fixtures this season! All league games have been played.'
+            : 'No played fixtures found for this selection.'}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+          {displayedFixtures.map((fixture) => {
+            const home = clubsMap.get(fixture.homeClubId) || allClubs[0];
+            const away = clubsMap.get(fixture.awayClubId) || allClubs[1];
+            const isUserMatch =
+              fixture.homeClubId === userClubId || fixture.awayClubId === userClubId;
+            const isPlayed = fixture.played;
+            const isUpcoming = !fixture.played && nextFixture?.id === fixture.id;
 
-          return (
-            <div
-              key={fixture.id}
-              onClick={() => {
-                if (isPlayed) {
-                  setMatchOverviewModal({ type: 'result', fixture });
-                } else if (isUpcoming) {
-                  setMatchOverviewModal({ type: 'preview', fixture });
-                }
-              }}
-              className={`p-4 rounded-2xl border transition-all ${
-                isPlayed
-                  ? 'border-slate-850 hover:border-emerald-500/50 bg-slate-900/60 shadow-md cursor-pointer hover:shadow-emerald-500/5 group'
-                  : isUpcoming
-                  ? 'border-emerald-500/60 bg-emerald-950/20 shadow-lg cursor-pointer hover:border-emerald-400 group'
-                  : isUserMatch
-                  ? 'border-slate-800 bg-slate-900/40'
-                  : 'border-slate-850 bg-slate-950/40'
-              }`}
-            >
-              <div className="flex justify-between items-center text-[10px] text-slate-500 font-bold mb-2">
-                <span className="flex items-center gap-1.5">
-                  <span>Round {fixture.round}</span>
-                  {isUpcoming && (
-                    <span className="bg-emerald-500 text-slate-950 text-[9px] font-black uppercase px-1.5 py-0.5 rounded font-display">
-                      Next Match
+            return (
+              <div
+                key={fixture.id}
+                className={`p-3 rounded-2xl border transition-all ${
+                  isPlayed
+                    ? 'border-slate-850 hover:border-emerald-500/40 bg-slate-900/50 shadow-sm'
+                    : isUpcoming
+                    ? 'border-emerald-500/70 bg-gradient-to-r from-emerald-950/40 via-slate-900/70 to-slate-900/50 shadow-md ring-1 ring-emerald-500/30'
+                    : isUserMatch
+                    ? 'border-slate-800 bg-slate-900/40'
+                    : 'border-slate-850/80 bg-slate-950/40'
+                }`}
+              >
+                {/* Top metadata line: Round + Date + Status Badge */}
+                <div className="flex justify-between items-center text-[10px] text-slate-500 font-bold mb-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono text-slate-400">R{fixture.round}</span>
+                    <span className="text-slate-700">•</span>
+                    <span>{formatCareerDate(fixture.date, save.settings?.dateFormat)}</span>
+                    {isUpcoming && (
+                      <span className="bg-emerald-500 text-slate-950 text-[9px] font-black uppercase px-1.5 py-0.2 rounded font-display">
+                        Next Up
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {isPlayed ? (
+                      <button
+                        type="button"
+                        onClick={() => setMatchOverviewModal({ type: 'result', fixture })}
+                        className="text-emerald-400 hover:text-emerald-300 font-display font-black text-[10px] cursor-pointer"
+                      >
+                        📊 Match Stats
+                      </button>
+                    ) : isUpcoming ? (
+                      <button
+                        type="button"
+                        onClick={() => setMatchOverviewModal({ type: 'preview', fixture })}
+                        className="text-emerald-400 hover:text-emerald-300 font-display font-black text-[10px] cursor-pointer"
+                      >
+                        📋 Dossier
+                      </button>
+                    ) : null}
+                    {isPlayed && fixture.scorers && fixture.scorers.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => toggleFixtureExpanded(fixture.id)}
+                        className="text-slate-400 hover:text-white text-xs px-1 cursor-pointer"
+                        title="Toggle scorers"
+                      >
+                        {expandedFixtureIds.has(fixture.id) ? '▲' : '▼'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Compact Clubs & Scoreline */}
+                <div
+                  onClick={() => {
+                    if (isPlayed) {
+                      setMatchOverviewModal({ type: 'result', fixture });
+                    } else if (isUpcoming) {
+                      setMatchOverviewModal({ type: 'preview', fixture });
+                    } else if (isPlayed && fixture.scorers && fixture.scorers.length > 0) {
+                      toggleFixtureExpanded(fixture.id);
+                    }
+                  }}
+                  className="flex items-center justify-between text-xs cursor-pointer select-none"
+                >
+                  {/* Home */}
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <div
+                      data-force-white="true"
+                      className="club-crest w-3.5 h-3.5 rounded-full border border-white/20 shrink-0"
+                      style={{
+                        background: `linear-gradient(135deg, ${home.primaryColor}, ${home.secondaryColor})`,
+                      }}
+                    />
+                    <span
+                      className={`truncate text-xs ${
+                        fixture.homeClubId === userClubId ? 'text-emerald-300 font-black' : 'text-white font-medium'
+                      }`}
+                    >
+                      {getEffectiveClubName(home, save.club)}
                     </span>
-                  )}
-                </span>
-                <span className="flex items-center gap-2">
-                  <span>{formatCareerDate(fixture.date, save.settings?.dateFormat)}</span>
-                  {isPlayed && (
-                    <span className="text-emerald-400 font-display font-black group-hover:translate-x-0.5 transition-transform text-[10px]">
-                      📊 Stats ➔
+                  </div>
+
+                  {/* Score / VS */}
+                  <div className="px-2.5 text-center shrink-0">
+                    {fixture.played ? (
+                      <span className="font-display font-black text-xs sm:text-sm text-white px-2 py-0.5 rounded bg-slate-950 border border-slate-800">
+                        {fixture.homeScore} - {fixture.awayScore}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold text-slate-500 uppercase px-2 py-0.5 rounded bg-slate-950 border border-slate-800">
+                        VS
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Away */}
+                  <div className="flex items-center gap-2 flex-1 justify-end min-w-0 text-right">
+                    <span
+                      className={`truncate text-xs ${
+                        fixture.awayClubId === userClubId ? 'text-emerald-300 font-black' : 'text-white font-medium'
+                      }`}
+                    >
+                      {getEffectiveClubName(away, save.club)}
                     </span>
-                  )}
-                  {isUpcoming && (
-                    <span className="text-emerald-400 font-display font-black group-hover:translate-x-0.5 transition-transform text-[10px]">
-                      📋 Dossier ➔
-                    </span>
-                  )}
-                </span>
+                    <div
+                      data-force-white="true"
+                      className="club-crest w-3.5 h-3.5 rounded-full border border-white/20 shrink-0"
+                      style={{
+                        background: `linear-gradient(135deg, ${away.primaryColor}, ${away.secondaryColor})`,
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Expandable Scorers / Details */}
+                {isPlayed && fixture.scorers && fixture.scorers.length > 0 && expandedFixtureIds.has(fixture.id) && (
+                  <div className="mt-2 pt-2 border-t border-slate-850 text-[10px] text-slate-400 flex flex-wrap gap-x-2.5 gap-y-1">
+                    {fixture.scorers.map((s, i) => (
+                      <span key={i} className="flex items-center gap-1">
+                        <span>⚽</span>
+                        <span>{s.name} ({s.minute}&apos;)</span>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
-
-              {/* Clubs & Result */}
-              <div className="flex justify-between items-center text-xs">
-                {/* Home */}
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <div
-                    data-force-white="true"
-                    className="club-crest w-3.5 h-3.5 rounded-full border border-white/20 flex-shrink-0"
-                    style={{
-                      background: `linear-gradient(135deg, ${home.primaryColor}, ${home.secondaryColor})`,
-                    }}
-                  />
-                  <span
-                    className={`truncate font-semibold ${
-                      fixture.homeClubId === userClubId ? 'text-emerald-300 font-bold' : 'text-white'
-                    }`}
-                  >
-                    {getEffectiveClubName(home, save.club)}
-                  </span>
-                </div>
-
-                {/* Score or Status */}
-                <div className="px-3 text-center flex-shrink-0">
-                  {fixture.played ? (
-                    <div className="font-display font-black text-sm text-white px-2 py-0.5 rounded bg-slate-950 border border-slate-800 group-hover:border-emerald-500/40 transition-colors">
-                      {fixture.homeScore} - {fixture.awayScore}
-                    </div>
-                  ) : (
-                    <div className="text-[10px] font-bold text-slate-500 uppercase px-2 py-0.5 rounded bg-slate-950 border border-slate-850">
-                      VS
-                    </div>
-                  )}
-                </div>
-
-                {/* Away */}
-                <div className="flex items-center gap-2 flex-1 justify-end min-w-0 text-right">
-                  <span
-                    className={`truncate font-semibold ${
-                      fixture.awayClubId === userClubId ? 'text-emerald-300 font-bold' : 'text-white'
-                    }`}
-                  >
-                    {getEffectiveClubName(away, save.club)}
-                  </span>
-                  <div
-                    data-force-white="true"
-                    className="club-crest w-3.5 h-3.5 rounded-full border border-white/20 flex-shrink-0"
-                    style={{
-                      background: `linear-gradient(135deg, ${away.primaryColor}, ${away.secondaryColor})`,
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Scorers if played */}
-              {fixture.played && fixture.scorers && fixture.scorers.length > 0 && (
-                <div className="mt-2.5 pt-2 border-t border-slate-900/60 text-[10px] text-slate-400 flex flex-wrap gap-x-2 gap-y-1">
-                  {fixture.scorers.map((s, i) => (
-                    <span key={i} className="flex items-center gap-1">
-                      <span>⚽</span>
-                      <span>{s.name} ({s.minute}&apos;)</span>
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Live Matchday Interactive Command Center */}
       {activeMatchFixture && (

@@ -85,6 +85,7 @@ function CareerPlayHubContent() {
   const [showSeasonReviewModal, setShowSeasonReviewModal] = useState(false);
   const [transferHubSubTab, setTransferHubSubTab] = useState<'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board'>('market');
   const [focusedOfferId, setFocusedOfferId] = useState<string | undefined>(undefined);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
 
   const navigateToIncomingOffers = (specificOfferId?: string) => {
     setTransferHubSubTab('incoming');
@@ -618,56 +619,49 @@ function CareerPlayHubContent() {
       )}
 
       {/* Manager Office Top Header */}
-      <header className="w-full py-3 px-4 sm:px-6 border-b border-slate-900 bg-slate-950/85 backdrop-blur-md sticky top-0 z-40 flex flex-wrap justify-between items-center gap-3 select-none shadow-xl">
-        <div className="flex items-center gap-3">
+      <header className="w-full py-2 px-3 sm:px-6 border-b border-slate-900 bg-slate-950/90 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center gap-2 select-none shadow-xl">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Link
             href="/career"
-            className="text-xs font-bold text-slate-400 hover:text-white px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900/60 hover:bg-slate-800 transition-colors flex items-center gap-1.5"
+            className="text-xs font-bold text-slate-400 hover:text-white px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border border-slate-800 bg-slate-900/60 hover:bg-slate-800 transition-colors flex items-center gap-1 shrink-0"
             title="Exit to Career Save Slots"
           >
-            ← <span>Saves</span>
+            ← <span className="hidden xs:inline">Saves</span>
           </Link>
-          <div className="h-4 w-px bg-slate-800" />
+          <div className="h-4 w-px bg-slate-800 shrink-0" />
 
           {/* Club Crest & Title */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
             <div
-              className="w-4 h-4 rounded-full border border-white/20 shadow-sm"
+              className="w-4 h-4 rounded-full border border-white/20 shadow-sm shrink-0"
               style={{
                 background: `linear-gradient(135deg, ${save.club.primaryColor}, ${save.club.secondaryColor})`,
               }}
             />
-            <h1 className="text-base font-display font-black text-white uppercase tracking-tight flex items-center gap-2">
-              {effectiveClubName}
-              <span className="text-[10px] font-bold text-slate-400 font-sans tracking-normal lowercase">
+            <h1 className="text-sm sm:text-base font-display font-black text-white uppercase tracking-tight truncate flex items-center gap-1.5">
+              <span className="truncate">{effectiveClubName}</span>
+              <span className="text-[10px] font-bold text-slate-400 font-sans tracking-normal lowercase hidden sm:inline">
                 • {save.manager.name}
               </span>
             </h1>
           </div>
         </div>
 
-        {/* Financial & Time Status Badges */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 sm:gap-4 bg-slate-900/60 border border-slate-800 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs">
+        {/* Financial & Time Status Badges & Quick Action Controls */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-3 bg-slate-900/60 border border-slate-800 px-2 sm:px-3 py-1 rounded-xl text-xs">
             <div className="hidden xs:block">
-              <span className="text-[9px] uppercase font-bold text-slate-500 mr-1.5">Budget</span>
+              <span className="text-[9px] uppercase font-bold text-slate-500 mr-1">Budget</span>
               <span className="font-display font-black text-emerald-400">
                 {formatCareerCurrency(save.finances.transferBudget, save.settings.currency)}
               </span>
             </div>
-            <div className="hidden xs:block h-3 w-px bg-slate-800" />
-            <div className="hidden md:block">
-              <span className="text-[9px] uppercase font-bold text-slate-500 mr-1.5">Wages</span>
-              <span className="font-display font-bold text-slate-300">
-                {formatCareerWage(save.finances.weeklyWageBudget, save.settings.wageUnit, save.settings.currency)}
-              </span>
-            </div>
             {activeTab !== 'overview' && (
               <>
-                <div className="hidden md:block h-3 w-px bg-slate-800" />
+                <div className="hidden xs:block h-3 w-px bg-slate-800" />
                 <div className="flex items-center">
-                  <span className="text-[9px] uppercase font-bold text-slate-500 mr-1.5">Date</span>
-                  <span className="font-mono text-xs font-semibold text-emerald-400">
+                  <span className="text-[9px] uppercase font-bold text-slate-500 mr-1">Date</span>
+                  <span className="font-mono text-[11px] sm:text-xs font-semibold text-emerald-400">
                     {formatCareerDate(save.season.currentDate, save.settings.dateFormat, 'medium')}
                   </span>
                 </div>
@@ -676,9 +670,24 @@ function CareerPlayHubContent() {
           </div>
 
           <button
+            onClick={() => {
+              setIsMoreMenuOpen(false);
+              setActiveTab('settings');
+            }}
+            title="Career Settings"
+            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center border transition-colors text-xs cursor-pointer ${
+              activeTab === 'settings'
+                ? 'border-emerald-500 bg-emerald-950/60 text-emerald-400'
+                : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
+          >
+            ⚙️
+          </button>
+
+          <button
             onClick={handleExport}
             title="Export JSON backup"
-            className="w-8 h-8 rounded-xl flex items-center justify-center border border-slate-800 bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-xs"
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center border border-slate-800 bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-xs cursor-pointer"
           >
             💾
           </button>
@@ -686,7 +695,7 @@ function CareerPlayHubContent() {
           <button
             onClick={toggleTheme}
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className="w-8 h-8 rounded-xl flex items-center justify-center border border-slate-800 bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-xs"
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center border border-slate-800 bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-xs cursor-pointer"
           >
             {theme === 'dark' ? '🌙' : '☀️'}
           </button>
@@ -694,35 +703,104 @@ function CareerPlayHubContent() {
       </header>
 
       {/* Main Hub Layout */}
-      <main className="flex-1 w-full max-w-5xl mx-auto px-4 py-6 flex flex-col">
-        {/* Navigation Tabs */}
-        <nav aria-label="Career management sections" className="flex border-b border-slate-850 gap-1 sm:gap-2 overflow-x-auto pb-px mb-6 scrollbar-none">
-          {[
-            { id: 'overview', label: 'Office', icon: '👔' },
-            { id: 'squad', label: 'Squad', icon: '👥' },
-            { id: 'fixtures', label: 'Fixtures', icon: '📅' },
-            { id: 'table', label: 'Table', icon: '📊' },
-            { id: 'cups', label: 'Cups & Europe', icon: '🏆' },
-            { id: 'transfers', label: 'Transfers', icon: '💱' },
-            { id: 'settings', label: 'Settings', icon: '⚙️' },
-          ].map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                className={`py-2.5 px-3.5 sm:px-5 font-display font-black text-xs uppercase tracking-wider border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
-                  isActive
-                    ? 'border-emerald-500 text-emerald-400 bg-slate-900/40'
-                    : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700'
-                }`}
-              >
-                <span>{tab.icon}</span>
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </nav>
+      <main className="flex-1 w-full max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-6 flex flex-col">
+        {/* Navigation Tabs - 4 Primary + More Menu */}
+        <div className="relative mb-5 z-30">
+          <nav aria-label="Career management sections" className="grid grid-cols-5 border-b border-slate-850 gap-1 pb-px bg-slate-950/40 rounded-2xl p-1">
+            {[
+              { id: 'overview', label: 'Office', icon: '👔' },
+              { id: 'squad', label: 'Squad', icon: '👥' },
+              { id: 'fixtures', label: 'Fixtures', icon: '📅' },
+              { id: 'transfers', label: 'Transfers', icon: '💱', badge: incomingOffersCount > 0 ? incomingOffersCount : null },
+            ].map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setIsMoreMenuOpen(false);
+                    setActiveTab(tab.id as typeof activeTab);
+                  }}
+                  className={`py-2 px-1 sm:px-3 font-display font-black text-[11px] sm:text-xs uppercase tracking-wider rounded-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer min-h-[44px] relative ${
+                    isActive
+                      ? 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
+                  }`}
+                >
+                  <span className="text-sm sm:text-xs">{tab.icon}</span>
+                  <span className="truncate">{tab.label}</span>
+                  {tab.badge && (
+                    <span className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                  )}
+                </button>
+              );
+            })}
+
+            {/* 5th Tab: More Menu */}
+            {(() => {
+              const isMoreActive = ['table', 'cups', 'settings'].includes(activeTab);
+              const activeMoreLabel = activeTab === 'table' ? 'Table' : activeTab === 'cups' ? 'Cups' : activeTab === 'settings' ? 'Config' : null;
+
+              return (
+                <button
+                  onClick={() => setIsMoreMenuOpen((prev) => !prev)}
+                  className={`py-2 px-1 sm:px-3 font-display font-black text-[11px] sm:text-xs uppercase tracking-wider rounded-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer min-h-[44px] relative ${
+                    isMoreActive
+                      ? 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 shadow-sm'
+                      : isMoreMenuOpen
+                      ? 'bg-slate-850 text-white'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
+                  }`}
+                  aria-expanded={isMoreMenuOpen}
+                  aria-haspopup="true"
+                >
+                  <span className="text-sm sm:text-xs">⋯</span>
+                  <span className="truncate">{activeMoreLabel ? activeMoreLabel : 'More'} ▾</span>
+                </button>
+              );
+            })()}
+          </nav>
+
+          {/* More Menu Popover */}
+          {isMoreMenuOpen && (
+            <div
+              className="absolute right-0 top-full mt-1.5 z-40 w-56 bg-slate-950/95 border border-slate-800 rounded-2xl p-2 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-top-2"
+              role="menu"
+            >
+              {[
+                { id: 'table', label: 'League Table', icon: '📊', desc: 'Standings, GD & form guide' },
+                { id: 'cups', label: 'Cups & Europe', icon: '🏆', desc: 'Domestic cups & continental silverware' },
+                { id: 'settings', label: 'Career Settings', icon: '⚙️', desc: 'Rules, formats & club naming' },
+              ].map((item) => {
+                const isItemActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    role="menuitem"
+                    onClick={() => {
+                      setActiveTab(item.id as typeof activeTab);
+                      setIsMoreMenuOpen(false);
+                    }}
+                    className={`w-full p-2.5 rounded-xl text-left transition-all flex items-center gap-3 cursor-pointer ${
+                      isItemActive
+                        ? 'bg-emerald-500/20 text-emerald-300 font-bold'
+                        : 'hover:bg-slate-900 text-slate-300 hover:text-white'
+                    }`}
+                  >
+                    <span className="text-lg">{item.icon}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-display font-black text-xs uppercase tracking-wider flex items-center justify-between">
+                        <span>{item.label}</span>
+                        {isItemActive && <span className="text-emerald-400 text-xs">✓</span>}
+                      </div>
+                      <div className="text-[10px] text-slate-500 truncate">{item.desc}</div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {/* TAB 1: OVERVIEW / MANAGER OFFICE */}
         {activeTab === 'overview' && (
@@ -972,45 +1050,50 @@ function CareerPlayHubContent() {
             )}
 
             {/* 3-COLUMN MANAGER STATUS & KPI ROW */}
-            <section aria-label="Key Performance Indicators" className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <section aria-label="Key Performance Indicators" className="grid grid-cols-3 gap-1.5 sm:gap-2.5 select-none">
               {/* 1. Finances */}
               <div
                 onClick={() => {
                   setTransferHubSubTab('market');
                   setActiveTab('transfers');
                 }}
-                className="bg-slate-900/60 hover:bg-slate-850/80 border border-slate-800 hover:border-emerald-500/40 p-3 rounded-2xl transition-all cursor-pointer flex items-center justify-between"
+                className="bg-slate-900/60 hover:bg-slate-850/80 border border-slate-800 hover:border-emerald-500/40 p-2 sm:p-3 rounded-2xl transition-all cursor-pointer flex flex-col justify-between min-h-[64px]"
                 title="View Transfers & Finances"
               >
-                <div className="space-y-0.5">
-                  <span className="text-[9.5px] uppercase font-bold text-slate-500 block">Transfer Warchest</span>
-                  <span className="text-base font-display font-black text-emerald-400">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] sm:text-[9.5px] uppercase font-bold text-slate-500 block truncate">Warchest</span>
+                  <span className="text-xs text-slate-400 hidden xs:inline">💱</span>
+                </div>
+                <div className="mt-0.5">
+                  <span className="text-xs sm:text-base font-display font-black text-emerald-400 block truncate">
                     {formatCareerCurrency(save.finances.transferBudget, save.settings.currency)}
                   </span>
-                  <span className="text-[10px] text-slate-400 block font-mono">
-                    {formatCareerWage(Math.max(0, save.finances.weeklyWageBudget - save.finances.currentWeeklyWages), save.settings.wageUnit, save.settings.currency)} wage room
+                  <span className="text-[8.5px] sm:text-[10px] text-slate-400 block font-mono truncate">
+                    +{formatCareerWage(Math.max(0, save.finances.weeklyWageBudget - save.finances.currentWeeklyWages), save.settings.wageUnit, save.settings.currency)}/w
                   </span>
                 </div>
-                <span className="text-base text-slate-400">💱</span>
               </div>
 
               {/* 2. League Rank & Form */}
               <div
                 onClick={() => setActiveTab('table')}
-                className="bg-slate-900/60 hover:bg-slate-850/80 border border-slate-800 hover:border-emerald-500/40 p-3 rounded-2xl transition-all cursor-pointer flex items-center justify-between"
+                className="bg-slate-900/60 hover:bg-slate-850/80 border border-slate-800 hover:border-emerald-500/40 p-2 sm:p-3 rounded-2xl transition-all cursor-pointer flex flex-col justify-between min-h-[64px]"
                 title="View League Table"
               >
-                <div className="space-y-0.5">
-                  <span className="text-[9.5px] uppercase font-bold text-slate-500 block">League Position</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-base font-display font-black text-white">
-                      #{userRank} <span className="text-xs font-normal text-slate-400">/ 20</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] sm:text-[9.5px] uppercase font-bold text-slate-500 block truncate">Standing</span>
+                  <span className="text-xs text-slate-400 hidden xs:inline">📊</span>
+                </div>
+                <div className="mt-0.5">
+                  <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
+                    <span className="text-xs sm:text-base font-display font-black text-white">
+                      #{userRank}
                     </span>
-                    <div className="flex gap-1">
-                      {recentFormResults.slice(-4).map((res, i) => (
+                    <div className="flex gap-0.5">
+                      {recentFormResults.slice(-3).map((res, i) => (
                         <span
                           key={i}
-                          className={`w-4 h-4 rounded text-[9px] font-black flex items-center justify-center font-display ${
+                          className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded text-[8px] sm:text-[9px] font-black flex items-center justify-center font-display ${
                             res === 'W'
                               ? 'bg-emerald-500 text-slate-950'
                               : res === 'D'
@@ -1023,11 +1106,10 @@ function CareerPlayHubContent() {
                       ))}
                     </div>
                   </div>
-                  <span className="text-[10px] text-slate-400 block font-mono">
-                    {userStanding ? `${userStanding.points} pts (${userStanding.won}W ${userStanding.drawn}D ${userStanding.lost}L)` : 'Matchday 1'}
+                  <span className="text-[8.5px] sm:text-[10px] text-slate-400 block font-mono truncate">
+                    {userStanding ? `${userStanding.points} pts (${userStanding.won}W ${userStanding.lost}L)` : 'Matchday 1'}
                   </span>
                 </div>
-                <span className="text-base text-slate-400">📊</span>
               </div>
 
               {/* 3. Action Center / Urgent Alerts Pill */}
@@ -1039,42 +1121,43 @@ function CareerPlayHubContent() {
                     setActiveTab('squad');
                   }
                 }}
-                className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+                className={`p-2 sm:p-3 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between min-h-[64px] ${
                   incomingOffersCount > 0 || injuredCount > 0
                     ? 'bg-amber-950/30 hover:bg-amber-950/50 border-amber-500/40'
                     : 'bg-slate-900/60 hover:bg-slate-850/80 border-slate-800'
                 }`}
                 title={incomingOffersCount > 0 || injuredCount > 0 ? 'Click to resolve urgent issues' : 'Squad status'}
               >
-                <div className="space-y-0.5">
-                  <span className="text-[9.5px] uppercase font-bold text-slate-500 block">Action Center</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] sm:text-[9.5px] uppercase font-bold text-slate-500 block truncate">Action</span>
+                  <span className="text-xs">{incomingOffersCount > 0 || injuredCount > 0 ? '⚠️' : '✓'}</span>
+                </div>
+                <div className="mt-0.5">
                   {incomingOffersCount > 0 || injuredCount > 0 ? (
                     <div>
-                      <span className="text-xs font-display font-black text-amber-300 block">
-                        🚨 Needs Attention
+                      <span className="text-[11px] sm:text-xs font-display font-black text-amber-300 block truncate">
+                        🚨 Needs Action
                       </span>
-                      <span className="text-[10px] text-amber-200/90 block font-medium">
+                      <span className="text-[8.5px] sm:text-[10px] text-amber-200/90 block font-medium truncate">
                         {[
-                          incomingOffersCount > 0 ? `${incomingOffersCount} offer${incomingOffersCount > 1 ? 's' : ''}` : null,
-                          injuredCount > 0 ? `${injuredCount} injured` : null,
+                          incomingOffersCount > 0 ? `${incomingOffersCount} bid${incomingOffersCount > 1 ? 's' : ''}` : null,
+                          injuredCount > 0 ? `${injuredCount} inj` : null,
                         ]
                           .filter(Boolean)
-                          .join(' • ')}{' '}
-                        ➔
+                          .join(' • ')} ➔
                       </span>
                     </div>
                   ) : (
                     <div>
-                      <span className="text-xs font-display font-black text-emerald-400 block">
+                      <span className="text-[11px] sm:text-xs font-display font-black text-emerald-400 block truncate">
                         🟢 All Clear
                       </span>
-                      <span className="text-[10px] text-slate-400 block font-medium">
-                        Squad 100% fit • No pending bids
+                      <span className="text-[8.5px] sm:text-[10px] text-slate-400 block font-medium truncate">
+                        100% Fit • Ready
                       </span>
                     </div>
                   )}
                 </div>
-                <span className="text-base">{incomingOffersCount > 0 || injuredCount > 0 ? '⚠️' : '✓'}</span>
               </div>
             </section>
 
@@ -1283,27 +1366,33 @@ function CareerPlayHubContent() {
               </section>
             )}
 
-            {/* PHYSIO ROOM & MEDICAL REPORT CARD (ACTION ITEM: INJURIES) */}
-            <section className="bg-slate-900/50 border border-slate-850 rounded-3xl p-5 sm:p-6 shadow-md space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
+            {/* PHYSIO ROOM & MEDICAL REPORT CARD */}
+            {injuredCount === 0 ? (
+              <section className="bg-slate-900/40 border border-slate-850 rounded-2xl px-4 py-2.5 flex items-center justify-between text-xs text-slate-400">
                 <div className="flex items-center gap-2">
-                  <span className="text-base">🏥</span>
-                  <h3 className="text-xs font-display font-black uppercase tracking-wider text-slate-300">
-                    Physio Room &amp; Squad Medical Report
-                  </h3>
+                  <span>🏥</span>
+                  <span className="font-display font-bold text-slate-300">Physio Room:</span>
+                  <span className="text-emerald-400 font-semibold">Clean Bill of Health</span>
+                  <span className="hidden sm:inline text-slate-500">• 100% Squad Fit</span>
                 </div>
-                {injuredCount > 0 ? (
+                <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-900 px-2 py-0.5 rounded-full">
+                  0 Injured ✓
+                </span>
+              </section>
+            ) : (
+              <section className="bg-slate-900/50 border border-slate-850 rounded-3xl p-4 sm:p-5 shadow-md space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🏥</span>
+                    <h3 className="text-xs font-display font-black uppercase tracking-wider text-slate-300">
+                      Physio Room &amp; Squad Medical Report
+                    </h3>
+                  </div>
                   <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse">
                     {injuredCount} First-Team {injuredCount === 1 ? 'Player' : 'Players'} Injured
                   </span>
-                ) : (
-                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                    Clean Bill of Health (100% Fit)
-                  </span>
-                )}
-              </div>
+                </div>
 
-              {injuredCount > 0 ? (
                 <div className="space-y-2 pt-1">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                     {save.squad.filter((p) => p.injured).map((player) => (
@@ -1330,7 +1419,7 @@ function CareerPlayHubContent() {
                       </div>
                     ))}
                   </div>
-                  <div className="pt-2 flex justify-end">
+                  <div className="pt-1 flex justify-end">
                     <button
                       onClick={() => setActiveTab('squad')}
                       className="text-xs font-display font-black uppercase text-emerald-400 hover:text-emerald-300 flex items-center gap-1 cursor-pointer"
@@ -1340,163 +1429,38 @@ function CareerPlayHubContent() {
                     </button>
                   </div>
                 </div>
-              ) : (
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  All first-team squad members have passed physical readiness checks. No players are currently sidelined with injuries.
-                </p>
-              )}
-            </section>
+              </section>
+            )}
 
-            {/* MANAGERIAL ACTION CENTER */}
-            <section className="space-y-4">
-              <h3 className="text-xs font-display font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                <span>📋</span>
-                <span>Managerial Action Center</span>
-              </h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                {/* 1. Transfers Hub Action */}
-                <div className="bg-slate-900/50 border border-slate-850 rounded-2xl p-5 flex flex-col justify-between gap-3 shadow-md hover:border-slate-750 transition-colors">
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between items-center">
-                      <span className="font-display font-black text-sm text-white uppercase flex items-center gap-1.5">
-                        <span>💱</span> Transfer Market
-                      </span>
-                      {incomingOffersCount > 0 ? (
-                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 animate-pulse">
-                          {incomingOffersCount} Bids Waiting
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-bold text-slate-500">
-                          Scouting Department
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-[11px] text-slate-400">
-                      Budget: <strong className="text-emerald-400">{formatCareerCurrency(save.finances.transferBudget, save.settings.currency)}</strong> • Wage room: <strong className="text-slate-200">{formatCareerWage(Math.max(0, save.finances.weeklyWageBudget - save.finances.currentWeeklyWages), save.settings.wageUnit, save.settings.currency)}</strong>
-                    </p>
+            {/* BOARD ROOM CONFIDENCE BAR */}
+            <section className="bg-slate-900/40 border border-slate-850 rounded-2xl p-3.5 sm:p-4 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2.5">
+                <span className="text-base">🏛️</span>
+                <div>
+                  <div className="font-display font-black uppercase text-white flex items-center gap-2">
+                    <span>Board Confidence</span>
+                    <span className={`text-[9.5px] font-black uppercase px-2 py-0.5 rounded-full ${
+                      boardConfidence >= 70
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                        : boardConfidence >= 50
+                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                        : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                    }`}>
+                      {boardConfidence}% Satisfaction
+                    </span>
                   </div>
-                  <button
-                    onClick={() => {
-                      if (incomingOffersCount > 0) {
-                        navigateToIncomingOffers();
-                      } else {
-                        setTransferHubSubTab('market');
-                        setFocusedOfferId(undefined);
-                        setActiveTab('transfers');
-                      }
-                    }}
-                    className="w-full py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-950/80 hover:bg-slate-900 text-slate-200 hover:text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                  >
-                    <span>{incomingOffersCount > 0 ? 'Review Incoming Offers' : 'Open Transfer Market'}</span>
-                    <span>➔</span>
-                  </button>
-                </div>
-
-                {/* 2. Squad Condition Action */}
-                <div className="bg-slate-900/50 border border-slate-850 rounded-2xl p-5 flex flex-col justify-between gap-3 shadow-md hover:border-slate-750 transition-colors">
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between items-center">
-                      <span className="font-display font-black text-sm text-white uppercase flex items-center gap-1.5">
-                        <span>👥</span> Squad Condition
-                      </span>
-                      {injuredCount > 0 ? (
-                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40">
-                          {injuredCount} Injured
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                          100% Fit
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-[11px] text-slate-400">
-                      Total squad: <strong className="text-white">{save.squad.length}/35</strong> players • Senior: <strong className="text-slate-300">{seniorCount}/25</strong> sr
-                    </p>
+                  <div className="text-[10.5px] text-slate-400 mt-0.5">
+                    Objective: <strong className="text-white">{save.club.tier === 'elite' ? 'Win Title' : save.club.tier === 'upper' ? 'European Qualification' : 'Avoid Relegation'}</strong> • Status: <span className="text-emerald-400 font-bold">Job Safe</span>
                   </div>
-                  <button
-                    onClick={() => setActiveTab('squad')}
-                    className="w-full py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-950/80 hover:bg-slate-900 text-slate-200 hover:text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                  >
-                    <span>Adjust Team Sheet &amp; Tactics</span>
-                    <span>➔</span>
-                  </button>
-                </div>
-
-                {/* 3. League Standing & Form Guide */}
-                <div className="bg-slate-900/50 border border-slate-850 rounded-2xl p-5 flex flex-col justify-between gap-3 shadow-md hover:border-slate-750 transition-colors">
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between items-center">
-                      <span className="font-display font-black text-sm text-white uppercase flex items-center gap-1.5">
-                        <span>📊</span> League Standing
-                      </span>
-                      <span className="text-sm font-display font-black text-emerald-400">
-                        Rank #{userRank}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] text-slate-400">
-                        {userStanding?.points || 0} Points • GD: {(userStanding?.goalDifference || 0) > 0 ? `+${userStanding?.goalDifference}` : (userStanding?.goalDifference || 0)}
-                      </span>
-                      {recentFormResults.length > 0 && (
-                        <div className="flex items-center gap-1 ml-auto">
-                          {recentFormResults.map((res, idx) => (
-                            <span
-                              key={idx}
-                              className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
-                                res === 'W'
-                                  ? 'bg-emerald-500 text-slate-950'
-                                  : res === 'D'
-                                  ? 'bg-amber-500 text-slate-950'
-                                  : 'bg-rose-500 text-white'
-                              }`}
-                            >
-                              {res}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setActiveTab('table')}
-                    className="w-full py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-950/80 hover:bg-slate-900 text-slate-200 hover:text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                  >
-                    <span>View Standings &amp; Stats</span>
-                    <span>➔</span>
-                  </button>
-                </div>
-
-                {/* 4. Board Room Confidence */}
-                <div className="bg-slate-900/50 border border-slate-850 rounded-2xl p-5 flex flex-col justify-between gap-3 shadow-md hover:border-slate-750 transition-colors">
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between items-center">
-                      <span className="font-display font-black text-sm text-white uppercase flex items-center gap-1.5">
-                        <span>🏛️</span> Board Room Confidence
-                      </span>
-                      <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
-                        boardConfidence >= 70
-                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                          : boardConfidence >= 50
-                          ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                          : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                      }`}>
-                        {boardConfidence}% Satisfaction
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-400">
-                      Objective: <strong className="text-white">{save.club.tier === 'elite' ? 'Win Title' : save.club.tier === 'upper' ? 'European Football' : 'Safety'}</strong> • Status: <span className="text-emerald-400 font-bold">Job Safe</span>
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setActiveTab('settings')}
-                    className="w-full py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-950/80 hover:bg-slate-900 text-slate-200 hover:text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                  >
-                    <span>Review Rules &amp; Objectives</span>
-                    <span>➔</span>
-                  </button>
                 </div>
               </div>
+
+              <button
+                onClick={() => setActiveTab('settings')}
+                className="py-1.5 px-3 rounded-xl border border-slate-800 bg-slate-950/80 hover:bg-slate-900 text-slate-300 hover:text-white font-display font-bold text-[11px] uppercase tracking-wider transition-all cursor-pointer"
+              >
+                Board Objectives ➔
+              </button>
             </section>
 
             {/* INTERACTIVE FOOTBALL MANAGER INBOX (ACTION ITEM: GENERAL INBOX) */}

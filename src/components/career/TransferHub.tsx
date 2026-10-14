@@ -133,6 +133,50 @@ export function TransferHub({
   const [homegrownOnly, setHomegrownOnly] = useState<boolean>(false);
   const [affordableOnly, setAffordableOnly] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState<boolean>(false);
+  const [expandedPlayerIds, setExpandedPlayerIds] = useState<Set<string>>(new Set());
+
+  const togglePlayerExpanded = (playerId: string) => {
+    setExpandedPlayerIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(playerId)) {
+        next.delete(playerId);
+      } else {
+        next.add(playerId);
+      }
+      return next;
+    });
+  };
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (specificPosition !== 'ALL') count++;
+    if (ageCategory !== 'ALL') count++;
+    if (minRating > 0) count++;
+    if (affordableOnly) count++;
+    if (homegrownOnly) count++;
+    return count;
+  }, [specificPosition, ageCategory, minRating, affordableOnly, homegrownOnly]);
+
+  const getClubDisplayName = (clubIdOrName: string) => {
+    if (!clubIdOrName) return 'Free Agent';
+    const allClubs = getAllClubs();
+    const plClub = allClubs.find(
+      (c) =>
+        c.id.toLowerCase() === clubIdOrName.toLowerCase() ||
+        c.defaultName.toLowerCase() === clubIdOrName.toLowerCase() ||
+        c.shortName.toLowerCase() === clubIdOrName.toLowerCase()
+    );
+    if (plClub) return getEffectiveClubName(plClub, save.club);
+    const euroClub = CONTINENTAL_EUROPEAN_CLUBS.find(
+      (c) =>
+        c.id.toLowerCase() === clubIdOrName.toLowerCase() ||
+        c.defaultName.toLowerCase() === clubIdOrName.toLowerCase() ||
+        c.shortName.toLowerCase() === clubIdOrName.toLowerCase()
+    );
+    if (euroClub) return getEffectiveClubName(euroClub, save.club);
+    return clubIdOrName;
+  };
 
   // Transfer Negotiation Modal & Detailed Terms
   const [negotiatingPlayer, setNegotiatingPlayer] = useState<MarketPlayer | null>(null);
@@ -725,73 +769,68 @@ export function TransferHub({
         </section>
       )}
 
-      {/* Transfer Window Status Banner */}
+      {/* Transfer Window Status Banner - Compact Header Bar */}
       <section
-        className={`p-5 rounded-3xl border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-xl ${
+        className={`px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl border flex flex-wrap sm:flex-nowrap justify-between items-center gap-2 shadow-md ${
           windowIsOpen
-            ? 'bg-gradient-to-r from-emerald-950/60 to-slate-900/80 border-emerald-700/60'
-            : 'bg-gradient-to-r from-slate-900/80 to-slate-950 border-slate-800'
+            ? 'bg-gradient-to-r from-emerald-950/50 via-slate-900/90 to-slate-950 border-emerald-700/40'
+            : 'bg-slate-900/80 border-slate-800'
         }`}
       >
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span
-              className={`w-2.5 h-2.5 rounded-full ${
-                windowIsOpen ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'
-              }`}
-            />
-            <span
-              className={`text-xs font-display font-black uppercase tracking-wider ${
-                windowIsOpen ? 'text-emerald-400' : 'text-slate-400'
-              }`}
-            >
-              {windowIsOpen ? 'Transfer Window Open' : 'Transfer Window Closed'}
-            </span>
-            <span className="text-slate-600">•</span>
-            <span className="text-xs text-slate-300 font-mono font-medium">
-              {save.season.currentDate}
-            </span>
-          </div>
-          <h2 className="text-xl sm:text-2xl font-display font-black text-white uppercase tracking-tight">
-            Transfers & Scouting Department
-          </h2>
+        <div className="flex items-center gap-2 min-w-0">
+          <span
+            className={`w-2 h-2 rounded-full shrink-0 ${
+              windowIsOpen ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'
+            }`}
+          />
+          <span
+            className={`text-[11px] font-display font-black uppercase tracking-wider shrink-0 ${
+              windowIsOpen ? 'text-emerald-400' : 'text-slate-400'
+            }`}
+          >
+            {windowIsOpen ? 'Window Open' : 'Window Closed'}
+          </span>
+          <span className="text-slate-700 text-xs hidden sm:inline">•</span>
+          <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
+            {save.season.currentDate}
+          </span>
         </div>
 
-        <div className="flex items-center gap-4 bg-slate-950/70 border border-slate-800 px-4 py-2.5 rounded-2xl">
+        <div className="flex items-center gap-2.5 sm:gap-4 bg-slate-950/80 border border-slate-800/80 px-2.5 py-1 sm:px-3 sm:py-1 rounded-xl ml-auto text-[11px]">
           <div>
-            <span className="text-[9px] uppercase font-bold text-slate-500 block">
-              Transfer Budget
+            <span className="text-[8px] uppercase font-bold text-slate-500 block leading-tight">
+              Budget
             </span>
-            <span className="font-display font-black text-emerald-400 text-base">
+            <span className="font-display font-black text-emerald-400 text-xs sm:text-sm">
               {formatCurrency(save.finances.transferBudget)}
             </span>
           </div>
-          <div className="h-6 w-px bg-slate-800" />
+          <div className="h-5 w-px bg-slate-800" />
           <div>
-            <span className="text-[9px] uppercase font-bold text-slate-500 block">
+            <span className="text-[8px] uppercase font-bold text-slate-500 block leading-tight">
               Wage Room
             </span>
-            <span className="font-display font-black text-slate-200 text-base">
+            <span className="font-display font-black text-slate-200 text-xs sm:text-sm">
               {formatCurrency(Math.max(0, save.finances.weeklyWageBudget - save.finances.currentWeeklyWages))}/w
             </span>
           </div>
-          <div className="h-6 w-px bg-slate-800" />
+          <div className="h-5 w-px bg-slate-800" />
           <div>
-            <span className="text-[9px] uppercase font-bold text-slate-500 block">
-              Squad / Senior
+            <span className="text-[8px] uppercase font-bold text-slate-500 block leading-tight">
+              Senior
             </span>
-            <span className="font-display font-black text-slate-300 text-base">
-              {save.squad.length}/35 <span className="text-xs text-slate-500 font-normal">({seniorCount}/25 sr)</span>
+            <span className="font-display font-black text-slate-300 text-xs sm:text-sm">
+              {seniorCount}/25
             </span>
           </div>
         </div>
       </section>
 
       {/* Sub-Navigation Tabs */}
-      <nav aria-label="Transfer Sections" className="flex gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-slate-800">
+      <nav aria-label="Transfer Sections" className="flex gap-1.5 overflow-x-auto pb-1.5 scrollbar-none border-b border-slate-800/80">
         {[
-          { id: 'market', label: 'Player Market', icon: '🔍', badge: marketPlayers.length },
-          { id: 'incoming', label: 'Incoming Bids', icon: '📬', badge: save.incomingOffers?.length || 0 },
+          { id: 'market', label: 'Market', icon: '🔍', badge: marketPlayers.length },
+          { id: 'incoming', label: 'Incoming', icon: '📬', badge: save.incomingOffers?.length || 0 },
           {
             id: 'contracts',
             label: 'Contracts',
@@ -800,23 +839,23 @@ export function TransferHub({
             badgeAlert: criticalExpiringCount > 0,
           },
           { id: 'shortlist', label: 'Shortlist', icon: '⭐', badge: shortlistedPlayers.length },
-          { id: 'history', label: 'Transfer History', icon: '📜', badge: save.transfersHistory?.length || 0 },
-          { id: 'board', label: 'Board Room', icon: '🏛️', badge: `${boardStatus.confidence}%` },
+          { id: 'history', label: 'History', icon: '📜', badge: save.transfersHistory?.length || 0 },
+          { id: 'board', label: 'Board', icon: '🏛️', badge: `${boardStatus.confidence}%` },
         ].map((tab) => {
           const isSelected = subTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => setSubTab(tab.id as typeof subTab)}
-              className={`py-2 px-3.5 rounded-xl border text-xs font-display font-black uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap cursor-pointer transition-all ${
+              className={`py-1.5 px-2.5 sm:px-3 rounded-xl border text-[11px] sm:text-xs font-display font-black uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap cursor-pointer transition-all ${
                 isSelected
-                  ? 'border-emerald-500 bg-emerald-950/40 text-emerald-300 shadow-md shadow-emerald-950/50'
+                  ? 'border-emerald-500 bg-emerald-950/40 text-emerald-300 shadow-sm'
                   : 'border-slate-800 bg-slate-900/40 text-slate-400 hover:text-slate-200 hover:border-slate-700'
               }`}
             >
               <span>{tab.icon}</span>
               <span>{tab.label}</span>
-              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-md ${
+              <span className={`text-[9px] font-mono px-1 py-0.2 rounded-md ${
                 tab.badgeAlert
                   ? 'bg-rose-950 text-rose-300 border border-rose-700/60 font-bold animate-pulse'
                   : 'bg-slate-950/60 opacity-80'
@@ -830,26 +869,74 @@ export function TransferHub({
 
       {/* SUB-VIEW 1: PLAYER MARKET */}
       {subTab === 'market' && (
-        <section className="space-y-4">
+        <section className="space-y-3">
           {/* Search & Filter Controls */}
-          <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-4 sm:p-5 space-y-4">
-            {/* Era Toggle Header */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
-              <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+          <div className="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-3 sm:p-4 space-y-2.5 shadow-md">
+            {/* Top Row: Immediate Search Input + Advanced Filters Toggle */}
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs">🔍</span>
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  placeholder="Search player, club, or nationality..."
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-semibold"
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchTerm('');
+                      setCurrentPage(1);
+                    }}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs px-1"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsAdvancedFiltersOpen(!isAdvancedFiltersOpen)}
+                className={`px-3 py-2 rounded-xl text-xs font-display font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shrink-0 border ${
+                  isAdvancedFiltersOpen || activeFilterCount > 0
+                    ? 'bg-emerald-950/70 border-emerald-500/80 text-emerald-300 shadow-sm'
+                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+                aria-expanded={isAdvancedFiltersOpen}
+              >
+                <span>Filters</span>
+                {activeFilterCount > 0 && (
+                  <span className="bg-emerald-500 text-slate-950 text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center">
+                    {activeFilterCount}
+                  </span>
+                )}
+                <span>{isAdvancedFiltersOpen ? '▲' : '▼'}</span>
+              </button>
+            </div>
+
+            {/* Quick Filters Row: Era pills + Position pills + Target count */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-850/60">
+              {/* Era Pills */}
+              <div className="flex items-center gap-1 bg-slate-950/80 p-0.5 rounded-lg border border-slate-800/80">
                 <button
                   type="button"
                   onClick={() => {
                     setPlayerPoolType('modern');
                     setCurrentPage(1);
                   }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-display font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
+                  className={`px-2 py-1 rounded-md text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
                     playerPoolType === 'modern'
-                      ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+                      ? 'bg-emerald-500 text-slate-950 shadow-sm'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  <span>⚡</span>
-                  <span>Current Season (Modern)</span>
+                  ⚡ Modern
                 </button>
                 <button
                   type="button"
@@ -857,14 +944,13 @@ export function TransferHub({
                     setPlayerPoolType('legends');
                     setCurrentPage(1);
                   }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-display font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
+                  className={`px-2 py-1 rounded-md text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
                     playerPoolType === 'legends'
-                      ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/30'
+                      ? 'bg-amber-400 text-slate-950 font-black shadow-sm'
                       : 'text-amber-400/80 hover:text-amber-300'
                   }`}
                 >
-                  <span>👑</span>
-                  <span>Legends & Icons</span>
+                  👑 Icons
                 </button>
                 <button
                   type="button"
@@ -872,36 +958,18 @@ export function TransferHub({
                     setPlayerPoolType('all');
                     setCurrentPage(1);
                   }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-display font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
+                  className={`px-2 py-1 rounded-md text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
                     playerPoolType === 'all'
                       ? 'bg-slate-700 text-white'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  <span>🌐</span>
-                  <span>All Eras</span>
+                  🌐 All
                 </button>
               </div>
 
-              <span className="text-[11px] text-slate-400 font-medium">
-                Active Pool: <strong className="text-white">{marketPlayers.length}</strong> available targets
-              </span>
-            </div>
-
-            {/* Main Search & Position Category */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setCurrentPage(1);
-                }}
-                placeholder="Search player, club, or nationality..."
-                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-semibold"
-              />
-
-              <div className="flex gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+              {/* Position Category Pills */}
+              <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
                 {(['ALL', 'GK', 'DEF', 'MID', 'FWD'] as const).map((cat) => (
                   <button
                     key={cat}
@@ -910,128 +978,134 @@ export function TransferHub({
                       setSelectedPosCategory(cat);
                       setCurrentPage(1);
                     }}
-                    className={`px-3 py-2 rounded-xl text-xs font-display font-black uppercase tracking-wider cursor-pointer transition-colors ${
+                    className={`px-2 py-1 rounded-lg text-[11px] font-display font-black uppercase tracking-wider cursor-pointer transition-colors ${
                       selectedPosCategory === cat
-                        ? 'bg-emerald-500 text-slate-950 shadow'
-                        : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-white'
+                        ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                        : 'bg-slate-950 border border-slate-850 text-slate-400 hover:text-white'
                     }`}
                   >
                     {cat}
                   </button>
                 ))}
               </div>
+
+              <span className="text-[10px] text-slate-400 font-mono ml-auto">
+                <strong className="text-white">{marketPlayers.length}</strong> targets
+              </span>
             </div>
 
-            {/* Granular Filters Bar */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 text-xs pt-1 border-t border-slate-850/60">
-              {/* Specific Position Role */}
-              <div className="space-y-1">
-                <span className="text-[9px] uppercase font-bold text-slate-500 block">Specific Role:</span>
-                <select
-                  value={specificPosition}
-                  onChange={(e) => {
-                    setSpecificPosition(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-2 py-1.5 text-xs font-display font-black"
-                >
-                  <option value="ALL">All Roles</option>
-                  <option value="GK">GK (Goalkeeper)</option>
-                  <option value="CB">CB (Center Back)</option>
-                  <option value="LB">LB (Left Back)</option>
-                  <option value="RB">RB (Right Back)</option>
-                  <option value="CDM">CDM (Def Mid)</option>
-                  <option value="CM">CM (Center Mid)</option>
-                  <option value="CAM">CAM (Att Mid)</option>
-                  <option value="LM">LM (Left Mid)</option>
-                  <option value="RM">RM (Right Mid)</option>
-                  <option value="LW">LW (Left Wing)</option>
-                  <option value="RW">RW (Right Wing)</option>
-                  <option value="ST">ST (Striker)</option>
-                </select>
-              </div>
-
-              {/* Age Range Filter */}
-              <div className="space-y-1">
-                <span className="text-[9px] uppercase font-bold text-slate-500 block">Age Profile:</span>
-                <select
-                  value={ageCategory}
-                  onChange={(e) => {
-                    setAgeCategory(e.target.value as typeof ageCategory);
-                    setCurrentPage(1);
-                  }}
-                  className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-2 py-1.5 text-xs font-display font-black"
-                >
-                  <option value="ALL">All Ages</option>
-                  <option value="U21">U21 Wonderkids (≤21)</option>
-                  <option value="PEAK">Peak Prime (22–29)</option>
-                  <option value="VET">Veterans (30+)</option>
-                </select>
-              </div>
-
-              {/* Min Rating */}
-              <div className="space-y-1">
-                <span className="text-[9px] uppercase font-bold text-slate-500 block">Min Rating:</span>
-                <select
-                  value={minRating}
-                  onChange={(e) => {
-                    setMinRating(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-2 py-1.5 text-xs font-mono"
-                >
-                  <option value={0}>Any Rating</option>
-                  <option value={70}>70+ OVR</option>
-                  <option value={75}>75+ OVR</option>
-                  <option value={80}>80+ OVR</option>
-                  <option value={84}>84+ Elite</option>
-                  <option value={88}>88+ Superstar</option>
-                </select>
-              </div>
-
-              {/* Affordable Only */}
-              <div className="flex items-end pb-1.5">
-                <label className="flex items-center gap-2 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={affordableOnly}
+            {/* Collapsible Advanced Filters Panel */}
+            {isAdvancedFiltersOpen && (
+              <div className="pt-2.5 border-t border-slate-800 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 text-xs">
+                {/* Specific Position Role */}
+                <div className="space-y-0.5">
+                  <span className="text-[9px] uppercase font-bold text-slate-500 block">Specific Role</span>
+                  <select
+                    value={specificPosition}
                     onChange={(e) => {
-                      setAffordableOnly(e.target.checked);
+                      setSpecificPosition(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="w-4 h-4 accent-emerald-500 rounded cursor-pointer"
-                  />
-                  <span className="text-[11px] font-bold text-slate-300">Affordable Only</span>
-                </label>
-              </div>
+                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-2 py-1 text-xs font-display font-bold"
+                  >
+                    <option value="ALL">All Roles</option>
+                    <option value="GK">GK</option>
+                    <option value="CB">CB</option>
+                    <option value="LB">LB</option>
+                    <option value="RB">RB</option>
+                    <option value="CDM">CDM</option>
+                    <option value="CM">CM</option>
+                    <option value="CAM">CAM</option>
+                    <option value="LM">LM</option>
+                    <option value="RM">RM</option>
+                    <option value="LW">LW</option>
+                    <option value="RW">RW</option>
+                    <option value="ST">ST</option>
+                  </select>
+                </div>
 
-              {/* Homegrown */}
-              <div className="flex items-end pb-1.5">
-                <label className="flex items-center gap-2 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={homegrownOnly}
+                {/* Age Range Filter */}
+                <div className="space-y-0.5">
+                  <span className="text-[9px] uppercase font-bold text-slate-500 block">Age Profile</span>
+                  <select
+                    value={ageCategory}
                     onChange={(e) => {
-                      setHomegrownOnly(e.target.checked);
+                      setAgeCategory(e.target.value as typeof ageCategory);
                       setCurrentPage(1);
                     }}
-                    className="w-4 h-4 accent-emerald-500 rounded cursor-pointer"
-                  />
-                  <span className="text-[11px] font-bold text-slate-300">Homegrown (8+)</span>
-                </label>
-              </div>
+                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-2 py-1 text-xs font-display font-bold"
+                  >
+                    <option value="ALL">All Ages</option>
+                    <option value="U21">U21 Wonderkids (≤21)</option>
+                    <option value="PEAK">Peak Prime (22–29)</option>
+                    <option value="VET">Veterans (30+)</option>
+                  </select>
+                </div>
 
-              {/* Reset Filters */}
-              <div className="flex items-end pb-1">
-                <button
-                  type="button"
-                  onClick={handleResetFilters}
-                  className="w-full py-1.5 px-2 rounded-lg border border-slate-800 bg-slate-950/80 hover:bg-slate-900 text-slate-400 hover:text-white text-[11px] font-display font-bold uppercase transition-all cursor-pointer"
-                >
-                  ↺ Reset
-                </button>
+                {/* Min Rating */}
+                <div className="space-y-0.5">
+                  <span className="text-[9px] uppercase font-bold text-slate-500 block">Min Rating</span>
+                  <select
+                    value={minRating}
+                    onChange={(e) => {
+                      setMinRating(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-2 py-1 text-xs font-mono"
+                  >
+                    <option value={0}>Any Rating</option>
+                    <option value={70}>70+ OVR</option>
+                    <option value={75}>75+ OVR</option>
+                    <option value={80}>80+ OVR</option>
+                    <option value={84}>84+ Elite</option>
+                    <option value={88}>88+ Superstar</option>
+                  </select>
+                </div>
+
+                {/* Affordable Only */}
+                <div className="flex items-end pb-1">
+                  <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={affordableOnly}
+                      onChange={(e) => {
+                        setAffordableOnly(e.target.checked);
+                        setCurrentPage(1);
+                      }}
+                      className="w-3.5 h-3.5 accent-emerald-500 rounded cursor-pointer"
+                    />
+                    <span className="text-[11px] font-bold text-slate-300">Within Budget</span>
+                  </label>
+                </div>
+
+                {/* Homegrown */}
+                <div className="flex items-end pb-1">
+                  <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={homegrownOnly}
+                      onChange={(e) => {
+                        setHomegrownOnly(e.target.checked);
+                        setCurrentPage(1);
+                      }}
+                      className="w-3.5 h-3.5 accent-emerald-500 rounded cursor-pointer"
+                    />
+                    <span className="text-[11px] font-bold text-slate-300">Homegrown (8+)</span>
+                  </label>
+                </div>
+
+                {/* Reset Filters */}
+                <div className="flex items-end pb-0.5">
+                  <button
+                    type="button"
+                    onClick={handleResetFilters}
+                    className="w-full py-1 px-2 rounded-lg border border-slate-800 bg-slate-950/80 hover:bg-slate-900 text-slate-400 hover:text-white text-[10px] font-display font-bold uppercase transition-all cursor-pointer"
+                  >
+                    ↺ Reset
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Market Grid */}
@@ -1047,62 +1121,87 @@ export function TransferHub({
               </button>
             </div>
           ) : (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
                 {paginatedPlayers.map((player) => {
                   const isShortlisted = shortlistIdsSet.has(player.id);
                   const canAfford = player.value <= save.finances.transferBudget;
                   const isLegend = player.isLegend;
+                  const isExpanded = expandedPlayerIds.has(player.id);
+                  const resolvedClub = getClubDisplayName(player.club);
+                  const isSenior = player.age > U21_AGE_LIMIT;
+                  const isSquadFull = save.squad.length >= MAX_SQUAD_SIZE;
+                  const isSeniorFull = isSenior && seniorCount >= MAX_SENIOR_SQUAD_SIZE;
+                  const isBlocked = !windowIsOpen || isSquadFull || isSeniorFull;
 
                   return (
                     <article
                       key={player.id}
-                      className={`rounded-2xl p-4 flex flex-col justify-between gap-3 transition-all ${
+                      className={`rounded-2xl border transition-all ${
                         isLegend
-                          ? 'bg-gradient-to-b from-amber-950/30 via-slate-900/70 to-slate-950 border border-amber-500/50 hover:border-amber-400 shadow-lg shadow-amber-950/20 ring-1 ring-amber-400/20'
-                          : 'bg-slate-900/40 border border-slate-850 hover:border-slate-800'
+                          ? 'bg-gradient-to-b from-amber-950/30 via-slate-900/80 to-slate-950 border-amber-500/50 hover:border-amber-400 shadow-md ring-1 ring-amber-400/20'
+                          : 'bg-slate-900/50 border-slate-800/80 hover:border-slate-700'
                       }`}
                     >
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-start gap-2">
-                          <div className="flex items-center gap-2.5">
-                            <span
-                              className={`w-9 h-9 rounded-xl flex items-center justify-center font-display font-black text-xs ${
-                                isLegend
-                                  ? 'bg-amber-950/90 border border-amber-500/60 text-amber-300 shadow-md shadow-amber-500/20'
-                                  : 'bg-slate-950 border border-slate-800 text-emerald-400'
-                              }`}
-                            >
-                              {player.rating}
-                            </span>
-                            <div>
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <h3 className="font-display font-black text-sm text-white leading-tight">
-                                  {player.name}
-                                </h3>
-                                {isLegend && (
-                                  <span className="text-[9px] font-black uppercase tracking-wider text-amber-400 bg-amber-950/80 border border-amber-600/70 px-1.5 py-0.2 rounded-full font-display">
-                                    👑 ICON ★
-                                  </span>
-                                )}
-                              </div>
-                              <div className="text-[10px] text-slate-400 font-medium flex items-center gap-1 mt-0.5">
-                                <span className={isLegend ? 'text-amber-400 font-bold' : 'text-emerald-400 font-bold'}>
-                                  {player.position}
+                      {/* Compact Primary Row (Always Visible) */}
+                      <div
+                        onClick={() => togglePlayerExpanded(player.id)}
+                        className="p-3 flex items-center justify-between gap-2.5 cursor-pointer select-none"
+                      >
+                        {/* Rating Badge */}
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span
+                            className={`w-9 h-9 rounded-xl flex items-center justify-center font-display font-black text-xs shrink-0 shadow-sm ${
+                              isLegend
+                                ? 'bg-amber-950 border border-amber-500/70 text-amber-300 shadow-amber-500/20'
+                                : player.rating >= 85
+                                ? 'bg-emerald-950 border border-emerald-600/70 text-emerald-300'
+                                : 'bg-slate-950 border border-slate-800 text-slate-200'
+                            }`}
+                          >
+                            {player.rating}
+                          </span>
+
+                          {/* Name + Position + Val + Wage */}
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <h3 className="font-display font-black text-xs sm:text-sm text-white truncate max-w-[150px] sm:max-w-[200px]">
+                                {player.name}
+                              </h3>
+                              {isLegend && (
+                                <span className="text-[8px] font-black uppercase text-amber-400 bg-amber-950/80 border border-amber-600/70 px-1 py-0.2 rounded font-display shrink-0">
+                                  👑 ICON
                                 </span>
-                                <span>•</span>
-                                <span>{player.age} yrs</span>
-                                <span>•</span>
-                                <span>{player.nationality}</span>
-                              </div>
+                              )}
+                            </div>
+                            <div className="text-[10px] text-slate-400 font-medium flex items-center gap-1 mt-0.5 truncate">
+                              <span className={isLegend ? 'text-amber-400 font-bold' : 'text-emerald-400 font-bold'}>
+                                {player.position}
+                              </span>
+                              <span>•</span>
+                              <span>{player.age}y</span>
+                              <span>•</span>
+                              <span className={`font-mono font-bold ${isLegend ? 'text-amber-300' : 'text-white'}`}>
+                                {formatCurrency(player.value)}
+                              </span>
+                              <span>•</span>
+                              <span className="font-mono text-slate-300">
+                                {formatWage(player.wageDemand)}
+                              </span>
+                            </div>
+                            <div className="text-[9px] text-slate-500 truncate mt-0.5">
+                              {resolvedClub}
                             </div>
                           </div>
+                        </div>
 
+                        {/* Quick Actions (Shortlist + Bid + Expand Chevron) */}
+                        <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                           <button
                             type="button"
                             onClick={() => handleToggleShortlist(player.id)}
                             title={isShortlisted ? 'Remove from Shortlist' : 'Add to Shortlist'}
-                            className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-colors cursor-pointer shrink-0 ${
+                            className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-colors cursor-pointer ${
                               isShortlisted
                                 ? 'bg-amber-950/80 text-amber-400 border border-amber-800'
                                 : 'bg-slate-950 text-slate-500 hover:text-white border border-slate-800'
@@ -1110,107 +1209,144 @@ export function TransferHub({
                           >
                             ★
                           </button>
-                        </div>
 
-                        <div className="bg-slate-950/60 p-2.5 rounded-xl flex justify-between items-center text-xs font-mono">
-                          <div>
-                            <span className="text-[9px] uppercase text-slate-500 block">Valuation</span>
-                            <span className={`font-bold ${isLegend ? 'text-amber-300' : 'text-white'}`}>
-                              {formatCurrency(player.value)}
-                            </span>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-[9px] uppercase text-slate-500 block">Wage Demand</span>
-                            <span className="font-bold text-slate-300">{formatWage(player.wageDemand)}</span>
-                          </div>
-                        </div>
-
-                        {/* EA FC 6 Face Stats */}
-                        {(() => {
-                          const fs = calculateEaFcFaceStats(player as unknown as CareerPlayer);
-                          return (
-                            <div className="grid grid-cols-6 gap-1 bg-slate-950/70 p-1.5 rounded-xl text-center font-display border border-white/5 text-[9px]">
-                              <div>
-                                <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'DIV' : 'PAC'}</span>
-                                <span className="font-black text-white">{fs.pac}</span>
-                              </div>
-                              <div>
-                                <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'HAN' : 'SHO'}</span>
-                                <span className="font-black text-white">{fs.sho}</span>
-                              </div>
-                              <div>
-                                <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'KIC' : 'PAS'}</span>
-                                <span className="font-black text-white">{fs.pas}</span>
-                              </div>
-                              <div>
-                                <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'REF' : 'DRI'}</span>
-                                <span className="font-black text-white">{fs.dri}</span>
-                              </div>
-                              <div>
-                                <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'SPD' : 'DEF'}</span>
-                                <span className="font-black text-white">{fs.def}</span>
-                              </div>
-                              <div>
-                                <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'POS' : 'PHY'}</span>
-                                <span className="font-black text-white">{fs.phy}</span>
-                              </div>
-                            </div>
-                          );
-                        })()}
-
-
-                        <div className="flex justify-between items-center text-[10px] text-slate-400">
-                          <span className="truncate max-w-[140px]">Club: {player.club}</span>
-                          <div className="flex items-center gap-1">
-                            {player.versions && player.versions.length > 1 && (
-                              <span className="text-[9px] font-bold text-amber-400/90 bg-amber-950/40 border border-amber-800/40 px-1.5 py-0.5 rounded">
-                                📚 {player.versions.length} Editions
-                              </span>
-                            )}
-                            {player.isHomegrown && (
-                              <span className="text-emerald-400 font-bold uppercase tracking-wider text-[9px] bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-900/60">
-                                Homegrown
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {(() => {
-                        const isSenior = player.age > U21_AGE_LIMIT;
-                        const isSquadFull = save.squad.length >= MAX_SQUAD_SIZE;
-                        const isSeniorFull = isSenior && seniorCount >= MAX_SENIOR_SQUAD_SIZE;
-                        const isBlocked = !windowIsOpen || isSquadFull || isSeniorFull;
-
-                        return (
                           <button
                             type="button"
                             onClick={() => handleStartNegotiation(player)}
                             disabled={isBlocked}
-                            className={`w-full py-2.5 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                            className={`py-1.5 px-2.5 rounded-lg font-display font-black text-[11px] uppercase tracking-wider transition-all cursor-pointer ${
                               !windowIsOpen
                                 ? 'bg-slate-950 border border-slate-800 text-slate-600 cursor-not-allowed'
                                 : isSquadFull || isSeniorFull
                                 ? 'bg-amber-950/60 border border-amber-900 text-amber-400 cursor-not-allowed'
                                 : isLegend
-                                ? 'bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 shadow-md shadow-amber-500/25'
+                                ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-sm'
                                 : canAfford
-                                ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/20'
+                                ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-sm'
                                 : 'bg-slate-850 hover:bg-slate-800 text-slate-300 border border-slate-700'
                             }`}
                           >
-                            {!windowIsOpen
-                              ? 'Window Closed'
-                              : isSquadFull
-                              ? 'Squad Full (35/35)'
-                              : isSeniorFull
-                              ? 'Senior Full (25/25)'
-                              : isLegend
-                              ? '👑 Select Edition & Bid'
-                              : 'Make Offer'}
+                            {!windowIsOpen ? 'Closed' : isLegend ? '👑 Bid' : 'Bid'}
                           </button>
-                        );
-                      })()}
+
+                          <button
+                            type="button"
+                            onClick={() => togglePlayerExpanded(player.id)}
+                            className="w-6 h-7 rounded-lg text-slate-400 hover:text-white text-xs flex items-center justify-center cursor-pointer"
+                            aria-label={isExpanded ? 'Collapse player details' : 'Expand player details'}
+                          >
+                            {isExpanded ? '▲' : '▼'}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Expanded Details: EA FC 6 Face Stats, Editions, Scouting Actions */}
+                      {isExpanded && (
+                        <div className="p-3 pt-0 border-t border-slate-800/80 mt-1 space-y-2.5 bg-slate-950/40 rounded-b-2xl">
+                          {/* Tags: Nationality, Editions, Homegrown */}
+                          <div className="flex flex-wrap items-center justify-between gap-1.5 text-[10px] text-slate-400 pt-2">
+                            <div className="flex items-center gap-1.5">
+                              <span>Nationality: <strong className="text-slate-200">{player.nationality}</strong></span>
+                              {player.isHomegrown && (
+                                <span className="text-emerald-400 font-bold uppercase tracking-wider text-[9px] bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-900/60">
+                                  Homegrown
+                                </span>
+                              )}
+                            </div>
+                            {player.versions && player.versions.length > 1 && (
+                              <span className="text-[9px] font-bold text-amber-400 bg-amber-950/60 border border-amber-800/60 px-1.5 py-0.2 rounded">
+                                📚 {player.versions.length} Editions Available
+                              </span>
+                            )}
+                          </div>
+
+                          {/* EA FC 6 Face Stats Grid */}
+                          {(() => {
+                            const fs = calculateEaFcFaceStats(player as unknown as CareerPlayer);
+                            return (
+                              <div className="grid grid-cols-6 gap-1 bg-slate-950/80 p-2 rounded-xl text-center font-display border border-white/5 text-[10px]">
+                                <div>
+                                  <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'DIV' : 'PAC'}</span>
+                                  <span className="font-black text-white">{fs.pac}</span>
+                                </div>
+                                <div>
+                                  <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'HAN' : 'SHO'}</span>
+                                  <span className="font-black text-white">{fs.sho}</span>
+                                </div>
+                                <div>
+                                  <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'KIC' : 'PAS'}</span>
+                                  <span className="font-black text-white">{fs.pas}</span>
+                                </div>
+                                <div>
+                                  <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'REF' : 'DRI'}</span>
+                                  <span className="font-black text-white">{fs.dri}</span>
+                                </div>
+                                <div>
+                                  <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'SPD' : 'DEF'}</span>
+                                  <span className="font-black text-white">{fs.def}</span>
+                                </div>
+                                <div>
+                                  <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'POS' : 'PHY'}</span>
+                                  <span className="font-black text-white">{fs.phy}</span>
+                                </div>
+                              </div>
+                            );
+                          })()}
+
+                          {/* Full Action & Constraint Warning */}
+                          <div className="pt-1">
+                            {isSquadFull && (
+                              <div className="text-[10px] text-amber-400 bg-amber-950/40 border border-amber-800/50 p-2 rounded-xl text-center mb-2">
+                                ⚠️ Squad limit reached (35/35). Sell or release a player before signing.
+                              </div>
+                            )}
+                            {isSeniorFull && !isSquadFull && (
+                              <div className="text-[10px] text-amber-400 bg-amber-950/40 border border-amber-800/50 p-2 rounded-xl text-center mb-2">
+                                ⚠️ Senior quota reached (25/25). Player is over 21. Sell a senior player first.
+                              </div>
+                            )}
+                            {!canAfford && (
+                              <div className="text-[10px] text-amber-300 bg-amber-950/40 border border-amber-800/40 p-2 rounded-xl flex items-center justify-between mb-2">
+                                <span>Fee ({formatCurrency(player.value)}) exceeds current budget ({formatCurrency(save.finances.transferBudget)}).</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setSubTab('board')}
+                                  className="text-[9px] font-bold underline hover:text-white uppercase"
+                                >
+                                  Petition Board ➔
+                                </button>
+                              </div>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() => handleStartNegotiation(player)}
+                              disabled={isBlocked}
+                              className={`w-full py-2.5 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                                !windowIsOpen
+                                  ? 'bg-slate-950 border border-slate-800 text-slate-600 cursor-not-allowed'
+                                  : isSquadFull || isSeniorFull
+                                  ? 'bg-amber-950/60 border border-amber-900 text-amber-400 cursor-not-allowed'
+                                  : isLegend
+                                  ? 'bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 shadow-md shadow-amber-500/25'
+                                  : canAfford
+                                  ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/20'
+                                  : 'bg-slate-850 hover:bg-slate-800 text-slate-300 border border-slate-700'
+                              }`}
+                            >
+                              {!windowIsOpen
+                                ? 'Window Closed'
+                                : isSquadFull
+                                ? 'Squad Full (35/35)'
+                                : isSeniorFull
+                                ? 'Senior Full (25/25)'
+                                : isLegend
+                                ? '👑 Select Edition & Bid'
+                                : 'Negotiate Transfer Terms'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </article>
                   );
                 })}

@@ -170,95 +170,92 @@ export function TournamentsHub({
 
       {/* VIEW 1: TROPHY CABINET */}
       {selectedTournamentId === 'cabinet' ? (
-        <section className="space-y-6">
-          <header className="bg-slate-900/40 border border-slate-800 rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="space-y-1">
-              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 font-display">
-                Club Honours
-              </span>
-              <h2 className="text-2xl font-display font-black text-white uppercase tracking-tight flex items-center gap-2">
-                <span>🏛️</span> Trophy Cabinet
-              </h2>
-              <p className="text-xs text-slate-400">
-                Silverware accumulated during your managerial tenure at {getEffectiveClubName(save.club)}.
-              </p>
+        <section className="space-y-4">
+          <header className="bg-slate-900/60 border border-slate-800 rounded-2xl px-4 py-3 flex justify-between items-center shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🏛️</span>
+              <div>
+                <h2 className="text-sm font-display font-black text-white uppercase tracking-tight">
+                  Trophy Cabinet
+                </h2>
+                <p className="text-[10px] text-slate-400">
+                  {getEffectiveClubName(save.club)} Honours
+                </p>
+              </div>
             </div>
-
-            <div className="bg-slate-950/70 border border-slate-800 px-5 py-3 rounded-2xl text-center">
-              <span className="text-[10px] uppercase font-bold text-slate-500 block">Total Honours</span>
-              <span className="text-2xl font-display font-black text-emerald-400">
+            <div className="bg-slate-950 border border-slate-800 px-3 py-1 rounded-xl text-center">
+              <span className="text-[9px] uppercase font-bold text-slate-500 block">Total</span>
+              <span className="text-base font-display font-black text-amber-400">
                 {save.trophies?.length || 0}
               </span>
             </div>
           </header>
 
           {(!save.trophies || save.trophies.length === 0) ? (
-            <div className="bg-slate-900/20 border border-slate-850 rounded-3xl p-12 text-center space-y-3">
-              <span className="text-4xl block">🏆</span>
-              <h3 className="text-base font-display font-black text-slate-300 uppercase">
+            <div className="bg-slate-900/20 border border-slate-850 rounded-2xl p-8 text-center space-y-2">
+              <span className="text-3xl block">🏆</span>
+              <h3 className="text-xs font-display font-black text-slate-300 uppercase">
                 The Cabinet is Empty
               </h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-                Win domestic competitions like The English Cup or compete against continental giants in the European Champions Cup to lift your first trophy.
+              <p className="text-[11px] text-slate-500 max-w-xs mx-auto">
+                Win domestic cups or European competitions to lift your first piece of silverware.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
               {save.trophies.map((trophy, idx) => (
                 <article
                   key={`${trophy.competitionId}_${trophy.year}_${idx}`}
-                  className="bg-gradient-to-br from-slate-900/70 to-slate-950 border border-emerald-900/40 rounded-2xl p-5 space-y-3 shadow-lg relative overflow-hidden"
+                  className="bg-gradient-to-br from-slate-900/90 via-slate-950 to-slate-900/70 border border-amber-500/30 rounded-xl p-3 space-y-1.5 shadow-sm text-center relative overflow-hidden"
                 >
-                  <div className="flex justify-between items-start">
-                    <span className="text-3xl">🏆</span>
-                    <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-900 px-2 py-0.5 rounded-full">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xl">🏆</span>
+                    <span className="text-[9px] font-mono font-bold text-amber-400 bg-amber-950/70 border border-amber-800/60 px-1.5 py-0.2 rounded-full">
                       {trophy.year}
                     </span>
                   </div>
-                  <div>
-                    <h4 className="text-base font-display font-black text-white uppercase tracking-tight">
-                      {trophy.competitionName}
-                    </h4>
-                    <p className="text-[11px] text-slate-400 font-medium">
-                      Champions • {getEffectiveClubName(save.club)}
-                    </p>
-                  </div>
+                  <h4 className="text-xs font-display font-black text-white uppercase tracking-tight truncate">
+                    {trophy.competitionName}
+                  </h4>
+                  <p className="text-[10px] text-slate-400 truncate">
+                    {getEffectiveClubName(save.club)}
+                  </p>
                 </article>
               ))}
             </div>
           )}
         </section>
       ) : !currentTournament ? (
-        <div className="bg-slate-900/30 border border-slate-800 rounded-3xl p-8 text-center text-slate-400">
+        <div className="bg-slate-900/30 border border-slate-800 rounded-2xl p-8 text-center text-slate-400 text-xs">
           Tournament data not available.
         </div>
       ) : (
         /* VIEW 2: TOURNAMENT BRACKET & FIXTURES */
-        <section className="space-y-6">
+        <section className="space-y-4">
           {/* Header Card */}
-          <header className="bg-slate-900/40 border border-slate-800 rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="space-y-1">
+          <header className="bg-slate-900/50 border border-slate-800 rounded-2xl px-4 py-2.5 flex flex-wrap sm:flex-nowrap justify-between items-center gap-2 shadow-sm">
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/60 border border-emerald-900/60 px-2.5 py-0.5 rounded-full font-display">
+                <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/60 border border-emerald-900/60 px-2 py-0.2 rounded-full font-display">
                   Prize: £{(currentTournament.prizeMoney / 1_000_000).toFixed(1)}M
                 </span>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Current Stage: {currentTournament.currentRound}
+                  {currentTournament.currentRound}
                 </span>
               </div>
-              <h2 className="text-2xl font-display font-black text-white uppercase tracking-tight">
+              <h2 className="text-base sm:text-lg font-display font-black text-white uppercase tracking-tight truncate mt-0.5">
                 {currentTournament.name}
               </h2>
             </div>
 
             {currentTournament.isCompleted && currentTournament.winnerClubId && (
-              <div className="bg-emerald-950/40 border border-emerald-800/60 rounded-2xl px-5 py-3 flex items-center gap-3">
-                <span className="text-3xl">🏆</span>
+              <div className="bg-emerald-950/40 border border-emerald-800/60 rounded-xl px-3 py-1.5 flex items-center gap-2 ml-auto">
+                <span className="text-xl">🏆</span>
                 <div>
-                  <span className="text-[9px] uppercase font-bold text-emerald-400 block tracking-widest">
-                    Tournament Champion
+                  <span className="text-[8px] uppercase font-bold text-emerald-400 block tracking-wider">
+                    Champion
                   </span>
-                  <span className="text-sm font-display font-black text-white uppercase">
+                  <span className="text-xs font-display font-black text-white uppercase">
                     {(() => {
                       const w = findAnyClub(currentTournament.winnerClubId);
                       return w ? getEffectiveClubName(w, save.club) : currentTournament.winnerClubId;
@@ -271,7 +268,6 @@ export function TournamentsHub({
 
           {/* Group Fixtures by Round */}
           {(() => {
-            // Group fixtures by roundName
             const roundsMap = new Map<string, CupFixture[]>();
             currentTournament.fixtures.forEach((f) => {
               const list = roundsMap.get(f.roundName) || [];
@@ -282,74 +278,68 @@ export function TournamentsHub({
             const roundEntries = Array.from(roundsMap.entries());
 
             return (
-              <div className="space-y-6">
-                {roundEntries.map(([roundName, roundFixtures]) => (
-                  <div key={roundName} className="space-y-3">
-                    <div className="flex items-center justify-between border-b border-slate-850 pb-2">
-                      <h3 className="text-xs font-display font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                        <span>⚔️</span> {roundName}
-                      </h3>
-                      <span className="text-[10px] font-mono text-slate-500">
-                        {roundFixtures.filter((f) => f.played).length} / {roundFixtures.length} Completed
-                      </span>
-                    </div>
+              <div className="space-y-4">
+                {roundEntries.map(([roundName, roundFixtures]) => {
+                  const userTie = roundFixtures.find(
+                    (f) => f.homeClubId === userClubId || f.awayClubId === userClubId
+                  );
+                  const otherTies = roundFixtures.filter((f) => f.id !== userTie?.id);
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {roundFixtures.map((fixture) => {
-                        const home = findAnyClub(fixture.homeClubId);
-                        const away = findAnyClub(fixture.awayClubId);
-                        const isUserInTie =
-                          fixture.homeClubId === userClubId || fixture.awayClubId === userClubId;
+                  return (
+                    <div key={roundName} className="space-y-2.5">
+                      <div className="flex items-center justify-between border-b border-slate-800/80 pb-1.5">
+                        <h3 className="text-xs font-display font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                          <span>⚔️</span> {roundName}
+                        </h3>
+                        <span className="text-[10px] font-mono text-slate-500">
+                          {roundFixtures.filter((f) => f.played).length} / {roundFixtures.length} Completed
+                        </span>
+                      </div>
+
+                      {/* User Fixture Spotlight (Always Top) */}
+                      {userTie && (() => {
+                        const home = findAnyClub(userTie.homeClubId);
+                        const away = findAnyClub(userTie.awayClubId);
 
                         return (
-                          <article
-                            key={fixture.id}
-                            className={`p-4 rounded-2xl border transition-all ${
-                              isUserInTie
-                                ? 'bg-slate-900/80 border-emerald-500/60 shadow-lg shadow-emerald-950/30'
-                                : 'bg-slate-900/30 border-slate-850 hover:border-slate-800'
-                            }`}
-                          >
+                          <article className="p-3.5 rounded-2xl border border-emerald-500/70 bg-gradient-to-r from-emerald-950/40 via-slate-900/80 to-slate-950 shadow-md ring-1 ring-emerald-500/30">
                             <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono mb-2">
-                              <span>📅 {formatCareerDate(fixture.date, save.settings?.dateFormat)}</span>
-                              {isUserInTie && (
-                                <span className="bg-emerald-500 text-slate-950 font-display font-black px-2 py-0.5 rounded text-[9px] uppercase tracking-wider">
-                                  Your Fixture
-                                </span>
-                              )}
+                              <span className="bg-emerald-500 text-slate-950 font-display font-black px-2 py-0.2 rounded text-[9px] uppercase tracking-wider">
+                                ⭐ Your Cup Fixture
+                              </span>
+                              <span>📅 {formatCareerDate(userTie.date, save.settings?.dateFormat)}</span>
                             </div>
 
-                            {/* Home vs Away Match Row */}
-                            <div className="flex items-center justify-between gap-3 my-2">
+                            <div className="flex items-center justify-between gap-3 my-1">
                               {/* Home Team */}
                               <div className="flex items-center gap-2 flex-1 min-w-0">
                                 <div
-                                  className="w-5 h-5 rounded-full border border-white/20 shrink-0"
+                                  className="w-4 h-4 rounded-full border border-white/20 shrink-0"
                                   style={{
                                     background: `linear-gradient(135deg, ${home?.primaryColor || '#555'}, ${home?.secondaryColor || '#222'})`,
                                   }}
                                 />
                                 <span
                                   className={`text-xs font-bold truncate ${
-                                    fixture.homeClubId === userClubId
-                                      ? 'text-emerald-400 font-display'
+                                    userTie.homeClubId === userClubId
+                                      ? 'text-emerald-300 font-black'
                                       : 'text-white'
                                   }`}
                                 >
-                                  {home ? getEffectiveClubName(home, save.club) : fixture.homeClubId}
+                                  {home ? getEffectiveClubName(home, save.club) : userTie.homeClubId}
                                 </span>
                               </div>
 
                               {/* Scoreline */}
-                              <div className="px-3 py-1 bg-slate-950 border border-slate-800 rounded-xl text-center shrink-0 min-w-16">
-                                {fixture.played ? (
+                              <div className="px-3 py-1 bg-slate-950 border border-slate-800 rounded-xl text-center shrink-0">
+                                {userTie.played ? (
                                   <div>
-                                    <span className="font-display font-black text-xs text-white">
-                                      {fixture.homeScore} - {fixture.awayScore}
+                                    <span className="font-display font-black text-xs sm:text-sm text-white">
+                                      {userTie.homeScore} - {userTie.awayScore}
                                     </span>
-                                    {fixture.penalties && (
-                                      <span className="block text-[9px] font-mono text-amber-400">
-                                        (P: {fixture.penalties.homePenalties}-{fixture.penalties.awayPenalties})
+                                    {userTie.penalties && (
+                                      <span className="block text-[8px] font-mono text-amber-400 leading-none">
+                                        (P: {userTie.penalties.homePenalties}-{userTie.penalties.awayPenalties})
                                       </span>
                                     )}
                                   </div>
@@ -361,18 +351,18 @@ export function TournamentsHub({
                               </div>
 
                               {/* Away Team */}
-                              <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
+                              <div className="flex items-center gap-2 flex-1 min-w-0 justify-end text-right">
                                 <span
-                                  className={`text-xs font-bold truncate text-right ${
-                                    fixture.awayClubId === userClubId
-                                      ? 'text-emerald-400 font-display'
+                                  className={`text-xs font-bold truncate ${
+                                    userTie.awayClubId === userClubId
+                                      ? 'text-emerald-300 font-black'
                                       : 'text-white'
                                   }`}
                                 >
-                                  {away ? getEffectiveClubName(away, save.club) : fixture.awayClubId}
+                                  {away ? getEffectiveClubName(away, save.club) : userTie.awayClubId}
                                 </span>
                                 <div
-                                  className="w-5 h-5 rounded-full border border-white/20 shrink-0"
+                                  className="w-4 h-4 rounded-full border border-white/20 shrink-0"
                                   style={{
                                     background: `linear-gradient(135deg, ${away?.primaryColor || '#555'}, ${away?.secondaryColor || '#222'})`,
                                   }}
@@ -380,30 +370,87 @@ export function TournamentsHub({
                               </div>
                             </div>
 
-                            {/* Action Buttons for Unplayed Matches */}
-                            {!fixture.played && (
-                              <div className="mt-3 pt-2 border-t border-slate-850 flex items-center justify-between gap-2">
-                                {isUserInTie ? (
-                                  <button
-                                    onClick={() => setActiveCupMatch(fixture)}
-                                    className="flex-1 py-2 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-[10px] uppercase tracking-wider flex items-center justify-center gap-1 shadow-md shadow-emerald-500/20 cursor-pointer transition-all"
-                                  >
-                                    <span>🎮</span> Play Matchday Command Center
-                                  </button>
-                                ) : (
-                                  <div className="flex-1 py-1.5 px-3 rounded-xl bg-slate-950/60 border border-slate-850/80 text-slate-400 font-mono text-[10px] flex items-center justify-center gap-1.5">
-                                    <span>⏱️</span>
-                                    <span>Simulates automatically on matchday</span>
-                                  </div>
-                                )}
+                            {/* User Action for Unplayed Match */}
+                            {!userTie.played && (
+                              <div className="mt-2.5 pt-2 border-t border-slate-800">
+                                <button
+                                  type="button"
+                                  onClick={() => setActiveCupMatch(userTie)}
+                                  className="w-full py-2 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1 shadow-md shadow-emerald-500/20 cursor-pointer transition-all"
+                                >
+                                  <span>🎮</span> Play Matchday Command Center
+                                </button>
                               </div>
                             )}
                           </article>
                         );
-                      })}
+                      })()}
+
+                      {/* Other Ties (Compact Rows) */}
+                      {otherTies.length > 0 && (
+                        <div className="space-y-1">
+                          {userTie && (
+                            <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider block pt-1">
+                              Other {roundName} Ties ({otherTies.length})
+                            </span>
+                          )}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                            {otherTies.map((fixture) => {
+                              const home = findAnyClub(fixture.homeClubId);
+                              const away = findAnyClub(fixture.awayClubId);
+
+                              return (
+                                <div
+                                  key={fixture.id}
+                                  className="px-2.5 py-1.5 rounded-xl border border-slate-850 bg-slate-950/60 flex items-center justify-between text-xs"
+                                >
+                                  <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                                    <div
+                                      className="w-3 h-3 rounded-full border border-white/20 shrink-0"
+                                      style={{
+                                        background: `linear-gradient(135deg, ${home?.primaryColor || '#555'}, ${home?.secondaryColor || '#222'})`,
+                                      }}
+                                    />
+                                    <span className="truncate text-[11px] text-slate-300">
+                                      {home ? getEffectiveClubName(home, save.club) : fixture.homeClubId}
+                                    </span>
+                                  </div>
+
+                                  <div className="px-2 font-mono text-[11px] text-center shrink-0">
+                                    {fixture.played ? (
+                                      <span className="font-bold text-white">
+                                        {fixture.homeScore} - {fixture.awayScore}
+                                        {fixture.penalties && (
+                                          <span className="text-[8px] text-amber-400 block leading-none">
+                                            ({fixture.penalties.homePenalties}-{fixture.penalties.awayPenalties}p)
+                                          </span>
+                                        )}
+                                      </span>
+                                    ) : (
+                                      <span className="text-slate-500 text-[10px]">VS</span>
+                                    )}
+                                  </div>
+
+                                  <div className="flex items-center gap-1.5 flex-1 min-w-0 justify-end text-right">
+                                    <span className="truncate text-[11px] text-slate-300">
+                                      {away ? getEffectiveClubName(away, save.club) : fixture.awayClubId}
+                                    </span>
+                                    <div
+                                      className="w-3 h-3 rounded-full border border-white/20 shrink-0"
+                                      style={{
+                                        background: `linear-gradient(135deg, ${away?.primaryColor || '#555'}, ${away?.secondaryColor || '#222'})`,
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             );
           })()}
