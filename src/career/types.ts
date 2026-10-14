@@ -460,6 +460,19 @@ export interface YouthProspect {
   value: number;
 }
 
+export type MessageClassification = 'action_required' | 'important' | 'info';
+
+export type ActionType =
+  | 'review_offer'
+  | 'open_squad'
+  | 'review_injury'
+  | 'view_cup_draw'
+  | 'respond_board'
+  | 'review_contract'
+  | 'deadline_clock'
+  | 'open_transfers'
+  | 'open_cups';
+
 export interface ManagerMessage {
   id: string;
   date: string; // YYYY-MM-DD
@@ -470,8 +483,12 @@ export interface ManagerMessage {
   type: 'match_report' | 'injury' | 'transfer' | 'board' | 'cup_draw' | 'international' | 'system';
   isRead: boolean;
   priority?: 'normal' | 'urgent';
+  classification?: MessageClassification;
+  resolved?: boolean;
   actionLabel?: string;
   actionTab?: 'overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings';
+  actionType?: ActionType;
+  targetId?: string;
 }
 
 export interface CareerSaveFile {

@@ -35,9 +35,10 @@ import {
 interface SquadManagementProps {
   save: CareerSaveFile;
   onUpdateSave: (updated: CareerSaveFile) => void;
+  onOpenCompare?: (playerA: CareerPlayer, playerB?: CareerPlayer) => void;
 }
 
-export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
+export function SquadManagement({ save, onUpdateSave, onOpenCompare }: SquadManagementProps) {
   const [viewMode, setViewMode] = useState<'pitch' | 'list' | 'academy'>('pitch');
   const [filterGroup, setFilterGroup] = useState<'ALL' | GeneralPositionGroup>('ALL');
   const [selectedPlayer, setSelectedPlayer] = useState<CareerPlayer | null>(null);
@@ -452,6 +453,19 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5">
+                  {onOpenCompare && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const p = squad.find((sp) => sp.id === swapSourceId);
+                        if (p) onOpenCompare(p);
+                      }}
+                      className="py-1 px-2.5 rounded-lg bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-[11px] font-bold hover:bg-emerald-900/60 cursor-pointer flex items-center gap-1"
+                      title="Compare player with squad rivals"
+                    >
+                      <span>📊 Compare</span>
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       const p = squad.find((p) => p.id === swapSourceId);
@@ -1330,6 +1344,20 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
             </div>
 
             <div className="flex gap-2 pt-1">
+              {onOpenCompare && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const p = selectedPlayer;
+                    setSelectedPlayer(null);
+                    onOpenCompare(p);
+                  }}
+                  className="py-2.5 px-3.5 rounded-xl border border-emerald-500/40 bg-emerald-950/40 hover:bg-emerald-950/70 text-emerald-300 font-display font-black text-xs uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5"
+                  title="Compare player with squad rivals or transfer targets"
+                >
+                  <span>📊 Compare</span>
+                </button>
+              )}
               <button
                 onClick={() => {
                   setSwapSourceId(selectedPlayer.id);

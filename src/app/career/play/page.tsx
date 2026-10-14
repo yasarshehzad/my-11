@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { loadCareerSave, saveCareerSave, exportCareerSaveAsJson, isValidSlotId, ValidSlotId } from '../../../career/saves';
@@ -18,6 +18,9 @@ import {
   CupFixture,
   CupTournament,
   ManagerMessage,
+  MarketPlayer,
+  CareerPlayer,
+  ActionType,
 } from '../../../career/types';
 import { getEffectiveClubName, getAllClubs, getClubsWithUserClub } from '../../../career/clubs';
 import { validateSettings } from '../../../career/settings';
@@ -34,6 +37,7 @@ import { TournamentsHub } from '../../../components/career/TournamentsHub';
 import { TransferHub } from '../../../components/career/TransferHub';
 import { MatchDayModal } from '../../../components/career/MatchDayModal';
 import { MatchOverviewModal } from '../../../components/career/MatchOverviewModal';
+import { PlayerComparisonModal } from '../../../components/career/PlayerComparisonModal';
 import { isSeasonComplete, advanceToNextSeason, getSeasonReviewSummary, SeasonReviewSummary } from '../../../career/seasons';
 import { getNextClubFixture, getNextScheduledMatch, getPreviousPlayedMatch, isDateInInternationalBreak, ScheduledMatch } from '../../../career/calendar';
 import { simulateMatchFixture, advanceTimeSkip, TimeSkipTarget } from '../../../career/sim';
@@ -46,7 +50,14 @@ import {
   autoResolvePendingCupFixtures,
 } from '../../../career/cups';
 
-import { markMessageRead, markAllMessagesRead, getInitialInboxMessages } from '../../../career/inbox';
+import {
+  markMessageRead,
+  markAllMessagesRead,
+  getInitialInboxMessages,
+  classifyInboxMessage,
+  getManagerialAlerts,
+  markMessageResolved,
+} from '../../../career/inbox';
 import { calculateStandings } from '../../../career/table';
 import { formatCurrency } from '../../../career/finance';
 import { getSeniorPlayerCount, getSquadOrderedByLineup } from '../../../career/squad';
@@ -79,7 +90,7 @@ function CareerPlayHubContent() {
     type: 'result' | 'preview';
     fixture: LeagueFixture | CupFixture;
   } | null>(null);
-  const [inboxFilter, setInboxFilter] = useState<'all' | 'unread' | 'board' | 'injury' | 'transfer' | 'cup_draw'>('all');
+  const [inboxFilter, setInboxFilter] = useState<'all' | 'action_required' | 'unread' | 'board' | 'injury' | 'transfer' | 'cup_draw'>('all');
   const [expandedMessageId, setExpandedMessageId] = useState<string | null>(null);
   const [simulating, setSimulating] = useState(false);
   const [pendingFastForward, setPendingFastForward] = useState<TimeSkipTarget | null>(null);
@@ -88,6 +99,85 @@ function CareerPlayHubContent() {
   const [transferHubSubTab, setTransferHubSubTab] = useState<'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board'>('market');
   const [focusedOfferId, setFocusedOfferId] = useState<string | undefined>(undefined);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+
+  // Reusable Player Comparison state
+  const [comparisonState, setComparisonState] = useState<{
+    isOpen: boolean;
+    playerA?: CareerPlayer | MarketPlayer;
+    playerB?: CareerPlayer | MarketPlayer;
+  }>({ isOpen: false });
+
+  // Managerial alerts & Inbox derived states
+  const allInbox = useMemo(() => {
+    if (!save) return [];
+    return save.inbox && save.inbox.length > 0 ? save.inbox : getInitialInboxMessages(save);
+  }, [save]);
+
+  const managerialAlerts = useMemo(() => {
+    if (!save) return [];
+    return getManagerialAlerts(save);
+  }, [save]);
+
+  const actionableAlerts = useMemo(() => {
+    return managerialAlerts.filter((a) => a.classification === 'action_required');
+  }, [managerialAlerts]);
+
+  const handleExecuteAlertAction = (alert: {
+    actionTab?: string;
+    actionType?: ActionType;
+    targetId?: string;
+  }) => {
+    if (alert.actionType === 'review_offer') {
+      setTransferHubSubTab('incoming');
+      setFocusedOfferId(alert.targetId || (save?.incomingOffers && save.incomingOffers.length > 0 ? save.incomingOffers[0].id : undefined));
+      setActiveTab('transfers');
+    } else if (alert.actionType === 'review_contract') {
+      setTransferHubSubTab('contracts');
+      setFocusedOfferId(undefined);
+      setActiveTab('transfers');
+    } else if (alert.actionType === 'deadline_clock') {
+      setTransferHubSubTab('market');
+      setFocusedOfferId(undefined);
+      setActiveTab('transfers');
+    } else if (alert.actionType === 'open_squad' || alert.actionType === 'review_injury') {
+      setActiveTab('squad');
+    } else if (alert.actionType === 'view_cup_draw') {
+      setActiveTab('cups');
+    } else if (alert.actionType === 'respond_board') {
+      setTransferHubSubTab('board');
+      setActiveTab('transfers');
+    } else if (alert.actionTab) {
+      if (alert.actionTab === 'transfers') {
+        setTransferHubSubTab('market');
+      }
+      setActiveTab(alert.actionTab as typeof activeTab);
+    }
+  };
+
+  const handleSwapLineup = (starterId: string, benchId: string) => {
+    if (!save || !save.lineup) return;
+    const starterIdx = save.lineup.starterIds.indexOf(starterId);
+    const benchIdx = save.lineup.benchIds.indexOf(benchId);
+    if (starterIdx !== -1 && benchIdx !== -1) {
+      const nextStarters = [...save.lineup.starterIds];
+      const nextBench = [...save.lineup.benchIds];
+      nextStarters[starterIdx] = benchId;
+      nextBench[benchIdx] = starterId;
+      const updatedSave: CareerSaveFile = {
+        ...save,
+        lineup: {
+          ...save.lineup,
+          formation: save.lineup.formation || '4-3-3',
+          starterIds: nextStarters,
+          benchIds: nextBench,
+        },
+      };
+      handleUpdateSave(updatedSave);
+      showToast('Lineup updated successfully.');
+    } else {
+      showToast('Players must be in starting XI and bench to swap.');
+    }
+  };
 
   const navigateToIncomingOffers = (specificOfferId?: string) => {
     setTransferHubSubTab('incoming');
@@ -710,7 +800,7 @@ function CareerPlayHubContent() {
         <div className="relative mb-5 z-30">
           <nav aria-label="Career management sections" className="grid grid-cols-5 border-b border-slate-850 gap-1 pb-px bg-slate-950/40 rounded-2xl p-1">
             {[
-              { id: 'overview', label: 'Office', icon: '👔' },
+              { id: 'overview', label: 'Office', icon: '👔', badge: actionableAlerts.length > 0 ? actionableAlerts.length : null },
               { id: 'squad', label: 'Squad', icon: '👥' },
               { id: 'fixtures', label: 'Fixtures', icon: '📅' },
               { id: 'transfers', label: 'Transfers', icon: '💱', badge: incomingOffersCount > 0 ? incomingOffersCount : null },
@@ -732,7 +822,9 @@ function CareerPlayHubContent() {
                   <span className="text-sm sm:text-xs">{tab.icon}</span>
                   <span className="truncate">{tab.label}</span>
                   {tab.badge && (
-                    <span className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                    <span className="absolute -top-1 -right-0.5 sm:top-1 sm:right-1 min-w-[16px] h-4 px-1 rounded-full bg-amber-500 text-slate-950 font-black text-[9px] flex items-center justify-center shadow-md animate-pulse">
+                      {tab.badge}
+                    </span>
                   )}
                 </button>
               );
@@ -855,6 +947,91 @@ function CareerPlayHubContent() {
                 </span>
               </div>
             </section>
+
+            {/* COMPACT MANAGERIAL ALERTS STRIP */}
+            {managerialAlerts.length > 0 && (
+              <section aria-label="Managerial Alerts" className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 sm:p-4 shadow-md space-y-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${actionableAlerts.length > 0 ? 'bg-amber-400 animate-pulse' : 'bg-blue-400'}`} />
+                    <h3 className="font-display font-black text-xs uppercase tracking-wider text-white truncate flex items-center gap-2">
+                      <span>Managerial Alerts</span>
+                      {actionableAlerts.length > 0 ? (
+                        <span className="text-[10px] font-mono font-black px-2 py-0.5 rounded-full bg-amber-500 text-slate-950">
+                          {actionableAlerts.length} Action{actionableAlerts.length > 1 ? 's' : ''} Needed
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">
+                          {managerialAlerts.length} Note{managerialAlerts.length > 1 ? 's' : ''}
+                        </span>
+                      )}
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const inboxEl = document.getElementById('managerial-inbox');
+                      if (inboxEl) {
+                        inboxEl.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
+                    className="text-[10px] font-bold text-slate-400 hover:text-emerald-400 transition-colors uppercase tracking-wider flex items-center gap-1 cursor-pointer shrink-0"
+                  >
+                    <span>Full Inbox</span>
+                    <span className="font-mono">({allInbox.length}) ➔</span>
+                  </button>
+                </div>
+
+                {/* Top 1-2 alerts rendered as compact rows */}
+                <div className="space-y-1.5">
+                  {managerialAlerts.slice(0, 2).map((alert) => (
+                    <div
+                      key={alert.id}
+                      className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-xl text-xs transition-all ${
+                        alert.classification === 'action_required'
+                          ? 'bg-amber-950/40 border border-amber-800/50'
+                          : 'bg-slate-950/60 border border-slate-850'
+                      }`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span
+                            className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${
+                              alert.classification === 'action_required'
+                                ? 'bg-amber-400 text-slate-950'
+                                : 'bg-blue-900/60 text-blue-300 border border-blue-700/60'
+                            }`}
+                          >
+                            {alert.classification === 'action_required' ? 'Action Required' : 'Important'}
+                          </span>
+                          <span className="font-display font-black text-white text-[11px] truncate">
+                            {alert.title}
+                          </span>
+                        </div>
+                        <p className="text-[10.5px] text-slate-300 truncate mt-0.5">
+                          {alert.description}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                        <button
+                          type="button"
+                          onClick={() => handleExecuteAlertAction(alert)}
+                          className={`py-1.5 px-3 rounded-lg font-display font-black text-[11px] uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 shadow-sm ${
+                            alert.classification === 'action_required'
+                              ? 'bg-amber-400 hover:bg-amber-300 text-slate-950'
+                              : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+                          }`}
+                        >
+                          <span>{alert.actionLabel}</span>
+                          <span>➔</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* TRANSFER DEADLINE DAY STATUS CARD */}
             {(save.deadlineDayState?.isActive || isTransferDeadlineDay(save.season.currentDate, save.season.yearStart)) && (
@@ -1140,36 +1317,45 @@ function CareerPlayHubContent() {
               {/* 3. Action Center / Urgent Alerts Pill */}
               <div
                 onClick={() => {
-                  if (incomingOffersCount > 0) {
-                    navigateToIncomingOffers();
-                  } else if (injuredCount > 0) {
-                    setActiveTab('squad');
+                  if (actionableAlerts.length > 0) {
+                    handleExecuteAlertAction(actionableAlerts[0]);
+                  } else if (managerialAlerts.length > 0) {
+                    handleExecuteAlertAction(managerialAlerts[0]);
+                  } else {
+                    const inboxEl = document.getElementById('managerial-inbox');
+                    if (inboxEl) inboxEl.scrollIntoView({ behavior: 'smooth' });
                   }
                 }}
                 className={`p-2 sm:p-3 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between min-h-[64px] ${
-                  incomingOffersCount > 0 || injuredCount > 0
+                  actionableAlerts.length > 0
                     ? 'bg-amber-950/30 hover:bg-amber-950/50 border-amber-500/40'
+                    : managerialAlerts.length > 0
+                    ? 'bg-blue-950/30 hover:bg-blue-950/50 border-blue-500/40'
                     : 'bg-slate-900/60 hover:bg-slate-850/80 border-slate-800'
                 }`}
-                title={incomingOffersCount > 0 || injuredCount > 0 ? 'Click to resolve urgent issues' : 'Squad status'}
+                title={actionableAlerts.length > 0 ? 'Click to resolve urgent issues' : 'Squad & office status'}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[9px] sm:text-[9.5px] uppercase font-bold text-slate-500 block truncate">Action</span>
-                  <span className="text-xs">{incomingOffersCount > 0 || injuredCount > 0 ? '⚠️' : '✓'}</span>
+                  <span className="text-xs">{actionableAlerts.length > 0 ? '⚠️' : managerialAlerts.length > 0 ? 'ℹ️' : '✓'}</span>
                 </div>
                 <div className="mt-0.5">
-                  {incomingOffersCount > 0 || injuredCount > 0 ? (
+                  {actionableAlerts.length > 0 ? (
                     <div>
                       <span className="text-[11px] sm:text-xs font-display font-black text-amber-300 block truncate">
-                        🚨 Needs Action
+                        🚨 Needs Action ({actionableAlerts.length})
                       </span>
                       <span className="text-[8.5px] sm:text-[10px] text-amber-200/90 block font-medium truncate">
-                        {[
-                          incomingOffersCount > 0 ? `${incomingOffersCount} bid${incomingOffersCount > 1 ? 's' : ''}` : null,
-                          injuredCount > 0 ? `${injuredCount} inj` : null,
-                        ]
-                          .filter(Boolean)
-                          .join(' • ')} ➔
+                        {actionableAlerts[0].title} ➔
+                      </span>
+                    </div>
+                  ) : managerialAlerts.length > 0 ? (
+                    <div>
+                      <span className="text-[11px] sm:text-xs font-display font-black text-blue-300 block truncate">
+                        📋 {managerialAlerts.length} Review Item{managerialAlerts.length > 1 ? 's' : ''}
+                      </span>
+                      <span className="text-[8.5px] sm:text-[10px] text-slate-400 block font-medium truncate">
+                        {managerialAlerts[0].title} ➔
                       </span>
                     </div>
                   ) : (
@@ -1178,7 +1364,7 @@ function CareerPlayHubContent() {
                         🟢 All Clear
                       </span>
                       <span className="text-[8.5px] sm:text-[10px] text-slate-400 block font-medium truncate">
-                        100% Fit • Ready
+                        No pending decisions
                       </span>
                     </div>
                   )}
@@ -1490,17 +1676,24 @@ function CareerPlayHubContent() {
 
             {/* INTERACTIVE FOOTBALL MANAGER INBOX (ACTION ITEM: GENERAL INBOX) */}
             {(() => {
-              const allInbox = (save.inbox && save.inbox.length > 0) ? save.inbox : getInitialInboxMessages(save);
               const unreadInboxCount = allInbox.filter((m) => !m.isRead).length;
+              const actionableInboxCount = allInbox.filter((m) => {
+                const cl = classifyInboxMessage(m, save);
+                return cl.classification === 'action_required' && !cl.isResolved;
+              }).length;
 
               const filteredMessages = allInbox.filter((m) => {
                 if (inboxFilter === 'all') return true;
+                if (inboxFilter === 'action_required') {
+                  const cl = classifyInboxMessage(m, save);
+                  return cl.classification === 'action_required' && !cl.isResolved;
+                }
                 if (inboxFilter === 'unread') return !m.isRead;
                 return m.type === inboxFilter;
               });
 
               return (
-                <section className="bg-slate-900/50 border border-slate-850 rounded-3xl p-5 sm:p-6 shadow-md space-y-4">
+                <section id="managerial-inbox" className="bg-slate-900/50 border border-slate-850 rounded-3xl p-5 sm:p-6 shadow-md space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5">
                       <span className="text-lg">📬</span>
@@ -1509,6 +1702,11 @@ function CareerPlayHubContent() {
                         {unreadInboxCount > 0 && (
                           <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950">
                             {unreadInboxCount} Unread
+                          </span>
+                        )}
+                        {actionableInboxCount > 0 && (
+                          <span className="text-[10px] font-mono font-black px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 animate-pulse">
+                            {actionableInboxCount} Action Required
                           </span>
                         )}
                       </h3>
@@ -1528,6 +1726,7 @@ function CareerPlayHubContent() {
                   <nav aria-label="Inbox Filters" className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none border-b border-slate-800">
                     {[
                       { id: 'all', label: 'All', count: allInbox.length },
+                      { id: 'action_required', label: 'Action Needed', count: actionableInboxCount },
                       { id: 'unread', label: 'Unread', count: unreadInboxCount },
                       { id: 'board', label: 'Board', count: allInbox.filter((m) => m.type === 'board').length },
                       { id: 'injury', label: 'Medical', count: allInbox.filter((m) => m.type === 'injury').length },
@@ -1561,6 +1760,9 @@ function CareerPlayHubContent() {
                     ) : (
                       filteredMessages.map((msg) => {
                         const isExpanded = expandedMessageId === msg.id;
+                        const classificationInfo = classifyInboxMessage(msg, save);
+                        const { classification, isResolved, effectiveActionLabel, effectiveActionTab, effectiveActionType, targetId } = classificationInfo;
+
                         return (
                           <article
                             key={msg.id}
@@ -1584,10 +1786,22 @@ function CareerPlayHubContent() {
                                 </span>
                               </div>
 
-                              <div className="flex items-center gap-2 ml-auto text-[10px]">
-                                {msg.priority === 'urgent' && (
-                                  <span className="bg-rose-500/20 text-rose-300 border border-rose-500/40 px-2 py-0.5 rounded-full font-black uppercase">
-                                    Urgent
+                              <div className="flex items-center gap-1.5 ml-auto text-[10px]">
+                                {isResolved ? (
+                                  <span className="bg-slate-800 text-slate-400 border border-slate-700 px-2 py-0.5 rounded-full font-bold uppercase text-[9px]">
+                                    ✓ Resolved
+                                  </span>
+                                ) : classification === 'action_required' ? (
+                                  <span className="bg-amber-400 text-slate-950 font-black uppercase px-2 py-0.5 rounded-full text-[9px] animate-pulse">
+                                    Action Required
+                                  </span>
+                                ) : classification === 'important' ? (
+                                  <span className="bg-blue-500/20 text-blue-300 border border-blue-500/40 px-2 py-0.5 rounded-full font-black uppercase text-[9px]">
+                                    Important
+                                  </span>
+                                ) : (
+                                  <span className="bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full font-medium text-[9px]">
+                                    Info
                                   </span>
                                 )}
                                 <span className="font-mono text-slate-400">
@@ -1607,43 +1821,25 @@ function CareerPlayHubContent() {
                                   {msg.body}
                                 </p>
 
-                                {msg.actionLabel && msg.actionTab && (
+                                {effectiveActionLabel && (
                                   <div className="pt-1 flex justify-end">
                                     <button
+                                      type="button"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        if (msg.actionTab === 'transfers') {
-                                          if (
-                                            msg.type === 'transfer' &&
-                                            (msg.subject.toLowerCase().includes('bid') ||
-                                              msg.subject.toLowerCase().includes('offer') ||
-                                              msg.body.toLowerCase().includes('bid') ||
-                                              msg.actionLabel?.toLowerCase().includes('offer'))
-                                          ) {
-                                            const matchingOffer = save?.incomingOffers?.find(
-                                              (o) => msg.subject.includes(o.playerName) || msg.body.includes(o.playerName)
-                                            );
-                                            navigateToIncomingOffers(matchingOffer?.id);
-                                          } else if (
-                                            msg.subject.toLowerCase().includes('contract') ||
-                                            msg.subject.toLowerCase().includes('renew') ||
-                                            msg.actionLabel?.toLowerCase().includes('contract')
-                                          ) {
-                                            setTransferHubSubTab('contracts');
-                                            setFocusedOfferId(undefined);
-                                            setActiveTab('transfers');
-                                          } else {
-                                            setTransferHubSubTab('market');
-                                            setFocusedOfferId(undefined);
-                                            setActiveTab('transfers');
-                                          }
-                                        } else if (msg.actionTab) {
-                                          setActiveTab(msg.actionTab as typeof activeTab);
-                                        }
+                                        handleExecuteAlertAction({
+                                          actionTab: effectiveActionTab,
+                                          actionType: effectiveActionType,
+                                          targetId: targetId || msg.targetId,
+                                        });
                                       }}
-                                      className="py-2 px-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+                                      className={`py-2 px-3.5 rounded-xl font-display font-black text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer flex items-center gap-1.5 ${
+                                        classification === 'action_required' && !isResolved
+                                          ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-amber-500/20'
+                                          : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/20'
+                                      }`}
                                     >
-                                      <span>{msg.actionLabel}</span>
+                                      <span>{effectiveActionLabel}</span>
                                       <span>➔</span>
                                     </button>
                                   </div>
@@ -1751,7 +1947,11 @@ function CareerPlayHubContent() {
 
         {/* TAB 2: SQUAD */}
         {activeTab === 'squad' && (
-          <SquadManagement save={save} onUpdateSave={handleUpdateSave} />
+          <SquadManagement
+            save={save}
+            onUpdateSave={handleUpdateSave}
+            onOpenCompare={(pA, pB) => setComparisonState({ isOpen: true, playerA: pA, playerB: pB })}
+          />
         )}
 
         {/* TAB 3: FIXTURES */}
@@ -1790,6 +1990,7 @@ function CareerPlayHubContent() {
             onNotification={showToast}
             initialSubTab={transferHubSubTab}
             focusedOfferId={focusedOfferId}
+            onOpenCompare={(pA, pB) => setComparisonState({ isOpen: true, playerA: pA, playerB: pB })}
           />
         )}
 
@@ -2365,6 +2566,33 @@ function CareerPlayHubContent() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Reusable Player Comparison Modal */}
+      {comparisonState.isOpen && comparisonState.playerA && save && (
+        <PlayerComparisonModal
+          isOpen={comparisonState.isOpen}
+          onClose={() => setComparisonState({ isOpen: false, playerA: undefined, playerB: undefined })}
+          playerA={comparisonState.playerA}
+          playerB={comparisonState.playerB}
+          squad={save.squad || []}
+          finances={save.finances}
+          seniorCount={seniorCount}
+          settings={save.settings}
+          onSwapSquadPlayers={(starterId: string, benchId: string) => {
+            handleSwapLineup(starterId, benchId);
+          }}
+          onSelectTransferTarget={(targetPlayer: MarketPlayer) => {
+            setComparisonState({ isOpen: false, playerA: undefined, playerB: undefined });
+            setTransferHubSubTab('market');
+            setActiveTab('transfers');
+          }}
+          onNavigateOfficeBudget={() => {
+            setComparisonState({ isOpen: false, playerA: undefined, playerB: undefined });
+            setTransferHubSubTab('board');
+            setActiveTab('transfers');
+          }}
+        />
       )}
     </div>
   );

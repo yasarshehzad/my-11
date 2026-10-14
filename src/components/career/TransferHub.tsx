@@ -56,6 +56,7 @@ interface TransferHubProps {
   onNotification?: (msg: string) => void;
   initialSubTab?: 'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board';
   focusedOfferId?: string;
+  onOpenCompare?: (playerA: MarketPlayer, playerB?: CareerPlayer | MarketPlayer) => void;
 }
 
 const PAGE_SIZE = 12;
@@ -66,6 +67,7 @@ export function TransferHub({
   onNotification,
   initialSubTab,
   focusedOfferId,
+  onOpenCompare,
 }: TransferHubProps) {
   const [subTab, setSubTab] = useState<'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board'>(
     initialSubTab || 'market'
@@ -1196,7 +1198,7 @@ export function TransferHub({
                           </div>
                         </div>
 
-                        {/* Quick Actions (Shortlist + Bid + Expand Chevron) */}
+                        {/* Quick Actions (Shortlist + Compare + Bid + Expand Chevron) */}
                         <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                           <button
                             type="button"
@@ -1210,6 +1212,17 @@ export function TransferHub({
                           >
                             ★
                           </button>
+
+                          {onOpenCompare && (
+                            <button
+                              type="button"
+                              onClick={() => onOpenCompare(player)}
+                              title={`Compare ${player.name} with squad or target`}
+                              className="w-7 h-7 rounded-lg flex items-center justify-center text-xs bg-slate-950 text-slate-400 hover:text-white border border-slate-800 transition-colors cursor-pointer"
+                            >
+                              📊
+                            </button>
+                          )}
 
                           <button
                             type="button"
@@ -1319,32 +1332,44 @@ export function TransferHub({
                               </div>
                             )}
 
-                            <button
-                              type="button"
-                              onClick={() => handleStartNegotiation(player)}
-                              disabled={isBlocked}
-                              className={`w-full py-2.5 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                                !windowIsOpen
-                                  ? 'bg-slate-950 border border-slate-800 text-slate-600 cursor-not-allowed'
-                                  : isSquadFull || isSeniorFull
-                                  ? 'bg-amber-950/60 border border-amber-900 text-amber-400 cursor-not-allowed'
+                            <div className="flex items-center gap-2">
+                              {onOpenCompare && (
+                                <button
+                                  type="button"
+                                  onClick={() => onOpenCompare(player)}
+                                  className="py-2.5 px-3.5 rounded-xl font-display font-bold text-xs uppercase tracking-wider bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 flex items-center justify-center gap-1.5 cursor-pointer transition-colors shrink-0"
+                                >
+                                  <span>📊</span>
+                                  <span>Compare</span>
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleStartNegotiation(player)}
+                                disabled={isBlocked}
+                                className={`flex-1 py-2.5 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                                  !windowIsOpen
+                                    ? 'bg-slate-950 border border-slate-800 text-slate-600 cursor-not-allowed'
+                                    : isSquadFull || isSeniorFull
+                                    ? 'bg-amber-950/60 border border-amber-900 text-amber-400 cursor-not-allowed'
+                                    : isLegend
+                                    ? 'bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 shadow-md shadow-amber-500/25'
+                                    : canAfford
+                                    ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/20'
+                                    : 'bg-slate-850 hover:bg-slate-800 text-slate-300 border border-slate-700'
+                                }`}
+                              >
+                                {!windowIsOpen
+                                  ? 'Window Closed'
+                                  : isSquadFull
+                                  ? 'Squad Full (35/35)'
+                                  : isSeniorFull
+                                  ? 'Senior Full (25/25)'
                                   : isLegend
-                                  ? 'bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 shadow-md shadow-amber-500/25'
-                                  : canAfford
-                                  ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/20'
-                                  : 'bg-slate-850 hover:bg-slate-800 text-slate-300 border border-slate-700'
-                              }`}
-                            >
-                              {!windowIsOpen
-                                ? 'Window Closed'
-                                : isSquadFull
-                                ? 'Squad Full (35/35)'
-                                : isSeniorFull
-                                ? 'Senior Full (25/25)'
-                                : isLegend
-                                ? '👑 Select Edition & Bid'
-                                : 'Negotiate Transfer Terms'}
-                            </button>
+                                  ? '👑 Select Edition & Bid'
+                                  : 'Negotiate Transfer Terms'}
+                              </button>
+                            </div>
                           </div>
                         </div>
                       )}
@@ -1849,23 +1874,36 @@ export function TransferHub({
                     const isBlocked = !windowIsOpen || isSquadFull || isSeniorFull;
 
                     return (
-                      <button
-                        onClick={() => handleStartNegotiation(player)}
-                        disabled={isBlocked}
-                        className={`w-full py-2 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all ${
-                          isBlocked
-                            ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                            : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950'
-                        }`}
-                      >
-                        {!windowIsOpen
-                          ? 'Window Closed'
-                          : isSquadFull
-                          ? 'Squad Full (35/35)'
-                          : isSeniorFull
-                          ? 'Senior Full (25/25)'
-                          : 'Make Offer'}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {onOpenCompare && (
+                          <button
+                            type="button"
+                            onClick={() => onOpenCompare(player)}
+                            className="py-2 px-3 rounded-xl font-display font-bold text-xs uppercase tracking-wider bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 flex items-center justify-center gap-1 cursor-pointer transition-colors shrink-0"
+                          >
+                            <span>📊</span>
+                            <span>Compare</span>
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleStartNegotiation(player)}
+                          disabled={isBlocked}
+                          className={`flex-1 py-2 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all ${
+                            isBlocked
+                              ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                              : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950'
+                          }`}
+                        >
+                          {!windowIsOpen
+                            ? 'Window Closed'
+                            : isSquadFull
+                            ? 'Squad Full (35/35)'
+                            : isSeniorFull
+                            ? 'Senior Full (25/25)'
+                            : 'Make Offer'}
+                        </button>
+                      </div>
                     );
                   })()}
                 </article>
