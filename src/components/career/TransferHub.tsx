@@ -49,6 +49,7 @@ import {
   MAX_SENIOR_SQUAD_SIZE,
   U21_AGE_LIMIT,
 } from '../../career/squad';
+import { players } from '../../data/players';
 
 interface TransferHubProps {
   save: CareerSaveFile;
@@ -134,21 +135,25 @@ export function TransferHub({
   const [ageCategory, setAgeCategory] = useState<'ALL' | 'U21' | 'PEAK' | 'VET'>('ALL');
   const [homegrownOnly, setHomegrownOnly] = useState<boolean>(false);
   const [affordableOnly, setAffordableOnly] = useState<boolean>(false);
+  const [selectedLeague, setSelectedLeague] = useState<'ALL' | 'pl' | 'continental' | 'legends'>('ALL');
+  const [selectedClub, setSelectedClub] = useState<string>('ALL');
+  const [selectedNationality, setSelectedNationality] = useState<string>('ALL');
+  const [selectedSortBy, setSelectedSortBy] = useState<'value_desc' | 'value_asc' | 'rating_desc' | 'rating_asc' | 'age_asc' | 'name_asc'>('value_desc');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState<boolean>(false);
-  const [expandedPlayerIds, setExpandedPlayerIds] = useState<Set<string>>(new Set());
 
-  const togglePlayerExpanded = (playerId: string) => {
-    setExpandedPlayerIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(playerId)) {
-        next.delete(playerId);
-      } else {
-        next.add(playerId);
-      }
-      return next;
-    });
-  };
+  const availableClubs = useMemo(() => {
+    const clubs = new Set<string>();
+    getAllClubs().forEach((c) => clubs.add(c.defaultName));
+    CONTINENTAL_EUROPEAN_CLUBS.forEach((c) => clubs.add(c.defaultName));
+    return Array.from(clubs).sort();
+  }, []);
+
+  const availableNationalities = useMemo(() => {
+    const nats = new Set<string>();
+    players.forEach((p) => p.nationality && nats.add(p.nationality));
+    return Array.from(nats).sort();
+  }, []);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -157,8 +162,12 @@ export function TransferHub({
     if (minRating > 0) count++;
     if (affordableOnly) count++;
     if (homegrownOnly) count++;
+    if (selectedLeague !== 'ALL') count++;
+    if (selectedClub !== 'ALL') count++;
+    if (selectedNationality !== 'ALL') count++;
+    if (selectedSortBy !== 'value_desc') count++;
     return count;
-  }, [specificPosition, ageCategory, minRating, affordableOnly, homegrownOnly]);
+  }, [specificPosition, ageCategory, minRating, affordableOnly, homegrownOnly, selectedLeague, selectedClub, selectedNationality, selectedSortBy]);
 
   const getClubDisplayName = (clubIdOrName: string) => {
     if (!clubIdOrName) return 'Free Agent';
@@ -232,6 +241,10 @@ export function TransferHub({
       maxPrice: affordableOnly ? save.finances.transferBudget : undefined,
       homegrownOnly,
       searchTerm: searchTerm.trim() || undefined,
+      club: selectedClub !== 'ALL' ? selectedClub : undefined,
+      league: selectedLeague !== 'ALL' ? selectedLeague : undefined,
+      nationality: selectedNationality !== 'ALL' ? selectedNationality : undefined,
+      sortBy: selectedSortBy,
     };
   }, [
     playerPoolType,
@@ -242,6 +255,10 @@ export function TransferHub({
     affordableOnly,
     homegrownOnly,
     searchTerm,
+    selectedClub,
+    selectedLeague,
+    selectedNationality,
+    selectedSortBy,
     save.finances.transferBudget,
   ]);
 
@@ -357,6 +374,10 @@ export function TransferHub({
     setAgeCategory('ALL');
     setAffordableOnly(false);
     setHomegrownOnly(false);
+    setSelectedLeague('ALL');
+    setSelectedClub('ALL');
+    setSelectedNationality('ALL');
+    setSelectedSortBy('value_desc');
     setCurrentPage(1);
   };
 
@@ -999,7 +1020,7 @@ export function TransferHub({
 
             {/* Collapsible Advanced Filters Panel */}
             {isAdvancedFiltersOpen && (
-              <div className="pt-2.5 border-t border-slate-800 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 text-xs">
+              <div className="pt-2.5 border-t border-slate-800 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2 text-xs">
                 {/* Specific Position Role */}
                 <div className="space-y-0.5">
                   <span className="text-[9px] uppercase font-bold text-slate-500 block">Specific Role</span>
@@ -1024,6 +1045,84 @@ export function TransferHub({
                     <option value="LW">LW</option>
                     <option value="RW">RW</option>
                     <option value="ST">ST</option>
+                  </select>
+                </div>
+
+                {/* League / Pool Filter */}
+                <div className="space-y-0.5">
+                  <span className="text-[9px] uppercase font-bold text-slate-500 block">League / Pool</span>
+                  <select
+                    value={selectedLeague}
+                    onChange={(e) => {
+                      setSelectedLeague(e.target.value as any);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-2 py-1 text-xs font-display font-bold"
+                  >
+                    <option value="ALL">All Leagues</option>
+                    <option value="pl">Premier League</option>
+                    <option value="continental">Europe Continental</option>
+                    <option value="legends">Legends / Icons</option>
+                  </select>
+                </div>
+
+                {/* Club Filter */}
+                <div className="space-y-0.5">
+                  <span className="text-[9px] uppercase font-bold text-slate-500 block">Club</span>
+                  <select
+                    value={selectedClub}
+                    onChange={(e) => {
+                      setSelectedClub(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-2 py-1 text-xs font-display font-bold truncate"
+                  >
+                    <option value="ALL">All Clubs</option>
+                    {availableClubs.map((club) => (
+                      <option key={club} value={club}>
+                        {club}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Nationality Filter */}
+                <div className="space-y-0.5">
+                  <span className="text-[9px] uppercase font-bold text-slate-500 block">Nationality</span>
+                  <select
+                    value={selectedNationality}
+                    onChange={(e) => {
+                      setSelectedNationality(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-2 py-1 text-xs font-display font-bold truncate"
+                  >
+                    <option value="ALL">All Nationalities</option>
+                    {availableNationalities.map((nat) => (
+                      <option key={nat} value={nat}>
+                        {nat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Sort Order */}
+                <div className="space-y-0.5">
+                  <span className="text-[9px] uppercase font-bold text-slate-500 block">Sort By</span>
+                  <select
+                    value={selectedSortBy}
+                    onChange={(e) => {
+                      setSelectedSortBy(e.target.value as any);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full bg-slate-950 border border-slate-800 text-emerald-400 rounded-lg px-2 py-1 text-xs font-display font-bold"
+                  >
+                    <option value="value_desc">Valuation (High to Low)</option>
+                    <option value="value_asc">Valuation (Low to High)</option>
+                    <option value="rating_desc">Rating (High to Low)</option>
+                    <option value="rating_asc">Rating (Low to High)</option>
+                    <option value="age_asc">Age (Youngest First)</option>
+                    <option value="name_asc">Name (A to Z)</option>
                   </select>
                 </div>
 
@@ -1104,7 +1203,7 @@ export function TransferHub({
                     onClick={handleResetFilters}
                     className="w-full py-1 px-2 rounded-lg border border-slate-800 bg-slate-950/80 hover:bg-slate-900 text-slate-400 hover:text-white text-[10px] font-display font-bold uppercase transition-all cursor-pointer"
                   >
-                    ↺ Reset
+                    ↺ Reset All
                   </button>
                 </div>
               </div>
@@ -1130,31 +1229,29 @@ export function TransferHub({
                   const isShortlisted = shortlistIdsSet.has(player.id);
                   const canAfford = player.value <= save.finances.transferBudget;
                   const isLegend = player.isLegend;
-                  const isExpanded = expandedPlayerIds.has(player.id);
                   const resolvedClub = getClubDisplayName(player.club);
                   const isSenior = player.age > U21_AGE_LIMIT;
                   const isSquadFull = save.squad.length >= MAX_SQUAD_SIZE;
                   const isSeniorFull = isSenior && seniorCount >= MAX_SENIOR_SQUAD_SIZE;
-                  const isBlocked = !windowIsOpen || isSquadFull || isSeniorFull;
+                  // Allow bidding even if senior squad is 25 - manager can sell or adjust registration later
+                  const isBlocked = !windowIsOpen || isSquadFull;
+                  const fs = calculateEaFcFaceStats(player as unknown as CareerPlayer);
 
                   return (
                     <article
                       key={player.id}
-                      className={`rounded-2xl border transition-all ${
+                      className={`rounded-2xl border p-2.5 sm:p-3 space-y-2 transition-all ${
                         isLegend
                           ? 'bg-gradient-to-b from-amber-950/30 via-slate-900/80 to-slate-950 border-amber-500/50 hover:border-amber-400 shadow-md ring-1 ring-amber-400/20'
                           : 'bg-slate-900/50 border-slate-800/80 hover:border-slate-700'
                       }`}
                     >
-                      {/* Compact Primary Row (Always Visible) */}
-                      <div
-                        onClick={() => togglePlayerExpanded(player.id)}
-                        className="p-3 flex items-center justify-between gap-2.5 cursor-pointer select-none"
-                      >
-                        {/* Rating Badge */}
-                        <div className="flex items-center gap-2.5 min-w-0">
+                      {/* Primary Header Row */}
+                      <div className="flex items-center justify-between gap-2">
+                        {/* Rating Badge + Name + Info */}
+                        <div className="flex items-center gap-2 min-w-0">
                           <span
-                            className={`w-9 h-9 rounded-xl flex items-center justify-center font-display font-black text-xs shrink-0 shadow-sm ${
+                            className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-display font-black text-xs shrink-0 shadow-sm ${
                               isLegend
                                 ? 'bg-amber-950 border border-amber-500/70 text-amber-300 shadow-amber-500/20'
                                 : player.rating >= 85
@@ -1165,19 +1262,18 @@ export function TransferHub({
                             {player.rating}
                           </span>
 
-                          {/* Name + Position + Val + Wage */}
                           <div className="min-w-0">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <h3 className="font-display font-black text-xs sm:text-sm text-white truncate max-w-[150px] sm:max-w-[200px]">
+                            <div className="flex items-center gap-1.5">
+                              <h3 className="font-display font-black text-xs sm:text-sm text-white truncate max-w-[120px] sm:max-w-[170px]">
                                 {player.name}
                               </h3>
                               {isLegend && (
-                                <span className="text-[8px] font-black uppercase text-amber-400 bg-amber-950/80 border border-amber-600/70 px-1 py-0.2 rounded font-display shrink-0">
+                                <span className="text-[7.5px] font-black uppercase text-amber-400 bg-amber-950/80 border border-amber-600/70 px-1 rounded font-display shrink-0">
                                   👑 ICON
                                 </span>
                               )}
                             </div>
-                            <div className="text-[10px] text-slate-400 font-medium flex items-center gap-1 mt-0.5 truncate">
+                            <div className="text-[9.5px] text-slate-400 font-medium flex items-center gap-1 truncate mt-0.2">
                               <span className={isLegend ? 'text-amber-400 font-bold' : 'text-emerald-400 font-bold'}>
                                 {player.position}
                               </span>
@@ -1192,14 +1288,14 @@ export function TransferHub({
                                 {formatWage(player.wageDemand)}
                               </span>
                             </div>
-                            <div className="text-[9px] text-slate-500 truncate mt-0.5">
+                            <div className="text-[8.5px] text-slate-500 truncate mt-0.2">
                               {resolvedClub}
                             </div>
                           </div>
                         </div>
 
-                        {/* Quick Actions (Shortlist + Compare + Bid + Expand Chevron) */}
-                        <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                        {/* Quick Actions (Shortlist + Compare + Bid) */}
+                        <div className="flex items-center gap-1 shrink-0">
                           <button
                             type="button"
                             onClick={() => handleToggleShortlist(player.id)}
@@ -1228,11 +1324,11 @@ export function TransferHub({
                             type="button"
                             onClick={() => handleStartNegotiation(player)}
                             disabled={isBlocked}
-                            className={`py-1.5 px-2.5 rounded-lg font-display font-black text-[11px] uppercase tracking-wider transition-all cursor-pointer ${
+                            className={`py-1.5 px-2.5 rounded-lg font-display font-black text-[10.5px] uppercase tracking-wider transition-all cursor-pointer ${
                               !windowIsOpen
                                 ? 'bg-slate-950 border border-slate-800 text-slate-600 cursor-not-allowed'
-                                : isSquadFull || isSeniorFull
-                                ? 'bg-amber-950/60 border border-amber-900 text-amber-400 cursor-not-allowed'
+                                : isSquadFull
+                                ? 'bg-rose-950/60 border border-rose-900 text-rose-400 cursor-not-allowed'
                                 : isLegend
                                 ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-sm'
                                 : canAfford
@@ -1240,139 +1336,60 @@ export function TransferHub({
                                 : 'bg-slate-850 hover:bg-slate-800 text-slate-300 border border-slate-700'
                             }`}
                           >
-                            {!windowIsOpen ? 'Closed' : isLegend ? '👑 Bid' : 'Bid'}
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => togglePlayerExpanded(player.id)}
-                            className="w-6 h-7 rounded-lg text-slate-400 hover:text-white text-xs flex items-center justify-center cursor-pointer"
-                            aria-label={isExpanded ? 'Collapse player details' : 'Expand player details'}
-                          >
-                            {isExpanded ? '▲' : '▼'}
+                            {!windowIsOpen ? 'Closed' : isSquadFull ? 'Squad Full' : isLegend ? '👑 Bid' : 'Bid'}
                           </button>
                         </div>
                       </div>
 
-                      {/* Expanded Details: EA FC 6 Face Stats, Editions, Scouting Actions */}
-                      {isExpanded && (
-                        <div className="p-3 pt-0 border-t border-slate-800/80 mt-1 space-y-2.5 bg-slate-950/40 rounded-b-2xl">
-                          {/* Tags: Nationality, Editions, Homegrown */}
-                          <div className="flex flex-wrap items-center justify-between gap-1.5 text-[10px] text-slate-400 pt-2">
-                            <div className="flex items-center gap-1.5">
-                              <span>Nationality: <strong className="text-slate-200">{player.nationality}</strong></span>
-                              {player.isHomegrown && (
-                                <span className="text-emerald-400 font-bold uppercase tracking-wider text-[9px] bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-900/60">
-                                  Homegrown
-                                </span>
-                              )}
-                            </div>
-                            {player.versions && player.versions.length > 1 && (
-                              <span className="text-[9px] font-bold text-amber-400 bg-amber-950/60 border border-amber-800/60 px-1.5 py-0.2 rounded">
-                                📚 {player.versions.length} Editions Available
-                              </span>
-                            )}
-                          </div>
-
-                          {/* EA FC 6 Face Stats Grid */}
-                          {(() => {
-                            const fs = calculateEaFcFaceStats(player as unknown as CareerPlayer);
-                            return (
-                              <div className="grid grid-cols-6 gap-1 bg-slate-950/80 p-2 rounded-xl text-center font-display border border-white/5 text-[10px]">
-                                <div>
-                                  <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'DIV' : 'PAC'}</span>
-                                  <span className="font-black text-white">{fs.pac}</span>
-                                </div>
-                                <div>
-                                  <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'HAN' : 'SHO'}</span>
-                                  <span className="font-black text-white">{fs.sho}</span>
-                                </div>
-                                <div>
-                                  <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'KIC' : 'PAS'}</span>
-                                  <span className="font-black text-white">{fs.pas}</span>
-                                </div>
-                                <div>
-                                  <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'REF' : 'DRI'}</span>
-                                  <span className="font-black text-white">{fs.dri}</span>
-                                </div>
-                                <div>
-                                  <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'SPD' : 'DEF'}</span>
-                                  <span className="font-black text-white">{fs.def}</span>
-                                </div>
-                                <div>
-                                  <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'POS' : 'PHY'}</span>
-                                  <span className="font-black text-white">{fs.phy}</span>
-                                </div>
-                              </div>
-                            );
-                          })()}
-
-                          {/* Full Action & Constraint Warning */}
-                          <div className="pt-1">
-                            {isSquadFull && (
-                              <div className="text-[10px] text-amber-400 bg-amber-950/40 border border-amber-800/50 p-2 rounded-xl text-center mb-2">
-                                ⚠️ Squad limit reached (35/35). Sell or release a player before signing.
-                              </div>
-                            )}
-                            {isSeniorFull && !isSquadFull && (
-                              <div className="text-[10px] text-amber-400 bg-amber-950/40 border border-amber-800/50 p-2 rounded-xl text-center mb-2">
-                                ⚠️ Senior quota reached (25/25). Player is over 21. Sell a senior player first.
-                              </div>
-                            )}
-                            {!canAfford && (
-                              <div className="text-[10px] text-amber-300 bg-amber-950/40 border border-amber-800/40 p-2 rounded-xl flex items-center justify-between mb-2">
-                                <span>Fee ({formatCurrency(player.value)}) exceeds current budget ({formatCurrency(save.finances.transferBudget)}).</span>
-                                <button
-                                  type="button"
-                                  onClick={() => setSubTab('board')}
-                                  className="text-[9px] font-bold underline hover:text-white uppercase"
-                                >
-                                  Petition Board ➔
-                                </button>
-                              </div>
-                            )}
-
-                            <div className="flex items-center gap-2">
-                              {onOpenCompare && (
-                                <button
-                                  type="button"
-                                  onClick={() => onOpenCompare(player)}
-                                  className="py-2.5 px-3.5 rounded-xl font-display font-bold text-xs uppercase tracking-wider bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 flex items-center justify-center gap-1.5 cursor-pointer transition-colors shrink-0"
-                                >
-                                  <span>📊</span>
-                                  <span>Compare</span>
-                                </button>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() => handleStartNegotiation(player)}
-                                disabled={isBlocked}
-                                className={`flex-1 py-2.5 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                                  !windowIsOpen
-                                    ? 'bg-slate-950 border border-slate-800 text-slate-600 cursor-not-allowed'
-                                    : isSquadFull || isSeniorFull
-                                    ? 'bg-amber-950/60 border border-amber-900 text-amber-400 cursor-not-allowed'
-                                    : isLegend
-                                    ? 'bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 shadow-md shadow-amber-500/25'
-                                    : canAfford
-                                    ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/20'
-                                    : 'bg-slate-850 hover:bg-slate-800 text-slate-300 border border-slate-700'
-                                }`}
-                              >
-                                {!windowIsOpen
-                                  ? 'Window Closed'
-                                  : isSquadFull
-                                  ? 'Squad Full (35/35)'
-                                  : isSeniorFull
-                                  ? 'Senior Full (25/25)'
-                                  : isLegend
-                                  ? '👑 Select Edition & Bid'
-                                  : 'Negotiate Transfer Terms'}
-                              </button>
-                            </div>
-                          </div>
+                      {/* EA FC 6 Face Stats Bar (Always Visible by Default) */}
+                      <div className="grid grid-cols-6 gap-1 bg-slate-950/70 p-1.5 rounded-lg text-center font-display border border-white/5 text-[9px]">
+                        <div>
+                          <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'DIV' : 'PAC'}</span>
+                          <span className="font-black text-white">{fs.pac}</span>
                         </div>
-                      )}
+                        <div>
+                          <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'HAN' : 'SHO'}</span>
+                          <span className="font-black text-white">{fs.sho}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'KIC' : 'PAS'}</span>
+                          <span className="font-black text-white">{fs.pas}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'REF' : 'DRI'}</span>
+                          <span className="font-black text-white">{fs.dri}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'SPD' : 'DEF'}</span>
+                          <span className="font-black text-white">{fs.def}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'POS' : 'PHY'}</span>
+                          <span className="font-black text-white">{fs.phy}</span>
+                        </div>
+                      </div>
+
+                      {/* Metadata Strip: Nationality, Homegrown, Senior Quota Notice */}
+                      <div className="flex flex-wrap items-center justify-between gap-1 text-[9px] text-slate-400 pt-0.5">
+                        <div className="flex items-center gap-1.5">
+                          <span>{player.nationality}</span>
+                          {player.isHomegrown && (
+                            <span className="text-emerald-400 font-bold uppercase tracking-wider text-[8px] bg-emerald-950/60 px-1 py-0.2 rounded border border-emerald-900/60">
+                              HG
+                            </span>
+                          )}
+                          {player.versions && player.versions.length > 1 && (
+                            <span className="text-[8px] font-bold text-amber-400 bg-amber-950/60 border border-amber-800/60 px-1 py-0.2 rounded">
+                              {player.versions.length} Eds
+                            </span>
+                          )}
+                        </div>
+                        {isSeniorFull && !isSquadFull && (
+                          <span className="text-[8px] text-amber-400 font-mono">
+                            Senior pool &gt;25 (registration required)
+                          </span>
+                        )}
+                      </div>
                     </article>
                   );
                 })}
@@ -1620,54 +1637,51 @@ export function TransferHub({
             </div>
           </header>
 
-          {/* Sporting Director Delegation Control Banner */}
-          <div className="p-5 rounded-3xl border border-indigo-500/30 bg-gradient-to-r from-indigo-950/40 via-slate-900/60 to-slate-950 shadow-xl space-y-4">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div className="flex items-start gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-950/80 border border-indigo-500/40 flex items-center justify-center text-2xl shrink-0 shadow-lg shadow-indigo-950/50">
-                  👔
+          {/* Sporting Director Delegation Control Bar (Compact) */}
+          <div className="p-2.5 sm:p-3 rounded-2xl border border-indigo-500/30 bg-slate-900/60 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 shadow-md">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-lg shrink-0">👔</span>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <h4 className="font-display font-black text-white text-xs sm:text-sm uppercase tracking-tight truncate">
+                    Director of Football
+                  </h4>
+                  <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded border shrink-0 ${
+                    save.settings.sportingDirectorHandlesRenewals
+                      ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300'
+                      : 'bg-slate-950 border-slate-700 text-slate-400'
+                  }`}>
+                    {save.settings.sportingDirectorHandlesRenewals ? 'AUTOMATED' : 'MANUAL'}
+                  </span>
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-display font-black text-white text-base uppercase tracking-tight">
-                      Director of Football Contract Automation
-                    </h4>
-                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md border ${
-                      save.settings.sportingDirectorHandlesRenewals
-                        ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300'
-                        : 'bg-slate-900 border-slate-700 text-slate-400'
-                    }`}>
-                      {save.settings.sportingDirectorHandlesRenewals ? 'DELEGATED (ACTIVE)' : 'MANUAL ONLY'}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-300/90 leading-relaxed max-w-2xl mt-1">
-                    When active, your Sporting Director automatically conducts contract renewals for expiring key squad players (&ge;74 OVR or U23 prospects) to safeguard against free agency, operating strictly within authorized weekly wage and bonus limits.
-                  </p>
-                </div>
+                <p className="text-[10px] text-slate-400 truncate">
+                  Auto-renews key expiring contracts (≥74 OVR or U23) within authorized wage limits.
+                </p>
               </div>
+            </div>
 
-              <div className="flex sm:flex-col gap-2 w-full sm:w-auto">
+            <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+              <button
+                type="button"
+                onClick={handleToggleSportingDirectorRenewals}
+                className={`py-1.5 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap border ${
+                  save.settings.sportingDirectorHandlesRenewals
+                    ? 'bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-400 shadow-sm'
+                    : 'bg-slate-950 hover:bg-slate-800 text-slate-200 border-slate-700'
+                }`}
+              >
+                {save.settings.sportingDirectorHandlesRenewals ? '✓ Auto-Renew Active' : 'Delegate Auto-Renew'}
+              </button>
+              {save.settings.sportingDirectorHandlesRenewals && (
                 <button
                   type="button"
-                  onClick={handleToggleSportingDirectorRenewals}
-                  className={`py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap border ${
-                    save.settings.sportingDirectorHandlesRenewals
-                      ? 'bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-400 shadow-lg shadow-indigo-600/30'
-                      : 'bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-700'
-                  }`}
+                  onClick={handleRunSportingDirectorBatchRenewals}
+                  title="Run automated renewal check now"
+                  className="py-1.5 px-2.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 text-slate-300 border border-slate-800 text-[11px] font-bold cursor-pointer"
                 >
-                  {save.settings.sportingDirectorHandlesRenewals ? '✓ Delegation Enabled' : 'Delegate to Sporting Director'}
+                  ⚡ Run Now
                 </button>
-                {save.settings.sportingDirectorHandlesRenewals && (
-                  <button
-                    type="button"
-                    onClick={handleRunSportingDirectorBatchRenewals}
-                    className="py-2 px-3 rounded-xl bg-slate-950/80 hover:bg-slate-900 text-slate-300 border border-slate-800 text-[11px] font-bold cursor-pointer"
-                  >
-                    ⚡ Run Director Review Now
-                  </button>
-                )}
-              </div>
+              )}
             </div>
           </div>
 
@@ -1834,80 +1848,114 @@ export function TransferHub({
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {shortlistedPlayers.map((player) => (
-                <article
-                  key={player.id}
-                  className="bg-slate-900/40 border border-slate-850 rounded-2xl p-4 space-y-3"
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-2">
-                      <span className="w-8 h-8 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center font-display font-black text-xs text-emerald-400">
-                        {player.rating}
-                      </span>
-                      <div>
-                        <h4 className="font-display font-black text-sm text-white">
-                          {player.name}
-                        </h4>
-                        <div className="text-[10px] text-slate-400">
-                          {player.position} • {player.age} yrs • {player.nationality}
+              {shortlistedPlayers.map((player) => {
+                const isSenior = player.age > U21_AGE_LIMIT;
+                const isSquadFull = save.squad.length >= MAX_SQUAD_SIZE;
+                const isSeniorFull = isSenior && seniorCount >= MAX_SENIOR_SQUAD_SIZE;
+                const isBlocked = !windowIsOpen || isSquadFull;
+                const fs = calculateEaFcFaceStats(player as unknown as CareerPlayer);
+                const canAfford = player.value <= save.finances.transferBudget;
+
+                return (
+                  <article
+                    key={player.id}
+                    className="bg-slate-900/50 border border-slate-800 rounded-2xl p-2.5 sm:p-3 space-y-2 hover:border-slate-700 transition-all"
+                  >
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="w-8 h-8 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center font-display font-black text-xs text-emerald-400 shrink-0">
+                          {player.rating}
+                        </span>
+                        <div className="min-w-0">
+                          <h4 className="font-display font-black text-xs sm:text-sm text-white truncate max-w-[130px] sm:max-w-[170px]">
+                            {player.name}
+                          </h4>
+                          <div className="text-[9.5px] text-slate-400 truncate mt-0.2">
+                            <span className="text-emerald-400 font-bold">{player.position}</span>
+                            <span> • {player.age}y</span>
+                            <span> • {player.nationality}</span>
+                          </div>
                         </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleToggleShortlist(player.id)}
+                        className="text-amber-400 hover:text-slate-500 text-sm cursor-pointer p-0.5"
+                        title="Remove from shortlist"
+                      >
+                        ★
+                      </button>
+                    </div>
+
+                    {/* EA FC 6 Face Stats Bar */}
+                    <div className="grid grid-cols-6 gap-1 bg-slate-950/70 p-1.5 rounded-lg text-center font-display border border-white/5 text-[9px]">
+                      <div>
+                        <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'DIV' : 'PAC'}</span>
+                        <span className="font-black text-white">{fs.pac}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'HAN' : 'SHO'}</span>
+                        <span className="font-black text-white">{fs.sho}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'KIC' : 'PAS'}</span>
+                        <span className="font-black text-white">{fs.pas}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'REF' : 'DRI'}</span>
+                        <span className="font-black text-white">{fs.dri}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'SPD' : 'DEF'}</span>
+                        <span className="font-black text-white">{fs.def}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'POS' : 'PHY'}</span>
+                        <span className="font-black text-white">{fs.phy}</span>
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => handleToggleShortlist(player.id)}
-                      className="text-amber-400 hover:text-slate-500 text-sm"
-                    >
-                      ★
-                    </button>
-                  </div>
+                    <div className="bg-slate-950/60 p-1.5 px-2 rounded-lg flex justify-between text-xs font-mono">
+                      <span className="text-emerald-400 font-bold">{formatCurrency(player.value)}</span>
+                      <span className="text-slate-400">{formatWage(player.wageDemand)}</span>
+                    </div>
 
-                  <div className="bg-slate-950/60 p-2 rounded-xl flex justify-between text-xs font-mono">
-                    <span>{formatCurrency(player.value)}</span>
-                    <span className="text-slate-400">{formatWage(player.wageDemand)}</span>
-                  </div>
-
-                  {(() => {
-                    const isSenior = player.age > U21_AGE_LIMIT;
-                    const isSquadFull = save.squad.length >= MAX_SQUAD_SIZE;
-                    const isSeniorFull = isSenior && seniorCount >= MAX_SENIOR_SQUAD_SIZE;
-                    const isBlocked = !windowIsOpen || isSquadFull || isSeniorFull;
-
-                    return (
-                      <div className="flex items-center gap-2">
-                        {onOpenCompare && (
-                          <button
-                            type="button"
-                            onClick={() => onOpenCompare(player)}
-                            className="py-2 px-3 rounded-xl font-display font-bold text-xs uppercase tracking-wider bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 flex items-center justify-center gap-1 cursor-pointer transition-colors shrink-0"
-                          >
-                            <span>📊</span>
-                            <span>Compare</span>
-                          </button>
-                        )}
+                    <div className="flex items-center gap-1.5">
+                      {onOpenCompare && (
                         <button
                           type="button"
-                          onClick={() => handleStartNegotiation(player)}
-                          disabled={isBlocked}
-                          className={`flex-1 py-2 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all ${
-                            isBlocked
-                              ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                              : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950'
-                          }`}
+                          onClick={() => onOpenCompare(player)}
+                          className="py-1.5 px-2.5 rounded-lg font-display font-bold text-xs uppercase tracking-wider bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 flex items-center justify-center gap-1 cursor-pointer transition-colors shrink-0"
                         >
-                          {!windowIsOpen
-                            ? 'Window Closed'
-                            : isSquadFull
-                            ? 'Squad Full (35/35)'
-                            : isSeniorFull
-                            ? 'Senior Full (25/25)'
-                            : 'Make Offer'}
+                          <span>📊</span>
+                          <span>Compare</span>
                         </button>
-                      </div>
-                    );
-                  })()}
-                </article>
-              ))}
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleStartNegotiation(player)}
+                        disabled={isBlocked}
+                        className={`flex-1 py-1.5 px-3 rounded-lg font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer ${
+                          !windowIsOpen
+                            ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                            : isSquadFull
+                            ? 'bg-rose-950 text-rose-400 cursor-not-allowed border border-rose-800'
+                            : canAfford
+                            ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950'
+                            : 'bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700'
+                        }`}
+                      >
+                        {!windowIsOpen
+                          ? 'Window Closed'
+                          : isSquadFull
+                          ? 'Squad Full'
+                          : 'Make Offer'}
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           )}
         </section>
@@ -2021,28 +2069,29 @@ export function TransferHub({
         </section>
       )}
 
-      {/* SUB-VIEW 5: BOARD ROOM & JOB SECURITY */}
+      {/* SUB-VIEW 5: BOARD ROOM & JOB SECURITY (COMPACT) */}
       {subTab === 'board' && (
-        <section className="space-y-6">
-          <header className="bg-slate-900/40 border border-slate-800 rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="space-y-1">
-              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 font-display">
-                Club Governance
-              </span>
-              <h3 className="text-2xl font-display font-black text-white uppercase tracking-tight flex items-center gap-2">
-                <span>🏛️</span> Board Room & Expectations
-              </h3>
-              <p className="text-xs text-slate-400">
-                Performance review from the board of directors at {getEffectiveClubName(save.club)}.
+        <section className="space-y-3.5">
+          {/* Header */}
+          <header className="bg-slate-900/40 border border-slate-800 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-base sm:text-lg">🏛️</span>
+                <h3 className="text-base sm:text-lg font-display font-black text-white uppercase tracking-tight truncate">
+                  Board Room &amp; Governance
+                </h3>
+              </div>
+              <p className="text-[11px] text-slate-400 truncate">
+                Directives &amp; review from {getEffectiveClubName(save.club)} board.
               </p>
             </div>
 
-            <div className="bg-slate-950/70 border border-slate-800 px-5 py-3 rounded-2xl text-center">
-              <span className="text-[10px] uppercase font-bold text-slate-500 block">
-                Board Confidence
+            <div className="bg-slate-950/80 border border-slate-800 px-3 py-1.5 rounded-xl text-center shrink-0">
+              <span className="text-[9px] uppercase font-bold text-slate-500 block leading-none">
+                Confidence
               </span>
               <span
-                className={`text-2xl font-display font-black ${
+                className={`text-base sm:text-lg font-display font-black leading-tight ${
                   boardStatus.confidence >= 75
                     ? 'text-emerald-400'
                     : boardStatus.confidence >= 50
@@ -2055,133 +2104,133 @@ export function TransferHub({
             </div>
           </header>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-            <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-5 space-y-2">
-              <span className="text-xl">🎯</span>
-              <h4 className="font-display font-black uppercase text-slate-300">
-                Seasonal Objective
-              </h4>
-              <div className="text-base font-display font-black text-white">
+          {/* 3 Governance Pillars (Compact) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+            <div className="bg-slate-900/40 border border-slate-850 rounded-xl p-2.5 sm:p-3 space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
+                  <span>🎯</span> Objective
+                </span>
+                <span className="text-[9px] uppercase font-bold text-emerald-400 bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-900/60 font-mono">
+                  {save.club.tier?.toUpperCase() || 'PL'} Tier
+                </span>
+              </div>
+              <div className="text-sm font-display font-black text-white truncate">
                 {boardStatus.expectation}
               </div>
-              <p className="text-[11px] text-slate-400">
-                Based on reputation tier: <span className="uppercase font-bold text-emerald-400">{save.club.tier}</span>
+              <p className="text-[10px] text-slate-400 truncate">
+                League finish mandate
               </p>
             </div>
 
-            <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-5 space-y-2">
-              <span className="text-xl">⚖️</span>
-              <h4 className="font-display font-black uppercase text-slate-300">
-                Job Security Status
-              </h4>
-              <div
-                className={`text-base font-display font-black uppercase ${
+            <div className="bg-slate-900/40 border border-slate-850 rounded-xl p-2.5 sm:p-3 space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
+                  <span>⚖️</span> Job Security
+                </span>
+                <span className={`text-[9px] uppercase font-black px-1.5 py-0.2 rounded font-mono ${
                   boardStatus.status === 'secure'
-                    ? 'text-emerald-400'
+                    ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800'
                     : boardStatus.status === 'stable'
-                    ? 'text-slate-200'
-                    : boardStatus.status === 'under_pressure'
-                    ? 'text-amber-400'
-                    : 'text-rose-400'
-                }`}
-              >
+                    ? 'bg-slate-900 text-slate-300 border border-slate-800'
+                    : 'bg-rose-950/80 text-rose-300 border border-rose-800'
+                }`}>
+                  {boardStatus.status.replace('_', ' ')}
+                </span>
+              </div>
+              <div className="text-sm font-display font-black text-white truncate capitalize">
                 {boardStatus.status.replace('_', ' ')}
               </div>
-              <p className="text-[11px] text-slate-400">
-                {save.settings.boardCanSack
-                  ? 'Board sackings enabled in career rules.'
-                  : 'Sackings disabled (Safe Job mode).'}
+              <p className="text-[10px] text-slate-400 truncate">
+                {save.settings.boardCanSack ? 'Sackings enabled' : 'Safe Job mode'}
               </p>
             </div>
 
-            <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-5 space-y-2">
-              <span className="text-xl">⚠️</span>
-              <h4 className="font-display font-black uppercase text-slate-300">
-                Official Warnings
-              </h4>
-              <div className="text-base font-display font-black text-white">
+            <div className="bg-slate-900/40 border border-slate-850 rounded-xl p-2.5 sm:p-3 space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
+                  <span>⚠️</span> Board Warnings
+                </span>
+                <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded ${
+                  boardStatus.warningsCount > 0
+                    ? 'bg-rose-950 text-rose-400 border border-rose-800'
+                    : 'bg-slate-950 text-slate-400 border border-slate-850'
+                }`}>
+                  {boardStatus.warningsCount}/3
+                </span>
+              </div>
+              <div className="text-sm font-display font-black text-white truncate">
                 {boardStatus.warningsCount} Warnings
               </div>
-              <p className="text-[11px] text-slate-400">
-                {boardStatus.warningsCount > 0
-                  ? 'Immediate points required in upcoming fixtures.'
-                  : 'Board is currently satisfied with progress.'}
+              <p className="text-[10px] text-slate-400 truncate">
+                {boardStatus.warningsCount > 0 ? 'Urgent points required' : 'Board is satisfied'}
               </p>
             </div>
           </div>
 
-          {/* FM-STYLE TRANSFER & WAGE BUDGET REALLOCATION */}
-          <section className="bg-slate-900/40 border border-slate-800 rounded-3xl p-6 sm:p-7 space-y-5">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-              <div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 font-display block">
-                  FINANCIAL ENGINEERING
-                </span>
-                <h4 className="text-lg font-display font-black text-white uppercase tracking-tight flex items-center gap-2">
-                  <span>⚖️</span> Budget Adjustment &amp; Reallocation (FM Style)
+          {/* FM-STYLE TRANSFER & WAGE BUDGET REALLOCATION (COMPACT) */}
+          <section className="bg-slate-900/40 border border-slate-800 rounded-2xl p-3.5 sm:p-4 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <h4 className="text-xs sm:text-sm font-display font-black text-white uppercase tracking-tight flex items-center gap-1.5 truncate">
+                  <span>⚖️</span> FM Budget Adjustment
                 </h4>
-                <p className="text-xs text-slate-400">
-                  Rebalance your operational resources between upfront Transfer Funds and Weekly Wage Headroom (1 yr wage headroom = 52× transfer funds).
+                <p className="text-[10px] text-slate-400 truncate">
+                  Reallocate between Transfer Funds and Weekly Wage Headroom (1y = 52×).
                 </p>
               </div>
-              <div className="text-right hidden sm:block">
-                <span className="text-[10px] uppercase font-bold text-slate-500 block">Total Flexible Capital</span>
-                <span className="text-sm font-mono font-bold text-emerald-400">{formatCurrency(budgetBounds.totalFlexibleFund)}</span>
+              <div className="text-right shrink-0">
+                <span className="text-[8.5px] uppercase font-bold text-slate-500 block">Flexible Capital</span>
+                <span className="text-xs font-mono font-bold text-emerald-400">{formatCurrency(budgetBounds.totalFlexibleFund)}</span>
               </div>
             </div>
 
-            {/* Dual Metric Display Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Transfer Budget Card */}
-              <div className="bg-slate-950/70 border border-slate-850 rounded-2xl p-4 space-y-2">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-400 font-bold uppercase text-[10px]">Transfer Warchest</span>
-                  <span className="font-mono text-[10px] text-slate-500">
-                    Min: {formatCurrency(budgetBounds.minTransferBudget)} • Max: {formatCurrency(budgetBounds.maxTransferBudget)}
+            {/* Dual Metric Cards */}
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="bg-slate-950/70 border border-slate-850 rounded-xl p-2.5 space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400 font-bold uppercase text-[9px]">Transfer Warchest</span>
+                  <span className="text-[9px] font-mono text-slate-500 hidden sm:inline">
+                    Max: {formatCurrency(budgetBounds.maxTransferBudget)}
                   </span>
                 </div>
                 <div className="flex items-baseline justify-between">
-                  <span className="text-2xl font-display font-black text-emerald-400">
+                  <span className="text-base sm:text-lg font-display font-black text-emerald-400">
                     {formatCurrency(allocatedTransferBudget)}
                   </span>
-                  <span className="text-xs font-mono text-slate-400">
-                    {allocatedTransferBudget !== save.finances.transferBudget ? (
-                      <span className={allocatedTransferBudget > save.finances.transferBudget ? 'text-emerald-400' : 'text-amber-400'}>
-                        {allocatedTransferBudget > save.finances.transferBudget ? '+' : ''}{formatCurrency(allocatedTransferBudget - save.finances.transferBudget)}
-                      </span>
-                    ) : (
-                      <span className="text-slate-500 font-normal">Current Balance</span>
-                    )}
-                  </span>
+                  {allocatedTransferBudget !== save.finances.transferBudget && (
+                    <span className={`text-[10px] font-mono ${allocatedTransferBudget > save.finances.transferBudget ? 'text-emerald-400' : 'text-amber-400'}`}>
+                      {allocatedTransferBudget > save.finances.transferBudget ? '+' : ''}{formatCurrency(allocatedTransferBudget - save.finances.transferBudget)}
+                    </span>
+                  )}
                 </div>
               </div>
 
-              {/* Wage Budget Card */}
-              <div className="bg-slate-950/70 border border-slate-850 rounded-2xl p-4 space-y-2">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-400 font-bold uppercase text-[10px]">Weekly Wage Budget</span>
-                  <span className="font-mono text-[10px] text-slate-500">
-                    Current Payroll: {formatWage(save.finances.currentWeeklyWages)}
+              <div className="bg-slate-950/70 border border-slate-850 rounded-xl p-2.5 space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400 font-bold uppercase text-[9px]">Weekly Wage Ceiling</span>
+                  <span className="text-[9px] font-mono text-slate-500 hidden sm:inline">
+                    Payroll: {formatWage(save.finances.currentWeeklyWages)}
                   </span>
                 </div>
                 <div className="flex items-baseline justify-between">
-                  <span className="text-2xl font-display font-black text-white">
+                  <span className="text-base sm:text-lg font-display font-black text-white">
                     {formatWage(derivedWeeklyWage)}
                   </span>
-                  <span className={`text-xs font-mono font-bold ${derivedWeeklySpare > 0 ? 'text-emerald-400' : 'text-slate-500'}`}>
-                    {derivedWeeklySpare > 0 ? `+${formatWage(derivedWeeklySpare)} free` : 'Fully Committed'}
+                  <span className={`text-[10px] font-mono font-bold ${derivedWeeklySpare > 0 ? 'text-emerald-400' : 'text-slate-500'}`}>
+                    {derivedWeeklySpare > 0 ? `+${formatWage(derivedWeeklySpare)}` : 'Cap'}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Range Slider & Quick Presets */}
-            <div className="space-y-3 bg-slate-950/50 border border-slate-850 p-4 rounded-2xl">
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-xs font-mono font-bold text-slate-400">
-                  <span>0% Transfer Cash (Max Wages)</span>
-                  <span className="text-emerald-400">{Math.round((allocatedTransferBudget / (budgetBounds.totalFlexibleFund || 1)) * 100)}% Transfer Allocation</span>
-                  <span>100% Transfer Cash (Min Wages)</span>
+            {/* Range Slider & Quick Presets Strip */}
+            <div className="bg-slate-950/50 border border-slate-850 p-2.5 rounded-xl space-y-2">
+              <div className="space-y-1">
+                <div className="flex justify-between text-[10px] font-mono font-bold text-slate-400">
+                  <span>Max Wages</span>
+                  <span className="text-emerald-400">{Math.round((allocatedTransferBudget / (budgetBounds.totalFlexibleFund || 1)) * 100)}% Transfers</span>
+                  <span>Max Transfers</span>
                 </div>
                 <input
                   type="range"
@@ -2190,39 +2239,38 @@ export function TransferHub({
                   step={50000}
                   value={allocatedTransferBudget}
                   onChange={(e) => setAllocatedTransferBudget(Number(e.target.value))}
-                  className="w-full h-2.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                  className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
                 />
               </div>
 
-              {/* Preset Pills */}
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-                <div className="flex flex-wrap gap-1.5 text-xs">
+              <div className="flex flex-wrap items-center justify-between gap-1.5 pt-0.5">
+                <div className="flex flex-wrap gap-1 text-xs">
                   <button
                     type="button"
                     onClick={() => setAllocatedTransferBudget(budgetBounds.maxTransferBudget)}
-                    className="py-1 px-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-[10px] font-bold border border-slate-800 transition-all cursor-pointer"
+                    className="py-1 px-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-[9.5px] font-bold border border-slate-800 cursor-pointer"
                   >
-                    Max Transfer Funds
+                    Max Transfers
                   </button>
                   <button
                     type="button"
                     onClick={() => setAllocatedTransferBudget(Math.round((budgetBounds.totalFlexibleFund * 0.5) / 50_000) * 50_000)}
-                    className="py-1 px-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-[10px] font-bold border border-slate-800 transition-all cursor-pointer"
+                    className="py-1 px-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-[9.5px] font-bold border border-slate-800 cursor-pointer"
                   >
-                    Balanced (50/50)
+                    50/50
                   </button>
                   <button
                     type="button"
                     onClick={() => setAllocatedTransferBudget(0)}
-                    className="py-1 px-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-[10px] font-bold border border-slate-800 transition-all cursor-pointer"
+                    className="py-1 px-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-[9.5px] font-bold border border-slate-800 cursor-pointer"
                   >
-                    Max Wage Headroom
+                    Max Wages
                   </button>
                   <button
                     type="button"
                     onClick={() => setAllocatedTransferBudget(save.finances.transferBudget)}
                     disabled={allocatedTransferBudget === save.finances.transferBudget}
-                    className="py-1 px-2.5 rounded-lg bg-slate-900/60 hover:bg-slate-800 text-slate-500 hover:text-slate-300 font-mono text-[10px] font-bold border border-slate-850 transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="py-1 px-2 rounded-lg bg-slate-900/60 text-slate-500 font-mono text-[9.5px] font-bold border border-slate-850 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     Reset
                   </button>
@@ -2232,162 +2280,154 @@ export function TransferHub({
                   type="button"
                   onClick={handleApplyBudgetReallocation}
                   disabled={allocatedTransferBudget === save.finances.transferBudget}
-                  className="py-2 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-1.5"
+                  className="py-1.5 px-3 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-[10.5px] uppercase tracking-wider shadow-sm transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
                 >
-                  <span>💾</span>
-                  <span>Confirm Budget Reallocation</span>
+                  <span>💾 Apply Reallocation</span>
                 </button>
               </div>
             </div>
           </section>
 
-          {/* ASK THE BOARD FOR FINANCIAL BACKING */}
-          <section className="bg-slate-900/40 border border-slate-800 rounded-3xl p-6 sm:p-7 space-y-5">
+          {/* BOARD PETITIONS & CAPITAL REQUESTS (COMPACT 2x2) */}
+          <section className="bg-slate-900/40 border border-slate-800 rounded-2xl p-3.5 sm:p-4 space-y-2.5">
             <div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 font-display block">
-                EXECUTIVE GOVERNANCE
-              </span>
-              <h4 className="text-lg font-display font-black text-white uppercase tracking-tight flex items-center gap-2">
-                <span>🏛️</span> Ask the Board for Financial Backing
+              <h4 className="text-xs sm:text-sm font-display font-black text-white uppercase tracking-tight flex items-center gap-1.5">
+                <span>🏛️</span> Board Petitions &amp; Capital Requests
               </h4>
-              <p className="text-xs text-slate-400">
-                Submit formal petitions to the Chairman and Board of Directors for capital injections under specific sporting and window circumstances.
+              <p className="text-[10px] text-slate-400">
+                Appeal to ownership for financial interventions under specific sporting circumstances.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {/* 1. Deadline Day Marquee Warchest */}
               {(() => {
                 const isDeadline = save.deadlineDayState?.isActive || isTransferDeadlineDay(save.season.currentDate, save.season.yearStart);
                 return (
-                  <div className={`p-5 rounded-2xl border transition-all space-y-3 flex flex-col justify-between ${
+                  <div className={`p-2.5 sm:p-3 rounded-xl border transition-all space-y-2 flex flex-col justify-between ${
                     isDeadline
-                      ? 'bg-gradient-to-br from-amber-950/40 to-slate-950 border-amber-500/60 shadow-xl shadow-amber-500/10'
-                      : 'bg-slate-950/70 border-slate-850 opacity-75'
+                      ? 'bg-amber-950/30 border-amber-500/60 shadow-sm'
+                      : 'bg-slate-950/60 border-slate-850 opacity-80'
                   }`}>
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <span className="text-xl">⏱️</span>
-                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full font-mono ${
-                          isDeadline
-                            ? 'bg-amber-400 text-slate-950 animate-pulse'
-                            : 'bg-slate-900 text-slate-500 border border-slate-800'
+                        <span className="text-base">⏱️</span>
+                        <span className={`text-[8.5px] font-black uppercase px-1.5 py-0.2 rounded-full font-mono ${
+                          isDeadline ? 'bg-amber-400 text-slate-950 animate-pulse' : 'bg-slate-900 text-slate-500 border border-slate-800'
                         }`}>
-                          {isDeadline ? 'Active Deadline Day' : 'Deadline Day Only'}
+                          {isDeadline ? 'Active' : 'Deadline Only'}
                         </span>
                       </div>
-                      <h5 className="font-display font-black text-sm text-white uppercase">
-                        Emergency Deadline Day Warchest
+                      <h5 className="font-display font-black text-xs text-white uppercase">
+                        Emergency Deadline Warchest
                       </h5>
-                      <p className="text-xs text-slate-400 leading-relaxed">
-                        Petition the Board for an urgent eleventh-hour funding injection to seal a once-in-a-lifetime marquee acquisition before the 23:00 cutoff.
+                      <p className="text-[10px] text-slate-400 line-clamp-2">
+                        Urgent eleventh-hour cash injection before the 23:00 transfer cutoff.
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => handleOpenPetitionModal('deadline_day_marquee')}
                       disabled={!isDeadline}
-                      className={`w-full py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                      className={`w-full py-1.5 px-2.5 rounded-lg font-display font-black text-[10.5px] uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1 ${
                         isDeadline
-                          ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-md shadow-amber-500/20 hover:scale-[1.02]'
+                          ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-sm'
                           : 'bg-slate-900 text-slate-600 border border-slate-800 cursor-not-allowed'
                       }`}
                     >
-                      <span>{isDeadline ? '🏛️ Petition Marquee Warchest' : 'Window Not at Deadline'}</span>
+                      <span>{isDeadline ? '🏛️ Petition Warchest' : 'Window Not at Deadline'}</span>
                     </button>
                   </div>
                 );
               })()}
 
-              {/* 2. Injury Crisis Emergency Grant */}
+              {/* 2. Injury Crisis Replacement Grant */}
               {(() => {
                 const injuredCount = save.squad.filter((p) => p.injured).length;
                 const hasInjuries = injuredCount > 0;
                 return (
-                  <div className={`p-5 rounded-2xl border transition-all space-y-3 flex flex-col justify-between ${
+                  <div className={`p-2.5 sm:p-3 rounded-xl border transition-all space-y-2 flex flex-col justify-between ${
                     hasInjuries
-                      ? 'bg-gradient-to-br from-rose-950/30 to-slate-950 border-rose-500/50 shadow-xl shadow-rose-500/10'
-                      : 'bg-slate-950/70 border-slate-850'
+                      ? 'bg-rose-950/30 border-rose-500/50 shadow-sm'
+                      : 'bg-slate-950/60 border-slate-850'
                   }`}>
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <span className="text-xl">🏥</span>
-                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full font-mono ${
-                          hasInjuries
-                            ? 'bg-rose-500 text-slate-950 animate-pulse'
-                            : 'bg-emerald-950 text-emerald-400 border border-emerald-900'
+                        <span className="text-base">🏥</span>
+                        <span className={`text-[8.5px] font-black uppercase px-1.5 py-0.2 rounded-full font-mono ${
+                          hasInjuries ? 'bg-rose-500 text-slate-950 animate-pulse' : 'bg-emerald-950 text-emerald-400 border border-emerald-900'
                         }`}>
-                          {hasInjuries ? `🚨 ${injuredCount} Sidelined` : '✅ Squad Fit'}
+                          {hasInjuries ? `${injuredCount} Out` : 'Fit'}
                         </span>
                       </div>
-                      <h5 className="font-display font-black text-sm text-white uppercase">
-                        Injury Crisis Replacement Grant
+                      <h5 className="font-display font-black text-xs text-white uppercase">
+                        Injury Crisis Grant
                       </h5>
-                      <p className="text-xs text-slate-400 leading-relaxed">
-                        Appeal to the Board for emergency capital backing when key starters or multiple squad players suffer serious injuries.
+                      <p className="text-[10px] text-slate-400 line-clamp-2">
+                        Emergency replacement fund when starters suffer serious injuries.
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => handleOpenPetitionModal('injury_crisis')}
                       disabled={!hasInjuries}
-                      className={`w-full py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                      className={`w-full py-1.5 px-2.5 rounded-lg font-display font-black text-[10.5px] uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1 ${
                         hasInjuries
-                          ? 'bg-rose-500 hover:bg-rose-400 text-slate-950 shadow-md shadow-rose-500/20 hover:scale-[1.02]'
+                          ? 'bg-rose-500 hover:bg-rose-400 text-slate-950 shadow-sm'
                           : 'bg-slate-900 text-slate-600 border border-slate-850 cursor-not-allowed'
                       }`}
                     >
-                      <span>{hasInjuries ? '🏥 Request Injury Cover' : 'No Active Injury Crisis'}</span>
+                      <span>{hasInjuries ? '🏥 Request Injury Cover' : 'No Injury Crisis'}</span>
                     </button>
                   </div>
                 );
               })()}
 
               {/* 3. General Transfer Budget Expansion */}
-              <div className="p-5 rounded-2xl bg-slate-950/70 border border-slate-850 transition-all space-y-3 flex flex-col justify-between">
-                <div className="space-y-1.5">
+              <div className="p-2.5 sm:p-3 rounded-xl bg-slate-950/60 border border-slate-850 transition-all space-y-2 flex flex-col justify-between">
+                <div className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-xl">📈</span>
-                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full font-mono bg-slate-900 text-emerald-400 border border-slate-850">
-                      Confidence {boardStatus.confidence}%
+                    <span className="text-base">📈</span>
+                    <span className="text-[8.5px] font-black uppercase px-1.5 py-0.2 rounded-full font-mono bg-slate-900 text-emerald-400 border border-slate-850">
+                      Conf. {boardStatus.confidence}%
                     </span>
                   </div>
-                  <h5 className="font-display font-black text-sm text-white uppercase">
-                    General Transfer Budget Expansion
+                  <h5 className="font-display font-black text-xs text-white uppercase">
+                    Transfer Budget Expansion
                   </h5>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    Table a standard petition for additional transfer capital based on sporting progress, high board confidence, and club reserves.
+                  <p className="text-[10px] text-slate-400 line-clamp-2">
+                    Table a standard petition for additional transfer capital from club reserves.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => handleOpenPetitionModal('general_transfer_funds')}
-                  className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-850 text-emerald-400 border border-emerald-500/40 hover:border-emerald-400 font-display font-black text-xs uppercase tracking-wider transition-all hover:scale-[1.02] cursor-pointer flex items-center justify-center gap-1.5"
+                  className="w-full py-1.5 px-2.5 rounded-lg bg-slate-900 hover:bg-slate-850 text-emerald-400 border border-emerald-500/40 hover:border-emerald-400 font-display font-black text-[10.5px] uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1"
                 >
                   <span>📈 Petition Budget Top-Up</span>
                 </button>
               </div>
 
               {/* 4. Wage Budget Headroom Expansion */}
-              <div className="p-5 rounded-2xl bg-slate-950/70 border border-slate-850 transition-all space-y-3 flex flex-col justify-between">
-                <div className="space-y-1.5">
+              <div className="p-2.5 sm:p-3 rounded-xl bg-slate-950/60 border border-slate-850 transition-all space-y-2 flex flex-col justify-between">
+                <div className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-xl">💼</span>
-                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full font-mono bg-slate-900 text-slate-400 border border-slate-850">
-                      Payroll: {formatWage(save.finances.currentWeeklyWages)}
+                    <span className="text-base">💼</span>
+                    <span className="text-[8.5px] font-black uppercase px-1.5 py-0.2 rounded-full font-mono bg-slate-900 text-slate-400 border border-slate-850">
+                      Payroll {formatWage(save.finances.currentWeeklyWages)}
                     </span>
                   </div>
-                  <h5 className="font-display font-black text-sm text-white uppercase">
-                    Wage Budget Headroom Expansion
+                  <h5 className="font-display font-black text-xs text-white uppercase">
+                    Wage Budget Headroom
                   </h5>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    Petition the Board for a higher weekly wage ceiling to authorize crucial contract renewals and attract higher-caliber recruits.
+                  <p className="text-[10px] text-slate-400 line-clamp-2">
+                    Higher weekly wage ceiling to authorize vital contract extensions.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => handleOpenPetitionModal('wage_budget_increase')}
-                  className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-850 text-blue-300 border border-blue-500/40 hover:border-blue-400 font-display font-black text-xs uppercase tracking-wider transition-all hover:scale-[1.02] cursor-pointer flex items-center justify-center gap-1.5"
+                  className="w-full py-1.5 px-2.5 rounded-lg bg-slate-900 hover:bg-slate-850 text-blue-300 border border-blue-500/40 hover:border-blue-400 font-display font-black text-[10.5px] uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1"
                 >
                   <span>💼 Request Wage Increase</span>
                 </button>

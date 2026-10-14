@@ -11,6 +11,7 @@ import {
   comparePlayers,
   ComparedPlayerStats,
   ComparisonMode,
+  calculatePositionFit,
 } from '../../career/playerComparison';
 import { formatCurrency, formatWage } from '../../career/finance';
 
@@ -57,7 +58,27 @@ export function PlayerComparisonModal({
   // Player selector drawer state
   const [switchingSlot, setSwitchingSlot] = useState<'A' | 'B' | null>(null);
   const [pickerTab, setPickerTab] = useState<'squad' | 'market' | 'shortlist'>('squad');
-  const [pickerPosFilter, setPickerPosFilter] = useState<'all' | 'same'>('same');
+  const [pickerPosFilter, setPickerPosFilter] = useState<'all' | 'same'>('all');
+  const [pickerSearch, setPickerSearch] = useState('');
+  const [pickerLeague, setPickerLeague] = useState<'ALL' | 'pl' | 'continental' | 'legends'>('ALL');
+  const [pickerClub, setPickerClub] = useState<string>('ALL');
+  const [pickerNationality, setPickerNationality] = useState<string>('ALL');
+  const [pickerSort, setPickerSort] = useState<'value_desc' | 'rating_desc' | 'age_asc' | 'name_asc'>('value_desc');
+
+  // Extract unique clubs and nationalities from available players
+  const availableClubs = useMemo(() => {
+    const set = new Set<string>();
+    squad.forEach((p) => p.club && set.add(p.club));
+    marketPlayers.forEach((p) => p.club && set.add(p.club));
+    return Array.from(set).sort();
+  }, [squad, marketPlayers]);
+
+  const availableNationalities = useMemo(() => {
+    const set = new Set<string>();
+    squad.forEach((p) => p.nationality && set.add(p.nationality));
+    marketPlayers.forEach((p) => p.nationality && set.add(p.nationality));
+    return Array.from(set).sort();
+  }, [squad, marketPlayers]);
 
   // Sync state if props change when opening
   React.useEffect(() => {
@@ -108,18 +129,104 @@ export function PlayerComparisonModal({
 
   const { mode, fitA, fitB, attributes, financialImpact, verdict } = comparison;
 
-  // Filter available players for the picker drawer
+  // Filter available players for the picker drawer with sorting by value default
   const getPickerList = () => {
-    const filterByPos = (p: { position: string }) =>
-      pickerPosFilter === 'all' || p.position === targetPosition;
-
+    let list: (CareerPlayer | MarketPlayer)[] = [];
     if (pickerTab === 'squad') {
-      return squad.filter(filterByPos);
+      list = [...squad];
+    } else if (pickerTab === 'shortlist') {
+      list = [...shortlistedPlayers];
+    } else {
+      list = [...marketPlayers];
     }
-    if (pickerTab === 'shortlist') {
-      return shortlistedPlayers.filter(filterByPos);
+
+    // Position filter
+    if (pickerPosFilter === 'same') {
+      list = list.filter((p) => p.position === targetPosition);
     }
-    return marketPlayers.filter(filterByPos);
+
+    // Search query
+    if (pickerSearch.trim()) {
+      const q = pickerSearch.toLowerCase();
+      list = list.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.club.toLowerCase().includes(q) ||
+          p.nationality.toLowerCase().includes(q) ||
+          p.position.toLowerCase().includes(q)
+      );
+    }
+
+    // League filter
+    if (pickerLeague !== 'ALL') {
+      if (pickerLeague === 'legends') {
+        list = list.filter((p) => Boolean((p as MarketPlayer).isLegend));
+      } else if (pickerLeague === 'pl') {
+        list = list.filter((p) => {
+          const c = p.club.toLowerCase();
+          return (
+            c.includes('london') ||
+            c.includes('manchester') ||
+            c.includes('merseyside') ||
+            c.includes('birmingham') ||
+            c.includes('newcastle') ||
+            c.includes('brighton') ||
+            c.includes('wolves') ||
+            c.includes('bournemouth') ||
+            c.includes('nottingham') ||
+            c.includes('leicester') ||
+            c.includes('southampton') ||
+            c.includes('ipswich') ||
+            c.includes('everton')
+          );
+        });
+      } else if (pickerLeague === 'continental') {
+        list = list.filter((p) => {
+          const c = p.club.toLowerCase();
+          return (
+            c.includes('madrid') ||
+            c.includes('barcelona') ||
+            c.includes('munich') ||
+            c.includes('paris') ||
+            c.includes('milan') ||
+            c.includes('turin') ||
+            c.includes('dortmund') ||
+            c.includes('lisbon') ||
+            c.includes('porto') ||
+            c.includes('amsterdam') ||
+            c.includes('leverkusen') ||
+            c.includes('bergamo') ||
+            c.includes('rome') ||
+            c.includes('naples')
+          );
+        });
+      }
+    }
+
+    // Club filter
+    if (pickerClub !== 'ALL') {
+      const c = pickerClub.toLowerCase();
+      list = list.filter((p) => p.club.toLowerCase() === c || p.club.toLowerCase().includes(c));
+    }
+
+    // Nationality filter
+    if (pickerNationality !== 'ALL') {
+      const nat = pickerNationality.toLowerCase();
+      list = list.filter((p) => p.nationality.toLowerCase() === nat || p.nationality.toLowerCase().includes(nat));
+    }
+
+    // Sort by default: value descending
+    if (pickerSort === 'value_desc') {
+      list.sort((a, b) => b.value - a.value);
+    } else if (pickerSort === 'rating_desc') {
+      list.sort((a, b) => b.rating - a.rating);
+    } else if (pickerSort === 'age_asc') {
+      list.sort((a, b) => a.age - b.age);
+    } else if (pickerSort === 'name_asc') {
+      list.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    return list;
   };
 
   const handleSelectFromPicker = (player: CareerPlayer | MarketPlayer) => {
@@ -574,19 +681,23 @@ export function PlayerComparisonModal({
 
       {/* PLAYER PICKER DRAWER / POPUP (For switching player A or B) */}
       {switchingSlot && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-3 bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-slate-900 border border-slate-750 w-full max-w-md rounded-2xl shadow-2xl flex flex-col max-h-[80vh] overflow-hidden">
-            <div className="p-3.5 border-b border-slate-800 flex items-center justify-between">
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-2 sm:p-3 bg-slate-950/85 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-slate-900 border border-slate-750 w-full max-w-xl rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden">
+            {/* Header */}
+            <div className="p-3 sm:p-3.5 border-b border-slate-800 flex items-center justify-between bg-slate-950/70">
               <div>
-                <h3 className="font-display font-black text-xs uppercase text-white tracking-wider">
-                  Select Player for Slot {switchingSlot}
+                <h3 className="font-display font-black text-xs uppercase text-white tracking-wider flex items-center gap-2">
+                  <span>Select Player for Slot {switchingSlot}</span>
+                  <span className="text-[10px] text-emerald-400 font-mono">
+                    ({getPickerList().length} Available)
+                  </span>
                 </h3>
                 <span className="text-[10px] text-slate-400">Choose from Squad, Market, or Shortlist</span>
               </div>
               <button
                 type="button"
                 onClick={() => setSwitchingSlot(null)}
-                className="w-7 h-7 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold text-sm"
+                className="w-7 h-7 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer"
               >
                 ×
               </button>
@@ -597,8 +708,8 @@ export function PlayerComparisonModal({
               <button
                 type="button"
                 onClick={() => setPickerTab('squad')}
-                className={`flex-1 py-1 px-2 rounded-lg font-bold text-[10px] uppercase ${
-                  pickerTab === 'squad' ? 'bg-emerald-500 text-slate-950' : 'text-slate-400 hover:text-white'
+                className={`flex-1 py-1.5 px-2 rounded-lg font-bold text-[10px] uppercase transition-all cursor-pointer ${
+                  pickerTab === 'squad' ? 'bg-emerald-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 Squad ({squad.length})
@@ -606,8 +717,8 @@ export function PlayerComparisonModal({
               <button
                 type="button"
                 onClick={() => setPickerTab('market')}
-                className={`flex-1 py-1 px-2 rounded-lg font-bold text-[10px] uppercase ${
-                  pickerTab === 'market' ? 'bg-emerald-500 text-slate-950' : 'text-slate-400 hover:text-white'
+                className={`flex-1 py-1.5 px-2 rounded-lg font-bold text-[10px] uppercase transition-all cursor-pointer ${
+                  pickerTab === 'market' ? 'bg-emerald-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 Market ({marketPlayers.length})
@@ -615,65 +726,158 @@ export function PlayerComparisonModal({
               <button
                 type="button"
                 onClick={() => setPickerTab('shortlist')}
-                className={`flex-1 py-1 px-2 rounded-lg font-bold text-[10px] uppercase ${
-                  pickerTab === 'shortlist' ? 'bg-emerald-500 text-slate-950' : 'text-slate-400 hover:text-white'
+                className={`flex-1 py-1.5 px-2 rounded-lg font-bold text-[10px] uppercase transition-all cursor-pointer ${
+                  pickerTab === 'shortlist' ? 'bg-emerald-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 Shortlist ({shortlistedPlayers.length})
               </button>
             </div>
 
-            <div className="px-3 py-1.5 border-b border-slate-800 flex items-center justify-between text-[10px]">
-              <span className="text-slate-400">Position filter:</span>
-              <div className="flex gap-1">
-                <button
-                  type="button"
-                  onClick={() => setPickerPosFilter('same')}
-                  className={`px-2 py-0.5 rounded text-[9px] font-bold ${
-                    pickerPosFilter === 'same' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'text-slate-400'
-                  }`}
+            {/* Search Input Bar */}
+            <div className="p-2 border-b border-slate-850 bg-slate-950/40">
+              <input
+                type="text"
+                placeholder="Search by player name, club, nationality, or position..."
+                value={pickerSearch}
+                onChange={(e) => setPickerSearch(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-sans"
+              />
+            </div>
+
+            {/* Filter & Sort Controls Grid */}
+            <div className="p-2 border-b border-slate-850 bg-slate-950/20 grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[10.5px]">
+              {/* Position Filter */}
+              <div>
+                <span className="text-[8.5px] uppercase font-bold text-slate-500 block">Position</span>
+                <select
+                  value={pickerPosFilter}
+                  onChange={(e) => setPickerPosFilter(e.target.value as any)}
+                  className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-1.5 py-1 text-[10.5px] font-bold"
                 >
-                  {targetPosition} Only
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPickerPosFilter('all')}
-                  className={`px-2 py-0.5 rounded text-[9px] font-bold ${
-                    pickerPosFilter === 'all' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'text-slate-400'
-                  }`}
+                  <option value="all">All Positions</option>
+                  <option value="same">{targetPosition} Only</option>
+                  <option value="GK">GK</option>
+                  <option value="CB">CB</option>
+                  <option value="LB">LB</option>
+                  <option value="RB">RB</option>
+                  <option value="CDM">CDM</option>
+                  <option value="CM">CM</option>
+                  <option value="CAM">CAM</option>
+                  <option value="LW">LW</option>
+                  <option value="RW">RW</option>
+                  <option value="ST">ST</option>
+                </select>
+              </div>
+
+              {/* League Filter */}
+              <div>
+                <span className="text-[8.5px] uppercase font-bold text-slate-500 block">League / Pool</span>
+                <select
+                  value={pickerLeague}
+                  onChange={(e) => setPickerLeague(e.target.value as any)}
+                  className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-1.5 py-1 text-[10.5px] font-bold"
                 >
-                  All Positions
-                </button>
+                  <option value="ALL">All Leagues</option>
+                  <option value="pl">Premier League</option>
+                  <option value="continental">Europe Continental</option>
+                  <option value="legends">Legends / Icons</option>
+                </select>
+              </div>
+
+              {/* Club Filter */}
+              <div>
+                <span className="text-[8.5px] uppercase font-bold text-slate-500 block">Club</span>
+                <select
+                  value={pickerClub}
+                  onChange={(e) => setPickerClub(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-1.5 py-1 text-[10.5px] font-bold truncate"
+                >
+                  <option value="ALL">All Clubs</option>
+                  {availableClubs.map((club) => (
+                    <option key={club} value={club}>
+                      {club}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Sort By Filter */}
+              <div>
+                <span className="text-[8.5px] uppercase font-bold text-slate-500 block">Sort Order</span>
+                <select
+                  value={pickerSort}
+                  onChange={(e) => setPickerSort(e.target.value as any)}
+                  className="w-full bg-slate-950 border border-slate-800 text-emerald-400 rounded-lg px-1.5 py-1 text-[10.5px] font-bold"
+                >
+                  <option value="value_desc">Valuation (High-Low)</option>
+                  <option value="rating_desc">Rating (High-Low)</option>
+                  <option value="age_asc">Age (Youngest)</option>
+                  <option value="name_asc">Name (A-Z)</option>
+                </select>
               </div>
             </div>
 
             {/* List */}
-            <div className="flex-1 overflow-y-auto p-2 space-y-1 divide-y divide-slate-850/60 max-h-[380px]">
+            <div className="flex-1 overflow-y-auto p-2 space-y-1 divide-y divide-slate-850/60 max-h-[380px] scrollbar-thin">
               {getPickerList().length === 0 ? (
-                <div className="text-center py-6 text-xs text-slate-500">
-                  No matching players found.
+                <div className="text-center py-8 text-xs text-slate-500 space-y-1">
+                  <p>No matching players found with selected filters.</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPickerSearch('');
+                      setPickerLeague('ALL');
+                      setPickerClub('ALL');
+                      setPickerNationality('ALL');
+                      setPickerPosFilter('all');
+                    }}
+                    className="text-[10.5px] text-emerald-400 underline font-bold"
+                  >
+                    Reset Picker Filters
+                  </button>
                 </div>
               ) : (
-                getPickerList().map((p) => (
-                  <div
-                    key={p.id}
-                    onClick={() => handleSelectFromPicker(p)}
-                    className="p-2 rounded-xl hover:bg-slate-800/60 flex items-center justify-between gap-2 cursor-pointer transition-colors"
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="w-7 h-7 rounded-lg bg-slate-950 border border-slate-800 text-emerald-400 text-xs font-display font-black flex items-center justify-center shrink-0">
-                        {p.rating}
-                      </span>
-                      <div className="min-w-0">
-                        <div className="font-display font-bold text-xs text-white truncate">{p.name}</div>
-                        <div className="text-[10px] text-slate-400 truncate">{p.position} • {p.age}y • {p.club}</div>
+                getPickerList().map((p) => {
+                  const fit = calculatePositionFit(p as CareerPlayer, targetPosition);
+                  return (
+                    <div
+                      key={p.id}
+                      onClick={() => handleSelectFromPicker(p)}
+                      className="p-2 rounded-xl hover:bg-slate-800/60 flex items-center justify-between gap-2 cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="w-8 h-8 rounded-lg bg-slate-950 border border-slate-800 text-emerald-400 text-xs font-display font-black flex items-center justify-center shrink-0">
+                          {p.rating}
+                        </span>
+                        <div className="min-w-0">
+                          <div className="font-display font-bold text-xs text-white truncate flex items-center gap-1.5">
+                            <span>{p.name}</span>
+                            {fit === 'natural' && (
+                              <span className="text-[8px] font-black uppercase px-1 rounded bg-emerald-950 text-emerald-300 border border-emerald-800">
+                                Fit
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[10px] text-slate-400 truncate">
+                            <span className="text-emerald-400 font-bold">{p.position}</span>
+                            <span> • {p.age}y</span>
+                            <span> • {p.nationality}</span>
+                            <span> • {p.club}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-[10px] font-mono text-emerald-400 font-bold block">
+                          {formatCurrency(p.value, settings?.currency)}
+                        </span>
+                        <span className="text-[9px] font-mono text-slate-400 block">
+                          {formatWage((p as CareerPlayer).wageWeekly || (p as MarketPlayer).wageDemand || 0, settings?.wageUnit, settings?.currency)}
+                        </span>
                       </div>
                     </div>
-                    <span className="text-[10px] font-mono text-emerald-400 font-bold shrink-0">
-                      {formatCurrency(p.value, settings?.currency)}
-                    </span>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

@@ -3,6 +3,7 @@ import {
   ManagerMessage,
   MessageClassification,
   CareerPlayer,
+  ActionType,
 } from './types';
 import { getEffectiveClubName } from './clubs';
 import { formatCareerCurrency } from './formatters';
@@ -16,16 +17,7 @@ export interface ManagerialAlert {
   classification: MessageClassification;
   actionLabel: string;
   actionTab: 'overview' | 'squad' | 'transfers' | 'cups' | 'fixtures' | 'table' | 'settings';
-  actionType:
-    | 'review_offer'
-    | 'open_squad'
-    | 'review_injury'
-    | 'view_cup_draw'
-    | 'respond_board'
-    | 'review_contract'
-    | 'deadline_clock'
-    | 'open_transfers'
-    | 'open_cups';
+  actionType: ActionType;
   targetId?: string;
   isResolved: boolean;
   date: string;
@@ -246,7 +238,24 @@ export function getManagerialAlerts(save: CareerSaveFile): ManagerialAlert[] {
     });
   }
 
-  // 3. Transfer Deadline Day Clock Active (Action Required)
+  // 3. Squad Registration Alert (Action Required when seniors > 25)
+  const seniorPlayers = squad.filter((p) => p.age > 21);
+  if (seniorPlayers.length > 25) {
+    alerts.push({
+      id: 'alert_squad_registration',
+      title: `Squad Registration: ${seniorPlayers.length} Senior Players`,
+      description: `Senior squad exceeds 25-man Premier League limit by ${seniorPlayers.length - 25}. Register your 25 senior players for league fixtures.`,
+      classification: 'action_required',
+      actionLabel: 'Register Squad',
+      actionTab: 'squad',
+      actionType: 'squad_registration',
+      isResolved: false,
+      date: currentDate,
+      badgeText: `${seniorPlayers.length}/25 Seniors`,
+    });
+  }
+
+  // 4. Transfer Deadline Day Clock Active (Action Required)
   const isDeadline =
     save.deadlineDayState?.isActive ||
     isTransferDeadlineDay(currentDate, yearStart);

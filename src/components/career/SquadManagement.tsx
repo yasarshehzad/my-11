@@ -11,7 +11,12 @@ import {
   SUPPORTED_CAREER_FORMATIONS,
   GeneralPositionGroup,
   isHomegrownPlayer,
+  getRegisteredSeniorPlayerIds,
+  isPlayerRegisteredForMatch,
+  MAX_SENIOR_SQUAD_SIZE,
+  U21_AGE_LIMIT,
 } from '../../career/squad';
+import { SquadRegistrationModal } from './SquadRegistrationModal';
 
 import { formatCurrency, formatWage } from '../../career/finance';
 import {
@@ -44,6 +49,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare }: SquadMana
   const [selectedPlayer, setSelectedPlayer] = useState<CareerPlayer | null>(null);
   const [swapSourceId, setSwapSourceId] = useState<string | null>(null);
   const [academyToast, setAcademyToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [showRegistrationModal, setShowRegistrationModal] = useState<boolean>(false);
 
   // Outgoing transfer & player actions state
   const [askingPriceInput, setAskingPriceInput] = useState<number>(0);
@@ -327,6 +333,44 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare }: SquadMana
             </span>
           </div>
         </div>
+
+        {/* 25-Man League Registration Quick Status */}
+        {(() => {
+          const seniorCount = squad.filter((p) => p.age > U21_AGE_LIMIT).length;
+          const registeredIds = getRegisteredSeniorPlayerIds(squad, save.registeredPlayerIds);
+          const isOver = seniorCount > MAX_SENIOR_SQUAD_SIZE;
+          return (
+            <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[10px] font-display font-black uppercase text-slate-300">
+                  📋 25-Man League Registration:
+                </span>
+                <span
+                  className={`text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+                    isOver
+                      ? 'bg-amber-950/70 border-amber-600/70 text-amber-300'
+                      : 'bg-emerald-950/70 border-emerald-600/70 text-emerald-300'
+                  }`}
+                >
+                  {registeredIds.length} / {MAX_SENIOR_SQUAD_SIZE} Registered
+                </span>
+                {isOver && (
+                  <span className="text-[9px] text-amber-400 font-bold">
+                    ⚠️ {seniorCount - registeredIds.length} Senior{seniorCount - registeredIds.length > 1 ? 's' : ''} Unregistered
+                  </span>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowRegistrationModal(true)}
+                className="py-1 px-2.5 rounded-lg bg-emerald-950/60 hover:bg-emerald-900 border border-emerald-500/50 text-emerald-300 text-[10.5px] font-display font-black uppercase tracking-wider transition-colors cursor-pointer"
+              >
+                📋 Manage Registration
+              </button>
+            </div>
+          );
+        })()}
 
         {validation.errors.length > 0 && (
           <div className="mt-2 pt-2 border-t border-rose-950/60 flex items-center justify-between text-[11px] text-rose-300">
@@ -704,17 +748,24 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare }: SquadMana
                         </td>
 
                         <td className="py-3 px-3">
-                          <span
-                            className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${
-                              isStarter
-                                ? 'bg-emerald-950/60 border-emerald-800/60 text-emerald-300'
-                                : isBench
-                                ? 'bg-blue-950/60 border-blue-800/60 text-blue-300'
-                                : 'bg-slate-950 border-slate-800 text-slate-500'
-                            }`}
-                          >
-                            {roleLabel}
-                          </span>
+                          <div className="flex items-center gap-1 flex-wrap">
+                            <span
+                              className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${
+                                isStarter
+                                  ? 'bg-emerald-950/60 border-emerald-800/60 text-emerald-300'
+                                  : isBench
+                                  ? 'bg-blue-950/60 border-blue-800/60 text-blue-300'
+                                  : 'bg-slate-950 border-slate-800 text-slate-500'
+                              }`}
+                            >
+                              {roleLabel}
+                            </span>
+                            {!isPlayerRegisteredForMatch(player, squad, save.registeredPlayerIds) && (
+                              <span className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded bg-amber-950 text-amber-300 border border-amber-800">
+                                Unregistered
+                              </span>
+                            )}
+                          </div>
                         </td>
 
                         <td className="py-3 px-3 text-center font-bold text-slate-300">
@@ -1376,6 +1427,23 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare }: SquadMana
             </div>
           </div>
         </div>
+      )}
+
+      {/* 25-Man League Squad Registration Modal */}
+      {showRegistrationModal && (
+        <SquadRegistrationModal
+          isOpen={showRegistrationModal}
+          onClose={() => setShowRegistrationModal(false)}
+          squad={squad}
+          registeredPlayerIds={save.registeredPlayerIds}
+          settings={save.settings}
+          onSaveRegistration={(newIds) => {
+            onUpdateSave({
+              ...save,
+              registeredPlayerIds: newIds,
+            });
+          }}
+        />
       )}
 
     </div>

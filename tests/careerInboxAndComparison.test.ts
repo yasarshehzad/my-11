@@ -15,6 +15,13 @@ import {
   normalizePlayerForComparison,
 } from '../src/career/playerComparison';
 import { CareerPlayer, MarketPlayer, ManagerMessage, CareerSaveFile } from '../src/career/types';
+import {
+  getSeniorPlayerCount,
+  getRegisteredSeniorPlayerIds,
+  isPlayerRegisteredForMatch,
+  validateSquad,
+} from '../src/career/squad';
+import { getScoutingMarketPool, executePlayerSigning } from '../src/career/transfers';
 
 describe('Managerial Inbox Classification & Alert Prioritisation', () => {
   const baseSave = createNewCareerSave({
@@ -502,3 +509,151 @@ describe('Player Comparison Engine', () => {
     }
   });
 });
+
+describe('25-Man Squad Registration & Scouting Market Filters', () => {
+  const save = createNewCareerSave({
+    slotId: 'slot_1',
+    manager: { name: 'Manager Y', nationality: 'Spain', preferredFormation: '4-3-3' },
+    club: getClubById('man_blue')!,
+    settings: getPresetSettings('balanced'),
+  });
+
+  it('allows signing players even if senior squad exceeds 25 without blocking', () => {
+    // Generate a squad with 25 senior players (>21)
+    const seniorPlayers: CareerPlayer[] = Array.from({ length: 25 }, (_, idx) => ({
+      id: `senior_p_${idx}`,
+      name: `Senior Player ${idx}`,
+      position: 'CM',
+      rating: 80,
+      potential: 80,
+      age: 26,
+      value: 10_000_000,
+      wage: 50_000,
+      contractYears: 2,
+      injured: false,
+      fitness: 100,
+      morale: 80,
+      form: 7.0,
+      appearances: 0,
+      goals: 0,
+      assists: 0,
+      cleanSheets: 0,
+      yellowCards: 0,
+      redCards: 0,
+    }));
+
+    const saveWith25Seniors: CareerSaveFile = {
+      ...save,
+      squad: seniorPlayers,
+      finances: {
+        ...save.finances,
+        transferBudget: 100_000_000,
+        weeklyWageBudget: 3_000_000,
+        currentWeeklyWages: 1_250_000,
+      },
+    };
+
+    expect(getSeniorPlayerCount(saveWith25Seniors.squad)).toBe(25);
+
+    // Target a 26th senior player
+    const targetPlayer: MarketPlayer = {
+      id: 'target_rodri',
+      cardId: 'rodri',
+      name: 'Rodri',
+      rating: 89,
+      position: 'CDM',
+      age: 27,
+      value: 30_000_000,
+      wageDemand: 120_000,
+      club: 'Manchester City',
+      nationality: 'Spain',
+      isHomegrown: false,
+      rarity: 'gold',
+    };
+
+    const res = executePlayerSigning(saveWith25Seniors, targetPlayer, 30_000_000, 120_000, 3);
+    // Player signing should succeed!
+    expect(res.success).toBe(true);
+    expect(res.updatedSave.squad.length).toBe(26);
+    expect(getSeniorPlayerCount(res.updatedSave.squad)).toBe(26);
+
+    // Alert for squad registration should now trigger
+    const alerts = getManagerialAlerts(res.updatedSave);
+    const regAlert = alerts.find((a) => a.id === 'alert_squad_registration');
+    expect(regAlert).toBeDefined();
+    expect(regAlert?.classification).toBe('action_required');
+    expect(regAlert?.actionLabel).toBe('Register Squad');
+    expect(regAlert?.actionType).toBe('squad_registration');
+  });
+
+  it('treats U21 players as automatically exempt from 25-man senior registration', () => {
+    const u21Player: CareerPlayer = {
+      id: 'wonderkid_1',
+      name: 'Youth Star',
+      position: 'CAM',
+      rating: 77,
+      potential: 88,
+      age: 19, // U21
+      value: 12_000_000,
+      wage: 20_000,
+      contractYears: 4,
+      injured: false,
+      fitness: 100,
+      morale: 85,
+      form: 7.2,
+      appearances: 5,
+      goals: 2,
+      assists: 1,
+      cleanSheets: 0,
+      yellowCards: 0,
+      redCards: 0,
+    };
+
+    const registeredSeniorIds = ['senior_1', 'senior_2'];
+    // U21 player is ALWAYS registered for matches regardless of registeredSeniorIds list
+    expect(isPlayerRegisteredForMatch(u21Player, [u21Player], registeredSeniorIds)).toBe(true);
+  });
+
+  it('filters market pool by league, club, nationality, and sort by valuation', () => {
+    const market = getScoutingMarketPool(
+      save.squad,
+      {
+        playerPoolType: 'all',
+        sortBy: 'value_desc',
+      },
+      '2026/27',
+      2026
+    );
+
+    expect(market.length).toBeGreaterThan(0);
+    // Ensure sorted descending by value
+    for (let i = 0; i < Math.min(10, market.length - 1); i++) {
+      expect(market[i].value).toBeGreaterThanOrEqual(market[i + 1].value);
+    }
+
+    // Filter by nationality: Spain
+    const spanishMarket = getScoutingMarketPool(
+      save.squad,
+      {
+        playerPoolType: 'all',
+        nationality: 'Spain',
+      },
+      '2026/27',
+      2026
+    );
+    expect(spanishMarket.every((p) => p.nationality === 'Spain')).toBe(true);
+
+    // Filter by specific position: GK
+    const gkMarket = getScoutingMarketPool(
+      save.squad,
+      {
+        playerPoolType: 'all',
+        specificPosition: 'GK',
+      },
+      '2026/27',
+      2026
+    );
+    expect(gkMarket.every((p) => p.position === 'GK')).toBe(true);
+  });
+});
+

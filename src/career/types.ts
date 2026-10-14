@@ -442,6 +442,9 @@ export interface ScoutingFilters {
   affordableOnly?: boolean;
   playerPoolType?: 'modern' | 'legends' | 'all';
   nationality?: string;
+  club?: string;
+  league?: 'ALL' | 'pl' | 'continental' | 'legends';
+  sortBy?: 'value_desc' | 'value_asc' | 'rating_desc' | 'rating_asc' | 'age_asc' | 'name_asc';
   homegrownOnly?: boolean;
   searchTerm?: string;
 }
@@ -471,7 +474,8 @@ export type ActionType =
   | 'review_contract'
   | 'deadline_clock'
   | 'open_transfers'
-  | 'open_cups';
+  | 'open_cups'
+  | 'squad_registration';
 
 export interface ManagerMessage {
   id: string;
@@ -502,6 +506,7 @@ export interface CareerSaveFile {
   season: SeasonSummary;
   finances: CareerFinances;
   squad: CareerPlayer[];
+  registeredPlayerIds?: string[]; // IDs of senior players registered for the 25-man league squad
   lineup?: CareerLineup;
   fixtures?: LeagueFixture[];
   standings?: ClubStanding[];

@@ -475,9 +475,74 @@ export function getScoutingMarketPool(
       pool = pool.filter((p) => p.value <= effectiveFilters.maxPrice!);
     }
 
-    if (effectiveFilters.nationality) {
+    if (effectiveFilters.club && effectiveFilters.club !== 'ALL') {
+      const c = effectiveFilters.club.toLowerCase();
+      pool = pool.filter((p) => p.club.toLowerCase() === c || p.club.toLowerCase().includes(c));
+    }
+
+    if (effectiveFilters.league && effectiveFilters.league !== 'ALL') {
+      const l = effectiveFilters.league.toLowerCase();
+      const plClubs = new Set(getAllClubs().map((c) => c.defaultName.toLowerCase()));
+      const plClubIds = new Set(getAllClubs().map((c) => c.id.toLowerCase()));
+      const plShortNames = new Set(getAllClubs().map((c) => c.shortName.toLowerCase()));
+      const euroClubs = new Set(CONTINENTAL_EUROPEAN_CLUBS.map((c) => c.defaultName.toLowerCase()));
+      const euroClubIds = new Set(CONTINENTAL_EUROPEAN_CLUBS.map((c) => c.id.toLowerCase()));
+      const euroShortNames = new Set(CONTINENTAL_EUROPEAN_CLUBS.map((c) => c.shortName.toLowerCase()));
+
+      if (l === 'pl') {
+        pool = pool.filter((p) => {
+          const clubLower = p.club.toLowerCase();
+          return (
+            plClubs.has(clubLower) ||
+            plClubIds.has(clubLower) ||
+            plShortNames.has(clubLower) ||
+            clubLower.includes('london') ||
+            clubLower.includes('manchester') ||
+            clubLower.includes('merseyside') ||
+            clubLower.includes('birmingham') ||
+            clubLower.includes('newcastle') ||
+            clubLower.includes('brighton') ||
+            clubLower.includes('wolves') ||
+            clubLower.includes('bournemouth') ||
+            clubLower.includes('nottingham') ||
+            clubLower.includes('leicester') ||
+            clubLower.includes('southampton') ||
+            clubLower.includes('ipswich') ||
+            clubLower.includes('everton')
+          );
+        });
+      } else if (l === 'continental') {
+        pool = pool.filter((p) => {
+          const clubLower = p.club.toLowerCase();
+          return (
+            euroClubs.has(clubLower) ||
+            euroClubIds.has(clubLower) ||
+            euroShortNames.has(clubLower) ||
+            clubLower.includes('madrid') ||
+            clubLower.includes('barcelona') ||
+            clubLower.includes('munich') ||
+            clubLower.includes('paris') ||
+            clubLower.includes('milan') ||
+            clubLower.includes('turin') ||
+            clubLower.includes('dortmund') ||
+            clubLower.includes('lisbon') ||
+            clubLower.includes('porto') ||
+            clubLower.includes('amsterdam') ||
+            clubLower.includes('leverkusen') ||
+            clubLower.includes('bergamo') ||
+            clubLower.includes('rome') ||
+            clubLower.includes('naples')
+          );
+        });
+      } else if (l === 'legends') {
+        pool = pool.filter((p) => p.isLegend);
+      }
+    }
+
+    if (effectiveFilters.nationality && effectiveFilters.nationality !== 'ALL') {
+      const nat = effectiveFilters.nationality.toLowerCase();
       pool = pool.filter((p) =>
-        p.nationality.toLowerCase().includes(effectiveFilters.nationality!.toLowerCase())
+        p.nationality.toLowerCase() === nat || p.nationality.toLowerCase().includes(nat)
       );
     }
 
@@ -496,8 +561,21 @@ export function getScoutingMarketPool(
     }
   }
 
-  // Sort by rating descending by default
-  pool.sort((a, b) => b.rating - a.rating);
+  // Sorting
+  if (effectiveFilters?.sortBy === 'value_desc') {
+    pool.sort((a, b) => b.value - a.value);
+  } else if (effectiveFilters?.sortBy === 'value_asc') {
+    pool.sort((a, b) => a.value - b.value);
+  } else if (effectiveFilters?.sortBy === 'rating_asc') {
+    pool.sort((a, b) => a.rating - b.rating);
+  } else if (effectiveFilters?.sortBy === 'age_asc') {
+    pool.sort((a, b) => a.age - b.age);
+  } else if (effectiveFilters?.sortBy === 'name_asc') {
+    pool.sort((a, b) => a.name.localeCompare(b.name));
+  } else {
+    // Default: rating descending
+    pool.sort((a, b) => b.rating - a.rating);
+  }
 
   return pool;
 }
@@ -686,17 +764,7 @@ export function executePlayerSigning(
     };
   }
 
-  // Validate senior squad limit (Premier League 25 senior players aged 22+; U21 players are exempt)
   const isTargetSenior = targetPlayer.age > U21_AGE_LIMIT;
-  const currentSeniorCount = getSeniorPlayerCount(save.squad);
-  if (isTargetSenior && currentSeniorCount >= MAX_SENIOR_SQUAD_SIZE) {
-    return {
-      success: false,
-      updatedSave: save,
-      error: `Senior squad limit reached! Premier League rules allow a maximum of ${MAX_SENIOR_SQUAD_SIZE} senior players (aged 22+). Under-21 players are exempt. You must sell or release a senior player first.`,
-    };
-  }
-
   const signingBonus = detailedTerms?.signingBonus || 0;
   const totalUpfrontCost = fee + signingBonus;
 
@@ -716,18 +784,6 @@ export function executePlayerSigning(
       updatedSave: save,
       error: `Wage budget exceeded! Adding £${(wage / 1_000).toFixed(0)}k/w would surpass your weekly limit of £${(save.finances.weeklyWageBudget / 1_000).toFixed(0)}k.`,
     };
-  }
-
-  // Validate Homegrown Rule if enabled (senior non-homegrown cannot exceed 17)
-  if (save.settings.homegrownRule && !targetPlayer.isHomegrown && isTargetSenior) {
-    const seniorNonHomegrownCount = save.squad.filter((p) => p.age > U21_AGE_LIMIT && !p.isHomegrown).length + 1;
-    if (seniorNonHomegrownCount > 17) {
-      return {
-        success: false,
-        updatedSave: save,
-        error: `Homegrown rule violation! A 25-man senior squad can contain at most 17 foreign senior players. You cannot register another foreign senior player.`,
-      };
-    }
   }
 
   const selectedVariant = targetPlayer.versions?.find((v) => v.id === targetPlayer.selectedVersionId);
@@ -765,6 +821,13 @@ export function executePlayerSigning(
 
   const updatedSquad = [...save.squad, newPlayer];
 
+  let updatedRegisteredPlayerIds = save.registeredPlayerIds;
+  if (updatedRegisteredPlayerIds) {
+    if (isTargetSenior && updatedRegisteredPlayerIds.length < MAX_SENIOR_SQUAD_SIZE) {
+      updatedRegisteredPlayerIds = [...updatedRegisteredPlayerIds, newPlayer.id];
+    }
+  }
+
   const transferRecord: TransferRecord = {
     id: `tx_${Date.now()}`,
     playerId: newPlayer.id,
@@ -784,6 +847,7 @@ export function executePlayerSigning(
   const updatedSave: CareerSaveFile = {
     ...save,
     squad: updatedSquad,
+    registeredPlayerIds: updatedRegisteredPlayerIds,
     finances: {
       ...save.finances,
       transferBudget: save.finances.transferBudget - totalUpfrontCost,

@@ -38,6 +38,7 @@ import { TransferHub } from '../../../components/career/TransferHub';
 import { MatchDayModal } from '../../../components/career/MatchDayModal';
 import { MatchOverviewModal } from '../../../components/career/MatchOverviewModal';
 import { PlayerComparisonModal } from '../../../components/career/PlayerComparisonModal';
+import { SquadRegistrationModal } from '../../../components/career/SquadRegistrationModal';
 import { isSeasonComplete, advanceToNextSeason, getSeasonReviewSummary, SeasonReviewSummary } from '../../../career/seasons';
 import { getNextClubFixture, getNextScheduledMatch, getPreviousPlayedMatch, isDateInInternationalBreak, ScheduledMatch } from '../../../career/calendar';
 import { simulateMatchFixture, advanceTimeSkip, TimeSkipTarget } from '../../../career/sim';
@@ -66,6 +67,7 @@ import {
   isTransferDeadlineDay,
   initializeDeadlineDay,
   advanceDeadlineDayPhase,
+  getScoutingMarketPool,
 } from '../../../career/transfers';
 import { updatePlayerForm, applyInSeasonMatchProgression } from '../../../career/formAndProgression';
 
@@ -107,6 +109,22 @@ function CareerPlayHubContent() {
     playerB?: CareerPlayer | MarketPlayer;
   }>({ isOpen: false });
 
+  // Squad 25-man registration modal state
+  const [showRegistrationModal, setShowRegistrationModal] = useState<boolean>(false);
+
+  // Full market and shortlisted pools for comparison modal
+  const fullMarketPool = useMemo(() => {
+    if (!save) return [];
+    const dbSeason = save.settings?.databaseSeason || save.season?.databaseSeason || '2026/27';
+    return getScoutingMarketPool(save.squad, { playerPoolType: 'all', sortBy: 'value_desc' }, dbSeason, save.season?.yearStart || 2026);
+  }, [save?.squad, save?.settings?.databaseSeason, save?.season?.databaseSeason, save?.season?.yearStart]);
+
+  const shortlistedPool = useMemo(() => {
+    if (!save?.shortlistPlayerIds || save.shortlistPlayerIds.length === 0) return [];
+    const set = new Set(save.shortlistPlayerIds);
+    return fullMarketPool.filter((p) => set.has(p.id));
+  }, [save?.shortlistPlayerIds, fullMarketPool]);
+
   // Managerial alerts & Inbox derived states
   const allInbox = useMemo(() => {
     if (!save) return [];
@@ -127,7 +145,9 @@ function CareerPlayHubContent() {
     actionType?: ActionType;
     targetId?: string;
   }) => {
-    if (alert.actionType === 'review_offer') {
+    if (alert.actionType === 'squad_registration') {
+      setShowRegistrationModal(true);
+    } else if (alert.actionType === 'review_offer') {
       setTransferHubSubTab('incoming');
       setFocusedOfferId(alert.targetId || (save?.incomingOffers && save.incomingOffers.length > 0 ? save.incomingOffers[0].id : undefined));
       setActiveTab('transfers');
@@ -900,33 +920,39 @@ function CareerPlayHubContent() {
         {activeTab === 'overview' && (
           <div className="space-y-4">
             {/* MANAGER'S COCKPIT TOP META HEADER */}
-            <section aria-label="Manager Overview" className="flex flex-wrap items-center justify-between gap-2.5 pb-1">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xl sm:text-2xl font-display font-black text-white uppercase tracking-tight">
+            <section aria-label="Manager Overview" className="flex items-center justify-between gap-2 pb-0.5">
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <h2 className="text-lg sm:text-xl font-display font-black text-white uppercase tracking-tight truncate">
                     {effectiveClubName}
                   </h2>
-                  <span className="text-xs font-mono font-bold text-slate-400">
-                    Season {save.season.seasonNumber} • {save.club.tier?.toUpperCase() || 'PL'}
+                  <span className="text-[10px] font-mono font-bold text-slate-400">
+                    S{save.season.seasonNumber} • {save.club.tier?.toUpperCase() || 'PL'}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-xs font-mono text-emerald-400 font-semibold mt-0.5">
-                  <span>📅 {formatCareerDate(save.season.currentDate, save.settings.dateFormat, 'long')}</span>
+                <div className="flex items-center gap-1.5 text-[10.5px] font-mono text-emerald-400 font-semibold mt-0.2">
+                  <span>📅 {formatCareerDate(save.season.currentDate, save.settings.dateFormat, 'short')}</span>
                   {save.season.transferWindowOpen ? (
-                    <span className="text-[9px] uppercase font-bold text-amber-300 bg-amber-950/60 border border-amber-500/40 px-2 py-0.5 rounded-full animate-pulse">
+                    <span className="text-[8px] uppercase font-bold text-amber-300 bg-amber-950/60 border border-amber-500/40 px-1.5 py-0.2 rounded-full animate-pulse">
                       Window Open
                     </span>
                   ) : (
-                    <span className="text-[9px] uppercase font-bold text-slate-500 bg-slate-900 border border-slate-800 px-2 py-0.5 rounded-full">
-                      Window Closed
+                    <span className="text-[8px] uppercase font-bold text-slate-500 bg-slate-900 border border-slate-800 px-1.5 py-0.2 rounded-full">
+                      Closed
                     </span>
                   )}
                 </div>
               </div>
 
-              {/* Board Mood Pill */}
-              <div
-                className={`px-3 py-1.5 rounded-xl border text-xs font-display font-black uppercase flex items-center gap-1.5 shadow-sm ${
+              {/* Board Mood Pill - smaller & moved up inline */}
+              <button
+                type="button"
+                onClick={() => {
+                  setTransferHubSubTab('board');
+                  setActiveTab('transfers');
+                }}
+                title="View Board Room"
+                className={`px-2 py-1 rounded-lg border text-[10px] font-display font-black uppercase flex items-center gap-1 shrink-0 shadow-sm transition-all cursor-pointer ${
                   boardConfidence >= 65
                     ? 'text-emerald-400 bg-emerald-950/60 border-emerald-800/60'
                     : boardConfidence >= 45
@@ -934,34 +960,34 @@ function CareerPlayHubContent() {
                     : 'text-rose-400 bg-rose-950/60 border-rose-800/60'
                 }`}
               >
-                <span>🏛️ Board:</span>
+                <span>🏛️</span>
                 <span>
                   {boardConfidence >= 75
                     ? 'Delighted'
                     : boardConfidence >= 60
                     ? 'Content'
                     : boardConfidence >= 45
-                    ? 'Under Scrutiny'
+                    ? 'Scrutiny'
                     : 'Precarious'}{' '}
-                  ({boardConfidence}%)
+                  {boardConfidence}%
                 </span>
-              </div>
+              </button>
             </section>
 
             {/* COMPACT MANAGERIAL ALERTS STRIP */}
             {managerialAlerts.length > 0 && (
-              <section aria-label="Managerial Alerts" className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 sm:p-4 shadow-md space-y-2.5">
+              <section aria-label="Managerial Alerts" className="bg-slate-900/80 border border-slate-800 rounded-2xl p-2.5 sm:p-3 shadow-md space-y-1.5">
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className={`w-2 h-2 rounded-full shrink-0 ${actionableAlerts.length > 0 ? 'bg-amber-400 animate-pulse' : 'bg-blue-400'}`} />
-                    <h3 className="font-display font-black text-xs uppercase tracking-wider text-white truncate flex items-center gap-2">
-                      <span>Managerial Alerts</span>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${actionableAlerts.length > 0 ? 'bg-amber-400 animate-pulse' : 'bg-blue-400'}`} />
+                    <h3 className="font-display font-black text-xs uppercase tracking-wider text-white truncate flex items-center gap-1.5">
+                      <span>Alerts</span>
                       {actionableAlerts.length > 0 ? (
-                        <span className="text-[10px] font-mono font-black px-2 py-0.5 rounded-full bg-amber-500 text-slate-950">
+                        <span className="text-[9px] font-mono font-black px-1.5 py-0.2 rounded-full bg-amber-500 text-slate-950">
                           {actionableAlerts.length} Action{actionableAlerts.length > 1 ? 's' : ''} Needed
                         </span>
                       ) : (
-                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">
+                        <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300">
                           {managerialAlerts.length} Note{managerialAlerts.length > 1 ? 's' : ''}
                         </span>
                       )}
@@ -975,49 +1001,49 @@ function CareerPlayHubContent() {
                         inboxEl.scrollIntoView({ behavior: 'smooth' });
                       }
                     }}
-                    className="text-[10px] font-bold text-slate-400 hover:text-emerald-400 transition-colors uppercase tracking-wider flex items-center gap-1 cursor-pointer shrink-0"
+                    className="text-[9.5px] font-bold text-slate-400 hover:text-emerald-400 transition-colors uppercase tracking-wider flex items-center gap-1 cursor-pointer shrink-0"
                   >
                     <span>Full Inbox</span>
                     <span className="font-mono">({allInbox.length}) ➔</span>
                   </button>
                 </div>
 
-                {/* Top 1-2 alerts rendered as compact rows */}
-                <div className="space-y-1.5">
+                {/* Top 1-2 alerts rendered as compact single-line rows */}
+                <div className="space-y-1">
                   {managerialAlerts.slice(0, 2).map((alert) => (
                     <div
                       key={alert.id}
-                      className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-xl text-xs transition-all ${
+                      className={`flex items-center justify-between gap-2 p-2 rounded-xl text-xs transition-all ${
                         alert.classification === 'action_required'
                           ? 'bg-amber-950/40 border border-amber-800/50'
                           : 'bg-slate-950/60 border border-slate-850'
                       }`}
                     >
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 flex-wrap">
+                        <div className="flex items-center gap-1.5">
                           <span
-                            className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${
+                            className={`text-[8px] font-black uppercase px-1 py-0.2 rounded shrink-0 ${
                               alert.classification === 'action_required'
                                 ? 'bg-amber-400 text-slate-950'
                                 : 'bg-blue-900/60 text-blue-300 border border-blue-700/60'
                             }`}
                           >
-                            {alert.classification === 'action_required' ? 'Action Required' : 'Important'}
+                            {alert.classification === 'action_required' ? 'ACTION' : 'INFO'}
                           </span>
                           <span className="font-display font-black text-white text-[11px] truncate">
                             {alert.title}
                           </span>
                         </div>
-                        <p className="text-[10.5px] text-slate-300 truncate mt-0.5">
+                        <p className="text-[10px] text-slate-300 truncate mt-0.2">
                           {alert.description}
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                      <div className="flex items-center gap-1 shrink-0">
                         <button
                           type="button"
                           onClick={() => handleExecuteAlertAction(alert)}
-                          className={`py-1.5 px-3 rounded-lg font-display font-black text-[11px] uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 shadow-sm ${
+                          className={`py-1 px-2.5 rounded-lg font-display font-black text-[10px] uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 shadow-sm whitespace-nowrap ${
                             alert.classification === 'action_required'
                               ? 'bg-amber-400 hover:bg-amber-300 text-slate-950'
                               : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
@@ -2576,6 +2602,8 @@ function CareerPlayHubContent() {
           playerA={comparisonState.playerA}
           playerB={comparisonState.playerB}
           squad={save.squad || []}
+          marketPlayers={fullMarketPool}
+          shortlistedPlayers={shortlistedPool}
           finances={save.finances}
           seniorCount={seniorCount}
           settings={save.settings}
@@ -2591,6 +2619,24 @@ function CareerPlayHubContent() {
             setComparisonState({ isOpen: false, playerA: undefined, playerB: undefined });
             setTransferHubSubTab('board');
             setActiveTab('transfers');
+          }}
+        />
+      )}
+
+      {/* 25-Man Squad Registration Modal */}
+      {showRegistrationModal && save && (
+        <SquadRegistrationModal
+          isOpen={showRegistrationModal}
+          onClose={() => setShowRegistrationModal(false)}
+          squad={save.squad}
+          registeredPlayerIds={save.registeredPlayerIds}
+          onSaveRegistration={(updatedIds) => {
+            const updated: CareerSaveFile = {
+              ...save,
+              registeredPlayerIds: updatedIds,
+            };
+            handleUpdateSave(updated);
+            showToast('Squad registration submitted successfully.');
           }}
         />
       )}

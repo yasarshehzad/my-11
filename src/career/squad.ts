@@ -74,7 +74,8 @@ export interface SquadValidationResult {
 
 export function validateSquad(
   squad: CareerPlayer[],
-  settings?: CareerSettings
+  settings?: CareerSettings,
+  registeredSeniorIds?: string[]
 ): SquadValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -126,9 +127,13 @@ export function validateSquad(
   }
 
   // Premier League 25-man senior squad cap (U21 players aged <= 21 are exempt)
-  if (seniorCount > MAX_SENIOR_SQUAD_SIZE) {
+  if (registeredSeniorIds && registeredSeniorIds.length > MAX_SENIOR_SQUAD_SIZE) {
     errors.push(
-      `Squad has ${seniorCount} senior players aged 22+ (Premier League maximum is ${MAX_SENIOR_SQUAD_SIZE}; players aged 21 and under are exempt).`
+      `Registered squad has ${registeredSeniorIds.length} senior players (Premier League maximum is ${MAX_SENIOR_SQUAD_SIZE}; players aged 21 and under are exempt).`
+    );
+  } else if (!registeredSeniorIds && seniorCount > MAX_SENIOR_SQUAD_SIZE) {
+    warnings.push(
+      `Squad has ${seniorCount} senior players aged 22+. Select your registered 25-man senior squad before league matchdays.`
     );
   }
 
@@ -809,5 +814,51 @@ export function getSquadOrderedByLineup(
   );
 
   return [...starters, ...bench, ...reserves];
+}
+
+/**
+ * Returns the IDs of senior players registered in the 25-man squad.
+ * If registeredPlayerIds is specified on the save, returns that valid list.
+ * If not specified, auto-registers the first 25 seniors (ordered by rating/status).
+ */
+export function getRegisteredSeniorPlayerIds(
+  squad: CareerPlayer[],
+  registeredPlayerIds?: string[]
+): string[] {
+  const seniors = squad.filter((p) => p.age > U21_AGE_LIMIT);
+  if (seniors.length <= MAX_SENIOR_SQUAD_SIZE) {
+    return seniors.map((p) => p.id);
+  }
+  if (registeredPlayerIds && registeredPlayerIds.length > 0) {
+    const validSeniorIds = new Set(seniors.map((p) => p.id));
+    const filtered = registeredPlayerIds.filter((id) => validSeniorIds.has(id));
+    return filtered.slice(0, MAX_SENIOR_SQUAD_SIZE);
+  }
+  // Fallback: auto-register top 25 seniors by rating
+  return [...seniors]
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, MAX_SENIOR_SQUAD_SIZE)
+    .map((p) => p.id);
+}
+
+/**
+ * Checks whether a player is eligible/registered for league matches.
+ * Under-21 players (age <= 21) are ALWAYS automatically eligible and exempt from registration.
+ * Senior players (age > 21) must have their ID in the registered senior list.
+ */
+export function isPlayerRegisteredForMatch(
+  player: CareerPlayer,
+  squad: CareerPlayer[],
+  registeredPlayerIds?: string[]
+): boolean {
+  if (player.age <= U21_AGE_LIMIT) {
+    return true; // U21 exempt
+  }
+  const seniorCount = squad.filter((p) => p.age > U21_AGE_LIMIT).length;
+  if (seniorCount <= MAX_SENIOR_SQUAD_SIZE) {
+    return true; // Within 25 seniors, all are eligible
+  }
+  const registered = getRegisteredSeniorPlayerIds(squad, registeredPlayerIds);
+  return registered.includes(player.id);
 }
 
