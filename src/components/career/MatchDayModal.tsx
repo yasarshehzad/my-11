@@ -23,6 +23,7 @@ import {
 import { calculateStandings } from '../../career/table';
 import { formatCurrency } from '../../career/finance';
 import { formatCareerDate } from '../../career/formatters';
+import { isPlayerRegisteredForMatch, getBestStartingLineup } from '../../career/squad';
 
 interface MatchDayModalProps {
   fixture: LeagueFixture | CupFixture;
@@ -86,14 +87,41 @@ export function MatchDayModal({
 
   const squad = save.squad || [];
 
-  const starterIdsSet = new Set(save.lineup?.starterIds || []);
-  const benchIdsSet = new Set(save.lineup?.benchIds || []);
+  const [currentLineup, setCurrentLineup] = useState(save.lineup);
+
+  const starterIdsSet = new Set(currentLineup?.starterIds || []);
+  const benchIdsSet = new Set(currentLineup?.benchIds || []);
 
   const starters = squad.filter((p) => starterIdsSet.has(p.id));
   const bench = squad.filter((p) => benchIdsSet.has(p.id));
 
+  // Premier League registration validation: unregistered senior players cannot participate in league matches
+  const ineligibleStarters = !isCup
+    ? starters.filter((p) => !isPlayerRegisteredForMatch(p, squad, save.registeredPlayerIds, save.season?.yearStart))
+    : [];
+  const ineligibleBench = !isCup
+    ? bench.filter((p) => !isPlayerRegisteredForMatch(p, squad, save.registeredPlayerIds, save.season?.yearStart))
+    : [];
+  const hasIneligiblePlayers = ineligibleStarters.length > 0 || ineligibleBench.length > 0;
+
+  const handleAutoPickEligible = () => {
+    const freshLineup = getBestStartingLineup(
+      squad,
+      currentLineup?.formation || '4-3-3',
+      save.registeredPlayerIds,
+      save.season?.yearStart
+    );
+    setCurrentLineup(freshLineup);
+    onSaveMatchResult({
+      ...save,
+      lineup: freshLineup,
+    });
+  };
+
   // Run full match calculation on kick-off
   const handleKickOff = () => {
+    if (hasIneligiblePlayers) return;
+
     const result = simulateFullMatch(fixture, {
       homeClub,
       awayClub,
@@ -437,12 +465,37 @@ export function MatchDayModal({
               </div>
             </div>
 
+            {/* Ineligibility Warning Banner */}
+            {hasIneligiblePlayers && (
+              <div className="bg-rose-950/40 border border-rose-600/60 p-3.5 rounded-2xl space-y-2 text-xs">
+                <div className="flex items-center gap-2 text-rose-300 font-bold">
+                  <span>⚠️</span>
+                  <span>Unregistered Senior Player(s) in Matchday Squad</span>
+                </div>
+                <p className="text-[11px] text-rose-200/90 leading-relaxed">
+                  The following player(s) are not registered in your 25-man Premier League squad: <strong className="text-white">{[...ineligibleStarters, ...ineligibleBench].map((p) => p.name).join(', ')}</strong>. Unregistered senior players cannot participate in league fixtures.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleAutoPickEligible}
+                  className="py-1.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                >
+                  ⚡ Auto-Pick Eligible Lineup
+                </button>
+              </div>
+            )}
+
             {/* Kick Off Button */}
             <button
               onClick={handleKickOff}
-              className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-display font-black text-sm uppercase tracking-wider shadow-xl shadow-emerald-500/20 transition-all hover:scale-101 cursor-pointer"
+              disabled={hasIneligiblePlayers}
+              className={`w-full py-3.5 px-6 rounded-2xl font-display font-black text-sm uppercase tracking-wider shadow-xl transition-all ${
+                hasIneligiblePlayers
+                  ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                  : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 shadow-emerald-500/20 hover:scale-101 cursor-pointer'
+              }`}
             >
-              ⚽ Kick Off Match
+              {hasIneligiblePlayers ? '🚫 Lineup Ineligible (Resolve Registration)' : '⚽ Kick Off Match'}
             </button>
           </div>
         )}

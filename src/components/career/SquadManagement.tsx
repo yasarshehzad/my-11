@@ -41,9 +41,10 @@ interface SquadManagementProps {
   save: CareerSaveFile;
   onUpdateSave: (updated: CareerSaveFile) => void;
   onOpenCompare?: (playerA: CareerPlayer, playerB?: CareerPlayer) => void;
+  onNotification?: (msg: string) => void;
 }
 
-export function SquadManagement({ save, onUpdateSave, onOpenCompare }: SquadManagementProps) {
+export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotification }: SquadManagementProps) {
   const [viewMode, setViewMode] = useState<'pitch' | 'list' | 'academy'>('pitch');
   const [filterGroup, setFilterGroup] = useState<'ALL' | GeneralPositionGroup>('ALL');
   const [selectedPlayer, setSelectedPlayer] = useState<CareerPlayer | null>(null);
@@ -184,14 +185,23 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare }: SquadMana
 
 
   const handleAutoPick = () => {
-    const updatedLineup = getBestStartingLineup(squad, currentFormation);
+    const updatedLineup = getBestStartingLineup(squad, currentFormation, save.registeredPlayerIds, save.season?.yearStart);
     onUpdateSave({
       ...save,
       lineup: updatedLineup,
     });
+    onNotification?.('Auto-picked best eligible starting lineup and bench.');
   };
 
   const handleRoleChange = (player: CareerPlayer, newRole: 'starter' | 'bench' | 'reserve') => {
+    if (newRole !== 'reserve') {
+      const eligible = isPlayerRegisteredForMatch(player, squad, save.registeredPlayerIds, save.season?.yearStart);
+      if (!eligible) {
+        onNotification?.(`${player.name} is unregistered. Register them in your 25-man squad before selecting for matchdays.`);
+        return;
+      }
+    }
+
     let nextStarters = [...lineup.starterIds];
     let nextBench = [...lineup.benchIds];
 
@@ -235,6 +245,22 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare }: SquadMana
       const targetIsStarter = starterIdsSet.has(player.id);
       const sourceIsBench = benchIdsSet.has(swapSourceId);
       const targetIsBench = benchIdsSet.has(player.id);
+
+      // Prevent unregistered senior players from being moved into starters or bench
+      if (!sourceIsStarter && !sourceIsBench && (targetIsStarter || targetIsBench)) {
+        const sourcePlayer = squad.find((p) => p.id === swapSourceId);
+        if (sourcePlayer && !isPlayerRegisteredForMatch(sourcePlayer, squad, save.registeredPlayerIds, save.season?.yearStart)) {
+          onNotification?.(`${sourcePlayer.name} is unregistered. Register them in your 25-man squad before selecting for matchdays.`);
+          setSwapSourceId(null);
+          return;
+        }
+      } else if (!targetIsStarter && !targetIsBench && (sourceIsStarter || sourceIsBench)) {
+        if (!isPlayerRegisteredForMatch(player, squad, save.registeredPlayerIds, save.season?.yearStart)) {
+          onNotification?.(`${player.name} is unregistered. Register them in your 25-man squad before selecting for matchdays.`);
+          setSwapSourceId(null);
+          return;
+        }
+      }
 
       let nextStarters = [...lineup.starterIds];
       let nextBench = [...lineup.benchIds];
@@ -784,7 +810,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare }: SquadMana
                             >
                               {roleLabel}
                             </span>
-                            {!isPlayerRegisteredForMatch(player, squad, save.registeredPlayerIds) && (
+                            {!isPlayerRegisteredForMatch(player, squad, save.registeredPlayerIds, save.season?.yearStart) && (
                               <span className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded bg-amber-950 text-amber-300 border border-amber-800">
                                 Unregistered
                               </span>
@@ -1461,6 +1487,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare }: SquadMana
           squad={squad}
           registeredPlayerIds={save.registeredPlayerIds}
           settings={save.settings}
+          seasonYearStart={save.season?.yearStart}
           onSaveRegistration={(newIds) => {
             onUpdateSave({
               ...save,

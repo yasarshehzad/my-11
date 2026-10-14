@@ -434,7 +434,7 @@ describe('Player Comparison Engine', () => {
 
     // Registration feasibility: Bastoni is 27 (>21) and senior squad is 25/25
     expect(comparison.financialImpact.isExemptU21A).toBe(false);
-    expect(comparison.financialImpact.registrationWarningA).toContain('Senior roster full');
+    expect(comparison.financialImpact.registrationWarningA).toContain('Senior registration cap reached');
   });
 
   it('Scenario C: Transfer Target vs Transfer Target handles U21 registration exemption', () => {

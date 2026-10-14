@@ -14,12 +14,44 @@ export const STARTING_XI_SIZE = 11;
 export const MIN_BENCH_SIZE = 5;
 export const MAX_BENCH_SIZE = 9;
 
-export function getSeniorPlayerCount(squad: CareerPlayer[]): number {
-  return squad.filter((p) => p.age > U21_AGE_LIMIT).length;
+export function getU21CutoffDate(seasonYearStart: number = 2026): string {
+  return `${seasonYearStart - U21_AGE_LIMIT}-01-01`;
 }
 
-export function getU21PlayerCount(squad: CareerPlayer[]): number {
-  return squad.filter((p) => p.age <= U21_AGE_LIMIT).length;
+/**
+ * Determines whether a player qualifies for the Under-21 registration exemption.
+ * Under official Premier League rules, players born on or after 1 January of (seasonYearStart - 21)
+ * are exempt from the 25-man senior squad registration limit and can participate in matches freely.
+ * If player.dateOfBirth is provided, evaluates against the season-specific cutoff.
+ * If dateOfBirth is not available, falls back gracefully to player.age <= 21.
+ */
+export function isU21Exempt(
+  player: { age: number; dateOfBirth?: string },
+  seasonYearStart: number = 2026
+): boolean {
+  if (player.dateOfBirth) {
+    const dobIso = player.dateOfBirth.slice(0, 10);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dobIso)) {
+      const cutoff = getU21CutoffDate(seasonYearStart);
+      return dobIso >= cutoff;
+    }
+  }
+  return player.age <= U21_AGE_LIMIT;
+}
+
+export function isSeniorPlayer(
+  player: { age: number; dateOfBirth?: string },
+  seasonYearStart: number = 2026
+): boolean {
+  return !isU21Exempt(player, seasonYearStart);
+}
+
+export function getSeniorPlayerCount(squad: CareerPlayer[], seasonYearStart: number = 2026): number {
+  return squad.filter((p) => isSeniorPlayer(p, seasonYearStart)).length;
+}
+
+export function getU21PlayerCount(squad: CareerPlayer[], seasonYearStart: number = 2026): number {
+  return squad.filter((p) => isU21Exempt(p, seasonYearStart)).length;
 }
 
 export type GeneralPositionGroup = 'GK' | 'DEF' | 'MID' | 'FWD';
@@ -75,7 +107,8 @@ export interface SquadValidationResult {
 export function validateSquad(
   squad: CareerPlayer[],
   settings?: CareerSettings,
-  registeredSeniorIds?: string[]
+  registeredSeniorIds?: string[],
+  seasonYearStart: number = 2026
 ): SquadValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -100,7 +133,7 @@ export function validateSquad(
     totalSquadValue += player.value || 0;
     totalRating += player.rating || 75;
 
-    if (player.age > U21_AGE_LIMIT) {
+    if (isSeniorPlayer(player, seasonYearStart)) {
       seniorCount++;
     } else {
       u21Count++;
@@ -126,14 +159,14 @@ export function validateSquad(
     errors.push(`Squad has ${squadSize} players (maximum ${MAX_SQUAD_SIZE} allowed).`);
   }
 
-  // Premier League 25-man senior squad cap (U21 players aged <= 21 are exempt)
+  // Premier League 25-man senior squad cap (U21 players are exempt)
   if (registeredSeniorIds && registeredSeniorIds.length > MAX_SENIOR_SQUAD_SIZE) {
     errors.push(
-      `Registered squad has ${registeredSeniorIds.length} senior players (Premier League maximum is ${MAX_SENIOR_SQUAD_SIZE}; players aged 21 and under are exempt).`
+      `Registered squad has ${registeredSeniorIds.length} senior players (Premier League maximum is ${MAX_SENIOR_SQUAD_SIZE}; Under-21 players are exempt).`
     );
   } else if (!registeredSeniorIds && seniorCount > MAX_SENIOR_SQUAD_SIZE) {
     warnings.push(
-      `Squad has ${seniorCount} senior players aged 22+. Select your registered 25-man senior squad before league matchdays.`
+      `Squad has ${seniorCount} senior players. Select your registered 25-man senior squad before league matchdays.`
     );
   }
 
@@ -150,20 +183,33 @@ export function validateSquad(
     warnings.push(`Squad has only ${positionCounts.fwd} Forwards (recommended: at least ${MIN_FORWARDS}).`);
   }
 
-  // Homegrown quota check: in Premier League, max 17 non-homegrown senior players are permitted
+  // Homegrown quota check: In Premier League, clubs are permitted a MAXIMUM of 17 non-homegrown senior players.
+  // A smaller squad does NOT automatically need 8 homegrown players.
   const homegrownRuleActive = settings?.homegrownRule ?? false;
-  const seniorNonHomegrown = squad.filter((p) => p.age > U21_AGE_LIMIT && !isHomegrownPlayer(p)).length;
-  if (homegrownRuleActive && seniorNonHomegrown > MAX_SENIOR_NON_HOMEGROWN) {
-    errors.push(
-      `Homegrown rule violation: squad has ${seniorNonHomegrown} non-homegrown senior players (maximum ${MAX_SENIOR_NON_HOMEGROWN} allowed in 25-man senior registration).`
+  if (registeredSeniorIds && registeredSeniorIds.length > 0) {
+    const regSeniors = squad.filter(
+      (p) => registeredSeniorIds.includes(p.id) && isSeniorPlayer(p, seasonYearStart)
     );
-  } else if (homegrownRuleActive && homegrownCount < REQUIRED_HOMEGROWN_COUNT) {
-    errors.push(
-      `Homegrown rule violation: squad has ${homegrownCount} domestic players (${REQUIRED_HOMEGROWN_COUNT} required).`
-    );
-  } else if (!homegrownRuleActive && homegrownCount < REQUIRED_HOMEGROWN_COUNT) {
+    const regNonHomegrown = regSeniors.filter((p) => !isHomegrownPlayer(p)).length;
+    if (homegrownRuleActive && regNonHomegrown > MAX_SENIOR_NON_HOMEGROWN) {
+      errors.push(
+        `Homegrown rule violation: registered squad has ${regNonHomegrown} non-homegrown senior players (maximum ${MAX_SENIOR_NON_HOMEGROWN} allowed in 25-man senior registration).`
+      );
+    }
+  } else {
+    const clubSeniorNonHomegrown = squad.filter(
+      (p) => isSeniorPlayer(p, seasonYearStart) && !isHomegrownPlayer(p)
+    ).length;
+    if (homegrownRuleActive && clubSeniorNonHomegrown > MAX_SENIOR_NON_HOMEGROWN) {
+      warnings.push(
+        `Squad has ${clubSeniorNonHomegrown} non-homegrown senior players. Maximum ${MAX_SENIOR_NON_HOMEGROWN} non-homegrown players can be registered in your 25-man league squad.`
+      );
+    }
+  }
+
+  if (homegrownCount < REQUIRED_HOMEGROWN_COUNT) {
     warnings.push(
-      `Squad has ${homegrownCount}/${REQUIRED_HOMEGROWN_COUNT} domestic players.`
+      `Squad has ${homegrownCount}/${REQUIRED_HOMEGROWN_COUNT} domestic players. (Max 17 non-homegrown senior slots allowed).`
     );
   }
 
@@ -558,13 +604,20 @@ export const SUPPORTED_CAREER_FORMATIONS: CareerFormationConfig[] = [
 
 export function getBestStartingLineup(
   squad: CareerPlayer[],
-  formationName: string = '4-3-3'
+  formationName: string = '4-3-3',
+  registeredPlayerIds?: string[],
+  seasonYearStart: number = 2026
 ): CareerLineup {
   const formation =
     SUPPORTED_CAREER_FORMATIONS.find((f) => f.name === formationName) ||
     SUPPORTED_CAREER_FORMATIONS[0];
 
-  const available = [...squad].sort((a, b) => b.rating - a.rating);
+  // Enforce league registration: Only correctly registered seniors and U21 exempt players can be auto-picked
+  const eligible = squad.filter((p) =>
+    isPlayerRegisteredForMatch(p, squad, registeredPlayerIds, seasonYearStart)
+  );
+  const pool = eligible.length >= 11 ? eligible : squad;
+  const available = [...pool].sort((a, b) => b.rating - a.rating);
   const starterMap = new Map<number, string>();
   const assignedSet = new Set<string>();
 
@@ -823,16 +876,17 @@ export function getSquadOrderedByLineup(
  */
 export function getRegisteredSeniorPlayerIds(
   squad: CareerPlayer[],
-  registeredPlayerIds?: string[]
+  registeredPlayerIds?: string[],
+  seasonYearStart: number = 2026
 ): string[] {
-  const seniors = squad.filter((p) => p.age > U21_AGE_LIMIT);
-  if (seniors.length <= MAX_SENIOR_SQUAD_SIZE) {
-    return seniors.map((p) => p.id);
-  }
+  const seniors = squad.filter((p) => isSeniorPlayer(p, seasonYearStart));
   if (registeredPlayerIds && registeredPlayerIds.length > 0) {
     const validSeniorIds = new Set(seniors.map((p) => p.id));
     const filtered = registeredPlayerIds.filter((id) => validSeniorIds.has(id));
     return filtered.slice(0, MAX_SENIOR_SQUAD_SIZE);
+  }
+  if (seniors.length <= MAX_SENIOR_SQUAD_SIZE) {
+    return seniors.map((p) => p.id);
   }
   // Fallback: auto-register top 25 seniors by rating
   return [...seniors]
@@ -843,22 +897,25 @@ export function getRegisteredSeniorPlayerIds(
 
 /**
  * Checks whether a player is eligible/registered for league matches.
- * Under-21 players (age <= 21) are ALWAYS automatically eligible and exempt from registration.
- * Senior players (age > 21) must have their ID in the registered senior list.
+ * Under-21 players (born on or after cutoff or age <= 21) are ALWAYS automatically eligible and exempt from registration.
+ * Senior players must have their ID in the registered senior list.
  */
 export function isPlayerRegisteredForMatch(
   player: CareerPlayer,
   squad: CareerPlayer[],
-  registeredPlayerIds?: string[]
+  registeredPlayerIds?: string[],
+  seasonYearStart: number = 2026
 ): boolean {
-  if (player.age <= U21_AGE_LIMIT) {
+  if (isU21Exempt(player, seasonYearStart)) {
     return true; // U21 exempt
   }
-  const seniorCount = squad.filter((p) => p.age > U21_AGE_LIMIT).length;
-  if (seniorCount <= MAX_SENIOR_SQUAD_SIZE) {
-    return true; // Within 25 seniors, all are eligible
+  if (!registeredPlayerIds || registeredPlayerIds.length === 0) {
+    const seniorCount = squad.filter((p) => isSeniorPlayer(p, seasonYearStart)).length;
+    if (seniorCount <= MAX_SENIOR_SQUAD_SIZE) {
+      return true; // Within 25 seniors, all are eligible if no custom registration saved
+    }
   }
-  const registered = getRegisteredSeniorPlayerIds(squad, registeredPlayerIds);
+  const registered = getRegisteredSeniorPlayerIds(squad, registeredPlayerIds, seasonYearStart);
   return registered.includes(player.id);
 }
 

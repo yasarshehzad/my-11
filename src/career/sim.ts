@@ -12,8 +12,12 @@ import {
   ManagerMessage,
 } from './types';
 import { getClubById, getAllClubs } from './clubs';
-import { calculateStandings } from './table';
-import { categorizePosition, getSquadOrderedByLineup } from './squad';
+import {
+  categorizePosition,
+  getSquadOrderedByLineup,
+  isPlayerRegisteredForMatch,
+  getBestStartingLineup,
+} from './squad';
 import {
   simulateKnockoutCupFixture,
   findAnyClub,
@@ -35,6 +39,7 @@ import {
   applyMonthlySquadTraining,
 } from './formAndProgression';
 import { formatCurrency } from './finance';
+import { calculateStandings } from './table';
 
 /**
  * Simulates a single league fixture with realistic football scorelines and goalscorers.
@@ -343,17 +348,50 @@ export function advanceTimeSkip(
   queue.sort((a, b) => new Date(a.fixture.date).getTime() - new Date(b.fixture.date).getTime());
 
   // Helper to get active lineup-ordered squad for user match simulation
-  const getActiveUserSquad = () => {
+  // Helper to get active lineup-ordered squad for user match simulation
+  const getActiveUserSquad = (isLeagueMatch: boolean) => {
+    if (isLeagueMatch) {
+      // In league matches, unregistered seniors cannot participate in match simulation
+      const eligibleSquad = userSquad.filter((p) =>
+        isPlayerRegisteredForMatch(p, userSquad, save.registeredPlayerIds, save.season?.yearStart)
+      );
+      if (usePreferred && save.lineup && save.lineup.starterIds && save.lineup.starterIds.length > 0) {
+        const sanitizedLineup = getBestStartingLineup(
+          userSquad,
+          save.lineup.formation || '4-3-3',
+          save.registeredPlayerIds,
+          save.season?.yearStart
+        );
+        return getSquadOrderedByLineup(userSquad, sanitizedLineup);
+      }
+      return eligibleSquad.length >= 11 ? eligibleSquad : userSquad;
+    }
+
     if (usePreferred && save.lineup && save.lineup.starterIds && save.lineup.starterIds.length > 0) {
       return getSquadOrderedByLineup(userSquad, save.lineup);
     }
     return userSquad;
   };
 
+  const summerDeadlineDay = `${save.season.yearStart}-09-01`;
+  const winterDeadlineDay = `${save.season.yearStart + 1}-02-01`;
+
   // 3. Step forward day by day through fixtures
   for (const item of queue) {
     const fixDate = new Date(item.fixture.date);
     const fixIso = fixDate.toISOString().split('T')[0];
+
+    // Always halt at Transfer Deadline Day before simulating fixtures past the deadline
+    if (startIso < summerDeadlineDay && fixIso >= summerDeadlineDay) {
+      pausedReason = 'Transfer Deadline Day (Summer Window Closing - 23:00 BST)';
+      currentDate = new Date(summerDeadlineDay);
+      break;
+    }
+    if (startIso < winterDeadlineDay && fixIso >= winterDeadlineDay) {
+      pausedReason = 'Transfer Deadline Day (Winter Window Closing - 23:00 BST)';
+      currentDate = new Date(winterDeadlineDay);
+      break;
+    }
 
     // Conduct any cup draws whose draw date has arrived by this fixture date
     for (const [tId, tourney] of Object.entries(cups)) {
@@ -404,7 +442,7 @@ export function advanceTimeSkip(
 
     // Simulate fixture
     let simmedResult: { homeScore?: number; awayScore?: number } | undefined;
-    const activeSquad = getActiveUserSquad();
+    const activeSquad = getActiveUserSquad(item.type === 'league');
 
     if (item.type === 'league') {
       const homeClub = getClubById(item.fixture.homeClubId) || getAllClubs()[0];
@@ -462,7 +500,16 @@ export function advanceTimeSkip(
 
   // If no pausedReason interrupted progression and target has a specific date milestone, advance to targetDate
   if (!pausedReason && target !== 'next_match' && targetDate > currentDate) {
-    currentDate = targetDate;
+    const targetIso = targetDate.toISOString().split('T')[0];
+    if (startIso < summerDeadlineDay && targetIso >= summerDeadlineDay) {
+      currentDate = new Date(summerDeadlineDay);
+      pausedReason = 'Transfer Deadline Day (Summer Window Closing - 23:00 BST)';
+    } else if (startIso < winterDeadlineDay && targetIso >= winterDeadlineDay) {
+      currentDate = new Date(winterDeadlineDay);
+      pausedReason = 'Transfer Deadline Day (Winter Window Closing - 23:00 BST)';
+    } else {
+      currentDate = targetDate;
+    }
   }
 
   const initialIso = save.season.currentDate;

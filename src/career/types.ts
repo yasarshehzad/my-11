@@ -98,6 +98,7 @@ export interface CareerPlayer {
   naturalPositions?: string[];
   secondaryPositions?: string[];
   age: number;
+  dateOfBirth?: string; // YYYY-MM-DD for season-specific U21 exemption
   value: number; // in £/coins
   wageWeekly: number;
   contractYears: number;
@@ -419,6 +420,7 @@ export interface MarketPlayer {
   naturalPositions?: string[];
   secondaryPositions?: string[];
   age: number;
+  dateOfBirth?: string;
   value: number;
   wageDemand: number;
   club: string;

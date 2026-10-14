@@ -12,6 +12,7 @@ import { simulateMatchFixture } from './sim';
 import { applySeasonalPlayerProgression, generateYouthIntake, ProgressionReport } from './youthAcademy';
 import { generateIncomingAiBids } from './transfers';
 import { formatCareerCurrency } from './formatters';
+import { getRegisteredSeniorPlayerIds } from './squad';
 
 export interface SeasonReviewSummary {
   seasonNumber: number;
@@ -216,6 +217,12 @@ export function advanceToNextSeason(save: CareerSaveFile): {
     actionTab: 'transfers',
   };
 
+  const nextRegisteredPlayerIds = getRegisteredSeniorPlayerIds(
+    summerRecoveredSquad,
+    save.registeredPlayerIds,
+    nextYearStart
+  );
+
   const updatedSave: CareerSaveFile = {
     ...save,
     season: {
@@ -226,6 +233,7 @@ export function advanceToNextSeason(save: CareerSaveFile): {
     },
     phase: 'transfer_window',
     squad: summerRecoveredSquad,
+    registeredPlayerIds: nextRegisteredPlayerIds,
     youthAcademy: updatedAcademy,
     fixtures,
     calendar,

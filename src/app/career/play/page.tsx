@@ -61,7 +61,7 @@ import {
 } from '../../../career/inbox';
 import { calculateStandings } from '../../../career/table';
 import { formatCurrency } from '../../../career/finance';
-import { getSeniorPlayerCount, getSquadOrderedByLineup } from '../../../career/squad';
+import { getSeniorPlayerCount, getSquadOrderedByLineup, getBestStartingLineup } from '../../../career/squad';
 import {
   evaluateBoardConfidence,
   isTransferDeadlineDay,
@@ -522,13 +522,66 @@ function CareerPlayHubContent() {
 
   const handlePlayNextMatchInstant = () => {
     if (!save || !nextScheduled) return;
+
+    // 1. Guard against Deadline Day clock in progress
+    if (save.deadlineDayState?.isActive && save.deadlineDayState.phase !== 'closed') {
+      showToast('⏱️ Transfer Deadline Day is in progress! Advance the deadline clock or finalize deals before simulating matches.');
+      return;
+    }
+
+    const summerDeadline = `${save.season.yearStart}-09-01`;
+    const winterDeadline = `${save.season.yearStart + 1}-02-01`;
+    const fixDate = nextScheduled.fixture.date;
+
+    // 2. Halt if Instant Sim would jump over Summer Deadline Day (1st September)
+    if (save.season.currentDate < summerDeadline && fixDate >= summerDeadline) {
+      let deadlineSave: CareerSaveFile = {
+        ...save,
+        season: {
+          ...save.season,
+          currentDate: summerDeadline,
+        },
+      };
+      deadlineSave = initializeDeadlineDay(deadlineSave);
+      saveCareerSave(deadlineSave);
+      setSave(deadlineSave);
+      showToast('⏱️ Transfer Deadline Day has arrived! The summer window shuts tonight at 23:00 BST. Complete your transfer and squad registration business.');
+      return;
+    }
+
+    // 3. Halt if Instant Sim would jump over Winter Deadline Day (1st February)
+    if (save.season.currentDate < winterDeadline && fixDate >= winterDeadline) {
+      let deadlineSave: CareerSaveFile = {
+        ...save,
+        season: {
+          ...save.season,
+          currentDate: winterDeadline,
+        },
+      };
+      deadlineSave = initializeDeadlineDay(deadlineSave);
+      saveCareerSave(deadlineSave);
+      setSave(deadlineSave);
+      showToast('⏱️ Transfer Deadline Day has arrived! The winter window shuts tonight at 23:00 BST.');
+      return;
+    }
+
     setSimulating(true);
 
     const isUserHome = nextScheduled.fixture.homeClubId === save.club.id;
     const isUserAway = nextScheduled.fixture.awayClubId === save.club.id;
 
-    // Use preferred starting 11 by ordering squad according to lineup starter slots
-    const activeSquad = (save.lineup && save.lineup.starterIds && save.lineup.starterIds.length > 0)
+    // Sanitize squad for league matches: unregistered senior players cannot participate
+    const activeSquad = !nextScheduled.isCup
+      ? getSquadOrderedByLineup(
+          save.squad,
+          getBestStartingLineup(
+            save.squad,
+            save.lineup?.formation || '4-3-3',
+            save.registeredPlayerIds,
+            save.season?.yearStart
+          )
+        )
+      : (save.lineup && save.lineup.starterIds && save.lineup.starterIds.length > 0)
       ? getSquadOrderedByLineup(save.squad, save.lineup)
       : save.squad;
 
@@ -1338,7 +1391,28 @@ function CareerPlayHubContent() {
 
                       {/* Primary 1-Column Action: Prepare & Play Match */}
                       <button
-                        onClick={() => setActiveMatchFixture(nextScheduled.fixture)}
+                        onClick={() => {
+                          const summerDeadline = `${save.season.yearStart}-09-01`;
+                          const winterDeadline = `${save.season.yearStart + 1}-02-01`;
+                          const fixDate = nextScheduled.fixture.date;
+                          if (save.season.currentDate < summerDeadline && fixDate >= summerDeadline) {
+                            let deadlineSave = { ...save, season: { ...save.season, currentDate: summerDeadline } };
+                            deadlineSave = initializeDeadlineDay(deadlineSave);
+                            saveCareerSave(deadlineSave);
+                            setSave(deadlineSave);
+                            showToast('⏱️ Transfer Deadline Day has arrived! The summer window shuts tonight at 23:00 BST. Complete negotiations and squad registrations.');
+                            return;
+                          }
+                          if (save.season.currentDate < winterDeadline && fixDate >= winterDeadline) {
+                            let deadlineSave = { ...save, season: { ...save.season, currentDate: winterDeadline } };
+                            deadlineSave = initializeDeadlineDay(deadlineSave);
+                            saveCareerSave(deadlineSave);
+                            setSave(deadlineSave);
+                            showToast('⏱️ Transfer Deadline Day has arrived! The winter window shuts tonight at 23:00 BST.');
+                            return;
+                          }
+                          setActiveMatchFixture(nextScheduled.fixture);
+                        }}
                         disabled={simulating}
                         className="w-full py-3 sm:py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-display font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/25 transition-all hover:scale-[1.01] active:scale-[0.98] cursor-pointer min-h-[48px]"
                       >
@@ -2081,6 +2155,7 @@ function CareerPlayHubContent() {
             save={save}
             onUpdateSave={handleUpdateSave}
             onOpenCompare={(pA, pB) => setComparisonState({ isOpen: true, playerA: pA, playerB: pB })}
+            onNotification={showToast}
           />
         )}
 
@@ -2710,6 +2785,8 @@ function CareerPlayHubContent() {
           shortlistedPlayers={shortlistedPool}
           finances={save.finances}
           seniorCount={seniorCount}
+          registeredPlayerIds={save.registeredPlayerIds}
+          seasonYearStart={save.season?.yearStart}
           settings={save.settings}
           onSwapSquadPlayers={(starterId: string, benchId: string) => {
             handleSwapLineup(starterId, benchId);
@@ -2732,6 +2809,8 @@ function CareerPlayHubContent() {
           onClose={() => setShowRegistrationModal(false)}
           squad={save.squad}
           registeredPlayerIds={save.registeredPlayerIds}
+          settings={save.settings}
+          seasonYearStart={save.season?.yearStart}
           onSaveRegistration={(updatedIds) => {
             const updated: CareerSaveFile = {
               ...save,

@@ -27,6 +27,7 @@ import {
   MAX_SENIOR_SQUAD_SIZE,
   U21_AGE_LIMIT,
   getSeniorPlayerCount,
+  isSeniorPlayer,
 } from './squad';
 import { getAllClubs, getClubById, getCleanClubName } from './clubs';
 import { CONTINENTAL_EUROPEAN_CLUBS } from './continentalClubs';
@@ -764,7 +765,7 @@ export function executePlayerSigning(
     };
   }
 
-  const isTargetSenior = targetPlayer.age > U21_AGE_LIMIT;
+  const isTargetSenior = isSeniorPlayer(targetPlayer, save.season.yearStart);
   const signingBonus = detailedTerms?.signingBonus || 0;
   const totalUpfrontCost = fee + signingBonus;
 
@@ -802,6 +803,7 @@ export function executePlayerSigning(
     naturalPositions: targetPlayer.naturalPositions,
     secondaryPositions: targetPlayer.secondaryPositions,
     age: effectiveAge,
+    dateOfBirth: targetPlayer.dateOfBirth,
     value: effectiveValue,
     wageWeekly: wage,
     contractYears,
@@ -964,6 +966,7 @@ export function executePlayerSale(
     ...save,
     squad: updatedSquad,
     lineup: updatedLineup,
+    registeredPlayerIds: save.registeredPlayerIds?.filter((id) => id !== playerId),
     finances: {
       ...save.finances,
       transferBudget: save.finances.transferBudget + fee,
@@ -1045,9 +1048,15 @@ export function executeBuyBackReSigning(
     type: 'signing',
   };
 
+  let updatedRegisteredPlayerIds = save.registeredPlayerIds;
+  if (updatedRegisteredPlayerIds && isSeniorPlayer(reSignedPlayer, save.season.yearStart) && updatedRegisteredPlayerIds.length < MAX_SENIOR_SQUAD_SIZE) {
+    updatedRegisteredPlayerIds = [...updatedRegisteredPlayerIds, reSignedPlayer.id];
+  }
+
   const updatedSave: CareerSaveFile = {
     ...save,
     squad: updatedSquad,
+    registeredPlayerIds: updatedRegisteredPlayerIds,
     finances: {
       ...save.finances,
       transferBudget: save.finances.transferBudget - saleRecord.buyBackFee,
@@ -1792,6 +1801,7 @@ export function releasePlayerContract(
     ...save,
     squad: updatedSquad,
     lineup: updatedLineup,
+    registeredPlayerIds: save.registeredPlayerIds?.filter((id) => id !== playerId),
     incomingOffers: updatedOffers,
     finances: {
       ...save.finances,

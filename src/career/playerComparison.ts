@@ -8,7 +8,11 @@ import {
   calculatePositionFit,
   getSeniorPlayerCount,
   MAX_SENIOR_SQUAD_SIZE,
+  MAX_SENIOR_NON_HOMEGROWN,
   U21_AGE_LIMIT,
+  isU21Exempt,
+  isSeniorPlayer,
+  isHomegrownPlayer,
   PositionFitLevel,
 } from './squad';
 
@@ -182,6 +186,8 @@ export function comparePlayers(
     finances: CareerFinances;
     seniorCount?: number;
     maxSeniorCount?: number;
+    registeredSeniorIds?: string[];
+    seasonYearStart?: number;
     currency?: string;
     wageUnit?: string;
   }
@@ -255,10 +261,20 @@ export function comparePlayers(
   });
 
   // Financial & Registration Impact
+  const seasonYear = options.seasonYearStart ?? 2026;
   const finances = options.finances || { transferBudget: 0, weeklyWageBudget: 0, currentWeeklyWages: 0, balance: 0 };
-  const seniorCount = options.seniorCount ?? getSeniorPlayerCount(squad);
+  const seniorCount = options.seniorCount ?? getSeniorPlayerCount(squad, seasonYear);
   const maxSenior = options.maxSeniorCount ?? MAX_SENIOR_SQUAD_SIZE;
-  const isSeniorQuotaFull = seniorCount >= maxSenior;
+  const registeredSeniorCount = options.registeredSeniorIds?.length ?? Math.min(maxSenior, seniorCount);
+  const isRegisteredSeniorFull = registeredSeniorCount >= maxSenior;
+  const isSeniorQuotaFull = isRegisteredSeniorFull;
+
+  // Non-homegrown registered count
+  const registeredNonHomegrownCount = (options.registeredSeniorIds && options.registeredSeniorIds.length > 0)
+    ? squad.filter((p) => options.registeredSeniorIds!.includes(p.id) && isSeniorPlayer(p, seasonYear) && !isHomegrownPlayer(p)).length
+    : squad.filter((p) => isSeniorPlayer(p, seasonYear) && !isHomegrownPlayer(p)).slice(0, maxSenior).length;
+
+  const isNonHomegrownFull = registeredNonHomegrownCount >= MAX_SENIOR_NON_HOMEGROWN;
   const wageHeadroom = Math.max(0, finances.weeklyWageBudget - finances.currentWeeklyWages);
 
   const canAffordFeeA = isSquadA ? true : playerA.value <= finances.transferBudget;
@@ -267,19 +283,28 @@ export function comparePlayers(
   const hasWageHeadroomA = isSquadA ? true : playerA.wageWeekly <= wageHeadroom;
   const hasWageHeadroomB = isSquadB ? true : playerB.wageWeekly <= wageHeadroom;
 
-  const isExemptU21A = playerA.age <= U21_AGE_LIMIT;
-  const isExemptU21B = playerB.age <= U21_AGE_LIMIT;
+  const isExemptU21A = isU21Exempt(rawA, seasonYear);
+  const isExemptU21B = isU21Exempt(rawB, seasonYear);
 
-  const canRegisterA = isSquadA ? true : isExemptU21A || !isSeniorQuotaFull;
-  const canRegisterB = isSquadB ? true : isExemptU21B || !isSeniorQuotaFull;
+  const isHomegrownA = isHomegrownPlayer(rawA);
+  const isHomegrownB = isHomegrownPlayer(rawB);
 
-  const registrationWarningA = !isSquadA && !canRegisterA
-    ? `Senior roster full (${seniorCount}/${maxSenior}). Cannot register without selling or releasing a senior player.`
-    : undefined;
+  const canRegisterA = isSquadA ? true : isExemptU21A || (!isRegisteredSeniorFull && (isHomegrownA || !isNonHomegrownFull));
+  const canRegisterB = isSquadB ? true : isExemptU21B || (!isRegisteredSeniorFull && (isHomegrownB || !isNonHomegrownFull));
 
-  const registrationWarningB = !isSquadB && !canRegisterB
-    ? `Senior roster full (${seniorCount}/${maxSenior}). Cannot register without selling or releasing a senior player.`
-    : undefined;
+  const formatRegWarning = (isSquad: boolean, isExempt: boolean, isHomegrown: boolean, canReg: boolean) => {
+    if (isSquad || canReg || isExempt) return undefined;
+    if (!isHomegrown && isNonHomegrownFull) {
+      return `Non-homegrown senior quota full (${registeredNonHomegrownCount}/17). Signing can proceed, but player cannot be registered for league matches unless a non-homegrown senior is deregistered or sold.`;
+    }
+    if (isRegisteredSeniorFull) {
+      return `Senior registration cap reached (${registeredSeniorCount}/${maxSenior}). Signing can proceed, but player cannot play league matches until another senior is deregistered or sold.`;
+    }
+    return `Senior squad registration full (${registeredSeniorCount}/${maxSenior}). Cannot participate in league matches without registration.`;
+  };
+
+  const registrationWarningA = formatRegWarning(isSquadA, isExemptU21A, isHomegrownA, canRegisterA);
+  const registrationWarningB = formatRegWarning(isSquadB, isExemptU21B, isHomegrownB, canRegisterB);
 
   const wageWarningA = !isSquadA && !hasWageHeadroomA
     ? `Wage demand (${formatWage(playerA.wageWeekly)}) exceeds available headroom (${formatWage(wageHeadroom)}). Adjust budget or reduce squad wages.`

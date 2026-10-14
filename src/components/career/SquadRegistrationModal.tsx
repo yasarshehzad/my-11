@@ -4,11 +4,12 @@ import React, { useState, useMemo } from 'react';
 import { CareerPlayer, CareerSettings } from '../../career/types';
 import {
   MAX_SENIOR_SQUAD_SIZE,
-  U21_AGE_LIMIT,
   MAX_SENIOR_NON_HOMEGROWN,
   REQUIRED_HOMEGROWN_COUNT,
   isHomegrownPlayer,
   getRegisteredSeniorPlayerIds,
+  isU21Exempt,
+  isSeniorPlayer,
 } from '../../career/squad';
 import { formatCurrency, formatWage } from '../../career/finance';
 
@@ -18,6 +19,7 @@ interface SquadRegistrationModalProps {
   squad: CareerPlayer[];
   registeredPlayerIds?: string[];
   settings?: CareerSettings;
+  seasonYearStart?: number;
   onSaveRegistration: (newRegisteredSeniorIds: string[]) => void;
 }
 
@@ -27,23 +29,24 @@ export function SquadRegistrationModal({
   squad,
   registeredPlayerIds,
   settings,
+  seasonYearStart = 2026,
   onSaveRegistration,
 }: SquadRegistrationModalProps) {
-  // Separate seniors (age > 21) from U21 exempt players
+  // Separate seniors from U21 exempt players using season-specific rules
   const seniors = useMemo(
-    () => squad.filter((p) => p.age > U21_AGE_LIMIT),
-    [squad]
+    () => squad.filter((p) => isSeniorPlayer(p, seasonYearStart)),
+    [squad, seasonYearStart]
   );
 
   const u21Players = useMemo(
-    () => squad.filter((p) => p.age <= U21_AGE_LIMIT),
-    [squad]
+    () => squad.filter((p) => isU21Exempt(p, seasonYearStart)),
+    [squad, seasonYearStart]
   );
 
   // Initial selection derived from existing registeredPlayerIds or top 25 seniors
   const initialSelection = useMemo(() => {
-    return new Set(getRegisteredSeniorPlayerIds(squad, registeredPlayerIds));
-  }, [squad, registeredPlayerIds]);
+    return new Set(getRegisteredSeniorPlayerIds(squad, registeredPlayerIds, seasonYearStart));
+  }, [squad, registeredPlayerIds, seasonYearStart]);
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(initialSelection);
   const [filterPos, setFilterPos] = useState<'ALL' | 'GK' | 'DEF' | 'MID' | 'FWD'>('ALL');
@@ -53,9 +56,9 @@ export function SquadRegistrationModal({
   // Sync selection when opened
   React.useEffect(() => {
     if (isOpen) {
-      setSelectedIds(new Set(getRegisteredSeniorPlayerIds(squad, registeredPlayerIds)));
+      setSelectedIds(new Set(getRegisteredSeniorPlayerIds(squad, registeredPlayerIds, seasonYearStart)));
     }
-  }, [isOpen, squad, registeredPlayerIds]);
+  }, [isOpen, squad, registeredPlayerIds, seasonYearStart]);
 
   if (!isOpen) return null;
 

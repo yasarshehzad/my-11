@@ -26,6 +26,8 @@ interface PlayerComparisonModalProps {
   finances: CareerFinances;
   seniorCount?: number;
   maxSeniorCount?: number;
+  registeredPlayerIds?: string[];
+  seasonYearStart?: number;
   settings?: CareerSettings;
   onSelectTransferTarget?: (player: MarketPlayer) => void;
   onSwapSquadPlayers?: (playerAId: string, playerBId: string) => void;
@@ -43,6 +45,8 @@ export function PlayerComparisonModal({
   finances,
   seniorCount,
   maxSeniorCount,
+  registeredPlayerIds,
+  seasonYearStart = 2026,
   settings,
   onSelectTransferTarget,
   onSwapSquadPlayers,
@@ -120,10 +124,23 @@ export function PlayerComparisonModal({
       finances,
       seniorCount,
       maxSeniorCount,
+      registeredSeniorIds: registeredPlayerIds,
+      seasonYearStart,
       currency: settings?.currency,
       wageUnit: settings?.wageUnit,
     });
-  }, [activePlayerA, activePlayerB, targetPosition, squad, finances, seniorCount, maxSeniorCount, settings]);
+  }, [
+    activePlayerA,
+    activePlayerB,
+    targetPosition,
+    squad,
+    finances,
+    seniorCount,
+    maxSeniorCount,
+    registeredPlayerIds,
+    seasonYearStart,
+    settings,
+  ]);
 
   if (!isOpen || !activePlayerA || !activePlayerB || !comparison) return null;
 
