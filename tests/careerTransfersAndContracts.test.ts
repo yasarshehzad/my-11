@@ -73,6 +73,34 @@ describe('Career Mode Phase 6: Transfers, Scouting & Contracts', () => {
       expect(isTransferWindowOpen('2027-02-02')).toBe(false);
       expect(isTransferWindowOpen('2027-04-10')).toBe(false);
     });
+
+    it('accurately identifies transfer deadline dates across multiple seasons (2026, 2027, 2028 and beyond)', () => {
+      // 2026/27 Season (yearStart = 2026)
+      expect(isTransferDeadlineDay('2026-09-01', 2026)).toBe(true);
+      expect(isTransferDeadlineDay('2027-02-01', 2026)).toBe(true);
+      expect(isTransferDeadlineDay('2026-08-31', 2026)).toBe(false);
+
+      // 2027/28 Season (yearStart = 2027)
+      expect(isTransferDeadlineDay('2027-09-01', 2027)).toBe(true);
+      expect(isTransferDeadlineDay('2028-02-01', 2027)).toBe(true);
+      expect(isTransferDeadlineDay('2027-08-31', 2027)).toBe(false);
+
+      // 2028/29 Season (yearStart = 2028)
+      expect(isTransferDeadlineDay('2028-09-01', 2028)).toBe(true);
+      expect(isTransferDeadlineDay('2029-02-01', 2028)).toBe(true);
+
+      // Auto-inferred year without explicit parameter
+      expect(isTransferDeadlineDay('2027-09-01')).toBe(true);
+      expect(isTransferDeadlineDay('2028-02-01')).toBe(true);
+      expect(isTransferDeadlineDay('2029-09-01')).toBe(true);
+      expect(isTransferDeadlineDay('2030-02-01')).toBe(true);
+
+      // Multi-season transfer window open checks
+      expect(isTransferWindowOpen('2027-08-15', 2027)).toBe(true);
+      expect(isTransferWindowOpen('2027-10-15', 2027)).toBe(false);
+      expect(isTransferWindowOpen('2028-01-15', 2027)).toBe(true);
+      expect(isTransferWindowOpen('2028-08-15', 2028)).toBe(true);
+    });
   });
 
   describe('Scouting Market Pool & Filters', () => {
@@ -141,6 +169,56 @@ describe('Career Mode Phase 6: Transfers, Scouting & Contracts', () => {
       expect(messiCards[0].rating).toBeGreaterThanOrEqual(95);
       expect(ronaldoCards[0].rating).toBeGreaterThanOrEqual(95);
       expect(thierryHenryCards[0].rating).toBeGreaterThanOrEqual(94);
+    });
+
+    it('ensures peak Henry and legends maintain consistent historic playing ages in 2026, 2027 and beyond, rather than behaving as 50-year-olds', () => {
+      const pool2026 = getScoutingMarketPool([], { playerPoolType: 'all' }, '2026/27', 2026);
+      const pool2027 = getScoutingMarketPool([], { playerPoolType: 'all' }, '2026/27', 2027);
+      const pool2028 = getScoutingMarketPool([], { playerPoolType: 'all' }, '2026/27', 2028);
+
+      const henry2026 = pool2026.find((p) => p.name.toLowerCase().includes('thierry henry'));
+      const henry2027 = pool2027.find((p) => p.name.toLowerCase().includes('thierry henry'));
+      const henry2028 = pool2028.find((p) => p.name.toLowerCase().includes('thierry henry'));
+
+      expect(henry2026).toBeDefined();
+      expect(henry2027).toBeDefined();
+      expect(henry2028).toBeDefined();
+
+      // Peak playing age for Henry's peak 2003/04 season must remain his prime age (26), not an age-50 veteran!
+      expect(henry2026!.age).toBe(26);
+      expect(henry2027!.age).toBe(26);
+      expect(henry2028!.age).toBe(26);
+
+      // Virtual date of birth must match his peak playing age in each season timeline
+      expect(henry2026!.dateOfBirth).toBe('2000-08-17');
+      expect(henry2027!.dateOfBirth).toBe('2001-08-17');
+      expect(henry2028!.dateOfBirth).toBe('2002-08-17');
+    });
+
+    it('verifies that existing career saves retain their chosen player-pool settings (modern, all, legends)', () => {
+      const saveAll = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager 1', nationality: 'England' },
+        club: testClub,
+        settings: { ...getPresetSettings('easy'), playerPool: 'all' },
+      });
+      expect(saveAll.settings.playerPool).toBe('all');
+
+      const saveLegends = createNewCareerSave({
+        slotId: 'slot_2',
+        manager: { name: 'Manager 2', nationality: 'England' },
+        club: testClub,
+        settings: { ...getPresetSettings('medium'), playerPool: 'legends' },
+      });
+      expect(saveLegends.settings.playerPool).toBe('legends');
+
+      const saveModern = createNewCareerSave({
+        slotId: 'slot_3',
+        manager: { name: 'Manager 3', nationality: 'England' },
+        club: testClub,
+        settings: { ...getPresetSettings('hard'), playerPool: 'modern' },
+      });
+      expect(saveModern.settings.playerPool).toBe('modern');
     });
   });
 

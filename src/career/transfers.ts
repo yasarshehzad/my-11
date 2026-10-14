@@ -43,12 +43,20 @@ import { getPlayerPhysicals } from './formatters';
  */
 export function isTransferWindowOpen(
   dateStr: string,
-  yearStart: number = 2026
+  yearStart?: number
 ): boolean {
-  const summerStart = `${yearStart}-07-01`;
-  const summerEnd = `${yearStart}-09-01`;
-  const winterStart = `${yearStart + 1}-01-01`;
-  const winterEnd = `${yearStart + 1}-02-01`;
+  let effectiveYearStart = yearStart;
+  if (effectiveYearStart === undefined) {
+    const parts = dateStr.split('-');
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10);
+    // Jan (1) or Feb (2) belong to season starting in previous calendar year
+    effectiveYearStart = !isNaN(y) && !isNaN(m) && m <= 6 ? y - 1 : y || 2026;
+  }
+  const summerStart = `${effectiveYearStart}-07-01`;
+  const summerEnd = `${effectiveYearStart}-09-01`;
+  const winterStart = `${effectiveYearStart + 1}-01-01`;
+  const winterEnd = `${effectiveYearStart + 1}-02-01`;
 
   return (
     (dateStr >= summerStart && dateStr <= summerEnd) ||
@@ -63,11 +71,15 @@ export function isTransferWindowOpen(
  */
 export function isTransferDeadlineDay(
   dateStr: string,
-  yearStart: number = 2026
+  yearStart?: number
 ): boolean {
-  const summerDeadline = `${yearStart}-09-01`;
-  const winterDeadline = `${yearStart + 1}-02-01`;
-  return dateStr === summerDeadline || dateStr === winterDeadline;
+  if (dateStr.endsWith('-09-01') || dateStr.endsWith('-02-01')) {
+    if (yearStart === undefined) return true;
+    const summerDeadline = `${yearStart}-09-01`;
+    const winterDeadline = `${yearStart + 1}-02-01`;
+    return dateStr === summerDeadline || dateStr === winterDeadline;
+  }
+  return false;
 }
 
 /**
@@ -79,7 +91,10 @@ export function initializeDeadlineDay(save: CareerSaveFile): CareerSaveFile {
   }
 
   const yearStart = save.season.yearStart;
-  const isSummer = save.season.currentDate.includes('-09-');
+  const isSummer =
+    save.season.currentDate.includes('-09-') ||
+    save.season.currentDate.includes('-08-') ||
+    save.season.currentDate.includes('-07-');
   const deadlineDate = isSummer ? `${yearStart}-09-01` : `${yearStart + 1}-02-01`;
 
   const initialBreakingNews = [
@@ -388,11 +403,23 @@ export function getScoutingMarketPool(
     const seasonStart = parseInt(topVariant.season.split('/')[0], 10);
     const authenticPeakAge = bio.birthYear && !isNaN(seasonStart)
       ? Math.max(19, Math.min(38, seasonStart - bio.birthYear))
-      : topVariant.age;
+      : bio.peakAge || topVariant.age;
 
-    const peakValue = calculatePlayerValue(topVariant.rating, authenticPeakAge, group.base.primaryPosition);
+    // For historical legends, their peak playing version is presented at their peak playing age (e.g. 26 for Henry)
+    // regardless of whether the career is in 2026, 2027, or 2030, rather than behaving as a 50-year-old.
+    // For non-legends, age naturally progresses with ageDelta across seasons.
+    const effectiveAge = isLegend ? authenticPeakAge : (authenticPeakAge + ageDelta);
+
+    const peakValue = calculatePlayerValue(topVariant.rating, effectiveAge, group.base.primaryPosition);
     const peakWage = calculateWeeklyWage(topVariant.rating, peakValue);
-    const dateOfBirth = bio.dateOfBirth || `${2026 - authenticPeakAge}-07-01`;
+
+    const dobMonthDay = (bio.dateOfBirth && /^\d{4}-\d{2}-\d{2}$/.test(bio.dateOfBirth))
+      ? bio.dateOfBirth.slice(5)
+      : '07-01';
+    const effectiveBirthYear = (seasonYear || 2026) - effectiveAge;
+    const dateOfBirth = isLegend
+      ? `${effectiveBirthYear}-${dobMonthDay}`
+      : (bio.dateOfBirth || `${effectiveBirthYear}-${dobMonthDay}`);
 
     pool.push({
       id: topVariant.id,
@@ -402,7 +429,7 @@ export function getScoutingMarketPool(
       position: group.base.primaryPosition,
       naturalPositions: group.base.naturalPositions || [group.base.primaryPosition],
       secondaryPositions: group.base.secondaryPositions,
-      age: authenticPeakAge,
+      age: effectiveAge,
       dateOfBirth,
       preferredFoot: bio.preferredFoot,
       heightCm: bio.heightCm,
@@ -822,7 +849,15 @@ export function executePlayerSigning(
   const preferredFoot = targetPlayer.preferredFoot || bio.preferredFoot;
   const heightCm = targetPlayer.heightCm || bio.heightCm;
   const weightKg = targetPlayer.weightKg || bio.weightKg;
-  const dateOfBirth = targetPlayer.dateOfBirth || bio.dateOfBirth || `${2026 - effectiveAge}-07-01`;
+
+  const isLegend = targetPlayer.isLegend || targetPlayer.era !== 'Modern';
+  const dobMonthDay = (bio.dateOfBirth && /^\d{4}-\d{2}-\d{2}$/.test(bio.dateOfBirth))
+    ? bio.dateOfBirth.slice(5)
+    : '07-01';
+  const effectiveBirthYear = (save.season.yearStart || 2026) - effectiveAge;
+  const dateOfBirth = targetPlayer.dateOfBirth || (isLegend
+    ? `${effectiveBirthYear}-${dobMonthDay}`
+    : (bio.dateOfBirth || `${effectiveBirthYear}-${dobMonthDay}`));
 
   const newPlayer: CareerPlayer = {
     id: `cp_${targetPlayer.id}_${Date.now()}`,

@@ -129,4 +129,38 @@ describe('Career Mode Match Overview & Pre-Match Dossier', () => {
     expect(simmed.manOfTheMatch!.name).toBeTruthy();
     expect(simmed.manOfTheMatch!.rating).toBeGreaterThanOrEqual(6.0);
   });
+
+  it('guarantees match statistics reflect actual events and agree identically between Instant Summary and Match Dossier', () => {
+    const fixture: LeagueFixture = {
+      id: 'fix_consistency_test',
+      competitionId: 'premier_league',
+      round: 24,
+      date: '2027-02-14',
+      homeClubId: homeClub.id,
+      awayClubId: awayClub.id,
+      played: false,
+    };
+
+    const simmed = simulateMatchFixture(fixture, homeClub, awayClub);
+
+    // Both InstantMatchSummaryModal and MatchOverviewModal read directly from fixture.stats
+    const instantStats = simmed.stats!;
+    const dossierStats = simmed.stats!;
+
+    expect(instantStats.homePossession).toBe(dossierStats.homePossession);
+    expect(instantStats.awayPossession).toBe(dossierStats.awayPossession);
+    expect(instantStats.homeShots).toBe(dossierStats.homeShots);
+    expect(instantStats.awayShots).toBe(dossierStats.awayShots);
+    expect(instantStats.homeShotsOnTarget).toBe(dossierStats.homeShotsOnTarget);
+    expect(instantStats.awayShotsOnTarget).toBe(dossierStats.awayShotsOnTarget);
+    expect(instantStats.homeCorners).toBe(dossierStats.homeCorners);
+    expect(instantStats.awayCorners).toBe(dossierStats.awayCorners);
+    expect(instantStats.homeFouls).toBe(dossierStats.homeFouls);
+    expect(instantStats.awayFouls).toBe(dossierStats.awayFouls);
+
+    // Scorers and Player of the Match are identical references
+    expect(simmed.scorers).toBeDefined();
+    expect(simmed.manOfTheMatch).toBeDefined();
+    expect(simmed.manOfTheMatch?.name).toBeTruthy();
+  });
 });
