@@ -741,8 +741,8 @@ function SetupWizardContent() {
                     }
                     className="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-xs text-white"
                   >
-                    <option value="all">All Eras (Icons + Modern)</option>
-                    <option value="modern">Modern Only</option>
+                    <option value="modern">Modern Only (Default - Legends Off)</option>
+                    <option value="all">All Eras (Modern + Peak Legends)</option>
                     <option value="legends">Legends Only</option>
                   </select>
                 </div>

@@ -421,6 +421,9 @@ export interface MarketPlayer {
   secondaryPositions?: string[];
   age: number;
   dateOfBirth?: string;
+  preferredFoot?: 'Right' | 'Left' | 'Both';
+  heightCm?: number;
+  weightKg?: number;
   value: number;
   wageDemand: number;
   club: string;

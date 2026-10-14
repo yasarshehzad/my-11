@@ -106,4 +106,27 @@ describe('Career Mode Match Overview & Pre-Match Dossier', () => {
     expect(oppClub).toBeDefined();
     expect(oppClub?.stadiumName).toBeDefined();
   });
+
+  it('supports instant match simulation summary modal data with complete stats and MOTM', () => {
+    const fixture: LeagueFixture = {
+      id: 'fix_instant_test',
+      competitionId: 'premier_league',
+      round: 18,
+      date: '2026-12-26',
+      homeClubId: homeClub.id,
+      awayClubId: awayClub.id,
+      played: false,
+    };
+
+    const simmed = simulateMatchFixture(fixture, homeClub, awayClub);
+    expect(simmed.played).toBe(true);
+    expect(simmed.homeScore).toBeGreaterThanOrEqual(0);
+    expect(simmed.awayScore).toBeGreaterThanOrEqual(0);
+    expect(simmed.stats).toBeDefined();
+    expect(simmed.stats!.homePossession).toBeGreaterThan(0);
+    expect(simmed.stats!.awayPossession).toBeGreaterThan(0);
+    expect(simmed.manOfTheMatch).toBeDefined();
+    expect(simmed.manOfTheMatch!.name).toBeTruthy();
+    expect(simmed.manOfTheMatch!.rating).toBeGreaterThanOrEqual(6.0);
+  });
 });

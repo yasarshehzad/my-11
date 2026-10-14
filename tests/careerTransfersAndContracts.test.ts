@@ -116,6 +116,32 @@ describe('Career Mode Phase 6: Transfers, Scouting & Contracts', () => {
         expect(p.isHomegrown).toBe(true);
       }
     });
+
+    it('ensures each legend appears strictly as a single peak version without multi-season duplicate choices', () => {
+      const allPool = getScoutingMarketPool([], { playerPoolType: 'all' });
+      const nameCounts = new Map<string, number>();
+
+      for (const p of allPool) {
+        const norm = p.name.toLowerCase().trim();
+        nameCounts.set(norm, (nameCounts.get(norm) || 0) + 1);
+        // Alternative versions selector must not be exposed
+        expect(p.versions).toBeUndefined();
+      }
+
+      // Check famous multi-card legends: Messi, Ronaldo, Thierry Henry
+      const messiCards = allPool.filter((p) => p.name.toLowerCase().includes('messi'));
+      const ronaldoCards = allPool.filter((p) => p.name.toLowerCase().includes('ronaldo') && !p.name.toLowerCase().includes('nazario'));
+      const thierryHenryCards = allPool.filter((p) => p.name.toLowerCase().includes('thierry henry'));
+
+      expect(messiCards.length).toBe(1);
+      expect(ronaldoCards.length).toBe(1);
+      expect(thierryHenryCards.length).toBe(1);
+
+      // Verify peak version ratings
+      expect(messiCards[0].rating).toBeGreaterThanOrEqual(95);
+      expect(ronaldoCards[0].rating).toBeGreaterThanOrEqual(95);
+      expect(thierryHenryCards[0].rating).toBeGreaterThanOrEqual(94);
+    });
   });
 
   describe('Offer Evaluation & Personal Terms', () => {

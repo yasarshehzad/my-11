@@ -37,6 +37,7 @@ import { TournamentsHub } from '../../../components/career/TournamentsHub';
 import { TransferHub } from '../../../components/career/TransferHub';
 import { MatchDayModal } from '../../../components/career/MatchDayModal';
 import { MatchOverviewModal } from '../../../components/career/MatchOverviewModal';
+import { InstantMatchSummaryModal } from '../../../components/career/InstantMatchSummaryModal';
 import { PlayerComparisonModal } from '../../../components/career/PlayerComparisonModal';
 import { SquadRegistrationModal } from '../../../components/career/SquadRegistrationModal';
 import { isSeasonComplete, advanceToNextSeason, getSeasonReviewSummary, SeasonReviewSummary } from '../../../career/seasons';
@@ -92,6 +93,7 @@ function CareerPlayHubContent() {
     type: 'result' | 'preview';
     fixture: LeagueFixture | CupFixture;
   } | null>(null);
+  const [instantSimResultModal, setInstantSimResultModal] = useState<LeagueFixture | CupFixture | null>(null);
   const [inboxFilter, setInboxFilter] = useState<'all' | 'action_required' | 'unread' | 'board' | 'injury' | 'transfer' | 'cup_draw'>('all');
   const [expandedMessageId, setExpandedMessageId] = useState<string | null>(null);
   const [simulating, setSimulating] = useState(false);
@@ -229,8 +231,9 @@ function CareerPlayHubContent() {
   const fullMarketPool = useMemo(() => {
     if (!save) return [];
     const dbSeason = save.settings?.databaseSeason || save.season?.databaseSeason || '2026/27';
-    return getScoutingMarketPool(save.squad, { playerPoolType: 'all', sortBy: 'value_desc' }, dbSeason, save.season?.yearStart || 2026);
-  }, [save?.squad, save?.settings?.databaseSeason, save?.season?.databaseSeason, save?.season?.yearStart]);
+    const poolType = save.settings?.playerPool || 'modern';
+    return getScoutingMarketPool(save.squad, { playerPoolType: poolType, sortBy: 'value_desc' }, dbSeason, save.season?.yearStart || 2026);
+  }, [save?.squad, save?.settings?.playerPool, save?.settings?.databaseSeason, save?.season?.databaseSeason, save?.season?.yearStart]);
 
   const shortlistedPool = useMemo(() => {
     if (!save?.shortlistPlayerIds || save.shortlistPlayerIds.length === 0) return [];
@@ -661,13 +664,7 @@ function CareerPlayHubContent() {
       saveCareerSave(updatedSave);
       setSave(updatedSave);
       setSimulating(false);
-
-      const userWon = isUserHome
-        ? (simmed.homeScore! > simmed.awayScore! || (simmed.penalties ? simmed.penalties.homePenalties > simmed.penalties.awayPenalties : false))
-        : (simmed.awayScore! > simmed.homeScore! || (simmed.penalties ? simmed.penalties.awayPenalties > simmed.penalties.homePenalties : false));
-
-      const pensText = simmed.penalties ? ` (${simmed.penalties.homePenalties} - ${simmed.penalties.awayPenalties} pens)` : '';
-      showToast(`${nextScheduled.cupName} ${nextScheduled.roundName}: ${simmed.homeScore} - ${simmed.awayScore}${pensText} (${userWon ? 'Victory!' : 'Eliminated'})`);
+      setInstantSimResultModal(simmed);
       return;
     }
 
@@ -727,14 +724,7 @@ function CareerPlayHubContent() {
     saveCareerSave(updatedSave);
     setSave(updatedSave);
     setSimulating(false);
-
-    const userWon = isUserHome
-      ? simmed.homeScore! > simmed.awayScore!
-      : simmed.awayScore! > simmed.homeScore!;
-    const isDraw = simmed.homeScore === simmed.awayScore;
-    const resultText = userWon ? 'Victory!' : isDraw ? 'Draw' : 'Defeat';
-
-    showToast(`Matchday ${leagueFix.round} Result: ${simmed.homeScore} - ${simmed.awayScore} (${resultText})`);
+    setInstantSimResultModal(simmed);
   };
 
   const handleSkipInternationalBreak = () => {
@@ -2507,6 +2497,24 @@ function CareerPlayHubContent() {
           onPlayInstantMatch={() => {
             setMatchOverviewModal(null);
             handlePlayNextMatchInstant();
+          }}
+        />
+      )}
+
+      {/* Instant Match Summary Takeover Modal */}
+      {instantSimResultModal && (
+        <InstantMatchSummaryModal
+          fixture={instantSimResultModal}
+          save={save}
+          onClose={() => setInstantSimResultModal(null)}
+          onViewDetailedDossier={() => {
+            const fix = instantSimResultModal;
+            setInstantSimResultModal(null);
+            setMatchOverviewModal({ type: 'result', fixture: fix });
+          }}
+          onNavigateTab={(tab) => {
+            setInstantSimResultModal(null);
+            handleTabChange(tab);
           }}
         />
       )}

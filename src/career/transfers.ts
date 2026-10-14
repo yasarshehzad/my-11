@@ -32,6 +32,8 @@ import {
 import { getAllClubs, getClubById, getCleanClubName } from './clubs';
 import { CONTINENTAL_EUROPEAN_CLUBS } from './continentalClubs';
 import { getAllSupplementalPlayers } from './databaseExpansion';
+import { getPlayerBio } from './playerBioDatabase';
+import { getPlayerPhysicals } from './formatters';
 
 
 /**
@@ -371,32 +373,50 @@ export function getScoutingMarketPool(
   for (const [lowerName, group] of playerGroups.entries()) {
     seenPlayerNames.add(lowerName);
 
-    // Sort variants by rating descending so top card represents the player
-    group.variants.sort((a, b) => b.rating - a.rating);
+    // Sort variants by rating descending (and value descending) so only the single peak version represents the player
+    group.variants.sort((a, b) => b.rating - a.rating || b.value - a.value);
     const topVariant = group.variants[0];
     const isLegend =
       group.base.rarity === 'legend' ||
       group.base.era !== 'Modern' ||
       group.variants.length > 1;
 
+    const cleanPlayerName = group.base.playerName || group.base.displayName || topVariant.displayName.replace(/\s+\d{2}\/\d{2}$/, '').trim();
+    const bio = getPlayerBio(cleanPlayerName, group.base.primaryPosition);
+
+    // Calculate authentic peak age from season year and birth year
+    const seasonStart = parseInt(topVariant.season.split('/')[0], 10);
+    const authenticPeakAge = bio.birthYear && !isNaN(seasonStart)
+      ? Math.max(19, Math.min(38, seasonStart - bio.birthYear))
+      : topVariant.age;
+
+    const peakValue = calculatePlayerValue(topVariant.rating, authenticPeakAge, group.base.primaryPosition);
+    const peakWage = calculateWeeklyWage(topVariant.rating, peakValue);
+    const dateOfBirth = bio.dateOfBirth || `${2026 - authenticPeakAge}-07-01`;
+
     pool.push({
       id: topVariant.id,
       cardId: `${topVariant.id}_career`,
-      name: group.base.playerName || topVariant.displayName.replace(/\s+\d{2}\/\d{2}$/, '').trim(),
+      name: cleanPlayerName,
       rating: topVariant.rating,
       position: group.base.primaryPosition,
       naturalPositions: group.base.naturalPositions || [group.base.primaryPosition],
       secondaryPositions: group.base.secondaryPositions,
-      age: topVariant.age,
-      value: topVariant.value,
-      wageDemand: topVariant.wageDemand,
+      age: authenticPeakAge,
+      dateOfBirth,
+      preferredFoot: bio.preferredFoot,
+      heightCm: bio.heightCm,
+      weightKg: bio.weightKg,
+      value: peakValue,
+      wageDemand: peakWage,
       club: topVariant.club,
       nationality: group.base.nationality,
       isHomegrown: isHomegrownPlayer({ nationality: group.base.nationality }),
       rarity: isLegend ? 'Legend' : topVariant.rarity,
       isLegend,
       era: group.base.era,
-      versions: group.variants,
+      // Strictly peak version only; no choice of alternative historical editions
+      versions: undefined,
       selectedVersionId: topVariant.id,
     });
   }
@@ -424,6 +444,10 @@ export function getScoutingMarketPool(
       naturalPositions: supp.naturalPositions,
       secondaryPositions: supp.secondaryPositions,
       age: supp.age,
+      dateOfBirth: supp.dateOfBirth,
+      preferredFoot: supp.preferredFoot,
+      heightCm: supp.heightCm,
+      weightKg: supp.weightKg,
       value: supp.value,
       wageDemand: supp.wageWeekly,
       club: supp.club,
@@ -794,6 +818,12 @@ export function executePlayerSigning(
   const effectiveAge = selectedVariant ? selectedVariant.age : targetPlayer.age;
   const effectiveCardId = selectedVariant ? selectedVariant.id : targetPlayer.cardId;
 
+  const bio = getPlayerBio(effectiveName, targetPlayer.position);
+  const preferredFoot = targetPlayer.preferredFoot || bio.preferredFoot;
+  const heightCm = targetPlayer.heightCm || bio.heightCm;
+  const weightKg = targetPlayer.weightKg || bio.weightKg;
+  const dateOfBirth = targetPlayer.dateOfBirth || bio.dateOfBirth || `${2026 - effectiveAge}-07-01`;
+
   const newPlayer: CareerPlayer = {
     id: `cp_${targetPlayer.id}_${Date.now()}`,
     cardId: effectiveCardId,
@@ -803,7 +833,10 @@ export function executePlayerSigning(
     naturalPositions: targetPlayer.naturalPositions,
     secondaryPositions: targetPlayer.secondaryPositions,
     age: effectiveAge,
-    dateOfBirth: targetPlayer.dateOfBirth,
+    dateOfBirth,
+    preferredFoot,
+    heightCm,
+    weightKg,
     value: effectiveValue,
     wageWeekly: wage,
     contractYears,

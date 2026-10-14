@@ -239,6 +239,8 @@ function pseudoHash(str: string | undefined | null): number {
  * Compute or resolve consistent, realistic physical attributes (Height, Weight, Foot)
  * based on position and player identity.
  */
+import { getPlayerBio } from './playerBioDatabase';
+
 export function getPlayerPhysicals(
   playerOrId:
     | string
@@ -257,7 +259,7 @@ export function getPlayerPhysicals(
   preferredFoot: 'Right' | 'Left' | 'Both';
 } {
   const isObj = typeof playerOrId === 'object' && playerOrId !== null;
-  const id = isObj ? playerOrId.id || playerOrId.name || '' : playerOrId || '';
+  const name = isObj ? playerOrId.name || playerOrId.id || '' : playerOrId || '';
   const pos = (
     isObj
       ? playerOrId.position || positionFallback || ''
@@ -272,61 +274,14 @@ export function getPlayerPhysicals(
     };
   }
 
-  const hash = pseudoHash(id);
-
-  // Default baseline physicals by position
-  let baseHeight = 180;
-  let baseWeight = 75;
-
-  if (pos === 'GK') {
-    baseHeight = 191;
-    baseWeight = 86;
-  } else if (pos === 'CB') {
-    baseHeight = 188;
-    baseWeight = 83;
-  } else if (['LB', 'RB', 'LWB', 'RWB'].includes(pos)) {
-    baseHeight = 178;
-    baseWeight = 73;
-  } else if (pos === 'CDM') {
-    baseHeight = 184;
-    baseWeight = 79;
-  } else if (pos === 'CM') {
-    baseHeight = 181;
-    baseWeight = 75;
-  } else if (pos === 'CAM') {
-    baseHeight = 177;
-    baseWeight = 72;
-  } else if (['LM', 'RM', 'LW', 'RW'].includes(pos)) {
-    baseHeight = 175;
-    baseWeight = 70;
-  } else if (['ST', 'CF'].includes(pos)) {
-    baseHeight = 184;
-    baseWeight = 80;
-  }
-
-  // Variations: +/- 4cm height, +/- 3kg weight
-  const heightVariation = (hash % 9) - 4;
-  const weightVariation = ((Math.floor(hash / 10)) % 7) - 3;
-
+  const bio = getPlayerBio(name, pos);
   const explicitHeight = isObj ? playerOrId.heightCm : undefined;
   const explicitWeight = isObj ? playerOrId.weightKg : undefined;
   const explicitFoot = isObj ? playerOrId.preferredFoot : undefined;
 
-  const heightCm = explicitHeight || baseHeight + heightVariation;
-  const weightKg = explicitWeight || baseWeight + weightVariation;
-
-  // Preferred foot determination
-  let preferredFoot: 'Right' | 'Left' | 'Both' = explicitFoot || 'Right';
-  if (!explicitFoot) {
-    if (pos === 'LB' || pos === 'LWB' || pos === 'LM' || pos === 'LW') {
-      preferredFoot = (hash % 10 < 8) ? 'Left' : 'Right';
-    } else if (pos === 'RB' || pos === 'RWB' || pos === 'RM' || pos === 'RW') {
-      preferredFoot = (hash % 10 < 8) ? 'Right' : 'Left';
-    } else {
-      const footMod = hash % 20;
-      preferredFoot = footMod === 0 ? 'Both' : footMod <= 4 ? 'Left' : 'Right';
-    }
-  }
-
-  return { heightCm, weightKg, preferredFoot };
+  return {
+    heightCm: explicitHeight || bio.heightCm,
+    weightKg: explicitWeight || bio.weightKg,
+    preferredFoot: explicitFoot || bio.preferredFoot,
+  };
 }

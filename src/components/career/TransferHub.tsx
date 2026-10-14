@@ -125,7 +125,9 @@ export function TransferHub({
   );
 
   // Era pool toggle ('modern' default per user requirement)
-  const [playerPoolType, setPlayerPoolType] = useState<'modern' | 'legends' | 'all'>('modern');
+  const [playerPoolType, setPlayerPoolType] = useState<'modern' | 'legends' | 'all'>(
+    save.settings?.playerPool || 'modern'
+  );
 
   // Rich Scouting search & filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -313,53 +315,13 @@ export function TransferHub({
   };
 
   const handleStartNegotiation = (player: MarketPlayer) => {
-    // If player has versions, initialize with the top version
-    const initialVersion = player.versions && player.versions.length > 0 ? player.versions[0] : null;
-    const initialPlayer: MarketPlayer = initialVersion
-      ? {
-          ...player,
-          selectedVersionId: initialVersion.id,
-          name: initialVersion.displayName,
-          rating: initialVersion.rating,
-          value: initialVersion.value,
-          wageDemand: initialVersion.wageDemand,
-          age: initialVersion.age,
-          club: initialVersion.club,
-          cardId: initialVersion.id,
-        }
-      : { ...player };
-
-    const preferred = getPlayerPreferredTerms(initialPlayer as unknown as CareerPlayer);
-    setNegotiatingPlayer(initialPlayer);
-    setOfferedFee(initialPlayer.value);
+    const preferred = getPlayerPreferredTerms(player as unknown as CareerPlayer);
+    setNegotiatingPlayer(player);
+    setOfferedFee(player.value);
     setOfferedWage(preferred.preferredWageWeekly);
     setOfferedContractYears(preferred.preferredContractYears);
     setOfferedAddOnFee(0);
     setOfferedSellOnClause(10);
-    setOfferedSquadRole(preferred.expectedSquadRole);
-    setOfferedSigningBonus(preferred.expectedSigningBonus);
-    setOfferedReleaseClause(preferred.releaseClausePreference);
-    setNegotiationFeedback({ status: 'idle', message: '' });
-  };
-
-  const handleSelectLegendVersion = (ver: PlayerVersionVariant) => {
-    if (!negotiatingPlayer) return;
-    const updated: MarketPlayer = {
-      ...negotiatingPlayer,
-      selectedVersionId: ver.id,
-      name: ver.displayName,
-      rating: ver.rating,
-      value: ver.value,
-      wageDemand: ver.wageDemand,
-      age: ver.age,
-      club: ver.club,
-      cardId: ver.id,
-    };
-    const preferred = getPlayerPreferredTerms(updated as unknown as CareerPlayer);
-    setNegotiatingPlayer(updated);
-    setOfferedFee(ver.value);
-    setOfferedWage(preferred.preferredWageWeekly);
-    setOfferedContractYears(preferred.preferredContractYears);
     setOfferedSquadRole(preferred.expectedSquadRole);
     setOfferedSigningBonus(preferred.expectedSigningBonus);
     setOfferedReleaseClause(preferred.releaseClausePreference);
@@ -1383,11 +1345,6 @@ export function TransferHub({
                           {player.isHomegrown && (
                             <span className="text-emerald-400 font-bold uppercase tracking-wider text-[8px] bg-emerald-950/60 px-1 py-0.2 rounded border border-emerald-900/60">
                               HG
-                            </span>
-                          )}
-                          {player.versions && player.versions.length > 1 && (
-                            <span className="text-[8px] font-bold text-amber-400 bg-amber-950/60 border border-amber-800/60 px-1 py-0.2 rounded">
-                              {player.versions.length} Eds
                             </span>
                           )}
                         </div>
@@ -2771,47 +2728,6 @@ export function TransferHub({
                 </div>
               );
             })()}
-
-            {/* Legend Historical Edition Selector (User requirement: select which season version to bid for) */}
-            {negotiatingPlayer.versions && negotiatingPlayer.versions.length > 1 && (
-              <div className="bg-amber-950/30 border border-amber-500/40 rounded-2xl p-3.5 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 flex items-center gap-1 font-display">
-                    <span>👑</span> Select Historical Edition
-                  </span>
-                  <span className="text-[10px] text-amber-300/80 font-mono">
-                    {negotiatingPlayer.versions.length} Seasons Available
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-1">
-                  {negotiatingPlayer.versions.map((ver) => {
-                    const isSelected =
-                      (negotiatingPlayer.selectedVersionId || negotiatingPlayer.cardId) === ver.id;
-                    return (
-                      <button
-                        key={ver.id}
-                        type="button"
-                        onClick={() => handleSelectLegendVersion(ver)}
-                        className={`p-2.5 rounded-xl text-left border transition-all text-xs flex justify-between items-center cursor-pointer ${
-                          isSelected
-                            ? 'bg-amber-500 text-slate-950 border-amber-300 font-bold shadow-md shadow-amber-500/30 ring-2 ring-amber-400'
-                            : 'bg-slate-950/80 border-slate-800 text-slate-300 hover:border-amber-500/50 hover:text-white'
-                        }`}
-                      >
-                        <div className="truncate mr-1">
-                          <div className="font-bold truncate">{ver.displayName}</div>
-                          <div className="text-[10px] opacity-80">{ver.club} • {ver.age} yrs</div>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <span className="font-mono font-black">{ver.rating} OVR</span>
-                          <div className="text-[9px] opacity-80 font-mono">{formatCurrency(ver.value)}</div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
 
             {/* Detailed Negotiation Inputs */}
             <div className="space-y-4 text-xs">

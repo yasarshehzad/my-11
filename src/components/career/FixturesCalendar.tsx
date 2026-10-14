@@ -20,6 +20,7 @@ import { formatCurrency } from '../../career/finance';
 import { isSeasonComplete, getSeasonReviewSummary, advanceToNextSeason } from '../../career/seasons';
 import { MatchDayModal } from './MatchDayModal';
 import { MatchOverviewModal } from './MatchOverviewModal';
+import { InstantMatchSummaryModal } from './InstantMatchSummaryModal';
 
 interface FixturesCalendarProps {
   save: CareerSaveFile;
@@ -39,6 +40,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
     type: 'result' | 'preview';
     fixture: LeagueFixture;
   } | null>(null);
+  const [instantSimResultModal, setInstantSimResultModal] = useState<LeagueFixture | null>(null);
   const [showSeasonReviewModal, setShowSeasonReviewModal] = useState(false);
 
   const fixtures = save.fixtures || [];
@@ -107,18 +109,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
 
     onUpdateSave(updatedSave);
     setSimulating(false);
-
-    if (onNotification) {
-      const userWon = isUserHome
-        ? simmed.homeScore! > simmed.awayScore!
-        : simmed.awayScore! > simmed.homeScore!;
-      const isDraw = simmed.homeScore === simmed.awayScore;
-
-      const resultText = userWon ? 'Victory!' : isDraw ? 'Draw' : 'Defeat';
-      onNotification(
-        `Matchday ${nextFixture.round} Result: ${simmed.homeScore} - ${simmed.awayScore} (${resultText})`
-      );
-    }
+    setInstantSimResultModal(simmed);
   };
 
   // Time-skip advancement
@@ -511,6 +502,20 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
           onPlayInstantMatch={() => {
             setMatchOverviewModal(null);
             handlePlayNextMatch();
+          }}
+        />
+      )}
+
+      {/* Instant Match Summary Takeover Modal */}
+      {instantSimResultModal && (
+        <InstantMatchSummaryModal
+          fixture={instantSimResultModal}
+          save={save}
+          onClose={() => setInstantSimResultModal(null)}
+          onViewDetailedDossier={() => {
+            const fix = instantSimResultModal;
+            setInstantSimResultModal(null);
+            setMatchOverviewModal({ type: 'result', fixture: fix });
           }}
         />
       )}

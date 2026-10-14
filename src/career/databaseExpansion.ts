@@ -4,6 +4,8 @@ import { isHomegrownPlayer } from './squad';
 import { getClubById, getCleanClubName } from './clubs';
 
 
+import { getPlayerBio } from './playerBioDatabase';
+
 export interface SupplementalPlayerDef {
   id: string;
   name: string;
@@ -16,6 +18,12 @@ export interface SupplementalPlayerDef {
   potential: number;
   nationality: string;
   isHomegrown?: boolean;
+  dateOfBirth?: string;
+  contractYears?: number;
+  wageWeekly?: number;
+  preferredFoot?: 'Right' | 'Left' | 'Both';
+  heightCm?: number;
+  weightKg?: number;
 }
 
 /** 2026/27 Season Database (Current Season - 20 Clubs including promoted Leeds, Sunderland, Burnley) */
@@ -1723,13 +1731,20 @@ export function convertToCareerPlayer(def: SupplementalPlayerDef, seasonYear: nu
   const ageDelta = Math.max(0, seasonYear - 2026);
   const effectiveAge = def.age + ageDelta;
   const value = calculatePlayerValue(def.rating, effectiveAge, def.position);
-  const wageWeekly = calculateWeeklyWage(def.rating, value);
+  const wageWeekly = def.wageWeekly || calculateWeeklyWage(def.rating, value);
   const isHomegrown = typeof def.isHomegrown === 'boolean'
     ? def.isHomegrown
     : isHomegrownPlayer({ nationality: def.nationality });
 
   const clubObj = getClubById(def.clubId);
   const resolvedClub = clubObj ? clubObj.defaultName : getCleanClubName(def.clubId);
+  const bio = getPlayerBio(def.name, def.position);
+
+  const preferredFoot = def.preferredFoot || bio.preferredFoot;
+  const heightCm = def.heightCm || bio.heightCm;
+  const weightKg = def.weightKg || bio.weightKg;
+  const dateOfBirth = def.dateOfBirth || bio.dateOfBirth || `${2026 - def.age}-07-01`;
+  const contractYears = def.contractYears ?? (def.rating >= 86 ? 4 : def.age <= 21 ? 5 : 3);
 
   return {
     id: def.id,
@@ -1740,9 +1755,13 @@ export function convertToCareerPlayer(def: SupplementalPlayerDef, seasonYear: nu
     naturalPositions: def.naturalPositions,
     secondaryPositions: def.secondaryPositions,
     age: effectiveAge,
+    dateOfBirth,
+    preferredFoot,
+    heightCm,
+    weightKg,
     value,
     wageWeekly,
-    contractYears: 3,
+    contractYears,
     fitness: 100,
     morale: 85,
     form: 7.0,
