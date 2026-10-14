@@ -269,6 +269,7 @@ export interface LeagueFixture {
   events?: MatchEvent[];
   stats?: MatchStats;
   manOfTheMatch?: { name: string; clubId: string; rating: number };
+  venue?: string;
 }
 
 export interface ClubStanding {
@@ -326,7 +327,11 @@ export interface CupTournament {
   winnerClubId?: string;
   runnerUpClubId?: string;
   prizeMoney: number;
+  drawDate?: string;
+  drawCompleted?: boolean;
+  qualifyingClubs?: string[];
 }
+
 
 export interface TransferRecord {
   id: string;

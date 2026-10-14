@@ -8,6 +8,8 @@ import {
   getEffectiveRating,
   getEaFcCardStyle,
 } from '../../career/formAndProgression';
+import { getCleanClubName } from '../../career/clubs';
+
 
 interface EaFcCardProps {
   player: CareerPlayer;
@@ -150,8 +152,9 @@ export function EaFcCard({
         <div className="flex justify-center items-center gap-2 text-[11px] font-bold opacity-80 mt-0.5">
           <span>Age {player.age}</span>
           <span>•</span>
-          <span className="uppercase">{player.club}</span>
+          <span className="uppercase">{getCleanClubName(player.club)}</span>
           {player.preferredFoot && (
+
             <>
               <span>•</span>
               <span>{player.preferredFoot} Foot</span>

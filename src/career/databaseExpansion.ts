@@ -1,6 +1,8 @@
 import { CareerPlayer, DatabaseSeason } from './types';
 import { calculatePlayerValue, calculateWeeklyWage } from './finance';
 import { isHomegrownPlayer } from './squad';
+import { getClubById, getCleanClubName } from './clubs';
+
 
 export interface SupplementalPlayerDef {
   id: string;
@@ -1717,12 +1719,17 @@ export const SUPPLEMENTAL_PLAYERS_DATA: SupplementalPlayerDef[] = SUPPLEMENTAL_P
 /**
  * Converts supplemental player definitions into standard CareerPlayer objects.
  */
-export function convertToCareerPlayer(def: SupplementalPlayerDef): CareerPlayer {
-  const value = calculatePlayerValue(def.rating, def.age, def.position);
+export function convertToCareerPlayer(def: SupplementalPlayerDef, seasonYear: number = 2026): CareerPlayer {
+  const ageDelta = Math.max(0, seasonYear - 2026);
+  const effectiveAge = def.age + ageDelta;
+  const value = calculatePlayerValue(def.rating, effectiveAge, def.position);
   const wageWeekly = calculateWeeklyWage(def.rating, value);
   const isHomegrown = typeof def.isHomegrown === 'boolean'
     ? def.isHomegrown
     : isHomegrownPlayer({ nationality: def.nationality });
+
+  const clubObj = getClubById(def.clubId);
+  const resolvedClub = clubObj ? clubObj.defaultName : getCleanClubName(def.clubId);
 
   return {
     id: def.id,
@@ -1732,7 +1739,7 @@ export function convertToCareerPlayer(def: SupplementalPlayerDef): CareerPlayer 
     position: def.position,
     naturalPositions: def.naturalPositions,
     secondaryPositions: def.secondaryPositions,
-    age: def.age,
+    age: effectiveAge,
     value,
     wageWeekly,
     contractYears: 3,
@@ -1741,13 +1748,17 @@ export function convertToCareerPlayer(def: SupplementalPlayerDef): CareerPlayer 
     form: 7.0,
     injured: false,
     isHomegrown,
-    club: def.clubId,
+    club: resolvedClub,
     nationality: def.nationality,
     potential: def.potential,
   };
 }
 
-export function getSupplementalPlayersForClub(clubId: string, season: DatabaseSeason = '2026/27'): CareerPlayer[] {
+export function getSupplementalPlayersForClub(
+  clubId: string,
+  season: DatabaseSeason = '2026/27',
+  seasonYear: number = 2026
+): CareerPlayer[] {
   const pool = season === '2024/25'
     ? SUPPLEMENTAL_PLAYERS_2024_25
     : season === '2025/26'
@@ -1762,14 +1773,18 @@ export function getSupplementalPlayersForClub(clubId: string, season: DatabaseSe
       if (matched.length > 0) break;
     }
   }
-  return matched.map(convertToCareerPlayer);
+  return matched.map((def) => convertToCareerPlayer(def, seasonYear));
 }
 
-export function getAllSupplementalPlayers(season: DatabaseSeason = '2026/27'): CareerPlayer[] {
+export function getAllSupplementalPlayers(
+  season: DatabaseSeason = '2026/27',
+  seasonYear: number = 2026
+): CareerPlayer[] {
   const pool = season === '2024/25'
     ? SUPPLEMENTAL_PLAYERS_2024_25
     : season === '2025/26'
     ? SUPPLEMENTAL_PLAYERS_2025_26
     : SUPPLEMENTAL_PLAYERS_2026_27;
-  return pool.map(convertToCareerPlayer);
+  return pool.map((def) => convertToCareerPlayer(def, seasonYear));
 }
+

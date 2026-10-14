@@ -246,8 +246,8 @@ export function TransferHub({
   const dbSeason = save.settings?.databaseSeason || save.season?.databaseSeason || '2026/27';
 
   const marketPlayers = useMemo(
-    () => getScoutingMarketPool(save.squad, filters, dbSeason),
-    [save.squad, filters, dbSeason]
+    () => getScoutingMarketPool(save.squad, filters, dbSeason, save.season?.yearStart || 2026),
+    [save.squad, filters, dbSeason, save.season?.yearStart]
   );
 
   // Total pages and paginated slice
@@ -265,11 +265,12 @@ export function TransferHub({
 
   const shortlistedPlayers = useMemo(
     () =>
-      getScoutingMarketPool(save.squad, undefined, dbSeason).filter((p) =>
+      getScoutingMarketPool(save.squad, undefined, dbSeason, save.season?.yearStart || 2026).filter((p) =>
         shortlistIdsSet.has(p.id)
       ),
-    [save.squad, shortlistIdsSet, dbSeason]
+    [save.squad, shortlistIdsSet, dbSeason, save.season?.yearStart]
   );
+
 
   const boardStatus = useMemo(
     () => save.boardStatus || evaluateBoardConfidence(save),

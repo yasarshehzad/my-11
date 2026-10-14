@@ -160,47 +160,65 @@ export function generateRoundRobinFixtures(
   return { fixtures, calendar };
 }
 
-/**
- * Distributes 38 weekend/midweek dates realistically across the European football season.
- */
-function generateCalendarMatchDates(yearStart: number): string[] {
+export function generateCalendarMatchDates(yearStart: number): string[] {
   const dates: string[] = [];
 
-  // Matchday 1 starts mid-August
-  const cur = new Date(Date.UTC(yearStart, 7, 15)); // 15 Aug
+  // Matchday 1 starts on the second Saturday of August
+  const cur = new Date(Date.UTC(yearStart, 7, 8));
+  while (cur.getUTCDay() !== 6) {
+    cur.setUTCDate(cur.getUTCDate() + 1);
+  }
+
+  const snapToSaturday = (d: Date): void => {
+    const day = d.getUTCDay();
+    if (day === 6) return;
+    const diff = (6 - day + 7) % 7;
+    d.setUTCDate(d.getUTCDate() + diff);
+  };
 
   for (let round = 1; round <= 38; round++) {
     dates.push(cur.toISOString().split('T')[0]);
 
-    // Fast-forward ~7 days (with international break pauses)
-    const month = cur.getUTCMonth(); // 0-indexed (8 = Sept, 9 = Oct, 10 = Nov, 2 = March)
-
-    // Mid-September break (after round 4)
+    // International breaks, festive period, and cup reservation windows
     if (round === 4) {
+      // September international break (14-day gap)
       cur.setUTCDate(cur.getUTCDate() + 14);
-    }
-    // Mid-October break (after round 8)
-    else if (round === 8) {
+      snapToSaturday(cur);
+    } else if (round === 8) {
+      // October international break (14-day gap)
       cur.setUTCDate(cur.getUTCDate() + 14);
-    }
-    // Mid-November break (after round 12)
-    else if (round === 12) {
+      snapToSaturday(cur);
+    } else if (round === 12) {
+      // November international break (14-day gap)
       cur.setUTCDate(cur.getUTCDate() + 14);
-    }
-    // Late-December Festive period (shorter gap: 4 days)
-    else if (round >= 18 && round <= 20) {
-      cur.setUTCDate(cur.getUTCDate() + 4);
-    }
-    // Late-March international break (after round 29)
-    else if (round === 29) {
-      cur.setUTCDate(cur.getUTCDate() + 14);
-    } else {
+      snapToSaturday(cur);
+    } else if (round === 18) {
+      // Boxing Day fixture (26 December)
+      cur.setUTCFullYear(yearStart, 11, 26);
+    } else if (round === 19) {
+      // New Year fixture (1 January)
+      cur.setUTCFullYear(yearStart + 1, 0, 1);
+    } else if (round === 20) {
+      // The English Cup (FA Cup) Third Round takes place on the first full weekend of January.
+      // Resume Premier League Round 21 on the second Saturday of January.
+      cur.setUTCFullYear(yearStart + 1, 0, 8);
+      snapToSaturday(cur);
       cur.setUTCDate(cur.getUTCDate() + 7);
+      snapToSaturday(cur);
+    } else if (round === 29) {
+      // Late-March international break (14-day gap)
+      cur.setUTCDate(cur.getUTCDate() + 14);
+      snapToSaturday(cur);
+    } else {
+      // Standard weekly weekend fixture (strictly Saturday)
+      cur.setUTCDate(cur.getUTCDate() + 7);
+      snapToSaturday(cur);
     }
   }
 
   return dates;
 }
+
 
 export function getNextClubFixture(
   fixtures: LeagueFixture[],

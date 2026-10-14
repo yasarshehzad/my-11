@@ -9,7 +9,7 @@ import {
   MatchStats,
 } from '../../career/types';
 import { getEffectiveClubName, getClubsWithUserClub } from '../../career/clubs';
-import { findAnyClub } from '../../career/cups';
+import { findAnyClub, CUP_IDS } from '../../career/cups';
 import { formatCareerDate } from '../../career/formatters';
 
 export interface MatchOverviewModalProps {
@@ -38,6 +38,18 @@ export function MatchOverviewModal({
   const isCup = 'competitionName' in fixture;
   const cupFixture = isCup ? (fixture as CupFixture) : null;
   const competitionTitle = cupFixture ? cupFixture.competitionName : 'English Top Flight';
+
+  const isNeutralWembley =
+    cupFixture &&
+    (cupFixture.competitionId === CUP_IDS.SHIELD ||
+      (cupFixture.roundName === 'Final' &&
+        (cupFixture.competitionId === CUP_IDS.LEAGUE_CUP || cupFixture.competitionId === CUP_IDS.ENGLISH_CUP)) ||
+      (cupFixture.roundName === 'Semi-Final' && cupFixture.competitionId === CUP_IDS.ENGLISH_CUP));
+
+  const venueDisplay = isNeutralWembley
+    ? 'Wembley Stadium (Neutral)'
+    : (homeClub.stadiumName || 'Stadium');
+
   const roundTitle = cupFixture ? cupFixture.roundName : `Matchday ${fixture.round} of 38`;
 
   const isUserHome = fixture.homeClubId === save.club.id;
@@ -193,8 +205,9 @@ export function MatchOverviewModal({
                 </span>
               )}
               <span className="text-[10px] text-slate-400 font-medium truncate max-w-[130px] sm:max-w-[170px] text-center">
-                🏟️ {homeClub.stadiumName}
+                🏟️ {venueDisplay}
               </span>
+
             </div>
 
             {/* Away Club */}
@@ -449,8 +462,9 @@ export function MatchOverviewModal({
 
               <p className="text-[11px] text-slate-400 leading-relaxed">
                 Tactical Mentality: <strong className="text-slate-200">Balanced / High Pressing</strong>.
-                Expect a competitive encounter at {homeClub.stadiumName}. Managers must ensure defensive discipline and manage fitness rotations carefully.
+                Expect a competitive encounter at {venueDisplay}. Managers must ensure defensive discipline and manage fitness rotations carefully.
               </p>
+
             </div>
 
             {/* Matchday Action Buttons */}

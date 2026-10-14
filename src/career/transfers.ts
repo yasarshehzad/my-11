@@ -28,9 +28,10 @@ import {
   U21_AGE_LIMIT,
   getSeniorPlayerCount,
 } from './squad';
-import { getAllClubs, getClubById } from './clubs';
+import { getAllClubs, getClubById, getCleanClubName } from './clubs';
 import { CONTINENTAL_EUROPEAN_CLUBS } from './continentalClubs';
 import { getAllSupplementalPlayers } from './databaseExpansion';
+
 
 /**
  * Checks whether the transfer window is open on a given date.
@@ -291,7 +292,8 @@ function getDeterministicAge(id: string): number {
 export function getScoutingMarketPool(
   userSquad: CareerPlayer[] = [],
   filters?: ScoutingFilters | DatabaseSeason,
-  databaseSeason: DatabaseSeason = '2026/27'
+  databaseSeason: DatabaseSeason = '2026/27',
+  seasonYear: number = 2026
 ): MarketPlayer[] {
   let effectiveSeason: DatabaseSeason = databaseSeason;
   let effectiveFilters: ScoutingFilters | undefined = undefined;
@@ -302,9 +304,12 @@ export function getScoutingMarketPool(
     effectiveFilters = filters;
   }
 
-  const userPlayerIds = new Set(userSquad.map((p) => p.id));
+  const ageDelta = Math.max(0, seasonYear - 2026);
+
+  const safeSquad = Array.isArray(userSquad) ? userSquad : [];
+  const userPlayerIds = new Set(safeSquad.map((p) => p.id));
   const userPlayerNames = new Set(
-    userSquad.map((p) => (p.name || '').toLowerCase()).filter(Boolean)
+    safeSquad.map((p) => (p.name || '').toLowerCase()).filter(Boolean)
   );
 
   // 1. Group base players by canonical name to deduplicate historical versions of legends
@@ -336,7 +341,7 @@ export function getScoutingMarketPool(
       continue;
     }
 
-    const age = getDeterministicAge(base.id);
+    const age = getDeterministicAge(base.id) + ageDelta;
     const value = calculatePlayerValue(base.rating, age, base.primaryPosition);
     const wageDemand = calculateWeeklyWage(base.rating, value);
 
@@ -349,7 +354,7 @@ export function getScoutingMarketPool(
       wageDemand,
       age,
       rarity: base.rarity,
-      club: base.club,
+      club: getCleanClubName(base.club),
     };
 
     if (!playerGroups.has(lowerName)) {
@@ -396,7 +401,8 @@ export function getScoutingMarketPool(
   }
 
   // 2. Include supplemental database expansion players (modern current season)
-  const supplementalPlayers = getAllSupplementalPlayers(effectiveSeason);
+  const supplementalPlayers = getAllSupplementalPlayers(effectiveSeason, seasonYear);
+
   for (const supp of supplementalPlayers) {
     const lowerName = supp.name.toLowerCase();
     if (

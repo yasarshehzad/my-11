@@ -11,7 +11,8 @@ import {
   Club,
 } from '../../career/types';
 import { getAllClubs, getEffectiveClubName } from '../../career/clubs';
-import { findAnyClub, advanceCupTournament, simulateAiFixturesInCupRound } from '../../career/cups';
+import { CUP_IDS, findAnyClub, advanceCupTournament, simulateAiFixturesInCupRound } from '../../career/cups';
+
 import { simulateMatchFixture } from '../../career/sim';
 import {
   simulateFullMatch,
@@ -70,7 +71,21 @@ export function MatchDayModal({
   const userClub = isUserHome ? homeClub : awayClub;
   const opponentClub = isUserHome ? awayClub : homeClub;
 
+  const isCup = 'isKnockout' in fixture;
+  const cupFix = isCup ? (fixture as CupFixture) : undefined;
+  const isNeutralWembley =
+    cupFix &&
+    (cupFix.competitionId === CUP_IDS.SHIELD ||
+      (cupFix.roundName === 'Final' &&
+        (cupFix.competitionId === CUP_IDS.LEAGUE_CUP || cupFix.competitionId === CUP_IDS.ENGLISH_CUP)) ||
+      (cupFix.roundName === 'Semi-Final' && cupFix.competitionId === CUP_IDS.ENGLISH_CUP));
+
+  const venueDisplay = isNeutralWembley
+    ? 'Wembley Stadium (Neutral)'
+    : (homeClub.stadiumName || 'Stadium');
+
   const squad = save.squad || [];
+
   const starterIdsSet = new Set(save.lineup?.starterIds || []);
   const benchIdsSet = new Set(save.lineup?.benchIds || []);
 
@@ -341,7 +356,7 @@ export function MatchDayModal({
                   {getEffectiveClubName(homeClub)}
                 </div>
                 <div className="text-[10px] text-slate-400 uppercase font-bold">
-                  {isUserHome ? 'YOU • HOME' : 'Home'}
+                  {isUserHome ? (isNeutralWembley ? 'YOU • NEUTRAL' : 'YOU • HOME') : (isNeutralWembley ? 'Neutral' : 'Home')}
                 </div>
               </div>
 
@@ -349,7 +364,7 @@ export function MatchDayModal({
               <div className="space-y-1">
                 <div className="text-xl font-display font-black text-emerald-400">VS</div>
                 <div className="text-[10px] text-slate-400 truncate">
-                  🏟️ {homeClub.stadiumName}
+                  🏟️ {venueDisplay}
                 </div>
               </div>
 
@@ -367,8 +382,9 @@ export function MatchDayModal({
                   {getEffectiveClubName(awayClub)}
                 </div>
                 <div className="text-[10px] text-slate-400 uppercase font-bold">
-                  {!isUserHome ? 'YOU • AWAY' : 'Away'}
+                  {!isUserHome ? (isNeutralWembley ? 'YOU • NEUTRAL' : 'YOU • AWAY') : (isNeutralWembley ? 'Neutral' : 'Away')}
                 </div>
+
               </div>
             </div>
 

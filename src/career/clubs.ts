@@ -347,13 +347,144 @@ export function getAllClubs(season: DatabaseSeason = '2026/27'): Club[] {
   return getClubsForSeason(season);
 }
 
+export const LOWER_LEAGUE_CLUBS: Club[] = [
+  {
+    id: 'lower_sheffield_red',
+    defaultName: 'Sheffield Red',
+    shortName: 'SHU',
+    tier: 'lower',
+    startingBudget: 15_000_000,
+    wageBudgetWeekly: 500_000,
+    primaryColor: '#EE2737',
+    secondaryColor: '#000000',
+    stadiumName: 'Bramall Park',
+    stadiumCapacity: 32050,
+    reputation: 68,
+  },
+  {
+    id: 'lower_norwich_yellow',
+    defaultName: 'Norwich Canaries',
+    shortName: 'NOR',
+    tier: 'lower',
+    startingBudget: 16_000_000,
+    wageBudgetWeekly: 550_000,
+    primaryColor: '#00A650',
+    secondaryColor: '#FFF200',
+    stadiumName: 'Carrow Ground',
+    stadiumCapacity: 27244,
+    reputation: 69,
+  },
+  {
+    id: 'lower_derby_rams',
+    defaultName: 'Derby Rams',
+    shortName: 'DER',
+    tier: 'lower',
+    startingBudget: 12_000_000,
+    wageBudgetWeekly: 450_000,
+    primaryColor: '#FFFFFF',
+    secondaryColor: '#000000',
+    stadiumName: 'Pride Arena',
+    stadiumCapacity: 33597,
+    reputation: 66,
+  },
+  {
+    id: 'lower_watford_hornets',
+    defaultName: 'Watford Hornets',
+    shortName: 'WAT',
+    tier: 'lower',
+    startingBudget: 14_000_000,
+    wageBudgetWeekly: 480_000,
+    primaryColor: '#FBEE23',
+    secondaryColor: '#ED2127',
+    stadiumName: 'Vicarage Field',
+    stadiumCapacity: 22200,
+    reputation: 67,
+  },
+  {
+    id: 'lower_middlesbrough_red',
+    defaultName: 'Middlesbrough Red',
+    shortName: 'MID',
+    tier: 'lower',
+    startingBudget: 14_000_000,
+    wageBudgetWeekly: 460_000,
+    primaryColor: '#E01E26',
+    secondaryColor: '#FFFFFF',
+    stadiumName: 'Riverside Field',
+    stadiumCapacity: 34742,
+    reputation: 67,
+  },
+  {
+    id: 'lower_west_brom_navy',
+    defaultName: 'West Brom Navy',
+    shortName: 'WBA',
+    tier: 'lower',
+    startingBudget: 15_000_000,
+    wageBudgetWeekly: 520_000,
+    primaryColor: '#122F67',
+    secondaryColor: '#FFFFFF',
+    stadiumName: 'Hawthorns Ground',
+    stadiumCapacity: 26850,
+    reputation: 68,
+  },
+  {
+    id: 'lower_bristol_red',
+    defaultName: 'Bristol Robins',
+    shortName: 'BRC',
+    tier: 'lower',
+    startingBudget: 11_000_000,
+    wageBudgetWeekly: 400_000,
+    primaryColor: '#E21A22',
+    secondaryColor: '#FFFFFF',
+    stadiumName: 'Ashton Gate Field',
+    stadiumCapacity: 27000,
+    reputation: 65,
+  },
+  {
+    id: 'lower_stoke_potters',
+    defaultName: 'Stoke Potters',
+    shortName: 'STK',
+    tier: 'lower',
+    startingBudget: 13_000_000,
+    wageBudgetWeekly: 440_000,
+    primaryColor: '#E03A3E',
+    secondaryColor: '#002D62',
+    stadiumName: 'Bet365 Arena',
+    stadiumCapacity: 30089,
+    reputation: 66,
+  },
+];
+
 export function getAllKnownClubs(): Club[] {
-  return [...ALL_CAREER_CLUBS];
+  return [...ALL_CAREER_CLUBS, ...LOWER_LEAGUE_CLUBS];
 }
 
 export function getClubById(id: string): Club | undefined {
-  const found = ALL_CAREER_CLUBS.find((c) => c.id === id);
+  const found = ALL_CAREER_CLUBS.find((c) => c.id === id) || LOWER_LEAGUE_CLUBS.find((c) => c.id === id);
   return found ? { ...found } : undefined;
+}
+
+export function getCleanClubName(clubIdOrName: string): string {
+  if (!clubIdOrName) return 'Free Agent';
+  if (clubIdOrName.toLowerCase() === 'tbc') return 'TBC / Awaiting Draw';
+  
+  const all = [...ALL_CAREER_CLUBS, ...LOWER_LEAGUE_CLUBS];
+  const found = all.find(
+    (c) =>
+      c.id.toLowerCase() === clubIdOrName.toLowerCase() ||
+      c.defaultName.toLowerCase() === clubIdOrName.toLowerCase() ||
+      c.shortName.toLowerCase() === clubIdOrName.toLowerCase()
+  );
+  if (found) return found.defaultName;
+
+  // Clean raw identifiers with underscores (e.g. man_blue -> Manchester Blue / Man Blue)
+  if (clubIdOrName.includes('_')) {
+    return clubIdOrName
+      .split('_')
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(' ');
+  }
+
+  return clubIdOrName;
 }
 
 export function getEffectiveClubName(club: Club, userClub?: Club): string {
@@ -382,3 +513,4 @@ export function getClubsWithUserClub(userClub?: Club): Club[] {
       : c
   );
 }
+

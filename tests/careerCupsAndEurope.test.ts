@@ -6,15 +6,19 @@ import {
   advanceCupTournament,
   simulateAiFixturesInCupRound,
   autoResolvePendingCupFixtures,
+  conductCupDraw,
   CUP_IDS,
   findAnyClub,
 } from '../src/career/cups';
-import { getAllClubs, getClubById } from '../src/career/clubs';
+
+import { getAllClubs, getClubById, getCleanClubName, LOWER_LEAGUE_CLUBS } from '../src/career/clubs';
 import { CONTINENTAL_EUROPEAN_CLUBS, getContinentalClubById } from '../src/career/continentalClubs';
 import { CupFixture, CupTournament, CareerSaveFile } from '../src/career/types';
 import { advanceTimeSkip } from '../src/career/sim';
 import { createNewCareerSave } from '../src/career/saves';
 import { getPresetSettings } from '../src/career/settings';
+import { getScoutingMarketPool } from '../src/career/transfers';
+import { generateCalendarMatchDates } from '../src/career/calendar';
 
 // Mock localStorage for node environment
 const mockStorage: Record<string, string> = {};
@@ -83,14 +87,26 @@ describe('Career Mode Phase 5: Cups & European Competitions', () => {
       expect(cups[CUP_IDS.LEAGUE_CUP].currentRound).toBe('Round of 16');
       expect(cups[CUP_IDS.LEAGUE_CUP].fixtures.length).toBe(8);
 
-      // Check European Champions Cup
+      // Check European Champions Cup (starts at Quarter-Final with 4 matches, awaiting draw on July 1)
       expect(cups[CUP_IDS.EURO_CHAMPIONS].name).toBe('European Champions Cup');
       expect(cups[CUP_IDS.EURO_CHAMPIONS].currentRound).toBe('Quarter-Final');
       expect(cups[CUP_IDS.EURO_CHAMPIONS].fixtures.length).toBe(4);
       expect(cups[CUP_IDS.EURO_CHAMPIONS].prizeMoney).toBe(45_000_000);
+      expect(cups[CUP_IDS.EURO_CHAMPIONS].drawCompleted).toBe(false);
+      expect(cups[CUP_IDS.EURO_CHAMPIONS].fixtures.every((f) => f.homeClubId === 'tbc')).toBe(true);
 
-      // Check that European cups include continental clubs
-      const euroClubs = cups[CUP_IDS.EURO_CHAMPIONS].fixtures.flatMap((f) => [
+      // Check European Plate starts at Quarter-Final (8 teams, 4 matches), NOT Semi-Final
+      expect(cups[CUP_IDS.EURO_PLATE].name).toBe('European Plate');
+      expect(cups[CUP_IDS.EURO_PLATE].currentRound).toBe('Quarter-Final');
+      expect(cups[CUP_IDS.EURO_PLATE].fixtures.length).toBe(4);
+
+      // Check that European cups include continental giants in qualified entrants pool
+      expect(cups[CUP_IDS.EURO_CHAMPIONS].qualifyingClubs).toContain('madrid_royal');
+      expect(cups[CUP_IDS.EURO_CHAMPIONS].qualifyingClubs).toContain('bavarian_munich');
+
+      // Once the draw is conducted, the fixtures contain the continental clubs
+      const drawnChampions = conductCupDraw(cups[CUP_IDS.EURO_CHAMPIONS]);
+      const euroClubs = drawnChampions.fixtures.flatMap((f) => [
         f.homeClubId,
         f.awayClubId,
       ]);
@@ -98,6 +114,7 @@ describe('Career Mode Phase 5: Cups & European Competitions', () => {
       expect(euroClubs).toContain('bavarian_munich');
     });
   });
+
 
   describe('Knockout Simulation and Penalty Shootouts', () => {
     it('resolves regulation draws with penalty shootouts', () => {
@@ -167,10 +184,11 @@ describe('Career Mode Phase 5: Cups & European Competitions', () => {
   describe('Bracket Progression', () => {
     it('advances tournament from Round of 16 to Quarter-Final when all matches are played', () => {
       const cups = initializeSeasonCups(testClub, 2026);
-      const leagueCup = cups[CUP_IDS.LEAGUE_CUP];
+      const leagueCup = conductCupDraw(cups[CUP_IDS.LEAGUE_CUP]);
 
       expect(leagueCup.currentRound).toBe('Round of 16');
       expect(leagueCup.fixtures.length).toBe(8);
+
 
       // Initially unplayed -> advance does nothing
       const initialAdv = advanceCupTournament(leagueCup, 2026);
@@ -293,6 +311,93 @@ describe('Career Mode Phase 5: Cups & European Competitions', () => {
       // Tournaments should have simulated their matches automatically
       const leagueCup = updatedCups[CUP_IDS.LEAGUE_CUP];
       expect(leagueCup.fixtures.some((f) => f.played)).toBe(true);
+    });
+  });
+
+  describe('Football Realism & Scheduling Audit Validations', () => {
+    it('initializes European and domestic cup knockout stages with Awaiting Draw / TBC at season start (1 July 2027)', () => {
+      const userClub = getAllClubs()[0]; // Man Blue
+      const cups2027 = initializeSeasonCups(userClub, 2027, '2027-07-01');
+
+      // Champions Cup
+      const champions = cups2027[CUP_IDS.EURO_CHAMPIONS];
+      expect(champions.drawCompleted).toBe(false);
+      expect(champions.drawDate).toBe('2027-12-18');
+      expect(champions.fixtures.every((f) => f.homeClubId === 'tbc' && f.awayClubId === 'tbc')).toBe(true);
+
+      // European Plate starts at Quarter-Final with 8 teams / 4 matches, awaiting draw
+      const plate = cups2027[CUP_IDS.EURO_PLATE];
+      expect(plate.currentRound).toBe('Quarter-Final');
+      expect(plate.fixtures.length).toBe(4);
+      expect(plate.drawCompleted).toBe(false);
+      expect(plate.fixtures.every((f) => f.homeClubId === 'tbc')).toBe(true);
+
+      // The English Cup (FA Cup equivalent) starts at Round of 16 in January 2028 with Dec 2027 draw
+      const englishCup = cups2027[CUP_IDS.ENGLISH_CUP];
+      expect(englishCup.currentRound).toBe('Round of 16');
+      expect(englishCup.drawCompleted).toBe(false);
+      expect(englishCup.drawDate).toBe('2027-12-14');
+      expect(englishCup.fixtures[0].date).toMatch(/^2028-01/);
+
+      // League Cup starts in August with lower league clubs pool
+      const leagueCup = cups2027[CUP_IDS.LEAGUE_CUP];
+      expect(leagueCup.currentRound).toBe('Round of 16');
+      expect(leagueCup.drawDate).toBe('2027-08-01');
+      expect(leagueCup.qualifyingClubs?.some((id) => LOWER_LEAGUE_CLUBS.some((ll) => ll.id === id))).toBe(true);
+    });
+
+    it('populates fixtures with real opponents once draw date is reached or conducted', () => {
+      const userClub = getAllClubs()[0];
+      const cups2027 = initializeSeasonCups(userClub, 2027, '2027-07-01');
+      const champions = cups2027[CUP_IDS.EURO_CHAMPIONS];
+
+      // Conduct draw
+      const drawn = conductCupDraw(champions, undefined, userClub.id);
+      expect(drawn.drawCompleted).toBe(true);
+      expect(drawn.fixtures.every((f) => f.homeClubId !== 'tbc' && f.awayClubId !== 'tbc')).toBe(true);
+      expect(drawn.fixtures.length).toBe(4);
+    });
+
+    it('locks weekend league fixtures to Saturday in 2027/28, preventing Friday fixture drift', () => {
+      const dates = generateCalendarMatchDates(2027);
+      expect(dates.length).toBe(38);
+
+      // Weekend fixtures (round 1 to 17, 21 to 38) must land on Saturday (UTC day 6)
+      const secondHalfWeekendDates = [dates[20], dates[21], dates[22], dates[23], dates[24], dates[30], dates[37]];
+      for (const d of secondHalfWeekendDates) {
+        const dayOfWeek = new Date(`${d}T12:00:00Z`).getUTCDay();
+        expect(dayOfWeek).toBe(6); // Saturday
+      }
+
+      // 0 dates should be Friday (day 5)
+      const fridayDates = dates.filter((d) => new Date(`${d}T12:00:00Z`).getUTCDay() === 5);
+      expect(fridayDates.length).toBe(0);
+    });
+
+    it('accurately increments player ages in the scouting market across seasons (e.g. Rodri 30 in 2026/27, 31 in 2027/28)', () => {
+      const pool2026 = getScoutingMarketPool([], undefined, '2026/27', 2026);
+      const rodri2026 = pool2026.find((p) => p.name === 'Rodri');
+      expect(rodri2026).toBeDefined();
+      expect(rodri2026!.age).toBe(30);
+
+      const pool2027 = getScoutingMarketPool([], undefined, '2026/27', 2027);
+      const rodri2027 = pool2027.find((p) => p.name === 'Rodri');
+      expect(rodri2027).toBeDefined();
+      expect(rodri2027!.age).toBe(31);
+    });
+
+    it('formats internal club IDs into clean presentation club names', () => {
+      expect(getCleanClubName('man_blue')).toBe('Manchester Blue');
+      expect(getCleanClubName('london_red')).toBe('London Red');
+      expect(getCleanClubName('merseyside_red')).toBe('Merseyside Red');
+      expect(getCleanClubName('luton_orange')).toBe('Luton Orange');
+    });
+
+    it('sets Season Opener Shield venue to Wembley Stadium (Neutral)', () => {
+      const userClub = getAllClubs()[0];
+      const cups = initializeSeasonCups(userClub, 2026);
+      const shield = cups[CUP_IDS.SHIELD];
+      expect(shield.fixtures[0].venue).toBe('Wembley Stadium (Neutral)');
     });
   });
 });

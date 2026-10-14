@@ -13,6 +13,7 @@ import {
   simulateKnockoutCupFixture,
   advanceCupTournament,
   simulateAiFixturesInCupRound,
+  conductCupDraw,
 } from '../../career/cups';
 import { getAllClubs, getEffectiveClubName } from '../../career/clubs';
 import { formatCareerDate } from '../../career/formatters';
@@ -38,15 +39,35 @@ export function TournamentsHub({
   const currentTournament: CupTournament | undefined = cups[selectedTournamentId];
   const userClubId = save.club.id;
 
-  // Automatically simulate other AI matches in the active round when their scheduled date arrives or user fixture was played
+  // Conduct scheduled draws and simulate AI matches in the active round when their scheduled date arrives
   useEffect(() => {
     if (!currentTournament || currentTournament.isCompleted) return;
+
+    // 1. Conduct scheduled draw if draw date has arrived and draw not completed
+    if (
+      !currentTournament.drawCompleted &&
+      currentTournament.drawDate &&
+      save.season.currentDate >= currentTournament.drawDate
+    ) {
+      const drawn = conductCupDraw(currentTournament, undefined, userClubId);
+      onUpdateSave({
+        ...save,
+        cups: {
+          ...cups,
+          [selectedTournamentId]: drawn,
+        },
+      });
+      return;
+    }
+
     const roundFixtures = currentTournament.fixtures.filter(
       (f) => f.roundName === currentTournament.currentRound
     );
     const unplayedAi = roundFixtures.filter(
       (f) =>
         !f.played &&
+        f.homeClubId !== 'tbc' &&
+        f.awayClubId !== 'tbc' &&
         f.homeClubId !== userClubId &&
         f.awayClubId !== userClubId &&
         f.date <= save.season.currentDate
@@ -68,6 +89,7 @@ export function TournamentsHub({
       });
     }
   }, [selectedTournamentId, save.season.currentDate]);
+
 
   const tournamentList = [
     { id: CUP_IDS.EURO_CHAMPIONS, name: 'Champions Cup', icon: '⭐', prize: '£45M' },
@@ -296,6 +318,46 @@ export function TournamentsHub({
                         </span>
                       </div>
 
+                      {/* Draw Pending Banner when round has not been drawn */}
+                      {!currentTournament.drawCompleted && currentTournament.drawDate && (
+                        <div className="bg-amber-950/20 border border-amber-500/30 rounded-2xl p-3.5 space-y-2 mb-2">
+                          <div className="flex items-center justify-between text-xs font-display font-black text-amber-300 uppercase">
+                            <span>🎲 Tournament Draw Scheduled</span>
+                            <span className="font-mono text-[10px] text-amber-400">
+                              📅 {formatCareerDate(currentTournament.drawDate, save.settings?.dateFormat)}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-400 leading-relaxed">
+                            Qualified clubs are confirmed for the {currentTournament.currentRound}. Knockout pairings will be officially drawn on {formatCareerDate(currentTournament.drawDate, save.settings?.dateFormat)}.
+                          </p>
+                          {currentTournament.qualifyingClubs && currentTournament.qualifyingClubs.length > 0 && (
+                            <div className="pt-1">
+                              <span className="text-[9px] uppercase font-bold text-slate-500 block mb-1.5">
+                                Confirmed Participants ({currentTournament.qualifyingClubs.length}):
+                              </span>
+                              <div className="flex flex-wrap gap-1.5">
+                                {currentTournament.qualifyingClubs.map((cId) => {
+                                  const club = findAnyClub(cId);
+                                  const isUser = cId === userClubId;
+                                  return (
+                                    <span
+                                      key={cId}
+                                      className={`text-[10px] px-2 py-0.5 rounded-lg border font-bold ${
+                                        isUser
+                                          ? 'bg-emerald-950/70 border-emerald-500 text-emerald-300'
+                                          : 'bg-slate-900 border-slate-800 text-slate-300'
+                                      }`}
+                                    >
+                                      {club ? getEffectiveClubName(club, save.club) : cId}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       {/* User Fixture Spotlight (Always Top) */}
                       {userTie && (() => {
                         const home = findAnyClub(userTie.homeClubId);
@@ -326,7 +388,7 @@ export function TournamentsHub({
                                       : 'text-white'
                                   }`}
                                 >
-                                  {home ? getEffectiveClubName(home, save.club) : userTie.homeClubId}
+                                  {home ? getEffectiveClubName(home, save.club) : userTie.homeClubId === 'tbc' ? 'TBC' : userTie.homeClubId}
                                 </span>
                               </div>
 
@@ -359,7 +421,7 @@ export function TournamentsHub({
                                       : 'text-white'
                                   }`}
                                 >
-                                  {away ? getEffectiveClubName(away, save.club) : userTie.awayClubId}
+                                  {away ? getEffectiveClubName(away, save.club) : userTie.awayClubId === 'tbc' ? 'TBC' : userTie.awayClubId}
                                 </span>
                                 <div
                                   className="w-4 h-4 rounded-full border border-white/20 shrink-0"
@@ -396,23 +458,28 @@ export function TournamentsHub({
                           )}
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                             {otherTies.map((fixture) => {
+                              const isTbc = fixture.homeClubId === 'tbc' || fixture.awayClubId === 'tbc';
                               const home = findAnyClub(fixture.homeClubId);
                               const away = findAnyClub(fixture.awayClubId);
 
                               return (
                                 <div
                                   key={fixture.id}
-                                  className="px-2.5 py-1.5 rounded-xl border border-slate-850 bg-slate-950/60 flex items-center justify-between text-xs"
+                                  className={`px-2.5 py-1.5 rounded-xl border border-slate-850 bg-slate-950/60 flex items-center justify-between text-xs ${
+                                    isTbc ? 'opacity-70' : ''
+                                  }`}
                                 >
                                   <div className="flex items-center gap-1.5 flex-1 min-w-0">
                                     <div
                                       className="w-3 h-3 rounded-full border border-white/20 shrink-0"
                                       style={{
-                                        background: `linear-gradient(135deg, ${home?.primaryColor || '#555'}, ${home?.secondaryColor || '#222'})`,
+                                        background: isTbc
+                                          ? '#334155'
+                                          : `linear-gradient(135deg, ${home?.primaryColor || '#555'}, ${home?.secondaryColor || '#222'})`,
                                       }}
                                     />
                                     <span className="truncate text-[11px] text-slate-300">
-                                      {home ? getEffectiveClubName(home, save.club) : fixture.homeClubId}
+                                      {home ? getEffectiveClubName(home, save.club) : isTbc ? 'TBC' : fixture.homeClubId}
                                     </span>
                                   </div>
 
@@ -426,6 +493,8 @@ export function TournamentsHub({
                                           </span>
                                         )}
                                       </span>
+                                    ) : isTbc ? (
+                                      <span className="text-amber-400/80 text-[9.5px] uppercase font-mono">Awaiting Draw</span>
                                     ) : (
                                       <span className="text-slate-500 text-[10px]">VS</span>
                                     )}
@@ -433,12 +502,14 @@ export function TournamentsHub({
 
                                   <div className="flex items-center gap-1.5 flex-1 min-w-0 justify-end text-right">
                                     <span className="truncate text-[11px] text-slate-300">
-                                      {away ? getEffectiveClubName(away, save.club) : fixture.awayClubId}
+                                      {away ? getEffectiveClubName(away, save.club) : isTbc ? 'TBC' : fixture.awayClubId}
                                     </span>
                                     <div
                                       className="w-3 h-3 rounded-full border border-white/20 shrink-0"
                                       style={{
-                                        background: `linear-gradient(135deg, ${away?.primaryColor || '#555'}, ${away?.secondaryColor || '#222'})`,
+                                        background: isTbc
+                                          ? '#334155'
+                                          : `linear-gradient(135deg, ${away?.primaryColor || '#555'}, ${away?.secondaryColor || '#222'})`,
                                       }}
                                     />
                                   </div>
@@ -448,6 +519,7 @@ export function TournamentsHub({
                           </div>
                         </div>
                       )}
+
                     </div>
                   );
                 })}

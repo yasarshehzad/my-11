@@ -18,6 +18,8 @@ import {
   simulateKnockoutCupFixture,
   findAnyClub,
   advanceCupTournament,
+  conductCupDraw,
+  autoResolvePendingCupFixtures,
 } from './cups';
 import {
   isTransferWindowOpen,
@@ -280,10 +282,18 @@ export function advanceTimeSkip(
   const usePreferred = options?.usePreferredEleven ?? save.settings.usePreferredElevenOnHoliday ?? true;
 
   // Deep clone cups map
-  const cups: Record<string, CupTournament> = {};
+  let cups: Record<string, CupTournament> = {};
   if (save.cups) {
     for (const [k, v] of Object.entries(save.cups)) {
       cups[k] = { ...v, fixtures: [...v.fixtures] };
+    }
+  }
+
+  // Conduct any scheduled cup draws on or before current save date
+  const startIso = save.season.currentDate;
+  for (const [tId, tourney] of Object.entries(cups)) {
+    if (!tourney.drawCompleted && tourney.drawDate && startIso >= tourney.drawDate) {
+      cups[tId] = conductCupDraw(tourney, undefined, userClubId);
     }
   }
 
@@ -343,6 +353,24 @@ export function advanceTimeSkip(
   // 3. Step forward day by day through fixtures
   for (const item of queue) {
     const fixDate = new Date(item.fixture.date);
+    const fixIso = fixDate.toISOString().split('T')[0];
+
+    // Conduct any cup draws whose draw date has arrived by this fixture date
+    for (const [tId, tourney] of Object.entries(cups)) {
+      if (!tourney.drawCompleted && tourney.drawDate && fixIso >= tourney.drawDate) {
+        const drawn = conductCupDraw(tourney, undefined, userClubId);
+        cups[tId] = drawn;
+        for (const qItem of queue) {
+          if (qItem.type === 'cup' && qItem.tournamentId === tId && !qItem.fixture.played) {
+            const updatedFix = drawn.fixtures[qItem.index];
+            if (updatedFix) {
+              qItem.fixture = updatedFix;
+            }
+          }
+        }
+      }
+    }
+
     const isUserMatch =
       item.fixture.homeClubId === userClubId || item.fixture.awayClubId === userClubId;
 
@@ -437,12 +465,37 @@ export function advanceTimeSkip(
     currentDate = targetDate;
   }
 
-  // 4. Advance completed cup rounds & award trophies/prizes
-  for (const [tId, tourney] of Object.entries(cups)) {
-    const { updatedTournament } = advanceCupTournament(tourney, save.season.yearStart);
-    cups[tId] = updatedTournament;
+  const initialIso = save.season.currentDate;
+  const curIso = currentDate.toISOString().split('T')[0];
 
-    if (updatedTournament.isCompleted && updatedTournament.winnerClubId === userClubId) {
+  // 4. Auto-resolve pending AI cup fixtures, conduct scheduled draws, advance completed cup rounds & award trophies
+  const { updatedCups, trophiesAwarded } = autoResolvePendingCupFixtures(
+    cups,
+    curIso,
+    save.season.yearStart,
+    userClubId
+  );
+  cups = updatedCups;
+
+  for (const aw of trophiesAwarded) {
+    const tourney = cups[aw.id];
+    const trophyYear = save.season.yearStart + 1;
+    const alreadyAwarded = trophies.some(
+      (t) => t.competitionId === aw.id && t.year === trophyYear
+    );
+    if (!alreadyAwarded && tourney) {
+      trophies.push({
+        competitionId: aw.id,
+        competitionName: tourney.name,
+        year: trophyYear,
+      });
+      finances.transferBudget += tourney.prizeMoney;
+      finances.balance += tourney.prizeMoney;
+    }
+  }
+
+  for (const [tId, tourney] of Object.entries(cups)) {
+    if (tourney.isCompleted && tourney.winnerClubId === userClubId) {
       const trophyYear = save.season.yearStart + 1;
       const alreadyAwarded = trophies.some(
         (t) => t.competitionId === tId && t.year === trophyYear
@@ -451,18 +504,16 @@ export function advanceTimeSkip(
       if (!alreadyAwarded) {
         trophies.push({
           competitionId: tId,
-          competitionName: updatedTournament.name,
+          competitionName: tourney.name,
           year: trophyYear,
         });
-        finances.transferBudget += updatedTournament.prizeMoney;
-        finances.balance += updatedTournament.prizeMoney;
+        finances.transferBudget += tourney.prizeMoney;
+        finances.balance += tourney.prizeMoney;
       }
     }
   }
 
   // Check milestone calendar events reached
-  const initialIso = save.season.currentDate;
-  const curIso = currentDate.toISOString().split('T')[0];
   for (const evt of calendar) {
     if (!evt.processed && evt.date <= curIso) {
       evt.processed = true;

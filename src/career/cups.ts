@@ -6,7 +6,7 @@ import {
   TrophyRecord,
   CareerSaveFile,
 } from './types';
-import { getAllClubs, getClubById } from './clubs';
+import { getAllClubs, getClubById, LOWER_LEAGUE_CLUBS } from './clubs';
 import { CONTINENTAL_EUROPEAN_CLUBS, getContinentalClubById } from './continentalClubs';
 import { simulateMatchFixture } from './sim';
 
@@ -19,15 +19,72 @@ export const CUP_IDS = {
   EURO_PLATE: 'cup_euro_plate',
 } as const;
 
+export function findAnyClub(clubId: string): Club | undefined {
+  if (!clubId || clubId.toLowerCase() === 'tbc') return undefined;
+  return (
+    getClubById(clubId) ||
+    getContinentalClubById(clubId) ||
+    LOWER_LEAGUE_CLUBS.find((c) => c.id === clubId)
+  );
+}
+
+/**
+ * Conducts the tournament draw for an un-drawn cup round, randomly pairing
+ * the qualified teams into the scheduled knockout fixtures.
+ */
+export function conductCupDraw(
+  tournament: CupTournament,
+  clubsList?: string[],
+  userClubId?: string
+): CupTournament {
+  const currentFixtures = tournament.fixtures.filter(
+    (f) => f.roundName === tournament.currentRound
+  );
+  if (currentFixtures.length === 0) return tournament;
+
+  const pool = [...(clubsList || tournament.qualifyingClubs || [])];
+  if (pool.length === 0) return tournament;
+
+  // Shuffle pool using Fisher-Yates
+  const shuffled = [...pool];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  // If userClubId is in the pool and not drawn yet, ensure user club is placed in one match
+  if (userClubId && pool.includes(userClubId) && !shuffled.slice(0, currentFixtures.length * 2).includes(userClubId)) {
+    shuffled[0] = userClubId;
+  }
+
+  const updatedFixtures = tournament.fixtures.map((f) => {
+    if (f.roundName !== tournament.currentRound) return f;
+    const idx = currentFixtures.findIndex((cf) => cf.id === f.id);
+    if (idx === -1 || idx * 2 + 1 >= shuffled.length) return f;
+    return {
+      ...f,
+      homeClubId: shuffled[idx * 2],
+      awayClubId: shuffled[idx * 2 + 1],
+    };
+  });
+
+  return {
+    ...tournament,
+    fixtures: updatedFixtures,
+    drawCompleted: true,
+  };
+}
+
 export function initializeSeasonCups(
   userClub: Club,
-  yearStart: number = 2026
+  yearStart: number = 2026,
+  currentDate: string = `${yearStart}-07-01`
 ): Record<string, CupTournament> {
   const englishClubs = getAllClubs();
 
-  // 1. Season Opener Shield (Single Match in early August)
-  let shieldHome = englishClubs[0]; // Man Blue
-  let shieldAway = englishClubs[1]; // London Red
+  // 1. Season Opener Shield (Single Match in early August at Wembley)
+  let shieldHome = englishClubs[0]; // Man Blue (League Champions)
+  let shieldAway = englishClubs[1]; // London Red (Cup Winners)
   if (userClub.id === englishClubs[0].id) {
     shieldHome = userClub;
     shieldAway = englishClubs[1];
@@ -49,6 +106,7 @@ export function initializeSeasonCups(
     awayClubId: shieldAway.id,
     played: false,
     isKnockout: true,
+    venue: 'Wembley Stadium (Neutral)',
   };
 
   const shieldTournament: CupTournament = {
@@ -58,13 +116,20 @@ export function initializeSeasonCups(
     fixtures: [shieldFixture],
     isCompleted: false,
     prizeMoney: 2_500_000,
+    drawCompleted: true,
   };
 
-  // 2. League Cup (16 clubs -> R16 -> QF -> SF -> Final)
-  const lcEntrants = [...englishClubs.slice(0, 16)];
-  if (!lcEntrants.some((c) => c.id === userClub.id)) {
-    lcEntrants[lcEntrants.length - 1] = userClub;
+  // 2. League Cup (16 clubs meet in Round of 16 in August, featuring top-flight and lower-league qualifiers)
+  const lcEntrants = [
+    ...englishClubs.slice(0, 12).map((c) => c.id),
+    ...LOWER_LEAGUE_CLUBS.slice(4, 8).map((c) => c.id),
+  ];
+  if (!lcEntrants.includes(userClub.id)) {
+    lcEntrants[lcEntrants.length - 1] = userClub.id;
   }
+
+  const lcDrawDate = `${yearStart}-08-01`;
+  const lcIsDrawn = currentDate >= lcDrawDate;
 
   const lcR1Fixtures: CupFixture[] = [];
   for (let i = 0; i < 8; i++) {
@@ -75,12 +140,13 @@ export function initializeSeasonCups(
       round: 1,
       roundName: 'Round of 16',
       date: `${yearStart}-08-26`,
-      homeClubId: lcEntrants[i * 2].id,
-      awayClubId: lcEntrants[i * 2 + 1].id,
+      homeClubId: lcIsDrawn ? lcEntrants[i * 2] : 'tbc',
+      awayClubId: lcIsDrawn ? lcEntrants[i * 2 + 1] : 'tbc',
       played: false,
       isKnockout: true,
     });
   }
+
 
   const leagueCupTournament: CupTournament = {
     id: CUP_IDS.LEAGUE_CUP,
@@ -89,13 +155,23 @@ export function initializeSeasonCups(
     fixtures: lcR1Fixtures,
     isCompleted: false,
     prizeMoney: 8_000_000,
+    drawDate: lcDrawDate,
+    drawCompleted: lcIsDrawn,
+    qualifyingClubs: lcEntrants,
   };
 
-  // 3. The English Cup (Premier domestic cup, starts January)
-  const ecEntrants = [...englishClubs.slice(4, 20)];
-  if (!ecEntrants.some((c) => c.id === userClub.id)) {
-    ecEntrants[ecEntrants.length - 1] = userClub;
+  // 3. The English Cup (FA Cup equivalent: Top-flight clubs enter at Third Round in January)
+  // Draw date: 14 December. Matches scheduled on dedicated weekend with no league clashing.
+  const ecEntrants = [
+    ...englishClubs.slice(0, 12).map((c) => c.id),
+    ...LOWER_LEAGUE_CLUBS.slice(0, 4).map((c) => c.id),
+  ];
+  if (!ecEntrants.includes(userClub.id)) {
+    ecEntrants[ecEntrants.length - 1] = userClub.id;
   }
+
+  const ecDrawDate = `${yearStart}-12-14`;
+  const ecIsDrawn = currentDate >= ecDrawDate;
 
   const ecR1Fixtures: CupFixture[] = [];
   for (let i = 0; i < 8; i++) {
@@ -106,8 +182,8 @@ export function initializeSeasonCups(
       round: 1,
       roundName: 'Round of 16',
       date: `${yearStart + 1}-01-09`,
-      homeClubId: ecEntrants[i * 2].id,
-      awayClubId: ecEntrants[i * 2 + 1].id,
+      homeClubId: ecIsDrawn ? ecEntrants[i * 2] : 'tbc',
+      awayClubId: ecIsDrawn ? ecEntrants[i * 2 + 1] : 'tbc',
       played: false,
       isKnockout: true,
     });
@@ -120,23 +196,30 @@ export function initializeSeasonCups(
     fixtures: ecR1Fixtures,
     isCompleted: false,
     prizeMoney: 16_000_000,
+    drawDate: ecDrawDate,
+    drawCompleted: ecIsDrawn,
+    qualifyingClubs: ecEntrants,
   };
 
   // 4. European Champions Cup (Top 4 English clubs + Top 4 Continental Giants)
+  // Knockout starts at Quarter-Final in March. Draw occurs mid-December.
   const euroEntrants = [
-    englishClubs[0], // Man Blue
-    englishClubs[1], // London Red
-    englishClubs[2], // Merseyside Red
-    englishClubs[3], // London West
-    CONTINENTAL_EUROPEAN_CLUBS[0], // Madrid Royal
-    CONTINENTAL_EUROPEAN_CLUBS[1], // Barcelona Blaugrana
-    CONTINENTAL_EUROPEAN_CLUBS[2], // Bavarian Munich
-    CONTINENTAL_EUROPEAN_CLUBS[3], // Paris Red & Blue
+    englishClubs[0].id, // Man Blue
+    englishClubs[1].id, // London Red
+    englishClubs[2].id, // Merseyside Red
+    englishClubs[3].id, // London West
+    CONTINENTAL_EUROPEAN_CLUBS[0].id, // Madrid Royal
+    CONTINENTAL_EUROPEAN_CLUBS[1].id, // Barcelona Blaugrana
+    CONTINENTAL_EUROPEAN_CLUBS[2].id, // Bavarian Munich
+    CONTINENTAL_EUROPEAN_CLUBS[3].id, // Paris Red & Blue
   ];
 
-  if ((userClub.tier === 'elite' || userClub.tier === 'upper') && !euroEntrants.some((c) => c.id === userClub.id)) {
-    euroEntrants[3] = userClub;
+  if ((userClub.tier === 'elite' || userClub.tier === 'upper') && !euroEntrants.includes(userClub.id)) {
+    euroEntrants[3] = userClub.id;
   }
+
+  const euroDrawDate = `${yearStart}-12-18`;
+  const euroIsDrawn = currentDate >= euroDrawDate;
 
   const uclQfFixtures: CupFixture[] = [];
   for (let i = 0; i < 4; i++) {
@@ -147,8 +230,8 @@ export function initializeSeasonCups(
       round: 1,
       roundName: 'Quarter-Final',
       date: `${yearStart + 1}-03-10`,
-      homeClubId: euroEntrants[i * 2].id,
-      awayClubId: euroEntrants[i * 2 + 1].id,
+      homeClubId: euroIsDrawn ? euroEntrants[i * 2] : 'tbc',
+      awayClubId: euroIsDrawn ? euroEntrants[i * 2 + 1] : 'tbc',
       played: false,
       isKnockout: true,
     });
@@ -161,23 +244,29 @@ export function initializeSeasonCups(
     fixtures: uclQfFixtures,
     isCompleted: false,
     prizeMoney: 45_000_000,
+    drawDate: euroDrawDate,
+    drawCompleted: euroIsDrawn,
+    qualifyingClubs: euroEntrants,
   };
 
-  // 5. European Challenge Cup (Europa equivalent)
+  // 5. European Challenge Cup (Europa League equivalent)
   const challengeEntrants = [
-    englishClubs[4], // Man Red
-    englishClubs[5], // North London White
-    CONTINENTAL_EUROPEAN_CLUBS[4], // Milan Blue
-    CONTINENTAL_EUROPEAN_CLUBS[5], // Milan Red
-    CONTINENTAL_EUROPEAN_CLUBS[6], // Turin Stripes
-    CONTINENTAL_EUROPEAN_CLUBS[7], // Dortmund Yellow
-    englishClubs[6], // Tyneside Stripes
-    englishClubs[7], // West Midlands Claret
+    englishClubs[4].id, // Man Red
+    englishClubs[5].id, // North London White
+    CONTINENTAL_EUROPEAN_CLUBS[4].id, // Milan Blue
+    CONTINENTAL_EUROPEAN_CLUBS[5].id, // Milan Red
+    CONTINENTAL_EUROPEAN_CLUBS[6].id, // Turin Stripes
+    CONTINENTAL_EUROPEAN_CLUBS[7].id, // Dortmund Yellow
+    englishClubs[6].id, // Tyneside Stripes
+    englishClubs[7].id, // West Midlands Claret
   ];
 
-  if (!euroEntrants.some((c) => c.id === userClub.id) && !challengeEntrants.some((c) => c.id === userClub.id)) {
-    challengeEntrants[challengeEntrants.length - 1] = userClub;
+  if (!euroEntrants.includes(userClub.id) && !challengeEntrants.includes(userClub.id)) {
+    challengeEntrants[challengeEntrants.length - 1] = userClub.id;
   }
+
+  const challengeDrawDate = `${yearStart}-12-18`;
+  const challengeIsDrawn = currentDate >= challengeDrawDate;
 
   const challengeQfFixtures: CupFixture[] = [];
   for (let i = 0; i < 4; i++) {
@@ -188,8 +277,8 @@ export function initializeSeasonCups(
       round: 1,
       roundName: 'Quarter-Final',
       date: `${yearStart + 1}-03-12`,
-      homeClubId: challengeEntrants[i * 2].id,
-      awayClubId: challengeEntrants[i * 2 + 1].id,
+      homeClubId: challengeIsDrawn ? challengeEntrants[i * 2] : 'tbc',
+      awayClubId: challengeIsDrawn ? challengeEntrants[i * 2 + 1] : 'tbc',
       played: false,
       isKnockout: true,
     });
@@ -202,27 +291,45 @@ export function initializeSeasonCups(
     fixtures: challengeQfFixtures,
     isCompleted: false,
     prizeMoney: 22_000_000,
+    drawDate: challengeDrawDate,
+    drawCompleted: challengeIsDrawn,
+    qualifyingClubs: challengeEntrants,
   };
 
-  // 6. European Plate (Conference equivalent)
+  // 6. European Plate (Conference equivalent: starts at Quarter-Final with 8 clubs, not Semi-Final)
   const plateEntrants = [
-    englishClubs[8], // Brighton Seagulls
-    englishClubs[9], // West Ham Claret
-    CONTINENTAL_EUROPEAN_CLUBS[8], // Lisbon Eagles
-    CONTINENTAL_EUROPEAN_CLUBS[9], // Amsterdam Red
+    englishClubs[8].id, // Brighton Seagulls
+    englishClubs[9].id, // West Ham Claret
+    englishClubs[10]?.id || 'south_coast_stadium', // Riverside Cottage / Saints
+    englishClubs[11]?.id || 'molineux_ridge', // Selhurst Grounds / Wolves
+    CONTINENTAL_EUROPEAN_CLUBS[8].id, // Lisbon Eagles
+    CONTINENTAL_EUROPEAN_CLUBS[9].id, // Amsterdam Red
+    'turin_stripes',
+    'dortmund_yellow',
   ];
 
-  const plateSfFixtures: CupFixture[] = [];
-  for (let i = 0; i < 2; i++) {
-    plateSfFixtures.push({
-      id: `fix_plate_sf_${i + 1}`,
+  if (
+    !euroEntrants.includes(userClub.id) &&
+    !challengeEntrants.includes(userClub.id) &&
+    !plateEntrants.includes(userClub.id)
+  ) {
+    plateEntrants[plateEntrants.length - 1] = userClub.id;
+  }
+
+  const plateDrawDate = `${yearStart}-12-18`;
+  const plateIsDrawn = currentDate >= plateDrawDate;
+
+  const plateQfFixtures: CupFixture[] = [];
+  for (let i = 0; i < 4; i++) {
+    plateQfFixtures.push({
+      id: `fix_plate_qf_${i + 1}`,
       competitionId: CUP_IDS.EURO_PLATE,
       competitionName: 'European Plate',
       round: 1,
-      roundName: 'Semi-Final',
-      date: `${yearStart + 1}-04-16`,
-      homeClubId: plateEntrants[i * 2].id,
-      awayClubId: plateEntrants[i * 2 + 1].id,
+      roundName: 'Quarter-Final',
+      date: `${yearStart + 1}-03-18`,
+      homeClubId: plateIsDrawn ? plateEntrants[i * 2] : 'tbc',
+      awayClubId: plateIsDrawn ? plateEntrants[i * 2 + 1] : 'tbc',
       played: false,
       isKnockout: true,
     });
@@ -231,10 +338,13 @@ export function initializeSeasonCups(
   const euroPlateTournament: CupTournament = {
     id: CUP_IDS.EURO_PLATE,
     name: 'European Plate',
-    currentRound: 'Semi-Final',
-    fixtures: plateSfFixtures,
+    currentRound: 'Quarter-Final',
+    fixtures: plateQfFixtures,
     isCompleted: false,
     prizeMoney: 12_000_000,
+    drawDate: plateDrawDate,
+    drawCompleted: plateIsDrawn,
+    qualifyingClubs: plateEntrants,
   };
 
   return {
@@ -299,6 +409,7 @@ export function getCupWinner(fixture: CupFixture): string {
 
 /**
  * Advances a cup tournament to the next bracket round if all current matches are played.
+ * Strictly pairs the actual winners from the previous round; future rounds are never predetermined.
  */
 export function advanceCupTournament(
   tournament: CupTournament,
@@ -308,7 +419,7 @@ export function advanceCupTournament(
     (f) => f.roundName === tournament.currentRound
   );
 
-  const allPlayed = currentFixtures.every((f) => f.played);
+  const allPlayed = currentFixtures.length > 0 && currentFixtures.every((f) => f.played && f.homeClubId !== 'tbc');
   if (!allPlayed) {
     return { updatedTournament: tournament, isNewRound: false };
   }
@@ -334,16 +445,34 @@ export function advanceCupTournament(
     };
   }
 
-  // Draw next round
+  // Draw next round with appropriate realistic calendar dates
   let nextRoundName = 'Final';
   let nextDate = `${yearStart + 1}-05-20`;
 
-  if (tournament.currentRound === 'Round of 16') {
+  const isDomesticLeagueCup = tournament.id === CUP_IDS.LEAGUE_CUP;
+  const isTheEnglishCup = tournament.id === CUP_IDS.ENGLISH_CUP;
+
+  if (tournament.currentRound === 'Round of 16' || tournament.currentRound === 'Third Round') {
     nextRoundName = 'Quarter-Final';
-    nextDate = `${yearStart + 1}-02-15`;
+    nextDate = isDomesticLeagueCup
+      ? `${yearStart}-12-15`
+      : isTheEnglishCup
+      ? `${yearStart + 1}-03-20`
+      : `${yearStart + 1}-03-10`;
   } else if (tournament.currentRound === 'Quarter-Final') {
     nextRoundName = 'Semi-Final';
-    nextDate = `${yearStart + 1}-04-10`;
+    nextDate = isDomesticLeagueCup
+      ? `${yearStart + 1}-01-26`
+      : isTheEnglishCup
+      ? `${yearStart + 1}-04-17`
+      : `${yearStart + 1}-04-14`;
+  } else if (tournament.currentRound === 'Semi-Final') {
+    nextRoundName = 'Final';
+    nextDate = isDomesticLeagueCup
+      ? `${yearStart + 1}-02-28`
+      : isTheEnglishCup
+      ? `${yearStart + 1}-05-15`
+      : `${yearStart + 1}-05-26`;
   }
 
   const nextFixtures: CupFixture[] = [];
@@ -374,10 +503,6 @@ export function advanceCupTournament(
   };
 }
 
-export function findAnyClub(clubId: string): Club | undefined {
-  return getClubById(clubId) || getContinentalClubById(clubId);
-}
-
 /**
  * Simulates all unplayed AI vs AI matches in a tournament's active or specified round.
  * If userClubId is provided, any match involving userClubId is preserved unplayed.
@@ -387,12 +512,18 @@ export function simulateAiFixturesInCupRound(
   roundName: string,
   userClubId?: string
 ): CupTournament {
+  let tourney = { ...tournament };
+  if (!tourney.drawCompleted && tourney.qualifyingClubs && tourney.qualifyingClubs.length > 0) {
+    tourney = conductCupDraw(tourney, undefined, userClubId);
+  }
+
   const allEnglish = getAllClubs();
-  let updatedFixtures = [...tournament.fixtures];
+  let updatedFixtures = [...tourney.fixtures];
   let changed = false;
 
   updatedFixtures = updatedFixtures.map((fix) => {
     if (fix.roundName !== roundName || fix.played) return fix;
+    if (fix.homeClubId === 'tbc' || fix.awayClubId === 'tbc') return fix;
     const isUserMatch =
       userClubId && (fix.homeClubId === userClubId || fix.awayClubId === userClubId);
     if (isUserMatch) return fix;
@@ -403,15 +534,16 @@ export function simulateAiFixturesInCupRound(
     return simulateKnockoutCupFixture(fix, homeClub, awayClub);
   });
 
-  if (!changed) return tournament;
+  if (!changed) return tourney;
   return {
-    ...tournament,
+    ...tourney,
     fixtures: updatedFixtures,
   };
 }
 
 /**
- * Automatically simulates pending AI cup matches and advances completed cup rounds up to or past currentDate.
+ * Automatically simulates pending AI cup matches, conducts scheduled draws,
+ * and advances completed cup rounds up to or past currentDate.
  */
 export function autoResolvePendingCupFixtures(
   cups: Record<string, CupTournament>,
@@ -425,6 +557,11 @@ export function autoResolvePendingCupFixtures(
   for (const [tId, tourney] of Object.entries(cups)) {
     let current: CupTournament = { ...tourney, fixtures: [...tourney.fixtures] };
 
+    // Conduct draw if draw date has arrived
+    if (!current.drawCompleted && current.drawDate && currentDate >= current.drawDate) {
+      current = conductCupDraw(current, undefined, userClubId);
+    }
+
     // While current round has unplayed AI matches, simulate them and advance
     let progressed = true;
     let safeguard = 0;
@@ -432,9 +569,14 @@ export function autoResolvePendingCupFixtures(
       safeguard++;
       progressed = false;
 
+      if (!current.drawCompleted && current.drawDate && currentDate >= current.drawDate) {
+        current = conductCupDraw(current, undefined, userClubId);
+      }
+
       const roundFixtures = current.fixtures.filter((f) => f.roundName === current.currentRound);
       const unplayedAi = roundFixtures.filter((f) => {
         if (f.played) return false;
+        if (f.homeClubId === 'tbc' || f.awayClubId === 'tbc') return false;
         const isUser = userClubId && (f.homeClubId === userClubId || f.awayClubId === userClubId);
         return !isUser && f.date <= currentDate;
       });
@@ -445,9 +587,10 @@ export function autoResolvePendingCupFixtures(
       }
 
       // Check if all fixtures in current round are played
-      const allRoundPlayed = current.fixtures
-        .filter((f) => f.roundName === current.currentRound)
-        .every((f) => f.played);
+      const activeRoundFixtures = current.fixtures.filter((f) => f.roundName === current.currentRound);
+      const allRoundPlayed =
+        activeRoundFixtures.length > 0 &&
+        activeRoundFixtures.every((f) => f.played && f.homeClubId !== 'tbc' && f.awayClubId !== 'tbc');
 
       if (allRoundPlayed && !current.isCompleted) {
         const adv = advanceCupTournament(current, yearStart);

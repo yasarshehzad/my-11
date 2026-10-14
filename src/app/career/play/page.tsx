@@ -38,12 +38,14 @@ import { isSeasonComplete, advanceToNextSeason, getSeasonReviewSummary, SeasonRe
 import { getNextClubFixture, getNextScheduledMatch, getPreviousPlayedMatch, isDateInInternationalBreak, ScheduledMatch } from '../../../career/calendar';
 import { simulateMatchFixture, advanceTimeSkip, TimeSkipTarget } from '../../../career/sim';
 import {
+  CUP_IDS,
   findAnyClub,
   simulateKnockoutCupFixture,
   advanceCupTournament,
   simulateAiFixturesInCupRound,
   autoResolvePendingCupFixtures,
 } from '../../../career/cups';
+
 import { markMessageRead, markAllMessagesRead, getInitialInboxMessages } from '../../../career/inbox';
 import { calculateStandings } from '../../../career/table';
 import { formatCurrency } from '../../../career/finance';
@@ -960,6 +962,17 @@ function CareerPlayHubContent() {
                   const isUserHome = nextScheduled.fixture.homeClubId === save.club.id;
                   const isUserAway = nextScheduled.fixture.awayClubId === save.club.id;
 
+                  const isNeutralWembley =
+                    nextScheduled.isCup &&
+                    (nextScheduled.cupId === CUP_IDS.SHIELD ||
+                      (nextScheduled.roundName === 'Final' &&
+                        (nextScheduled.cupId === CUP_IDS.LEAGUE_CUP || nextScheduled.cupId === CUP_IDS.ENGLISH_CUP)) ||
+                      (nextScheduled.roundName === 'Semi-Final' && nextScheduled.cupId === CUP_IDS.ENGLISH_CUP));
+
+                  const venueDisplay = isNeutralWembley
+                    ? 'Wembley Stadium (Neutral)'
+                    : (home.stadiumName || 'Stadium');
+
                   return (
                     <div className="space-y-3.5">
                       <div className="flex items-center justify-between gap-3 sm:gap-6 py-1 px-1 sm:px-4">
@@ -979,7 +992,7 @@ function CareerPlayHubContent() {
                               {getEffectiveClubName(home, save.club)}
                             </h4>
                             <span className="text-[9px] uppercase font-bold text-slate-400 block truncate">
-                              {isUserHome ? '★ (YOU • HOME)' : 'Home'}
+                              {isUserHome ? (isNeutralWembley ? '★ (YOU • NEUTRAL)' : '★ (YOU • HOME)') : (isNeutralWembley ? 'Neutral' : 'Home')}
                             </span>
                           </div>
                         </div>
@@ -989,8 +1002,8 @@ function CareerPlayHubContent() {
                           <span className="text-lg sm:text-2xl font-display font-black text-emerald-400 tracking-wider">
                             VS
                           </span>
-                          <span className="text-[9.5px] text-slate-400 font-medium truncate max-w-[100px] sm:max-w-[180px]">
-                            🏟️ {home.stadiumName || 'Stadium'}
+                          <span className="text-[9.5px] text-slate-400 font-medium truncate max-w-[110px] sm:max-w-[200px]">
+                            🏟️ {venueDisplay}
                           </span>
                         </div>
 
@@ -1010,11 +1023,12 @@ function CareerPlayHubContent() {
                               {getEffectiveClubName(away, save.club)}
                             </h4>
                             <span className="text-[9px] uppercase font-bold text-slate-400 block truncate">
-                              {isUserAway ? '★ (YOU • AWAY)' : 'Away'}
+                              {isUserAway ? (isNeutralWembley ? '★ (YOU • NEUTRAL)' : '★ (YOU • AWAY)') : (isNeutralWembley ? 'Neutral' : 'Away')}
                             </span>
                           </div>
                         </div>
                       </div>
+
 
                       {/* Primary 1-Column Action: Prepare & Play Match */}
                       <button
@@ -1086,30 +1100,41 @@ function CareerPlayHubContent() {
                 </div>
                 <div className="mt-0.5">
                   <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
-                    <span className="text-xs sm:text-base font-display font-black text-white">
-                      #{userRank}
-                    </span>
-                    <div className="flex gap-0.5">
-                      {recentFormResults.slice(-3).map((res, i) => (
-                        <span
-                          key={i}
-                          className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded text-[8px] sm:text-[9px] font-black flex items-center justify-center font-display ${
-                            res === 'W'
-                              ? 'bg-emerald-500 text-slate-950'
-                              : res === 'D'
-                              ? 'bg-amber-500 text-slate-950'
-                              : 'bg-rose-500 text-white'
-                          }`}
-                        >
-                          {res}
+                    {userStanding && userStanding.played > 0 ? (
+                      <>
+                        <span className="text-xs sm:text-base font-display font-black text-white">
+                          #{userRank}
                         </span>
-                      ))}
-                    </div>
+                        <div className="flex gap-0.5">
+                          {recentFormResults.slice(-3).map((res, i) => (
+                            <span
+                              key={i}
+                              className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded text-[8px] sm:text-[9px] font-black flex items-center justify-center font-display ${
+                                res === 'W'
+                                  ? 'bg-emerald-500 text-slate-950'
+                                  : res === 'D'
+                                  ? 'bg-amber-500 text-slate-950'
+                                  : 'bg-rose-500 text-white'
+                              }`}
+                            >
+                              {res}
+                            </span>
+                          ))}
+                        </div>
+                      </>
+                    ) : (
+                      <span className="text-xs sm:text-base font-display font-black text-slate-300">
+                        Pre-Season
+                      </span>
+                    )}
                   </div>
                   <span className="text-[8.5px] sm:text-[10px] text-slate-400 block font-mono truncate">
-                    {userStanding ? `${userStanding.points} pts (${userStanding.won}W ${userStanding.lost}L)` : 'Matchday 1'}
+                    {userStanding && userStanding.played > 0
+                      ? `${userStanding.points} pts (${userStanding.won}W ${userStanding.lost}L)`
+                      : 'Matchday 1 Pending'}
                   </span>
                 </div>
+
               </div>
 
               {/* 3. Action Center / Urgent Alerts Pill */}
