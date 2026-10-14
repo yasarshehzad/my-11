@@ -124,6 +124,28 @@ export interface CareerPlayer {
   // Contract & Squad Status
   releaseClause?: number;
   squadRole?: SquadRole;
+  transferListed?: boolean;
+  askingPrice?: number;
+  loanListed?: boolean;
+  offeredToClubsDate?: string;
+  agentBrokeringActive?: boolean;
+  // Buy-back & Performance add-on clauses
+  buyBackClause?: {
+    clubId: string;
+    clubName: string;
+    buyBackFee: number;
+    active: boolean;
+  };
+  transferClauses?: {
+    appearances: number;
+    appearanceThreshold: number;
+    appearancePayout: number;
+    appearancePaid: boolean;
+    goalsOrCleanSheets: number;
+    goalThreshold: number;
+    goalPayout: number;
+    goalPaid: boolean;
+  };
 }
 
 export type SquadRole = 'crucial' | 'important' | 'squad' | 'sporadic' | 'prospect';
@@ -146,6 +168,11 @@ export interface DetailedTransferTerms {
   signingBonus?: number;
   squadRole?: SquadRole;
   releaseClause?: number;
+  appearanceMilestoneFee?: number;
+  appearanceThreshold?: number;
+  goalMilestoneFee?: number;
+  goalThreshold?: number;
+  buyBackFee?: number;
 }
 
 
@@ -166,11 +193,29 @@ export interface SeasonSummary {
   databaseSeason?: DatabaseSeason;
 }
 
+export type BoardPetitionType =
+  | 'deadline_day_marquee'
+  | 'injury_crisis'
+  | 'general_transfer_funds'
+  | 'wage_budget_increase';
+
+export interface BoardFinancialPetitionRecord {
+  id: string;
+  date: string;
+  type: BoardPetitionType;
+  outcome: 'approved' | 'compromised' | 'rejected';
+  amountRequested: number;
+  amountGranted: number;
+  reason: string;
+}
+
 export interface CareerFinances {
   transferBudget: number;
   weeklyWageBudget: number;
   currentWeeklyWages: number;
   balance: number;
+  lastBudgetAdjustmentDate?: string;
+  boardPetitionsHistory?: BoardFinancialPetitionRecord[];
 }
 
 export interface TrophyRecord {
@@ -295,6 +340,13 @@ export interface TransferRecord {
   wage: number;
   date: string;
   type: 'signing' | 'sale';
+  sellOnPercent?: number;
+  appearanceMilestoneFee?: number;
+  appearanceThreshold?: number;
+  goalMilestoneFee?: number;
+  goalThreshold?: number;
+  buyBackFee?: number;
+  buyBackActive?: boolean;
 }
 
 export interface IncomingTransferOffer {
@@ -307,7 +359,31 @@ export interface IncomingTransferOffer {
   buyingClubName: string;
   offeredFee: number;
   date: string;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: 'pending' | 'accepted' | 'rejected' | 'negotiating';
+  counterFee?: number;
+  sellOnPercent?: number; // 0, 10, 15, 20%
+  patienceRemaining?: number; // Counter attempts remaining (e.g. 3)
+  originalOfferedFee?: number;
+  fairValue?: number;
+  buyerCeilingFee?: number;
+  lastFeedback?: string;
+  appearanceMilestoneFee?: number;
+  appearanceThreshold?: number;
+  goalMilestoneFee?: number;
+  goalThreshold?: number;
+  buyBackFee?: number;
+  isPanicBid?: boolean;
+  panicMarkupPercent?: number;
+  history?: Array<{
+    date: string;
+    proposedBy: 'buyer' | 'user';
+    fee: number;
+    sellOn?: number;
+    appearanceFee?: number;
+    goalFee?: number;
+    buyBackFee?: number;
+    message: string;
+  }>;
 }
 
 export interface BoardStatus {
@@ -417,6 +493,18 @@ export interface CareerSaveFile {
   boardStatus?: BoardStatus;
   phase: 'preseason' | 'transfer_window' | 'regular_season' | 'season_review';
   inbox?: ManagerMessage[];
+  deadlineDayState?: DeadlineDayState;
+}
+
+export type DeadlineDayPhase = 'morning' | 'afternoon' | 'evening' | 'deadline' | 'closed';
+
+export interface DeadlineDayState {
+  isActive: boolean;
+  phase: DeadlineDayPhase;
+  hoursRemaining: number;
+  timeString: string; // e.g. '09:00 BST', '13:00 BST', '18:00 BST', '22:00 BST', '23:00 BST'
+  dealsCompletedCount: number;
+  breakingNews: string[];
 }
 
 export interface SaveSlotMeta {

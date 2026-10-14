@@ -25,6 +25,12 @@ import {
   calculateFormRatingBonus,
   getEffectiveRating,
 } from '../../career/formAndProgression';
+import {
+  setPlayerTransferStatus,
+  offerPlayerToClubs,
+  hireIntermediaryForPlayer,
+  releasePlayerContract,
+} from '../../career/transfers';
 
 interface SquadManagementProps {
   save: CareerSaveFile;
@@ -37,6 +43,80 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
   const [selectedPlayer, setSelectedPlayer] = useState<CareerPlayer | null>(null);
   const [swapSourceId, setSwapSourceId] = useState<string | null>(null);
   const [academyToast, setAcademyToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  // Outgoing transfer & player actions state
+  const [askingPriceInput, setAskingPriceInput] = useState<number>(0);
+  const [transferListedInput, setTransferListedInput] = useState<boolean>(false);
+  const [loanListedInput, setLoanListedInput] = useState<boolean>(false);
+  const [showReleaseModal, setShowReleaseModal] = useState<boolean>(false);
+  const [releaseActionType, setReleaseActionType] = useState<'mutual' | 'unilateral'>('mutual');
+  const [squadActionMessage, setSquadActionMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  const handleSelectPlayerWithActions = (player: CareerPlayer) => {
+    setSelectedPlayer(player);
+    setAskingPriceInput(player.askingPrice || player.value);
+    setTransferListedInput(player.transferListed ?? false);
+    setLoanListedInput(player.loanListed ?? false);
+    setShowReleaseModal(false);
+    setSquadActionMessage(null);
+  };
+
+  const handleUpdateTransferStatus = () => {
+    if (!selectedPlayer) return;
+    const res = setPlayerTransferStatus(save, selectedPlayer.id, {
+      transferListed: transferListedInput,
+      askingPrice: askingPriceInput,
+      loanListed: loanListedInput,
+    });
+    onUpdateSave(res.updatedSave);
+    const updated = res.updatedSave.squad.find((p) => p.id === selectedPlayer.id);
+    if (updated) setSelectedPlayer(updated);
+    setSquadActionMessage({ text: 'Transfer listing updated successfully.', type: 'success' });
+    setTimeout(() => setSquadActionMessage(null), 3000);
+  };
+
+  const handleOfferToClubs = () => {
+    if (!selectedPlayer) return;
+    const res = offerPlayerToClubs(save, selectedPlayer.id, askingPriceInput);
+    if (res.success) {
+      onUpdateSave(res.updatedSave);
+      const updated = res.updatedSave.squad.find((p) => p.id === selectedPlayer.id);
+      if (updated) setSelectedPlayer(updated);
+      setSquadActionMessage({ text: res.message, type: 'success' });
+    } else {
+      setSquadActionMessage({ text: res.message, type: 'error' });
+    }
+  };
+
+  const handleHireIntermediary = () => {
+    if (!selectedPlayer) return;
+    const res = hireIntermediaryForPlayer(save, selectedPlayer.id);
+    if (res.success) {
+      onUpdateSave(res.updatedSave);
+      const updated = res.updatedSave.squad.find((p) => p.id === selectedPlayer.id);
+      if (updated) setSelectedPlayer(updated);
+      setSquadActionMessage({ text: res.message, type: 'success' });
+    } else {
+      setSquadActionMessage({ text: res.message, type: 'error' });
+    }
+  };
+
+  const handleConfirmRelease = () => {
+    if (!selectedPlayer) return;
+    const res = releasePlayerContract(save, selectedPlayer.id, releaseActionType);
+    if (!res.success) {
+      setSquadActionMessage({ text: res.error || 'Failed to release player.', type: 'error' });
+      return;
+    }
+    onUpdateSave(res.updatedSave);
+    setSelectedPlayer(null);
+    setShowReleaseModal(false);
+    setAcademyToast({
+      message: `Successfully released ${selectedPlayer.name}. Freed ${formatCurrency(res.wageFreed)}/wk in wages. Payout: ${formatCurrency(res.payout)}.`,
+      type: 'success',
+    });
+    setTimeout(() => setAcademyToast(null), 4000);
+  };
 
   const squad = save.squad || [];
   const academy: YouthProspect[] = save.youthAcademy || [];
@@ -189,7 +269,7 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
       });
       setSwapSourceId(null);
     } else {
-      setSelectedPlayer(player);
+      handleSelectPlayerWithActions(player);
     }
   };
 
@@ -519,13 +599,28 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
                       >
                         <td className="py-3 px-4 font-semibold text-white">
                           <button
-                            onClick={() => setSelectedPlayer(player)}
-                            className="hover:text-emerald-400 text-left font-display font-black text-sm flex items-center gap-1.5"
+                            onClick={() => handleSelectPlayerWithActions(player)}
+                            className="hover:text-emerald-400 text-left font-display font-black text-sm flex items-center gap-1.5 flex-wrap cursor-pointer"
                           >
                             <span>{player.name}</span>
                             {player.age <= 23 && (
                               <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/60 font-mono">
                                 U23
+                              </span>
+                            )}
+                            {player.transferListed && (
+                              <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-950/80 text-amber-300 border border-amber-800/60 font-mono font-bold" title={`Asking Price: ${formatCurrency(player.askingPrice || player.value)}`}>
+                                Listed
+                              </span>
+                            )}
+                            {player.loanListed && (
+                              <span className="text-[9px] px-1.5 py-0.2 rounded bg-blue-950/80 text-blue-300 border border-blue-800/60 font-mono font-bold">
+                                Loan
+                              </span>
+                            )}
+                            {player.agentBrokeringActive && (
+                              <span className="text-[9px] px-1.5 py-0.2 rounded bg-purple-950/80 text-purple-300 border border-purple-800/60 font-mono font-bold">
+                                Brokered
                               </span>
                             )}
                           </button>
@@ -672,6 +767,14 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
                               }`}
                             >
                               Res
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSelectPlayerWithActions(player)}
+                              className="px-2 py-1 rounded text-[10px] font-bold bg-slate-900/80 hover:bg-slate-800 border border-slate-750 text-slate-300 hover:text-white cursor-pointer"
+                              title="Transfer status & contract management"
+                            >
+                              ⚙️
                             </button>
                           </div>
                         </td>
@@ -914,6 +1017,257 @@ export function SquadManagement({ save, onUpdateSave }: SquadManagementProps) {
                 </div>
               );
             })()}
+
+            {/* Feedback Alert */}
+            {squadActionMessage && (
+              <div
+                className={`p-3 rounded-2xl border text-xs font-bold flex items-center justify-between ${
+                  squadActionMessage.type === 'success'
+                    ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300'
+                    : 'bg-rose-950/70 border-rose-500/50 text-rose-300'
+                }`}
+              >
+                <span>{squadActionMessage.text}</span>
+                <button
+                  type="button"
+                  onClick={() => setSquadActionMessage(null)}
+                  className="opacity-70 hover:opacity-100 text-xs ml-2 cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
+            {/* Outgoing Transfer & Contract Management Hub */}
+            <div className="bg-slate-900/60 border border-slate-850 rounded-2xl p-4 space-y-3.5 text-xs">
+              <div className="flex justify-between items-center text-[10px] font-black uppercase text-emerald-400 font-display">
+                <span>💱 Transfer Market &amp; Contract Actions</span>
+                <span className="text-slate-400 font-mono">
+                  {selectedPlayer.transferListed ? 'Transfer Listed' : 'Not Listed'}
+                </span>
+              </div>
+
+              {/* Status Toggles */}
+              <div className="grid grid-cols-2 gap-2">
+                <label className="flex items-center gap-2 p-2 rounded-xl bg-slate-950 border border-slate-800 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={transferListedInput}
+                    onChange={(e) => setTransferListedInput(e.target.checked)}
+                    className="accent-emerald-500 rounded"
+                  />
+                  <span className="text-[11px] font-bold text-slate-200">Transfer Listed</span>
+                </label>
+
+                <label className="flex items-center gap-2 p-2 rounded-xl bg-slate-950 border border-slate-800 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={loanListedInput}
+                    onChange={(e) => setLoanListedInput(e.target.checked)}
+                    className="accent-blue-500 rounded"
+                  />
+                  <span className="text-[11px] font-bold text-slate-200">Available for Loan</span>
+                </label>
+              </div>
+
+              {/* Asking Price Controls */}
+              <div className="space-y-2 bg-slate-950/60 border border-slate-800/80 p-3 rounded-xl">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Asking Price</span>
+                  <span className="font-display font-black text-emerald-400 text-sm">
+                    {formatCurrency(askingPriceInput)}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-1 text-[9px] font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setAskingPriceInput(Math.max(100_000, askingPriceInput - 1_000_000))}
+                    className="py-1 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 cursor-pointer"
+                  >
+                    -£1M
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAskingPriceInput(Math.max(100_000, askingPriceInput - 250_000))}
+                    className="py-1 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 cursor-pointer"
+                  >
+                    -£250k
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAskingPriceInput(askingPriceInput + 250_000)}
+                    className="py-1 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 text-emerald-400 cursor-pointer"
+                  >
+                    +£250k
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAskingPriceInput(askingPriceInput + 500_000)}
+                    className="py-1 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 text-emerald-400 cursor-pointer"
+                  >
+                    +£500k
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAskingPriceInput(askingPriceInput + 1_000_000)}
+                    className="py-1 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 text-emerald-400 cursor-pointer"
+                  >
+                    +£1M
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAskingPriceInput(askingPriceInput + 2_000_000)}
+                    className="py-1 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 text-emerald-400 cursor-pointer"
+                  >
+                    +£2M
+                  </button>
+                </div>
+
+                <div className="flex justify-between items-center pt-1 text-[10px]">
+                  <button
+                    type="button"
+                    onClick={() => setAskingPriceInput(selectedPlayer.value)}
+                    className="text-slate-400 hover:text-white underline cursor-pointer"
+                  >
+                    Reset to Valuation ({formatCurrency(selectedPlayer.value)})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleUpdateTransferStatus}
+                    className="px-2.5 py-1 rounded bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold hover:bg-emerald-500/30 cursor-pointer"
+                  >
+                    Save Status
+                  </button>
+                </div>
+              </div>
+
+              {/* Market Operations Buttons */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={handleOfferToClubs}
+                  className="p-2.5 rounded-xl border border-blue-500/30 bg-blue-950/20 hover:bg-blue-950/40 text-blue-300 font-display font-bold text-xs uppercase tracking-wider text-left transition-all cursor-pointer flex items-center justify-between gap-2"
+                >
+                  <div>
+                    <div className="font-black text-white flex items-center gap-1.5">
+                      <span>📢</span>
+                      <span>Offer to Clubs</span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-normal">
+                      Circulate to domestic &amp; Europe
+                    </div>
+                  </div>
+                  <span className="text-base text-blue-400">➔</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleHireIntermediary}
+                  className="p-2.5 rounded-xl border border-purple-500/30 bg-purple-950/20 hover:bg-purple-950/40 text-purple-300 font-display font-bold text-xs uppercase tracking-wider text-left transition-all cursor-pointer flex items-center justify-between gap-2"
+                >
+                  <div>
+                    <div className="font-black text-white flex items-center gap-1.5">
+                      <span>🤝</span>
+                      <span>Hire Intermediary</span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-normal">
+                      Broker firm bids (5% fee)
+                    </div>
+                  </div>
+                  <span className="text-base text-purple-400">➔</span>
+                </button>
+              </div>
+
+              {/* Free Release Trigger */}
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowReleaseModal(!showReleaseModal)}
+                  className="w-full py-2 px-3 rounded-xl border border-rose-900/50 hover:border-rose-700 bg-rose-950/20 hover:bg-rose-950/40 text-rose-300 font-display font-bold text-xs uppercase tracking-wider text-center transition-all cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <span>⚠️</span>
+                  <span>Release Player on Free Transfer</span>
+                </button>
+              </div>
+
+              {/* Release Confirmation & Payout Calculation */}
+              {showReleaseModal && (
+                <div className="bg-rose-950/30 border border-rose-500/40 p-3.5 rounded-2xl space-y-3">
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-rose-400 font-display block">
+                      Contract Buyout &amp; Wage Relief
+                    </span>
+                    <p className="text-[11px] text-slate-300 leading-relaxed">
+                      Releasing <strong className="text-white">{selectedPlayer.name}</strong> will remove him from your squad and free up <strong className="text-emerald-400">+{formatWage(selectedPlayer.wageWeekly)}/wk</strong> in wage budget.
+                    </p>
+                  </div>
+
+                  {(() => {
+                    const remainingWeeks = Math.max(1, (selectedPlayer.contractYears ?? 2) * 52);
+                    const fullLiability = remainingWeeks * selectedPlayer.wageWeekly;
+                    const mutualPayout = Math.round(fullLiability * 0.60);
+
+                    return (
+                      <div className="space-y-2.5">
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <label
+                            onClick={() => setReleaseActionType('mutual')}
+                            className={`p-2.5 rounded-xl border cursor-pointer transition-all ${
+                              releaseActionType === 'mutual'
+                                ? 'bg-amber-950/60 border-amber-500 text-amber-200 shadow-sm'
+                                : 'bg-slate-950 border-slate-800 text-slate-400'
+                            }`}
+                          >
+                            <span className="text-[10px] font-black uppercase block">Mutual Settlement</span>
+                            <span className="font-display font-black text-sm text-white block mt-0.5">
+                              {formatCurrency(mutualPayout)}
+                            </span>
+                            <span className="text-[9px] text-slate-400 block mt-0.5">
+                              Discounted 60% settlement
+                            </span>
+                          </label>
+
+                          <label
+                            onClick={() => setReleaseActionType('unilateral')}
+                            className={`p-2.5 rounded-xl border cursor-pointer transition-all ${
+                              releaseActionType === 'unilateral'
+                                ? 'bg-rose-950/60 border-rose-500 text-rose-200 shadow-sm'
+                                : 'bg-slate-950 border-slate-800 text-slate-400'
+                            }`}
+                          >
+                            <span className="text-[10px] font-black uppercase block">Unilateral Buyout</span>
+                            <span className="font-display font-black text-sm text-white block mt-0.5">
+                              {formatCurrency(fullLiability)}
+                            </span>
+                            <span className="text-[9px] text-slate-400 block mt-0.5">
+                              Full 100% wage liability
+                            </span>
+                          </label>
+                        </div>
+
+                        <div className="flex gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => setShowReleaseModal(false)}
+                            className="py-2 px-3 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 font-bold text-xs uppercase cursor-pointer"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleConfirmRelease}
+                            className="flex-1 py-2 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-rose-600/30 cursor-pointer"
+                          >
+                            Confirm Termination
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
 
             <div className="flex gap-2 pt-1">
               <button

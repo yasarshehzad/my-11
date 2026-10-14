@@ -11,6 +11,17 @@ import {
   getPlayerPreferredTerms,
   getExpiringContracts,
   processSportingDirectorRenewals,
+  getNegotiationBallpark,
+  getCounterOfferSentiment,
+  negotiateIncomingOffer,
+  setPlayerTransferStatus,
+  offerPlayerToClubs,
+  hireIntermediaryForPlayer,
+  releasePlayerContract,
+  isTransferDeadlineDay,
+  initializeDeadlineDay,
+  advanceDeadlineDayPhase,
+  executeBuyBackReSigning,
 } from '../src/career/transfers';
 import { getAllClubs } from '../src/career/clubs';
 import { createNewCareerSave } from '../src/career/saves';
@@ -551,4 +562,705 @@ describe('Career Mode Phase 6: Transfers, Scouting & Contracts', () => {
       expect(summerOpenMsg).toBeDefined();
     });
   });
+
+  describe('Incoming Transfer Offers: Ballpark Figures & Sentiment', () => {
+    it('calculates realistic ballpark tiers and budget ceilings based on buyer reputation', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      const player = save.squad[0];
+      const offer = {
+        id: 'test_offer_1',
+        playerId: player.id,
+        playerName: player.name,
+        rating: player.rating,
+        position: player.position,
+        buyingClubId: 'madrid_r',
+        buyingClubName: 'Madrid Royal',
+        offeredFee: player.value,
+        date: '2026-07-15',
+        status: 'pending' as const,
+        originalOfferedFee: player.value,
+        fairValue: player.value,
+        patienceRemaining: 3,
+      };
+
+      const ballparkElite = getNegotiationBallpark(offer, player, 'elite');
+      expect(ballparkElite.fairValue).toBe(player.value);
+      expect(ballparkElite.minReasonable).toBeLessThanOrEqual(player.value);
+      expect(ballparkElite.maxReasonable).toBeGreaterThanOrEqual(player.value);
+      expect(ballparkElite.buyerCeiling).toBeGreaterThan(ballparkElite.maxReasonable);
+      expect(ballparkElite.walkawayDangerThreshold).toBeGreaterThan(ballparkElite.buyerCeiling);
+
+      const ballparkLower = getNegotiationBallpark(offer, player, 'lower');
+      expect(ballparkLower.buyerCeiling).toBeLessThan(ballparkElite.buyerCeiling);
+    });
+
+    it('returns appropriate sentiment zones and probability gradients', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      const player = save.squad[0];
+      const offer = {
+        id: 'test_offer_2',
+        playerId: player.id,
+        playerName: player.name,
+        rating: player.rating,
+        position: player.position,
+        buyingClubId: 'chelsea',
+        buyingClubName: 'London Blues',
+        offeredFee: player.value,
+        date: '2026-07-15',
+        status: 'pending' as const,
+      };
+
+      const ballpark = getNegotiationBallpark(offer, player, 'upper');
+
+      // Fair zone
+      const fairSentiment = getCounterOfferSentiment(ballpark.minReasonable, ballpark);
+      expect(fairSentiment.zone).toBe('fair');
+      expect(fairSentiment.acceptanceProbability).toBeGreaterThanOrEqual(85);
+
+      // Ambitious zone
+      const ambitiousFee = Math.round((ballpark.maxReasonable + ballpark.ambitiousLimit) / 2);
+      const ambitiousSentiment = getCounterOfferSentiment(ambitiousFee, ballpark);
+      expect(ambitiousSentiment.zone).toBe('ambitious');
+      expect(ambitiousSentiment.acceptanceProbability).toBeGreaterThanOrEqual(40);
+      expect(ambitiousSentiment.acceptanceProbability).toBeLessThanOrEqual(70);
+
+      // Risky zone
+      const riskyFee = ballpark.walkawayDangerThreshold + 10_000_000;
+      const riskySentiment = getCounterOfferSentiment(riskyFee, ballpark);
+      expect(riskySentiment.zone).toBe('risky');
+      expect(riskySentiment.acceptanceProbability).toBeLessThanOrEqual(25);
+    });
+  });
+
+  describe('Counter-Offer Negotiation Room Outcomes', () => {
+    it('accepts immediately when counter fee is within buyer valuation ceiling and fair range', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      const player = save.squad[0];
+      const initialOffer = {
+        id: 'offer_acc_1',
+        playerId: player.id,
+        playerName: player.name,
+        rating: player.rating,
+        position: player.position,
+        buyingClubId: 'paris_sg',
+        buyingClubName: 'Paris Saint',
+        offeredFee: player.value,
+        date: '2026-07-15',
+        status: 'pending' as const,
+        originalOfferedFee: player.value,
+        fairValue: player.value,
+        buyerCeilingFee: Math.round(player.value * 1.4),
+        patienceRemaining: 3,
+      };
+
+      save.incomingOffers = [initialOffer];
+
+      // Counter with a modest 5% markup
+      const counterFee = Math.round(player.value * 1.05);
+      const res = negotiateIncomingOffer(save, initialOffer.id, counterFee, 15);
+
+      expect(res.success).toBe(true);
+      expect(res.outcome).toBe('accepted');
+      expect(res.feedback).toContain('agreed');
+      expect(res.updatedSave.incomingOffers![0].status).toBe('accepted');
+      expect(res.updatedSave.incomingOffers![0].sellOnPercent).toBe(15);
+      expect(res.updatedSave.incomingOffers![0].offeredFee).toBe(counterFee);
+    });
+
+    it('compromises with a middle-ground counter-offer when demand is ambitious', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      const player = save.squad[0];
+      const initialOffer = {
+        id: 'offer_comp_1',
+        playerId: player.id,
+        playerName: player.name,
+        rating: player.rating,
+        position: player.position,
+        buyingClubId: 'bavaria_m',
+        buyingClubName: 'Bavarian Giants',
+        offeredFee: player.value,
+        date: '2026-07-15',
+        status: 'pending' as const,
+        originalOfferedFee: player.value,
+        fairValue: player.value,
+        buyerCeilingFee: Math.round(player.value * 1.35),
+        patienceRemaining: 3,
+      };
+
+      save.incomingOffers = [initialOffer];
+
+      // Counter with 20% markup (exceeds maxReasonable 12%, but under walkaway danger)
+      const counterFee = Math.round(player.value * 1.20);
+      const res = negotiateIncomingOffer(save, initialOffer.id, counterFee, 10);
+
+      expect(res.success).toBe(true);
+      expect(res.outcome).toBe('compromise');
+      expect(res.feedback).toContain('compromised');
+      expect(res.updatedSave.incomingOffers![0].status).toBe('pending');
+      expect(res.updatedSave.incomingOffers![0].patienceRemaining).toBe(2);
+      expect(res.updatedSave.incomingOffers![0].offeredFee).toBeGreaterThan(initialOffer.offeredFee);
+      expect(res.updatedSave.incomingOffers![0].offeredFee).toBeLessThan(counterFee);
+    });
+
+    it('causes buyer to break off talks when demand is exorbitant or patience expires', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      const player = save.squad[0];
+      const initialOffer = {
+        id: 'offer_walk_1',
+        playerId: player.id,
+        playerName: player.name,
+        rating: player.rating,
+        position: player.position,
+        buyingClubId: 'everton_b',
+        buyingClubName: 'Merseyside Blues',
+        offeredFee: player.value,
+        date: '2026-07-15',
+        status: 'pending' as const,
+        originalOfferedFee: player.value,
+        fairValue: player.value,
+        buyerCeilingFee: Math.round(player.value * 1.15),
+        patienceRemaining: 1,
+      };
+
+      save.incomingOffers = [initialOffer];
+
+      // Counter with ridiculous fee (2.5x player value)
+      const ridiculousFee = player.value * 2.5;
+      const res = negotiateIncomingOffer(save, initialOffer.id, ridiculousFee);
+
+      expect(res.success).toBe(true);
+      expect(res.outcome).toBe('walked_away');
+      expect(res.feedback).toContain('withdrawn');
+      expect(res.updatedSave.incomingOffers![0].status).toBe('rejected');
+      expect(res.updatedSave.incomingOffers![0].patienceRemaining).toBe(0);
+    });
+  });
+
+  describe('Squad Outgoing Actions: Listing, Circulars, and Intermediaries', () => {
+    it('updates transfer listing status, asking price, and loan availability', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      const player = save.squad[0];
+      const askingPrice = player.value + 5_000_000;
+
+      const res = setPlayerTransferStatus(save, player.id, {
+        transferListed: true,
+        askingPrice,
+        loanListed: true,
+      });
+
+      expect(res.success).toBe(true);
+      const updated = res.updatedSave.squad.find((p) => p.id === player.id)!;
+      expect(updated.transferListed).toBe(true);
+      expect(updated.askingPrice).toBe(askingPrice);
+      expect(updated.loanListed).toBe(true);
+    });
+
+    it('offers player to clubs, generates incoming suitor bid, and notifies via inbox', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      save.season.currentDate = '2026-07-20'; // Open summer window
+      const player = save.squad[0];
+      const askingPrice = player.value * 1.1;
+
+      const res = offerPlayerToClubs(save, player.id, askingPrice);
+      expect(res.success).toBe(true);
+
+      const updatedPlayer = res.updatedSave.squad.find((p) => p.id === player.id)!;
+      expect(updatedPlayer.transferListed).toBe(true);
+      expect(updatedPlayer.askingPrice).toBe(askingPrice);
+      expect(updatedPlayer.offeredToClubsDate).toBe('2026-07-20');
+
+      // Verify incoming bid generated
+      const generatedBid = res.updatedSave.incomingOffers?.find((o) => o.playerId === player.id);
+      expect(generatedBid).toBeDefined();
+      expect(generatedBid?.offeredFee).toBeGreaterThan(0);
+
+      // Verify DoF inbox message sent
+      const dofMsg = res.updatedSave.inbox?.find(
+        (m) => m.sender === 'Director of Football' && m.subject.includes(player.name)
+      );
+      expect(dofMsg).toBeDefined();
+      expect(dofMsg?.actionTab).toBe('transfers');
+    });
+
+    it('hires intermediary broker to secure firm purchase offer', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      save.season.currentDate = '2026-07-20';
+      const player = save.squad[0];
+
+      const res = hireIntermediaryForPlayer(save, player.id);
+      expect(res.success).toBe(true);
+
+      const updatedPlayer = res.updatedSave.squad.find((p) => p.id === player.id)!;
+      expect(updatedPlayer.agentBrokeringActive).toBe(true);
+      expect(updatedPlayer.transferListed).toBe(true);
+
+      // Verify broker bid secured
+      const brokerBid = res.updatedSave.incomingOffers?.find((o) => o.playerId === player.id);
+      expect(brokerBid).toBeDefined();
+      expect(brokerBid?.history?.[0].message).toContain('broker commission');
+
+      // Verify agent inbox message
+      const agentMsg = res.updatedSave.inbox?.find(
+        (m) => m.sender === 'Licensed Intermediary Agency' && m.subject.includes(player.name)
+      );
+      expect(agentMsg).toBeDefined();
+    });
+  });
+
+  describe('Contract Terminations & Free Release Financial Guardrails', () => {
+    it('enforces 18-player minimum squad size guardrail on releases', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      // Trim squad down to exactly 18 players
+      save.squad = save.squad.slice(0, 18);
+
+      const res = releasePlayerContract(save, save.squad[0].id, 'unilateral');
+      expect(res.success).toBe(false);
+      expect(res.error).toContain('18 players');
+    });
+
+    it('executes unilateral buyout with 100% wage liability payout and wage bill reduction', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      const player = save.squad[save.squad.length - 1];
+      const initialBalance = save.finances.balance;
+      const initialWages = save.finances.currentWeeklyWages;
+      const expectedPayout = (player.contractYears ?? 2) * 52 * player.wageWeekly;
+
+      const res = releasePlayerContract(save, player.id, 'unilateral');
+      expect(res.success).toBe(true);
+      expect(res.payout).toBe(expectedPayout);
+      expect(res.wageFreed).toBe(player.wageWeekly);
+      expect(res.updatedSave.finances.balance).toBe(initialBalance - expectedPayout);
+      expect(res.updatedSave.finances.currentWeeklyWages).toBe(initialWages - player.wageWeekly);
+      expect(res.updatedSave.squad.some((p) => p.id === player.id)).toBe(false);
+    });
+
+    it('applies 60% discounted mutual termination payout when conditions are met', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      const player = save.squad[save.squad.length - 1];
+      player.squadRole = 'fringe';
+      player.morale = 60; // low morale -> willing to settle
+
+      const fullLiability = (player.contractYears ?? 2) * 52 * player.wageWeekly;
+      const expectedSettlement = Math.round(fullLiability * 0.6);
+
+      const res = releasePlayerContract(save, player.id, 'mutual');
+      expect(res.success).toBe(true);
+      expect(res.payout).toBe(expectedSettlement);
+    });
+
+    it('rejects mutual termination if player is a happy crucial starter', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      const starPlayer = save.squad[0];
+      starPlayer.squadRole = 'crucial';
+      starPlayer.morale = 90;
+
+      const res = releasePlayerContract(save, starPlayer.id, 'mutual');
+      expect(res.success).toBe(false);
+      expect(res.error).toContain('refuses mutual termination');
+    });
+
+    it('vetoes contract release if club balance is insufficient to pay compensation', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      const player = save.squad[save.squad.length - 1];
+      save.finances.balance = 10_000; // Almost bankrupt
+
+      const res = releasePlayerContract(save, player.id, 'unilateral');
+      expect(res.success).toBe(false);
+      expect(res.error).toContain('Board vetoed release');
+    });
+  });
+
+  describe('Transfer Deadline Day Clock & Panic Buying Volatility', () => {
+    it('accurately identifies summer (Sep 1) and winter (Feb 1) deadline dates', () => {
+      expect(isTransferDeadlineDay('2026-09-01', 2026)).toBe(true);
+      expect(isTransferDeadlineDay('2027-02-01', 2026)).toBe(true);
+      expect(isTransferDeadlineDay('2026-08-31', 2026)).toBe(false);
+      expect(isTransferDeadlineDay('2026-09-02', 2026)).toBe(false);
+      expect(isTransferDeadlineDay('2027-01-15', 2026)).toBe(false);
+    });
+
+    it('initializes Deadline Day state, urgent inbox notice, and morning bids', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      save.season.currentDate = '2026-09-01';
+      const initialized = initializeDeadlineDay(save);
+
+      expect(initialized.deadlineDayState).toBeDefined();
+      expect(initialized.deadlineDayState?.isActive).toBe(true);
+      expect(initialized.deadlineDayState?.phase).toBe('morning');
+      expect(initialized.deadlineDayState?.hoursRemaining).toBe(14);
+      expect(initialized.deadlineDayState?.timeString).toBe('09:00 BST');
+      expect(initialized.deadlineDayState?.breakingNews.length).toBeGreaterThan(0);
+
+      // Verify urgent inbox dispatch
+      const deadlineMsg = initialized.inbox?.find((m) => m.subject.includes('Deadline Day Clock'));
+      expect(deadlineMsg).toBeDefined();
+      expect(deadlineMsg?.priority).toBe('urgent');
+    });
+
+    it('progresses through Morning -> Afternoon -> Evening -> Final Hour -> Window Closed', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      save.season.currentDate = '2026-09-01';
+      let state = initializeDeadlineDay(save);
+
+      // 1. Advance to Afternoon
+      const afternoonRes = advanceDeadlineDayPhase(state);
+      expect(afternoonRes.phase).toBe('afternoon');
+      expect(afternoonRes.updatedSave.deadlineDayState?.phase).toBe('afternoon');
+      expect(afternoonRes.updatedSave.deadlineDayState?.hoursRemaining).toBe(10);
+      expect(afternoonRes.updatedSave.deadlineDayState?.timeString).toBe('13:00 BST');
+
+      // 2. Advance to Evening
+      const eveningRes = advanceDeadlineDayPhase(afternoonRes.updatedSave);
+      expect(eveningRes.phase).toBe('evening');
+      expect(eveningRes.updatedSave.deadlineDayState?.phase).toBe('evening');
+      expect(eveningRes.updatedSave.deadlineDayState?.hoursRemaining).toBe(5);
+      expect(eveningRes.updatedSave.deadlineDayState?.timeString).toBe('18:00 BST');
+
+      // 3. Advance to Final Hour
+      const deadlineRes = advanceDeadlineDayPhase(eveningRes.updatedSave);
+      expect(deadlineRes.phase).toBe('deadline');
+      expect(deadlineRes.updatedSave.deadlineDayState?.phase).toBe('deadline');
+      expect(deadlineRes.updatedSave.deadlineDayState?.hoursRemaining).toBe(1);
+      expect(deadlineRes.updatedSave.deadlineDayState?.timeString).toBe('22:00 BST');
+
+      // 4. Slam Window Shut (23:00 BST)
+      const closedRes = advanceDeadlineDayPhase(deadlineRes.updatedSave);
+      expect(closedRes.phase).toBe('closed');
+      expect(closedRes.updatedSave.deadlineDayState?.isActive).toBe(false);
+      expect(closedRes.updatedSave.deadlineDayState?.phase).toBe('closed');
+      expect(closedRes.updatedSave.season.transferWindowOpen).toBe(false);
+      expect(closedRes.updatedSave.season.currentDate).toBe('2026-09-02');
+
+      const windowClosedMsg = closedRes.updatedSave.inbox?.find((m) => m.subject.includes('Transfer Window Closed'));
+      expect(windowClosedMsg).toBeDefined();
+    });
+
+    it('generates panic bids with markup percentage during deadline day hours', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      save.season.currentDate = '2026-09-01';
+      save.deadlineDayState = {
+        isActive: true,
+        phase: 'evening',
+        hoursRemaining: 5,
+        timeString: '18:00 BST',
+        dealsCompletedCount: 22,
+        breakingNews: ['Clubs scramble for reinforcements!'],
+      };
+
+      const bids = generateIncomingAiBids(save);
+      expect(bids.length).toBeGreaterThanOrEqual(1);
+
+      const panicBid = bids.find((b) => b.isPanicBid);
+      expect(panicBid).toBeDefined();
+      expect(panicBid?.panicMarkupPercent).toBeGreaterThan(0);
+      expect(panicBid?.offeredFee).toBeGreaterThanOrEqual(panicBid?.fairValue || 0);
+    });
+  });
+
+  describe('Buy-Back Clauses & Performance Add-Ons', () => {
+    it('negotiates incoming offer with appearance and goal milestone add-ons', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      const player = save.squad[0];
+      const offer = {
+        id: 'offer_addons_test',
+        playerId: player.id,
+        playerName: player.name,
+        rating: player.rating,
+        position: player.position,
+        buyingClubId: 'paris_sg',
+        buyingClubName: 'Paris Saint-Germain',
+        offeredFee: player.value,
+        date: save.season.currentDate,
+        status: 'pending' as const,
+        originalOfferedFee: player.value,
+        fairValue: player.value,
+        patienceRemaining: 3,
+      };
+
+      save.incomingOffers = [offer];
+
+      const res = negotiateIncomingOffer(
+        save,
+        offer.id,
+        player.value, // fair base fee
+        15, // 15% sell-on
+        {
+          appearanceMilestoneFee: 2_500_000,
+          appearanceThreshold: 20,
+          goalMilestoneFee: 1_500_000,
+          goalThreshold: 15,
+        }
+      );
+
+      expect(res.success).toBe(true);
+      expect(res.outcome).toBe('accepted');
+
+      const updatedOffer = res.updatedSave.incomingOffers?.find((o) => o.id === offer.id);
+      expect(updatedOffer).toBeDefined();
+      expect(updatedOffer?.appearanceMilestoneFee).toBe(2_500_000);
+      expect(updatedOffer?.appearanceThreshold).toBe(20);
+      expect(updatedOffer?.goalMilestoneFee).toBe(1_500_000);
+      expect(updatedOffer?.goalThreshold).toBe(15);
+      expect(updatedOffer?.sellOnPercent).toBe(15);
+    });
+
+    it('rejects buy-back clause on young wonderkid if requested buy-back fee is unrealistically low', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      const player = save.squad[0];
+      player.age = 20; // young prospect
+
+      const offer = {
+        id: 'offer_buyback_reject_test',
+        playerId: player.id,
+        playerName: player.name,
+        rating: player.rating,
+        position: player.position,
+        buyingClubId: 'bayern_m',
+        buyingClubName: 'Bayern München',
+        offeredFee: 20_000_000,
+        date: save.season.currentDate,
+        status: 'pending' as const,
+        originalOfferedFee: 20_000_000,
+        fairValue: 20_000_000,
+        patienceRemaining: 3,
+      };
+
+      save.incomingOffers = [offer];
+
+      // Counter with buy-back fee barely above base fee (1.1x instead of required >= 1.45x)
+      const res = negotiateIncomingOffer(
+        save,
+        offer.id,
+        20_000_000,
+        0,
+        {
+          buyBackFee: 22_000_000, // only 1.1x
+        }
+      );
+
+      expect(res.outcome).toBe('walked_away');
+      expect(res.feedback).toContain('was unrealistically low');
+    });
+
+    it('preserves buy-back clause and add-on terms upon executing player sale', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      const player = save.squad[0];
+      const terms: DetailedTransferTerms = {
+        baseFee: 30_000_000,
+        wageWeekly: 100_000,
+        contractYears: 4,
+        appearanceMilestoneFee: 3_000_000,
+        appearanceThreshold: 25,
+        goalMilestoneFee: 2_000_000,
+        goalThreshold: 20,
+        buyBackFee: 50_000_000,
+      };
+
+      const initialBudget = save.finances.transferBudget;
+      const initialSquadSize = save.squad.length;
+
+      const saleRes = executePlayerSale(save, player.id, terms.baseFee, 'Madrid Royal', terms);
+
+      expect(saleRes.success).toBe(true);
+      expect(saleRes.updatedSave.squad.length).toBe(initialSquadSize - 1);
+      expect(saleRes.updatedSave.finances.transferBudget).toBe(initialBudget + terms.baseFee);
+
+      const record = saleRes.updatedSave.transfersHistory?.find((tx) => tx.playerId === player.id);
+      expect(record).toBeDefined();
+      expect(record?.buyBackFee).toBe(50_000_000);
+      expect(record?.buyBackActive).toBe(true);
+      expect(record?.appearanceMilestoneFee).toBe(3_000_000);
+      expect(record?.appearanceThreshold).toBe(25);
+    });
+
+    it('executes buy-back re-signing, deducting fee and returning player to squad', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      save.finances.transferBudget = 60_000_000;
+      save.transfersHistory = [
+        {
+          id: 'tx_sold_wonderkid',
+          playerId: 'wk_01',
+          playerName: 'Wonder Kid',
+          rating: 83,
+          position: 'CAM',
+          fromClubName: save.club.defaultName,
+          toClubName: 'Borussia Dortmund',
+          fee: 25_000_000,
+          wage: 60_000,
+          date: '2026-08-01',
+          type: 'sale',
+          buyBackFee: 40_000_000,
+          buyBackActive: true,
+        },
+      ];
+
+      const initialSquadSize = save.squad.length;
+      const res = executeBuyBackReSigning(save, 'wk_01');
+
+      expect(res.success).toBe(true);
+      expect(res.updatedSave.squad.length).toBe(initialSquadSize + 1);
+      expect(res.updatedSave.finances.transferBudget).toBe(20_000_000); // 60M - 40M
+
+      const reSigned = res.updatedSave.squad.find((p) => p.cardId === 'wk_01');
+      expect(reSigned).toBeDefined();
+      expect(reSigned?.name).toBe('Wonder Kid');
+
+      // Verify buyBackActive is marked false so it cannot be triggered repeatedly
+      const prevRecord = res.updatedSave.transfersHistory?.find((tx) => tx.id === 'tx_sold_wonderkid');
+      expect(prevRecord?.buyBackActive).toBe(false);
+    });
+
+    it('rejects buy-back if club has insufficient funds to cover the fee', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      save.finances.transferBudget = 5_000_000;
+      save.transfersHistory = [
+        {
+          id: 'tx_sold_wonderkid',
+          playerId: 'wk_01',
+          playerName: 'Wonder Kid',
+          rating: 83,
+          position: 'CAM',
+          fromClubName: save.club.defaultName,
+          toClubName: 'Borussia Dortmund',
+          fee: 25_000_000,
+          wage: 60_000,
+          date: '2026-08-01',
+          type: 'sale',
+          buyBackFee: 40_000_000,
+          buyBackActive: true,
+        },
+      ];
+
+      const res = executeBuyBackReSigning(save, 'wk_01');
+      expect(res.success).toBe(false);
+      expect(res.error).toContain('Insufficient transfer budget');
+    });
+  });
 });
+

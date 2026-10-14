@@ -4,7 +4,11 @@ import {
   calculateWeeklyWage,
   formatCurrency,
   formatWage,
+  calculateBudgetAdjustmentBounds,
+  reallocateBudgetDistribution,
 } from '../src/career/finance';
+import { evaluateBoardFinancialPetition } from '../src/career/transfers';
+import { createNewCareerSave } from '../src/career/saves';
 import {
   validateSquad,
   categorizePosition,
@@ -17,7 +21,7 @@ import {
 } from '../src/career/squad';
 import { generateClubSquad } from '../src/career/squadGenerator';
 import { getClubById, getAllClubs } from '../src/career/clubs';
-import { CareerPlayer, CareerSettings } from '../src/career/types';
+import { CareerPlayer, CareerSettings, CareerSaveFile } from '../src/career/types';
 import { getPresetSettings } from '../src/career/settings';
 
 describe('Career Finance & Valuation Engine', () => {
@@ -56,6 +60,230 @@ describe('Career Finance & Valuation Engine', () => {
     expect(formatCurrency(18_500_000)).toBe('£18.5M');
     expect(formatCurrency(450_000)).toBe('£450k');
     expect(formatWage(120_000)).toBe('£120k/w');
+  });
+
+  describe('FM-Style Budget Adjustment & Reallocation', () => {
+    it('calculates flexible capital bounds conserving weekly wages and transfer cash', () => {
+      const finances = {
+        transferBudget: 20_000_000,
+        weeklyWageBudget: 1_200_000,
+        currentWeeklyWages: 1_000_000, // £200k/w spare wage headroom
+        balance: 50_000_000,
+      };
+
+      const bounds = calculateBudgetAdjustmentBounds(finances);
+      // Spare wage annualised = 200,000 * 52 = £10,400,000
+      // Total flexible capital = £20,000,000 + £10,400,000 = £30,400,000
+      expect(bounds.totalFlexibleFund).toBe(30_400_000);
+      expect(bounds.minTransferBudget).toBe(0);
+      expect(bounds.maxTransferBudget).toBe(30_400_000);
+      expect(bounds.minWeeklyWageBudget).toBe(1_000_000); // cannot drop below current wages
+      expect(bounds.currentWageSpare).toBe(200_000);
+    });
+
+    it('shifts spare wage headroom into upfront transfer funds', () => {
+      const club = getAllClubs()[0];
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club,
+        settings: getPresetSettings('easy'),
+      });
+
+      save.finances.transferBudget = 10_000_000;
+      save.finances.currentWeeklyWages = 1_000_000;
+      save.finances.weeklyWageBudget = 1_200_000; // £200k/w spare headroom
+
+      // Reallocate to max transfer budget (£10M + £200k*52 = £20.4M)
+      const res = reallocateBudgetDistribution(save, 20_400_000);
+      expect(res.success).toBe(true);
+      expect(res.updatedSave.finances.transferBudget).toBe(20_400_000);
+      // Weekly wage budget reduced to match current squad payroll
+      expect(res.updatedSave.finances.weeklyWageBudget).toBe(1_000_000);
+    });
+
+    it('shifts transfer funds into weekly wage headroom', () => {
+      const club = getAllClubs()[0];
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club,
+        settings: getPresetSettings('easy'),
+      });
+
+      save.finances.transferBudget = 26_000_000;
+      save.finances.currentWeeklyWages = 1_000_000;
+      save.finances.weeklyWageBudget = 1_000_000;
+
+      // Sacrifice all transfer funds (£26M / 52 = £500k/w wage increase)
+      const res = reallocateBudgetDistribution(save, 0);
+      expect(res.success).toBe(true);
+      expect(res.updatedSave.finances.transferBudget).toBe(0);
+      expect(res.updatedSave.finances.weeklyWageBudget).toBe(1_500_000);
+    });
+
+    it('prevents budget allocation exceeding flexible fund limits', () => {
+      const club = getAllClubs()[0];
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club,
+        settings: getPresetSettings('easy'),
+      });
+
+      save.finances.transferBudget = 5_000_000;
+      save.finances.currentWeeklyWages = 1_000_000;
+      save.finances.weeklyWageBudget = 1_000_000; // Zero spare wage headroom
+
+      // Permissible max is £5,000,000. Try setting £10,000,000
+      const res = reallocateBudgetDistribution(save, 10_000_000);
+      expect(res.success).toBe(false);
+      expect(res.error).toContain('permissible limits');
+    });
+  });
+
+  describe('Board Financial Petitions (Ask the Board)', () => {
+    it('approves emergency deadline day marquee warchest on deadline day with high confidence', () => {
+      const club = getAllClubs()[0]; // Elite tier club
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club,
+        settings: getPresetSettings('easy'),
+      });
+
+      save.season.currentDate = '2026-09-01'; // Deadline Day
+      save.deadlineDayState = {
+        isActive: true,
+        phase: 'evening',
+        hoursRemaining: 5,
+        timeString: '18:00 BST',
+        dealsCompletedCount: 15,
+        breakingNews: [],
+      };
+
+      const initialBudget = save.finances.transferBudget;
+      const res = evaluateBoardFinancialPetition(save, 'deadline_day_marquee', {
+        targetPlayerName: 'Florian Wirtz',
+      });
+
+      expect(res.success).toBe(true);
+      expect(res.outcome).toBe('approved');
+      expect(res.amountGranted).toBeGreaterThan(0);
+      expect(res.updatedSave.finances.transferBudget).toBe(initialBudget + res.amountGranted);
+
+      // Verify breaking news ticker updated
+      expect(res.updatedSave.deadlineDayState?.breakingNews.length).toBeGreaterThan(0);
+      expect(res.updatedSave.deadlineDayState?.breakingNews[0]).toContain('Board of Directors');
+
+      // Verify official resolution inbox dispatch
+      const inboxMsg = res.updatedSave.inbox?.find((m) => m.subject.includes('Board Resolution: Funding Approved'));
+      expect(inboxMsg).toBeDefined();
+      expect(inboxMsg?.priority).toBe('urgent');
+    });
+
+    it('rejects emergency deadline day marquee warchest on regular non-deadline calendar dates', () => {
+      const club = getAllClubs()[0];
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club,
+        settings: getPresetSettings('easy'),
+      });
+
+      save.season.currentDate = '2026-07-20'; // Regular July day, not deadline day
+
+      const res = evaluateBoardFinancialPetition(save, 'deadline_day_marquee');
+      expect(res.success).toBe(false);
+      expect(res.outcome).toBe('rejected');
+      expect(res.feedback).toContain('Transfer Deadline Day');
+    });
+
+    it('approves emergency injury crisis replacement grant when key player is injured', () => {
+      const club = getAllClubs()[0];
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club,
+        settings: getPresetSettings('easy'),
+      });
+
+      // Mark star player as injured
+      const star = save.squad[0];
+      star.injured = true;
+      star.injuryWeeks = 8;
+      star.injuryDescription = 'Torn Hamstring';
+      star.squadRole = 'crucial';
+      star.rating = 88;
+
+      const initialBudget = save.finances.transferBudget;
+      const res = evaluateBoardFinancialPetition(save, 'injury_crisis', {
+        injuredPlayerId: star.id,
+      });
+
+      expect(res.success).toBe(true);
+      expect(res.outcome).toBe('approved');
+      expect(res.amountGranted).toBeGreaterThan(0);
+      expect(res.updatedSave.finances.transferBudget).toBe(initialBudget + res.amountGranted);
+      expect(res.feedback).toContain(star.name);
+    });
+
+    it('rejects emergency injury crisis grant if squad has zero injured players', () => {
+      const club = getAllClubs()[0];
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club,
+        settings: getPresetSettings('easy'),
+      });
+
+      // Ensure no injuries
+      save.squad.forEach((p) => {
+        p.injured = false;
+      });
+
+      const res = evaluateBoardFinancialPetition(save, 'injury_crisis');
+      expect(res.success).toBe(false);
+      expect(res.outcome).toBe('rejected');
+      expect(res.feedback).toContain('zero squad members');
+    });
+
+    it('enforces cooldown preventing duplicate approved petitions of the same type within 30 days', () => {
+      const club = getAllClubs()[0];
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club,
+        settings: getPresetSettings('easy'),
+      });
+
+      // First petition
+      const firstRes = evaluateBoardFinancialPetition(save, 'general_transfer_funds');
+      expect(firstRes.success).toBe(true);
+
+      // Second immediate petition of same type
+      const secondRes = evaluateBoardFinancialPetition(firstRes.updatedSave, 'general_transfer_funds');
+      expect(secondRes.success).toBe(false);
+      expect(secondRes.outcome).toBe('rejected');
+      expect(secondRes.feedback).toContain('previously approved');
+    });
+
+    it('approves wage budget expansion providing weekly headroom', () => {
+      const club = getAllClubs()[0];
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club,
+        settings: getPresetSettings('easy'),
+      });
+
+      const initialWageBudget = save.finances.weeklyWageBudget;
+      const res = evaluateBoardFinancialPetition(save, 'wage_budget_increase');
+
+      expect(res.success).toBe(true);
+      expect(res.amountGranted).toBeGreaterThan(0);
+      expect(res.updatedSave.finances.weeklyWageBudget).toBe(initialWageBudget + res.amountGranted);
+    });
   });
 });
 

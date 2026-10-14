@@ -83,6 +83,8 @@ import {
   CurrencyPreference,
   WageUnitPreference,
   NumberFormatPreference,
+  CareerFinances,
+  CareerSaveFile,
 } from './types';
 import { formatCareerCurrency, formatCareerWage } from './formatters';
 
@@ -107,4 +109,89 @@ export function formatWage(
   numberFormat: NumberFormatPreference = 'comma'
 ): string {
   return formatCareerWage(weeklyAmount, wageUnit, currency, numberFormat);
+}
+
+export interface BudgetAdjustmentBounds {
+  minTransferBudget: number;
+  maxTransferBudget: number;
+  minWeeklyWageBudget: number;
+  maxWeeklyWageBudget: number;
+  totalFlexibleFund: number;
+  currentWageSpare: number;
+  currentTransferBudget: number;
+  currentWeeklyWageBudget: number;
+}
+
+/**
+ * Calculates permissible bounds for reallocating wage budget <-> transfer budget (Football Manager style).
+ * 1 year of weekly wage headroom = 52 x weekly wage in upfront transfer capital.
+ */
+export function calculateBudgetAdjustmentBounds(finances: CareerFinances): BudgetAdjustmentBounds {
+  const currentWeeklyWages = finances.currentWeeklyWages || 0;
+  const currentWageBudget = finances.weeklyWageBudget || 0;
+  const currentTransferBudget = finances.transferBudget || 0;
+
+  const currentWageSpare = Math.max(0, currentWageBudget - currentWeeklyWages);
+  // Total flexible capital in £ = current transfer funds + annualised spare wage capacity
+  const totalFlexibleFund = Math.max(0, currentTransferBudget + currentWageSpare * 52);
+
+  const minTransferBudget = 0;
+  const maxTransferBudget = totalFlexibleFund;
+
+  const minWeeklyWageBudget = currentWeeklyWages;
+  const maxWeeklyWageBudget = currentWeeklyWages + Math.round(totalFlexibleFund / 52);
+
+  return {
+    minTransferBudget,
+    maxTransferBudget,
+    minWeeklyWageBudget,
+    maxWeeklyWageBudget,
+    totalFlexibleFund,
+    currentWageSpare,
+    currentTransferBudget,
+    currentWeeklyWageBudget: currentWageBudget,
+  };
+}
+
+/**
+ * Reallocates the first-team financial pool between Transfer Budget and Weekly Wage Budget.
+ * Guarantees that weekly wage budget never drops below the current contracted squad wage liability.
+ */
+export function reallocateBudgetDistribution(
+  save: CareerSaveFile,
+  targetTransferBudget: number
+): { success: boolean; updatedSave: CareerSaveFile; error?: string; message: string } {
+  const bounds = calculateBudgetAdjustmentBounds(save.finances);
+
+  if (targetTransferBudget < bounds.minTransferBudget || targetTransferBudget > bounds.maxTransferBudget) {
+    return {
+      success: false,
+      updatedSave: save,
+      error: `Requested transfer budget of ${formatCurrency(targetTransferBudget)} exceeds permissible limits (${formatCurrency(bounds.minTransferBudget)} to ${formatCurrency(bounds.maxTransferBudget)}).`,
+      message: 'Budget adjustment outside permissible limits.',
+    };
+  }
+
+  // Round to nearest clean increment £25,000
+  const cleanTransfer = Math.round(targetTransferBudget / 25_000) * 25_000;
+
+  const remainingAnnualWageFund = Math.max(0, bounds.totalFlexibleFund - cleanTransfer);
+  const newWeeklySpare = Math.round((remainingAnnualWageFund / 52) / 500) * 500;
+  const newWeeklyWageBudget = save.finances.currentWeeklyWages + newWeeklySpare;
+
+  const updatedSave: CareerSaveFile = {
+    ...save,
+    finances: {
+      ...save.finances,
+      transferBudget: cleanTransfer,
+      weeklyWageBudget: newWeeklyWageBudget,
+      lastBudgetAdjustmentDate: save.season.currentDate,
+    },
+  };
+
+  return {
+    success: true,
+    updatedSave,
+    message: `Budget successfully reallocated! Transfer funds set to ${formatCurrency(cleanTransfer)}, wage budget set to ${formatWage(newWeeklyWageBudget)}.`,
+  };
 }

@@ -21,6 +21,8 @@ import {
 } from './cups';
 import {
   isTransferWindowOpen,
+  isTransferDeadlineDay,
+  initializeDeadlineDay,
   generateIncomingAiBids,
   evaluateBoardConfidence,
   processSportingDirectorRenewals,
@@ -30,6 +32,7 @@ import {
   applyInSeasonMatchProgression,
   applyMonthlySquadTraining,
 } from './formAndProgression';
+import { formatCurrency } from './finance';
 
 /**
  * Simulates a single league fixture with realistic football scorelines and goalscorers.
@@ -597,6 +600,25 @@ export function advanceTimeSkip(
     ? generateIncomingAiBids({ ...save, season: { ...save.season, currentDate: curIso } })
     : (save.incomingOffers || []);
 
+  // Notify manager if any brand new transfer bids arrived
+  const prevOfferIds = new Set((save.incomingOffers || []).map((o) => o.id));
+  const brandNewOffers = incomingOffers.filter((o) => !prevOfferIds.has(o.id));
+  if (brandNewOffers.length > 0) {
+    const firstNew = brandNewOffers[0];
+    addNotification({
+      date: curIso,
+      sender: 'Chief Scout & Transfer Committee',
+      senderRole: 'Recruitment & Operations',
+      subject: `Transfer Bid Received: ${firstNew.buyingClubName} for ${firstNew.playerName}`,
+      body: `Boss,\n\nWe have received an official transfer bid of ${formatCurrency(firstNew.offeredFee)} from ${firstNew.buyingClubName} for ${firstNew.playerName} (${firstNew.position}, ${firstNew.rating} OVR).\n\nYou can accept the offer, reject it, or negotiate a counter-proposal with ballpark fee expectations in the Incoming Offers Hub.`,
+      type: 'transfer',
+      isRead: false,
+      priority: 'urgent',
+      actionLabel: 'Review Transfer Offer',
+      actionTab: 'transfers',
+    });
+  }
+
   if (updatedBoardStatus.status === 'sacked' && save.settings.boardCanSack && !pausedReason) {
     pausedReason = 'Emergency Board Meeting: Sacked due to poor league results';
   }
@@ -632,7 +654,7 @@ export function advanceTimeSkip(
     }
   }
 
-  const updatedSave: CareerSaveFile = {
+  let updatedSave: CareerSaveFile = {
     ...save,
     season: {
       ...save.season,
@@ -650,6 +672,19 @@ export function advanceTimeSkip(
     squad: userSquad,
     inbox: currentInbox,
   };
+
+  // If date reached deadline day or fast forward targeted deadline day, initialize clock
+  if (isTransferDeadlineDay(curIso, save.season.yearStart) || target === 'transfer_deadline') {
+    if (!updatedSave.deadlineDayState?.isActive && updatedSave.deadlineDayState?.phase !== 'closed') {
+      updatedSave = initializeDeadlineDay(updatedSave);
+      if (save.settings.smartPause) {
+        const isSummer = curIso.includes('-09-');
+        pausedReason = isSummer
+          ? 'Smart Pause: Summer Transfer Deadline Day'
+          : 'Smart Pause: Winter Transfer Deadline Day';
+      }
+    }
+  }
 
   return {
     updatedSave,
