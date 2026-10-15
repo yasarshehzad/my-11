@@ -26,6 +26,8 @@ describe('Career Mode Regional Formatters (UK default & FM style)', () => {
   });
 
   it('formats currencies across GBP (£), EUR (€), USD ($)', () => {
+    expect(formatCareerCurrency(2_498_000_000, 'GBP')).toBe('£2.50B');
+    expect(formatCareerCurrency(1_050_000_000, 'GBP')).toBe('£1.05B');
     expect(formatCareerCurrency(150_000_000, 'GBP')).toBe('£150M');
     expect(formatCareerCurrency(15_500_000, 'GBP')).toBe('£15.5M');
     expect(formatCareerCurrency(450_000, 'GBP')).toBe('£450k');

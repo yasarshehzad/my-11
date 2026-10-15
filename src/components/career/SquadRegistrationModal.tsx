@@ -244,7 +244,7 @@ export function SquadRegistrationModal({
         </div>
 
         {/* POSITION FILTER PILLS */}
-        <nav aria-label="Senior Position Filters" className="px-3 sm:px-4 py-1.5 border-b border-slate-850 flex gap-1 overflow-x-auto scrollbar-none text-xs">
+        <nav aria-label="Senior Position Filters" data-no-swipe="true" className="px-3 sm:px-4 py-1.5 border-b border-slate-850 flex gap-1 overflow-x-auto scrollbar-none text-xs">
           {(['ALL', 'GK', 'DEF', 'MID', 'FWD'] as const).map((cat) => (
             <button
               key={cat}

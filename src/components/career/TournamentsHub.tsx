@@ -168,6 +168,7 @@ export function TournamentsHub({
       {/* Tournament Selection Pills */}
       <nav
         aria-label="Cup Tournaments Selector"
+        data-no-swipe="true"
         className="flex gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-slate-800"
       >
         {tournamentList.map((t) => {

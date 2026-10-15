@@ -281,16 +281,33 @@ function CareerPlayHubContent() {
     if (e.touches.length !== 1) return;
     const target = e.target as HTMLElement;
     // Don't intercept touches inside interactive elements with their own drag or horizontal scrolling
-    // NOTE: do not block .overflow-x-auto or table so league table swipe gestures remain smooth
+    // Ignore touches in menus, sub-navs, tab lists, filter chips, or horizontal scroll containers (excluding tables)
     if (
       target.closest(
-        'input[type="range"], [role="dialog"], [data-no-swipe="true"], [data-player-id], select'
+        'input, select, textarea, [role="dialog"], [data-no-swipe="true"], [data-player-id], nav, [role="tablist"], .scrollbar-none, [data-scrollable-menu="true"]'
       )
     ) {
       touchStartXRef.current = null;
       touchStartYRef.current = null;
       return;
     }
+
+    // Also check if any ancestor has horizontal scrollability (e.g. scrollWidth > clientWidth) that is not a table
+    let curr: HTMLElement | null = target;
+    while (curr && curr !== e.currentTarget) {
+      if (curr.tagName === 'TABLE') {
+        // Allow table swipes to bubble up so league table remains easily swipable
+        break;
+      }
+      const overflowX = window.getComputedStyle(curr).overflowX;
+      if ((overflowX === 'auto' || overflowX === 'scroll') && curr.scrollWidth > curr.clientWidth) {
+        touchStartXRef.current = null;
+        touchStartYRef.current = null;
+        return;
+      }
+      curr = curr.parentElement;
+    }
+
     touchStartXRef.current = e.touches[0].clientX;
     touchStartYRef.current = e.touches[0].clientY;
     touchStartTimeRef.current = Date.now();
@@ -1092,7 +1109,7 @@ function CareerPlayHubContent() {
       >
         {/* Navigation Tabs - 4 Primary + More Menu */}
         <div className="relative mb-5 z-30">
-          <nav aria-label="Career management sections" className="grid grid-cols-5 border-b border-slate-850 gap-1 pb-px bg-slate-950/40 rounded-2xl p-1">
+          <nav aria-label="Career management sections" data-no-swipe="true" className="grid grid-cols-5 border-b border-slate-850 gap-1 pb-px bg-slate-950/40 rounded-2xl p-1">
             {[
               { id: 'overview', label: 'Office', icon: '👔', badge: actionableAlerts.length > 0 ? actionableAlerts.length : null },
               { id: 'squad', label: 'Squad', icon: '👥' },
@@ -1191,7 +1208,8 @@ function CareerPlayHubContent() {
         {/* Carousel Slide Container */}
         <div
           key={activeTab}
-          className={`w-full will-change-transform ${
+          onAnimationEnd={() => setSlideDirection(null)}
+          className={`w-full ${
             slideDirection === 'right'
               ? 'animate-tab-slide-right'
               : slideDirection === 'left'
@@ -1702,7 +1720,7 @@ function CareerPlayHubContent() {
             </section>
 
             {/* 4-COLUMN MOBILE SHORTCUT TOOLBAR */}
-            <nav aria-label="Quick management actions" className="grid grid-cols-4 gap-2 text-center text-xs">
+            <nav aria-label="Quick management actions" data-no-swipe="true" className="grid grid-cols-4 gap-2 text-center text-xs">
               <button
                 onClick={() => handleTabChange('squad')}
                 className="py-2.5 px-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 text-slate-200 font-display font-black uppercase text-[10.5px] flex flex-col items-center justify-center gap-1 transition-all cursor-pointer min-h-[48px]"
@@ -2055,7 +2073,7 @@ function CareerPlayHubContent() {
                   </div>
 
                   {/* Filter Pills */}
-                  <nav aria-label="Inbox Filters" className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none border-b border-slate-800">
+                  <nav aria-label="Inbox Filters" data-no-swipe="true" className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none border-b border-slate-800">
                     {[
                       { id: 'all', label: 'All', count: allInbox.length },
                       { id: 'action_required', label: 'Action Needed', count: actionableInboxCount },

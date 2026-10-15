@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { CareerPlayer, CareerSaveFile, CareerLineup, YouthProspect } from '../../career/types';
 import {
   validateSquad,
@@ -58,6 +59,11 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
   const touchStartPosRef = React.useRef<{ x: number; y: number } | null>(null);
   const [academyToast, setAcademyToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [showRegistrationModal, setShowRegistrationModal] = useState<boolean>(false);
+  const [isMounted, setIsMounted] = useState<boolean>(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Outgoing transfer & player actions state
   const [askingPriceInput, setAskingPriceInput] = useState<number>(0);
@@ -1329,62 +1335,63 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
       )}
 
       {/* PLAYER DETAIL MODAL */}
-      {selectedPlayer && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          onClick={() => setSelectedPlayer(null)}
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 select-none"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="bg-slate-950 border border-slate-800 rounded-3xl p-4 sm:p-5 max-w-sm sm:max-w-md w-full space-y-3.5 shadow-2xl relative"
-          >
-            {/* Prominent, accessible Close Button */}
-            <button
-              type="button"
+      {selectedPlayer && isMounted && createPortal(
+            <div
+              role="dialog"
+              aria-modal="true"
               onClick={() => setSelectedPlayer(null)}
-              className="absolute top-3.5 right-3.5 w-9 h-9 rounded-full bg-slate-900 border border-slate-700/80 text-slate-300 hover:text-white hover:bg-slate-800 flex items-center justify-center font-bold text-base shadow-lg transition-colors cursor-pointer z-30"
-              aria-label="Close player profile"
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 select-none"
             >
-              ✕
-            </button>
-
-            {/* Segmented Mode Switcher */}
-            <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-900/80 rounded-xl border border-slate-800 pr-12">
-              <button
-                type="button"
-                onClick={() => setPlayerModalTab('profile')}
-                className={`py-1.5 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
-                  playerModalTab === 'profile'
-                    ? 'bg-emerald-500 text-slate-950 shadow-md'
-                    : 'text-slate-400 hover:text-white'
-                }`}
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="bg-slate-950 border border-slate-800 rounded-3xl p-4 sm:p-5 max-w-sm sm:max-w-md w-full space-y-3.5 shadow-2xl relative max-h-[92vh] overflow-y-auto scrollbar-none"
               >
-                👤 Profile
-              </button>
-              <button
-                type="button"
-                onClick={() => setPlayerModalTab('market')}
-                className={`py-1.5 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
-                  playerModalTab === 'market'
-                    ? 'bg-emerald-500 text-slate-950 shadow-md'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                💱 Market &amp; Actions
-              </button>
-            </div>
+                {/* Header: Segmented Switcher & Clear Accessible Close Button */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="grid grid-cols-2 gap-1 p-1 bg-slate-900/80 rounded-xl border border-slate-800 flex-1">
+                    <button
+                      type="button"
+                      onClick={() => setPlayerModalTab('profile')}
+                      className={`py-1.5 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
+                        playerModalTab === 'profile'
+                          ? 'bg-emerald-500 text-slate-950 shadow-md'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      👤 Profile
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPlayerModalTab('market')}
+                      className={`py-1.5 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
+                        playerModalTab === 'market'
+                          ? 'bg-emerald-500 text-slate-950 shadow-md'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      💱 Market &amp; Actions
+                    </button>
+                  </div>
 
-            {playerModalTab === 'profile' ? (
-              <div className="space-y-3">
-                {/* Authentic EA FC Card */}
-                <EaFcCard
-                  player={selectedPlayer}
-                  size="standard"
-                  showFormHistory={true}
-                  showProgressionBar={true}
-                />
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPlayer(null)}
+                    className="w-10 h-10 rounded-full bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white flex items-center justify-center font-bold text-base shadow-md transition-colors cursor-pointer shrink-0"
+                    aria-label="Close player profile"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {playerModalTab === 'profile' ? (
+                  <div className="space-y-3">
+                    {/* Authentic EA FC Card */}
+                    <EaFcCard
+                      player={selectedPlayer}
+                      size="standard"
+                      showFormHistory={false}
+                      showProgressionBar={false}
+                    />
 
                 {/* Financial and Contract details */}
                 <div className="grid grid-cols-2 gap-2 text-xs">
@@ -1716,7 +1723,8 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 25-Man League Squad Registration Modal */}
@@ -1817,11 +1825,11 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
       )}
 
       {/* Reserve Picker Modal for Empty Bench Slots */}
-      {showReservePickerModal && (
-        <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in"
-          onClick={() => setShowReservePickerModal(false)}
-        >
+      {showReservePickerModal && isMounted && createPortal(
+            <div
+              className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in"
+              onClick={() => setShowReservePickerModal(false)}
+            >
           <div
             className="bg-slate-950 border border-slate-850 rounded-3xl max-w-md w-full p-4 sm:p-5 shadow-2xl space-y-4 max-h-[85vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
@@ -1899,7 +1907,8 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

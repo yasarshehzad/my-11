@@ -81,21 +81,22 @@ export function formatNumber(
   num: number,
   format: NumberFormatPreference = 'comma'
 ): string {
-  const rounded = Math.round(num);
-  const str = Math.abs(rounded).toString();
-  const sign = rounded < 0 ? '-' : '';
+  const parts = Math.abs(num).toString().split('.');
+  const integerPart = parts[0];
+  const decimalPart = parts[1] !== undefined ? `.${parts[1]}` : '';
+  const sign = num < 0 ? '-' : '';
 
   let separated = '';
   switch (format) {
     case 'dot':
-      separated = str.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      separated = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + (decimalPart ? `,${parts[1]}` : '');
       break;
     case 'space':
-      separated = str.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+      separated = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + decimalPart;
       break;
     case 'comma':
     default:
-      separated = str.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      separated = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + decimalPart;
       break;
   }
 
@@ -115,7 +116,7 @@ const CURRENCY_CONFIG: Record<
 };
 
 /**
- * Format currency amounts: e.g. £140.0M, €161.0M, $175.0M, £850k
+ * Format currency amounts: e.g. £2.50B, £140.0M, €161.0M, $175.0M, £850k
  */
 export function formatCareerCurrency(
   amountInGBP: number,
@@ -127,11 +128,17 @@ export function formatCareerCurrency(
   const absConverted = Math.abs(converted);
   const sign = converted < 0 ? '-' : '';
 
+  if (absConverted >= 1_000_000_000) {
+    const billions = absConverted / 1_000_000_000;
+    const formattedNum = billions >= 10 ? billions.toFixed(1) : billions.toFixed(2);
+    return `${sign}${config.symbol}${formattedNum}B`;
+  }
+
   if (absConverted >= 1_000_000) {
     const millions = absConverted / 1_000_000;
     const formattedNum = millions >= 100 ? Math.round(millions).toString() : millions.toFixed(1);
-    const withSep = formatNumber(parseFloat(formattedNum), numberFormat);
-    return `${sign}${config.symbol}${formattedNum}M`;
+    const withSep = millions >= 100 ? formatNumber(Math.round(millions), numberFormat) : formattedNum;
+    return `${sign}${config.symbol}${withSep}M`;
   }
 
   if (absConverted >= 1_000) {

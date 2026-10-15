@@ -823,7 +823,7 @@ export function TransferHub({
       </section>
 
       {/* Sub-Navigation Tabs */}
-      <nav aria-label="Transfer Sections" className="flex gap-1.5 overflow-x-auto pb-1.5 scrollbar-none border-b border-slate-800/80">
+      <nav aria-label="Transfer Sections" data-no-swipe="true" className="flex gap-1.5 overflow-x-auto pb-1.5 scrollbar-none border-b border-slate-800/80">
         {[
           { id: 'market', label: 'Market', icon: '🔍', badge: marketPlayers.length },
           { id: 'incoming', label: 'Incoming', icon: '📬', badge: save.incomingOffers?.length || 0 },
@@ -972,7 +972,7 @@ export function TransferHub({
               </div>
 
               {/* Position Category Pills */}
-              <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
+              <div data-no-swipe="true" className="flex items-center gap-1 overflow-x-auto scrollbar-none">
                 {(['ALL', 'GK', 'DEF', 'MID', 'FWD'] as const).map((cat) => (
                   <button
                     key={cat}
@@ -1661,7 +1661,7 @@ export function TransferHub({
           </div>
 
           {/* Filter Pills */}
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          <div data-no-swipe="true" className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
             {[
               { id: 'all', label: 'All Players', count: save.squad.length },
               { id: 'critical', label: 'Critical (&le; 1 Yr)', count: criticalExpiringCount, alert: criticalExpiringCount > 0 },

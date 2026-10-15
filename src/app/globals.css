@@ -161,9 +161,9 @@
   --slate-950: #ffffff; /* primary cards / panels become crisp clean white */
   --slate-900: #f8fafc; /* secondary containers become slate-50 */
   --slate-850: #f1f5f9; /* card surfaces become slate-100 */
-  --slate-800: #e2e8f0; /* borders become slate-200 */
-  --slate-750: #e2e8f0;
-  --slate-700: #cbd5e1; /* medium borders become slate-300 */
+  --slate-800: #cbd5e1; /* crisp visible slate-300 borders instead of faint #e2e8f0 */
+  --slate-750: #cbd5e1;
+  --slate-700: #94a3b8; /* medium borders become slate-400 */
   --slate-650: #94a3b8;
   --slate-600: #64748b;
   --slate-500: #64748b;
@@ -678,15 +678,51 @@ body {
   border-color: #cbd5e1 !important;
 }
 
+[data-theme='light'] select option,
+[data-theme='light'] select optgroup {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
 [data-theme='light'] input::placeholder,
 [data-theme='light'] textarea::placeholder {
   color: #64748b !important;
+}
+
+/* Semi-transparent dark badges/pills adapt smoothly in light mode */
+[data-theme='light'] .bg-black\/40,
+[data-theme='light'] .bg-black\/25 {
+  background-color: rgba(15, 23, 42, 0.08) !important;
+}
+[data-theme='light'] .border-white\/10,
+[data-theme='light'] .border-white\/5 {
+  border-color: rgba(15, 23, 42, 0.12) !important;
 }
 
 /* Modal dark backdrops in light mode */
 [data-theme='light'] [role="dialog"].fixed,
 [data-theme='light'] .fixed.inset-0.z-50 {
   background-color: rgba(15, 23, 42, 0.55) !important;
+}
+
+/* Soft shadows for elevated cards and panels in light mode */
+[data-theme='light'] .bg-slate-950,
+[data-theme='light'] [class*="bg-slate-950/"] {
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+}
+
+/* Pitch canvas elements in Squad Management stay crisp & readable against dark green grass */
+[data-theme='light'] #squad-pitch-section .border-emerald-500\/30 {
+  border-color: rgba(52, 211, 153, 0.6) !important;
+}
+[data-theme='light'] #squad-pitch-section .text-emerald-400\/60 {
+  color: #a7f3d0 !important;
+}
+[data-theme='light'] #squad-pitch-section .border-emerald-500\/15 {
+  border-color: rgba(52, 211, 153, 0.35) !important;
+}
+[data-theme='light'] #squad-pitch-section .bg-emerald-500\/15 {
+  background-color: rgba(52, 211, 153, 0.35) !important;
 }
 
 [data-theme='light'] [data-force-white],
@@ -697,10 +733,14 @@ body {
 [data-theme='light'] .badge-force-white *,
 [data-theme='light'] button.bg-emerald-600,
 [data-theme='light'] button.bg-emerald-600 *,
+[data-theme='light'] button.bg-emerald-700,
+[data-theme='light'] button.bg-emerald-700 *,
 [data-theme='light'] button.bg-blue-600,
 [data-theme='light'] button.bg-blue-600 *,
 [data-theme='light'] button.bg-rose-600,
 [data-theme='light'] button.bg-rose-600 *,
+[data-theme='light'] button.bg-rose-500,
+[data-theme='light'] button.bg-rose-500 *,
 [data-theme='light'] .bg-rose-500.text-white,
 [data-theme='light'] .bg-rose-600.text-white,
 [data-theme='light'] .bg-emerald-600.text-white,
