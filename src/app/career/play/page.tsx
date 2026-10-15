@@ -135,15 +135,22 @@ function CareerPlayHubContent() {
   const [activeCelebration, setActiveCelebration] = useState<CelebrationEvent | null>(null);
   const [inboxShowAll, setInboxShowAll] = useState(false);
   const [showPreseasonModal, setShowPreseasonModal] = useState(false);
+  const [showFixtureReleasePromptModal, setShowFixtureReleasePromptModal] = useState(false);
   const [showFixtureReleaseModal, setShowFixtureReleaseModal] = useState(false);
   const [showUclDrawModal, setShowUclDrawModal] = useState(false);
 
-  // Auto-prompt pre-season tour selection at start of season
+  // Auto-prompt pre-season tour selection or fixture release day
   useEffect(() => {
-    if (save && shouldShowPreseasonPrompt(save)) {
+    if (!save) return;
+    if (shouldShowPreseasonPrompt(save)) {
       setShowPreseasonModal(true);
+    } else if (
+      save.season.currentDate >= `${save.season.yearStart}-07-08` &&
+      !save.fixtureReleaseState?.released
+    ) {
+      setShowFixtureReleasePromptModal(true);
     }
-  }, [save?.season?.currentDate, save?.preseasonState?.hasChosenTour]);
+  }, [save?.season?.currentDate, save?.preseasonState?.hasChosenTour, save?.fixtureReleaseState?.released]);
 
   const checkAndTriggerCelebration = useCallback((saveCandidate: CareerSaveFile, fixture?: LeagueFixture | CupFixture) => {
     const celebration = detectCelebrationEvent(saveCandidate, fixture);
@@ -246,6 +253,8 @@ function CareerPlayHubContent() {
       } else {
         window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
       }
+    } else if (!targetId) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     }
   }, [activeTab, transferHubSubTab, scrollToTarget]);
 
@@ -983,6 +992,12 @@ function CareerPlayHubContent() {
 
     if (res.pausedReason) {
       showToast(res.pausedReason);
+      if (
+        res.pausedReason.includes('Fixture Release') ||
+        (finalSave.season.currentDate >= `${finalSave.season.yearStart}-07-08` && !finalSave.fixtureReleaseState?.released)
+      ) {
+        setShowFixtureReleasePromptModal(true);
+      }
     } else {
       showToast(`Calendar advanced (${res.matchesPlayedCount} matches simulated)`);
     }
@@ -1049,7 +1064,7 @@ function CareerPlayHubContent() {
     }
     // 2. If fixture release pending on or after July 8
     if (save.season.currentDate >= `${save.season.yearStart}-07-08` && !save.fixtureReleaseState?.released) {
-      setShowFixtureReleaseModal(true);
+      setShowFixtureReleasePromptModal(true);
       return;
     }
     // 3. If UCL draw pending on or after August 27
@@ -1555,6 +1570,46 @@ function CareerPlayHubContent() {
               </section>
             )}
 
+            {/* PREMIER LEAGUE FIXTURE RELEASE DAY BANNER */}
+            {save.season.currentDate >= `${save.season.yearStart}-07-08` && !save.fixtureReleaseState?.released && (
+              <section className="bg-gradient-to-r from-emerald-950/50 via-slate-900/80 to-slate-950 border border-emerald-500/40 rounded-3xl p-4 sm:p-5 shadow-2xl space-y-3">
+                <div className="flex justify-between items-center gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-2.5 py-0.5 rounded-full font-display">
+                    📅 Official Announcement Day
+                  </span>
+                  <span className="text-xs font-mono font-bold text-slate-400">
+                    8 July {save.season.yearStart}
+                  </span>
+                </div>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                  <div className="space-y-1">
+                    <h3 className="text-base sm:text-lg font-display font-black text-white">
+                      Premier League Fixtures Announced!
+                    </h3>
+                    <p className="text-xs text-slate-300">
+                      The official 38-game schedule is ready. Launch the animated reveal ceremony or unlock the full calendar.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setShowFixtureReleaseModal(true)}
+                      className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all cursor-pointer whitespace-nowrap min-h-[42px] flex items-center justify-center gap-1.5"
+                    >
+                      <span>🎉 Launch Ceremony</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleFinishFixtureRelease}
+                      className="py-2.5 px-3 rounded-xl border border-slate-700 hover:border-slate-600 bg-slate-900 text-slate-300 hover:text-white font-display font-bold text-xs uppercase transition-all cursor-pointer min-h-[42px]"
+                    >
+                      ⏩ Skip &amp; Unlock
+                    </button>
+                  </div>
+                </div>
+              </section>
+            )}
+
             {/* MULTI-COMPETITION MATCHDAY SPOTLIGHT HERO */}
             {nextScheduled && (
               <section aria-label="Next Fixture" className="bg-gradient-to-r from-emerald-950/40 via-slate-900/70 to-slate-950 border border-emerald-500/30 rounded-3xl p-4 sm:p-6 shadow-2xl space-y-4">
@@ -1770,7 +1825,8 @@ function CareerPlayHubContent() {
               {/* 1. Finances */}
               <div
                 onClick={() => {
-                  navigateToSection('transfers', 'market', 'market-section');
+                  navigateToSection('transfers', 'market');
+                  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                 }}
                 className="bg-slate-900/60 hover:bg-slate-850/80 border border-slate-800 hover:border-emerald-500/40 p-2 sm:p-3 rounded-2xl transition-all cursor-pointer flex flex-col justify-between min-h-[64px]"
                 title="View Transfers & Finances"
@@ -2912,6 +2968,68 @@ function CareerPlayHubContent() {
           onSelectTour={handleChoosePreseasonTour}
           onClose={() => setShowPreseasonModal(false)}
         />
+      )}
+
+      {/* Premier League Fixture Release Day Prompt Modal */}
+      {showFixtureReleasePromptModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in"
+        >
+          <div className="bg-slate-900 border border-slate-700/80 rounded-3xl p-6 sm:p-7 max-w-lg w-full space-y-5 shadow-2xl text-left relative">
+            <header className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-2.5 py-0.5 rounded-full inline-block font-display">
+                  Official Calendar Announcement
+                </span>
+                <span className="text-xs font-mono font-bold text-slate-400">
+                  8 July {save.season.yearStart}
+                </span>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-display font-black text-white uppercase tracking-tight flex items-center gap-2">
+                <span>📅</span> Premier League Fixture Release Day!
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                The Premier League computer has officially finalized all 38 fixtures for the {save.season.yearStart}/{(save.season.yearStart + 1).toString().slice(-2)} season. Opening day, rival derbies, festive fixtures, and the final day are ready.
+              </p>
+            </header>
+
+            <div className="bg-slate-950/70 border border-slate-850 rounded-2xl p-4 text-xs space-y-2">
+              <div className="flex justify-between items-center text-slate-300">
+                <span className="text-slate-400">Campaign Length:</span>
+                <span className="font-mono text-white font-bold">38 Matchday Rounds</span>
+              </div>
+              <div className="flex justify-between items-center text-slate-300">
+                <span className="text-slate-400">Match Allocation:</span>
+                <span className="font-mono text-emerald-400 font-bold">19 Home • 19 Away</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowFixtureReleasePromptModal(false);
+                  setShowFixtureReleaseModal(true);
+                }}
+                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <span>🎉 Launch Live Reveal Ceremony</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowFixtureReleasePromptModal(false);
+                  handleFinishFixtureRelease();
+                }}
+                className="py-3 px-4 rounded-xl border border-slate-700 hover:border-slate-600 bg-slate-900 text-slate-300 hover:text-white font-display font-bold text-xs uppercase transition-all cursor-pointer text-center"
+              >
+                ⏩ Skip &amp; Unlock Calendar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Premier League Fixture Release Reveal Modal */}

@@ -196,7 +196,9 @@ export function SquadRegistrationModal({
               <span className="text-[10px] text-slate-400 font-mono">/ 17 max</span>
             </div>
             <span className="text-[8.5px] font-medium text-slate-400 mt-0.5 truncate">
-              {registeredHomegrownCount >= REQUIRED_HOMEGROWN_COUNT ? '✓ Quota Compliant' : 'Target: 8+ HG'}
+              {registeredNonHomegrownCount <= MAX_SENIOR_NON_HOMEGROWN
+                ? '✓ Compliant (Max 17 Foreign OK)'
+                : '⚠️ Exceeds 17 Foreign Limit'}
             </span>
           </div>
 

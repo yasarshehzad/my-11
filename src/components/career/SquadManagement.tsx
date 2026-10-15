@@ -553,11 +553,11 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
               <span className="text-sm sm:text-base font-display font-black text-white">
                 {validation.homegrownCount}
               </span>
-              <span className="text-[10px] text-slate-500">/8</span>
-              {validation.homegrownCount >= 8 ? (
-                <span className="text-xs text-emerald-400">✓</span>
+              <span className="text-[10px] text-slate-500">HG</span>
+              {(validation.nonHomegrownSeniorCount ?? 0) <= 17 ? (
+                <span className="text-xs text-emerald-400" title="Compliant with Premier League rules (max 17 foreign senior players allowed)">✓</span>
               ) : (
-                <span className="text-xs text-amber-400">⚠️</span>
+                <span className="text-xs text-rose-400" title="Exceeds maximum 17 non-homegrown senior limit">⚠️</span>
               )}
             </div>
           </div>
@@ -926,10 +926,12 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
             <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-3 space-y-1">
               <span className="text-[9px] uppercase font-bold text-slate-500 block">Domestic Quota</span>
               <div className="text-sm sm:text-base font-display font-black text-white truncate">
-                {validation.homegrownCount}/8 <span className="text-xs text-slate-400 font-normal">HG</span>
+                {validation.homegrownCount} <span className="text-xs text-slate-400 font-normal">HG</span>
               </div>
               <div className="text-[9px] text-slate-400">
-                {validation.homegrownCount >= 8 ? 'Quota Met ✓' : 'Under 8 Target ⚠️'}
+                {(validation.nonHomegrownSeniorCount ?? 0) <= 17
+                  ? `✓ Compliant (${validation.nonHomegrownSeniorCount ?? 0}/17 Foreign)`
+                  : `⚠️ ${validation.nonHomegrownSeniorCount ?? 0}/17 Foreign Over Limit`}
               </div>
             </div>
           </section>

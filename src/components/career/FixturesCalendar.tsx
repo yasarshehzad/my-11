@@ -6,7 +6,8 @@ import {
   LeagueFixture,
   Club,
 } from '../../career/types';
-import { getAllClubs, getEffectiveClubName, getClubsWithUserClub } from '../../career/clubs';
+import { getAllClubs, getEffectiveClubName, getClubsWithUserClub, getClubById } from '../../career/clubs';
+import { CUP_IDS } from '../../career/cups';
 import { formatCareerDate } from '../../career/formatters';
 import { getNextClubFixture } from '../../career/calendar';
 import {
@@ -57,6 +58,11 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
   const fixtures = save.fixtures || [];
   const userClubId = save.club.id;
   const userSquad = save.squad || [];
+
+  const isFixturesReleased = Boolean(save.fixtureReleaseState?.released);
+  const releaseDate = save.fixtureReleaseState?.releaseDate || `${save.season.yearStart}-07-08`;
+  const isReleaseDateReached = save.season.currentDate >= releaseDate;
+  const preseasonCup = save.cups?.[CUP_IDS.PRESEASON];
 
   const allClubs = getClubsWithUserClub(save.club);
   const clubsMap = new Map<string, Club>(allClubs.map((c) => [c.id, c]));
@@ -232,60 +238,147 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
         </section>
       )}
 
-      {/* Pre-Season: Fixture Release Day Pending Spotlight */}
-      {(!save.fixtureReleaseState?.released && save.season.currentDate < (save.fixtureReleaseState?.releaseDate || `${save.season.yearStart}-07-08`)) && (
-        <section className="bg-gradient-to-r from-emerald-950/40 via-slate-900/70 to-slate-950 border border-emerald-500/30 rounded-3xl p-4 sm:p-5 shadow-2xl space-y-3">
-          <div className="flex justify-between items-center gap-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-3 py-1 rounded-full font-display">
-              Official Calendar Compilation • In Progress
-            </span>
-            <span className="text-xs font-mono font-bold text-slate-400">
-              Release Day: 8 July {save.season.yearStart}
-            </span>
-          </div>
+      {/* Pre-Season / Embargo State: Shown when Premier League fixtures are not released yet */}
+      {!isFixturesReleased && (
+        <section className="space-y-4">
+          {!isReleaseDateReached ? (
+            /* BEFORE RELEASE DAY (July 1 - July 7) */
+            <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-xl">
+              <span className="text-4xl block">🔒</span>
+              <div className="space-y-1">
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-3 py-1 rounded-full font-display inline-block">
+                  Embargo Active • Calendar Compilation
+                </span>
+                <h3 className="text-xl sm:text-2xl font-display font-black text-white uppercase tracking-tight mt-2">
+                  Official Fixtures Released on 8 July {save.season.yearStart}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-400 max-w-lg mx-auto leading-relaxed pt-1">
+                  The Premier League computer is currently compiling the official 38-game schedule. Head to your Manager Office and click <strong className="text-emerald-400">▶️ Continue</strong> to advance day-by-day through pre-season until Fixture Release Day.
+                </p>
+              </div>
 
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <div className="space-y-1">
-              <h3 className="text-base sm:text-lg font-display font-black text-white">
-                📅 Premier League Fixture Release Day Pending
-              </h3>
-              <p className="text-xs text-slate-300 max-w-lg leading-relaxed">
-                The official 38-game schedule is currently being compiled by the Premier League computer. Opening day, boxing day, derbies, and the final day will be unveiled on 8 July.
-              </p>
+              {onNavigateOffice && (
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={onNavigateOffice}
+                    className="py-2.5 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer inline-flex items-center gap-1.5"
+                  >
+                    <span>➔ Go to Manager Office</span>
+                  </button>
+                </div>
+              )}
             </div>
+          ) : (
+            /* ON OR AFTER RELEASE DAY (July 8+) BUT UNREVEALED */
+            <div className="bg-gradient-to-r from-emerald-950/50 via-slate-900/80 to-slate-950 border border-emerald-500/40 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-3">
+              <div className="flex justify-between items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-3 py-1 rounded-full font-display">
+                  Official Announcement Day • 8 July
+                </span>
+                <span className="text-xs font-mono font-bold text-slate-400">38 Matches Ready</span>
+              </div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => setShowFixtureReleaseCeremonyModal(true)}
-                className="py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer"
-              >
-                🎉 Launch Live Reveal Ceremony
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onUpdateSave({
-                    ...save,
-                    fixtureReleaseState: {
-                      released: true,
-                      releaseDate: save.fixtureReleaseState?.releaseDate || `${save.season.yearStart}-07-08`,
-                      hasSeenCeremony: true,
-                    },
-                  });
-                  if (onNotification) onNotification('📅 Full 38-match Premier League schedule revealed!');
-                }}
-                className="py-2.5 px-3 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:text-white font-display font-bold text-xs uppercase cursor-pointer"
-              >
-                ⏩ Skip &amp; View All
-              </button>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div className="space-y-1">
+                  <h3 className="text-base sm:text-lg font-display font-black text-white">
+                    📅 Premier League 2026/27 Fixtures Confirmed!
+                  </h3>
+                  <p className="text-xs text-slate-300 max-w-lg leading-relaxed">
+                    The fixture computer has finalized the complete schedule. Launch the animated reveal ceremony to inspect key derbies and opening day, or skip to unlock the full calendar immediately.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setShowFixtureReleaseCeremonyModal(true)}
+                    className="py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer"
+                  >
+                    🎉 Launch Live Reveal Ceremony
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onUpdateSave({
+                        ...save,
+                        fixtureReleaseState: {
+                          released: true,
+                          releaseDate,
+                          hasSeenCeremony: true,
+                        },
+                      });
+                      if (onNotification) onNotification('📅 Full 38-match Premier League schedule revealed!');
+                    }}
+                    className="py-2.5 px-3 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:text-white font-display font-bold text-xs uppercase cursor-pointer"
+                  >
+                    ⏩ Skip &amp; Unlock Full Calendar
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Pre-Season Tour Friendlies (if scheduled in July) */}
+          {preseasonCup && preseasonCup.fixtures && preseasonCup.fixtures.length > 0 && (
+            <div className="bg-slate-950/60 border border-slate-800 rounded-3xl p-4 sm:p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">✈️</span>
+                  <div>
+                    <h4 className="font-display font-black text-xs sm:text-sm text-white uppercase tracking-wider">
+                      {preseasonCup.name} • Summer Friendlies
+                    </h4>
+                    <p className="text-[10px] text-slate-400">Pre-season conditioning tour matches</p>
+                  </div>
+                </div>
+                <span className="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-950/60 border border-emerald-900 px-2 py-0.5 rounded-full">
+                  {preseasonCup.fixtures.filter((f) => f.played).length} / {preseasonCup.fixtures.length} Played
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                {preseasonCup.fixtures.map((fix) => {
+                  const oppClub = clubsMap.get(fix.awayClubId) || getClubById(fix.awayClubId);
+                  return (
+                    <div
+                      key={fix.id}
+                      className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-3 flex items-center justify-between gap-3 text-xs"
+                    >
+                      <div className="space-y-0.5 min-w-0">
+                        <span className="text-[9.5px] uppercase font-bold text-emerald-400">
+                          {fix.roundName} • {formatCareerDate(fix.date, 'uk', 'medium')}
+                        </span>
+                        <div className="font-display font-bold text-white truncate">
+                          {getEffectiveClubName(save.club)} vs {oppClub ? getEffectiveClubName(oppClub) : 'Opponent'}
+                        </div>
+                        {fix.venue && <div className="text-[10px] text-slate-500 font-mono truncate">{fix.venue}</div>}
+                      </div>
+                      <div className="text-right shrink-0">
+                        {fix.played ? (
+                          <span className="font-display font-black text-sm text-emerald-400">
+                            {fix.homeScore} - {fix.awayScore}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-slate-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
+                            Scheduled
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </section>
       )}
 
-      {/* Timeline Tabs & Scope Filter */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-2">
+      {/* FULL LEAGUE FIXTURES TIMELINE: Only visible once released */}
+      {isFixturesReleased && (
+        <>
+          {/* Timeline Tabs & Scope Filter */}
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-2">
         {/* Timeline Quick Jump: Upcoming (default) | Recent | All */}
         <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
           <button
@@ -542,6 +635,8 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
           })}
         </div>
       )}
+    </>
+  )}
 
       {/* Live Matchday Interactive Command Center */}
       {activeMatchFixture && (

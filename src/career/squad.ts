@@ -93,6 +93,7 @@ export interface SquadValidationResult {
   seniorCount: number;
   u21Count: number;
   homegrownCount: number;
+  nonHomegrownSeniorCount?: number;
   totalWagesWeekly: number;
   totalSquadValue: number;
   averageRating: number;
@@ -186,6 +187,10 @@ export function validateSquad(
   // Homegrown quota check: In Premier League, clubs are permitted a MAXIMUM of 17 non-homegrown senior players.
   // A smaller squad does NOT automatically need 8 homegrown players.
   const homegrownRuleActive = settings?.homegrownRule ?? false;
+  const clubSeniorNonHomegrown = squad.filter(
+    (p) => isSeniorPlayer(p, seasonYearStart) && !isHomegrownPlayer(p)
+  ).length;
+
   if (registeredSeniorIds && registeredSeniorIds.length > 0) {
     const regSeniors = squad.filter(
       (p) => registeredSeniorIds.includes(p.id) && isSeniorPlayer(p, seasonYearStart)
@@ -197,9 +202,6 @@ export function validateSquad(
       );
     }
   } else {
-    const clubSeniorNonHomegrown = squad.filter(
-      (p) => isSeniorPlayer(p, seasonYearStart) && !isHomegrownPlayer(p)
-    ).length;
     if (homegrownRuleActive && clubSeniorNonHomegrown > MAX_SENIOR_NON_HOMEGROWN) {
       warnings.push(
         `Squad has ${clubSeniorNonHomegrown} non-homegrown senior players. Maximum ${MAX_SENIOR_NON_HOMEGROWN} non-homegrown players can be registered in your 25-man league squad.`
@@ -224,6 +226,7 @@ export function validateSquad(
     seniorCount,
     u21Count,
     homegrownCount,
+    nonHomegrownSeniorCount: clubSeniorNonHomegrown,
     totalWagesWeekly,
     totalSquadValue,
     averageRating,
@@ -880,11 +883,14 @@ export function getRegisteredSeniorPlayerIds(
   seasonYearStart: number = 2026
 ): string[] {
   const seniors = squad.filter((p) => isSeniorPlayer(p, seasonYearStart));
+  // 1. If explicit registeredPlayerIds are provided, respect them
   if (registeredPlayerIds && registeredPlayerIds.length > 0) {
     const validSeniorIds = new Set(seniors.map((p) => p.id));
-    const filtered = registeredPlayerIds.filter((id) => validSeniorIds.has(id));
-    return filtered.slice(0, MAX_SENIOR_SQUAD_SIZE);
+    const validRegistered = registeredPlayerIds.filter((id) => validSeniorIds.has(id));
+    return validRegistered.slice(0, MAX_SENIOR_SQUAD_SIZE);
   }
+  // 2. If no registeredPlayerIds are set:
+  // If club has 25 or fewer seniors in total, automatically register all of them
   if (seniors.length <= MAX_SENIOR_SQUAD_SIZE) {
     return seniors.map((p) => p.id);
   }
@@ -898,7 +904,9 @@ export function getRegisteredSeniorPlayerIds(
 /**
  * Checks whether a player is eligible/registered for league matches.
  * Under-21 players (born on or after cutoff or age <= 21) are ALWAYS automatically eligible and exempt from registration.
- * Senior players must have their ID in the registered senior list.
+ * If explicit registeredPlayerIds are provided, senior players must be in that list.
+ * If no registeredPlayerIds are provided and seniorCount <= 25, all senior players are automatically eligible.
+ * Otherwise, the top 25 registered seniors are eligible.
  */
 export function isPlayerRegisteredForMatch(
   player: CareerPlayer,
@@ -909,11 +917,14 @@ export function isPlayerRegisteredForMatch(
   if (isU21Exempt(player, seasonYearStart)) {
     return true; // U21 exempt
   }
-  if (!registeredPlayerIds || registeredPlayerIds.length === 0) {
-    const seniorCount = squad.filter((p) => isSeniorPlayer(p, seasonYearStart)).length;
-    if (seniorCount <= MAX_SENIOR_SQUAD_SIZE) {
-      return true; // Within 25 seniors, all are eligible if no custom registration saved
-    }
+  // If an explicit registration list is specified, player must be in that list
+  if (registeredPlayerIds && registeredPlayerIds.length > 0) {
+    return registeredPlayerIds.includes(player.id);
+  }
+  // If no registration list is specified, auto-register if seniors <= 25
+  const seniorCount = squad.filter((p) => isSeniorPlayer(p, seasonYearStart)).length;
+  if (seniorCount <= MAX_SENIOR_SQUAD_SIZE) {
+    return true; // 25 or fewer seniors in club: all automatically eligible
   }
   const registered = getRegisteredSeniorPlayerIds(squad, registeredPlayerIds, seasonYearStart);
   return registered.includes(player.id);

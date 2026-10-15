@@ -907,10 +907,11 @@ export function executePlayerSigning(
   const updatedSquad = [...save.squad, newPlayer];
 
   let updatedRegisteredPlayerIds = save.registeredPlayerIds;
-  if (updatedRegisteredPlayerIds) {
-    if (isTargetSenior && updatedRegisteredPlayerIds.length < MAX_SENIOR_SQUAD_SIZE) {
-      updatedRegisteredPlayerIds = [...updatedRegisteredPlayerIds, newPlayer.id];
-    }
+  const totalSeniors = updatedSquad.filter((p) => isSeniorPlayer(p, save.season?.yearStart));
+  if (totalSeniors.length <= MAX_SENIOR_SQUAD_SIZE) {
+    updatedRegisteredPlayerIds = totalSeniors.map((p) => p.id);
+  } else if (updatedRegisteredPlayerIds && isTargetSenior && updatedRegisteredPlayerIds.length < MAX_SENIOR_SQUAD_SIZE) {
+    updatedRegisteredPlayerIds = [...updatedRegisteredPlayerIds, newPlayer.id];
   }
 
   const transferRecord: TransferRecord = {
@@ -1132,7 +1133,10 @@ export function executeBuyBackReSigning(
   };
 
   let updatedRegisteredPlayerIds = save.registeredPlayerIds;
-  if (updatedRegisteredPlayerIds && isSeniorPlayer(reSignedPlayer, save.season.yearStart) && updatedRegisteredPlayerIds.length < MAX_SENIOR_SQUAD_SIZE) {
+  const totalBuybackSeniors = updatedSquad.filter((p) => isSeniorPlayer(p, save.season?.yearStart));
+  if (totalBuybackSeniors.length <= MAX_SENIOR_SQUAD_SIZE) {
+    updatedRegisteredPlayerIds = totalBuybackSeniors.map((p) => p.id);
+  } else if (updatedRegisteredPlayerIds && isSeniorPlayer(reSignedPlayer, save.season.yearStart) && updatedRegisteredPlayerIds.length < MAX_SENIOR_SQUAD_SIZE) {
     updatedRegisteredPlayerIds = [...updatedRegisteredPlayerIds, reSignedPlayer.id];
   }
 
