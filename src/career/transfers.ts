@@ -32,7 +32,7 @@ import {
 import { getAllClubs, getClubById, getCleanClubName } from './clubs';
 import { CONTINENTAL_EUROPEAN_CLUBS } from './continentalClubs';
 import { getAllSupplementalPlayers } from './databaseExpansion';
-import { getPlayerBio } from './playerBioDatabase';
+import { getPlayerBio, isCurrentPlayer, isIconPlayer } from './playerBioDatabase';
 import { getPlayerPhysicals } from './formatters';
 
 
@@ -388,27 +388,39 @@ export function getScoutingMarketPool(
   for (const [lowerName, group] of playerGroups.entries()) {
     seenPlayerNames.add(lowerName);
 
-    // Sort variants by rating descending (and value descending) so only the single peak version represents the player
-    group.variants.sort((a, b) => b.rating - a.rating || b.value - a.value);
-    const topVariant = group.variants[0];
-    const isLegend =
-      group.base.rarity === 'legend' ||
-      group.base.era !== 'Modern' ||
-      group.variants.length > 1;
-
-    const cleanPlayerName = group.base.playerName || group.base.displayName || topVariant.displayName.replace(/\s+\d{2}\/\d{2}$/, '').trim();
+    const cleanPlayerName = group.base.playerName || group.base.displayName || group.variants[0].displayName.replace(/\s+\d{2}\/\d{2}$/, '').trim();
+    const isCurrent = isCurrentPlayer(cleanPlayerName);
     const bio = getPlayerBio(cleanPlayerName, group.base.primaryPosition);
+
+    // Sort variants by rating descending (and value descending).
+    // If ratings tie, prioritize curated peakSeason from bio
+    group.variants.sort((a, b) => {
+      if (b.rating !== a.rating) return b.rating - a.rating;
+      if (bio.peakSeason) {
+        if (a.season === bio.peakSeason) return -1;
+        if (b.season === bio.peakSeason) return 1;
+      }
+      return b.value - a.value;
+    });
+    const topVariant = group.variants[0];
+
+    // Current active players MUST NEVER be classified as legends or icons
+    const isHistorical = group.base.era !== 'Modern';
+    const isExplicitLegend = group.base.isLegendaryPlayer === true || topVariant.rarity === 'legend' || isIconPlayer(cleanPlayerName);
+    const isLegend = !isCurrent && (isExplicitLegend || isHistorical);
 
     // Calculate authentic peak age from season year and birth year
     const seasonStart = parseInt(topVariant.season.split('/')[0], 10);
-    const authenticPeakAge = bio.birthYear && !isNaN(seasonStart)
-      ? Math.max(19, Math.min(38, seasonStart - bio.birthYear))
-      : bio.peakAge || topVariant.age;
+    const authenticPeakAge = bio.peakAge || (bio.birthYear && !isNaN(seasonStart)
+      ? Math.max(20, Math.min(38, seasonStart - bio.birthYear))
+      : 26);
 
-    // For historical legends, their peak playing version is presented at their peak playing age (e.g. 26 for Henry)
+    // For historical legends, their peak playing version is presented at their authentic peak age (e.g. 26 for Henry, 27 for Suarez)
     // regardless of whether the career is in 2026, 2027, or 2030, rather than behaving as a 50-year-old.
-    // For non-legends, age naturally progresses with ageDelta across seasons.
-    const effectiveAge = isLegend ? authenticPeakAge : (authenticPeakAge + ageDelta);
+    // For modern/current players, age naturally progresses from real-world DoB / current season year.
+    const effectiveAge = isLegend
+      ? authenticPeakAge
+      : (bio.birthYear ? (seasonYear || 2026) - bio.birthYear : (authenticPeakAge + ageDelta));
 
     const peakValue = calculatePlayerValue(topVariant.rating, effectiveAge, group.base.primaryPosition);
     const peakWage = calculateWeeklyWage(topVariant.rating, peakValue);
@@ -439,7 +451,7 @@ export function getScoutingMarketPool(
       club: topVariant.club,
       nationality: group.base.nationality,
       isHomegrown: isHomegrownPlayer({ nationality: group.base.nationality }),
-      rarity: isLegend ? 'Legend' : topVariant.rarity,
+      rarity: isLegend ? 'Legend' : (topVariant.rarity === 'legend' ? 'Elite' : topVariant.rarity),
       isLegend,
       era: group.base.era,
       // Strictly peak version only; no choice of alternative historical editions
@@ -852,7 +864,7 @@ export function executePlayerSigning(
   const heightCm = targetPlayer.heightCm || bio.heightCm;
   const weightKg = targetPlayer.weightKg || bio.weightKg;
 
-  const isLegend = targetPlayer.isLegend || targetPlayer.era !== 'Modern';
+  const isLegend = !isCurrentPlayer(effectiveName) && (targetPlayer.isLegend || targetPlayer.era !== 'Modern');
   const dobMonthDay = (bio.dateOfBirth && /^\d{4}-\d{2}-\d{2}$/.test(bio.dateOfBirth))
     ? bio.dateOfBirth.slice(5)
     : '07-01';

@@ -1,6 +1,7 @@
 import { Player, Position, Rarity } from '../types/game';
 import { seasonOverrides } from './seasonOverrides';
 import { careerRegistry, PlayerCareerMeta } from './careerData';
+import { isCurrentPlayer } from '../career/playerBioDatabase';
 
 // Interface for player base template
 export interface PlayerBase {
@@ -3557,7 +3558,8 @@ function generatePlayersDatabase(): Player[] {
 
       // Determine Rarity
       let rarity: Rarity = 'solid';
-      if (rating >= 95) rarity = 'legend';
+      const isCurrent = isCurrentPlayer(base.name);
+      if (rating >= 95) rarity = isCurrent ? 'elite' : 'legend';
       else if (rating >= 90) rarity = 'elite';
       else if (rating >= 85) rarity = 'rare';
       else if (rating >= 79) rarity = 'solid';
@@ -3780,6 +3782,9 @@ function generatePlayersDatabase(): Player[] {
         if (override.primaryPosition !== undefined) primaryPosition = override.primaryPosition;
         if (override.secondaryPositions !== undefined) secondaryPositions = [...override.secondaryPositions];
         if (override.rarity !== undefined) rarity = override.rarity;
+        if (isCurrentPlayer(base.name) && rarity === 'legend') {
+          rarity = 'elite';
+        }
         if (override.specialTrait !== undefined) specialTrait = override.specialTrait;
         if (override.playStyleTags !== undefined) playStyleTags = [...override.playStyleTags];
         if (override.strengths !== undefined) {
@@ -3879,7 +3884,7 @@ function generatePlayersDatabase(): Player[] {
         weaknesses: weaknesses.slice(0, 2),
         bestRole,
         chemistryBoosts: [club, base.nationality, era],
-        isLegendaryPlayer: base.isLegendaryPlayer !== false,
+        isLegendaryPlayer: !isCurrentPlayer(base.name) && (base.isLegendaryPlayer === true || (base.isLegendaryPlayer !== false && base.era !== 'Modern')),
       });
     });
   });
