@@ -392,11 +392,22 @@ export interface IncomingTransferOffer {
   }>;
 }
 
+export interface BoardEvaluationPillar {
+  title: string;
+  score: number; // e.g. +4, -2
+  description: string;
+  positive: boolean;
+}
+
 export interface BoardStatus {
-  confidence: number; // 0 to 100
+  confidence: number; // 0 to 100 in 1% increments
   expectation: string;
   status: 'secure' | 'stable' | 'under_pressure' | 'critical' | 'sacked';
   warningsCount: number;
+  pillars?: BoardEvaluationPillar[];
+  leagueContext?: string;
+  formContext?: string;
+  financialContext?: string;
 }
 
 export interface PlayerVersionVariant {

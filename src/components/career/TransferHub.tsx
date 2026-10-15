@@ -397,25 +397,35 @@ export function TransferHub({
   };
 
   const handleToggleSportingDirectorRenewals = () => {
-    const updatedSave: CareerSaveFile = {
+    const willEnable = !save.settings.sportingDirectorHandlesRenewals;
+    let updatedSave: CareerSaveFile = {
       ...save,
       settings: {
         ...save.settings,
-        sportingDirectorHandlesRenewals: !save.settings.sportingDirectorHandlesRenewals,
+        sportingDirectorHandlesRenewals: willEnable,
       },
     };
-    onUpdateSave(updatedSave);
-    onNotification?.(
-      !save.settings.sportingDirectorHandlesRenewals
-        ? '👔 Sporting Director delegated to handle key contract renewals automatically.'
-        : '👤 Contract renewals set to manual manager control.'
-    );
+
+    if (willEnable) {
+      // Immediately process contract renewals upon handoff
+      const renewalRes = processSportingDirectorRenewals(updatedSave, { force: true });
+      updatedSave = renewalRes.updatedSave;
+      onUpdateSave(updatedSave);
+      if (renewalRes.renewedCount > 0) {
+        onNotification?.(`👔 Sporting Director finalized ${renewalRes.renewedCount} contract extensions immediately!`);
+      } else {
+        onNotification?.('👔 Sporting Director delegated to handle key contract renewals automatically.');
+      }
+    } else {
+      onUpdateSave(updatedSave);
+      onNotification?.('👤 Contract renewals set to manual manager control.');
+    }
   };
 
   const handleRunSportingDirectorBatchRenewals = () => {
-    const res = processSportingDirectorRenewals(save);
+    const res = processSportingDirectorRenewals(save, { force: true });
     if (res.renewedCount === 0) {
-      onNotification?.('👔 Sporting Director: No urgent extensions required at this moment.');
+      onNotification?.('👔 Sporting Director: All squad contracts are currently secured (no expiring deals under 1 yr).');
       return;
     }
     onUpdateSave(res.updatedSave);
@@ -2541,7 +2551,10 @@ export function TransferHub({
               {/* Signing / Loyalty Bonus & Release Clause */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <span className="text-slate-400 font-bold block text-[11px]">Signing Bonus:</span>
+                  <div className="flex justify-between items-center text-[11px]">
+                    <span className="text-slate-400 font-bold">Signing Bonus:</span>
+                    <span className="font-mono text-emerald-400 font-bold">{formatCurrency(renewSigningBonus)}</span>
+                  </div>
                   <input
                     type="number"
                     min={0}
@@ -2553,7 +2566,10 @@ export function TransferHub({
                   <span className="text-[10px] text-slate-500 block">Deducted from transfer budget</span>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-slate-400 font-bold block text-[11px]">Release Clause (£):</span>
+                  <div className="flex justify-between items-center text-[11px]">
+                    <span className="text-slate-400 font-bold">Release Clause:</span>
+                    <span className="font-mono text-emerald-400 font-bold">{renewReleaseClause ? formatCurrency(renewReleaseClause) : 'None'}</span>
+                  </div>
                   <input
                     type="number"
                     min={0}
@@ -2856,7 +2872,10 @@ export function TransferHub({
               {/* Signing Bonus & Release Clause */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <span className="text-slate-400 font-bold block text-[11px]">Signing Bonus:</span>
+                  <div className="flex justify-between items-center text-[11px]">
+                    <span className="text-slate-400 font-bold">Signing Bonus:</span>
+                    <span className="font-mono text-emerald-400 font-bold">{formatCurrency(offeredSigningBonus)}</span>
+                  </div>
                   <input
                     type="number"
                     min={0}
@@ -2868,7 +2887,10 @@ export function TransferHub({
                   <span className="text-[10px] text-slate-500 block">Upfront loyalty payment</span>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-slate-400 font-bold block text-[11px]">Release Clause (£):</span>
+                  <div className="flex justify-between items-center text-[11px]">
+                    <span className="text-slate-400 font-bold">Release Clause:</span>
+                    <span className="font-mono text-emerald-400 font-bold">{offeredReleaseClause ? formatCurrency(offeredReleaseClause) : 'None'}</span>
+                  </div>
                   <input
                     type="number"
                     min={0}

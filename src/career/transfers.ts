@@ -6,6 +6,7 @@ import {
   TransferRecord,
   IncomingTransferOffer,
   BoardStatus,
+  BoardEvaluationPillar,
   Club,
   DatabaseSeason,
   SquadRole,
@@ -1994,9 +1995,10 @@ export function renewPlayerContract(
  * if Sporting Director delegation is enabled by the manager.
  */
 export function processSportingDirectorRenewals(
-  save: CareerSaveFile
+  save: CareerSaveFile,
+  options?: { force?: boolean }
 ): { updatedSave: CareerSaveFile; renewedCount: number; summaryLogs: string[] } {
-  if (!save.settings.sportingDirectorHandlesRenewals) {
+  if (!options?.force && !save.settings.sportingDirectorHandlesRenewals) {
     return { updatedSave: save, renewedCount: 0, summaryLogs: [] };
   }
 
@@ -2010,22 +2012,30 @@ export function processSportingDirectorRenewals(
   let renewedCount = 0;
 
   for (const player of expiring) {
-    if (player.rating >= 74 || player.age <= 23) {
-      const preferred = getPlayerPreferredTerms(player);
-      const newWage = Math.max(player.wageWeekly, preferred.preferredWageWeekly);
-      const newYears = Math.min(4, Math.max(2, preferred.preferredContractYears));
+    const preferred = getPlayerPreferredTerms(player);
+    const wageDifference = preferred.preferredWageWeekly - player.wageWeekly;
+    const availableWageRoom = Math.max(0, currentSave.finances.weeklyWageBudget - currentSave.finances.currentWeeklyWages);
 
-      const res = renewPlayerContract(currentSave, player.id, newWage, newYears, {
-        squadRole: preferred.expectedSquadRole,
-        releaseClause: preferred.releaseClausePreference,
-      });
+    // If preferred wage is affordable, offer it. If not, offer current wage or affordable headroom
+    let newWage = player.wageWeekly;
+    if (wageDifference <= availableWageRoom && wageDifference > 0) {
+      newWage = preferred.preferredWageWeekly;
+    } else if (availableWageRoom > 0) {
+      newWage = player.wageWeekly + Math.min(wageDifference, Math.floor(availableWageRoom * 0.5));
+    }
 
-      if (res.success) {
-        currentSave = res.updatedSave;
-        renewedCount++;
-        const log = `${player.name} (${player.position}) agreed a ${newYears}-year extension at ${formatCurrency(newWage)}/wk.`;
-        summaryLogs.push(log);
-      }
+    const newYears = Math.min(4, Math.max(2, preferred.preferredContractYears || 3));
+
+    const res = renewPlayerContract(currentSave, player.id, newWage, newYears, {
+      squadRole: preferred.expectedSquadRole,
+      releaseClause: preferred.releaseClausePreference,
+    });
+
+    if (res.success) {
+      currentSave = res.updatedSave;
+      renewedCount++;
+      const log = `${player.name} (${player.position}) agreed a ${newYears}-year extension at ${formatCurrency(newWage)}/wk.`;
+      summaryLogs.push(log);
     }
   }
 
@@ -2047,15 +2057,22 @@ export function processSportingDirectorRenewals(
   return { updatedSave: currentSave, renewedCount, summaryLogs };
 }
 
+function getOrdinalSuffix(n: number): string {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return s[(v - 20) % 10] || s[v] || s[0];
+}
 
 /**
- * Evaluates board satisfaction and sacking risk based on club tier and league standing.
+ * Evaluates board satisfaction and sacking risk based on club tier, league standing, form, and finances.
+ * Operates in authentic 1% granularity with detailed evaluation breakdown pillars.
  */
 export function evaluateBoardConfidence(save: CareerSaveFile): BoardStatus {
   const standings = save.standings || [];
   const userRankIdx = standings.findIndex((s) => s.clubId === save.club.id);
   const currentRank = userRankIdx >= 0 ? userRankIdx + 1 : 10;
-  const matchesPlayed = standings[userRankIdx]?.played || 0;
+  const userStanding = userRankIdx >= 0 ? standings[userRankIdx] : null;
+  const matchesPlayed = userStanding?.played || 0;
 
   // Target rank based on club tier
   let targetRank = 10;
@@ -2080,22 +2097,99 @@ export function evaluateBoardConfidence(save: CareerSaveFile): BoardStatus {
       break;
   }
 
-  // Calculate baseline confidence
-  // If rank is better than target, confidence goes above 80
-  const rankDelta = targetRank - currentRank; // positive = better than target
-  let confidence = Math.round(75 + rankDelta * 5);
+  // Base confidence starts at 72%
+  let confidence = 72;
+  const pillars: BoardEvaluationPillar[] = [];
 
-  // If few matches played, keep confidence neutral
-  if (matchesPlayed < 5) {
-    confidence = Math.max(70, confidence);
+  // 1. League Position & Standing (calculated per position in 1-2% increments)
+  const rankDelta = targetRank - currentRank; // positive = better than expected
+  const rankAdjustment = Math.round(rankDelta * 2.5);
+  confidence += rankAdjustment;
+  
+  const rankDesc = rankDelta > 0
+    ? `Exceeding expectations: currently ${currentRank}${getOrdinalSuffix(currentRank)} (target was ${targetRank}${getOrdinalSuffix(targetRank)} or higher).`
+    : rankDelta === 0
+    ? `Meeting seasonal expectation: currently ${currentRank}${getOrdinalSuffix(currentRank)}.`
+    : `Trailing expectation: currently ${currentRank}${getOrdinalSuffix(currentRank)} (target was ${targetRank}${getOrdinalSuffix(targetRank)} or higher).`;
+  
+  pillars.push({
+    title: 'League Performance',
+    score: rankAdjustment,
+    description: rankDesc,
+    positive: rankAdjustment >= 0,
+  });
+
+  // 2. Goal Difference & Win Rate (1% increments)
+  if (userStanding && matchesPlayed > 0) {
+    const gd = userStanding.goalDifference || 0;
+    const gdAdj = Math.max(-6, Math.min(6, Math.round(gd / 3)));
+    confidence += gdAdj;
+    pillars.push({
+      title: 'Goal Difference & Dominance',
+      score: gdAdj,
+      description: `${gd >= 0 ? '+' : ''}${gd} goal difference across ${matchesPlayed} matches played.`,
+      positive: gdAdj >= 0,
+    });
   }
 
-  // If sackings are disabled in settings, board confidence never drops below safe threshold
+  // 3. Recent Form (last 5 user fixtures)
+  const userFixtures = (save.fixtures || []).filter(
+    (f) => f.played && (f.homeClubId === save.club.id || f.awayClubId === save.club.id)
+  );
+  const recent5 = userFixtures.slice(-5);
+  let formScore = 0;
+  for (const f of recent5) {
+    const isHome = f.homeClubId === save.club.id;
+    const userGoals = isHome ? (f.homeScore ?? 0) : (f.awayScore ?? 0);
+    const oppGoals = isHome ? (f.awayScore ?? 0) : (f.homeScore ?? 0);
+    if (userGoals > oppGoals) formScore += 1;
+    else if (userGoals < oppGoals) formScore -= 1;
+  }
+  confidence += formScore;
+  if (recent5.length > 0) {
+    pillars.push({
+      title: 'Recent Match Form',
+      score: formScore,
+      description: `${formScore >= 0 ? 'Positive' : 'Concerning'} momentum over the past ${recent5.length} fixtures (${formScore >= 0 ? '+' : ''}${formScore}%).`,
+      positive: formScore >= 0,
+    });
+  }
+
+  // 4. Financial Health (Wage Budget & Bank Balance)
+  const weeklyWages = save.finances.currentWeeklyWages || 0;
+  const wageBudget = save.finances.weeklyWageBudget || 1;
+  const wageRatio = weeklyWages / wageBudget;
+  let finScore = 0;
+  let finDesc = '';
+  if (wageRatio <= 0.90) {
+    finScore = 3;
+    finDesc = 'Excellent payroll discipline; operating well within weekly wage ceiling (+3%).';
+  } else if (wageRatio <= 1.0) {
+    finScore = 1;
+    finDesc = 'Wages managed responsibly within authorized threshold (+1%).';
+  } else {
+    finScore = -4;
+    finDesc = 'Payroll budget exceeded! Club finances under scrutiny (-4%).';
+  }
+  confidence += finScore;
+  pillars.push({
+    title: 'Financial Control',
+    score: finScore,
+    description: finDesc,
+    positive: finScore >= 0,
+  });
+
+  // If sackings disabled in settings, board confidence never drops below safe threshold
   if (!save.settings.boardCanSack) {
     confidence = Math.max(65, confidence);
   }
 
-  confidence = Math.max(5, Math.min(100, confidence));
+  // Early season grace period (first 3 matches)
+  if (matchesPlayed < 3) {
+    confidence = Math.max(72, confidence);
+  }
+
+  confidence = Math.max(1, Math.min(100, Math.round(confidence)));
 
   let status: BoardStatus['status'] = 'secure';
   if (confidence >= 80) {
@@ -2115,6 +2209,10 @@ export function evaluateBoardConfidence(save: CareerSaveFile): BoardStatus {
     expectation,
     status,
     warningsCount: status === 'critical' ? 2 : status === 'under_pressure' ? 1 : 0,
+    pillars,
+    leagueContext: rankDesc,
+    formContext: `${recent5.length > 0 ? `${formScore >= 0 ? '+' : ''}${formScore}% form impact` : 'Season commencing'}`,
+    financialContext: finDesc,
   };
 }
 
@@ -2200,27 +2298,29 @@ export function evaluateBoardFinancialPetition(
     };
   }
 
-  // 2. Base grant scale based on club tier
+  // 2. Base grant scale based on club tier and current finances
   let baseTransferGrant = 10_000_000;
-  let baseWageGrant = 35_000;
   switch (tier) {
     case 'elite':
       baseTransferGrant = 30_000_000;
-      baseWageGrant = 100_000;
       break;
     case 'upper':
       baseTransferGrant = 18_000_000;
-      baseWageGrant = 60_000;
       break;
     case 'mid':
       baseTransferGrant = 10_000_000;
-      baseWageGrant = 35_000;
       break;
     case 'lower':
       baseTransferGrant = 4_500_000;
-      baseWageGrant = 18_000;
       break;
   }
+
+  // Dynamic wage grant scaled proportionally to club's current weekly payroll (e.g. 8-12%)
+  const currentWeeklyBudget = save.finances.weeklyWageBudget || 350_000;
+  const proportionalWageIncrease = Math.max(15_000, Math.round((currentWeeklyBudget * 0.10) / 5_000) * 5_000);
+  const baseWageGrant = options?.requestedAmount && options.requestedAmount > 0
+    ? options.requestedAmount
+    : proportionalWageIncrease;
 
   let outcome: 'approved' | 'compromised' | 'rejected' = 'rejected';
   let amountGranted = 0;
@@ -2320,7 +2420,7 @@ export function evaluateBoardFinancialPetition(
       feedback = `The Board has authorized an increase of ${formatWage(amountGranted)} to our weekly wage budget to support contract extensions and player retention.`;
     } else if (confidence >= 45) {
       outcome = 'compromised';
-      amountGranted = Math.round((baseWageGrant * 0.6) / 1_000) * 1_000;
+      amountGranted = Math.max(10_000, Math.round((baseWageGrant * 0.65) / 5_000) * 5_000);
       reason = 'Partial wage headroom authorized';
       feedback = `The Board has approved a partial wage ceiling increase of ${formatWage(amountGranted)} per week.`;
     } else {

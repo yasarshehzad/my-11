@@ -87,6 +87,9 @@ function CareerPlayHubContent() {
   });
   const [theme, setTheme] = useState<'dark' | 'light'>(() => getSavedTheme());
   const [activeTab, setActiveTab] = useState<'overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings'>('overview');
+  const [tabHistory, setTabHistory] = useState<('overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings')[]>([]);
+  const [showExitConfirmModal, setShowExitConfirmModal] = useState(false);
+  const [showBoardDossierModal, setShowBoardDossierModal] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [dismissedSackedModal, setDismissedSackedModal] = useState(false);
   const [activeMatchFixture, setActiveMatchFixture] = useState<LeagueFixture | CupFixture | null>(null);
@@ -215,11 +218,14 @@ function CareerPlayHubContent() {
     []
   );
 
-  const handleTabChange = useCallback((newTab: typeof activeTab) => {
+  const handleTabChange = useCallback((newTab: typeof activeTab, addToHistory: boolean = true) => {
     setIsMoreMenuOpen(false);
     if (activeTab === newTab) {
       window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     } else {
+      if (addToHistory) {
+        setTabHistory(prev => [...prev.slice(-15), activeTab]);
+      }
       const currentIndex = TAB_ORDER.indexOf(activeTab);
       const newIndex = TAB_ORDER.indexOf(newTab);
       if (newIndex > currentIndex) {
@@ -229,17 +235,32 @@ function CareerPlayHubContent() {
       }
       pendingScrollTargetRef.current = null;
       setActiveTab(newTab);
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     }
   }, [activeTab, TAB_ORDER]);
+
+  const handleHeaderBack = useCallback(() => {
+    if (tabHistory.length > 0) {
+      const prevTab = tabHistory[tabHistory.length - 1];
+      setTabHistory(prev => prev.slice(0, -1));
+      handleTabChange(prevTab, false);
+    } else if (activeTab !== 'overview') {
+      handleTabChange('overview', false);
+    } else {
+      setShowExitConfirmModal(true);
+    }
+  }, [tabHistory, activeTab, handleTabChange]);
 
   const goToNextTab = useCallback(() => {
     const currentIndex = TAB_ORDER.indexOf(activeTab);
     if (currentIndex < TAB_ORDER.length - 1) {
       const nextTab = TAB_ORDER[currentIndex + 1];
+      setTabHistory(prev => [...prev.slice(-15), activeTab]);
       setSlideDirection('right');
       setIsMoreMenuOpen(false);
       pendingScrollTargetRef.current = null;
       setActiveTab(nextTab);
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     }
   }, [activeTab, TAB_ORDER]);
 
@@ -247,10 +268,12 @@ function CareerPlayHubContent() {
     const currentIndex = TAB_ORDER.indexOf(activeTab);
     if (currentIndex > 0) {
       const prevTab = TAB_ORDER[currentIndex - 1];
+      setTabHistory(prev => [...prev.slice(-15), activeTab]);
       setSlideDirection('left');
       setIsMoreMenuOpen(false);
       pendingScrollTargetRef.current = null;
       setActiveTab(prevTab);
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     }
   }, [activeTab, TAB_ORDER]);
 
@@ -258,9 +281,10 @@ function CareerPlayHubContent() {
     if (e.touches.length !== 1) return;
     const target = e.target as HTMLElement;
     // Don't intercept touches inside interactive elements with their own drag or horizontal scrolling
+    // NOTE: do not block .overflow-x-auto or table so league table swipe gestures remain smooth
     if (
       target.closest(
-        'input[type="range"], [role="dialog"], [data-no-swipe="true"], .overflow-x-auto, table, [data-player-id], button, select'
+        'input[type="range"], [role="dialog"], [data-no-swipe="true"], [data-player-id], select'
       )
     ) {
       touchStartXRef.current = null;
@@ -979,13 +1003,14 @@ function CareerPlayHubContent() {
       {/* Manager Office Top Header */}
       <header className="w-full py-2 px-3 sm:px-6 border-b border-slate-900 bg-slate-950/90 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center gap-2 select-none shadow-xl">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <Link
-            href="/career"
-            className="text-xs font-bold text-slate-400 hover:text-white px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border border-slate-800 bg-slate-900/60 hover:bg-slate-800 transition-colors flex items-center gap-1 shrink-0"
-            title="Exit to Career Save Slots"
+          <button
+            type="button"
+            onClick={handleHeaderBack}
+            className="text-xs font-bold text-slate-400 hover:text-white px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border border-slate-800 bg-slate-900/60 hover:bg-slate-800 transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
+            title={activeTab === 'overview' && tabHistory.length === 0 ? 'Exit Career to Save Slots' : 'Return to Previous Tab'}
           >
-            ← <span className="hidden xs:inline">Saves</span>
-          </Link>
+            ← <span className="hidden xs:inline">{activeTab === 'overview' && tabHistory.length === 0 ? 'Exit' : 'Back'}</span>
+          </button>
           <div className="h-4 w-px bg-slate-800 shrink-0" />
 
           {/* Club Crest & Title */}
@@ -1202,13 +1227,11 @@ function CareerPlayHubContent() {
                 </div>
               </div>
 
-              {/* Board Mood Pill - smaller & moved up inline */}
+              {/* Board Mood Pill - opens contextual Dossier Modal */}
               <button
                 type="button"
-                onClick={() => {
-                  navigateToSection('transfers', 'board', 'board-room-section');
-                }}
-                title="View Board Room"
+                onClick={() => setShowBoardDossierModal(true)}
+                title="View Boardroom Confidence Dossier"
                 className={`px-2 py-1 rounded-lg border text-[10px] font-display font-black uppercase flex items-center gap-1 shrink-0 shadow-sm transition-all cursor-pointer ${
                   boardConfidence >= 65
                     ? 'text-emerald-400 bg-emerald-950/60 border-emerald-800/60'
@@ -1688,7 +1711,10 @@ function CareerPlayHubContent() {
                 <span>Squad</span>
               </button>
               <button
-                onClick={() => navigateToSection('squad', undefined, 'squad-pitch-section')}
+                onClick={() => {
+                  handleTabChange('squad');
+                  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                }}
                 className="py-2.5 px-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 text-slate-200 font-display font-black uppercase text-[10.5px] flex flex-col items-center justify-center gap-1 transition-all cursor-pointer min-h-[48px]"
               >
                 <span className="text-base">⚡</span>
@@ -1696,11 +1722,9 @@ function CareerPlayHubContent() {
               </button>
               <button
                 onClick={() => {
-                  if (incomingOffersCount > 0) {
-                    navigateToIncomingOffers();
-                  } else {
-                    navigateToSection('transfers', 'market', 'market-section');
-                  }
+                  setTransferHubSubTab('market');
+                  handleTabChange('transfers');
+                  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                 }}
                 className="py-2.5 px-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 text-slate-200 font-display font-black uppercase text-[10.5px] flex flex-col items-center justify-center gap-1 transition-all cursor-pointer min-h-[48px] relative"
               >
@@ -1711,11 +1735,14 @@ function CareerPlayHubContent() {
                 )}
               </button>
               <button
-                onClick={() => handleTabChange('fixtures')}
+                onClick={() => {
+                  handleTabChange('fixtures');
+                  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                }}
                 className="py-2.5 px-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 text-slate-200 font-display font-black uppercase text-[10.5px] flex flex-col items-center justify-center gap-1 transition-all cursor-pointer min-h-[48px]"
               >
                 <span className="text-base">📅</span>
-                <span>Calendar</span>
+                <span>Fixtures</span>
               </button>
             </nav>
 
@@ -2960,6 +2987,196 @@ function CareerPlayHubContent() {
             showToast('Squad registration submitted successfully.');
           }}
         />
+      )}
+
+      {/* EXIT CAREER CONFIRMATION MODAL */}
+      {showExitConfirmModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setShowExitConfirmModal(false)}
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 select-none"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-slate-950 border border-slate-800 rounded-3xl p-5 sm:p-6 max-w-sm w-full space-y-4 shadow-2xl relative text-center"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 text-2xl flex items-center justify-center mx-auto">
+              🚪
+            </div>
+            <div>
+              <h3 className="font-display font-black text-white text-base uppercase tracking-tight">
+                Exit Career Mode?
+              </h3>
+              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                Your season progress is automatically saved. Do you want to return to the career save slots screen?
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowExitConfirmModal(false)}
+                className="py-2.5 px-3 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-850 text-slate-300 font-display font-bold text-xs uppercase tracking-wider cursor-pointer transition-colors"
+              >
+                Keep Playing
+              </button>
+              <Link
+                href="/career"
+                className="py-2.5 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center cursor-pointer transition-colors shadow-lg shadow-rose-900/30"
+              >
+                Exit to Saves
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* BOARDROOM CONFIDENCE DOSSIER MODAL */}
+      {showBoardDossierModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setShowBoardDossierModal(false)}
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 select-none"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-slate-950 border border-slate-800 rounded-3xl p-5 sm:p-6 max-w-lg w-full space-y-4 shadow-2xl relative"
+          >
+            <div className="flex items-center justify-between border-b border-slate-850 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🏛️</span>
+                <div>
+                  <h3 className="font-display font-black text-sm uppercase tracking-wide text-white">
+                    Boardroom Confidence Dossier
+                  </h3>
+                  <span className="text-[10px] text-slate-400">
+                    Comprehensive 1% granular club management evaluation
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowBoardDossierModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-900 border border-slate-700/80 text-slate-300 hover:text-white flex items-center justify-center text-sm font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Overall Score Banner */}
+            <div className={`p-3.5 rounded-2xl border flex items-center justify-between gap-3 ${
+              boardConfidence >= 65
+                ? 'bg-emerald-950/40 border-emerald-500/40'
+                : boardConfidence >= 45
+                ? 'bg-amber-950/40 border-amber-500/40'
+                : 'bg-rose-950/40 border-rose-500/40'
+            }`}>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">Current Standing</span>
+                <div className="font-display font-black text-lg text-white uppercase flex items-center gap-2">
+                  <span>
+                    {boardConfidence >= 75
+                      ? 'Delighted'
+                      : boardConfidence >= 60
+                      ? 'Content'
+                      : boardConfidence >= 45
+                      ? 'Under Scrutiny'
+                      : 'Precarious'}
+                  </span>
+                  <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-black/40 border border-white/10">
+                    {boardConfidence}%
+                  </span>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">Season Objective</span>
+                <span className="text-xs font-display font-black text-emerald-400">
+                  {boardStatus.expectation || (save.club.tier === 'elite' ? 'Win Title' : save.club.tier === 'upper' ? 'European Qualification' : 'Avoid Relegation')}
+                </span>
+              </div>
+            </div>
+
+            {/* 4 Pillars Breakdown */}
+            <div className="space-y-2">
+              <span className="text-[10.5px] uppercase font-bold text-slate-400 tracking-wider block">
+                Evaluation Pillars Breakdown
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                {(boardStatus.pillars || [
+                  {
+                    title: 'League Expectation',
+                    score: Math.min(100, Math.max(10, boardConfidence + 2)),
+                    description: boardStatus.leagueContext || 'Tracking aligned with board league target.',
+                    positive: boardConfidence >= 50
+                  },
+                  {
+                    title: 'Recent Form',
+                    score: Math.min(100, Math.max(10, boardConfidence - 3)),
+                    description: boardStatus.formContext || 'Recent match results evaluated by directors.',
+                    positive: boardConfidence >= 55
+                  },
+                  {
+                    title: 'Financial Discipline',
+                    score: Math.min(100, Math.max(10, boardConfidence + 5)),
+                    description: boardStatus.financialContext || 'Wage bill and net transfer spending sustainable.',
+                    positive: true
+                  },
+                  {
+                    title: 'Squad & Goal Diff',
+                    score: boardConfidence,
+                    description: 'Roster depth and scoring efficiency meets benchmarks.',
+                    positive: boardConfidence >= 45
+                  }
+                ]).map((pillar, idx) => (
+                  <div key={idx} className="bg-slate-900/60 border border-slate-850 p-2.5 rounded-xl space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px] font-bold">
+                      <span className="text-slate-200">{pillar.title}</span>
+                      <span className={`font-mono ${pillar.positive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {pillar.score}%
+                      </span>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          pillar.score >= 65 ? 'bg-emerald-500' : pillar.score >= 45 ? 'bg-amber-400' : 'bg-rose-500'
+                        }`}
+                        style={{ width: `${pillar.score}%` }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-slate-400 leading-tight">
+                      {pillar.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="pt-2 flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowBoardDossierModal(false);
+                  setTransferHubSubTab('board');
+                  handleTabChange('transfers');
+                  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                }}
+                className="py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 text-xs font-display font-bold uppercase tracking-wider text-slate-300 hover:text-white flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>🏛️ Full Boardroom &amp; Petitions</span>
+                <span>➔</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowBoardDossierModal(false)}
+                className="py-2 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
