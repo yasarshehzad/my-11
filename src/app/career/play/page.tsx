@@ -39,11 +39,13 @@ import { MatchDayModal } from '../../../components/career/MatchDayModal';
 import { MatchOverviewModal } from '../../../components/career/MatchOverviewModal';
 import { InstantMatchSummaryModal } from '../../../components/career/InstantMatchSummaryModal';
 import { InstantSimLoadingModal } from '../../../components/career/InstantSimLoadingModal';
+import { CelebrationModal } from '../../../components/career/CelebrationModal';
 import { PlayerComparisonModal } from '../../../components/career/PlayerComparisonModal';
 import { SquadRegistrationModal } from '../../../components/career/SquadRegistrationModal';
 import { isSeasonComplete, advanceToNextSeason, getSeasonReviewSummary, SeasonReviewSummary } from '../../../career/seasons';
 import { getNextClubFixture, getNextScheduledMatch, getPreviousPlayedMatch, isDateInInternationalBreak, ScheduledMatch } from '../../../career/calendar';
 import { simulateMatchFixture, advanceTimeSkip, TimeSkipTarget } from '../../../career/sim';
+import { detectCelebrationEvent, CelebrationEvent } from '../../../career/celebrations';
 import {
   CUP_IDS,
   findAnyClub,
@@ -115,10 +117,24 @@ function CareerPlayHubContent() {
   const [simulating, setSimulating] = useState(false);
   const [pendingFastForward, setPendingFastForward] = useState<TimeSkipTarget | null>(null);
   const [fastForwardUsePreferredEleven, setFastForwardUsePreferredEleven] = useState(true);
+  const [fastForwardHaltOnTransferMilestone, setFastForwardHaltOnTransferMilestone] = useState<'deadline' | 'window_open_or_close' | 'none'>('deadline');
   const [showSeasonReviewModal, setShowSeasonReviewModal] = useState(false);
   const [transferHubSubTab, setTransferHubSubTab] = useState<'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board'>('market');
   const [focusedOfferId, setFocusedOfferId] = useState<string | undefined>(undefined);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const [activeCelebration, setActiveCelebration] = useState<CelebrationEvent | null>(null);
+  const [inboxShowAll, setInboxShowAll] = useState(false);
+
+  const checkAndTriggerCelebration = useCallback((saveCandidate: CareerSaveFile, fixture?: LeagueFixture | CupFixture) => {
+    const celebration = detectCelebrationEvent(saveCandidate, fixture);
+    if (celebration) {
+      saveCareerSave(celebration.updatedSave);
+      setSave(celebration.updatedSave);
+      setActiveCelebration(celebration.event);
+      return celebration.updatedSave;
+    }
+    return saveCandidate;
+  }, []);
 
   // Scroll management & targeted deep-linking ref
   const pendingScrollTargetRef = useRef<{
@@ -516,11 +532,12 @@ function CareerPlayHubContent() {
           trophies,
           finances,
         };
-        saveCareerSave(updatedSave);
-        setSave(updatedSave);
+        const finalSave = checkAndTriggerCelebration(updatedSave);
+        saveCareerSave(finalSave);
+        setSave(finalSave);
       }
     }
-  }, []);
+  }, [checkAndTriggerCelebration]);
 
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
@@ -920,12 +937,19 @@ function CareerPlayHubContent() {
     showToast('All inbox messages marked as read.');
   };
 
-  const handleTimeSkipAction = (target: TimeSkipTarget, options?: { usePreferredEleven?: boolean }) => {
+  const handleTimeSkipAction = (
+    target: TimeSkipTarget,
+    options?: {
+      usePreferredEleven?: boolean;
+      haltOnTransferMilestone?: 'deadline' | 'window_open_or_close' | 'none';
+    }
+  ) => {
     if (!save) return;
     setSimulating(true);
     const res = advanceTimeSkip(save, target, options);
-    saveCareerSave(res.updatedSave);
-    setSave(res.updatedSave);
+    const finalSave = checkAndTriggerCelebration(res.updatedSave);
+    saveCareerSave(finalSave);
+    setSave(finalSave);
     setSimulating(false);
 
     if (res.pausedReason) {
@@ -936,8 +960,9 @@ function CareerPlayHubContent() {
   };
 
   const handleMatchResultSaved = (updatedSave: CareerSaveFile) => {
-    saveCareerSave(updatedSave);
-    setSave(updatedSave);
+    const finalSave = checkAndTriggerCelebration(updatedSave, activeMatchFixture || undefined);
+    saveCareerSave(finalSave);
+    setSave(finalSave);
     setActiveMatchFixture(null);
     showToast('Match completed and results saved!');
   };
@@ -1048,25 +1073,38 @@ function CareerPlayHubContent() {
         </div>
 
         {/* Financial & Time Status Badges & Quick Action Controls */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-          <div className="flex items-center gap-1.5 sm:gap-3 bg-slate-900/60 border border-slate-800 px-2 sm:px-3 py-1 rounded-xl text-xs">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Boardroom Confidence Pill */}
+          <button
+            type="button"
+            onClick={() => setShowBoardDossierModal(true)}
+            title="View Boardroom Confidence Dossier"
+            className={`px-2 py-1 rounded-xl border text-[10px] font-display font-black uppercase flex items-center gap-1 shrink-0 transition-all cursor-pointer ${
+              boardConfidence >= 65
+                ? 'text-emerald-400 bg-emerald-950/60 border-emerald-800/60 hover:bg-emerald-900/60'
+                : boardConfidence >= 45
+                ? 'text-amber-300 bg-amber-950/60 border-amber-800/60 hover:bg-amber-900/60'
+                : 'text-rose-400 bg-rose-950/60 border-rose-800/60 hover:bg-rose-900/60'
+            }`}
+          >
+            <span>🏛️</span>
+            <span>{boardConfidence}%</span>
+          </button>
+
+          <div className="flex items-center gap-1.5 sm:gap-2.5 bg-slate-900/60 border border-slate-800 px-2 sm:px-3 py-1 rounded-xl text-xs">
             <div className="hidden xs:block">
               <span className="text-[9px] uppercase font-bold text-slate-500 mr-1">Budget</span>
               <span className="font-display font-black text-emerald-400">
                 {formatCareerCurrency(save.finances.transferBudget, save.settings.currency)}
               </span>
             </div>
-            {activeTab !== 'overview' && (
-              <>
-                <div className="hidden xs:block h-3 w-px bg-slate-800" />
-                <div className="flex items-center">
-                  <span className="text-[9px] uppercase font-bold text-slate-500 mr-1">Date</span>
-                  <span className="font-mono text-[11px] sm:text-xs font-semibold text-emerald-400">
-                    {formatCareerDate(save.season.currentDate, save.settings.dateFormat, 'medium')}
-                  </span>
-                </div>
-              </>
-            )}
+            <div className="hidden xs:block h-3 w-px bg-slate-800" />
+            <div className="flex items-center">
+              <span className="text-[9px] uppercase font-bold text-slate-500 mr-1">Date</span>
+              <span className="font-mono text-[11px] sm:text-xs font-semibold text-emerald-400">
+                {formatCareerDate(save.season.currentDate, save.settings.dateFormat, 'medium')}
+              </span>
+            </div>
           </div>
 
           <button
@@ -1220,58 +1258,6 @@ function CareerPlayHubContent() {
         {/* TAB 1: OVERVIEW / MANAGER OFFICE */}
         {activeTab === 'overview' && (
           <div className="space-y-4">
-            {/* MANAGER'S COCKPIT TOP META HEADER */}
-            <section aria-label="Manager Overview" className="flex items-center justify-between gap-2 pb-0.5">
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <h2 className="text-lg sm:text-xl font-display font-black text-white uppercase tracking-tight truncate">
-                    {effectiveClubName}
-                  </h2>
-                  <span className="text-[10px] font-mono font-bold text-slate-400">
-                    S{save.season.seasonNumber} • {save.club.tier?.toUpperCase() || 'PL'}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5 text-[10.5px] font-mono text-emerald-400 font-semibold mt-0.2">
-                  <span>📅 {formatCareerDate(save.season.currentDate, save.settings.dateFormat, 'short')}</span>
-                  {save.season.transferWindowOpen ? (
-                    <span className="text-[8px] uppercase font-bold text-amber-300 bg-amber-950/60 border border-amber-500/40 px-1.5 py-0.2 rounded-full animate-pulse">
-                      Window Open
-                    </span>
-                  ) : (
-                    <span className="text-[8px] uppercase font-bold text-slate-500 bg-slate-900 border border-slate-800 px-1.5 py-0.2 rounded-full">
-                      Closed
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Board Mood Pill - opens contextual Dossier Modal */}
-              <button
-                type="button"
-                onClick={() => setShowBoardDossierModal(true)}
-                title="View Boardroom Confidence Dossier"
-                className={`px-2 py-1 rounded-lg border text-[10px] font-display font-black uppercase flex items-center gap-1 shrink-0 shadow-sm transition-all cursor-pointer ${
-                  boardConfidence >= 65
-                    ? 'text-emerald-400 bg-emerald-950/60 border-emerald-800/60'
-                    : boardConfidence >= 45
-                    ? 'text-amber-300 bg-amber-950/60 border-amber-800/60'
-                    : 'text-rose-400 bg-rose-950/60 border-rose-800/60'
-                }`}
-              >
-                <span>🏛️</span>
-                <span>
-                  {boardConfidence >= 75
-                    ? 'Delighted'
-                    : boardConfidence >= 60
-                    ? 'Content'
-                    : boardConfidence >= 45
-                    ? 'Scrutiny'
-                    : 'Precarious'}{' '}
-                  {boardConfidence}%
-                </span>
-              </button>
-            </section>
-
             {/* COMPACT MANAGERIAL ALERTS STRIP */}
             {managerialAlerts.length > 0 && (
               <section id="managerial-alerts" aria-label="Managerial Alerts" className="bg-slate-900/80 border border-slate-800 rounded-2xl p-2.5 sm:p-3 shadow-md space-y-1.5 scroll-mt-20">
@@ -1826,39 +1812,35 @@ function CareerPlayHubContent() {
             )}
 
             {/* FAST-FORWARD CALENDAR TRACKER */}
-            <section aria-label="Calendar Controls" className="bg-slate-900/50 border border-slate-850 rounded-2xl p-3 sm:p-4 flex flex-wrap items-center justify-between gap-2.5 text-xs">
-              <div className="flex items-center gap-2 text-slate-300">
+            <section aria-label="Calendar Controls" className="bg-slate-900/50 border border-slate-850 rounded-2xl p-2.5 sm:p-3 flex items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-1.5 text-slate-300 shrink-0">
                 <span className="text-sm">⏱️</span>
-                <span className="text-[11px] font-bold uppercase tracking-wider">Fast Forward:</span>
+                <span className="text-[11px] font-bold uppercase tracking-wider hidden sm:inline">Fast Forward:</span>
               </div>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="grid grid-cols-3 gap-1.5 flex-1 max-w-sm ml-auto">
                 <button
+                  type="button"
                   onClick={() => setPendingFastForward('next_match')}
                   disabled={simulating || !nextScheduled}
-                  className="py-1.5 px-3 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-750 text-slate-200 font-display font-bold text-[11px] uppercase transition-all cursor-pointer min-h-[36px]"
+                  className="py-1.5 px-2 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-750 text-slate-200 font-display font-black text-[11px] uppercase transition-all cursor-pointer text-center truncate"
                 >
                   ⏭️ Next Match
                 </button>
                 <button
+                  type="button"
                   onClick={() => setPendingFastForward('next_week')}
                   disabled={simulating}
-                  className="py-1.5 px-3 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-slate-800 text-slate-300 font-display font-bold text-[11px] uppercase transition-all cursor-pointer min-h-[36px]"
+                  className="py-1.5 px-2 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-slate-800 text-slate-300 font-display font-black text-[11px] uppercase transition-all cursor-pointer text-center truncate"
                 >
-                  +7 Days
+                  📅 7 Days
                 </button>
                 <button
+                  type="button"
                   onClick={() => setPendingFastForward('next_month')}
                   disabled={simulating}
-                  className="py-1.5 px-3 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-slate-800 text-slate-300 font-display font-bold text-[11px] uppercase transition-all cursor-pointer min-h-[36px]"
+                  className="py-1.5 px-2 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-slate-800 text-slate-300 font-display font-black text-[11px] uppercase transition-all cursor-pointer text-center truncate"
                 >
-                  +1 Month
-                </button>
-                <button
-                  onClick={() => setPendingFastForward('transfer_deadline')}
-                  disabled={simulating}
-                  className="py-1.5 px-3 rounded-xl bg-amber-950/20 hover:bg-amber-950/40 border border-amber-500/40 text-amber-300 font-display font-bold text-[11px] uppercase transition-all cursor-pointer min-h-[36px]"
-                >
-                  ⏳ Deadline
+                  🗓️ 1 Month
                 </button>
               </div>
             </section>
@@ -2102,109 +2084,127 @@ function CareerPlayHubContent() {
                   </nav>
 
                   {/* Messages Feed */}
-                  <div className="space-y-2.5">
-                    {filteredMessages.length === 0 ? (
-                      <div className="text-center py-6 text-xs text-slate-500">
-                        No messages found in this folder.
-                      </div>
-                    ) : (
-                      filteredMessages.map((msg) => {
-                        const isExpanded = expandedMessageId === msg.id;
-                        const classificationInfo = classifyInboxMessage(msg, save);
-                        const { classification, isResolved, effectiveActionLabel, effectiveActionTab, effectiveActionType, targetId } = classificationInfo;
+                  {filteredMessages.length === 0 ? (
+                    <div className="text-center py-6 text-xs text-slate-500">
+                      No messages found in this folder.
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-2.5 max-h-[460px] overflow-y-auto pr-1 scrollbar-thin">
+                        {(inboxShowAll ? filteredMessages : filteredMessages.slice(0, 5)).map((msg) => {
+                          const isExpanded = expandedMessageId === msg.id;
+                          const classificationInfo = classifyInboxMessage(msg, save);
+                          const { classification, isResolved, effectiveActionLabel, effectiveActionTab, effectiveActionType, targetId } = classificationInfo;
 
-                        return (
-                          <article
-                            key={msg.id}
-                            onClick={() => handleToggleMessageRead(msg.id)}
-                            className={`rounded-2xl border p-4 transition-all cursor-pointer select-none space-y-2 ${
-                              !msg.isRead
-                                ? 'bg-slate-950/90 border-emerald-500/40 hover:border-emerald-500/70 shadow-sm'
-                                : 'bg-slate-950/40 border-slate-850 hover:border-slate-800 text-slate-300'
-                            }`}
-                          >
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <div className="flex items-center gap-2">
-                                {!msg.isRead && (
-                                  <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
-                                )}
-                                <span className="font-display font-bold text-xs text-white">
-                                  {msg.sender}
-                                </span>
-                                <span className="text-[10px] text-slate-500 font-sans">
-                                  • {msg.senderRole}
-                                </span>
+                          return (
+                            <article
+                              key={msg.id}
+                              onClick={() => handleToggleMessageRead(msg.id)}
+                              className={`rounded-2xl border p-4 transition-all cursor-pointer select-none space-y-2 ${
+                                !msg.isRead
+                                  ? 'bg-slate-950/90 border-emerald-500/40 hover:border-emerald-500/70 shadow-sm'
+                                  : 'bg-slate-950/40 border-slate-850 hover:border-slate-800 text-slate-300'
+                              }`}
+                            >
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div className="flex items-center gap-2">
+                                  {!msg.isRead && (
+                                    <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+                                  )}
+                                  <span className="font-display font-bold text-xs text-white">
+                                    {msg.sender}
+                                  </span>
+                                  <span className="text-[10px] text-slate-500 font-sans">
+                                    • {msg.senderRole}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center gap-1.5 ml-auto text-[10px]">
+                                  {isResolved ? (
+                                    <span className="bg-slate-800 text-slate-400 border border-slate-700 px-2 py-0.5 rounded-full font-bold uppercase text-[9px]">
+                                      ✓ Resolved
+                                    </span>
+                                  ) : classification === 'action_required' ? (
+                                    <span className="bg-amber-400 text-slate-950 font-black uppercase px-2 py-0.5 rounded-full text-[9px] animate-pulse">
+                                      Action Required
+                                    </span>
+                                  ) : classification === 'important' ? (
+                                    <span className="bg-blue-500/20 text-blue-300 border border-blue-500/40 px-2 py-0.5 rounded-full font-black uppercase text-[9px]">
+                                      Important
+                                    </span>
+                                  ) : (
+                                    <span className="bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full font-medium text-[9px]">
+                                      Info
+                                    </span>
+                                  )}
+                                  <span className="font-mono text-slate-400">
+                                    {formatCareerDate(msg.date, save.settings.dateFormat, 'medium')}
+                                  </span>
+                                </div>
                               </div>
 
-                              <div className="flex items-center gap-1.5 ml-auto text-[10px]">
-                                {isResolved ? (
-                                  <span className="bg-slate-800 text-slate-400 border border-slate-700 px-2 py-0.5 rounded-full font-bold uppercase text-[9px]">
-                                    ✓ Resolved
-                                  </span>
-                                ) : classification === 'action_required' ? (
-                                  <span className="bg-amber-400 text-slate-950 font-black uppercase px-2 py-0.5 rounded-full text-[9px] animate-pulse">
-                                    Action Required
-                                  </span>
-                                ) : classification === 'important' ? (
-                                  <span className="bg-blue-500/20 text-blue-300 border border-blue-500/40 px-2 py-0.5 rounded-full font-black uppercase text-[9px]">
-                                    Important
-                                  </span>
-                                ) : (
-                                  <span className="bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full font-medium text-[9px]">
-                                    Info
-                                  </span>
-                                )}
-                                <span className="font-mono text-slate-400">
-                                  {formatCareerDate(msg.date, save.settings.dateFormat, 'medium')}
-                                </span>
+                              <div className="font-semibold text-xs text-slate-200">
+                                {msg.subject}
                               </div>
-                            </div>
 
-                            <div className="font-semibold text-xs text-slate-200">
-                              {msg.subject}
-                            </div>
+                              {/* Message Preview or Expanded Content */}
+                              {isExpanded ? (
+                                <div className="pt-2 border-t border-slate-850 space-y-3">
+                                  <p className="text-xs text-slate-300 whitespace-pre-line leading-relaxed">
+                                    {msg.body}
+                                  </p>
 
-                            {/* Message Preview or Expanded Content */}
-                            {isExpanded ? (
-                              <div className="pt-2 border-t border-slate-850 space-y-3">
-                                <p className="text-xs text-slate-300 whitespace-pre-line leading-relaxed">
-                                  {msg.body}
+                                  {effectiveActionLabel && (
+                                    <div className="pt-1 flex justify-end">
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleExecuteAlertAction({
+                                            actionTab: effectiveActionTab,
+                                            actionType: effectiveActionType,
+                                            targetId: targetId || msg.targetId,
+                                          });
+                                        }}
+                                        className={`py-2 px-3.5 rounded-xl font-display font-black text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer flex items-center gap-1.5 ${
+                                          classification === 'action_required' && !isResolved
+                                            ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-amber-500/20'
+                                            : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/20'
+                                        }`}
+                                      >
+                                        <span>{effectiveActionLabel}</span>
+                                        <span>➔</span>
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <p className="text-[11px] text-slate-400 truncate">
+                                  {msg.body.replace(/\n+/g, ' ')}
                                 </p>
+                              )}
+                            </article>
+                          );
+                        })}
+                      </div>
 
-                                {effectiveActionLabel && (
-                                  <div className="pt-1 flex justify-end">
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleExecuteAlertAction({
-                                          actionTab: effectiveActionTab,
-                                          actionType: effectiveActionType,
-                                          targetId: targetId || msg.targetId,
-                                        });
-                                      }}
-                                      className={`py-2 px-3.5 rounded-xl font-display font-black text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer flex items-center gap-1.5 ${
-                                        classification === 'action_required' && !isResolved
-                                          ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-amber-500/20'
-                                          : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/20'
-                                      }`}
-                                    >
-                                      <span>{effectiveActionLabel}</span>
-                                      <span>➔</span>
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              <p className="text-[11px] text-slate-400 truncate">
-                                {msg.body.replace(/\n+/g, ' ')}
-                              </p>
-                            )}
-                          </article>
-                        );
-                      })
-                    )}
-                  </div>
+                      {filteredMessages.length > 5 && (
+                        <div className="pt-2 flex justify-center">
+                          <button
+                            type="button"
+                            onClick={() => setInboxShowAll(!inboxShowAll)}
+                            className="text-xs font-display font-bold uppercase tracking-wider py-2 px-4 rounded-xl bg-slate-950/70 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
+                          >
+                            <span>
+                              {inboxShowAll
+                                ? '▲ Show Recent (5 Messages)'
+                                : `▼ Show All (${filteredMessages.length} Messages)`}
+                            </span>
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </section>
               );
             })()}
@@ -2321,6 +2321,8 @@ function CareerPlayHubContent() {
             standings={save.standings || []}
             userClubId={save.club.id}
             userClub={save.club}
+            fixtures={save.fixtures || []}
+            userSquad={save.squad}
           />
         )}
 
@@ -2669,8 +2671,9 @@ function CareerPlayHubContent() {
           durationMs={1200}
           onComplete={() => {
             const { updatedSave, simmedFixture } = instantSimLoadingData;
-            saveCareerSave(updatedSave);
-            setSave(updatedSave);
+            const finalSave = checkAndTriggerCelebration(updatedSave, simmedFixture);
+            saveCareerSave(finalSave);
+            setSave(finalSave);
             setSimulating(false);
             setInstantSimLoadingData(null);
             setInstantSimResultModal(simmedFixture);
@@ -2691,6 +2694,18 @@ function CareerPlayHubContent() {
           }}
           onNavigateTab={(tab) => {
             setInstantSimResultModal(null);
+            handleTabChange(tab);
+          }}
+        />
+      )}
+
+      {/* Silverware & Advancement Celebration Pop-up */}
+      {activeCelebration && (
+        <CelebrationModal
+          event={activeCelebration}
+          onClose={() => setActiveCelebration(null)}
+          onNavigateTab={(tab) => {
+            setActiveCelebration(null);
             handleTabChange(tab);
           }}
         />
@@ -2870,6 +2885,52 @@ function CareerPlayHubContent() {
               </div>
             </label>
 
+            {/* Transfer Window Milestone Halting Option */}
+            <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-xl space-y-2 text-left">
+              <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                <span>🛑</span>
+                <span>Transfer Milestone Halting</span>
+              </span>
+              <p className="text-[10px] text-slate-400">
+                Choose when calendar fast-forward should automatically pause for transfer opportunities:
+              </p>
+              <div className="space-y-1.5 pt-0.5 text-xs">
+                <label className="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white">
+                  <input
+                    type="radio"
+                    name="ffTransferHalt"
+                    value="deadline"
+                    checked={fastForwardHaltOnTransferMilestone === 'deadline'}
+                    onChange={() => setFastForwardHaltOnTransferMilestone('deadline')}
+                    className="text-emerald-500 focus:ring-emerald-500"
+                  />
+                  <span>Halt on Transfer Deadline Day (23:00 BST)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white">
+                  <input
+                    type="radio"
+                    name="ffTransferHalt"
+                    value="window_open_or_close"
+                    checked={fastForwardHaltOnTransferMilestone === 'window_open_or_close'}
+                    onChange={() => setFastForwardHaltOnTransferMilestone('window_open_or_close')}
+                    className="text-emerald-500 focus:ring-emerald-500"
+                  />
+                  <span>Halt at Window Opening and Deadline Day</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white">
+                  <input
+                    type="radio"
+                    name="ffTransferHalt"
+                    value="none"
+                    checked={fastForwardHaltOnTransferMilestone === 'none'}
+                    onChange={() => setFastForwardHaltOnTransferMilestone('none')}
+                    className="text-emerald-500 focus:ring-emerald-500"
+                  />
+                  <span>Simulate continuously (do not halt)</span>
+                </label>
+              </div>
+            </div>
+
             <aside aria-label="Caution note" className="p-3 bg-amber-950/20 border border-amber-500/30 rounded-xl text-[11px] text-amber-300/90 flex items-center gap-2">
               <span>⚠️</span>
               <span>
@@ -2888,7 +2949,10 @@ function CareerPlayHubContent() {
                 onClick={() => {
                   const target = pendingFastForward;
                   setPendingFastForward(null);
-                  handleTimeSkipAction(target, { usePreferredEleven: fastForwardUsePreferredEleven });
+                  handleTimeSkipAction(target, {
+                    usePreferredEleven: fastForwardUsePreferredEleven,
+                    haltOnTransferMilestone: fastForwardHaltOnTransferMilestone,
+                  });
                 }}
                 className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
               >

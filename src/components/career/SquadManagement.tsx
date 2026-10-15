@@ -27,6 +27,7 @@ import {
 } from '../../career/formatters';
 import { generateYouthIntake, promoteYouthProspect, releaseYouthProspect } from '../../career/youthAcademy';
 import { EaFcCard } from './EaFcCard';
+import { getPlayerCompleteStats } from '../../career/playerStats';
 import {
   calculateFormRatingBonus,
   getEffectiveRating,
@@ -72,7 +73,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
   const [showReleaseModal, setShowReleaseModal] = useState<boolean>(false);
   const [releaseActionType, setReleaseActionType] = useState<'mutual' | 'unilateral'>('mutual');
   const [squadActionMessage, setSquadActionMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
-  const [playerModalTab, setPlayerModalTab] = useState<'profile' | 'market'>('profile');
+  const [playerModalTab, setPlayerModalTab] = useState<'profile' | 'stats' | 'market'>('profile');
 
   const handleSelectPlayerWithActions = (player: CareerPlayer) => {
     setSelectedPlayer(player);
@@ -1348,28 +1349,39 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
               >
                 {/* Header: Segmented Switcher & Clear Accessible Close Button */}
                 <div className="flex items-center justify-between gap-2">
-                  <div className="grid grid-cols-2 gap-1 p-1 bg-slate-900/80 rounded-xl border border-slate-800 flex-1">
+                  <div className="grid grid-cols-3 gap-1 p-1 bg-slate-900/80 rounded-xl border border-slate-800 flex-1">
                     <button
                       type="button"
                       onClick={() => setPlayerModalTab('profile')}
-                      className={`py-1.5 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
+                      className={`py-1.5 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate ${
                         playerModalTab === 'profile'
                           ? 'bg-emerald-500 text-slate-950 shadow-md'
                           : 'text-slate-400 hover:text-white'
                       }`}
                     >
-                      👤 Profile
+                      🎴 Profile
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPlayerModalTab('stats')}
+                      className={`py-1.5 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate ${
+                        playerModalTab === 'stats'
+                          ? 'bg-emerald-500 text-slate-950 shadow-md'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      📊 Stats
                     </button>
                     <button
                       type="button"
                       onClick={() => setPlayerModalTab('market')}
-                      className={`py-1.5 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
+                      className={`py-1.5 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate ${
                         playerModalTab === 'market'
                           ? 'bg-emerald-500 text-slate-950 shadow-md'
                           : 'text-slate-400 hover:text-white'
                       }`}
                     >
-                      💱 Market &amp; Actions
+                      💱 Market
                     </button>
                   </div>
 
@@ -1436,6 +1448,28 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                   );
                 })()}
 
+                {/* Quick Season Stats Ribbon */}
+                {(() => {
+                  const pStats = getPlayerCompleteStats(selectedPlayer, save);
+                  return (
+                    <div
+                      onClick={() => setPlayerModalTab('stats')}
+                      className="bg-emerald-950/20 hover:bg-emerald-950/40 border border-emerald-500/30 rounded-xl p-2.5 flex items-center justify-between text-xs cursor-pointer transition-colors shadow-sm group"
+                      title="Click to view full statistical dossier & historical career records"
+                    >
+                      <div className="flex items-center gap-2.5 sm:gap-3 font-mono text-[11px] text-emerald-300">
+                        <span>⚽ <strong>{pStats.currentSeason.goals}</strong> G</span>
+                        <span>🎯 <strong>{pStats.currentSeason.assists}</strong> A</span>
+                        <span>👕 <strong>{pStats.currentSeason.appearances}</strong> Apps</span>
+                        <span>⭐ <strong>{pStats.currentSeason.averageRating || '7.1'}</strong> Avg</span>
+                      </div>
+                      <span className="text-[10px] font-display font-black text-emerald-400 uppercase tracking-wider group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
+                        Stats ➔
+                      </span>
+                    </div>
+                  );
+                })()}
+
                 {/* Action Row */}
                 <div className="flex gap-2 pt-1">
                   {onOpenCompare && (
@@ -1470,6 +1504,166 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                   </button>
                 </div>
               </div>
+            ) : playerModalTab === 'stats' ? (
+              /* STATS & HISTORICAL CAREER DOSSIER TAB */
+              (() => {
+                const pStats = getPlayerCompleteStats(selectedPlayer, save);
+                const isGkOrDef = ['GK', 'CB', 'LB', 'RB', 'LWB', 'RWB', 'DEF'].includes(selectedPlayer.position?.toUpperCase() || '');
+
+                return (
+                  <div className="space-y-3.5 text-xs">
+                    {/* Current Season Header */}
+                    <div className="bg-gradient-to-r from-emerald-950/40 via-slate-900/60 to-slate-950 border border-emerald-500/30 rounded-2xl p-3 flex items-center justify-between gap-2 shadow-sm">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-xl shrink-0">📊</span>
+                        <div className="min-w-0">
+                          <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider font-display block">
+                            Season {save.season?.seasonNumber || 1} • {pStats.currentSeason.seasonLabel}
+                          </span>
+                          <span className="text-xs font-bold text-white truncate block">
+                            {selectedPlayer.name} ({selectedPlayer.position})
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold shrink-0">
+                        {pStats.currentSeason.competition}
+                      </span>
+                    </div>
+
+                    {/* Current Season Key Metrics Grid */}
+                    <div className="grid grid-cols-4 gap-1.5 text-center">
+                      <div className="bg-slate-900/70 border border-slate-800 p-2 rounded-xl">
+                        <span className="text-[9px] uppercase font-bold text-slate-400 block">Apps</span>
+                        <span className="font-display font-black text-white text-base">
+                          {pStats.currentSeason.appearances}
+                        </span>
+                        <span className="text-[8px] text-slate-500 block">({pStats.currentSeason.starts} starts)</span>
+                      </div>
+                      <div className="bg-slate-900/70 border border-slate-800 p-2 rounded-xl">
+                        <span className="text-[9px] uppercase font-bold text-slate-400 block">Goals</span>
+                        <span className="font-display font-black text-emerald-400 text-base">
+                          {pStats.currentSeason.goals}
+                        </span>
+                        <span className="text-[8px] text-slate-500 block">⚽ Goals</span>
+                      </div>
+                      <div className="bg-slate-900/70 border border-slate-800 p-2 rounded-xl">
+                        <span className="text-[9px] uppercase font-bold text-slate-400 block">Assists</span>
+                        <span className="font-display font-black text-blue-400 text-base">
+                          {pStats.currentSeason.assists}
+                        </span>
+                        <span className="text-[8px] text-slate-500 block">🎯 Assists</span>
+                      </div>
+                      <div className="bg-slate-900/70 border border-slate-800 p-2 rounded-xl">
+                        <span className="text-[9px] uppercase font-bold text-slate-400 block">
+                          {isGkOrDef ? 'Clean Sh' : 'Rating'}
+                        </span>
+                        <span className="font-display font-black text-amber-400 text-base">
+                          {isGkOrDef ? pStats.currentSeason.cleanSheets : (pStats.currentSeason.averageRating || '7.1')}
+                        </span>
+                        <span className="text-[8px] text-slate-500 block">
+                          {isGkOrDef ? '🧤 Zeroes' : '⭐ Avg OVR'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Secondary Disciplinary & Accolades */}
+                    <div className="grid grid-cols-3 gap-2 bg-slate-900/50 border border-slate-850 p-2.5 rounded-xl text-center text-xs">
+                      <div>
+                        <span className="text-[9px] uppercase font-bold text-slate-400 block">Cards</span>
+                        <span className="font-mono font-bold text-xs mt-0.5 inline-flex items-center gap-1.5">
+                          <span className="text-amber-400">🟨 {pStats.currentSeason.yellowCards}</span>
+                          <span className="text-rose-400">🟥 {pStats.currentSeason.redCards}</span>
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[9px] uppercase font-bold text-slate-400 block">Man of Match</span>
+                        <span className="font-display font-black text-amber-300 text-xs mt-0.5 block">
+                          🏆 {pStats.currentSeason.manOfTheMatch} Awards
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[9px] uppercase font-bold text-slate-400 block">Avg Match Rating</span>
+                        <span className="font-mono font-black text-emerald-400 text-xs mt-0.5 block">
+                          ⭐ {pStats.currentSeason.averageRating || '7.0'} / 10
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Previous Seasons Career History Table */}
+                    <div className="space-y-1.5 pt-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-display font-black text-slate-300 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                          <span>📜</span> Career History &amp; Previous Seasons
+                        </span>
+                        <span className="text-[9px] font-mono text-slate-400">
+                          {pStats.careerTotals.appearances} Total Career Apps
+                        </span>
+                      </div>
+
+                      <div className="rounded-xl border border-slate-800 overflow-hidden bg-slate-950/70">
+                        <div className="overflow-x-auto max-h-48 scrollbar-thin">
+                          <table className="w-full text-left text-[11px]">
+                            <thead className="bg-slate-900 text-[9px] font-bold uppercase text-slate-400 border-b border-slate-800 sticky top-0">
+                              <tr>
+                                <th className="py-2 px-2.5">Season</th>
+                                <th className="py-2 px-2">Club</th>
+                                <th className="py-2 px-1.5 text-center">App</th>
+                                <th className="py-2 px-1.5 text-center">G</th>
+                                <th className="py-2 px-1.5 text-center">A</th>
+                                <th className="py-2 px-1.5 text-center">{isGkOrDef ? 'CS' : 'G+A'}</th>
+                                <th className="py-2 px-2 text-right">Avg</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-850/60 font-medium">
+                              {/* Current season row */}
+                              <tr className="bg-emerald-950/20 text-emerald-300 font-bold">
+                                <td className="py-1.5 px-2.5 font-mono">{pStats.currentSeason.seasonLabel}</td>
+                                <td className="py-1.5 px-2 truncate max-w-[90px]">{pStats.currentSeason.clubName}</td>
+                                <td className="py-1.5 px-1.5 text-center font-mono">{pStats.currentSeason.appearances}</td>
+                                <td className="py-1.5 px-1.5 text-center font-mono">{pStats.currentSeason.goals}</td>
+                                <td className="py-1.5 px-1.5 text-center font-mono">{pStats.currentSeason.assists}</td>
+                                <td className="py-1.5 px-1.5 text-center font-mono">
+                                  {isGkOrDef ? pStats.currentSeason.cleanSheets : pStats.currentSeason.goals + pStats.currentSeason.assists}
+                                </td>
+                                <td className="py-1.5 px-2 text-right font-mono font-black">{pStats.currentSeason.averageRating || '7.1'}</td>
+                              </tr>
+
+                              {/* Previous seasons rows */}
+                              {pStats.previousSeasons.map((prev) => (
+                                <tr key={prev.seasonLabel} className="text-slate-300 hover:bg-slate-900/50">
+                                  <td className="py-1.5 px-2.5 font-mono text-slate-400">{prev.seasonLabel}</td>
+                                  <td className="py-1.5 px-2 truncate max-w-[90px]">{prev.clubName}</td>
+                                  <td className="py-1.5 px-1.5 text-center font-mono">{prev.appearances}</td>
+                                  <td className="py-1.5 px-1.5 text-center font-mono font-bold text-white">{prev.goals}</td>
+                                  <td className="py-1.5 px-1.5 text-center font-mono">{prev.assists}</td>
+                                  <td className="py-1.5 px-1.5 text-center font-mono">
+                                    {isGkOrDef ? prev.cleanSheets : prev.goals + prev.assists}
+                                  </td>
+                                  <td className="py-1.5 px-2 text-right font-mono font-bold text-emerald-400">{prev.averageRating}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                            <tfoot className="bg-slate-900/90 text-white font-bold border-t border-slate-800 text-[10px]">
+                              <tr>
+                                <td colSpan={2} className="py-2 px-2.5 font-display uppercase tracking-wider text-amber-400">
+                                  Career Totals
+                                </td>
+                                <td className="py-2 px-1.5 text-center font-mono">{pStats.careerTotals.appearances}</td>
+                                <td className="py-2 px-1.5 text-center font-mono text-emerald-400">{pStats.careerTotals.goals}</td>
+                                <td className="py-2 px-1.5 text-center font-mono text-blue-400">{pStats.careerTotals.assists}</td>
+                                <td className="py-2 px-1.5 text-center font-mono">
+                                  {isGkOrDef ? pStats.careerTotals.cleanSheets : pStats.careerTotals.goals + pStats.careerTotals.assists}
+                                </td>
+                                <td className="py-2 px-2 text-right font-mono text-amber-400">{pStats.careerTotals.averageRating}</td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()
             ) : (
               <div className="space-y-3 text-xs">
                 {/* Feedback Alert */}

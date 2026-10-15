@@ -87,7 +87,41 @@ export interface PlayerFaceStats {
   isGoalkeeper?: boolean;
 }
 
-export type FormTrend = 'rising' | 'steady' | 'dropping';
+export type FormTrend = 'hot' | 'rising' | 'steady' | 'dropping' | 'cold';
+
+export interface PlayerCompetitionStats {
+  appearances: number;
+  starts: number;
+  subAppearances: number;
+  goals: number;
+  assists: number;
+  cleanSheets: number;
+  yellowCards: number;
+  redCards: number;
+  avgRating: number;
+  manOfTheMatch: number;
+}
+
+export interface PlayerSeasonStats {
+  seasonLabel: string; // e.g. "2026/27"
+  yearStart: number;
+  clubName: string;
+  competition: string;
+  appearances: number;
+  starts: number;
+  subAppearances: number;
+  goals: number;
+  assists: number;
+  cleanSheets: number;
+  yellowCards: number;
+  redCards: number;
+  averageRating: number;
+  manOfTheMatch: number;
+  competitions?: {
+    league: PlayerCompetitionStats;
+    cups: PlayerCompetitionStats;
+  };
+}
 
 export interface CareerPlayer {
   id: string;
@@ -122,6 +156,9 @@ export interface CareerPlayer {
   // In-season natural progression (Under-23 development)
   developmentProgress?: number; // 0-100 progress towards next OVR
   faceStats?: PlayerFaceStats;
+  // Season match statistics & historical career records
+  seasonStats?: PlayerSeasonStats;
+  historyStats?: PlayerSeasonStats[];
   // Contract & Squad Status
   releaseClause?: number;
   squadRole?: SquadRole;
@@ -537,6 +574,7 @@ export interface CareerSaveFile {
   phase: 'preseason' | 'transfer_window' | 'regular_season' | 'season_review';
   inbox?: ManagerMessage[];
   deadlineDayState?: DeadlineDayState;
+  celebratedMilestones?: string[];
 }
 
 export type DeadlineDayPhase = 'morning' | 'afternoon' | 'evening' | 'deadline' | 'closed';

@@ -63,7 +63,7 @@ export function EaFcCard({
     return (
       <div
         onClick={onClick}
-        className={`relative overflow-hidden rounded-2xl border bg-gradient-to-b ${style.bgClass} ${style.glow} p-2 text-center select-none cursor-pointer transition-transform hover:scale-[1.02] ${className}`}
+        className={`eafc-card-compact relative overflow-hidden rounded-2xl border bg-gradient-to-b ${style.bgClass} ${style.glow} p-2 text-center select-none cursor-pointer transition-transform hover:scale-[1.02] ${className}`}
       >
         <div className="flex justify-between items-center text-[10px] font-black">
           <span className="font-display text-xs font-black">{effectiveRating}</span>
@@ -82,7 +82,7 @@ export function EaFcCard({
   return (
     <article
       onClick={onClick}
-      className={`relative rounded-3xl border-2 bg-gradient-to-b ${style.bgClass} ${style.glow} p-4 sm:p-5 select-none shadow-2xl transition-all ${
+      className={`eafc-card relative rounded-3xl border-2 bg-gradient-to-b ${style.bgClass} ${style.glow} p-4 sm:p-5 select-none shadow-2xl transition-all ${
         onClick ? 'cursor-pointer hover:scale-[1.02]' : ''
       } ${className}`}
     >
@@ -94,7 +94,7 @@ export function EaFcCard({
         <div className="space-y-0.5">
           {/* OVR + Form Bonus Indicator */}
           <div className="flex items-baseline gap-1.5">
-            <span className="text-3xl sm:text-4xl font-display font-black tracking-tighter leading-none drop-shadow-md">
+            <span className="text-3xl sm:text-4xl font-display font-black tracking-tighter leading-none drop-shadow-md eafc-rating">
               {effectiveRating}
             </span>
             {bonus !== 0 && (
@@ -146,7 +146,7 @@ export function EaFcCard({
 
       {/* Player Identity */}
       <div className="relative text-center my-3 pb-2 border-b border-white/10">
-        <h4 className="text-lg sm:text-xl font-display font-black uppercase tracking-wide truncate drop-shadow-sm">
+        <h4 className="text-lg sm:text-xl font-display font-black uppercase tracking-wide truncate drop-shadow-sm eafc-name">
           {player.name}
         </h4>
         <div className="flex justify-center items-center gap-2 text-[11px] font-bold opacity-80 mt-0.5">
@@ -171,10 +171,10 @@ export function EaFcCard({
               key={st.label}
               className="flex justify-between items-center py-0.5 px-2 rounded-lg bg-black/25 border border-white/5"
             >
-              <span className="text-sm sm:text-base font-black tracking-tight drop-shadow-sm">
+              <span className="text-sm sm:text-base font-black tracking-tight drop-shadow-sm eafc-stat-val">
                 {st.value}
               </span>
-              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider opacity-75">
+              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider opacity-75 eafc-stat-lbl">
                 {st.label}
               </span>
             </div>

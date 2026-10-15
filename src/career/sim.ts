@@ -128,14 +128,26 @@ export function simulateMatchFixture(
     awayCorners,
   };
 
-  // Generate events from scorers
-  const events: MatchEvent[] = scorers.map((s) => ({
-    minute: s.minute,
-    type: 'goal',
-    clubId: s.clubId,
-    playerName: s.name,
-    detail: 'Goal',
-  }));
+  // Generate events from scorers (with realistic assists for ~70% of open play goals)
+  const events: MatchEvent[] = scorers.map((s) => {
+    const isHome = s.clubId === homeClub.id;
+    const squad = isHome ? homeSquad : awaySquad;
+    const club = isHome ? homeClub : awayClub;
+    let detail = 'Goal';
+    if (Math.random() < 0.72) {
+      const assister = pickAssisterName(squad, club, s.name);
+      if (assister) {
+        detail = `Goal (Assist: ${assister})`;
+      }
+    }
+    return {
+      minute: s.minute,
+      type: 'goal',
+      clubId: s.clubId,
+      playerName: s.name,
+      detail,
+    };
+  });
 
   // Add random yellow cards
   const numCards = Math.floor(Math.random() * 3) + 1;
@@ -222,6 +234,23 @@ function pickScorerName(squad: CareerPlayer[] | undefined, club: Club): string {
   return PROCEDURAL_STRIKERS[Math.floor(Math.random() * PROCEDURAL_STRIKERS.length)];
 }
 
+function pickAssisterName(squad: CareerPlayer[] | undefined, club: Club, excludeName: string): string {
+  if (squad && squad.length > 0) {
+    const onPitch = squad.length >= 11 ? squad.slice(0, 11) : squad;
+    const outfield = onPitch.filter((p) => p.name !== excludeName && categorizePosition(p.position) !== 'GK');
+    if (outfield.length > 0) {
+      return outfield[Math.floor(Math.random() * outfield.length)].name;
+    }
+  }
+
+  const PROCEDURAL_PLAYMAKERS = [
+    'De Bruyne', 'Odegaard', 'Alexander-Arnold', 'Bruno Fernandes', 'Maddison',
+    'Foden', 'Saka', 'Szoboszlai', 'Paqueta', 'Tielemans', 'Eze', 'Gibbs-White'
+  ];
+  const candidates = PROCEDURAL_PLAYMAKERS.filter((n) => n !== excludeName);
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
 /**
  * Simulates all unplayed fixtures in a given round.
  */
@@ -275,6 +304,7 @@ export function advanceTimeSkip(
   target: TimeSkipTarget,
   options?: {
     usePreferredEleven?: boolean;
+    haltOnTransferMilestone?: 'deadline' | 'window_open_or_close' | 'none';
   }
 ): TimeSkipResult {
   const fixtures = [...(save.fixtures || [])];
@@ -499,16 +529,41 @@ export function advanceTimeSkip(
   }
 
   // If no pausedReason interrupted progression and target has a specific date milestone, advance to targetDate
+  const haltMilestone = options?.haltOnTransferMilestone ?? 'deadline';
   if (!pausedReason && target !== 'next_match' && targetDate > currentDate) {
     const targetIso = targetDate.toISOString().split('T')[0];
-    if (startIso < summerDeadlineDay && targetIso >= summerDeadlineDay) {
-      currentDate = new Date(summerDeadlineDay);
-      pausedReason = 'Transfer Deadline Day (Summer Window Closing - 23:00 BST)';
-    } else if (startIso < winterDeadlineDay && targetIso >= winterDeadlineDay) {
-      currentDate = new Date(winterDeadlineDay);
-      pausedReason = 'Transfer Deadline Day (Winter Window Closing - 23:00 BST)';
-    } else {
+    const summerOpen = `${save.season.yearStart}-07-01`;
+    const winterOpen = `${save.season.yearStart + 1}-01-01`;
+
+    if (haltMilestone === 'none') {
       currentDate = targetDate;
+    } else if (haltMilestone === 'window_open_or_close') {
+      if (startIso < summerOpen && targetIso >= summerOpen) {
+        currentDate = new Date(summerOpen);
+        pausedReason = 'Summer Transfer Window Opened (00:00 BST)';
+      } else if (startIso < summerDeadlineDay && targetIso >= summerDeadlineDay) {
+        currentDate = new Date(summerDeadlineDay);
+        pausedReason = 'Transfer Deadline Day (Summer Window Closing - 23:00 BST)';
+      } else if (startIso < winterOpen && targetIso >= winterOpen) {
+        currentDate = new Date(winterOpen);
+        pausedReason = 'Winter Transfer Window Opened (00:00 GMT)';
+      } else if (startIso < winterDeadlineDay && targetIso >= winterDeadlineDay) {
+        currentDate = new Date(winterDeadlineDay);
+        pausedReason = 'Transfer Deadline Day (Winter Window Closing - 23:00 BST)';
+      } else {
+        currentDate = targetDate;
+      }
+    } else {
+      // Default: halt on transfer deadline day
+      if (startIso < summerDeadlineDay && targetIso >= summerDeadlineDay) {
+        currentDate = new Date(summerDeadlineDay);
+        pausedReason = 'Transfer Deadline Day (Summer Window Closing - 23:00 BST)';
+      } else if (startIso < winterDeadlineDay && targetIso >= winterDeadlineDay) {
+        currentDate = new Date(winterDeadlineDay);
+        pausedReason = 'Transfer Deadline Day (Winter Window Closing - 23:00 BST)';
+      } else {
+        currentDate = targetDate;
+      }
     }
   }
 
