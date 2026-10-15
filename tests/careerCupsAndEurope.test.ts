@@ -87,11 +87,11 @@ describe('Career Mode Phase 5: Cups & European Competitions', () => {
       expect(cups[CUP_IDS.LEAGUE_CUP].currentRound).toBe('Round of 16');
       expect(cups[CUP_IDS.LEAGUE_CUP].fixtures.length).toBe(8);
 
-      // Check European Champions Cup (starts at Quarter-Final with 4 matches, awaiting draw on July 1)
+      // Check European Champions Cup (36-team single League Phase with 8 matchdays, awaiting Monaco draw)
       expect(cups[CUP_IDS.EURO_CHAMPIONS].name).toBe('European Champions Cup');
-      expect(cups[CUP_IDS.EURO_CHAMPIONS].currentRound).toBe('Quarter-Final');
-      expect(cups[CUP_IDS.EURO_CHAMPIONS].fixtures.length).toBe(4);
-      expect(cups[CUP_IDS.EURO_CHAMPIONS].prizeMoney).toBe(45_000_000);
+      expect(cups[CUP_IDS.EURO_CHAMPIONS].currentRound).toBe('League Phase • Matchday 1 of 8');
+      expect(cups[CUP_IDS.EURO_CHAMPIONS].fixtures.length).toBe(8);
+      expect(cups[CUP_IDS.EURO_CHAMPIONS].prizeMoney).toBe(55_000_000);
       expect(cups[CUP_IDS.EURO_CHAMPIONS].drawCompleted).toBe(false);
       expect(cups[CUP_IDS.EURO_CHAMPIONS].fixtures.every((f) => f.homeClubId === 'tbc')).toBe(true);
 
@@ -104,14 +104,15 @@ describe('Career Mode Phase 5: Cups & European Competitions', () => {
       expect(cups[CUP_IDS.EURO_CHAMPIONS].qualifyingClubs).toContain('madrid_royal');
       expect(cups[CUP_IDS.EURO_CHAMPIONS].qualifyingClubs).toContain('bavarian_munich');
 
-      // Once the draw is conducted, the fixtures contain the continental clubs
+      // Once the draw is conducted, the fixtures contain real clubs and draw is marked completed
       const drawnChampions = conductCupDraw(cups[CUP_IDS.EURO_CHAMPIONS]);
       const euroClubs = drawnChampions.fixtures.flatMap((f) => [
         f.homeClubId,
         f.awayClubId,
       ]);
-      expect(euroClubs).toContain('madrid_royal');
-      expect(euroClubs).toContain('bavarian_munich');
+      expect(drawnChampions.drawCompleted).toBe(true);
+      expect(drawnChampions.fixtures.length).toBe(8);
+      expect(euroClubs.every((id) => id !== 'tbc')).toBe(true);
     });
   });
 
@@ -276,14 +277,14 @@ describe('Career Mode Phase 5: Cups & European Competitions', () => {
       const clubs = getAllClubs();
       const userClub = clubs[0]; // Man Blue
       const cups = initializeSeasonCups(userClub, 2026);
-      const championsCup = cups[CUP_IDS.EURO_CHAMPIONS];
+      const challengeCup = cups[CUP_IDS.EURO_CHALLENGE];
 
       // Quarter-Final has 4 matches
-      expect(championsCup.fixtures.length).toBe(4);
-      expect(championsCup.fixtures.every((f) => !f.played)).toBe(true);
+      expect(challengeCup.fixtures.length).toBe(4);
+      expect(challengeCup.fixtures.every((f) => !f.played)).toBe(true);
 
       // Simulate AI fixtures in the Quarter-Final
-      const autoPlayed = simulateAiFixturesInCupRound(championsCup, 'Quarter-Final', userClub.id);
+      const autoPlayed = simulateAiFixturesInCupRound(challengeCup, 'Quarter-Final', userClub.id);
 
       // The AI vs AI matches should now be played automatically
       const aiMatches = autoPlayed.fixtures.filter(
@@ -319,11 +320,12 @@ describe('Career Mode Phase 5: Cups & European Competitions', () => {
       const userClub = getAllClubs()[0]; // Man Blue
       const cups2027 = initializeSeasonCups(userClub, 2027, '2027-07-01');
 
-      // Champions Cup
+      // Champions Cup (League Phase)
       const champions = cups2027[CUP_IDS.EURO_CHAMPIONS];
       expect(champions.drawCompleted).toBe(false);
-      expect(champions.drawDate).toBe('2027-12-18');
+      expect(champions.drawDate).toBe('2027-08-27');
       expect(champions.fixtures.every((f) => f.homeClubId === 'tbc' && f.awayClubId === 'tbc')).toBe(true);
+      expect(champions.fixtures.length).toBe(8);
 
       // European Plate starts at Quarter-Final with 8 teams / 4 matches, awaiting draw
       const plate = cups2027[CUP_IDS.EURO_PLATE];
@@ -355,7 +357,7 @@ describe('Career Mode Phase 5: Cups & European Competitions', () => {
       const drawn = conductCupDraw(champions, undefined, userClub.id);
       expect(drawn.drawCompleted).toBe(true);
       expect(drawn.fixtures.every((f) => f.homeClubId !== 'tbc' && f.awayClubId !== 'tbc')).toBe(true);
-      expect(drawn.fixtures.length).toBe(4);
+      expect(drawn.fixtures.length).toBe(8);
     });
 
     it('locks weekend league fixtures to Saturday in 2027/28, preventing Friday fixture drift', () => {

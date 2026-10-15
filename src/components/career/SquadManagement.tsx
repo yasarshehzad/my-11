@@ -74,6 +74,13 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
   const [releaseActionType, setReleaseActionType] = useState<'mutual' | 'unilateral'>('mutual');
   const [squadActionMessage, setSquadActionMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [playerModalTab, setPlayerModalTab] = useState<'profile' | 'stats' | 'market'>('profile');
+  const playerModalCardRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (selectedPlayer && playerModalCardRef.current) {
+      playerModalCardRef.current.scrollTop = 0;
+    }
+  }, [selectedPlayer?.id, playerModalTab]);
 
   const handleSelectPlayerWithActions = (player: CareerPlayer) => {
     setSelectedPlayer(player);
@@ -700,18 +707,28 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
 
       {/* PITCH VIEW */}
       {viewMode === 'pitch' && (
-        <section id="squad-pitch-section" className="space-y-6 scroll-mt-20">
+        <section id="squad-pitch-section" className="space-y-4 scroll-mt-20">
+          {/* Virtual Pitch Status Strip */}
+          <div className="flex items-center justify-between px-2 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="font-display font-black text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-2.5 py-1 rounded-xl text-xs uppercase tracking-wider shadow-sm">
+                ⚽ {currentFormation}
+              </span>
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                Starting XI • Matchday Canvas
+              </span>
+            </div>
+            <span className="text-[10px] text-slate-500 font-mono hidden sm:inline">
+              Tap player card to substitute or view stats
+            </span>
+          </div>
+
           {/* Virtual Pitch Canvas */}
           <div className="relative rounded-3xl border border-emerald-900/50 bg-gradient-to-b from-[#064e3b] via-[#022c22] to-[#011c15] p-3 sm:p-6 shadow-2xl overflow-hidden min-h-[480px] flex flex-col justify-between">
             {/* Pitch Marking Lines */}
             <div className="absolute inset-4 border-2 border-emerald-500/15 rounded-2xl pointer-events-none" />
             <div className="absolute top-1/2 left-4 right-4 h-0.5 bg-emerald-500/15 -translate-y-1/2 pointer-events-none" />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 border-2 border-emerald-500/15 rounded-full pointer-events-none" />
-
-            {/* Formation Title Overlay */}
-            <div className="absolute top-6 left-6 text-[10px] font-black uppercase tracking-widest text-emerald-400/60 font-display">
-              {currentFormation} • MATCHDAY XI
-            </div>
 
             {/* Starting XI Placed in Dedicated Tactical Lines */}
             <div className="relative z-10 w-full flex flex-col justify-between h-full min-h-[440px] py-4 gap-2">
@@ -1341,11 +1358,12 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
               role="dialog"
               aria-modal="true"
               onClick={() => setSelectedPlayer(null)}
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 select-none"
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 overflow-y-auto flex items-start justify-center p-3 sm:p-4 pt-4 sm:pt-6 select-none"
             >
               <div
+                ref={playerModalCardRef}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-slate-950 border border-slate-800 rounded-3xl p-4 sm:p-5 max-w-sm sm:max-w-md w-full space-y-3.5 shadow-2xl relative max-h-[92vh] overflow-y-auto scrollbar-none"
+                className="bg-slate-950 border border-slate-800 rounded-3xl p-4 sm:p-5 max-w-sm sm:max-w-md w-full space-y-3.5 shadow-2xl relative max-h-[90vh] overflow-y-auto scrollbar-none my-auto sm:my-0"
               >
                 {/* Header: Segmented Switcher & Clear Accessible Close Button */}
                 <div className="flex items-center justify-between gap-2">

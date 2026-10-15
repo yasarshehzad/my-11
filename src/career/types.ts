@@ -368,8 +368,49 @@ export interface CupTournament {
   drawDate?: string;
   drawCompleted?: boolean;
   qualifyingClubs?: string[];
+  stage?: 'league_phase' | 'playoffs' | 'knockout';
+  leaguePhaseStandings?: ClubStanding[];
 }
 
+export type PreseasonTourId = 'usa' | 'asia' | 'europe';
+
+export interface PreseasonTourOption {
+  id: PreseasonTourId;
+  title: string;
+  region: string;
+  destinationCity: string;
+  description: string;
+  prizeMoney: number;
+  commercialBoost: number;
+  fitnessBonusDescription: string;
+  badgeEmoji: string;
+  opponents: {
+    clubId: string;
+    name: string;
+    tier: string;
+    country: string;
+  }[];
+}
+
+export interface PreseasonState {
+  hasChosenTour: boolean;
+  selectedTourId?: PreseasonTourId;
+  delegatedToAssistant?: boolean;
+  completed?: boolean;
+  tournamentName?: string;
+}
+
+export interface FixtureReleaseState {
+  released: boolean;
+  releaseDate: string; // e.g. "2026-07-08"
+  hasSeenCeremony?: boolean;
+}
+
+export interface EuropeanLeaguePhaseState {
+  drawCompleted: boolean;
+  drawDate: string; // e.g. "2026-08-27"
+  hasSeenDrawCeremony?: boolean;
+}
 
 export interface TransferRecord {
   id: string;
@@ -575,6 +616,9 @@ export interface CareerSaveFile {
   inbox?: ManagerMessage[];
   deadlineDayState?: DeadlineDayState;
   celebratedMilestones?: string[];
+  preseasonState?: PreseasonState;
+  fixtureReleaseState?: FixtureReleaseState;
+  europeanLeaguePhaseState?: EuropeanLeaguePhaseState;
 }
 
 export type DeadlineDayPhase = 'morning' | 'afternoon' | 'evening' | 'deadline' | 'closed';

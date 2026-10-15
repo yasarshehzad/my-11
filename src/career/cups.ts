@@ -9,8 +9,13 @@ import {
 import { getAllClubs, getClubById, LOWER_LEAGUE_CLUBS } from './clubs';
 import { CONTINENTAL_EUROPEAN_CLUBS, getContinentalClubById } from './continentalClubs';
 import { simulateMatchFixture } from './sim';
+import {
+  initializeChampionsLeagueWithLeaguePhase,
+  drawLeaguePhaseOpponents,
+} from './championsLeague';
 
 export const CUP_IDS = {
+  PRESEASON: 'cup_preseason',
   SHIELD: 'cup_season_opener_shield',
   LEAGUE_CUP: 'cup_league_cup',
   ENGLISH_CUP: 'cup_the_english_cup',
@@ -37,6 +42,24 @@ export function conductCupDraw(
   clubsList?: string[],
   userClubId?: string
 ): CupTournament {
+  if (tournament.stage === 'league_phase' && tournament.id === CUP_IDS.EURO_CHAMPIONS) {
+    const clubId = userClubId || 'merseyside_red';
+    const opps = drawLeaguePhaseOpponents(clubId, 2026);
+    const updatedFixtures = tournament.fixtures.map((f, idx) => {
+      const opp = opps[idx] || opps[0];
+      return {
+        ...f,
+        homeClubId: opp.homeAway === 'home' ? clubId : opp.club.id,
+        awayClubId: opp.homeAway === 'away' ? clubId : opp.club.id,
+      };
+    });
+    return {
+      ...tournament,
+      fixtures: updatedFixtures,
+      drawCompleted: true,
+    };
+  }
+
   const currentFixtures = tournament.fixtures.filter(
     (f) => f.roundName === tournament.currentRound
   );
@@ -201,53 +224,12 @@ export function initializeSeasonCups(
     qualifyingClubs: ecEntrants,
   };
 
-  // 4. European Champions Cup (Top 4 English clubs + Top 4 Continental Giants)
-  // Knockout starts at Quarter-Final in March. Draw occurs mid-December.
-  const euroEntrants = [
-    englishClubs[0].id, // Man Blue
-    englishClubs[1].id, // London Red
-    englishClubs[2].id, // Merseyside Red
-    englishClubs[3].id, // London West
-    CONTINENTAL_EUROPEAN_CLUBS[0].id, // Madrid Royal
-    CONTINENTAL_EUROPEAN_CLUBS[1].id, // Barcelona Blaugrana
-    CONTINENTAL_EUROPEAN_CLUBS[2].id, // Bavarian Munich
-    CONTINENTAL_EUROPEAN_CLUBS[3].id, // Paris Red & Blue
-  ];
-
-  if ((userClub.tier === 'elite' || userClub.tier === 'upper') && !euroEntrants.includes(userClub.id)) {
-    euroEntrants[3] = userClub.id;
-  }
-
-  const euroDrawDate = `${yearStart}-12-18`;
-  const euroIsDrawn = currentDate >= euroDrawDate;
-
-  const uclQfFixtures: CupFixture[] = [];
-  for (let i = 0; i < 4; i++) {
-    uclQfFixtures.push({
-      id: `fix_ucl_qf_${i + 1}`,
-      competitionId: CUP_IDS.EURO_CHAMPIONS,
-      competitionName: 'European Champions Cup',
-      round: 1,
-      roundName: 'Quarter-Final',
-      date: `${yearStart + 1}-03-10`,
-      homeClubId: euroIsDrawn ? euroEntrants[i * 2] : 'tbc',
-      awayClubId: euroIsDrawn ? euroEntrants[i * 2 + 1] : 'tbc',
-      played: false,
-      isKnockout: true,
-    });
-  }
-
-  const euroChampionsTournament: CupTournament = {
-    id: CUP_IDS.EURO_CHAMPIONS,
-    name: 'European Champions Cup',
-    currentRound: 'Quarter-Final',
-    fixtures: uclQfFixtures,
-    isCompleted: false,
-    prizeMoney: 45_000_000,
-    drawDate: euroDrawDate,
-    drawCompleted: euroIsDrawn,
-    qualifyingClubs: euroEntrants,
-  };
+  // 4. European Champions Cup (Authentic 36-team Swiss League Phase with 8 matchdays from September to January)
+  const euroChampionsTournament: CupTournament = initializeChampionsLeagueWithLeaguePhase(
+    userClub,
+    yearStart,
+    currentDate
+  );
 
   // 5. European Challenge Cup (Europa League equivalent)
   const challengeEntrants = [
@@ -261,6 +243,7 @@ export function initializeSeasonCups(
     englishClubs[7].id, // West Midlands Claret
   ];
 
+  const euroEntrants = euroChampionsTournament.qualifyingClubs || [];
   if (!euroEntrants.includes(userClub.id) && !challengeEntrants.includes(userClub.id)) {
     challengeEntrants[challengeEntrants.length - 1] = userClub.id;
   }

@@ -1033,5 +1033,183 @@ body {
   color: #334155 !important;
 }
 
+/* ==========================================================================
+   ENHANCED LIGHT MODE SECTION DIFFERENTIATION & CONTRAST
+   ========================================================================== */
+
+/* Light Canvas Background with elevated cards */
+[data-theme='light'] body,
+[data-theme='light'] main,
+[data-theme='light'] .pitch-bg {
+  background-color: #f8fafc !important;
+  background-image: none !important;
+  color: #0f172a !important;
+}
+
+/* Home Screen Card Differentiation */
+[data-theme='light'] section,
+[data-theme='light'] .career-hub-card {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Matchday Hero on Home Screen */
+[data-theme='light'] section[aria-label="Next Fixture"] {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04) !important;
+}
+
+/* Button Differentiation in Light Mode */
+[data-theme='light'] button:not([class*="bg-emerald"]):not([class*="bg-amber"]):not([class*="bg-rose"]):not([class*="bg-blue"]):not([class*="bg-indigo"]) {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-theme='light'] button:hover:not([class*="bg-emerald"]):not([class*="bg-amber"]):not([class*="bg-rose"]):not([class*="bg-blue"]):not([class*="bg-indigo"]) {
+  background-color: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+}
+
+/* Primary Action Buttons */
+[data-theme='light'] .bg-emerald-500,
+[data-theme='light'] button[class*="from-emerald-500"] {
+  background: linear-gradient(135deg, #059669, #10b981) !important;
+  color: #022c22 !important;
+  font-weight: 900 !important;
+  border: none !important;
+  box-shadow: 0 4px 10px -1px rgba(16, 185, 129, 0.35) !important;
+}
+
+/* KPI Stat Cards on Home Screen */
+[data-theme='light'] section[aria-label="Key Performance Indicators"] > div {
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
+}
+[data-theme='light'] section[aria-label="Key Performance Indicators"] > div:hover {
+  border-color: #10b981 !important;
+  background-color: #f8fafc !important;
+}
+
+/* Fast Forward Bar on Home Screen */
+[data-theme='light'] section[aria-label="Calendar simulation controls"] {
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* ==========================================================================
+   TRANSFERS PAGE LIGHT MODE FIXES (NO DARK HIGHLIGHTS)
+   ========================================================================== */
+
+/* Transfer Player Cards and Rows */
+[data-theme='light'] #transfers-market-section,
+[data-theme='light'] [id^="transfer-"] {
+  color: #0f172a !important;
+}
+
+/* Override dark gradients on player items */
+[data-theme='light'] [class*="bg-gradient-to-b"][class*="from-amber-950"],
+[data-theme='light'] [class*="bg-gradient-to-b"][class*="from-rose-950"],
+[data-theme='light'] [class*="bg-gradient-to-b"][class*="from-emerald-950"],
+[data-theme='light'] [class*="bg-gradient-to-b"][class*="from-slate-900"],
+[data-theme='light'] [class*="bg-slate-900/50"],
+[data-theme='light'] [class*="bg-slate-900/40"],
+[data-theme='light'] [class*="bg-slate-900/60"],
+[data-theme='light'] [class*="bg-slate-900/80"] {
+  background-image: none !important;
+  background-color: #ffffff !important;
+}
+
+/* Highlighted Player Rows: Clean Soft Tints */
+[data-theme='light'] .ring-amber-400\/20,
+[data-theme='light'] [class*="border-amber-500"] {
+  background-color: #fffbeb !important;
+  border-color: #f59e0b !important;
+}
+
+[data-theme='light'] [class*="border-rose-800"],
+[data-theme='light'] [class*="border-rose-600"] {
+  background-color: #fff1f2 !important;
+  border-color: #f43f5e !important;
+}
+
+[data-theme='light'] [class*="border-emerald-500"],
+[data-theme='light'] [class*="border-emerald-800"] {
+  background-color: #ecfdf5 !important;
+  border-color: #10b981 !important;
+}
+
+/* Transfer Player Row Hover State */
+[data-theme='light'] .hover\:bg-slate-850:hover,
+[data-theme='light'] .hover\:bg-slate-900:hover,
+[data-theme='light'] .hover\:border-slate-700:hover {
+  background-color: #f8fafc !important;
+  border-color: #94a3b8 !important;
+}
+
+/* Badges on Transfer Cards */
+[data-theme='light'] #transfers-market-section .bg-slate-950,
+[data-theme='light'] #transfers-market-section [class*="bg-slate-950/"] {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+
+/* ==========================================================================
+   CUPS TAB LIGHT MODE FIXES (HIGH CONTRAST & READABLE TEXT)
+   ========================================================================== */
+
+[data-theme='light'] #tournaments-hub,
+[data-theme='light'] #cup-tournament-cabinet,
+[data-theme='light'] section#cup-tournament-cabinet {
+  color: #0f172a !important;
+}
+
+/* Tournament Selection Strip */
+[data-theme='light'] #tournaments-hub nav,
+[data-theme='light'] nav[aria-label="Tournament selection"] {
+  background-color: #f8fafc !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+/* Tournament Fixtures & Round Cards */
+[data-theme='light'] #tournaments-hub .bg-slate-900,
+[data-theme='light'] #tournaments-hub [class*="bg-slate-900/"],
+[data-theme='light'] #tournaments-hub .bg-slate-950,
+[data-theme='light'] #tournaments-hub [class*="bg-slate-950/"] {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* High Contrast Text in Cups */
+[data-theme='light'] #tournaments-hub .text-slate-400,
+[data-theme='light'] #tournaments-hub .text-slate-500 {
+  color: #475569 !important;
+}
+
+[data-theme='light'] #tournaments-hub .text-slate-300 {
+  color: #1e293b !important;
+}
+
+[data-theme='light'] #tournaments-hub .text-white {
+  color: #0f172a !important;
+}
+
+/* Trophy Cabinet Cards */
+[data-theme='light'] #cup-tournament-cabinet article {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+[data-theme='light'] #cup-tournament-cabinet article:hover {
+  border-color: #f59e0b !important;
+  box-shadow: 0 4px 10px rgba(245, 158, 11, 0.15) !important;
+}
+
 
 

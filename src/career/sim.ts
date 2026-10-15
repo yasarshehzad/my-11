@@ -283,6 +283,7 @@ export function simulateRound(
 }
 
 export type TimeSkipTarget =
+  | 'continue'
   | 'next_match'
   | 'next_week'
   | 'next_month'
@@ -339,7 +340,9 @@ export function advanceTimeSkip(
   // 1. Calculate stopping condition date / milestone
   let targetDate = new Date(currentDate);
 
-  if (target === 'next_week') {
+  if (target === 'continue') {
+    targetDate.setDate(targetDate.getDate() + 1);
+  } else if (target === 'next_week') {
     targetDate.setDate(targetDate.getDate() + 7);
   } else if (target === 'next_month') {
     targetDate.setMonth(targetDate.getMonth() + 1);
@@ -405,11 +408,27 @@ export function advanceTimeSkip(
 
   const summerDeadlineDay = `${save.season.yearStart}-09-01`;
   const winterDeadlineDay = `${save.season.yearStart + 1}-02-01`;
+  const fixtureReleaseDay = `${save.season.yearStart}-07-08`;
+  const uclDrawDay = `${save.season.yearStart}-08-27`;
 
   // 3. Step forward day by day through fixtures
   for (const item of queue) {
     const fixDate = new Date(item.fixture.date);
     const fixIso = fixDate.toISOString().split('T')[0];
+
+    // Halt on Fixture Release Day if unreleased when continuing day by day
+    if (target === 'continue' && !save.fixtureReleaseState?.released && startIso < fixtureReleaseDay && fixIso >= fixtureReleaseDay) {
+      pausedReason = 'Premier League Fixture Release Day!';
+      currentDate = new Date(fixtureReleaseDay);
+      break;
+    }
+
+    // Halt on UEFA Champions League Draw if pending when continuing day by day
+    if (target === 'continue' && save.europeanLeaguePhaseState && !save.europeanLeaguePhaseState.drawCompleted && startIso < uclDrawDay && fixIso >= uclDrawDay) {
+      pausedReason = 'UEFA Champions League League Phase Draw!';
+      currentDate = new Date(uclDrawDay);
+      break;
+    }
 
     // Always halt at Transfer Deadline Day before simulating fixtures past the deadline
     if (startIso < summerDeadlineDay && fixIso >= summerDeadlineDay) {
@@ -535,7 +554,13 @@ export function advanceTimeSkip(
     const summerOpen = `${save.season.yearStart}-07-01`;
     const winterOpen = `${save.season.yearStart + 1}-01-01`;
 
-    if (haltMilestone === 'none') {
+    if (target === 'continue' && !save.fixtureReleaseState?.released && startIso < fixtureReleaseDay && targetIso >= fixtureReleaseDay) {
+      currentDate = new Date(fixtureReleaseDay);
+      pausedReason = 'Premier League Fixture Release Day!';
+    } else if (target === 'continue' && save.europeanLeaguePhaseState && !save.europeanLeaguePhaseState.drawCompleted && startIso < uclDrawDay && targetIso >= uclDrawDay) {
+      currentDate = new Date(uclDrawDay);
+      pausedReason = 'UEFA Champions League League Phase Draw!';
+    } else if (haltMilestone === 'none') {
       currentDate = targetDate;
     } else if (haltMilestone === 'window_open_or_close') {
       if (startIso < summerOpen && targetIso >= summerOpen) {

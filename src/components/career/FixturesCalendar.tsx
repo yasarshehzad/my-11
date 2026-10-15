@@ -22,6 +22,7 @@ import { MatchDayModal } from './MatchDayModal';
 import { MatchOverviewModal } from './MatchOverviewModal';
 import { InstantMatchSummaryModal } from './InstantMatchSummaryModal';
 import { InstantSimLoadingModal } from './InstantSimLoadingModal';
+import { FixtureReleaseModal } from './FixtureReleaseModal';
 
 interface FixturesCalendarProps {
   save: CareerSaveFile;
@@ -51,6 +52,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
     roundTitle: string;
   } | null>(null);
   const [showSeasonReviewModal, setShowSeasonReviewModal] = useState(false);
+  const [showFixtureReleaseCeremonyModal, setShowFixtureReleaseCeremonyModal] = useState(false);
 
   const fixtures = save.fixtures || [];
   const userClubId = save.club.id;
@@ -226,6 +228,58 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
             >
               🎉 Review & Advance to Season {save.season.seasonNumber + 1}
             </button>
+          </div>
+        </section>
+      )}
+
+      {/* Pre-Season: Fixture Release Day Pending Spotlight */}
+      {(!save.fixtureReleaseState?.released && save.season.currentDate < (save.fixtureReleaseState?.releaseDate || `${save.season.yearStart}-07-08`)) && (
+        <section className="bg-gradient-to-r from-emerald-950/40 via-slate-900/70 to-slate-950 border border-emerald-500/30 rounded-3xl p-4 sm:p-5 shadow-2xl space-y-3">
+          <div className="flex justify-between items-center gap-2">
+            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-3 py-1 rounded-full font-display">
+              Official Calendar Compilation • In Progress
+            </span>
+            <span className="text-xs font-mono font-bold text-slate-400">
+              Release Day: 8 July {save.season.yearStart}
+            </span>
+          </div>
+
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="space-y-1">
+              <h3 className="text-base sm:text-lg font-display font-black text-white">
+                📅 Premier League Fixture Release Day Pending
+              </h3>
+              <p className="text-xs text-slate-300 max-w-lg leading-relaxed">
+                The official 38-game schedule is currently being compiled by the Premier League computer. Opening day, boxing day, derbies, and the final day will be unveiled on 8 July.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowFixtureReleaseCeremonyModal(true)}
+                className="py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer"
+              >
+                🎉 Launch Live Reveal Ceremony
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onUpdateSave({
+                    ...save,
+                    fixtureReleaseState: {
+                      released: true,
+                      releaseDate: save.fixtureReleaseState?.releaseDate || `${save.season.yearStart}-07-08`,
+                      hasSeenCeremony: true,
+                    },
+                  });
+                  if (onNotification) onNotification('📅 Full 38-match Premier League schedule revealed!');
+                }}
+                className="py-2.5 px-3 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:text-white font-display font-bold text-xs uppercase cursor-pointer"
+              >
+                ⏩ Skip &amp; View All
+              </button>
+            </div>
           </div>
         </section>
       )}
@@ -666,6 +720,28 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
             </div>
           </div>
         </div>
+      )}
+
+      {/* Fixture Release Ceremony Modal */}
+      {showFixtureReleaseCeremonyModal && (
+        <FixtureReleaseModal
+          isOpen={showFixtureReleaseCeremonyModal}
+          fixtures={fixtures}
+          userClub={save.club}
+          allClubs={allClubs}
+          onComplete={() => {
+            onUpdateSave({
+              ...save,
+              fixtureReleaseState: {
+                released: true,
+                releaseDate: save.fixtureReleaseState?.releaseDate || `${save.season.yearStart}-07-08`,
+                hasSeenCeremony: true,
+              },
+            });
+            setShowFixtureReleaseCeremonyModal(false);
+            if (onNotification) onNotification('📅 Official 2026/27 Premier League Fixtures Confirmed!');
+          }}
+        />
       )}
     </div>
   );

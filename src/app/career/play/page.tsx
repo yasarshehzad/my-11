@@ -40,9 +40,19 @@ import { MatchOverviewModal } from '../../../components/career/MatchOverviewModa
 import { InstantMatchSummaryModal } from '../../../components/career/InstantMatchSummaryModal';
 import { InstantSimLoadingModal } from '../../../components/career/InstantSimLoadingModal';
 import { CelebrationModal } from '../../../components/career/CelebrationModal';
+import { PreseasonTourModal } from '../../../components/career/PreseasonTourModal';
+import { FixtureReleaseModal } from '../../../components/career/FixtureReleaseModal';
+import { ChampionsLeagueDrawModal } from '../../../components/career/ChampionsLeagueDrawModal';
 import { PlayerComparisonModal } from '../../../components/career/PlayerComparisonModal';
 import { SquadRegistrationModal } from '../../../components/career/SquadRegistrationModal';
 import { isSeasonComplete, advanceToNextSeason, getSeasonReviewSummary, SeasonReviewSummary } from '../../../career/seasons';
+import {
+  shouldShowPreseasonPrompt,
+  applyPreseasonTourChoice,
+  simulateAssistantPreseasonMatch,
+} from '../../../career/preseason';
+import { applyChampionsLeagueDraw } from '../../../career/championsLeague';
+import { PreseasonTourId } from '../../../career/types';
 import { getNextClubFixture, getNextScheduledMatch, getPreviousPlayedMatch, isDateInInternationalBreak, ScheduledMatch } from '../../../career/calendar';
 import { simulateMatchFixture, advanceTimeSkip, TimeSkipTarget } from '../../../career/sim';
 import { detectCelebrationEvent, CelebrationEvent } from '../../../career/celebrations';
@@ -124,6 +134,16 @@ function CareerPlayHubContent() {
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [activeCelebration, setActiveCelebration] = useState<CelebrationEvent | null>(null);
   const [inboxShowAll, setInboxShowAll] = useState(false);
+  const [showPreseasonModal, setShowPreseasonModal] = useState(false);
+  const [showFixtureReleaseModal, setShowFixtureReleaseModal] = useState(false);
+  const [showUclDrawModal, setShowUclDrawModal] = useState(false);
+
+  // Auto-prompt pre-season tour selection at start of season
+  useEffect(() => {
+    if (save && shouldShowPreseasonPrompt(save)) {
+      setShowPreseasonModal(true);
+    }
+  }, [save?.season?.currentDate, save?.preseasonState?.hasChosenTour]);
 
   const checkAndTriggerCelebration = useCallback((saveCandidate: CareerSaveFile, fixture?: LeagueFixture | CupFixture) => {
     const celebration = detectCelebrationEvent(saveCandidate, fixture);
@@ -666,6 +686,15 @@ function CareerPlayHubContent() {
           description: `Fast forwards all remaining league matches to conclude Season ${save?.season.seasonNumber || 1}. Final standings, awards, and board review will be finalized.`,
         };
       }
+      case 'continue':
+      default: {
+        return {
+          title: 'Advance Calendar',
+          badge: '▶️ Continue',
+          targetDate: 'Day by Day',
+          description: 'Advances the game calendar forward to progress training, daily events, and upcoming fixtures.',
+        };
+      }
     }
   };
 
@@ -965,6 +994,78 @@ function CareerPlayHubContent() {
     setSave(finalSave);
     setActiveMatchFixture(null);
     showToast('Match completed and results saved!');
+  };
+
+  const handleChoosePreseasonTour = (tourId: PreseasonTourId, delegateToAssistant: boolean) => {
+    if (!save) return;
+    const updated = applyPreseasonTourChoice(save, tourId, delegateToAssistant);
+    saveCareerSave(updated);
+    setSave(updated);
+    setShowPreseasonModal(false);
+    showToast(`Pre-season tour selected: ${tourId.toUpperCase()}! 3 Friendlies scheduled.`);
+  };
+
+  const handleFinishFixtureRelease = () => {
+    if (!save) return;
+    const updated: CareerSaveFile = {
+      ...save,
+      fixtureReleaseState: {
+        released: true,
+        releaseDate: `${save.season.yearStart}-07-08`,
+        hasSeenCeremony: true,
+      },
+    };
+    saveCareerSave(updated);
+    setSave(updated);
+    setShowFixtureReleaseModal(false);
+    showToast('Premier League fixtures released for the new season!');
+  };
+
+  const handleFinishUclDraw = (drawnOpponents: any[]) => {
+    if (!save) return;
+    const updated = applyChampionsLeagueDraw(save, drawnOpponents);
+    saveCareerSave(updated);
+    setSave(updated);
+    setShowUclDrawModal(false);
+    showToast('UEFA Champions League League Phase Draw concluded! Fixtures scheduled.');
+  };
+
+  const handleSimulateAssistantPreseason = (fixtureId: string) => {
+    if (!save) return;
+    setSimulating(true);
+    const updated = simulateAssistantPreseasonMatch(save, fixtureId);
+    saveCareerSave(updated);
+    setSave(updated);
+    setSimulating(false);
+    showToast('Assistant Manager simulated pre-season friendly! Check inbox for match report.');
+  };
+
+  const handleContinueCalendar = () => {
+    if (!save) return;
+    // 1. If pre-season prompt should be shown, show it first
+    if (shouldShowPreseasonPrompt(save)) {
+      setShowPreseasonModal(true);
+      return;
+    }
+    // 2. If fixture release pending on or after July 8
+    if (save.season.currentDate >= `${save.season.yearStart}-07-08` && !save.fixtureReleaseState?.released) {
+      setShowFixtureReleaseModal(true);
+      return;
+    }
+    // 3. If UCL draw pending on or after August 27
+    if (
+      save.season.currentDate >= `${save.season.yearStart}-08-27` &&
+      save.europeanLeaguePhaseState &&
+      !save.europeanLeaguePhaseState.drawCompleted
+    ) {
+      setShowUclDrawModal(true);
+      return;
+    }
+    // 4. Advance calendar by 1 day
+    handleTimeSkipAction('continue', {
+      usePreferredEleven: fastForwardUsePreferredEleven,
+      haltOnTransferMilestone: fastForwardHaltOnTransferMilestone,
+    });
   };
 
   if (!save) {
@@ -1428,12 +1529,40 @@ function CareerPlayHubContent() {
               </section>
             )}
 
+            {/* SUMMER PRE-SEASON TOUR INVITATION BANNER (IF UNCHOSEN) */}
+            {shouldShowPreseasonPrompt(save) && (
+              <section aria-label="Pre-Season Tour Selection" className="bg-gradient-to-r from-emerald-950/70 via-slate-900 to-slate-950 border-2 border-emerald-500/60 rounded-3xl p-4 sm:p-5 shadow-2xl space-y-3">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                  <div className="space-y-1">
+                    <span className="bg-emerald-500 text-slate-950 text-[10px] font-black uppercase px-2 py-0.5 rounded-full font-display flex items-center gap-1 w-fit">
+                      <span>✈️</span> SUMMER PRE-SEASON CAMPAIGN
+                    </span>
+                    <h3 className="text-base sm:text-lg font-display font-black text-white uppercase tracking-tight">
+                      Choose Your Pre-Season Tour
+                    </h3>
+                    <p className="text-xs text-slate-300">
+                      Pick between USA, Asia, or Europe. Earn up to £4.5M in commercial funds and prepare squad fitness.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowPreseasonModal(true)}
+                    className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all cursor-pointer whitespace-nowrap min-h-[42px] flex items-center justify-center gap-1.5"
+                  >
+                    <span>Select Tour ➔</span>
+                  </button>
+                </div>
+              </section>
+            )}
+
             {/* MULTI-COMPETITION MATCHDAY SPOTLIGHT HERO */}
             {nextScheduled && (
               <section aria-label="Next Fixture" className="bg-gradient-to-r from-emerald-950/40 via-slate-900/70 to-slate-950 border border-emerald-500/30 rounded-3xl p-4 sm:p-6 shadow-2xl space-y-4">
                 <div className="flex flex-wrap justify-between items-center gap-2">
                   <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-2.5 py-0.5 rounded-full font-display">
-                    {nextScheduled.isCup
+                    {nextScheduled.cupId === CUP_IDS.PRESEASON
+                      ? `✈️ ${save.preseasonState?.tournamentName || 'Pre-Season Tour'} • Friendly`
+                      : nextScheduled.isCup
                       ? `🏆 ${nextScheduled.cupName} • ${nextScheduled.roundName}`
                       : `Next Fixture • Matchday ${(nextScheduled.fixture as LeagueFixture).round} of 38`}
                   </span>
@@ -1459,6 +1588,10 @@ function CareerPlayHubContent() {
                   const venueDisplay = isNeutralWembley
                     ? 'Wembley Stadium (Neutral)'
                     : (home.stadiumName || 'Stadium');
+
+                  const isMatchday = save.season.currentDate >= nextScheduled.fixture.date;
+                  const isPreseasonMatch = nextScheduled.cupId === CUP_IDS.PRESEASON;
+                  const isAssistantDelegated = isPreseasonMatch && Boolean(save.preseasonState?.delegatedToAssistant);
 
                   return (
                     <div className="space-y-3.5">
@@ -1516,55 +1649,116 @@ function CareerPlayHubContent() {
                         </div>
                       </div>
 
+                      {/* Dynamic Action Buttons: Continue vs Prepare & Play Match */}
+                      {!isMatchday ? (
+                        /* NOT MATCHDAY YET: Clean day-by-day progression */
+                        <div className="space-y-2">
+                          <button
+                            onClick={handleContinueCalendar}
+                            disabled={simulating}
+                            className="w-full py-3 sm:py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-display font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/25 transition-all hover:scale-[1.01] active:scale-[0.98] cursor-pointer min-h-[48px]"
+                          >
+                            <span>▶️ Continue</span>
+                            <span className="text-[10.5px] font-bold font-mono opacity-85 lowercase">
+                              • next match: {formatCareerDate(nextScheduled.fixture.date, save.settings.dateFormat, 'medium')}
+                            </span>
+                          </button>
 
-                      {/* Primary 1-Column Action: Prepare & Play Match */}
-                      <button
-                        onClick={() => {
-                          const summerDeadline = `${save.season.yearStart}-09-01`;
-                          const winterDeadline = `${save.season.yearStart + 1}-02-01`;
-                          const fixDate = nextScheduled.fixture.date;
-                          if (save.season.currentDate < summerDeadline && fixDate >= summerDeadline) {
-                            let deadlineSave = { ...save, season: { ...save.season, currentDate: summerDeadline } };
-                            deadlineSave = initializeDeadlineDay(deadlineSave);
-                            saveCareerSave(deadlineSave);
-                            setSave(deadlineSave);
-                            showToast('⏱️ Transfer Deadline Day has arrived! The summer window shuts tonight at 23:00 BST. Complete negotiations and squad registrations.');
-                            return;
-                          }
-                          if (save.season.currentDate < winterDeadline && fixDate >= winterDeadline) {
-                            let deadlineSave = { ...save, season: { ...save.season, currentDate: winterDeadline } };
-                            deadlineSave = initializeDeadlineDay(deadlineSave);
-                            saveCareerSave(deadlineSave);
-                            setSave(deadlineSave);
-                            showToast('⏱️ Transfer Deadline Day has arrived! The winter window shuts tonight at 23:00 BST.');
-                            return;
-                          }
-                          setActiveMatchFixture(nextScheduled.fixture);
-                        }}
-                        disabled={simulating}
-                        className="w-full py-3 sm:py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-display font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/25 transition-all hover:scale-[1.01] active:scale-[0.98] cursor-pointer min-h-[48px]"
-                      >
-                        <span>▶ Prepare &amp; Play Match</span>
-                      </button>
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              onClick={() => setPendingFastForward('next_match')}
+                              disabled={simulating}
+                              className="py-2.5 px-3 rounded-xl border border-slate-700 hover:border-slate-600 bg-slate-900/80 hover:bg-slate-850 text-slate-200 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer min-h-[42px] flex items-center justify-center gap-1.5"
+                              title="Advance calendar directly to this fixture's matchday"
+                            >
+                              <span>⏭️ Advance to Matchday</span>
+                            </button>
+                            <button
+                              onClick={() => setMatchOverviewModal({ type: 'preview', fixture: nextScheduled.fixture })}
+                              className="py-2.5 px-3 rounded-xl border border-emerald-500/40 hover:border-emerald-400 bg-emerald-950/20 hover:bg-emerald-950/40 text-emerald-400 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[42px]"
+                              title="View pre-match tactical dossier and opponent scouting"
+                            >
+                              <span>📋 Match Dossier</span>
+                            </button>
+                          </div>
+                        </div>
+                      ) : isAssistantDelegated ? (
+                        /* MATCHDAY: Assistant Manager pre-season delegation */
+                        <div className="space-y-2">
+                          <button
+                            onClick={() => handleSimulateAssistantPreseason(nextScheduled.fixture.id)}
+                            disabled={simulating}
+                            className="w-full py-3 sm:py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600 hover:from-blue-400 hover:to-indigo-400 text-white font-display font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-blue-500/25 transition-all hover:scale-[1.01] active:scale-[0.98] cursor-pointer min-h-[48px]"
+                          >
+                            <span>📋 Assistant Manager Simulate Match</span>
+                          </button>
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              onClick={() => setActiveMatchFixture(nextScheduled.fixture)}
+                              disabled={simulating}
+                              className="py-2.5 px-3 rounded-xl border border-emerald-500/40 hover:border-emerald-400 bg-emerald-950/20 text-emerald-400 font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer min-h-[42px]"
+                            >
+                              <span>⚽ Take Charge (Play)</span>
+                            </button>
+                            <button
+                              onClick={() => setMatchOverviewModal({ type: 'preview', fixture: nextScheduled.fixture })}
+                              className="py-2.5 px-3 rounded-xl border border-slate-700 hover:border-slate-600 bg-slate-900/80 text-slate-200 font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer min-h-[42px]"
+                            >
+                              <span>📋 Match Dossier</span>
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        /* MATCHDAY: Regular Matchday Action Controls */
+                        <div className="space-y-2">
+                          <button
+                            onClick={() => {
+                              const summerDeadline = `${save.season.yearStart}-09-01`;
+                              const winterDeadline = `${save.season.yearStart + 1}-02-01`;
+                              const fixDate = nextScheduled.fixture.date;
+                              if (save.season.currentDate < summerDeadline && fixDate >= summerDeadline) {
+                                let deadlineSave = { ...save, season: { ...save.season, currentDate: summerDeadline } };
+                                deadlineSave = initializeDeadlineDay(deadlineSave);
+                                saveCareerSave(deadlineSave);
+                                setSave(deadlineSave);
+                                showToast('⏱️ Transfer Deadline Day has arrived! The summer window shuts tonight at 23:00 BST. Complete negotiations and registrations.');
+                                return;
+                              }
+                              if (save.season.currentDate < winterDeadline && fixDate >= winterDeadline) {
+                                let deadlineSave = { ...save, season: { ...save.season, currentDate: winterDeadline } };
+                                deadlineSave = initializeDeadlineDay(deadlineSave);
+                                saveCareerSave(deadlineSave);
+                                setSave(deadlineSave);
+                                showToast('⏱️ Transfer Deadline Day has arrived! The winter window shuts tonight at 23:00 BST.');
+                                return;
+                              }
+                              setActiveMatchFixture(nextScheduled.fixture);
+                            }}
+                            disabled={simulating}
+                            className="w-full py-3 sm:py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-display font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/25 transition-all hover:scale-[1.01] active:scale-[0.98] cursor-pointer min-h-[48px]"
+                          >
+                            <span>⚽ Prepare &amp; Play Match</span>
+                          </button>
 
-                      {/* Secondary 2-Column Actions */}
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          onClick={handlePlayNextMatchInstant}
-                          disabled={simulating}
-                          className="py-2.5 px-3 rounded-xl border border-slate-700 hover:border-slate-600 bg-slate-900/80 hover:bg-slate-850 text-slate-200 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer min-h-[42px] flex items-center justify-center gap-1.5"
-                          title="Quickly simulate this matchday"
-                        >
-                          <span>⚡ Instant Sim</span>
-                        </button>
-                        <button
-                          onClick={() => setMatchOverviewModal({ type: 'preview', fixture: nextScheduled.fixture })}
-                          className="py-2.5 px-3 rounded-xl border border-emerald-500/40 hover:border-emerald-400 bg-emerald-950/20 hover:bg-emerald-950/40 text-emerald-400 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[42px]"
-                          title="View pre-match tactical dossier and opponent scouting"
-                        >
-                          <span>📋 Match Dossier</span>
-                        </button>
-                      </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              onClick={handlePlayNextMatchInstant}
+                              disabled={simulating}
+                              className="py-2.5 px-3 rounded-xl border border-slate-700 hover:border-slate-600 bg-slate-900/80 hover:bg-slate-850 text-slate-200 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer min-h-[42px] flex items-center justify-center gap-1.5"
+                              title="Quickly simulate this matchday"
+                            >
+                              <span>⚡ Instant Sim</span>
+                            </button>
+                            <button
+                              onClick={() => setMatchOverviewModal({ type: 'preview', fixture: nextScheduled.fixture })}
+                              className="py-2.5 px-3 rounded-xl border border-emerald-500/40 hover:border-emerald-400 bg-emerald-950/20 hover:bg-emerald-950/40 text-emerald-400 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[42px]"
+                              title="View pre-match tactical dossier and opponent scouting"
+                            >
+                              <span>📋 Match Dossier</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
@@ -2708,6 +2902,34 @@ function CareerPlayHubContent() {
             setActiveCelebration(null);
             handleTabChange(tab);
           }}
+        />
+      )}
+
+      {/* Preseason Tour Selection Modal */}
+      {showPreseasonModal && (
+        <PreseasonTourModal
+          save={save}
+          onSelectTour={handleChoosePreseasonTour}
+          onClose={() => setShowPreseasonModal(false)}
+        />
+      )}
+
+      {/* Premier League Fixture Release Reveal Modal */}
+      {showFixtureReleaseModal && (
+        <FixtureReleaseModal
+          save={save}
+          fixtures={save.fixtures || []}
+          onClose={() => setShowFixtureReleaseModal(false)}
+          onFinishRelease={handleFinishFixtureRelease}
+        />
+      )}
+
+      {/* UEFA Champions League League Phase Draw Ceremony Modal */}
+      {showUclDrawModal && (
+        <ChampionsLeagueDrawModal
+          save={save}
+          onClose={() => setShowUclDrawModal(false)}
+          onFinishDraw={handleFinishUclDraw}
         />
       )}
 
