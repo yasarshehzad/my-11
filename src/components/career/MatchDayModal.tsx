@@ -11,7 +11,7 @@ import {
   Club,
 } from '../../career/types';
 import { getAllClubs, getEffectiveClubName } from '../../career/clubs';
-import { CUP_IDS, findAnyClub, advanceCupTournament, simulateAiFixturesInCupRound } from '../../career/cups';
+import { CUP_IDS, findAnyClub, advanceCupTournament, simulateAiFixturesInCupRound, isFriendlyTournament } from '../../career/cups';
 
 import { simulateMatchFixture } from '../../career/sim';
 import {
@@ -259,13 +259,15 @@ export function MatchDayModal({
     for (const [tId, tourney] of Object.entries(cups)) {
       const idx = tourney.fixtures.findIndex((f) => f.id === fixture.id);
       if (idx >= 0) {
+        const isFriendly = isFriendlyTournament(tId, tourney);
         const cupSimFix: CupFixture = {
           ...tourney.fixtures[idx],
           ...simResult.fixture,
-          isKnockout: true,
+          isKnockout: isFriendly ? false : true,
+          isFriendly: isFriendly || tourney.fixtures[idx].isFriendly,
         };
 
-        if (cupSimFix.homeScore === cupSimFix.awayScore) {
+        if (!isFriendly && cupSimFix.homeScore === cupSimFix.awayScore) {
           cupSimFix.penalties = generatePenaltyShootout();
         }
 
@@ -275,7 +277,11 @@ export function MatchDayModal({
         const adv = advanceCupTournament(tourneyWithAiPlayed, save.season.yearStart);
         cups[tId] = adv.updatedTournament;
 
-        if (adv.updatedTournament.isCompleted && adv.updatedTournament.winnerClubId === save.club.id) {
+        if (
+          adv.updatedTournament.isCompleted &&
+          adv.updatedTournament.winnerClubId === save.club.id &&
+          !isFriendlyTournament(tId, adv.updatedTournament)
+        ) {
           const trophyYear = save.season.yearStart + 1;
           if (!trophies.some((t) => t.competitionId === tId && t.year === trophyYear)) {
             trophies.push({

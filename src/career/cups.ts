@@ -2,6 +2,7 @@ import {
   Club,
   CupTournament,
   CupFixture,
+  LeagueFixture,
   CareerPlayer,
   TrophyRecord,
   CareerSaveFile,
@@ -23,6 +24,56 @@ export const CUP_IDS = {
   EURO_CHALLENGE: 'cup_euro_challenge',
   EURO_PLATE: 'cup_euro_plate',
 } as const;
+
+/**
+ * Returns true if the tournament is an exhibition / friendly tour (e.g. pre-season tour),
+ * which should not award official silverware trophies or trigger grand celebration popups.
+ */
+export function isFriendlyTournament(tournamentId: string, tournament?: CupTournament): boolean {
+  if (
+    tournamentId === CUP_IDS.PRESEASON ||
+    tournamentId.startsWith('cup_preseason') ||
+    tournamentId.includes('friendly')
+  ) {
+    return true;
+  }
+  if (tournament?.isFriendly) {
+    return true;
+  }
+  const name = tournament?.name?.toLowerCase() || '';
+  if (name.includes('pre-season') || name.includes('preseason') || name.includes('friendly')) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Returns true if the fixture belongs to a friendly / pre-season tour.
+ */
+export function isFriendlyFixture(fixture: CupFixture | LeagueFixture): boolean {
+  if ('isFriendly' in fixture && (fixture as CupFixture).isFriendly) {
+    return true;
+  }
+  if ('competitionId' in fixture) {
+    const compId = (fixture as CupFixture).competitionId || '';
+    if (compId === CUP_IDS.PRESEASON || compId.startsWith('cup_preseason') || compId.includes('friendly')) {
+      return true;
+    }
+  }
+  if ('competitionName' in fixture) {
+    const name = (fixture as CupFixture).competitionName?.toLowerCase() || '';
+    if (name.includes('pre-season') || name.includes('preseason') || name.includes('friendly')) {
+      return true;
+    }
+  }
+  if ('roundName' in fixture) {
+    const round = (fixture as CupFixture).roundName?.toLowerCase() || '';
+    if (round.includes('match') && round.includes('of 3')) {
+      return true;
+    }
+  }
+  return false;
+}
 
 export function findAnyClub(clubId: string): Club | undefined {
   if (!clubId || clubId.toLowerCase() === 'tbc') return undefined;
@@ -398,6 +449,19 @@ export function advanceCupTournament(
   tournament: CupTournament,
   yearStart: number = 2026
 ): { updatedTournament: CupTournament; winnerId?: string; isNewRound: boolean } {
+  if (isFriendlyTournament(tournament.id, tournament)) {
+    const allPlayed = tournament.fixtures.length > 0 && tournament.fixtures.every((f) => f.played);
+    const nextUnplayed = tournament.fixtures.find((f) => !f.played);
+    return {
+      updatedTournament: {
+        ...tournament,
+        isCompleted: allPlayed,
+        currentRound: nextUnplayed ? nextUnplayed.roundName : 'Completed',
+      },
+      isNewRound: false,
+    };
+  }
+
   const currentFixtures = tournament.fixtures.filter(
     (f) => f.roundName === tournament.currentRound
   );
@@ -580,7 +644,11 @@ export function autoResolvePendingCupFixtures(
         if (adv.isNewRound || adv.updatedTournament.isCompleted) {
           current = adv.updatedTournament;
           progressed = true;
-          if (adv.updatedTournament.isCompleted && adv.winnerId === userClubId) {
+          if (
+            adv.updatedTournament.isCompleted &&
+            adv.winnerId === userClubId &&
+            !isFriendlyTournament(tId, adv.updatedTournament)
+          ) {
             trophiesAwarded.push({ id: tId, name: adv.updatedTournament.name });
           }
         }

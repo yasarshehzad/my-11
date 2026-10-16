@@ -106,6 +106,7 @@ export function applyPreseasonTourChoice(
     awayClubId: opp.clubId,
     played: false,
     isKnockout: false,
+    isFriendly: true,
     venue: `${venues[idx]} (Neutral)`,
   }));
 
@@ -115,6 +116,7 @@ export function applyPreseasonTourChoice(
     currentRound: 'Match 1 of 3',
     fixtures,
     isCompleted: false,
+    isFriendly: true,
     prizeMoney: tour.prizeMoney,
     drawCompleted: true,
   };

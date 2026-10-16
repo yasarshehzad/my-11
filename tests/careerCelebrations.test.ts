@@ -197,4 +197,73 @@ describe('Career Celebration System', () => {
     expect(result?.updatedSave.celebratedMilestones).toContain('2026_league_champions');
     expect(result?.updatedSave.finances.transferBudget).toBe(88_000_000); // 50m + 38m
   });
+
+  it('does NOT trigger celebration pop-up or congratulations messages for friendly tournaments or pre-season tour matches', () => {
+    const save = getMockSave();
+    const preseasonCup: CupTournament = {
+      id: 'cup_preseason',
+      name: 'North American Champions Cup',
+      currentRound: 'Match 2 of 3',
+      isFriendly: true,
+      fixtures: [
+        {
+          id: 'fix_preseason_usa_1',
+          competitionId: 'cup_preseason',
+          competitionName: 'North American Champions Cup',
+          round: 1,
+          roundName: 'Match 1 of 3',
+          date: '2026-07-16',
+          homeClubId: save.club.id,
+          awayClubId: 'chelsea',
+          homeScore: 3,
+          awayScore: 0,
+          played: true,
+          isKnockout: false,
+          isFriendly: true,
+        },
+        {
+          id: 'fix_preseason_usa_2',
+          competitionId: 'cup_preseason',
+          competitionName: 'North American Champions Cup',
+          round: 2,
+          roundName: 'Match 2 of 3',
+          date: '2026-07-21',
+          homeClubId: save.club.id,
+          awayClubId: 'liverpool',
+          homeScore: 0,
+          awayScore: 0,
+          played: false,
+          isKnockout: false,
+          isFriendly: true,
+        },
+      ],
+      isCompleted: false,
+      prizeMoney: 4_500_000,
+      drawCompleted: true,
+    };
+
+    save.cups = { cup_preseason: preseasonCup };
+
+    // 1. Single match won in friendly tour — should NOT celebrate knockout advancement
+    const match1Result = detectCelebrationEvent(save, preseasonCup.fixtures[0]);
+    expect(match1Result).toBeNull();
+
+    // 2. Even without passing fixture, should NOT celebrate friendly cup advancement
+    const stateCheck = detectCelebrationEvent(save);
+    expect(stateCheck).toBeNull();
+
+    // 3. Complete the friendly tournament with user having won
+    preseasonCup.fixtures[1].played = true;
+    preseasonCup.fixtures[1].homeScore = 2;
+    preseasonCup.fixtures[1].awayScore = 1;
+    preseasonCup.isCompleted = true;
+    preseasonCup.winnerClubId = save.club.id;
+    save.cups = { cup_preseason: preseasonCup };
+
+    const tourCompletionResult = detectCelebrationEvent(save, preseasonCup.fixtures[1]);
+    expect(tourCompletionResult).toBeNull();
+
+    const globalTourCheck = detectCelebrationEvent(save);
+    expect(globalTourCheck).toBeNull();
+  });
 });

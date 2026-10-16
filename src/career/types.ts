@@ -350,6 +350,7 @@ export interface CupFixture extends LeagueFixture {
   competitionName: string;
   roundName: string;
   isKnockout: boolean;
+  isFriendly?: boolean;
   penalties?: {
     homePenalties: number;
     awayPenalties: number;
@@ -370,6 +371,7 @@ export interface CupTournament {
   qualifyingClubs?: string[];
   stage?: 'league_phase' | 'playoffs' | 'knockout';
   leaguePhaseStandings?: ClubStanding[];
+  isFriendly?: boolean;
 }
 
 export type PreseasonTourId = 'usa' | 'asia' | 'europe';

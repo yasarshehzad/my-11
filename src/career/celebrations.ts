@@ -8,7 +8,7 @@ import {
 } from './types';
 import { calculateStandings } from './table';
 import { getAllClubs } from './clubs';
-import { getCupWinner } from './cups';
+import { getCupWinner, isFriendlyTournament, isFriendlyFixture } from './cups';
 import { formatCareerCurrency } from './formatters';
 
 export type CelebrationCategory = 'title_win' | 'cup_win' | 'knockout_advancement' | 'continental_qualification';
@@ -86,6 +86,12 @@ export function detectCelebrationEvent(
   save: CareerSaveFile,
   recentFixture?: CupFixture | LeagueFixture
 ): { event: CelebrationEvent; updatedSave: CareerSaveFile } | null {
+  // If the fixture just completed was a friendly / exhibition / pre-season fixture,
+  // do not trigger any celebration modal.
+  if (recentFixture && isFriendlyFixture(recentFixture)) {
+    return null;
+  }
+
   const celebrated = new Set(save.celebratedMilestones || []);
   const yearStart = save.season?.yearStart || 2026;
   const userClubId = save.club.id;
@@ -95,6 +101,9 @@ export function detectCelebrationEvent(
   // 1. Check Cup Finals / Trophies Won
   if (save.cups) {
     for (const [tId, tourney] of Object.entries(save.cups)) {
+      if (isFriendlyTournament(tId, tourney)) {
+        continue;
+      }
       if (tourney.isCompleted && tourney.winnerClubId === userClubId) {
         const milestoneKey = `${yearStart}_cup_trophy_${tId}`;
         if (!celebrated.has(milestoneKey)) {
@@ -163,6 +172,9 @@ export function detectCelebrationEvent(
   // 2. Check Cup Knockout Stage Advancement (User won a match in a cup tie before the final)
   if (save.cups) {
     for (const [tId, tourney] of Object.entries(save.cups)) {
+      if (isFriendlyTournament(tId, tourney)) {
+        continue;
+      }
       // Find all fixtures involving user club that have been played and won
       const userPlayedFixtures = tourney.fixtures.filter(
         (f) =>
