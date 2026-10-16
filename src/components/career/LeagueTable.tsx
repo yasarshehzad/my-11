@@ -54,14 +54,14 @@ export function LeagueTable({ standings, userClubId, userClub, fixtures = [], us
   return (
     <section id="league-table-section" aria-label="League Standings and Player Stats" className="space-y-4 scroll-mt-20">
       {/* Sub-tab Switcher: Standings vs Player Stats Leaderboards */}
-      <nav aria-label="League navigation" className="bg-slate-900/60 border border-slate-800 p-1.5 rounded-2xl flex items-center gap-1 overflow-x-auto no-scrollbar shadow-sm">
+      <nav aria-label="League navigation" className="office-subcard p-1.5 flex items-center gap-1 overflow-x-auto no-scrollbar shadow-sm">
         <button
           type="button"
           onClick={() => setActiveSubTab('standings')}
           className={`flex-1 min-w-[110px] py-2 px-3 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
             activeSubTab === 'standings'
-              ? 'bg-emerald-500 text-slate-950 shadow-md font-black'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              ? 'office-nav-tab-active shadow-sm font-black'
+              : 'office-nav-tab'
           }`}
         >
           <span>🏆</span>
@@ -73,8 +73,8 @@ export function LeagueTable({ standings, userClubId, userClub, fixtures = [], us
           onClick={() => setActiveSubTab('scorers')}
           className={`flex-1 min-w-[110px] py-2 px-3 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
             activeSubTab === 'scorers'
-              ? 'bg-emerald-500 text-slate-950 shadow-md font-black'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              ? 'office-nav-tab-active shadow-sm font-black'
+              : 'office-nav-tab'
           }`}
         >
           <span>⚽</span>
@@ -86,8 +86,8 @@ export function LeagueTable({ standings, userClubId, userClub, fixtures = [], us
           onClick={() => setActiveSubTab('assists')}
           className={`flex-1 min-w-[110px] py-2 px-3 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
             activeSubTab === 'assists'
-              ? 'bg-emerald-500 text-slate-950 shadow-md font-black'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              ? 'office-nav-tab-active shadow-sm font-black'
+              : 'office-nav-tab'
           }`}
         >
           <span>🎯</span>
@@ -99,8 +99,8 @@ export function LeagueTable({ standings, userClubId, userClub, fixtures = [], us
           onClick={() => setActiveSubTab('clean_sheets')}
           className={`flex-1 min-w-[110px] py-2 px-3 rounded-xl text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
             activeSubTab === 'clean_sheets'
-              ? 'bg-emerald-500 text-slate-950 shadow-md font-black'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              ? 'office-nav-tab-active shadow-sm font-black'
+              : 'office-nav-tab'
           }`}
         >
           <span>🧤</span>
@@ -130,7 +130,7 @@ export function LeagueTable({ standings, userClubId, userClub, fixtures = [], us
       {/* VIEW 1: STANDINGS TABLE */}
       {activeSubTab === 'standings' && (
         <>
-          <div className="rounded-2xl border border-slate-800 overflow-hidden bg-slate-900/30 shadow-lg">
+          <div className="office-floating-card overflow-hidden">
             <div className="overflow-x-auto max-h-[75vh]">
               <table className="w-full text-left text-xs">
                 <thead className="sticky top-0 bg-slate-950/95 backdrop-blur-md z-10 text-[10px] font-bold uppercase text-slate-400 border-b border-slate-800 select-none shadow-sm">

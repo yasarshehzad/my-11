@@ -1212,10 +1212,12 @@ body {
 }
 
 /* ==========================================================================
-   CAREER MODE OFFICE REDESIGN — PREMIUM LIGHT & DARK THEME SYSTEM
+   MY-11 DESIGN SYSTEM — UNIVERSAL PREMIUM LIGHT & DARK THEME SYSTEM
    ========================================================================== */
 
-#career-office-root {
+:root,
+#career-office-root,
+.my11-root {
   --office-bg-1: #dbe8ff;
   --office-bg-2: #e5e0ff;
   --office-bg-3: #f1eeff;
@@ -1243,7 +1245,10 @@ body {
   --office-icon-pill-border: #dce5f7;
 }
 
-#career-office-root[data-office-theme="dark"] {
+[data-theme="dark"],
+[data-office-theme="dark"],
+#career-office-root[data-office-theme="dark"],
+.my11-root[data-theme="dark"] {
   --office-bg-1: #060b19;
   --office-bg-2: #0f172a;
   --office-bg-3: #13112c;
@@ -1271,8 +1276,9 @@ body {
   --office-icon-pill-border: rgba(148, 163, 184, 0.22);
 }
 
-/* Soft Lavender / Sky Blue Broadcast Canvas with Diagonal Light Streaks */
-#career-office-root[data-office-active="true"] {
+/* Universal Soft Lavender / Sky Blue Broadcast Canvas with Diagonal Light Streaks */
+.my11-canvas,
+#career-office-root {
   background:
     linear-gradient(125deg, rgba(255, 255, 255, 0.45) 0%, transparent 28%),
     linear-gradient(215deg, rgba(168, 85, 247, 0.14) 0%, transparent 42%),
@@ -1282,7 +1288,8 @@ body {
   position: relative;
 }
 
-#career-office-root[data-office-active="true"]::before {
+.my11-canvas::before,
+#career-office-root::before {
   content: '';
   position: fixed;
   inset: 0;
@@ -1294,13 +1301,16 @@ body {
     linear-gradient(135deg, transparent 82%, rgba(56, 189, 248, 0.18) 86%, transparent 91%);
 }
 
-#career-office-root[data-office-theme="dark"][data-office-active="true"]::before {
+[data-theme="dark"] .my11-canvas::before,
+[data-office-theme="dark"] #career-office-root::before,
+#career-office-root[data-office-theme="dark"]::before {
   background:
     linear-gradient(135deg, transparent 18%, rgba(56, 189, 248, 0.06) 22%, transparent 26%),
     linear-gradient(135deg, transparent 58%, rgba(168, 85, 247, 0.08) 64%, transparent 72%);
 }
 
 /* Floating White Cards */
+.my11-card,
 .office-floating-card {
   background: var(--office-card-bg) !important;
   border: 1px solid var(--office-card-border) !important;
@@ -1309,22 +1319,26 @@ body {
   -webkit-backdrop-filter: blur(16px);
 }
 
+.my11-subcard,
 .office-subcard {
   background: var(--office-subcard-bg) !important;
   border: 1px solid var(--office-subcard-border) !important;
   transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
 
+.my11-subcard:hover,
 .office-subcard:hover {
   background: var(--office-subcard-hover) !important;
   border-color: rgba(29, 94, 255, 0.28) !important;
 }
 
+.my11-subcard:active,
 .office-subcard:active {
   transform: scale(0.985);
 }
 
 /* Interactive KPI Card */
+.my11-kpi-card,
 .office-kpi-card {
   background: var(--office-card-bg) !important;
   border: 1px solid var(--office-card-border) !important;
@@ -1332,28 +1346,37 @@ body {
   transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms ease;
 }
 
+:root[data-theme="light"] .office-kpi-mint,
+:root[data-theme="light"] .my11-kpi-mint,
 #career-office-root[data-office-theme="light"] .office-kpi-mint {
   background: linear-gradient(145deg, #e7fbf6 0%, #f5fefa 38%, #ffffff 78%) !important;
 }
 
+:root[data-theme="light"] .office-kpi-blue,
+:root[data-theme="light"] .my11-kpi-blue,
 #career-office-root[data-office-theme="light"] .office-kpi-blue {
   background: linear-gradient(145deg, #ecf4ff 0%, #f7faff 40%, #ffffff 80%) !important;
 }
 
+:root[data-theme="light"] .office-kpi-lavender,
+:root[data-theme="light"] .my11-kpi-lavender,
 #career-office-root[data-office-theme="light"] .office-kpi-lavender {
   background: linear-gradient(145deg, #f3eeff 0%, #faf7ff 40%, #ffffff 80%) !important;
 }
 
+.my11-kpi-card:hover,
 .office-kpi-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 14px 30px -6px rgba(29, 94, 255, 0.2), 0 4px 10px -2px rgba(15, 23, 42, 0.06) !important;
 }
 
+.my11-kpi-card:active,
 .office-kpi-card:active {
   transform: scale(0.98);
 }
 
 /* Active Navigation Tab — Cyan -> Royal Blue -> Purple Gradient */
+.my11-nav-pill-active,
 .office-nav-tab-active {
   background: linear-gradient(135deg, #00d4ff 0%, #1d5eff 48%, #a855f7 100%) !important;
   color: #ffffff !important;
@@ -1361,10 +1384,12 @@ body {
   box-shadow: 0 8px 18px -4px rgba(37, 99, 235, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.45) !important;
 }
 
+.my11-nav-pill-active *,
 .office-nav-tab-active * {
   color: #ffffff !important;
 }
 
+.my11-nav-pill-inactive,
 .office-nav-tab-inactive {
   background: transparent !important;
   border: 1px solid transparent !important;
@@ -1373,14 +1398,166 @@ body {
   transition: background-color 160ms ease, transform 150ms ease, color 160ms ease;
 }
 
+.my11-nav-pill-inactive:hover,
 .office-nav-tab-inactive:hover {
   background: var(--office-subcard-bg) !important;
   color: var(--office-text-primary) !important;
 }
 
+.my11-nav-pill-inactive:active,
 .office-nav-tab-inactive:active,
+.my11-nav-pill-active:active,
 .office-nav-tab-active:active {
   transform: scale(0.96);
+}
+
+/* Primary CTA Button — Animated Vibrant Gradient */
+.my11-btn-gradient,
+.office-play-match-btn {
+  background: linear-gradient(92deg, #00d2ff 0%, #1d5eff 38%, #7c3aed 74%, #c026d3 100%) !important;
+  background-size: 160% 160% !important;
+  animation: officeGradientFlow 6s ease infinite;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  box-shadow:
+    0 10px 24px -4px rgba(99, 102, 241, 0.55),
+    0 4px 10px -2px rgba(0, 210, 255, 0.3),
+    inset 0 1px 1px rgba(255, 255, 255, 0.45) !important;
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms ease, filter 160ms ease;
+}
+
+.my11-btn-gradient *,
+.office-play-match-btn * {
+  color: #ffffff !important;
+}
+
+.my11-btn-gradient:hover,
+.office-play-match-btn:hover {
+  transform: translateY(-1px) scale(1.005);
+  filter: brightness(1.04);
+  box-shadow:
+    0 14px 28px -4px rgba(99, 102, 241, 0.65),
+    0 6px 14px -2px rgba(0, 210, 255, 0.35),
+    inset 0 1px 1px rgba(255, 255, 255, 0.55) !important;
+}
+
+.my11-btn-gradient:active,
+.office-play-match-btn:active {
+  transform: scale(0.98);
+}
+
+/* In light mode: ensure high contrast text & clean surfaces inside floating containers */
+:root[data-theme="light"] .my11-canvas,
+:root[data-theme="light"] #career-office-root {
+  color: #0b1536;
+}
+
+:root[data-theme="light"] .my11-card,
+:root[data-theme="light"] .office-floating-card,
+:root[data-theme="light"] .my11-subcard,
+:root[data-theme="light"] .office-subcard {
+  color: #0b1536;
+}
+
+:root[data-theme="light"] .my11-canvas .text-white:not(.office-play-match-btn):not(.my11-btn-gradient):not(.office-nav-tab-active):not(.my11-nav-pill-active):not([data-keep-white]),
+:root[data-theme="light"] #career-office-root .text-white:not(.office-play-match-btn):not(.my11-btn-gradient):not(.office-nav-tab-active):not(.my11-nav-pill-active):not([data-keep-white]) {
+  color: #0b1536;
+}
+
+:root[data-theme="light"] .my11-canvas .text-slate-300,
+:root[data-theme="light"] #career-office-root .text-slate-300 {
+  color: #1e293b;
+}
+
+:root[data-theme="light"] .my11-canvas .text-slate-400,
+:root[data-theme="light"] #career-office-root .text-slate-400 {
+  color: #3b4e76;
+}
+
+:root[data-theme="light"] .my11-canvas .text-slate-500,
+:root[data-theme="light"] #career-office-root .text-slate-500 {
+  color: #5b6e95;
+}
+
+:root[data-theme="light"] .my11-canvas .bg-slate-950,
+:root[data-theme="light"] #career-office-root .bg-slate-950,
+:root[data-theme="light"] .my11-canvas [class*="bg-slate-950"],
+:root[data-theme="light"] #career-office-root [class*="bg-slate-950"] {
+  background-color: #ffffff !important;
+}
+
+:root[data-theme="light"] .my11-canvas .bg-slate-900,
+:root[data-theme="light"] #career-office-root .bg-slate-900,
+:root[data-theme="light"] .my11-canvas [class*="bg-slate-900"],
+:root[data-theme="light"] #career-office-root [class*="bg-slate-900"],
+:root[data-theme="light"] .my11-canvas [class*="bg-slate-850"],
+:root[data-theme="light"] #career-office-root [class*="bg-slate-850"] {
+  background-color: #f6f8fd !important;
+}
+
+:root[data-theme="light"] .my11-canvas .border-slate-800,
+:root[data-theme="light"] #career-office-root .border-slate-800,
+:root[data-theme="light"] .my11-canvas .border-slate-850,
+:root[data-theme="light"] #career-office-root .border-slate-850,
+:root[data-theme="light"] .my11-canvas [class*="border-slate-800"],
+:root[data-theme="light"] #career-office-root [class*="border-slate-800"],
+:root[data-theme="light"] .my11-canvas [class*="border-slate-850"],
+:root[data-theme="light"] #career-office-root [class*="border-slate-850"],
+:root[data-theme="light"] .my11-canvas [class*="border-slate-900"],
+:root[data-theme="light"] #career-office-root [class*="border-slate-900"] {
+  border-color: #e2e8f0 !important;
+}
+
+/* Light mode soft pastel badges for high legibility */
+:root[data-theme="light"] .my11-canvas [class*="bg-emerald-950"] {
+  background-color: #ecfdf5 !important;
+  color: #065f46 !important;
+  border-color: #a7f3d0 !important;
+}
+:root[data-theme="light"] .my11-canvas [class*="bg-emerald-950"] * {
+  color: #065f46 !important;
+}
+
+:root[data-theme="light"] .my11-canvas [class*="bg-amber-950"] {
+  background-color: #fffbeb !important;
+  color: #92400e !important;
+  border-color: #fde68a !important;
+}
+:root[data-theme="light"] .my11-canvas [class*="bg-amber-950"] * {
+  color: #92400e !important;
+}
+
+:root[data-theme="light"] .my11-canvas [class*="bg-rose-950"] {
+  background-color: #fff1f2 !important;
+  color: #9f1239 !important;
+  border-color: #fecdd3 !important;
+}
+:root[data-theme="light"] .my11-canvas [class*="bg-rose-950"] * {
+  color: #9f1239 !important;
+}
+
+:root[data-theme="light"] .my11-canvas [class*="bg-indigo-950"],
+:root[data-theme="light"] .my11-canvas [class*="bg-blue-950"] {
+  background-color: #eef2ff !important;
+  color: #3730a3 !important;
+  border-color: #c7d2fe !important;
+}
+:root[data-theme="light"] .my11-canvas [class*="bg-indigo-950"] *,
+:root[data-theme="light"] .my11-canvas [class*="bg-blue-950"] * {
+  color: #3730a3 !important;
+}
+
+/* Form controls & inputs in light mode */
+:root[data-theme="light"] .my11-canvas input:not([type="checkbox"]):not([type="radio"]),
+:root[data-theme="light"] .my11-canvas select,
+:root[data-theme="light"] .my11-canvas textarea {
+  background-color: #ffffff !important;
+  color: #0b1536 !important;
+  border-color: #cbd5e1 !important;
+}
+:root[data-theme="light"] .my11-canvas input::placeholder,
+:root[data-theme="light"] .my11-canvas textarea::placeholder {
+  color: #94a3b8 !important;
 }
 
 /* Prepare & Play Match Primary Button — Animated Vibrant Gradient */

@@ -85,8 +85,8 @@ export function HistoryScreen({
         </div>
 
         {/* Run Outcome Hero Card */}
-        <div className="w-full flex flex-col items-center p-6 rounded-3xl glass border border-slate-800/80 text-center relative overflow-hidden shadow-2xl">
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+        <div className="w-full flex flex-col items-center p-6 office-floating-card text-center relative overflow-hidden">
+          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
             {formatDate(activeEntry.completedAt)} • {activeEntry.formation}
           </div>
 
@@ -183,7 +183,7 @@ export function HistoryScreen({
       </div>
 
       {/* Personal Bests Bar */}
-      <div className="rounded-3xl border border-slate-900 bg-slate-950/70 p-4 glass space-y-3">
+      <div className="office-floating-card p-4 space-y-3">
         <div className="flex items-center gap-1.5">
           <span className="text-xs">🏆</span>
           <h2 className="text-[10px] font-display font-black uppercase text-foreground tracking-wider">
@@ -193,45 +193,45 @@ export function HistoryScreen({
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
           {/* Overall PB */}
-          <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/20 p-2.5">
-            <span className="text-[7.5px] font-bold text-emerald-400/80 uppercase tracking-widest block">All-Time</span>
+          <div className="office-subcard p-2.5">
+            <span className="text-[7.5px] font-bold text-emerald-500 uppercase tracking-widest block">All-Time</span>
             <div className="text-base font-display font-black text-foreground mt-0.5">
               {personalBests.overall ? `${personalBests.overall.bestWins}W` : '—'}
             </div>
-            <span className="text-[8px] font-bold text-slate-400 block">
+            <span className="text-[8px] font-bold text-muted-foreground block">
               {personalBests.overall ? `${personalBests.overall.bestPoints} pts` : 'No runs'}
             </span>
           </div>
 
           {/* Classic PB */}
-          <div className="rounded-xl border border-slate-850 bg-slate-900/40 p-2.5">
-            <span className="text-[7.5px] font-bold text-slate-400 uppercase tracking-widest block">Classic</span>
+          <div className="office-subcard p-2.5">
+            <span className="text-[7.5px] font-bold text-muted-foreground uppercase tracking-widest block">Classic</span>
             <div className="text-base font-display font-black text-foreground mt-0.5">
               {personalBests.classic ? `${personalBests.classic.bestWins}W` : '—'}
             </div>
-            <span className="text-[8px] font-bold text-slate-500 block">
+            <span className="text-[8px] font-bold text-muted-foreground block">
               {personalBests.classic ? `${personalBests.classic.bestPoints} pts` : 'No runs'}
             </span>
           </div>
 
           {/* Quick PB */}
-          <div className="rounded-xl border border-slate-850 bg-slate-900/40 p-2.5">
-            <span className="text-[7.5px] font-bold text-amber-400/80 uppercase tracking-widest block">Quick</span>
+          <div className="office-subcard p-2.5">
+            <span className="text-[7.5px] font-bold text-amber-500 uppercase tracking-widest block">Quick</span>
             <div className="text-base font-display font-black text-foreground mt-0.5">
               {personalBests.quick ? `${personalBests.quick.bestWins}W` : '—'}
             </div>
-            <span className="text-[8px] font-bold text-slate-500 block">
+            <span className="text-[8px] font-bold text-muted-foreground block">
               {personalBests.quick ? `${personalBests.quick.bestPoints} pts` : 'No runs'}
             </span>
           </div>
 
           {/* Mystery PB */}
-          <div className="rounded-xl border border-slate-850 bg-slate-900/40 p-2.5">
-            <span className="text-[7.5px] font-bold text-purple-400/80 uppercase tracking-widest block">Mystery</span>
+          <div className="office-subcard p-2.5">
+            <span className="text-[7.5px] font-bold text-purple-500 uppercase tracking-widest block">Mystery</span>
             <div className="text-base font-display font-black text-foreground mt-0.5">
               {personalBests.mystery ? `${personalBests.mystery.bestWins}W` : '—'}
             </div>
-            <span className="text-[8px] font-bold text-slate-500 block">
+            <span className="text-[8px] font-bold text-muted-foreground block">
               {personalBests.mystery ? `${personalBests.mystery.bestPoints} pts` : 'No runs'}
             </span>
           </div>
@@ -239,15 +239,15 @@ export function HistoryScreen({
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-1.5 p-1 bg-slate-900/60 rounded-2xl border border-slate-850 overflow-x-auto text-[10px] font-display font-black uppercase tracking-wider">
+      <div className="flex items-center gap-1.5 p-1.5 office-subcard overflow-x-auto text-[10px] font-display font-black uppercase tracking-wider">
         {(['all', 'classic', 'quick', 'mystery', 'daily_challenge'] as FilterMode[]).map((mode) => (
           <button
             key={mode}
             onClick={() => setSelectedFilter(mode)}
             className={`px-3 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap flex-1 text-center ${
               selectedFilter === mode
-                ? 'bg-emerald-500 text-zinc-950 shadow-md font-black'
-                : 'text-slate-400 hover:text-white hover:bg-slate-850/60'
+                ? 'office-nav-tab-active shadow-sm font-black'
+                : 'office-nav-tab'
             }`}
           >
             {mode === 'all' ? 'All' : mode === 'daily_challenge' ? 'Challenge' : mode}

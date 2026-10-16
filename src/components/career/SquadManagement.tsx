@@ -709,29 +709,29 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
       {viewMode === 'pitch' && (
         <section id="squad-pitch-section" className="space-y-4 scroll-mt-20">
           {/* Virtual Pitch Status Strip */}
-          <div className="flex items-center justify-between px-2 text-xs">
-            <div className="flex items-center gap-2">
-              <span className="font-display font-black text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-2.5 py-1 rounded-xl text-xs uppercase tracking-wider shadow-sm">
+          <div className="office-subcard flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs shadow-sm">
+            <div className="flex items-center gap-2.5">
+              <span className="font-display font-black text-xs uppercase tracking-wider px-3 py-1 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold shadow-sm">
                 ⚽ {currentFormation}
               </span>
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 Starting XI • Matchday Canvas
               </span>
             </div>
-            <span className="text-[10px] text-slate-500 font-mono hidden sm:inline">
+            <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
               Tap player card to substitute or view stats
             </span>
           </div>
 
           {/* Virtual Pitch Canvas */}
-          <div className="relative rounded-3xl border border-emerald-900/50 bg-gradient-to-b from-[#064e3b] via-[#022c22] to-[#011c15] p-3 sm:p-6 shadow-2xl overflow-hidden min-h-[480px] flex flex-col justify-between">
+          <div className="relative rounded-3xl border border-emerald-900/40 bg-gradient-to-b from-[#064e3b] via-[#022c22] to-[#011c15] p-3 sm:p-6 shadow-2xl overflow-hidden min-h-[500px] flex flex-col justify-between">
             {/* Pitch Marking Lines */}
             <div className="absolute inset-4 border-2 border-emerald-500/15 rounded-2xl pointer-events-none" />
             <div className="absolute top-1/2 left-4 right-4 h-0.5 bg-emerald-500/15 -translate-y-1/2 pointer-events-none" />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 border-2 border-emerald-500/15 rounded-full pointer-events-none" />
 
             {/* Starting XI Placed in Dedicated Tactical Lines */}
-            <div className="relative z-10 w-full flex flex-col justify-between h-full min-h-[440px] py-4 gap-2">
+            <div className="relative z-10 w-full flex flex-col justify-between h-full min-h-[450px] pt-6 pb-4 gap-3">
               {activeFormationConfig.lines.map((lineIndices, rowIndex) => (
                 <div
                   key={rowIndex}

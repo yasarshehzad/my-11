@@ -850,10 +850,10 @@ export function TransferHub({
                   window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                 }
               }}
-              className={`py-1.5 px-2.5 sm:px-3 rounded-xl border text-[11px] sm:text-xs font-display font-black uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap cursor-pointer transition-all ${
+              className={`py-1.5 px-2.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-display font-black uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap cursor-pointer transition-all ${
                 isSelected
-                  ? 'border-emerald-500 bg-emerald-950/40 text-emerald-300 shadow-sm'
-                  : 'border-slate-800 bg-slate-900/40 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                  ? 'office-nav-tab-active shadow-sm'
+                  : 'office-nav-tab'
               }`}
             >
               <span>{tab.icon}</span>

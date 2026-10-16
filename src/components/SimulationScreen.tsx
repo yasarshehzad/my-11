@@ -68,30 +68,30 @@ export function SimulationScreen({
       </div>
 
       {/* Standings Widget */}
-      <div className="w-full glass rounded-3xl p-5 border border-slate-900 shadow-2xl flex flex-col gap-3">
-        <div className="flex justify-between items-center border-b border-slate-900 pb-3 leading-none">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Live Standings</span>
-          <span className="text-sm font-display font-black text-emerald-400 uppercase tracking-wide">
+      <div className="w-full office-floating-card p-5 flex flex-col gap-3">
+        <div className="flex justify-between items-center border-b border-border/40 pb-3 leading-none">
+          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Live Standings</span>
+          <span className="text-sm font-display font-black text-emerald-500 uppercase tracking-wide">
             {livePoints} PTS
           </span>
         </div>
 
         <div className="grid grid-cols-4 gap-2.5 text-center">
-          <div className="bg-slate-950/50 p-2.5 rounded-2xl border border-slate-900/60 leading-none">
-            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Wins</span>
+          <div className="office-subcard p-2.5 leading-none">
+            <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider">Wins</span>
             <p className="text-lg font-display font-black text-foreground mt-1">{liveWins}</p>
           </div>
-          <div className="bg-slate-950/50 p-2.5 rounded-2xl border border-slate-900/60 leading-none">
-            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Draws</span>
+          <div className="office-subcard p-2.5 leading-none">
+            <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider">Draws</span>
             <p className="text-lg font-display font-black text-foreground mt-1">{liveDraws}</p>
           </div>
-          <div className="bg-slate-950/50 p-2.5 rounded-2xl border border-slate-900/60 leading-none">
-            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Losses</span>
+          <div className="office-subcard p-2.5 leading-none">
+            <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider">Losses</span>
             <p className="text-lg font-display font-black text-foreground mt-1">{liveLosses}</p>
           </div>
-          <div className="bg-slate-950/50 p-2.5 rounded-2xl border border-slate-900/60 leading-none">
-            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Diff</span>
-            <p className="text-lg font-display font-black text-emerald-400 mt-1">
+          <div className="office-subcard p-2.5 leading-none">
+            <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider">Diff</span>
+            <p className="text-lg font-display font-black text-emerald-500 mt-1">
               {liveGoalsFor - liveGoalsAgainst > 0 ? '+' : ''}
               {liveGoalsFor - liveGoalsAgainst}
             </p>
@@ -100,8 +100,8 @@ export function SimulationScreen({
       </div>
 
       {/* Season Match Outcome Grid */}
-      <div className="w-full glass rounded-3xl p-4 border border-slate-900 shadow-xl flex flex-col gap-2 select-none">
-        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest px-1">
+      <div className="w-full office-floating-card p-4 flex flex-col gap-2 select-none">
+        <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest px-1">
           Season Fixtures Progress Tracker
         </span>
         <div 
@@ -260,7 +260,7 @@ export function SimulationScreen({
             <button
               onClick={onSkipSimulation}
               type="button"
-              className="py-2 px-4 rounded-xl text-slate-400 hover:text-white border border-slate-900 bg-slate-950/60 hover:bg-slate-900/60 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer active:scale-95 flex items-center gap-1.5"
+              className="py-2.5 px-5 rounded-2xl text-xs font-black uppercase tracking-wider office-subcard text-foreground hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all cursor-pointer active:scale-95 flex items-center gap-1.5 shadow-sm"
             >
               <span>⏩</span> Skip Simulation
             </button>
@@ -268,10 +268,10 @@ export function SimulationScreen({
         )}
 
         {simIndex === 38 && (
-          <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent border-t border-slate-900/30 md:relative md:bg-none md:border-none md:p-0 z-40 flex justify-center">
+          <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background/95 to-transparent border-t border-border/30 md:relative md:bg-none md:border-none md:p-0 z-40 flex justify-center">
             <button
               onClick={onProceedToResults}
-              className="w-full max-w-sm py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-zinc-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/35 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer text-center animate-bounce"
+              className="w-full max-w-sm py-4 px-6 rounded-2xl office-play-match-btn text-white font-display font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer text-center"
             >
               Reveal Final Standings ➔
             </button>

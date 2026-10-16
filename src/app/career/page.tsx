@@ -105,7 +105,10 @@ export default function CareerEntryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-foreground font-sans flex flex-col pitch-bg w-full overflow-x-hidden">
+    <div
+      data-theme={theme}
+      className="min-h-screen my11-canvas text-foreground font-sans flex flex-col w-full overflow-x-hidden"
+    >
       {/* Toast Notification */}
       {toastMessage && (
         <aside
@@ -117,67 +120,88 @@ export default function CareerEntryPage() {
         </aside>
       )}
 
-      {/* Header */}
-      <header className="w-full py-4 px-6 border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center select-none shadow-lg">
-        <div className="flex items-center gap-2">
-          <Link
-            href="/"
-            className="text-xs font-bold text-slate-400 hover:text-white px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900/60 hover:bg-slate-800 transition-colors flex items-center gap-1.5"
-            title="Return to Home"
-          >
-            ← <span>Home</span>
-          </Link>
-          <Link
-            href="/draft"
-            className="text-xs font-bold text-slate-400 hover:text-white px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900/60 hover:bg-slate-800 transition-colors flex items-center gap-1.5"
-            title="Play Draft Mode"
-          >
-            <span>Draft</span>
-          </Link>
-          <div className="h-4 w-px bg-slate-800" />
-          <h1 className="text-lg font-display font-black tracking-tight text-foreground uppercase">
-            MY-<span className="text-emerald-400">11</span>{' '}
-            <span className="text-xs ml-1 font-bold tracking-widest text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2 py-0.5 rounded-full">
-              CAREER
-            </span>
-          </h1>
-        </div>
+      {/* Floating MY-11 Header */}
+      <header className="w-full max-w-4xl mx-auto px-3 sm:px-4 pt-3 sm:pt-4 sticky top-0 z-40 select-none">
+        <div className="office-floating-card rounded-[22px] px-3 sm:px-4 py-2 sm:py-2.5 flex justify-between items-center shadow-lg gap-2">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link
+              href="/"
+              className="office-subcard text-xs font-bold px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 text-[var(--office-text-primary)]"
+              title="Return to Home"
+            >
+              ← <span>Home</span>
+            </Link>
+            <Link
+              href="/draft"
+              className="office-subcard text-xs font-bold px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 text-[var(--office-text-primary)]"
+              title="Play Draft Mode"
+            >
+              <span>Draft</span>
+            </Link>
+            <div className="h-4 w-px bg-[var(--office-divider)]" />
+            
+            {/* Brand Logo with Crown */}
+            <div className="flex items-center gap-1.5">
+              <div className="flex flex-col items-center justify-center shrink-0">
+                <svg viewBox="0 0 28 12" className="w-3.5 h-2.5 -mb-0.5" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="my11-crown-grad-career" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#00d2ff" />
+                      <stop offset="50%" stopColor="#2563eb" />
+                      <stop offset="100%" stopColor="#c026d3" />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    d="M2 10 L4 3 L10 7 L14 1 L18 7 L24 3 L26 10 Z"
+                    fill="url(#my11-crown-grad-career)"
+                  />
+                </svg>
+                <span className="font-display font-black text-sm tracking-tighter leading-none text-[var(--office-text-primary)]">
+                  MY-11
+                </span>
+              </div>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#2563eb] bg-[#dbe8ff] dark:bg-[#1e293b] px-2 py-0.5 rounded-full">
+                CAREER
+              </span>
+            </div>
+          </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowGuide(true)}
-            title="Career Mode Guide & Rules"
-            className="w-8 h-8 rounded-full flex items-center justify-center border border-slate-900 bg-slate-950/60 text-slate-400 hover:text-white hover:border-slate-800 hover:bg-slate-900/60 cursor-pointer active:scale-95 transition-all text-xs font-bold"
-          >
-            ❓
-          </button>
-          <button
-            onClick={toggleTheme}
-            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className="w-8 h-8 rounded-full flex items-center justify-center border border-slate-900 bg-slate-950/60 text-slate-400 hover:text-white hover:border-slate-800 hover:bg-slate-900/60 cursor-pointer active:scale-95 transition-all text-xs"
-          >
-            {theme === 'dark' ? '🌙' : '☀️'}
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setShowGuide(true)}
+              title="Career Mode Guide & Rules"
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold office-subcard cursor-pointer"
+            >
+              ❓
+            </button>
+            <button
+              onClick={toggleTheme}
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs office-subcard cursor-pointer"
+            >
+              {theme === 'dark' ? '🌙' : '☀️'}
+            </button>
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 flex flex-col items-center">
+      <main className="flex-1 w-full max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8 flex flex-col items-center">
         {/* Title & Introduction */}
-        <section className="text-center mb-8 max-w-lg space-y-2">
-          <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/40 border border-emerald-900/40 px-3 py-1 rounded-full font-display">
+        <section className="text-center mb-6 max-w-lg space-y-2">
+          <span className="text-[10px] font-black uppercase tracking-widest text-[#2563eb] bg-[#dbe8ff] dark:bg-[#1e293b] px-3 py-1 rounded-full font-display">
             Multi-Season Football Management
           </span>
-          <h2 className="text-2xl sm:text-3xl font-display font-black tracking-tight uppercase text-foreground">
+          <h2 className="text-2xl sm:text-3xl font-display font-black tracking-tight uppercase text-[var(--office-text-primary)]">
             Select Save Slot
           </h2>
-          <p className="text-xs sm:text-sm text-slate-400 font-medium">
+          <p className="text-xs sm:text-sm text-[var(--office-text-secondary)] font-medium">
             Take charge of an English Top Flight club. Manage budgets, negotiate transfers, and lead your squad across 38 league matches and cup glory.
           </p>
         </section>
 
         {/* Slot Grid */}
-        <section className="w-full grid grid-cols-1 md:grid-cols-3 gap-6 mb-8" aria-label="Career Save Slots">
+        <section className="w-full grid grid-cols-1 md:grid-cols-3 gap-5 mb-8" aria-label="Career Save Slots">
           {slots.map((slot, index) => {
             const slotNum = index + 1;
             const slotTitle = `Slot ${slotNum}`;
@@ -186,16 +210,16 @@ export default function CareerEntryPage() {
               return (
                 <div
                   key={slot.slotId}
-                  className="rounded-3xl border-2 border-dashed border-slate-850 hover:border-emerald-500/50 bg-slate-950/40 p-6 flex flex-col justify-between items-center min-h-[320px] text-center transition-all duration-300 group hover:bg-slate-900/20"
+                  className="office-floating-card rounded-[24px] border-2 border-dashed p-6 flex flex-col justify-between items-center min-h-[330px] text-center transition-all duration-300 group shadow-lg"
                 >
                   <div className="space-y-2 w-full">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 font-display">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-[var(--office-text-muted)] font-display">
                       {slotTitle}
                     </span>
-                    <h3 className="text-lg font-display font-black text-slate-400 group-hover:text-slate-200">
+                    <h3 className="text-lg font-display font-black text-[var(--office-text-primary)]">
                       Empty Slot
                     </h3>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-[var(--office-text-secondary)]">
                       No active manager career. Start a fresh club project here.
                     </p>
                   </div>
@@ -203,13 +227,13 @@ export default function CareerEntryPage() {
                   <div className="w-full space-y-3 pt-6">
                     <Link
                       href={`/career/setup?slot=${slot.slotId}`}
-                      className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                      className="office-play-match-btn w-full py-3 px-4 rounded-xl font-display font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2"
                     >
                       <span>+</span> Start New Career
                     </Link>
 
                     <div className="flex gap-2">
-                      <label className="flex-1 py-2 px-2 rounded-lg border border-slate-800 hover:border-slate-700 bg-slate-900/60 hover:bg-slate-800 text-[10px] font-bold text-slate-400 hover:text-white cursor-pointer transition-colors text-center">
+                      <label className="office-subcard flex-1 py-2 px-2 rounded-xl text-[10.5px] font-bold text-[var(--office-text-primary)] cursor-pointer text-center">
                         📁 Import JSON
                         <input
                           type="file"
@@ -224,7 +248,7 @@ export default function CareerEntryPage() {
                           setImportJsonText('');
                           setImportError(null);
                         }}
-                        className="py-2 px-2.5 rounded-lg border border-slate-800 hover:border-slate-700 bg-slate-900/60 hover:bg-slate-800 text-[10px] font-bold text-slate-400 hover:text-white transition-colors"
+                        className="office-subcard py-2 px-2.5 rounded-xl text-[10.5px] font-bold text-[var(--office-text-primary)]"
                         title="Paste JSON text directly"
                       >
                         📋 Paste
@@ -239,7 +263,7 @@ export default function CareerEntryPage() {
             return (
               <div
                 key={slot.slotId}
-                className="rounded-3xl border border-slate-850 hover:border-slate-700 bg-slate-900/40 p-6 flex flex-col justify-between min-h-[320px] transition-all duration-300 relative overflow-hidden shadow-xl"
+                className="office-floating-card rounded-[24px] p-6 flex flex-col justify-between min-h-[330px] transition-all duration-300 relative overflow-hidden shadow-xl"
               >
                 {/* Accent Top Bar */}
                 <div
@@ -252,14 +276,14 @@ export default function CareerEntryPage() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-start">
                     <div>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 font-display">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-[var(--office-text-muted)] font-display">
                         {slotTitle}
                       </span>
-                      <h3 className="text-xl font-display font-black text-white tracking-tight leading-tight">
+                      <h3 className="text-xl font-display font-black text-[var(--office-text-primary)] tracking-tight leading-tight">
                         {s.clubName}
                       </h3>
-                      <p className="text-xs text-slate-400 font-medium">
-                        Mgr: <span className="text-slate-200 font-semibold">{s.managerName}</span>
+                      <p className="text-xs text-[var(--office-text-secondary)] font-medium">
+                        Mgr: <span className="text-[var(--office-text-primary)] font-semibold">{s.managerName}</span>
                       </p>
                     </div>
 
@@ -277,14 +301,14 @@ export default function CareerEntryPage() {
                   </div>
 
                   {/* Vitals */}
-                  <div className="grid grid-cols-2 gap-2 bg-slate-950/60 border border-slate-900 rounded-xl p-3 text-xs">
+                  <div className="grid grid-cols-2 gap-2 office-subcard rounded-2xl p-3 text-xs">
                     <div>
-                      <div className="text-[9px] font-bold uppercase text-slate-500">Season</div>
-                      <div className="font-display font-black text-foreground">Season {s.seasonNumber}</div>
+                      <div className="text-[9px] font-bold uppercase text-[var(--office-text-muted)]">Season</div>
+                      <div className="font-display font-black text-[var(--office-text-primary)]">Season {s.seasonNumber}</div>
                     </div>
                     <div>
-                      <div className="text-[9px] font-bold uppercase text-slate-500">Budget</div>
-                      <div className="font-display font-black text-emerald-400">
+                      <div className="text-[9px] font-bold uppercase text-[var(--office-text-muted)]">Budget</div>
+                      <div className="font-display font-black text-emerald-500">
                         £{(s.budget / 1_000_000).toFixed(1)}M
                       </div>
                     </div>
@@ -294,7 +318,7 @@ export default function CareerEntryPage() {
                 <div className="pt-6 space-y-2">
                   <Link
                     href={`/career/play?slot=${slot.slotId}`}
-                    className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    className="office-play-match-btn w-full py-3 px-4 rounded-xl font-display font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2"
                   >
                     ▶ Continue Career
                   </Link>
@@ -302,14 +326,14 @@ export default function CareerEntryPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleExport(slot.slotId)}
-                      className="flex-1 py-1.5 px-2 rounded-lg border border-slate-800 hover:border-slate-700 bg-slate-950/60 hover:bg-slate-900 text-[10px] font-bold text-slate-400 hover:text-white transition-colors"
+                      className="office-subcard flex-1 py-1.5 px-2 rounded-xl text-[10.5px] font-bold text-[var(--office-text-primary)]"
                       title="Download JSON backup"
                     >
                       💾 Export JSON
                     </button>
                     <button
                       onClick={() => setDeleteConfirmSlot(slot.slotId)}
-                      className="py-1.5 px-3 rounded-lg border border-rose-900/40 hover:border-rose-700 bg-rose-950/20 hover:bg-rose-950/50 text-[10px] font-bold text-rose-400 hover:text-rose-200 transition-colors"
+                      className="office-subcard py-1.5 px-3 rounded-xl text-[10.5px] font-bold text-rose-500 hover:text-rose-600"
                       title="Delete save file"
                     >
                       🗑️

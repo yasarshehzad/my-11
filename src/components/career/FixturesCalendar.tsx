@@ -380,7 +380,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
           {/* Timeline Tabs & Scope Filter */}
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-2">
         {/* Timeline Quick Jump: Upcoming (default) | Recent | All */}
-        <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+        <div className="flex items-center gap-1 office-subcard p-1">
           <button
             type="button"
             onClick={() => {
@@ -393,8 +393,8 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
             }}
             className={`py-1.5 px-3 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
               timelineFilter === 'upcoming'
-                ? 'bg-emerald-500 text-slate-950 shadow-sm'
-                : 'text-slate-400 hover:text-white'
+                ? 'office-nav-tab-active shadow-sm font-black'
+                : 'office-nav-tab'
             }`}
           >
             Upcoming ({upcomingCount})
@@ -411,8 +411,8 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
             }}
             className={`py-1.5 px-3 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
               timelineFilter === 'recent'
-                ? 'bg-emerald-500 text-slate-950 shadow-sm'
-                : 'text-slate-400 hover:text-white'
+                ? 'office-nav-tab-active shadow-sm font-black'
+                : 'office-nav-tab'
             }`}
           >
             Recent ({playedCount})
@@ -429,8 +429,8 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
             }}
             className={`py-1.5 px-3 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
               timelineFilter === 'all'
-                ? 'bg-slate-700 text-white'
-                : 'text-slate-400 hover:text-white'
+                ? 'office-nav-tab-active shadow-sm font-black'
+                : 'office-nav-tab'
             }`}
           >
             All (38)

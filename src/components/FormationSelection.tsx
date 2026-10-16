@@ -44,211 +44,205 @@ export function FormationSelection({
   ];
 
   return (
-    <div className={`flex flex-col items-center justify-center min-h-[75vh] px-4 sm:px-6 py-8 space-y-6 w-full max-w-full overflow-hidden ${formation ? 'pb-24 md:pb-8' : ''}`}>
-      <div className="text-center">
-        <h2 className="text-3xl font-display font-black text-foreground uppercase tracking-tight leading-none mb-2">
-           Tactical Settings
-        </h2>
-        <p className="text-xs text-slate-400 font-semibold tracking-wide uppercase leading-none">
-          Configure your campaign and layout to begin drafting
-        </p>
-      </div>
-
-      {/* League Selector */}
-      <div className="w-full max-w-md space-y-3">
-        <div className="text-center sm:text-left">
-          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">
-            Select Competition League
-          </span>
-        </div>
-        <div className="flex flex-col gap-2.5">
-          {leaguesList.map((lg) => {
-            const active = selectedLeague === lg.id;
-            return (
-              <button
-                key={lg.id}
-                onClick={() => onSelectLeague(lg.id)}
-                className={`w-full p-3.5 rounded-2xl border text-left transition-all duration-300 flex items-center gap-3.5 cursor-pointer relative active:scale-99 ${
-                  active
-                    ? 'border-emerald-500 bg-emerald-950/20 text-emerald-450 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
-                    : 'border-slate-900 bg-slate-950/40 text-slate-350 hover:border-slate-800 hover:bg-slate-900/40'
-                }`}
-              >
-                <span className="text-2xl">{lg.flag}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-display font-black uppercase tracking-wide leading-none">
-                      {lg.name}
-                    </h4>
-                    <span className={`text-[8.5px] font-extrabold px-1.5 py-0.5 rounded uppercase leading-none font-display border ${
-                      active ? 'bg-emerald-500/10 text-emerald-450 border-emerald-500/20' : 'bg-slate-900 text-slate-400 border-slate-800'
-                    }`}>
-                      OVR ~{lg.avgRating}
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-slate-400 mt-1 truncate leading-none">
-                    {lg.desc}
-                  </p>
-                </div>
-                {active && (
-                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]" />
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Draft Mode Selector */}
-      <div className="w-full max-w-md space-y-3">
-        <div className="text-center sm:text-left">
-          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">
-            Choose Draft Mode
-          </span>
-        </div>
-        <div className="grid grid-cols-3 gap-2.5">
-          {([
-            { id: 'classic' as const, label: 'Classic', icon: '⏱️', badge: 'Standard', desc: 'Standard strategic draft with full tactical intel and no clock.' },
-            { id: 'quick' as const, label: 'Quick', icon: '⚡', badge: `${QUICK_DRAFT_TIMER_SECONDS}s Timer`, desc: `Fast-paced draft with ${QUICK_DRAFT_TIMER_SECONDS}s timer and auto-pick fallback.` },
-            { id: 'mystery' as const, label: 'Mystery', icon: '❓', badge: '3 Blind', desc: '3 concealed rounds with scout clues and dramatic reveal.' },
-          ]).map((mode) => {
-            const active = draftModifier === mode.id;
-            return (
-              <button
-                key={mode.id}
-                type="button"
-                onClick={() => onSelectDraftModifier?.(mode.id)}
-                className={`p-3 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center justify-between gap-1.5 cursor-pointer relative active:scale-98 ${
-                  active
-                    ? 'border-emerald-500 bg-emerald-950/25 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.12)] ring-1 ring-emerald-500/40'
-                    : 'border-slate-900 bg-slate-950/40 text-slate-400 hover:border-slate-800 hover:bg-slate-900/40'
-                }`}
-              >
-                <div className="text-xl leading-none">{mode.icon}</div>
-                <div className="font-display font-black text-xs uppercase tracking-wide text-foreground">
-                  {mode.label}
-                </div>
-                <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase leading-none font-display border ${
-                  active ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' : 'bg-slate-900 text-slate-500 border-slate-800'
-                }`}>
-                  {mode.badge}
-                </span>
-                <p className="text-[8.5px] text-slate-400 line-clamp-2 leading-tight font-medium hidden sm:block mt-0.5">
-                  {mode.desc}
-                </p>
-                {active && (
-                  <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Draft IQ Mode Toggle */}
-      <div className="w-full max-w-md p-4 rounded-2xl glass border border-slate-900 flex justify-between items-center gap-4 select-none">
-        <div className="flex-1 min-w-0">
-          <h4 className="text-xs font-display font-black uppercase text-foreground tracking-wider leading-none">
-            Tactical Scouting Intel (Draft IQ)
-          </h4>
-          <p className="text-[10px] text-slate-400 mt-1 leading-normal font-semibold">
-            Display live tactical scouting intel, prospective chemistry links, and positional fit on draft cards.
+    <div className={`flex flex-col items-center justify-center px-2 sm:px-4 py-4 w-full max-w-xl mx-auto overflow-hidden ${formation ? 'pb-24 md:pb-6' : ''}`}>
+      <div className="office-floating-card w-full rounded-[28px] p-5 sm:p-7 shadow-xl space-y-6">
+        <header className="text-center space-y-1">
+          <span className="text-3xl">📐</span>
+          <h2 className="text-2xl font-display font-black text-[var(--office-text-primary)] uppercase tracking-tight leading-none">
+            Tactical Settings
+          </h2>
+          <p className="text-xs text-slate-400 font-medium">
+            Configure your campaign league and formation to begin drafting
           </p>
-        </div>
-        <button
-          type="button"
-          onClick={onToggleDraftIQMode}
-          className={`w-12 h-6.5 rounded-full p-1 transition-colors duration-300 focus:outline-none cursor-pointer flex-shrink-0 relative ${
-            draftIQMode ? 'bg-emerald-500' : 'bg-slate-800'
-          }`}
-          aria-label="Toggle Tactical Scouting Intel"
-        >
-          <div
-            className={`bg-white w-4.5 h-4.5 rounded-full shadow-md transform transition-transform duration-300 ${
-              draftIQMode ? 'translate-x-5.5' : 'translate-x-0'
-            }`}
-          />
-        </button>
-      </div>
+        </header>
 
-      {/* Free Player Database Search Toggle */}
-      {onToggleFreeSearch && (
-        <div className="w-full max-w-md p-4 rounded-2xl glass border border-slate-900 flex justify-between items-center gap-4 select-none">
+        {/* League Selector */}
+        <div className="w-full space-y-2.5">
+          <div className="text-left">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 font-display">
+              Select Competition League
+            </span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {leaguesList.map((lg) => {
+              const active = selectedLeague === lg.id;
+              return (
+                <button
+                  key={lg.id}
+                  onClick={() => onSelectLeague(lg.id)}
+                  className={`w-full p-3 rounded-2xl text-left transition-all duration-200 flex items-center gap-3 cursor-pointer relative active:scale-99 ${
+                    active
+                      ? 'border-2 border-emerald-400 bg-emerald-500/10 shadow-md ring-2 ring-emerald-400/30'
+                      : 'office-subcard hover:border-slate-700/60'
+                  }`}
+                >
+                  <span className="text-2xl">{lg.flag}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs sm:text-sm font-display font-black uppercase tracking-wide text-[var(--office-text-primary)]">
+                        {lg.name}
+                      </h4>
+                      <span className="text-[8.5px] font-extrabold px-1.5 py-0.5 rounded-full uppercase office-subcard text-slate-300 font-mono">
+                        OVR ~{lg.avgRating}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-0.5 truncate leading-none">
+                      {lg.desc}
+                    </p>
+                  </div>
+                  {active && (
+                    <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-md shrink-0" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Draft Mode Selector */}
+        <div className="w-full space-y-2.5">
+          <div className="text-left">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 font-display">
+              Choose Draft Mode
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {([
+              { id: 'classic' as const, label: 'Classic', icon: '⏱️', badge: 'Standard', desc: 'Standard strategic draft with full tactical intel and no clock.' },
+              { id: 'quick' as const, label: 'Quick', icon: '⚡', badge: `${QUICK_DRAFT_TIMER_SECONDS}s Timer`, desc: `Fast-paced draft with ${QUICK_DRAFT_TIMER_SECONDS}s timer and auto-pick fallback.` },
+              { id: 'mystery' as const, label: 'Mystery', icon: '❓', badge: '3 Blind', desc: '3 concealed rounds with scout clues and dramatic reveal.' },
+            ]).map((mode) => {
+              const active = draftModifier === mode.id;
+              return (
+                <button
+                  key={mode.id}
+                  type="button"
+                  onClick={() => onSelectDraftModifier?.(mode.id)}
+                  className={`p-2.5 rounded-2xl text-center transition-all duration-200 flex flex-col items-center justify-between gap-1 cursor-pointer relative active:scale-98 ${
+                    active
+                      ? 'border-2 border-emerald-400 bg-emerald-500/10 shadow-md ring-2 ring-emerald-400/30'
+                      : 'office-subcard hover:border-slate-700/60'
+                  }`}
+                >
+                  <div className="text-xl leading-none">{mode.icon}</div>
+                  <div className="font-display font-black text-xs uppercase tracking-wide text-[var(--office-text-primary)]">
+                    {mode.label}
+                  </div>
+                  <span className="text-[8px] font-extrabold px-1.5 py-0.5 rounded-full uppercase office-subcard text-slate-300 font-mono">
+                    {mode.badge}
+                  </span>
+                  <p className="text-[8.5px] text-slate-400 line-clamp-2 leading-tight font-medium hidden sm:block mt-0.5">
+                    {mode.desc}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Draft IQ Mode Toggle */}
+        <div className="w-full p-3.5 rounded-2xl office-subcard flex justify-between items-center gap-3 select-none">
           <div className="flex-1 min-w-0">
-            <h4 className="text-xs font-display font-black uppercase text-foreground tracking-wider leading-none">
-              Free Player Search
+            <h4 className="text-xs font-display font-black uppercase text-[var(--office-text-primary)] tracking-wider leading-tight">
+              Tactical Scouting Intel (Draft IQ)
             </h4>
-            <p className="text-[10px] text-slate-400 mt-1 leading-normal font-semibold">
-              Search and pick any player directly from the 340+ database instead of 3-card choices (disables rerolls).
+            <p className="text-[10px] text-slate-400 mt-0.5 leading-snug font-medium">
+              Display live tactical scouting intel, prospective chemistry links, and positional fit.
             </p>
           </div>
           <button
             type="button"
-            onClick={onToggleFreeSearch}
-            className={`w-12 h-6.5 rounded-full p-1 transition-colors duration-300 focus:outline-none cursor-pointer flex-shrink-0 relative ${
-              freeSearchEnabled ? 'bg-emerald-500' : 'bg-slate-800'
+            onClick={onToggleDraftIQMode}
+            className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-200 cursor-pointer shrink-0 relative ${
+              draftIQMode ? 'bg-emerald-500' : 'bg-slate-700'
             }`}
-            aria-label="Toggle Free Player Search"
+            aria-label="Toggle Tactical Scouting Intel"
           >
             <div
-              className={`bg-white w-4.5 h-4.5 rounded-full shadow-md transform transition-transform duration-300 ${
-                freeSearchEnabled ? 'translate-x-5.5' : 'translate-x-0'
+              className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform duration-200 ${
+                draftIQMode ? 'translate-x-5' : 'translate-x-0'
               }`}
             />
           </button>
         </div>
-      )}
 
-      {/* Divider */}
-      <div className="w-full max-w-md h-[1.5px] bg-slate-900/60" />
-
-      <div className="w-full max-w-md space-y-3">
-        <div className="text-center sm:text-left">
-          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">
-            Choose Formation Layout
-          </span>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-          {formations.map((f) => {
-            const active = formation === f.type;
-            return (
-              <button
-                key={f.type}
-                onClick={() => onSelectFormation(f.type)}
-                className={`w-full p-3.5 rounded-2xl border text-left transition-all duration-300 group active:scale-98 cursor-pointer flex flex-col justify-between ${
-                  active
-                    ? 'border-emerald-500 bg-emerald-950/20 shadow-[0_0_15px_rgba(16,185,129,0.15)] ring-2 ring-emerald-500/30'
-                    : 'border-slate-900 bg-slate-950/40 hover:bg-slate-900/40 hover:border-slate-800'
+        {/* Free Player Database Search Toggle */}
+        {onToggleFreeSearch && (
+          <div className="w-full p-3.5 rounded-2xl office-subcard flex justify-between items-center gap-3 select-none">
+            <div className="flex-1 min-w-0">
+              <h4 className="text-xs font-display font-black uppercase text-[var(--office-text-primary)] tracking-wider leading-tight">
+                Free Player Search
+              </h4>
+              <p className="text-[10px] text-slate-400 mt-0.5 leading-snug font-medium">
+                Search and pick any player directly from the 340+ database instead of 3 choices.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onToggleFreeSearch}
+              className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-200 cursor-pointer shrink-0 relative ${
+                freeSearchEnabled ? 'bg-emerald-500' : 'bg-slate-700'
+              }`}
+              aria-label="Toggle Free Player Search"
+            >
+              <div
+                className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform duration-200 ${
+                  freeSearchEnabled ? 'translate-x-5' : 'translate-x-0'
                 }`}
-              >
-                <div className="flex justify-between items-center w-full leading-none">
-                  <span className={`text-base font-display font-black transition-colors ${active ? 'text-emerald-450' : 'text-foreground group-hover:text-emerald-450'}`}>
-                    {f.label}
-                  </span>
-                  <span className="text-[8px] font-extrabold text-slate-500 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-900 font-display">
-                    {f.type}
-                  </span>
-                </div>
-                <p className="text-[10px] text-slate-400 mt-1.5 leading-tight font-semibold">
-                  {f.desc}
-                </p>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+              />
+            </button>
+          </div>
+        )}
 
-      {/* Sticky proceed button */}
-      {formation && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent border-t border-slate-900/30 md:relative md:bg-none md:border-none md:p-0 z-40 flex justify-center animate-card-deal">
-          <button
-            onClick={onConfirmTactics}
-            className="w-full max-w-sm py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-zinc-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/35 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer text-center animate-pulse"
-          >
-            Confirm & Start Draft ➔
-          </button>
+        {/* Formation Selection Grid */}
+        <div className="w-full space-y-2.5">
+          <div className="text-left">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 font-display">
+              Choose Formation Layout
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+            {formations.map((f) => {
+              const active = formation === f.type;
+              return (
+                <button
+                  key={f.type}
+                  onClick={() => onSelectFormation(f.type)}
+                  className={`w-full p-3 rounded-2xl text-left transition-all duration-200 group active:scale-98 cursor-pointer flex flex-col justify-between ${
+                    active
+                      ? 'border-2 border-emerald-400 bg-emerald-500/10 shadow-md ring-2 ring-emerald-400/30'
+                      : 'office-subcard hover:border-slate-700/60'
+                  }`}
+                >
+                  <div className="flex justify-between items-center w-full leading-none">
+                    <span className={`text-sm sm:text-base font-display font-black ${active ? 'text-emerald-400' : 'text-[var(--office-text-primary)]'}`}>
+                      {f.label}
+                    </span>
+                    <span className="text-[9px] font-mono font-bold text-slate-400 office-subcard px-1.5 py-0.5 rounded-full">
+                      {f.type}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1 leading-snug font-medium">
+                    {f.desc}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      )}
+
+        {/* Confirm and Proceed Button */}
+        {formation && (
+          <div className="pt-2">
+            <button
+              onClick={onConfirmTactics}
+              className="office-play-match-btn w-full py-3.5 px-6 rounded-2xl text-white font-display font-black text-sm uppercase tracking-wider cursor-pointer text-center shadow-xl"
+            >
+              Confirm &amp; Start Draft ➔
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

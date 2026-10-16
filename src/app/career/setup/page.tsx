@@ -124,78 +124,74 @@ function SetupWizardContent() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-foreground font-sans flex flex-col pitch-bg w-full overflow-x-hidden">
-      {/* Header */}
-      <header className="w-full py-4 px-6 border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center select-none shadow-lg">
-        <div className="flex items-center gap-3">
+    <div className="min-h-screen my11-canvas text-foreground font-sans flex flex-col w-full overflow-x-hidden p-3 sm:p-5 select-none">
+      {/* Floating Header Card */}
+      <header className="office-floating-card w-full max-w-4xl mx-auto rounded-[24px] p-3 sm:p-4 mb-4 flex items-center justify-between shadow-md">
+        <div className="flex items-center gap-3 min-w-0">
           <Link
             href="/career"
-            className="text-xs font-bold text-slate-400 hover:text-white px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900/60 hover:bg-slate-800 transition-colors flex items-center gap-1.5"
+            className="office-subcard px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-colors flex items-center gap-1.5"
           >
             ← <span>Save Slots</span>
           </Link>
-          <div className="h-4 w-px bg-slate-800" />
-          <h1 className="text-base font-display font-black tracking-tight text-foreground uppercase">
-            New Career Setup <span className="text-xs text-emerald-400 ml-1">({targetSlot.replace('_', ' ').toUpperCase()})</span>
-          </h1>
+          <div className="h-4 w-px bg-[var(--office-divider)]" />
+          <div className="min-w-0">
+            <h1 className="text-xs sm:text-sm font-display font-black tracking-tight text-[var(--office-text-primary)] uppercase truncate">
+              New Career Setup
+            </h1>
+            <p className="text-[10px] text-slate-400 font-mono">
+              {targetSlot.replace('_', ' ').toUpperCase()} • Step {step} of 3
+            </p>
+          </div>
         </div>
 
         <button
           onClick={toggleTheme}
           title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-          className="w-8 h-8 rounded-full flex items-center justify-center border border-slate-900 bg-slate-950/60 text-slate-400 hover:text-white hover:border-slate-800 hover:bg-slate-900/60 cursor-pointer text-xs"
+          className="w-8 h-8 rounded-full flex items-center justify-center office-subcard text-xs cursor-pointer active:scale-95 transition-transform"
         >
           {theme === 'dark' ? '🌙' : '☀️'}
         </button>
       </header>
 
       {/* Main Wizard */}
-      <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 flex flex-col">
+      <main className="flex-1 w-full max-w-4xl mx-auto px-2 sm:px-4 py-4 flex flex-col">
         {/* Step Progress Indicators */}
-        <nav aria-label="Setup steps" className="flex items-center justify-center gap-2 sm:gap-4 mb-8">
+        <nav aria-label="Setup steps" className="flex items-center justify-center gap-2 mb-6">
           <button
             onClick={() => setStep(1)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-display font-black transition-all ${
-              step === 1
-                ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+            className={`px-3.5 py-1.5 rounded-full text-xs font-display font-black transition-all cursor-pointer ${
+              step === 1 ? 'office-nav-tab-active shadow-md' : 'office-nav-tab'
             }`}
           >
-            <span>1</span>
-            <span>Manager</span>
+            <span>1. Manager</span>
           </button>
-          <div className="w-4 h-px bg-slate-800" />
+          <div className="w-3 h-px bg-[var(--office-divider)]" />
           <button
             onClick={() => setStep(2)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-display font-black transition-all ${
-              step === 2
-                ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+            className={`px-3.5 py-1.5 rounded-full text-xs font-display font-black transition-all cursor-pointer ${
+              step === 2 ? 'office-nav-tab-active shadow-md' : 'office-nav-tab'
             }`}
           >
-            <span>2</span>
-            <span>Club</span>
+            <span>2. Club</span>
           </button>
-          <div className="w-4 h-px bg-slate-800" />
+          <div className="w-3 h-px bg-[var(--office-divider)]" />
           <button
             onClick={() => setStep(3)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-display font-black transition-all ${
-              step === 3
-                ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+            className={`px-3.5 py-1.5 rounded-full text-xs font-display font-black transition-all cursor-pointer ${
+              step === 3 ? 'office-nav-tab-active shadow-md' : 'office-nav-tab'
             }`}
           >
-            <span>3</span>
-            <span>Rules</span>
+            <span>3. Rules</span>
           </button>
         </nav>
 
         {/* STEP 1: MANAGER PROFILE */}
         {step === 1 && (
-          <section className="max-w-md mx-auto w-full space-y-6 bg-slate-900/40 border border-slate-850 rounded-3xl p-6 sm:p-8 shadow-xl">
-            <header className="text-center space-y-2">
+          <section className="office-floating-card max-w-md mx-auto w-full space-y-5 rounded-[26px] p-6 sm:p-8 shadow-xl">
+            <header className="text-center space-y-1.5">
               <span className="text-3xl">👔</span>
-              <h2 className="text-xl font-display font-black uppercase text-foreground">
+              <h2 className="text-xl font-display font-black uppercase text-[var(--office-text-primary)]">
                 Manager Profile
               </h2>
               <p className="text-xs text-slate-400">
@@ -203,9 +199,9 @@ function SetupWizardContent() {
               </p>
             </header>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+            <div className="space-y-3.5">
+              <div className="office-subcard rounded-2xl p-3.5 space-y-1.5">
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
                   Manager Full Name
                 </label>
                 <input
@@ -213,18 +209,18 @@ function SetupWizardContent() {
                   value={managerName}
                   onChange={(e) => setManagerName(e.target.value)}
                   placeholder="e.g. Alex Ferguson"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:border-emerald-500 font-semibold"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-emerald-500 font-semibold"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+              <div className="office-subcard rounded-2xl p-3.5 space-y-1.5">
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
                   Nationality
                 </label>
                 <select
                   value={nationality}
                   onChange={(e) => setNationality(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:border-emerald-500 font-semibold"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-emerald-500 font-semibold cursor-pointer"
                 >
                   {NATIONALITIES.map((n) => (
                     <option key={n} value={n}>
@@ -235,10 +231,10 @@ function SetupWizardContent() {
               </div>
             </div>
 
-            <div className="pt-4">
+            <div className="pt-2">
               <button
                 onClick={() => setStep(2)}
-                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 transition-all hover:scale-[1.01]"
+                className="office-play-match-btn w-full py-3.5 px-4 rounded-2xl text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg"
               >
                 Continue to Club Selection →
               </button>
@@ -337,10 +333,10 @@ function SetupWizardContent() {
                 <button
                   key={tier}
                   onClick={() => setTierFilter(tier)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
                     tierFilter === tier
-                      ? 'bg-emerald-500 text-slate-950 shadow-md'
-                      : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+                      ? 'office-nav-tab-active shadow-sm'
+                      : 'office-nav-tab'
                   }`}
                 >
                   {tier}
@@ -349,7 +345,7 @@ function SetupWizardContent() {
             </div>
 
             {/* Club Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5">
               {filteredClubs.map((club) => {
                 const isSelected = club.id === selectedClubId;
                 const customName = customClubNames[club.id] ?? '';
@@ -359,10 +355,10 @@ function SetupWizardContent() {
                   <div
                     key={club.id}
                     onClick={() => setSelectedClubId(club.id)}
-                    className={`rounded-2xl border p-4 cursor-pointer transition-all duration-200 relative overflow-hidden flex flex-col justify-between ${
+                    className={`office-floating-card rounded-[22px] p-3.5 cursor-pointer transition-all duration-200 relative overflow-hidden flex flex-col justify-between hover:scale-[1.01] ${
                       isSelected
-                        ? 'border-2 border-emerald-400 bg-emerald-950/40 shadow-2xl shadow-emerald-500/25 ring-4 ring-emerald-400/40 scale-[1.02]'
-                        : 'border-slate-850 bg-slate-950/40 hover:bg-slate-900/40 hover:border-slate-700'
+                        ? 'border-2 border-emerald-400 ring-2 ring-emerald-400/40 shadow-xl'
+                        : 'hover:border-slate-700/60'
                     }`}
                   >
                     {/* Club Colors Header Stripe */}
@@ -376,7 +372,7 @@ function SetupWizardContent() {
                     <div>
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">
+                          <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full office-subcard text-slate-300 font-display">
                             {club.tier}
                           </span>
                           {isSelected && (
@@ -385,12 +381,12 @@ function SetupWizardContent() {
                             </span>
                           )}
                         </div>
-                        <span className="text-xs font-mono font-bold text-slate-500">
+                        <span className="text-xs font-mono font-bold text-slate-400">
                           {club.shortName}
                         </span>
                       </div>
 
-                      <h3 className="text-base font-display font-black text-white leading-tight">
+                      <h3 className="text-sm sm:text-base font-display font-black text-[var(--office-text-primary)] leading-tight">
                         {displayName}
                       </h3>
                       <div className="text-[10px] text-slate-400 mt-1">
@@ -400,7 +396,7 @@ function SetupWizardContent() {
                       {/* Inline Custom Club Name on Selected Card */}
                       {isSelected && (
                         <div
-                          className="mt-3 pt-3 border-t border-emerald-500/30 bg-slate-950/80 rounded-xl p-2.5 space-y-1.5"
+                          className="mt-3 pt-2.5 border-t border-[var(--office-divider)] office-subcard rounded-xl p-2.5 space-y-1.5"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <label className="block text-[9px] font-bold text-emerald-400 uppercase tracking-wider">
@@ -411,22 +407,22 @@ function SetupWizardContent() {
                             value={customClubNames[club.id] ?? ''}
                             onChange={(e) => handleClubRename(club.id, e.target.value)}
                             placeholder={club.defaultName}
-                            className="w-full bg-slate-900 border border-emerald-500/40 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-400 font-semibold"
+                            className="w-full bg-slate-950 border border-emerald-500/40 rounded-lg px-2.5 py-1.5 text-xs text-foreground placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-400 font-semibold"
                           />
                         </div>
                       )}
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-slate-900/80 flex justify-between items-center text-xs">
+                    <div className="mt-3 pt-2.5 border-t border-[var(--office-divider)] flex justify-between items-center text-xs">
                       <div>
-                        <div className="text-[8px] uppercase font-bold text-slate-500">Budget</div>
+                        <div className="text-[8px] uppercase font-bold text-slate-400">Budget</div>
                         <div className="font-display font-black text-emerald-400">
                           £{(club.startingBudget / 1_000_000).toFixed(0)}M
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-[8px] uppercase font-bold text-slate-500">Reputation</div>
-                        <div className="font-display font-black text-slate-200">
+                        <div className="text-[8px] uppercase font-bold text-slate-400">Reputation</div>
+                        <div className="font-display font-black text-slate-300">
                           {club.reputation}/100
                         </div>
                       </div>
@@ -437,9 +433,9 @@ function SetupWizardContent() {
             </div>
 
             {/* Selected Club Customization Bar */}
-            <div className="max-w-md mx-auto w-full bg-slate-900/60 border border-slate-800 rounded-2xl p-4 space-y-2">
+            <div className="office-floating-card max-w-md mx-auto w-full rounded-2xl p-4 space-y-2">
               <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider">
-                Custom Name for <span className="text-emerald-400">{selectedClub.defaultName}</span> (Optional)
+                Custom Name for <span className="text-emerald-400 font-bold">{selectedClub.defaultName}</span> (Optional)
               </label>
               <input
                 type="text"
@@ -448,60 +444,42 @@ function SetupWizardContent() {
                 placeholder={selectedClub.defaultName}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-emerald-500 font-semibold"
               />
-              <p className="text-[9px] text-slate-500">
+              <p className="text-[9px] text-slate-400">
                 You can change this or any other club&apos;s name at any point during your career.
               </p>
             </div>
 
-            {/* Standard navigation buttons */}
-            <div className="flex justify-between items-center max-w-md mx-auto pt-4 gap-4">
-              <button
-                onClick={() => setStep(1)}
-                className="py-3 px-5 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-xs font-bold text-slate-300 font-display uppercase tracking-wider"
-              >
-                ← Back
-              </button>
-              <button
-                onClick={() => setStep(3)}
-                className="flex-1 py-3 px-6 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10"
-              >
-                Rules & Difficulty →
-              </button>
-            </div>
-
             {/* Floating Sticky Bottom Action Bar for Mobile & Quick Progression */}
-            <div className="fixed bottom-0 left-0 right-0 z-50 p-3 sm:p-4 bg-slate-950/92 backdrop-blur-xl border-t border-slate-800/90 shadow-2xl">
-              <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div
-                    className="w-4 h-4 rounded-full border border-white/20 shadow-sm shrink-0"
-                    style={{
-                      background: `linear-gradient(135deg, ${selectedClub.primaryColor}, ${selectedClub.secondaryColor})`,
-                    }}
-                  />
-                  <div className="min-w-0">
-                    <div className="text-[10px] uppercase font-bold text-slate-400 leading-tight">Selected Club</div>
-                    <div className="text-xs sm:text-sm font-display font-black text-white truncate">
-                      {customClubNames[selectedClub.id]?.trim() || selectedClub.defaultName}
-                    </div>
+            <div className="fixed bottom-3 left-3 right-3 max-w-4xl mx-auto z-50 p-3 sm:p-3.5 office-floating-card rounded-[24px] shadow-2xl flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div
+                  className="w-4 h-4 rounded-full border border-white/40 shadow-sm shrink-0"
+                  style={{
+                    background: `linear-gradient(135deg, ${selectedClub.primaryColor}, ${selectedClub.secondaryColor})`,
+                  }}
+                />
+                <div className="min-w-0">
+                  <div className="text-[9.5px] uppercase font-bold text-slate-400 leading-tight">Selected Club</div>
+                  <div className="text-xs sm:text-sm font-display font-black text-[var(--office-text-primary)] truncate">
+                    {customClubNames[selectedClub.id]?.trim() || selectedClub.defaultName}
                   </div>
                 </div>
+              </div>
 
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => setStep(1)}
-                    className="px-3 py-2 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-xs font-bold text-slate-300 font-display uppercase tracking-wider"
-                  >
-                    ← Back
-                  </button>
-                  <button
-                    onClick={() => setStep(3)}
-                    className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-display font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
-                  >
-                    <span>Next: Rules</span>
-                    <span>➔</span>
-                  </button>
-                </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => setStep(1)}
+                  className="office-subcard px-3 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white uppercase tracking-wider cursor-pointer"
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={() => setStep(3)}
+                  className="office-play-match-btn px-4 py-2.5 rounded-xl text-white font-display font-black text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-lg active:scale-95 transition-all"
+                >
+                  <span>Next: Rules</span>
+                  <span>➔</span>
+                </button>
               </div>
             </div>
           </section>
@@ -521,14 +499,14 @@ function SetupWizardContent() {
             </header>
 
             {/* Presets Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
               {/* EASY */}
               <button
                 onClick={() => handlePresetSelect('easy')}
-                className={`rounded-2xl border p-4 text-left transition-all cursor-pointer ${
+                className={`office-floating-card rounded-[22px] p-4 text-left transition-all cursor-pointer ${
                   preset === 'easy'
-                    ? 'border-emerald-500 bg-slate-900/90 shadow-xl shadow-emerald-500/10 ring-2 ring-emerald-500/40'
-                    : 'border-slate-850 bg-slate-950/40 hover:bg-slate-900/40'
+                    ? 'border-2 border-emerald-400 ring-2 ring-emerald-400/40 shadow-xl'
+                    : 'hover:scale-[1.01]'
                 }`}
               >
                 <div className="flex justify-between items-center mb-1">
@@ -538,7 +516,7 @@ function SetupWizardContent() {
                 <p className="text-[10px] text-slate-400 leading-relaxed mb-3">
                   Casual sandbox. Generous finances, no board sackings, retry matches allowed.
                 </p>
-                <div className="space-y-1 text-[9px] text-slate-300 font-medium">
+                <div className="space-y-1 text-[9px] text-slate-300 font-medium office-subcard rounded-xl p-2">
                   <div>✓ +50% Starting Budget</div>
                   <div>✓ No Board Sackings</div>
                   <div>✓ Match Retry Enabled</div>
@@ -549,10 +527,10 @@ function SetupWizardContent() {
               {/* HARD */}
               <button
                 onClick={() => handlePresetSelect('hard')}
-                className={`rounded-2xl border p-4 text-left transition-all cursor-pointer ${
+                className={`office-floating-card rounded-[22px] p-4 text-left transition-all cursor-pointer ${
                   preset === 'hard'
-                    ? 'border-rose-500 bg-slate-900/90 shadow-xl shadow-rose-500/10 ring-2 ring-rose-500/40'
-                    : 'border-slate-850 bg-slate-950/40 hover:bg-slate-900/40'
+                    ? 'border-2 border-rose-500 ring-2 ring-rose-500/40 shadow-xl'
+                    : 'hover:scale-[1.01]'
                 }`}
               >
                 <div className="flex justify-between items-center mb-1">
@@ -562,7 +540,7 @@ function SetupWizardContent() {
                 <p className="text-[10px] text-slate-400 leading-relaxed mb-3">
                   True football reality. Realistic injuries, board sackings, permanent locked settings.
                 </p>
-                <div className="space-y-1 text-[9px] text-slate-300 font-medium">
+                <div className="space-y-1 text-[9px] text-slate-300 font-medium office-subcard rounded-xl p-2">
                   <div>✓ 1.0x Real Budget</div>
                   <div>✓ Board Can Sack You</div>
                   <div>✓ Realistic Injuries</div>
@@ -573,10 +551,10 @@ function SetupWizardContent() {
               {/* CUSTOM */}
               <button
                 onClick={() => handlePresetSelect('custom')}
-                className={`rounded-2xl border p-4 text-left transition-all cursor-pointer ${
+                className={`office-floating-card rounded-[22px] p-4 text-left transition-all cursor-pointer ${
                   preset === 'custom'
-                    ? 'border-amber-500 bg-slate-900/90 shadow-xl shadow-amber-500/10 ring-2 ring-amber-500/40'
-                    : 'border-slate-850 bg-slate-950/40 hover:bg-slate-900/40'
+                    ? 'border-2 border-amber-500 ring-2 ring-amber-500/40 shadow-xl'
+                    : 'hover:scale-[1.01]'
                 }`}
               >
                 <div className="flex justify-between items-center mb-1">
@@ -586,7 +564,7 @@ function SetupWizardContent() {
                 <p className="text-[10px] text-slate-400 leading-relaxed mb-3">
                   Customize every individual rule switch to tailor your ideal manager challenge.
                 </p>
-                <div className="space-y-1 text-[9px] text-slate-300 font-medium">
+                <div className="space-y-1 text-[9px] text-slate-300 font-medium office-subcard rounded-xl p-2">
                   <div>✓ Full Switch Control</div>
                   <div>✓ Optional Rule Lock</div>
                   <div>✓ Scalable Budget</div>
@@ -916,16 +894,16 @@ function SetupWizardContent() {
             </div>
 
             {/* Actions */}
-            <div className="flex justify-between items-center pt-4 gap-4">
+            <div className="flex justify-between items-center pt-3 gap-3.5">
               <button
                 onClick={() => setStep(2)}
-                className="py-3 px-5 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-xs font-bold text-slate-300 font-display uppercase tracking-wider"
+                className="office-subcard py-3 px-5 rounded-2xl text-xs font-bold text-slate-400 hover:text-white font-display uppercase tracking-wider cursor-pointer"
               >
                 ← Back
               </button>
               <button
                 onClick={handleStartCareer}
-                className="flex-1 py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-display font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="office-play-match-btn flex-1 py-4 px-6 rounded-2xl text-white font-display font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl cursor-pointer"
               >
                 🚀 Launch Career ({selectedClub.defaultName})
               </button>

@@ -629,7 +629,7 @@ function CareerPlayHubContent() {
   ) => {
     if (typeof window === 'undefined') return;
     const behavior = options?.behavior ?? 'smooth';
-    const block = options?.block ?? 'center';
+    const block = options?.block ?? 'nearest';
 
     const tryScroll = () => {
       const el = document.getElementById(targetId);
@@ -649,26 +649,7 @@ function CareerPlayHubContent() {
         if (!tryScroll()) {
           setTimeout(() => {
             if (!tryScroll()) {
-              // Graceful fallback to section or top
-              if (targetId.startsWith('contract-player-')) {
-                const sec = document.getElementById('contracts-section');
-                if (sec) {
-                  sec.scrollIntoView({ behavior, block: 'start' });
-                  return;
-                }
-              } else if (targetId.startsWith('incoming-offer-')) {
-                const sec = document.getElementById('incoming-offers-section');
-                if (sec) {
-                  sec.scrollIntoView({ behavior, block: 'start' });
-                  return;
-                }
-              } else if (targetId.startsWith('squad-player-')) {
-                const sec = document.getElementById('squad-list-section') || document.getElementById('squad-pitch-section');
-                if (sec) {
-                  sec.scrollIntoView({ behavior, block: 'start' });
-                  return;
-                }
-              }
+              // Graceful fallback to top of page
               window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
             }
           }, 150);
@@ -683,8 +664,9 @@ function CareerPlayHubContent() {
     targetId?: string
   ) => {
     setIsMoreMenuOpen(false);
-    if (targetId) {
-      pendingScrollTargetRef.current = { id: targetId, behavior: 'smooth', block: 'center' };
+    const isSpecificItem = Boolean(targetId && !targetId.endsWith('-section'));
+    if (isSpecificItem && targetId) {
+      pendingScrollTargetRef.current = { id: targetId, behavior: 'smooth', block: 'nearest' };
     } else {
       pendingScrollTargetRef.current = null;
     }
@@ -700,13 +682,13 @@ function CareerPlayHubContent() {
     }
 
     if (!tabChanged && !subTabChanged) {
-      if (targetId) {
+      if (isSpecificItem && targetId) {
         pendingScrollTargetRef.current = null;
-        scrollToTarget(targetId);
+        scrollToTarget(targetId, { behavior: 'smooth', block: 'nearest' });
       } else {
-        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       }
-    } else if (!targetId) {
+    } else {
       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     }
   }, [activeTab, transferHubSubTab, scrollToTarget]);
@@ -1640,204 +1622,310 @@ function CareerPlayHubContent() {
         </aside>
       )}
 
-      {/* Non-Office Tabs Top Header (Preserved for Squad, Fixtures, Transfers, Table, Cups, Settings) */}
-      {activeTab !== 'overview' && (
-        <header className="w-full py-2 px-3 sm:px-6 border-b border-slate-900 bg-slate-950/90 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center gap-2 select-none shadow-xl">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <button
-              type="button"
-              onClick={handleHeaderBack}
-              className="text-xs font-bold text-slate-400 hover:text-white px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border border-slate-800 bg-slate-900/60 hover:bg-slate-800 transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
-              title="Return to Previous Tab"
-            >
-              ← <span className="hidden xs:inline">Back</span>
-            </button>
-            <div className="h-4 w-px bg-slate-800 shrink-0" />
-
-            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-              <div
-                className="w-4 h-4 rounded-full border border-white/20 shadow-sm shrink-0"
-                style={{
-                  background: `linear-gradient(135deg, ${save.club.primaryColor}, ${save.club.secondaryColor})`,
-                }}
-              />
-              <h1 className="text-sm sm:text-base font-display font-black text-white uppercase tracking-tight truncate flex items-center gap-1.5">
-                <span className="truncate">{effectiveClubName}</span>
-                <span className="text-[10px] font-bold text-slate-400 font-sans tracking-normal lowercase hidden sm:inline">
-                  • {save.manager.name}
-                </span>
-              </h1>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={() => setShowBoardDossierModal(true)}
-              title="View Boardroom Confidence Dossier"
-              className={`px-2 py-1 rounded-xl border text-[10px] font-display font-black uppercase flex items-center gap-1 shrink-0 transition-all cursor-pointer ${
-                boardConfidence >= 65
-                  ? 'text-emerald-400 bg-emerald-950/60 border-emerald-800/60 hover:bg-emerald-900/60'
-                  : boardConfidence >= 45
-                  ? 'text-amber-300 bg-amber-950/60 border-amber-800/60 hover:bg-amber-900/60'
-                  : 'text-rose-400 bg-rose-950/60 border-rose-800/60 hover:bg-rose-900/60'
-              }`}
-            >
-              <span>🏛️</span>
-              <span>{boardConfidence}%</span>
-            </button>
-
-            <div className="flex items-center gap-1.5 sm:gap-2.5 bg-slate-900/60 border border-slate-800 px-2 sm:px-3 py-1 rounded-xl text-xs">
-              <div className="hidden xs:block">
-                <span className="text-[9px] uppercase font-bold text-slate-500 mr-1">Budget</span>
-                <span className="font-display font-black text-emerald-400">
-                  {formatCareerCurrency(save.finances.transferBudget, save.settings.currency)}
-                </span>
-              </div>
-              <div className="hidden xs:block h-3 w-px bg-slate-800" />
-              <div className="flex items-center">
-                <span className="text-[9px] uppercase font-bold text-slate-500 mr-1">Date</span>
-                <span className="font-mono text-[11px] sm:text-xs font-semibold text-emerald-400">
-                  {formatCareerDate(save.season.currentDate, save.settings.dateFormat, 'medium')}
-                </span>
-              </div>
-            </div>
-
-            <button
-              onClick={() => handleTabChange('settings')}
-              title="Career Settings"
-              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center border transition-colors text-xs cursor-pointer ${
-                activeTab === 'settings'
-                  ? 'border-emerald-500 bg-emerald-950/60 text-emerald-400'
-                  : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800'
-              }`}
-            >
-              ⚙️
-            </button>
-
-            <button
-              onClick={handleExport}
-              title="Export JSON backup"
-              className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center border border-slate-800 bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-xs cursor-pointer"
-            >
-              💾
-            </button>
-
-            <button
-              onClick={toggleTheme}
-              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center border border-slate-800 bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-xs cursor-pointer"
-            >
-              {theme === 'dark' ? '🌙' : '☀️'}
-            </button>
-          </div>
-        </header>
-      )}
-
       {/* Main Hub Layout */}
       <main
-        data-office-ui={activeTab === 'overview' ? 'true' : undefined}
-        className={`relative z-10 flex-1 w-full mx-auto flex flex-col ${
+        data-office-ui="true"
+        className={`relative z-10 flex-1 w-full mx-auto flex flex-col gap-2.5 sm:gap-3 px-2 sm:px-4 py-2 sm:py-4 ${
           activeTab === 'overview'
-            ? 'max-w-[440px] sm:max-w-[480px] px-2 sm:px-3 py-2 sm:py-4'
-            : 'max-w-5xl px-3 sm:px-4 py-4 sm:py-6'
+            ? 'max-w-[440px] sm:max-w-[480px]'
+            : 'max-w-4xl'
         }`}
         onTouchStart={handleTouchStartCapture}
         onTouchEnd={handleTouchEndCapture}
       >
-        {/* Non-Office Navigation Tabs (Preserved for other tabs) */}
-        {activeTab !== 'overview' && (
-          <div className="relative mb-5 z-30">
-            <nav aria-label="Career management sections" data-no-swipe="true" className="grid grid-cols-5 border-b border-slate-850 gap-1 pb-px bg-slate-950/40 rounded-2xl p-1">
-              {[
-                { id: 'overview', label: 'Office', icon: '👔', badge: actionableAlerts.length > 0 ? actionableAlerts.length : null },
-                { id: 'squad', label: 'Squad', icon: '👥' },
-                { id: 'fixtures', label: 'Fixtures', icon: '📅' },
-                { id: 'transfers', label: 'Transfers', icon: '💱', badge: incomingOffersCount > 0 ? incomingOffersCount : null },
-              ].map((tab) => {
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => handleTabChange(tab.id as typeof activeTab)}
-                    className={`py-2 px-1 sm:px-3 font-display font-black text-[11px] sm:text-xs uppercase tracking-wider rounded-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer min-h-[44px] relative ${
-                      isActive
-                        ? 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 shadow-sm'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
-                    }`}
-                  >
-                    <span className="text-sm sm:text-xs">{tab.icon}</span>
-                    <span className="truncate">{tab.label}</span>
-                    {tab.badge && (
-                      <span className="absolute -top-1 -right-0.5 sm:top-1 sm:right-1 min-w-[16px] h-4 px-1 rounded-full bg-amber-500 text-slate-950 font-black text-[9px] flex items-center justify-center shadow-md animate-pulse">
-                        {tab.badge}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+        {/* 1. FLOATING HEADER CARD (UNIVERSAL ACROSS ALL TABS) */}
+        <header
+          data-office-ui="true"
+          className="office-floating-card office-reveal-1 rounded-[22px] px-2 sm:px-3.5 py-2 sm:py-2.5 flex items-center justify-between gap-1 sm:gap-1.5 select-none"
+        >
+          {/* Left: MY-11 Brand Mark + Club & Season/Date */}
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 overflow-hidden">
+            <button
+              type="button"
+              onClick={handleHeaderBack}
+              data-office-ui="true"
+              title="Exit Career / Save Slots"
+              className="flex flex-col items-center justify-center shrink-0 cursor-pointer group focus:outline-none"
+            >
+              {/* Crown SVG above MY-11 */}
+              <svg viewBox="0 0 28 12" className="w-3.5 h-2.5 -mb-0.5 transition-transform duration-150 group-hover:-translate-y-0.5" aria-hidden="true">
+                <defs>
+                  <linearGradient id="my11-crown-grad-univ" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#00d2ff" />
+                    <stop offset="50%" stopColor="#2563eb" />
+                    <stop offset="100%" stopColor="#c026d3" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M2 10 L4 3 L10 7 L14 1 L18 7 L24 3 L26 10 Z"
+                  fill="url(#my11-crown-grad-univ)"
+                />
+              </svg>
+              <span className="font-display font-black text-[14px] sm:text-[17px] tracking-tighter leading-none text-[var(--office-text-primary)]">
+                MY-11
+              </span>
+            </button>
 
-              {(() => {
-                const isMoreActive = ['table', 'cups', 'settings'].includes(activeTab);
-                const activeMoreLabel = activeTab === 'table' ? 'Table' : activeTab === 'cups' ? 'Cups' : activeTab === 'settings' ? 'Config' : null;
+            <div className="w-px h-6 bg-[var(--office-divider)] shrink-0" />
 
-                return (
-                  <button
-                    onClick={() => setIsMoreMenuOpen((prev) => !prev)}
-                    className={`py-2 px-1 sm:px-3 font-display font-black text-[11px] sm:text-xs uppercase tracking-wider rounded-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer min-h-[44px] relative ${
-                      isMoreActive
-                        ? 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 shadow-sm'
-                        : isMoreMenuOpen
-                        ? 'bg-slate-850 text-white'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
-                    }`}
-                    aria-expanded={isMoreMenuOpen}
-                    aria-haspopup="true"
-                  >
-                    <span className="text-sm sm:text-xs">⋯</span>
-                    <span className="truncate">{activeMoreLabel ? activeMoreLabel : 'More'} ▾</span>
-                  </button>
-                );
-              })()}
-            </nav>
-
-            {isMoreMenuOpen && (
-              <div
-                className="absolute right-0 top-full mt-1.5 z-40 w-56 bg-slate-950/95 border border-slate-800 rounded-2xl p-2 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-top-2"
-                role="menu"
-              >
-                {[
-                  { id: 'table', label: 'League Table', icon: '📊', desc: 'Standings, GD & form guide' },
-                  { id: 'cups', label: 'Cups & Europe', icon: '🏆', desc: 'Domestic cups & continental silverware' },
-                  { id: 'settings', label: 'Career Settings', icon: '⚙️', desc: 'Rules, formats & club naming' },
-                ].map((item) => {
-                  const isItemActive = activeTab === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      role="menuitem"
-                      onClick={() => handleTabChange(item.id as typeof activeTab)}
-                      className={`w-full p-2.5 rounded-xl text-left transition-all flex items-center gap-3 cursor-pointer ${
-                        isItemActive
-                          ? 'bg-emerald-500/20 text-emerald-300 font-bold'
-                          : 'hover:bg-slate-900 text-slate-300 hover:text-white'
-                      }`}
-                    >
-                      <span className="text-lg">{item.icon}</span>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-display font-black text-xs uppercase tracking-wider flex items-center justify-between">
-                          <span>{item.label}</span>
-                          {isItemActive && <span className="text-emerald-400 text-xs">✓</span>}
-                        </div>
-                        <div className="text-[10px] text-slate-500 truncate">{item.desc}</div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            <div className="min-w-0 flex-1 overflow-hidden">
+              <h1 className="font-display font-extrabold text-[11.5px] sm:text-[14px] text-[var(--office-text-primary)] leading-tight truncate">
+                {effectiveClubName}
+              </h1>
+              <p className="text-[9px] sm:text-[10.5px] font-medium text-[#2563eb] leading-tight truncate mt-0.5">
+                Season {save.season.seasonNumber} &bull; {formatOfficeShortDate(save.season.currentDate)}
+              </p>
+            </div>
           </div>
-        )}
+
+          {/* Right: Board Confidence Pill + Theme Toggle + Inbox + Settings */}
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+            <button
+              type="button"
+              data-office-ui="true"
+              onClick={() => setShowBoardDossierModal(true)}
+              title="View Boardroom Confidence Dossier"
+              className="office-subcard rounded-2xl px-1.5 sm:px-2 py-1 flex items-center gap-1 sm:gap-1.5 cursor-pointer"
+            >
+              <span
+                className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-white shrink-0 ${
+                  boardConfidence >= 60
+                    ? 'bg-[#10b981]'
+                    : boardConfidence >= 45
+                    ? 'bg-[#f59e0b]'
+                    : 'bg-[#ef4444]'
+                }`}
+              >
+                <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" aria-hidden="true">
+                  <circle cx="9" cy="10" r="1.5" />
+                  <circle cx="15" cy="10" r="1.5" />
+                  <path
+                    d="M8.5 14.5 C9.8 16.5, 14.2 16.5, 15.5 14.5"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    fill="none"
+                  />
+                </svg>
+              </span>
+              <div className="text-left leading-none pr-0.5">
+                <div className="text-[9px] sm:text-[10px] font-extrabold text-[var(--office-text-primary)] whitespace-nowrap">
+                  Board {boardConfidence}%
+                </div>
+                <div
+                  className={`text-[8.5px] sm:text-[9.5px] font-bold mt-0.5 whitespace-nowrap ${
+                    boardConfidence >= 60
+                      ? 'text-[#10b981]'
+                      : boardConfidence >= 45
+                      ? 'text-[#f59e0b]'
+                      : 'text-[#ef4444]'
+                  }`}
+                >
+                  {boardSentimentLabel}
+                </div>
+              </div>
+            </button>
+
+            {/* Quick Theme Toggle */}
+            <button
+              type="button"
+              data-office-ui="true"
+              onClick={toggleTheme}
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              aria-label="Toggle theme"
+              className="w-6.5 h-6.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center cursor-pointer transition-transform active:scale-95 shrink-0"
+              style={{
+                background: 'var(--office-icon-pill-bg)',
+                border: '1px solid var(--office-icon-pill-border)',
+              }}
+            >
+              <span className="text-xs">{theme === 'dark' ? '☀️' : '🌙'}</span>
+            </button>
+
+            {/* Inbox Envelope Icon Button */}
+            <button
+              type="button"
+              data-office-ui="true"
+              onClick={() => setShowOfficeInboxModal(true)}
+              title="Open Managerial Inbox"
+              aria-label="Open Managerial Inbox"
+              className="w-6.5 h-6.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center relative cursor-pointer transition-transform active:scale-95 shrink-0"
+              style={{
+                background: 'var(--office-icon-pill-bg)',
+                border: '1px solid var(--office-icon-pill-border)',
+              }}
+            >
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#4f679d]" fill="currentColor" aria-hidden="true">
+                <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4.2-8 5-8-5V6l8 5 8-5v2.2z" />
+              </svg>
+              {headerBadgeCount > 0 && (
+                <span className="absolute -top-1 -right-0.5 min-w-[14px] h-[14px] px-1 rounded-full bg-[#ef4444] text-white font-display font-black text-[8.5px] flex items-center justify-center shadow-xs border border-white">
+                  {headerBadgeCount}
+                </span>
+              )}
+            </button>
+
+            {/* Settings Gear Icon Button */}
+            <button
+              type="button"
+              data-office-ui="true"
+              onClick={() => handleTabChange('settings')}
+              title="Career Settings"
+              aria-label="Career Settings"
+              className="w-6.5 h-6.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center cursor-pointer transition-transform active:scale-95 shrink-0"
+              style={{
+                background: 'var(--office-icon-pill-bg)',
+                border: '1px solid var(--office-icon-pill-border)',
+              }}
+            >
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#4f679d]" fill="currentColor" aria-hidden="true">
+                <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
+              </svg>
+            </button>
+          </div>
+        </header>
+
+        {/* 2. FLOATING 5-TAB NAVIGATION BAR (UNIVERSAL ACROSS ALL TABS) */}
+        <div className="relative z-30 office-reveal-2">
+          <nav
+            aria-label="Career Navigation"
+            data-office-ui="true"
+            data-no-swipe="true"
+            className="office-floating-card rounded-[20px] p-1 grid grid-cols-5 gap-1 select-none"
+          >
+            {/* Office */}
+            <button
+              type="button"
+              data-office-ui="true"
+              onClick={() => handleTabChange('overview')}
+              className={`${activeTab === 'overview' ? 'office-nav-tab-active' : 'office-nav-tab-inactive'} rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer relative`}
+            >
+              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+                <path d="M12 3 3 10h2v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9h2L12 3z" />
+              </svg>
+              <span className="text-[11px] font-bold tracking-tight leading-tight">Office</span>
+            </button>
+
+            {/* Squad */}
+            <button
+              type="button"
+              data-office-ui="true"
+              onClick={() => handleTabChange('squad')}
+              className={`${activeTab === 'squad' ? 'office-nav-tab-active' : 'office-nav-tab-inactive'} rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer relative`}
+            >
+              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+              </svg>
+              <span className="text-[11px] font-bold tracking-tight leading-tight">Squad</span>
+            </button>
+
+            {/* Fixtures */}
+            <button
+              type="button"
+              data-office-ui="true"
+              onClick={() => handleTabChange('fixtures')}
+              className={`${activeTab === 'fixtures' ? 'office-nav-tab-active' : 'office-nav-tab-inactive'} rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer relative`}
+            >
+              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+                <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5v-5z" />
+              </svg>
+              <span className="text-[11px] font-bold tracking-tight leading-tight">Fixtures</span>
+            </button>
+
+            {/* Transfers */}
+            <button
+              type="button"
+              data-office-ui="true"
+              onClick={() => handleTabChange('transfers')}
+              className={`${activeTab === 'transfers' ? 'office-nav-tab-active' : 'office-nav-tab-inactive'} rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer relative`}
+            >
+              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+                <path d="M6.99 11 3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z" />
+              </svg>
+              <span className="text-[11px] font-bold tracking-tight leading-tight">Transfers</span>
+              {incomingOffersCount > 0 && (
+                <span className="absolute top-1 right-2 w-2 h-2 rounded-full bg-[#f59e0b]" />
+              )}
+            </button>
+
+            {/* More */}
+            <button
+              type="button"
+              data-office-ui="true"
+              onClick={() => setIsMoreMenuOpen((prev) => !prev)}
+              aria-expanded={isMoreMenuOpen}
+              aria-haspopup="true"
+              className={`${['table', 'cups', 'settings'].includes(activeTab) ? 'office-nav-tab-active' : 'office-nav-tab-inactive'} rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer relative`}
+            >
+              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+                <circle cx="6" cy="12" r="2" />
+                <circle cx="12" cy="12" r="2" />
+                <circle cx="18" cy="12" r="2" />
+              </svg>
+              <span className="text-[11px] font-bold tracking-tight leading-tight">
+                {activeTab === 'table' ? 'Table' : activeTab === 'cups' ? 'Cups' : activeTab === 'settings' ? 'Config' : 'More'} ▾
+              </span>
+            </button>
+          </nav>
+
+          {/* More Menu Popover */}
+          {isMoreMenuOpen && (
+            <div
+              data-office-ui="true"
+              className="office-floating-card absolute right-0 top-full mt-1.5 z-40 w-60 rounded-2xl p-2 shadow-2xl space-y-1"
+              role="menu"
+            >
+              {[
+                { id: 'table', label: 'League Table', icon: '📊', desc: 'Standings, GD & form guide' },
+                { id: 'cups', label: 'Cups & Europe', icon: '🏆', desc: 'Domestic cups & continental silverware' },
+                { id: 'settings', label: 'Career Settings', icon: '⚙️', desc: 'Rules, formats & club naming' },
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  role="menuitem"
+                  data-office-ui="true"
+                  onClick={() => handleTabChange(item.id as typeof activeTab)}
+                  className="office-subcard w-full p-2.5 rounded-xl text-left flex items-center gap-3 cursor-pointer"
+                >
+                  <span className="text-base">{item.icon}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-display font-bold text-xs text-[var(--office-text-primary)]">
+                      {item.label}
+                    </div>
+                    <div className="text-[10px] text-[var(--office-text-muted)] truncate">{item.desc}</div>
+                  </div>
+                </button>
+              ))}
+
+              <div className="h-px bg-[var(--office-divider)] my-1" />
+
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  type="button"
+                  data-office-ui="true"
+                  onClick={() => {
+                    toggleTheme();
+                    setIsMoreMenuOpen(false);
+                  }}
+                  className="office-subcard py-2 px-2.5 rounded-xl text-[11px] font-bold text-[var(--office-text-primary)] flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span>{theme === 'dark' ? '☀️ Light' : '🌙 Dark'}</span>
+                </button>
+                <button
+                  type="button"
+                  data-office-ui="true"
+                  onClick={() => {
+                    handleExport();
+                    setIsMoreMenuOpen(false);
+                  }}
+                  className="office-subcard py-2 px-2.5 rounded-xl text-[11px] font-bold text-[var(--office-text-primary)] flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span>💾 Backup</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Carousel Slide Container */}
         <div
@@ -1854,281 +1942,6 @@ function CareerPlayHubContent() {
         {/* TAB 1: REDESIGNED CAREER OFFICE SCREEN */}
         {activeTab === 'overview' && (
           <div className="space-y-2.5">
-            {/* 1. FLOATING HEADER CARD */}
-            <header
-              data-office-ui="true"
-              className="office-floating-card office-reveal-1 rounded-[22px] px-2 sm:px-3.5 py-2 sm:py-2.5 flex items-center justify-between gap-1 sm:gap-1.5 select-none"
-            >
-              {/* Left: MY-11 Brand Mark + Club & Season/Date */}
-              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 overflow-hidden">
-                <button
-                  type="button"
-                  onClick={handleHeaderBack}
-                  data-office-ui="true"
-                  title="Exit Career / Save Slots"
-                  className="flex flex-col items-center justify-center shrink-0 cursor-pointer group focus:outline-none"
-                >
-                  {/* Crown SVG above MY-11 */}
-                  <svg viewBox="0 0 28 12" className="w-3.5 h-2.5 -mb-0.5 transition-transform duration-150 group-hover:-translate-y-0.5" aria-hidden="true">
-                    <defs>
-                      <linearGradient id="my11-crown-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#00d2ff" />
-                        <stop offset="50%" stopColor="#2563eb" />
-                        <stop offset="100%" stopColor="#c026d3" />
-                      </linearGradient>
-                    </defs>
-                    <path
-                      d="M2 10 L4 3 L10 7 L14 1 L18 7 L24 3 L26 10 Z"
-                      fill="url(#my11-crown-grad)"
-                    />
-                  </svg>
-                  <span className="font-display font-black text-[14px] sm:text-[17px] tracking-tighter leading-none text-[var(--office-text-primary)]">
-                    MY-11
-                  </span>
-                </button>
-
-                <div className="w-px h-6 bg-[var(--office-divider)] shrink-0" />
-
-                <div className="min-w-0 flex-1 overflow-hidden">
-                  <h1 className="font-display font-extrabold text-[11.5px] sm:text-[14px] text-[var(--office-text-primary)] leading-tight truncate">
-                    {effectiveClubName}
-                  </h1>
-                  <p className="text-[9px] sm:text-[10.5px] font-medium text-[#2563eb] leading-tight truncate mt-0.5">
-                    Season {save.season.seasonNumber} &bull; {formatOfficeShortDate(save.season.currentDate)}
-                  </p>
-                </div>
-              </div>
-
-              {/* Right: Board Confidence Pill + Inbox Button + Settings Button */}
-              <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-                <button
-                  type="button"
-                  data-office-ui="true"
-                  onClick={() => setShowBoardDossierModal(true)}
-                  title="View Boardroom Confidence Dossier"
-                  className="office-subcard rounded-2xl px-1.5 sm:px-2 py-1 flex items-center gap-1 sm:gap-1.5 cursor-pointer"
-                >
-                  <span
-                    className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-white shrink-0 ${
-                      boardConfidence >= 60
-                        ? 'bg-[#10b981]'
-                        : boardConfidence >= 45
-                        ? 'bg-[#f59e0b]'
-                        : 'bg-[#ef4444]'
-                    }`}
-                  >
-                    <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" aria-hidden="true">
-                      <circle cx="9" cy="10" r="1.5" />
-                      <circle cx="15" cy="10" r="1.5" />
-                      <path
-                        d="M8.5 14.5 C9.8 16.5, 14.2 16.5, 15.5 14.5"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        fill="none"
-                      />
-                    </svg>
-                  </span>
-                  <div className="text-left leading-none pr-0.5">
-                    <div className="text-[9px] sm:text-[10px] font-extrabold text-[var(--office-text-primary)] whitespace-nowrap">
-                      Board {boardConfidence}%
-                    </div>
-                    <div
-                      className={`text-[8.5px] sm:text-[9.5px] font-bold mt-0.5 whitespace-nowrap ${
-                        boardConfidence >= 60
-                          ? 'text-[#10b981]'
-                          : boardConfidence >= 45
-                          ? 'text-[#f59e0b]'
-                          : 'text-[#ef4444]'
-                      }`}
-                    >
-                      {boardSentimentLabel}
-                    </div>
-                  </div>
-                </button>
-
-                {/* Inbox Envelope Icon Button */}
-                <button
-                  type="button"
-                  data-office-ui="true"
-                  onClick={() => setShowOfficeInboxModal(true)}
-                  title="Open Managerial Inbox"
-                  aria-label="Open Managerial Inbox"
-                  className="w-6.5 h-6.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center relative cursor-pointer transition-transform active:scale-95 shrink-0"
-                  style={{
-                    background: 'var(--office-icon-pill-bg)',
-                    border: '1px solid var(--office-icon-pill-border)',
-                  }}
-                >
-                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#4f679d]" fill="currentColor" aria-hidden="true">
-                    <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4.2-8 5-8-5V6l8 5 8-5v2.2z" />
-                  </svg>
-                  {headerBadgeCount > 0 && (
-                    <span className="absolute -top-1 -right-0.5 min-w-[14px] h-[14px] px-1 rounded-full bg-[#ef4444] text-white font-display font-black text-[8.5px] flex items-center justify-center shadow-xs border border-white">
-                      {headerBadgeCount}
-                    </span>
-                  )}
-                </button>
-
-                {/* Settings Gear Icon Button */}
-                <button
-                  type="button"
-                  data-office-ui="true"
-                  onClick={() => handleTabChange('settings')}
-                  title="Career Settings"
-                  aria-label="Career Settings"
-                  className="w-6.5 h-6.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center cursor-pointer transition-transform active:scale-95 shrink-0"
-                  style={{
-                    background: 'var(--office-icon-pill-bg)',
-                    border: '1px solid var(--office-icon-pill-border)',
-                  }}
-                >
-                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#4f679d]" fill="currentColor" aria-hidden="true">
-                    <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
-                  </svg>
-                </button>
-              </div>
-            </header>
-
-            {/* 2. FLOATING 5-TAB NAVIGATION BAR */}
-            <div className="relative z-30 office-reveal-2">
-              <nav
-                aria-label="Career management sections"
-                data-office-ui="true"
-                data-no-swipe="true"
-                className="office-floating-card rounded-[20px] p-1 grid grid-cols-5 gap-1 select-none"
-              >
-                {/* Office (Active) */}
-                <button
-                  type="button"
-                  data-office-ui="true"
-                  onClick={() => handleTabChange('overview')}
-                  className="office-nav-tab-active rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer"
-                >
-                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
-                    <path d="M12 3 3 10h2v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9h2L12 3z" />
-                  </svg>
-                  <span className="text-[11px] font-bold tracking-tight leading-tight">Office</span>
-                </button>
-
-                {/* Squad */}
-                <button
-                  type="button"
-                  data-office-ui="true"
-                  onClick={() => handleTabChange('squad')}
-                  className="office-nav-tab-inactive rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer"
-                >
-                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[var(--office-text-muted)]" aria-hidden="true">
-                    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
-                  </svg>
-                  <span className="text-[11px] font-semibold tracking-tight leading-tight">Squad</span>
-                </button>
-
-                {/* Fixtures */}
-                <button
-                  type="button"
-                  data-office-ui="true"
-                  onClick={() => handleTabChange('fixtures')}
-                  className="office-nav-tab-inactive rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer"
-                >
-                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[var(--office-text-muted)]" aria-hidden="true">
-                    <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5v-5z" />
-                  </svg>
-                  <span className="text-[11px] font-semibold tracking-tight leading-tight">Fixtures</span>
-                </button>
-
-                {/* Transfers */}
-                <button
-                  type="button"
-                  data-office-ui="true"
-                  onClick={() => handleTabChange('transfers')}
-                  className="office-nav-tab-inactive rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer relative"
-                >
-                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[var(--office-text-muted)]" aria-hidden="true">
-                    <path d="M6.99 11 3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z" />
-                  </svg>
-                  <span className="text-[11px] font-semibold tracking-tight leading-tight">Transfers</span>
-                  {incomingOffersCount > 0 && (
-                    <span className="absolute top-1 right-2 w-2 h-2 rounded-full bg-[#f59e0b]" />
-                  )}
-                </button>
-
-                {/* More */}
-                <button
-                  type="button"
-                  data-office-ui="true"
-                  onClick={() => setIsMoreMenuOpen((prev) => !prev)}
-                  aria-expanded={isMoreMenuOpen}
-                  aria-haspopup="true"
-                  className="office-nav-tab-inactive rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer"
-                >
-                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[var(--office-text-muted)]" aria-hidden="true">
-                    <circle cx="6" cy="12" r="2" />
-                    <circle cx="12" cy="12" r="2" />
-                    <circle cx="18" cy="12" r="2" />
-                  </svg>
-                  <span className="text-[11px] font-semibold tracking-tight leading-tight">More</span>
-                </button>
-              </nav>
-
-              {/* More Menu Popover */}
-              {isMoreMenuOpen && (
-                <div
-                  data-office-ui="true"
-                  className="office-floating-card absolute right-0 top-full mt-1.5 z-40 w-60 rounded-2xl p-2 shadow-2xl space-y-1"
-                  role="menu"
-                >
-                  {[
-                    { id: 'table', label: 'League Table', icon: '📊', desc: 'Standings, GD & form guide' },
-                    { id: 'cups', label: 'Cups & Europe', icon: '🏆', desc: 'Domestic cups & continental silverware' },
-                    { id: 'settings', label: 'Career Settings', icon: '⚙️', desc: 'Rules, formats & club naming' },
-                  ].map((item) => (
-                    <button
-                      key={item.id}
-                      role="menuitem"
-                      data-office-ui="true"
-                      onClick={() => handleTabChange(item.id as typeof activeTab)}
-                      className="office-subcard w-full p-2.5 rounded-xl text-left flex items-center gap-3 cursor-pointer"
-                    >
-                      <span className="text-base">{item.icon}</span>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-display font-bold text-xs text-[var(--office-text-primary)]">
-                          {item.label}
-                        </div>
-                        <div className="text-[10px] text-[var(--office-text-muted)] truncate">{item.desc}</div>
-                      </div>
-                    </button>
-                  ))}
-
-                  <div className="h-px bg-[var(--office-divider)] my-1" />
-
-                  <div className="grid grid-cols-2 gap-1.5">
-                    <button
-                      type="button"
-                      data-office-ui="true"
-                      onClick={() => {
-                        toggleTheme();
-                        setIsMoreMenuOpen(false);
-                      }}
-                      className="office-subcard py-2 px-2.5 rounded-xl text-[11px] font-bold text-[var(--office-text-primary)] flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      <span>{theme === 'dark' ? '☀️ Light' : '🌙 Dark'}</span>
-                    </button>
-                    <button
-                      type="button"
-                      data-office-ui="true"
-                      onClick={() => {
-                        handleExport();
-                        setIsMoreMenuOpen(false);
-                      }}
-                      className="office-subcard py-2 px-2.5 rounded-xl text-[11px] font-bold text-[var(--office-text-primary)] flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      <span>💾 Backup</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
 
             {/* 3. NEXT FIXTURE SPOTLIGHT HERO CARD */}
             {nextScheduled ? (

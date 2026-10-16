@@ -105,36 +105,42 @@ export function HomeScreen({
       {/* Dual Mode Portals - compact & accessible above the fold on mobile */}
       <section
         aria-label="Select Game Mode"
-        className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full text-left"
+        className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full text-left"
       >
         {/* Draft Mode Portal */}
-        <article className="rounded-2xl border border-slate-800 bg-slate-900/60 hover:border-emerald-500/40 p-3.5 sm:p-4.5 flex flex-col justify-between transition-colors">
+        <article className="office-floating-card rounded-[26px] p-4 sm:p-5 flex flex-col justify-between hover:scale-[1.01] transition-transform shadow-lg relative overflow-hidden">
+          {/* Top accent glow stripe */}
+          <div
+            className="absolute top-0 left-0 right-0 h-1.5"
+            style={{ background: 'linear-gradient(to right, #00d2ff, #10b981)' }}
+          />
+
           <div>
-            <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center justify-between mb-1 pt-1">
               <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-emerald-400 font-bold">
                 Draft Mode
               </span>
-              <span className="text-[9px] uppercase tracking-wider text-slate-500 font-semibold">
+              <span className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold office-subcard px-2 py-0.5 rounded-full">
                 38-Game Sim
               </span>
             </div>
 
-            <h2 className="text-base sm:text-lg font-display font-black text-foreground uppercase tracking-tight">
+            <h2 className="text-base sm:text-lg font-display font-black text-[var(--office-text-primary)] uppercase tracking-tight mt-1">
               Draft Your XI
             </h2>
-            <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">
+            <p className="text-[11px] text-slate-400 mt-1 leading-snug">
               Build an all-time XI across eras. Link chemistry and simulate a full 38-game league season.
             </p>
 
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              <span className="text-[9px] px-2 py-0.5 rounded bg-slate-800/80 text-slate-300 font-medium">
+            <div className="flex flex-wrap gap-1.5 mt-2.5">
+              <span className="text-[9px] px-2 py-0.5 rounded-full office-subcard text-slate-300 font-medium">
                 344 Players
               </span>
-              <span className="text-[9px] px-2 py-0.5 rounded bg-slate-800/80 text-slate-300 font-medium">
+              <span className="text-[9px] px-2 py-0.5 rounded-full office-subcard text-slate-300 font-medium">
                 Chemistry Links
               </span>
               {streakStats.gamesPlayed > 0 && (
-                <span className="text-[9px] px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-800/40 text-emerald-300 font-medium">
+                <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-medium font-mono">
                   {personalBests.overall?.bestWins !== undefined
                     ? `Best: ${personalBests.overall.bestWins}W`
                     : `Best: ${streakStats.bestPoints} pts`}
@@ -143,10 +149,10 @@ export function HomeScreen({
             </div>
           </div>
 
-          <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex flex-col gap-2">
+          <div className="mt-4 pt-3 border-t border-[var(--office-divider)] flex flex-col gap-2">
             <button
               onClick={onStartDraft}
-              className="w-full py-2.5 sm:py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-slate-950 font-display font-black text-xs sm:text-sm uppercase tracking-wider transition-all cursor-pointer text-center shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-1.5 min-h-[44px]"
+              className="office-play-match-btn w-full py-3 px-4 rounded-2xl text-white font-display font-black text-xs sm:text-sm uppercase tracking-wider cursor-pointer text-center shadow-lg flex items-center justify-center gap-1.5 min-h-[44px]"
             >
               Play Draft Mode ➔
             </button>
@@ -154,7 +160,7 @@ export function HomeScreen({
             {todayChallenge && (
               <button
                 onClick={onPlayDailyChallenge}
-                className="w-full py-1.5 px-2.5 rounded-lg border border-slate-800 bg-slate-900/40 hover:bg-slate-800/60 text-slate-300 hover:text-white text-[11px] font-medium flex items-center justify-between transition-colors cursor-pointer min-h-[38px]"
+                className="w-full py-2 px-3 rounded-xl office-subcard hover:border-amber-400/50 text-slate-300 hover:text-white text-[11px] font-medium flex items-center justify-between transition-colors cursor-pointer min-h-[38px]"
               >
                 <span className="truncate">
                   Daily Challenge: <strong className="text-amber-400">{todayChallenge.title}</strong>
@@ -169,7 +175,7 @@ export function HomeScreen({
               {onRandomDraft && (
                 <button
                   onClick={onRandomDraft}
-                  className="py-1.5 px-2 rounded-lg bg-slate-900/40 hover:bg-slate-800/80 border border-slate-800 text-slate-300 hover:text-emerald-400 font-mono uppercase text-[9px] font-bold text-center transition-colors cursor-pointer min-h-[36px] flex items-center justify-center"
+                  className="py-1.5 px-2 rounded-xl office-subcard hover:border-emerald-400/50 text-slate-300 hover:text-emerald-400 font-mono uppercase text-[9px] font-bold text-center transition-colors cursor-pointer min-h-[36px] flex items-center justify-center"
                 >
                   Instant Draft ➔
                 </button>
@@ -177,7 +183,7 @@ export function HomeScreen({
               {onViewHistory && (
                 <button
                   onClick={onViewHistory}
-                  className="py-1.5 px-2 rounded-lg bg-slate-900/40 hover:bg-slate-800/80 border border-slate-800 text-slate-300 hover:text-emerald-400 font-mono uppercase text-[9px] font-bold text-center transition-colors cursor-pointer min-h-[36px] flex items-center justify-center"
+                  className="py-1.5 px-2 rounded-xl office-subcard hover:border-emerald-400/50 text-slate-300 hover:text-emerald-400 font-mono uppercase text-[9px] font-bold text-center transition-colors cursor-pointer min-h-[36px] flex items-center justify-center"
                 >
                   📜 History ➔
                 </button>
@@ -187,56 +193,62 @@ export function HomeScreen({
         </article>
 
         {/* Career Mode Portal */}
-        <article className="rounded-2xl border border-slate-800 bg-slate-900/60 hover:border-indigo-500/40 p-3.5 sm:p-4.5 flex flex-col justify-between transition-colors">
+        <article className="office-floating-card rounded-[26px] p-4 sm:p-5 flex flex-col justify-between hover:scale-[1.01] transition-transform shadow-lg relative overflow-hidden">
+          {/* Top accent glow stripe */}
+          <div
+            className="absolute top-0 left-0 right-0 h-1.5"
+            style={{ background: 'linear-gradient(to right, #1d5eff, #7c3aed, #c026d3)' }}
+          />
+
           <div>
-            <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center justify-between mb-1 pt-1">
               <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-indigo-400 font-bold">
                 Career Mode
               </span>
-              <span className="text-[9px] uppercase tracking-wider text-slate-500 font-semibold">
+              <span className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold office-subcard px-2 py-0.5 rounded-full">
                 Multi-Season
               </span>
             </div>
 
-            <h2 className="text-base sm:text-lg font-display font-black text-foreground uppercase tracking-tight">
+            <h2 className="text-base sm:text-lg font-display font-black text-[var(--office-text-primary)] uppercase tracking-tight mt-1">
               Club Management
             </h2>
-            <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">
+            <p className="text-[11px] text-slate-400 mt-1 leading-snug">
               Lead your club across seasons. Squad caps, transfers, cups, finances, and board expectations.
             </p>
 
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              <span className="text-[9px] px-2 py-0.5 rounded bg-slate-800/80 text-slate-300 font-medium">
+            <div className="flex flex-wrap gap-1.5 mt-2.5">
+              <span className="text-[9px] px-2 py-0.5 rounded-full office-subcard text-slate-300 font-medium">
                 20 PL Clubs
               </span>
-              <span className="text-[9px] px-2 py-0.5 rounded bg-slate-800/80 text-slate-300 font-medium">
+              <span className="text-[9px] px-2 py-0.5 rounded-full office-subcard text-slate-300 font-medium">
                 25-Man Senior Cap
               </span>
-              <span className="text-[9px] px-2 py-0.5 rounded bg-slate-800/80 text-slate-300 font-medium">
+              <span className="text-[9px] px-2 py-0.5 rounded-full office-subcard text-slate-300 font-medium">
                 4 Trophies
               </span>
             </div>
           </div>
 
-          <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex flex-col gap-2">
+          <div className="mt-4 pt-3 border-t border-[var(--office-divider)] flex flex-col gap-2">
             {activeCareerSave ? (
               <Link
                 href={`/career/play?slot=${activeSlotId}`}
-                className="w-full py-2.5 sm:py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 active:scale-[0.98] text-white font-display font-black text-xs sm:text-sm uppercase tracking-wider transition-all cursor-pointer text-center shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-1.5 min-h-[44px]"
+                className="office-play-match-btn w-full py-3 px-4 rounded-2xl text-white font-display font-black text-xs sm:text-sm uppercase tracking-wider cursor-pointer text-center shadow-lg flex items-center justify-center gap-1.5 min-h-[44px]"
               >
                 <span>▶ Continue {activeCareerSave.clubName} — Season {activeCareerSave.seasonNumber}</span>
               </Link>
             ) : onSelectCareerMode ? (
               <button
                 onClick={onSelectCareerMode}
-                className="w-full py-2.5 sm:py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-display font-black text-xs sm:text-sm uppercase tracking-wider transition-all cursor-pointer text-center shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-1.5 min-h-[44px]"
+                className="office-play-match-btn w-full py-3 px-4 rounded-2xl text-white font-display font-black text-xs sm:text-sm uppercase tracking-wider cursor-pointer text-center shadow-lg flex items-center justify-center gap-1.5 min-h-[44px]"
               >
                 Start Career Mode ➔
               </button>
             ) : (
               <Link
                 href="/career/setup"
-                className="w-full py-2.5 sm:py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-display font-black text-xs sm:text-sm uppercase tracking-wider transition-all cursor-pointer text-center shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-1.5 min-h-[44px]"
+                className="office-play-match-btn w-full py-3 px-4 rounded-2xl text-white font-display font-black text-xs sm:text-sm uppercase tracking-wider cursor-pointer text-center shadow-lg flex items-center justify-center gap-1.5 min-h-[44px]"
               >
                 Start Career Mode ➔
               </Link>
@@ -245,13 +257,13 @@ export function HomeScreen({
             <div className="grid grid-cols-2 gap-1.5 text-[10px]">
               <Link
                 href="/career/setup"
-                className="py-1.5 px-2 rounded-lg bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 text-slate-300 hover:text-indigo-400 font-mono uppercase text-[9px] font-bold text-center transition-colors min-h-[36px] flex items-center justify-center"
+                className="py-1.5 px-2 rounded-xl office-subcard hover:border-indigo-400/50 text-slate-300 hover:text-indigo-400 font-mono uppercase text-[9px] font-bold text-center transition-colors min-h-[36px] flex items-center justify-center"
               >
                 + New Career ➔
               </Link>
               <Link
                 href="/career"
-                className="py-1.5 px-2 rounded-lg bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 text-slate-300 hover:text-indigo-400 font-mono uppercase text-[9px] font-bold text-center transition-colors min-h-[36px] flex items-center justify-center"
+                className="py-1.5 px-2 rounded-xl office-subcard hover:border-indigo-400/50 text-slate-300 hover:text-indigo-400 font-mono uppercase text-[9px] font-bold text-center transition-colors min-h-[36px] flex items-center justify-center"
               >
                 Save Slots ({careerSlots.filter((s) => !s.isEmpty).length}/3) ➔
               </Link>

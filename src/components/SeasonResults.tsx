@@ -330,7 +330,7 @@ export function SeasonResults({
       )}
 
       {/* 1. Main League Outcome Card */}
-      <div className="w-full flex flex-col items-center p-6 rounded-[32px] glass border border-emerald-500/10 relative overflow-hidden text-center z-10 shadow-2xl">
+      <div className="w-full flex flex-col items-center p-6 office-floating-card relative overflow-hidden text-center z-10">
         <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent pointer-events-none" />
 
         {/* Daily Challenge Clear Status Badge */}
@@ -352,19 +352,19 @@ export function SeasonResults({
           {simResult.wins}W - {simResult.draws}D - {simResult.losses}L
         </p>
         
-        <p className="text-xs font-bold text-slate-350 mt-2 leading-none uppercase tracking-wide">
+        <p className="text-xs font-bold text-muted-foreground mt-2 leading-none uppercase tracking-wide">
           Record: <span className="text-foreground font-extrabold">{simResult.points} PTS</span> • Goals: <span className="text-foreground font-extrabold">{simResult.goalsFor}F / {simResult.goalsAgainst}A</span>
         </p>
 
-        <div className="h-[1.5px] w-12 bg-slate-900 my-4" />
+        <div className="h-[1.5px] w-12 bg-border my-4" />
 
-        <p className="text-xs font-semibold text-slate-400 max-w-sm leading-relaxed italic">
+        <p className="text-xs font-semibold text-muted-foreground max-w-sm leading-relaxed italic">
           "{simResult.summary}"
         </p>
 
         {/* Season Verdict & Expectation Band */}
         {simResult.seasonStory && (
-          <div className="flex flex-wrap items-center justify-center gap-2 mt-4 pt-3 border-t border-slate-900/60 w-full">
+          <div className="flex flex-wrap items-center justify-center gap-2 mt-4 pt-3 border-t border-border/40 w-full">
             <span className={`text-[9px] font-black px-3 py-1 rounded-full border uppercase tracking-wider font-display leading-none ${
               simResult.seasonStory.verdict === 'Exceeded expectations'
                 ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
@@ -374,7 +374,7 @@ export function SeasonResults({
             }`}>
               VERDICT: {simResult.seasonStory.verdict}
             </span>
-            <span className="text-[9px] font-bold text-slate-450 bg-slate-950/70 border border-slate-900 px-2.5 py-1 rounded-full uppercase tracking-wider font-display">
+            <span className="text-[9px] font-bold text-muted-foreground office-subcard px-2.5 py-1 rounded-full uppercase tracking-wider font-display">
               Expected: {simResult.seasonStory.expectedWinsBand}
             </span>
           </div>
@@ -383,59 +383,59 @@ export function SeasonResults({
 
       {/* Season Narrative & Story Review Card */}
       {simResult.seasonStory && (
-        <div className="w-full p-6 rounded-[32px] glass border border-slate-900 z-10 flex flex-col gap-4 shadow-xl select-none">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-900 pb-3">
+        <div className="w-full p-6 office-floating-card z-10 flex flex-col gap-4 select-none">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 pb-3">
             <div>
-              <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">
+              <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">
                 Official Season Review
               </span>
               <h3 className="text-lg font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400 uppercase tracking-tight mt-0.5">
                 {simResult.seasonStory.title}
               </h3>
             </div>
-            <span className="text-[9px] font-extrabold px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-slate-350 font-display">
+            <span className="text-[9px] font-extrabold px-2.5 py-1 rounded-xl office-subcard text-foreground font-display">
               {simResult.seasonStory.longestStreak.description}
             </span>
           </div>
 
-          <div className="flex flex-col gap-3 text-xs leading-relaxed text-slate-350">
-            <div className="p-3.5 rounded-2xl bg-slate-950/40 border border-slate-900/60">
-              <span className="text-[9.5px] font-extrabold text-emerald-450 uppercase tracking-wider font-display block mb-1">
+          <div className="flex flex-col gap-3 text-xs leading-relaxed text-muted-foreground">
+            <div className="p-3.5 rounded-2xl office-subcard">
+              <span className="text-[9.5px] font-extrabold text-emerald-500 uppercase tracking-wider font-display block mb-1">
                 🏁 The Opening 10 Matchdays
               </span>
-              <p className="text-slate-400 font-medium">{simResult.seasonStory.howStarted}</p>
+              <p className="text-foreground/80 font-medium">{simResult.seasonStory.howStarted}</p>
             </div>
 
             {simResult.seasonStory.turningPoint && (
-              <div className="p-3.5 rounded-2xl bg-slate-950/40 border border-slate-900/60">
-                <span className="text-[9.5px] font-extrabold text-amber-400 uppercase tracking-wider font-display block mb-1">
+              <div className="p-3.5 rounded-2xl office-subcard">
+                <span className="text-[9.5px] font-extrabold text-amber-500 uppercase tracking-wider font-display block mb-1">
                   ⚡ The Turning Point
                 </span>
-                <p className="text-slate-400 font-medium">{simResult.seasonStory.turningPoint}</p>
+                <p className="text-foreground/80 font-medium">{simResult.seasonStory.turningPoint}</p>
               </div>
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="p-3.5 rounded-2xl bg-emerald-950/10 border border-emerald-500/20">
-                <span className="text-[9.5px] font-extrabold text-emerald-400 uppercase tracking-wider font-display block mb-1">
+                <span className="text-[9.5px] font-extrabold text-emerald-500 uppercase tracking-wider font-display block mb-1">
                   💪 Why It Worked
                 </span>
-                <p className="text-slate-400 font-medium text-[11px]">{simResult.seasonStory.whyItWorked}</p>
+                <p className="text-foreground/80 font-medium text-[11px]">{simResult.seasonStory.whyItWorked}</p>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-rose-950/10 border border-rose-500/20">
-                <span className="text-[9.5px] font-extrabold text-rose-400 uppercase tracking-wider font-display block mb-1">
+                <span className="text-[9.5px] font-extrabold text-rose-500 uppercase tracking-wider font-display block mb-1">
                   ⚠️ What Held You Back
                 </span>
-                <p className="text-slate-400 font-medium text-[11px]">{simResult.seasonStory.whatHeldBack}</p>
+                <p className="text-foreground/80 font-medium text-[11px]">{simResult.seasonStory.whatHeldBack}</p>
               </div>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-slate-950/40 border border-slate-900/60">
-              <span className="text-[9.5px] font-extrabold text-indigo-400 uppercase tracking-wider font-display block mb-1">
+            <div className="p-3.5 rounded-2xl office-subcard">
+              <span className="text-[9.5px] font-extrabold text-indigo-500 uppercase tracking-wider font-display block mb-1">
                 🏆 Final Campaign Appraisal
               </span>
-              <p className="text-slate-400 font-medium">{simResult.seasonStory.howEnded}</p>
+              <p className="text-foreground/80 font-medium">{simResult.seasonStory.howEnded}</p>
             </div>
           </div>
         </div>
@@ -709,13 +709,13 @@ export function SeasonResults({
       <div className="mt-4 mb-6 relative z-10 flex flex-col sm:flex-row gap-3 w-full">
         <button
           onClick={onStartDraft}
-          className="flex-1 py-4 px-6 rounded-2xl bg-slate-900 border border-slate-800 text-foreground hover:bg-slate-800 font-display font-black text-sm uppercase tracking-wider transition-all duration-300 transform active:scale-98 cursor-pointer text-center"
+          className="flex-1 py-4 px-6 rounded-2xl office-subcard text-foreground hover:bg-slate-200/50 dark:hover:bg-slate-800/50 font-display font-black text-sm uppercase tracking-wider transition-all duration-300 transform active:scale-98 cursor-pointer text-center shadow-sm"
         >
           🎮 Build Another Team
         </button>
         <button
           onClick={onRandomDraft}
-          className="flex-grow py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-zinc-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 hover:-translate-y-0.5 transition-all duration-300 transform active:scale-98 cursor-pointer text-center"
+          className="flex-grow py-4 px-6 rounded-2xl office-play-match-btn text-white font-display font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 transform active:scale-98 cursor-pointer text-center"
         >
           🎲 Randomize Again
         </button>

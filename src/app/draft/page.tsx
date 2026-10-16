@@ -109,24 +109,24 @@ function DraftPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-foreground font-sans flex flex-col pitch-bg w-full overflow-x-hidden">
-      {/* Draft Mode App Header */}
-      <header className="w-full py-4 px-6 border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50 flex justify-between items-center select-none shadow-lg">
-        <div className="flex items-center gap-3">
+    <div className="min-h-screen my11-canvas text-foreground font-sans flex flex-col w-full overflow-x-hidden p-3 sm:p-5 select-none">
+      {/* Draft Mode Floating MY-11 Header */}
+      <header className="office-floating-card w-full max-w-4xl mx-auto rounded-[24px] p-3 sm:p-4 mb-4 flex items-center justify-between shadow-md">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={handleReturnHome}
             title="Return to Home"
-            className="text-xs font-bold text-slate-400 hover:text-white px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900/60 hover:bg-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer"
+            className="office-subcard px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             ← <span>Home</span>
           </button>
-          <div className="h-4 w-px bg-slate-800" />
+          <div className="h-4 w-px bg-[var(--office-divider)]" />
           <button
             onClick={handleReturnHome}
-            className="text-lg font-display font-black tracking-tight text-foreground uppercase hover:text-emerald-400 transition-colors cursor-pointer"
+            className="text-base sm:text-lg font-display font-black tracking-tight text-[var(--office-text-primary)] uppercase hover:text-emerald-400 transition-colors cursor-pointer flex items-center gap-1.5"
           >
-            MY-<span className="text-emerald-400">11</span>{' '}
-            <span className="text-[10px] ml-1 font-mono font-bold tracking-wider text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2 py-0.5 rounded-full uppercase">
+            <span>MY-11</span>
+            <span className="text-[10px] font-mono font-bold tracking-wider text-emerald-400 office-subcard px-2 py-0.5 rounded-full uppercase">
               Draft
             </span>
           </button>
@@ -134,8 +134,8 @@ function DraftPageContent() {
 
         <div className="flex items-center gap-2">
           {game.streakStats.currentDailyStreak > 0 && (
-            <span className="text-[9.5px] font-mono font-bold text-slate-400 bg-slate-900/60 px-2.5 py-1 rounded-md border border-slate-800 uppercase tracking-wider leading-none">
-              Streak: {game.streakStats.currentDailyStreak}d
+            <span className="office-subcard text-[10px] font-mono font-bold text-slate-300 px-2.5 py-1 rounded-full uppercase tracking-wider leading-none">
+              🔥 {game.streakStats.currentDailyStreak}d
             </span>
           )}
 
@@ -143,9 +143,9 @@ function DraftPageContent() {
           <Link
             href="/career"
             title="Career Mode"
-            className="text-[10px] font-mono font-bold tracking-wider uppercase px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900/60 text-slate-300 hover:text-white transition-colors flex items-center gap-1 leading-none"
+            className="office-subcard text-[10px] font-mono font-bold tracking-wider uppercase px-2.5 py-1.5 rounded-xl text-slate-300 hover:text-white transition-colors flex items-center gap-1 leading-none"
           >
-            Career Mode
+            Career
           </Link>
 
           {/* History Screen Trigger Button */}
@@ -158,7 +158,7 @@ function DraftPageContent() {
               }
             }}
             title="View Squad History & Personal Bests"
-            className="w-7 h-7 rounded-full flex items-center justify-center border border-slate-900 bg-slate-950/60 text-[10px] text-slate-400 hover:text-white hover:border-slate-800 hover:bg-slate-900/60 cursor-pointer active:scale-95 transition-all leading-none"
+            className="w-8 h-8 rounded-full flex items-center justify-center office-subcard text-xs text-slate-400 hover:text-white cursor-pointer active:scale-95 transition-transform"
           >
             📜
           </button>
@@ -167,7 +167,7 @@ function DraftPageContent() {
           <button
             onClick={() => setShowTutorial(true)}
             title="How to Play & Game Guides"
-            className="w-7 h-7 rounded-full flex items-center justify-center border border-slate-900 bg-slate-950/60 text-[9px] text-slate-400 hover:text-white hover:border-slate-800 hover:bg-slate-900/60 cursor-pointer active:scale-95 transition-all leading-none"
+            className="w-8 h-8 rounded-full flex items-center justify-center office-subcard text-xs text-slate-400 hover:text-white cursor-pointer active:scale-95 transition-transform"
           >
             ❓
           </button>
@@ -176,7 +176,7 @@ function DraftPageContent() {
           <button
             onClick={toggleTheme}
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className="w-7 h-7 rounded-full flex items-center justify-center border border-slate-900 bg-slate-950/60 text-slate-400 hover:text-white hover:border-slate-800 hover:bg-slate-900/60 cursor-pointer active:scale-95 transition-all text-[11px] leading-none"
+            className="w-8 h-8 rounded-full flex items-center justify-center office-subcard text-xs cursor-pointer active:scale-95 transition-transform"
           >
             {theme === 'dark' ? '🌙' : '☀️'}
           </button>

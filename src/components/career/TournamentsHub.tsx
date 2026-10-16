@@ -184,10 +184,10 @@ export function TournamentsHub({
                   window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                 }
               }}
-              className={`py-2 px-3.5 rounded-xl border text-xs font-display font-black uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap cursor-pointer transition-all ${
+              className={`py-2 px-3.5 rounded-xl text-xs font-display font-black uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap cursor-pointer transition-all ${
                 isSelected
-                  ? 'border-emerald-500 bg-emerald-950/40 text-emerald-300 shadow-md shadow-emerald-950/50'
-                  : 'border-slate-800 bg-slate-900/40 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                  ? 'office-nav-tab-active shadow-sm'
+                  : 'office-nav-tab'
               }`}
             >
               <span>{t.icon}</span>

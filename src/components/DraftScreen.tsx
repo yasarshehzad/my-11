@@ -268,7 +268,7 @@ export function DraftScreen({
             {simResult && (
               <button
                 onClick={onStartSimulation}
-                className="hidden md:inline-flex py-3 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-zinc-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/10 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/20 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer"
+                className="hidden md:inline-flex office-play-match-btn py-3 px-5 rounded-2xl text-white font-display font-black text-xs uppercase tracking-wider shadow-lg cursor-pointer"
               >
                 Start simulation ➔
               </button>
@@ -279,7 +279,7 @@ export function DraftScreen({
             <button
               onClick={onUndoPick}
               title="Undo previous pick"
-              className="py-2 px-3 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-foreground hover:bg-slate-800 hover:border-slate-700 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+              className="office-subcard py-2 px-3.5 rounded-xl text-slate-400 hover:text-white font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
             >
               <span>↩️</span> Undo
             </button>
@@ -443,10 +443,10 @@ export function DraftScreen({
 
       {/* Sticky Proceed Button for Mobile (Bottom of screen) */}
       {isFinished && simResult && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent border-t border-slate-900/30 md:relative md:bg-none md:border-none md:p-0 z-40 flex justify-center">
+        <div className="fixed bottom-3 left-3 right-3 md:relative md:bottom-auto md:left-auto md:right-auto z-40 flex justify-center">
           <button
             onClick={onStartSimulation}
-            className="w-full max-w-sm py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-zinc-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/35 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer text-center"
+            className="office-play-match-btn w-full max-w-sm py-4 px-6 rounded-2xl text-white font-display font-black text-sm uppercase tracking-wider shadow-2xl cursor-pointer text-center"
           >
             Start Simulation ➔
           </button>

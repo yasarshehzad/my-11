@@ -112,34 +112,41 @@ export default function DraftedXIGame() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-foreground font-sans flex flex-col pitch-bg w-full overflow-x-hidden">
-      {/* App Header */}
-      <header className="w-full py-4 px-6 border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50 flex justify-between items-center select-none shadow-lg">
-        <button
-          onClick={() => {
-            if (game.phase === 'home') return;
-            if (game.phase === 'results' || window.confirm('Abandon current run and return to homepage?')) {
-              game.returnHome();
-            }
-          }}
-          className="text-lg font-display font-black tracking-tight text-foreground uppercase hover:text-emerald-400 transition-colors cursor-pointer"
-        >
-          MY-<span className="text-emerald-400">11</span>
-        </button>
-        
+    <div className="min-h-screen my11-canvas text-foreground font-sans flex flex-col w-full overflow-x-hidden p-3 sm:p-5 select-none">
+      {/* Floating MY-11 Header Card */}
+      <header className="office-floating-card w-full max-w-4xl mx-auto rounded-[24px] p-3 sm:p-4 mb-4 flex items-center justify-between shadow-md">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-400 via-blue-500 to-fuchsia-500 p-0.5 shadow-md flex items-center justify-center">
+            <div className="w-full h-full rounded-full bg-[var(--office-card-bg)] flex items-center justify-center font-display font-black text-xs text-[var(--office-text-primary)]">
+              👑
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              if (game.phase === 'home') return;
+              if (game.phase === 'results' || window.confirm('Abandon current run and return to homepage?')) {
+                game.returnHome();
+              }
+            }}
+            className="text-base sm:text-lg font-display font-black tracking-tight text-[var(--office-text-primary)] uppercase hover:text-emerald-400 transition-colors cursor-pointer"
+          >
+            MY-<span className="text-emerald-400">11</span>
+          </button>
+        </div>
+
         <div className="flex items-center gap-2">
           {game.streakStats.currentDailyStreak > 0 && (
-            <span className="text-[9.5px] font-mono font-bold text-slate-400 bg-slate-900/60 px-2.5 py-1 rounded-md border border-slate-800 uppercase tracking-wider leading-none">
-              Streak: {game.streakStats.currentDailyStreak}d
+            <span className="office-subcard text-[10px] font-mono font-bold text-slate-300 px-2.5 py-1 rounded-full uppercase tracking-wider leading-none">
+              🔥 {game.streakStats.currentDailyStreak}d
             </span>
           )}
-          
+
           {/* Career Mode Quick Link when inside Draft or other phases */}
           {game.phase !== 'home' && (
             <Link
               href="/career"
               title="Career Mode"
-              className="text-[10px] font-mono font-bold tracking-wider uppercase px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900/60 text-slate-300 hover:text-white transition-colors flex items-center gap-1 leading-none"
+              className="office-subcard text-[10px] font-mono font-bold tracking-wider uppercase px-2.5 py-1.5 rounded-xl text-slate-300 hover:text-white transition-colors flex items-center gap-1 leading-none"
             >
               Career Mode
             </Link>
@@ -155,7 +162,7 @@ export default function DraftedXIGame() {
               }
             }}
             title="View Squad History & Personal Bests"
-            className="w-7 h-7 rounded-full flex items-center justify-center border border-slate-900 bg-slate-950/60 text-[10px] text-slate-400 hover:text-white hover:border-slate-800 hover:bg-slate-900/60 cursor-pointer active:scale-95 transition-all leading-none"
+            className="w-8 h-8 rounded-full flex items-center justify-center office-subcard text-xs text-slate-400 hover:text-white cursor-pointer active:scale-95 transition-transform"
           >
             📜
           </button>
@@ -164,7 +171,7 @@ export default function DraftedXIGame() {
           <button
             onClick={handleOpenHelpModal}
             title="How to Play & Game Guides"
-            className="w-7 h-7 rounded-full flex items-center justify-center border border-slate-900 bg-slate-950/60 text-[9px] text-slate-400 hover:text-white hover:border-slate-800 hover:bg-slate-900/60 cursor-pointer active:scale-95 transition-all leading-none"
+            className="w-8 h-8 rounded-full flex items-center justify-center office-subcard text-xs text-slate-400 hover:text-white cursor-pointer active:scale-95 transition-transform"
           >
             ❓
           </button>
@@ -173,7 +180,7 @@ export default function DraftedXIGame() {
           <button
             onClick={toggleTheme}
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className="w-7 h-7 rounded-full flex items-center justify-center border border-slate-900 bg-slate-950/60 text-slate-400 hover:text-white hover:border-slate-800 hover:bg-slate-900/60 cursor-pointer active:scale-95 transition-all text-[11px] leading-none"
+            className="w-8 h-8 rounded-full flex items-center justify-center office-subcard text-xs cursor-pointer active:scale-95 transition-transform"
           >
             {theme === 'dark' ? '🌙' : '☀️'}
           </button>
