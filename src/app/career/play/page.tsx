@@ -85,6 +85,447 @@ import {
 } from '../../../career/transfers';
 import { updatePlayerForm, applyInSeasonMatchProgression } from '../../../career/formAndProgression';
 
+function formatOrdinalRank(n: number): string {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+function formatOfficeShortDate(dateStr: string): string {
+  const parts = dateStr.split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) return dateStr;
+  const [year, month, day] = parts;
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${day} ${months[month - 1] || 'Jan'} ${year}`;
+}
+
+function formatOfficeFixtureDate(dateStr: string): string {
+  const parts = dateStr.split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) return dateStr;
+  const [year, month, day] = parts;
+  const d = new Date(Date.UTC(year, month - 1, day));
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${days[d.getUTCDay()]} ${day} ${months[month - 1]} ${year}`;
+}
+
+function formatOfficeBudget(amount: number, currency: CurrencyPreference = 'GBP'): string {
+  const sym = currency === 'EUR' ? '€' : currency === 'USD' ? '$' : '£';
+  if (amount >= 1_000_000) {
+    const m = amount / 1_000_000;
+    const str = Number.isInteger(m) ? m.toFixed(0) : m.toFixed(1).replace(/\.0$/, '');
+    return `${sym}${str}M`;
+  }
+  if (amount >= 1_000) {
+    return `${sym}${Math.round(amount / 1_000)}k`;
+  }
+  return `${sym}${amount}`;
+}
+
+function formatOfficeWageRoom(weeklyAmount: number, currency: CurrencyPreference = 'GBP'): string {
+  const sym = currency === 'EUR' ? '€' : currency === 'USD' ? '$' : '£';
+  const k = Math.max(0, Math.round(weeklyAmount / 1_000));
+  return `${sym}${k}k / w`;
+}
+
+function isClubStripedKit(club: Club, displayName: string): boolean {
+  const lowerName = displayName.toLowerCase();
+  const stripedIds = new Set([
+    'newcastle',
+    'tyneside',
+    'tyneside_stripes',
+    'brighton',
+    'brighton_seagulls',
+    'brentford',
+    'west_london_bees',
+    'southampton',
+    'crystal_palace',
+    'south_london_eagles',
+    'sunderland',
+    'wearside_red_white',
+    'sheffield_utd',
+    'ac_milan',
+    'inter_milan',
+    'juventus',
+    'atletico_madrid',
+    'barcelona',
+  ]);
+  return (
+    stripedIds.has(club.id) ||
+    lowerName.includes('stripe') ||
+    lowerName.includes('tyneside') ||
+    lowerName.includes('magpie') ||
+    (club.primaryColor.toLowerCase() === '#111111' && club.secondaryColor.toLowerCase() === '#ffffff') ||
+    (club.primaryColor.toLowerCase() === '#000000' && club.secondaryColor.toLowerCase() === '#ffffff')
+  );
+}
+
+function OfficeClubJerseySvg({
+  club,
+  displayName,
+  size = 'lg',
+  uid,
+  className = '',
+}: {
+  club: Club;
+  displayName: string;
+  size?: 'lg' | 'sm';
+  uid: string;
+  className?: string;
+}) {
+  const striped = isClubStripedKit(club, displayName);
+  const primary = club.primaryColor || '#dc2626';
+  const secondary = striped && (club.id === 'tyneside_stripes' || displayName.toLowerCase().includes('tyneside'))
+    ? '#ffffff'
+    : (club.secondaryColor || '#ffffff');
+  const isLightPrimary =
+    primary.toLowerCase() === '#ffffff' ||
+    primary.toLowerCase() === '#f8fafc' ||
+    primary.toLowerCase() === '#eab308' ||
+    primary.toLowerCase() === '#fdb913';
+  const trimColor = isLightPrimary ? '#1e293b' : '#ffffff';
+
+  const clipId = `kit-clip-${uid}`;
+  const shadeId = `kit-shade-${uid}`;
+  const sheenId = `kit-sheen-${uid}`;
+  const dropId = `kit-drop-${uid}`;
+  const maskFadeId = `kit-fade-${uid}`;
+  const maskId = `kit-mask-${uid}`;
+
+  const shirtPath =
+    'M 38 12 C 44 16, 52 18, 60 18 C 68 18, 76 16, 82 12 L 106 24 L 116 52 L 95 60 L 88 42 L 88 102 C 88 105, 85 107, 81 107 L 39 107 C 35 107, 32 105, 32 102 L 32 42 L 25 60 L 4 52 L 14 24 Z';
+
+  if (size === 'sm') {
+    return (
+      <svg
+        viewBox="0 0 120 114"
+        className={`w-5 h-5 sm:w-5.5 sm:h-5.5 shrink-0 drop-shadow-2xs ${className}`}
+        aria-hidden="true"
+      >
+        <defs>
+          <clipPath id={clipId}>
+            <path d={shirtPath} />
+          </clipPath>
+        </defs>
+        <g clipPath={`url(#${clipId})`}>
+          <rect x="0" y="0" width="120" height="114" fill={primary} />
+          {striped && (
+            <g fill={secondary}>
+              <rect x="14" y="0" width="11" height="114" />
+              <rect x="36" y="0" width="11" height="114" />
+              <rect x="58" y="0" width="11" height="114" />
+              <rect x="80" y="0" width="11" height="114" />
+              <rect x="102" y="0" width="11" height="114" />
+            </g>
+          )}
+        </g>
+        <path
+          d={shirtPath}
+          fill="none"
+          stroke="rgba(15,23,42,0.28)"
+          strokeWidth="3.5"
+        />
+        <path
+          d="M 42 13 Q 60 27 78 13"
+          fill="none"
+          stroke={trimColor}
+          strokeWidth="5"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg
+      viewBox="0 0 120 114"
+      className={`w-[104px] h-[94px] sm:w-[116px] sm:h-[104px] select-none ${className}`}
+      aria-hidden="true"
+    >
+      <defs>
+        <clipPath id={clipId}>
+          <path d={shirtPath} />
+        </clipPath>
+        <linearGradient id={shadeId} x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#000000" stopOpacity="0.32" />
+          <stop offset="18%" stopColor="#000000" stopOpacity="0.06" />
+          <stop offset="45%" stopColor="#ffffff" stopOpacity="0.25" />
+          <stop offset="68%" stopColor="#ffffff" stopOpacity="0.06" />
+          <stop offset="85%" stopColor="#000000" stopOpacity="0.1" />
+          <stop offset="100%" stopColor="#000000" stopOpacity="0.34" />
+        </linearGradient>
+        <radialGradient id={sheenId} cx="46%" cy="32%" r="50%">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.34" />
+          <stop offset="60%" stopColor="#ffffff" stopOpacity="0.06" />
+          <stop offset="100%" stopColor="#000000" stopOpacity="0.18" />
+        </radialGradient>
+        <linearGradient id={maskFadeId} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+          <stop offset="82%" stopColor="#ffffff" stopOpacity="1" />
+          <stop offset="100%" stopColor="#ffffff" stopOpacity="0.18" />
+        </linearGradient>
+        <mask id={maskId}>
+          <rect x="0" y="0" width="120" height="114" fill={`url(#${maskFadeId})`} />
+        </mask>
+        <filter id={dropId} x="-15%" y="-10%" width="130%" height="130%">
+          <feDropShadow dx="0" dy="5" stdDeviation="4" floodColor="#0f172a" floodOpacity="0.24" />
+        </filter>
+      </defs>
+
+      <g filter={`url(#${dropId})`} mask={`url(#${maskId})`}>
+        <g clipPath={`url(#${clipId})`}>
+          {/* Base Jersey Color */}
+          <rect x="0" y="0" width="120" height="114" fill={primary} />
+
+          {/* Vertical Stripes for Striped Clubs or Subtle Tonal Pinstripes for Solid Kits */}
+          {striped ? (
+            <g fill={secondary}>
+              <rect x="4" y="0" width="10" height="114" />
+              <rect x="24" y="0" width="11" height="114" />
+              <rect x="45" y="0" width="10" height="114" />
+              <rect x="65" y="0" width="10" height="114" />
+              <rect x="85" y="0" width="11" height="114" />
+              <rect x="106" y="0" width="10" height="114" />
+            </g>
+          ) : (
+            <g opacity="0.11" fill="#000000">
+              <rect x="38" y="0" width="3" height="114" />
+              <rect x="49" y="0" width="3" height="114" />
+              <rect x="60" y="0" width="3" height="114" />
+              <rect x="71" y="0" width="3" height="114" />
+              <rect x="82" y="0" width="3" height="114" />
+            </g>
+          )}
+
+          {/* Sleeve Raglan Seams */}
+          <path d="M 38 12 Q 33 28 32 42" stroke="rgba(255,255,255,0.22)" strokeWidth="1.5" fill="none" />
+          <path d="M 82 12 Q 87 28 88 42" stroke="rgba(255,255,255,0.22)" strokeWidth="1.5" fill="none" />
+          <path d="M 38 12 L 32 42" stroke="rgba(0,0,0,0.24)" strokeWidth="2" fill="none" />
+          <path d="M 82 12 L 88 42" stroke="rgba(0,0,0,0.24)" strokeWidth="2" fill="none" />
+
+          {/* Sleeve Cuffs with Dual Trim */}
+          <path
+            d="M 4 49 L 26 57 L 25 61 L 3 53 Z"
+            fill={striped ? '#18181b' : trimColor}
+          />
+          <path
+            d="M 5.5 45.5 L 27 53.5 L 26.2 55.5 L 4.8 47.5 Z"
+            fill={striped ? '#f59e0b' : trimColor}
+            opacity="0.9"
+          />
+          <path
+            d="M 116 49 L 94 57 L 95 61 L 117 53 Z"
+            fill={striped ? '#18181b' : trimColor}
+          />
+          <path
+            d="M 114.5 45.5 L 93 53.5 L 93.8 55.5 L 115.2 47.5 Z"
+            fill={striped ? '#f59e0b' : trimColor}
+            opacity="0.9"
+          />
+
+          {/* 3D Cylindrical Shading & Specular Chest Sheen */}
+          <rect x="0" y="0" width="120" height="114" fill={`url(#${shadeId})`} />
+          <rect x="0" y="0" width="120" height="114" fill={`url(#${sheenId})`} />
+
+          {/* Soft Fabric Drape Folds */}
+          <path
+            d="M 44 42 Q 47 75 41 104"
+            stroke="rgba(255,255,255,0.18)"
+            strokeWidth="2.5"
+            fill="none"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 74 45 Q 71 76 77 104"
+            stroke="rgba(0,0,0,0.14)"
+            strokeWidth="2.5"
+            fill="none"
+            strokeLinecap="round"
+          />
+        </g>
+
+        {/* Sculpted Crew/V Neck Collar */}
+        <path
+          d="M 38 11 Q 60 20 82 11 Q 78 24 60 25 Q 42 24 38 11 Z"
+          fill="#1e293b"
+        />
+        <path
+          d="M 37 11.5 Q 60 27 83 11.5"
+          fill="none"
+          stroke={striped ? '#18181b' : trimColor}
+          strokeWidth="4.2"
+          strokeLinecap="round"
+        />
+        <path
+          d="M 39.5 11 Q 60 24.5 80.5 11"
+          fill="none"
+          stroke={striped ? '#f59e0b' : primary}
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+
+        {/* Fictional Shield Badge on Left Chest */}
+        <g transform="translate(67, 32)">
+          <path
+            d="M 0 0 L 13 0 L 13 8.5 C 13 14, 6.5 17.5, 6.5 17.5 C 6.5 17.5, 0 14, 0 8.5 Z"
+            fill="#ffffff"
+            stroke={striped ? '#d97706' : '#f1f5f9'}
+            strokeWidth="1.4"
+          />
+          <path
+            d="M 2 2 L 11 2 L 11 8 C 11 12, 6.5 14.8, 6.5 14.8 C 6.5 14.8, 2 12, 2 8 Z"
+            fill={striped ? '#18181b' : primary}
+          />
+          <path
+            d="M 2 6.5 L 6.5 3 L 11 6.5 L 6.5 12 Z"
+            fill={striped ? '#f59e0b' : '#ffffff'}
+            opacity="0.9"
+          />
+        </g>
+      </g>
+    </svg>
+  );
+}
+
+function OfficeStadiumSceneSvg() {
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden select-none" aria-hidden="true">
+      <svg
+        viewBox="0 0 600 260"
+        preserveAspectRatio="xMidYMid slice"
+        className="w-full h-full"
+      >
+        <defs>
+          <linearGradient id="office-sky-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#8ec8f9" stopOpacity="0.95" />
+            <stop offset="38%" stopColor="#cae5ff" stopOpacity="0.92" />
+            <stop offset="75%" stopColor="#eff6ff" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="1" />
+          </linearGradient>
+          <linearGradient id="office-stand-left" x1="0%" y1="0%" x2="100%" y2="40%">
+            <stop offset="0%" stopColor="#312e81" stopOpacity="0.88" />
+            <stop offset="55%" stopColor="#4338ca" stopOpacity="0.62" />
+            <stop offset="100%" stopColor="#c7d2fe" stopOpacity="0.08" />
+          </linearGradient>
+          <linearGradient id="office-stand-right" x1="100%" y1="0%" x2="0%" y2="40%">
+            <stop offset="0%" stopColor="#312e81" stopOpacity="0.88" />
+            <stop offset="55%" stopColor="#4338ca" stopOpacity="0.62" />
+            <stop offset="100%" stopColor="#c7d2fe" stopOpacity="0.08" />
+          </linearGradient>
+          <linearGradient id="office-beam-left" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.92" />
+            <stop offset="45%" stopColor="#bae6fd" stopOpacity="0.42" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="office-beam-right" x1="100%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.92" />
+            <stop offset="45%" stopColor="#e9d5ff" stopOpacity="0.42" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="office-bottom-fade" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
+            <stop offset="62%" stopColor="#ffffff" stopOpacity="0.88" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="1" />
+          </linearGradient>
+        </defs>
+
+        {/* Sky Base */}
+        <rect x="0" y="0" width="600" height="260" fill="url(#office-sky-grad)" />
+
+        {/* Soft Billowy Daytime Clouds */}
+        <g fill="#ffffff" opacity="0.88">
+          <circle cx="210" cy="48" r="36" />
+          <circle cx="255" cy="38" r="46" />
+          <circle cx="305" cy="42" r="50" />
+          <circle cx="355" cy="40" r="44" />
+          <circle cx="398" cy="52" r="34" />
+          <circle cx="150" cy="64" r="28" opacity="0.68" />
+          <circle cx="450" cy="64" r="28" opacity="0.68" />
+        </g>
+
+        {/* Distant Center Stadium Bowl Tiers */}
+        <path
+          d="M 155 152 Q 300 124 445 152 L 465 196 L 135 196 Z"
+          fill="#94a3b8"
+          opacity="0.32"
+        />
+        <path
+          d="M 170 148 Q 300 120 430 148"
+          fill="none"
+          stroke="#64748b"
+          strokeWidth="2"
+          opacity="0.4"
+        />
+        <path
+          d="M 162 164 Q 300 138 438 164"
+          fill="none"
+          stroke="#cbd5e1"
+          strokeWidth="2"
+          opacity="0.55"
+        />
+
+        {/* Left Stadium Roof Canopy & Steel Trusses */}
+        <path d="M -10 24 L 185 72 L 162 90 L -10 56 Z" fill="#475569" opacity="0.7" />
+        <path d="M -10 36 L 176 78 L 164 88 L -10 54 Z" fill="#1e293b" opacity="0.82" />
+        <g stroke="#e2e8f0" strokeWidth="1.4" opacity="0.72">
+          <line x1="12" y1="36" x2="20" y2="54" />
+          <line x1="36" y1="42" x2="42" y2="59" />
+          <line x1="62" y1="48" x2="66" y2="64" />
+          <line x1="88" y1="54" x2="90" y2="69" />
+          <line x1="114" y1="60" x2="114" y2="74" />
+          <line x1="140" y1="66" x2="138" y2="79" />
+        </g>
+
+        {/* Right Stadium Roof Canopy & Steel Trusses */}
+        <path d="M 610 24 L 415 72 L 438 90 L 610 56 Z" fill="#475569" opacity="0.7" />
+        <path d="M 610 36 L 424 78 L 436 88 L 610 54 Z" fill="#1e293b" opacity="0.82" />
+        <g stroke="#e2e8f0" strokeWidth="1.4" opacity="0.72">
+          <line x1="588" y1="36" x2="580" y2="54" />
+          <line x1="564" y1="42" x2="558" y2="59" />
+          <line x1="538" y1="48" x2="534" y2="64" />
+          <line x1="512" y1="54" x2="510" y2="69" />
+          <line x1="486" y1="60" x2="486" y2="74" />
+          <line x1="460" y1="66" x2="462" y2="79" />
+        </g>
+
+        {/* Left & Right Grandstand Tiers */}
+        <path d="M -10 60 L 200 108 L 200 215 L -10 215 Z" fill="url(#office-stand-left)" />
+        <path d="M 610 60 L 400 108 L 400 215 L 610 215 Z" fill="url(#office-stand-right)" />
+
+        {/* Stadium Tier LED Ribbons (Red/White/Blue Broadcast Accents) */}
+        <path d="M -10 102 L 190 136" stroke="#ef4444" strokeWidth="4" opacity="0.78" />
+        <path d="M -10 106 L 190 139" stroke="#ffffff" strokeWidth="2" opacity="0.85" />
+        <path d="M -10 138 L 195 162" stroke="#ef4444" strokeWidth="3.5" opacity="0.68" />
+        <path d="M -10 142 L 195 165" stroke="#3b82f6" strokeWidth="2.5" opacity="0.68" />
+        <path d="M -10 172 L 195 186" stroke="#ef4444" strokeWidth="3" opacity="0.55" />
+
+        <path d="M 610 102 L 410 136" stroke="#ef4444" strokeWidth="4" opacity="0.78" />
+        <path d="M 610 106 L 410 139" stroke="#ffffff" strokeWidth="2" opacity="0.85" />
+        <path d="M 610 138 L 405 162" stroke="#ef4444" strokeWidth="3.5" opacity="0.68" />
+        <path d="M 610 142 L 405 165" stroke="#3b82f6" strokeWidth="2.5" opacity="0.68" />
+        <path d="M 610 172 L 405 186" stroke="#ef4444" strokeWidth="3" opacity="0.55" />
+
+        {/* Floodlight Beams & Glowing Nodes */}
+        <g className="office-stadium-lights">
+          <polygon points="0,48 255,136 165,205 -10,115" fill="url(#office-beam-left)" />
+          <polygon points="600,48 345,136 435,205 610,115" fill="url(#office-beam-right)" />
+          <circle cx="24" cy="52" r="4.5" fill="#ffffff" />
+          <circle cx="54" cy="58" r="4" fill="#ffffff" />
+          <circle cx="84" cy="64" r="3.5" fill="#ffffff" />
+          <circle cx="114" cy="70" r="3" fill="#ffffff" />
+          <circle cx="576" cy="52" r="4.5" fill="#ffffff" />
+          <circle cx="546" cy="58" r="4" fill="#ffffff" />
+          <circle cx="516" cy="64" r="3.5" fill="#ffffff" />
+          <circle cx="486" cy="70" r="3" fill="#ffffff" />
+        </g>
+
+        {/* Feather Fade into Crisp Card Bottom */}
+        <rect x="0" y="160" width="600" height="100" fill="url(#office-bottom-fade)" />
+      </svg>
+    </div>
+  );
+}
+
 function CareerPlayHubContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -97,7 +538,17 @@ function CareerPlayHubContent() {
     }
     return null;
   });
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => getSavedTheme());
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('drafted_xi_theme');
+        if (saved === 'dark' || saved === 'light') return saved;
+      } catch {
+        // fallback to light
+      }
+    }
+    return 'light';
+  });
   const [activeTab, setActiveTab] = useState<'overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings'>('overview');
   const [tabHistory, setTabHistory] = useState<('overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings')[]>([]);
   const [showExitConfirmModal, setShowExitConfirmModal] = useState(false);
@@ -138,6 +589,8 @@ function CareerPlayHubContent() {
   const [showFixtureReleasePromptModal, setShowFixtureReleasePromptModal] = useState(false);
   const [showFixtureReleaseModal, setShowFixtureReleaseModal] = useState(false);
   const [showUclDrawModal, setShowUclDrawModal] = useState(false);
+  const [showOfficeInboxModal, setShowOfficeInboxModal] = useState(false);
+  const [showOfficeSeasonDrawer, setShowOfficeSeasonDrawer] = useState(false);
 
   // Auto-prompt pre-season tour selection or fixture release day
   useEffect(() => {
@@ -515,7 +968,7 @@ function CareerPlayHubContent() {
   }
 
   useEffect(() => {
-    saveTheme(getSavedTheme());
+    saveTheme(theme);
 
     // Auto-resolve any pending cup ties whose scheduled date has arrived
     if (save && save.cups) {
@@ -1145,8 +1598,37 @@ function CareerPlayHubContent() {
         : (previousFixture.awayScore! > previousFixture.homeScore! ? 'W' : previousFixture.homeScore === previousFixture.awayScore ? 'D' : 'L'))
     : null;
 
+  const expiringContractPlayers = save.squad
+    .filter((p) => (p.contractYears ?? 2) <= 1)
+    .sort((a, b) => b.rating - a.rating);
+
+  const contractReviewPlayers =
+    expiringContractPlayers.length >= 2
+      ? expiringContractPlayers
+      : [...save.squad]
+          .sort((a, b) => (a.contractYears ?? 2) - (b.contractYears ?? 2) || b.rating - a.rating)
+          .slice(0, 2);
+
+  const officeReviewCount = expiringContractPlayers.length > 0 ? expiringContractPlayers.length : contractReviewPlayers.length;
+  const unreadInboxCount = allInbox.filter((m) => !m.isRead).length;
+  const headerBadgeCount = officeReviewCount || actionableAlerts.length || unreadInboxCount;
+
+  const boardSentimentLabel =
+    boardConfidence >= 75
+      ? 'Delighted'
+      : boardConfidence >= 60
+      ? 'Satisfied'
+      : boardConfidence >= 45
+      ? 'Cautious'
+      : 'Under Pressure';
+
   return (
-    <div className="min-h-screen bg-slate-950 text-foreground font-sans flex flex-col pitch-bg w-full overflow-x-hidden">
+    <div
+      id="career-office-root"
+      data-office-theme={theme}
+      data-office-active={activeTab === 'overview' ? 'true' : 'false'}
+      className="min-h-screen bg-slate-950 text-foreground font-sans flex flex-col pitch-bg w-full overflow-x-hidden"
+    >
       {/* Toast Alert */}
       {toastMessage && (
         <aside
@@ -1158,206 +1640,204 @@ function CareerPlayHubContent() {
         </aside>
       )}
 
-      {/* Manager Office Top Header */}
-      <header className="w-full py-2 px-3 sm:px-6 border-b border-slate-900 bg-slate-950/90 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center gap-2 select-none shadow-xl">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <button
-            type="button"
-            onClick={handleHeaderBack}
-            className="text-xs font-bold text-slate-400 hover:text-white px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border border-slate-800 bg-slate-900/60 hover:bg-slate-800 transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
-            title={activeTab === 'overview' && tabHistory.length === 0 ? 'Exit Career to Save Slots' : 'Return to Previous Tab'}
-          >
-            ← <span className="hidden xs:inline">{activeTab === 'overview' && tabHistory.length === 0 ? 'Exit' : 'Back'}</span>
-          </button>
-          <div className="h-4 w-px bg-slate-800 shrink-0" />
+      {/* Non-Office Tabs Top Header (Preserved for Squad, Fixtures, Transfers, Table, Cups, Settings) */}
+      {activeTab !== 'overview' && (
+        <header className="w-full py-2 px-3 sm:px-6 border-b border-slate-900 bg-slate-950/90 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center gap-2 select-none shadow-xl">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <button
+              type="button"
+              onClick={handleHeaderBack}
+              className="text-xs font-bold text-slate-400 hover:text-white px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border border-slate-800 bg-slate-900/60 hover:bg-slate-800 transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
+              title="Return to Previous Tab"
+            >
+              ← <span className="hidden xs:inline">Back</span>
+            </button>
+            <div className="h-4 w-px bg-slate-800 shrink-0" />
 
-          {/* Club Crest & Title */}
-          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-            <div
-              className="w-4 h-4 rounded-full border border-white/20 shadow-sm shrink-0"
-              style={{
-                background: `linear-gradient(135deg, ${save.club.primaryColor}, ${save.club.secondaryColor})`,
-              }}
-            />
-            <h1 className="text-sm sm:text-base font-display font-black text-white uppercase tracking-tight truncate flex items-center gap-1.5">
-              <span className="truncate">{effectiveClubName}</span>
-              <span className="text-[10px] font-bold text-slate-400 font-sans tracking-normal lowercase hidden sm:inline">
-                • {save.manager.name}
-              </span>
-            </h1>
-          </div>
-        </div>
-
-        {/* Financial & Time Status Badges & Quick Action Controls */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Boardroom Confidence Pill */}
-          <button
-            type="button"
-            onClick={() => setShowBoardDossierModal(true)}
-            title="View Boardroom Confidence Dossier"
-            className={`px-2 py-1 rounded-xl border text-[10px] font-display font-black uppercase flex items-center gap-1 shrink-0 transition-all cursor-pointer ${
-              boardConfidence >= 65
-                ? 'text-emerald-400 bg-emerald-950/60 border-emerald-800/60 hover:bg-emerald-900/60'
-                : boardConfidence >= 45
-                ? 'text-amber-300 bg-amber-950/60 border-amber-800/60 hover:bg-amber-900/60'
-                : 'text-rose-400 bg-rose-950/60 border-rose-800/60 hover:bg-rose-900/60'
-            }`}
-          >
-            <span>🏛️</span>
-            <span>{boardConfidence}%</span>
-          </button>
-
-          <div className="flex items-center gap-1.5 sm:gap-2.5 bg-slate-900/60 border border-slate-800 px-2 sm:px-3 py-1 rounded-xl text-xs">
-            <div className="hidden xs:block">
-              <span className="text-[9px] uppercase font-bold text-slate-500 mr-1">Budget</span>
-              <span className="font-display font-black text-emerald-400">
-                {formatCareerCurrency(save.finances.transferBudget, save.settings.currency)}
-              </span>
-            </div>
-            <div className="hidden xs:block h-3 w-px bg-slate-800" />
-            <div className="flex items-center">
-              <span className="text-[9px] uppercase font-bold text-slate-500 mr-1">Date</span>
-              <span className="font-mono text-[11px] sm:text-xs font-semibold text-emerald-400">
-                {formatCareerDate(save.season.currentDate, save.settings.dateFormat, 'medium')}
-              </span>
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+              <div
+                className="w-4 h-4 rounded-full border border-white/20 shadow-sm shrink-0"
+                style={{
+                  background: `linear-gradient(135deg, ${save.club.primaryColor}, ${save.club.secondaryColor})`,
+                }}
+              />
+              <h1 className="text-sm sm:text-base font-display font-black text-white uppercase tracking-tight truncate flex items-center gap-1.5">
+                <span className="truncate">{effectiveClubName}</span>
+                <span className="text-[10px] font-bold text-slate-400 font-sans tracking-normal lowercase hidden sm:inline">
+                  • {save.manager.name}
+                </span>
+              </h1>
             </div>
           </div>
 
-          <button
-            onClick={() => {
-              handleTabChange('settings');
-            }}
-            title="Career Settings"
-            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center border transition-colors text-xs cursor-pointer ${
-              activeTab === 'settings'
-                ? 'border-emerald-500 bg-emerald-950/60 text-emerald-400'
-                : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800'
-            }`}
-          >
-            ⚙️
-          </button>
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowBoardDossierModal(true)}
+              title="View Boardroom Confidence Dossier"
+              className={`px-2 py-1 rounded-xl border text-[10px] font-display font-black uppercase flex items-center gap-1 shrink-0 transition-all cursor-pointer ${
+                boardConfidence >= 65
+                  ? 'text-emerald-400 bg-emerald-950/60 border-emerald-800/60 hover:bg-emerald-900/60'
+                  : boardConfidence >= 45
+                  ? 'text-amber-300 bg-amber-950/60 border-amber-800/60 hover:bg-amber-900/60'
+                  : 'text-rose-400 bg-rose-950/60 border-rose-800/60 hover:bg-rose-900/60'
+              }`}
+            >
+              <span>🏛️</span>
+              <span>{boardConfidence}%</span>
+            </button>
 
-          <button
-            onClick={handleExport}
-            title="Export JSON backup"
-            className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center border border-slate-800 bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-xs cursor-pointer"
-          >
-            💾
-          </button>
+            <div className="flex items-center gap-1.5 sm:gap-2.5 bg-slate-900/60 border border-slate-800 px-2 sm:px-3 py-1 rounded-xl text-xs">
+              <div className="hidden xs:block">
+                <span className="text-[9px] uppercase font-bold text-slate-500 mr-1">Budget</span>
+                <span className="font-display font-black text-emerald-400">
+                  {formatCareerCurrency(save.finances.transferBudget, save.settings.currency)}
+                </span>
+              </div>
+              <div className="hidden xs:block h-3 w-px bg-slate-800" />
+              <div className="flex items-center">
+                <span className="text-[9px] uppercase font-bold text-slate-500 mr-1">Date</span>
+                <span className="font-mono text-[11px] sm:text-xs font-semibold text-emerald-400">
+                  {formatCareerDate(save.season.currentDate, save.settings.dateFormat, 'medium')}
+                </span>
+              </div>
+            </div>
 
-          <button
-            onClick={toggleTheme}
-            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center border border-slate-800 bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-xs cursor-pointer"
-          >
-            {theme === 'dark' ? '🌙' : '☀️'}
-          </button>
-        </div>
-      </header>
+            <button
+              onClick={() => handleTabChange('settings')}
+              title="Career Settings"
+              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center border transition-colors text-xs cursor-pointer ${
+                activeTab === 'settings'
+                  ? 'border-emerald-500 bg-emerald-950/60 text-emerald-400'
+                  : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              ⚙️
+            </button>
+
+            <button
+              onClick={handleExport}
+              title="Export JSON backup"
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center border border-slate-800 bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-xs cursor-pointer"
+            >
+              💾
+            </button>
+
+            <button
+              onClick={toggleTheme}
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center border border-slate-800 bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-xs cursor-pointer"
+            >
+              {theme === 'dark' ? '🌙' : '☀️'}
+            </button>
+          </div>
+        </header>
+      )}
 
       {/* Main Hub Layout */}
       <main
-        className="flex-1 w-full max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-6 flex flex-col"
+        data-office-ui={activeTab === 'overview' ? 'true' : undefined}
+        className={`relative z-10 flex-1 w-full mx-auto flex flex-col ${
+          activeTab === 'overview'
+            ? 'max-w-[440px] sm:max-w-[480px] px-2 sm:px-3 py-2 sm:py-4'
+            : 'max-w-5xl px-3 sm:px-4 py-4 sm:py-6'
+        }`}
         onTouchStart={handleTouchStartCapture}
         onTouchEnd={handleTouchEndCapture}
       >
-        {/* Navigation Tabs - 4 Primary + More Menu */}
-        <div className="relative mb-5 z-30">
-          <nav aria-label="Career management sections" data-no-swipe="true" className="grid grid-cols-5 border-b border-slate-850 gap-1 pb-px bg-slate-950/40 rounded-2xl p-1">
-            {[
-              { id: 'overview', label: 'Office', icon: '👔', badge: actionableAlerts.length > 0 ? actionableAlerts.length : null },
-              { id: 'squad', label: 'Squad', icon: '👥' },
-              { id: 'fixtures', label: 'Fixtures', icon: '📅' },
-              { id: 'transfers', label: 'Transfers', icon: '💱', badge: incomingOffersCount > 0 ? incomingOffersCount : null },
-            ].map((tab) => {
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    handleTabChange(tab.id as typeof activeTab);
-                  }}
-                  className={`py-2 px-1 sm:px-3 font-display font-black text-[11px] sm:text-xs uppercase tracking-wider rounded-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer min-h-[44px] relative ${
-                    isActive
-                      ? 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
-                  }`}
-                >
-                  <span className="text-sm sm:text-xs">{tab.icon}</span>
-                  <span className="truncate">{tab.label}</span>
-                  {tab.badge && (
-                    <span className="absolute -top-1 -right-0.5 sm:top-1 sm:right-1 min-w-[16px] h-4 px-1 rounded-full bg-amber-500 text-slate-950 font-black text-[9px] flex items-center justify-center shadow-md animate-pulse">
-                      {tab.badge}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-
-            {/* 5th Tab: More Menu */}
-            {(() => {
-              const isMoreActive = ['table', 'cups', 'settings'].includes(activeTab);
-              const activeMoreLabel = activeTab === 'table' ? 'Table' : activeTab === 'cups' ? 'Cups' : activeTab === 'settings' ? 'Config' : null;
-
-              return (
-                <button
-                  onClick={() => setIsMoreMenuOpen((prev) => !prev)}
-                  className={`py-2 px-1 sm:px-3 font-display font-black text-[11px] sm:text-xs uppercase tracking-wider rounded-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer min-h-[44px] relative ${
-                    isMoreActive
-                      ? 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 shadow-sm'
-                      : isMoreMenuOpen
-                      ? 'bg-slate-850 text-white'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
-                  }`}
-                  aria-expanded={isMoreMenuOpen}
-                  aria-haspopup="true"
-                >
-                  <span className="text-sm sm:text-xs">⋯</span>
-                  <span className="truncate">{activeMoreLabel ? activeMoreLabel : 'More'} ▾</span>
-                </button>
-              );
-            })()}
-          </nav>
-
-          {/* More Menu Popover */}
-          {isMoreMenuOpen && (
-            <div
-              className="absolute right-0 top-full mt-1.5 z-40 w-56 bg-slate-950/95 border border-slate-800 rounded-2xl p-2 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-top-2"
-              role="menu"
-            >
+        {/* Non-Office Navigation Tabs (Preserved for other tabs) */}
+        {activeTab !== 'overview' && (
+          <div className="relative mb-5 z-30">
+            <nav aria-label="Career management sections" data-no-swipe="true" className="grid grid-cols-5 border-b border-slate-850 gap-1 pb-px bg-slate-950/40 rounded-2xl p-1">
               {[
-                { id: 'table', label: 'League Table', icon: '📊', desc: 'Standings, GD & form guide' },
-                { id: 'cups', label: 'Cups & Europe', icon: '🏆', desc: 'Domestic cups & continental silverware' },
-                { id: 'settings', label: 'Career Settings', icon: '⚙️', desc: 'Rules, formats & club naming' },
-              ].map((item) => {
-                const isItemActive = activeTab === item.id;
+                { id: 'overview', label: 'Office', icon: '👔', badge: actionableAlerts.length > 0 ? actionableAlerts.length : null },
+                { id: 'squad', label: 'Squad', icon: '👥' },
+                { id: 'fixtures', label: 'Fixtures', icon: '📅' },
+                { id: 'transfers', label: 'Transfers', icon: '💱', badge: incomingOffersCount > 0 ? incomingOffersCount : null },
+              ].map((tab) => {
+                const isActive = activeTab === tab.id;
                 return (
                   <button
-                    key={item.id}
-                    role="menuitem"
-                    onClick={() => {
-                      handleTabChange(item.id as typeof activeTab);
-                    }}
-                    className={`w-full p-2.5 rounded-xl text-left transition-all flex items-center gap-3 cursor-pointer ${
-                      isItemActive
-                        ? 'bg-emerald-500/20 text-emerald-300 font-bold'
-                        : 'hover:bg-slate-900 text-slate-300 hover:text-white'
+                    key={tab.id}
+                    onClick={() => handleTabChange(tab.id as typeof activeTab)}
+                    className={`py-2 px-1 sm:px-3 font-display font-black text-[11px] sm:text-xs uppercase tracking-wider rounded-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer min-h-[44px] relative ${
+                      isActive
+                        ? 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 shadow-sm'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
                     }`}
                   >
-                    <span className="text-lg">{item.icon}</span>
-                    <div className="min-w-0 flex-1">
-                      <div className="font-display font-black text-xs uppercase tracking-wider flex items-center justify-between">
-                        <span>{item.label}</span>
-                        {isItemActive && <span className="text-emerald-400 text-xs">✓</span>}
-                      </div>
-                      <div className="text-[10px] text-slate-500 truncate">{item.desc}</div>
-                    </div>
+                    <span className="text-sm sm:text-xs">{tab.icon}</span>
+                    <span className="truncate">{tab.label}</span>
+                    {tab.badge && (
+                      <span className="absolute -top-1 -right-0.5 sm:top-1 sm:right-1 min-w-[16px] h-4 px-1 rounded-full bg-amber-500 text-slate-950 font-black text-[9px] flex items-center justify-center shadow-md animate-pulse">
+                        {tab.badge}
+                      </span>
+                    )}
                   </button>
                 );
               })}
-            </div>
-          )}
-        </div>
+
+              {(() => {
+                const isMoreActive = ['table', 'cups', 'settings'].includes(activeTab);
+                const activeMoreLabel = activeTab === 'table' ? 'Table' : activeTab === 'cups' ? 'Cups' : activeTab === 'settings' ? 'Config' : null;
+
+                return (
+                  <button
+                    onClick={() => setIsMoreMenuOpen((prev) => !prev)}
+                    className={`py-2 px-1 sm:px-3 font-display font-black text-[11px] sm:text-xs uppercase tracking-wider rounded-xl transition-all flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer min-h-[44px] relative ${
+                      isMoreActive
+                        ? 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 shadow-sm'
+                        : isMoreMenuOpen
+                        ? 'bg-slate-850 text-white'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
+                    }`}
+                    aria-expanded={isMoreMenuOpen}
+                    aria-haspopup="true"
+                  >
+                    <span className="text-sm sm:text-xs">⋯</span>
+                    <span className="truncate">{activeMoreLabel ? activeMoreLabel : 'More'} ▾</span>
+                  </button>
+                );
+              })()}
+            </nav>
+
+            {isMoreMenuOpen && (
+              <div
+                className="absolute right-0 top-full mt-1.5 z-40 w-56 bg-slate-950/95 border border-slate-800 rounded-2xl p-2 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-top-2"
+                role="menu"
+              >
+                {[
+                  { id: 'table', label: 'League Table', icon: '📊', desc: 'Standings, GD & form guide' },
+                  { id: 'cups', label: 'Cups & Europe', icon: '🏆', desc: 'Domestic cups & continental silverware' },
+                  { id: 'settings', label: 'Career Settings', icon: '⚙️', desc: 'Rules, formats & club naming' },
+                ].map((item) => {
+                  const isItemActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      role="menuitem"
+                      onClick={() => handleTabChange(item.id as typeof activeTab)}
+                      className={`w-full p-2.5 rounded-xl text-left transition-all flex items-center gap-3 cursor-pointer ${
+                        isItemActive
+                          ? 'bg-emerald-500/20 text-emerald-300 font-bold'
+                          : 'hover:bg-slate-900 text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      <span className="text-lg">{item.icon}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-display font-black text-xs uppercase tracking-wider flex items-center justify-between">
+                          <span>{item.label}</span>
+                          {isItemActive && <span className="text-emerald-400 text-xs">✓</span>}
+                        </div>
+                        <div className="text-[10px] text-slate-500 truncate">{item.desc}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Carousel Slide Container */}
         <div
@@ -1371,267 +1851,297 @@ function CareerPlayHubContent() {
               : ''
           }`}
         >
-        {/* TAB 1: OVERVIEW / MANAGER OFFICE */}
+        {/* TAB 1: REDESIGNED CAREER OFFICE SCREEN */}
         {activeTab === 'overview' && (
-          <div className="space-y-4">
-            {/* COMPACT MANAGERIAL ALERTS STRIP */}
-            {managerialAlerts.length > 0 && (
-              <section id="managerial-alerts" aria-label="Managerial Alerts" className="bg-slate-900/80 border border-slate-800 rounded-2xl p-2.5 sm:p-3 shadow-md space-y-1.5 scroll-mt-20">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${actionableAlerts.length > 0 ? 'bg-amber-400 animate-pulse' : 'bg-blue-400'}`} />
-                    <h3 className="font-display font-black text-xs uppercase tracking-wider text-white truncate flex items-center gap-1.5">
-                      <span>Alerts</span>
-                      {actionableAlerts.length > 0 ? (
-                        <span className="text-[9px] font-mono font-black px-1.5 py-0.2 rounded-full bg-amber-500 text-slate-950">
-                          {actionableAlerts.length} Action{actionableAlerts.length > 1 ? 's' : ''} Needed
-                        </span>
-                      ) : (
-                        <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300">
-                          {managerialAlerts.length} Note{managerialAlerts.length > 1 ? 's' : ''}
-                        </span>
-                      )}
-                    </h3>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (activeTab === 'overview') {
-                        scrollToTarget('managerial-inbox', { behavior: 'smooth', block: 'start' });
-                      } else {
-                        navigateToSection('overview', undefined, 'managerial-inbox');
-                      }
-                    }}
-                    className="text-[9.5px] font-bold text-slate-400 hover:text-emerald-400 transition-colors uppercase tracking-wider flex items-center gap-1 cursor-pointer shrink-0"
-                  >
-                    <span>Full Inbox</span>
-                    <span className="font-mono">({allInbox.length}) ➔</span>
-                  </button>
-                </div>
+          <div className="space-y-2.5">
+            {/* 1. FLOATING HEADER CARD */}
+            <header
+              data-office-ui="true"
+              className="office-floating-card office-reveal-1 rounded-[22px] px-2 sm:px-3.5 py-2 sm:py-2.5 flex items-center justify-between gap-1 sm:gap-1.5 select-none"
+            >
+              {/* Left: MY-11 Brand Mark + Club & Season/Date */}
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={handleHeaderBack}
+                  data-office-ui="true"
+                  title="Exit Career / Save Slots"
+                  className="flex flex-col items-center justify-center shrink-0 cursor-pointer group focus:outline-none"
+                >
+                  {/* Crown SVG above MY-11 */}
+                  <svg viewBox="0 0 28 12" className="w-3.5 h-2.5 -mb-0.5 transition-transform duration-150 group-hover:-translate-y-0.5" aria-hidden="true">
+                    <defs>
+                      <linearGradient id="my11-crown-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#00d2ff" />
+                        <stop offset="50%" stopColor="#2563eb" />
+                        <stop offset="100%" stopColor="#c026d3" />
+                      </linearGradient>
+                    </defs>
+                    <path
+                      d="M2 10 L4 3 L10 7 L14 1 L18 7 L24 3 L26 10 Z"
+                      fill="url(#my11-crown-grad)"
+                    />
+                  </svg>
+                  <span className="font-display font-black text-[14px] sm:text-[17px] tracking-tighter leading-none text-[var(--office-text-primary)]">
+                    MY-11
+                  </span>
+                </button>
 
-                {/* Top 1-2 alerts rendered as compact single-line rows */}
-                <div className="space-y-1">
-                  {managerialAlerts.slice(0, 2).map((alert) => (
+                <div className="w-px h-6 bg-[var(--office-divider)] shrink-0" />
+
+                <div className="min-w-0 flex-1 overflow-hidden">
+                  <h1 className="font-display font-extrabold text-[11.5px] sm:text-[14px] text-[var(--office-text-primary)] leading-tight truncate">
+                    {effectiveClubName}
+                  </h1>
+                  <p className="text-[9px] sm:text-[10.5px] font-medium text-[#2563eb] leading-tight truncate mt-0.5">
+                    Season {save.season.seasonNumber} &bull; {formatOfficeShortDate(save.season.currentDate)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Right: Board Confidence Pill + Inbox Button + Settings Button */}
+              <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  data-office-ui="true"
+                  onClick={() => setShowBoardDossierModal(true)}
+                  title="View Boardroom Confidence Dossier"
+                  className="office-subcard rounded-2xl px-1.5 sm:px-2 py-1 flex items-center gap-1 sm:gap-1.5 cursor-pointer"
+                >
+                  <span
+                    className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-white shrink-0 ${
+                      boardConfidence >= 60
+                        ? 'bg-[#10b981]'
+                        : boardConfidence >= 45
+                        ? 'bg-[#f59e0b]'
+                        : 'bg-[#ef4444]'
+                    }`}
+                  >
+                    <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" aria-hidden="true">
+                      <circle cx="9" cy="10" r="1.5" />
+                      <circle cx="15" cy="10" r="1.5" />
+                      <path
+                        d="M8.5 14.5 C9.8 16.5, 14.2 16.5, 15.5 14.5"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        fill="none"
+                      />
+                    </svg>
+                  </span>
+                  <div className="text-left leading-none pr-0.5">
+                    <div className="text-[9px] sm:text-[10px] font-extrabold text-[var(--office-text-primary)] whitespace-nowrap">
+                      Board {boardConfidence}%
+                    </div>
                     <div
-                      key={alert.id}
-                      className={`flex items-center justify-between gap-2 p-2 rounded-xl text-xs transition-all ${
-                        alert.classification === 'action_required'
-                          ? 'bg-amber-950/40 border border-amber-800/50'
-                          : 'bg-slate-950/60 border border-slate-850'
+                      className={`text-[8.5px] sm:text-[9.5px] font-bold mt-0.5 whitespace-nowrap ${
+                        boardConfidence >= 60
+                          ? 'text-[#10b981]'
+                          : boardConfidence >= 45
+                          ? 'text-[#f59e0b]'
+                          : 'text-[#ef4444]'
                       }`}
                     >
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
-                          <span
-                            className={`text-[8px] font-black uppercase px-1 py-0.2 rounded shrink-0 ${
-                              alert.classification === 'action_required'
-                                ? 'bg-amber-400 text-slate-950'
-                                : 'bg-blue-900/60 text-blue-300 border border-blue-700/60'
-                            }`}
-                          >
-                            {alert.classification === 'action_required' ? 'ACTION' : 'INFO'}
-                          </span>
-                          <span className="font-display font-black text-white text-[11px] truncate">
-                            {alert.title}
-                          </span>
-                        </div>
-                        <p className="text-[10px] text-slate-300 truncate mt-0.2">
-                          {alert.description}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => handleExecuteAlertAction(alert)}
-                          className={`py-1 px-2.5 rounded-lg font-display font-black text-[10px] uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 shadow-sm whitespace-nowrap ${
-                            alert.classification === 'action_required'
-                              ? 'bg-amber-400 hover:bg-amber-300 text-slate-950'
-                              : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
-                          }`}
-                        >
-                          <span>{alert.actionLabel}</span>
-                          <span>➔</span>
-                        </button>
-                      </div>
+                      {boardSentimentLabel}
                     </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* TRANSFER DEADLINE DAY STATUS CARD */}
-            {(save.deadlineDayState?.isActive || isTransferDeadlineDay(save.season.currentDate, save.season.yearStart)) && (
-              <section className="bg-gradient-to-r from-amber-500/20 via-yellow-500/10 to-slate-950 border-2 border-amber-500/70 rounded-3xl p-4 sm:p-5 shadow-2xl space-y-3">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="bg-amber-400 text-slate-950 text-[10px] font-black uppercase px-2 py-0.5 rounded-full font-display animate-pulse flex items-center gap-1">
-                        <span>⏱️</span> DEADLINE DAY LIVE
-                      </span>
-                      <span className="text-white font-mono font-black text-xs bg-slate-900 px-2 py-0.5 rounded-full border border-amber-500/40">
-                        {save.deadlineDayState?.timeString || '09:00 BST'}
-                      </span>
-                      <span className="text-amber-300 text-xs font-mono font-bold">
-                        ⏳ {save.deadlineDayState?.hoursRemaining ?? 14} Hours to Window Close (23:00)
-                      </span>
-                    </div>
-                    <h3 className="text-base sm:text-lg font-display font-black text-white uppercase tracking-tight flex items-center gap-2">
-                      <span>Phase:</span>
-                      <span className="text-amber-400">{save.deadlineDayState?.phase?.toUpperCase() || 'MORNING'}</span>
-                    </h3>
                   </div>
+                </button>
 
-                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                    <button
-                      type="button"
-                      onClick={handleAdvanceDeadlinePhase}
-                      className="flex-1 sm:flex-none py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 hover:from-amber-300 hover:to-yellow-200 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap min-h-[42px]"
-                    >
-                      <span>⏩</span>
-                      <span>
-                        {save.deadlineDayState?.phase === 'morning'
-                          ? 'Advance to Afternoon (13:00)'
-                          : save.deadlineDayState?.phase === 'afternoon'
-                          ? 'Advance to Evening (18:00)'
-                          : save.deadlineDayState?.phase === 'evening'
-                          ? 'Advance to Final Hour (22:00)'
-                          : '🚨 Window Shut (23:00 BST)'}
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        navigateToSection('transfers', 'incoming', 'incoming-offers-section');
-                      }}
-                      className="flex-1 sm:flex-none py-2.5 px-3.5 rounded-xl bg-slate-900/90 hover:bg-slate-850 text-amber-300 border border-amber-500/40 font-display font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap min-h-[42px]"
-                    >
-                      <span>Review Offers ➔</span>
-                      {save.incomingOffers && save.incomingOffers.filter((o) => o.status === 'pending').length > 0 && (
-                        <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-1.5 py-0.5 rounded-full font-mono">
-                          {save.incomingOffers.filter((o) => o.status === 'pending').length}
-                        </span>
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* 4-Phase Progress Indicator Mini Bar */}
-                <div className="grid grid-cols-4 gap-1 pt-1 text-[10px] font-bold text-center">
-                  {(['morning', 'afternoon', 'evening', 'deadline'] as const).map((ph, idx) => {
-                    const currentPhase = save.deadlineDayState?.phase || 'morning';
-                    const phaseOrder = ['morning', 'afternoon', 'evening', 'deadline'];
-                    const isPastOrCurrent = phaseOrder.indexOf(currentPhase) >= idx;
-                    const isCurrent = currentPhase === ph;
-                    const labels = ['09:00 Morning', '13:00 Afternoon', '18:00 Evening', '22:00 Final'];
-
-                    return (
-                      <div
-                        key={ph}
-                        className={`py-1 px-0.5 rounded-lg transition-all border text-[9px] ${
-                          isCurrent
-                            ? 'bg-amber-400 text-slate-950 font-black border-amber-300 shadow-md shadow-amber-500/20'
-                            : isPastOrCurrent
-                            ? 'bg-amber-950/40 text-amber-300 border-amber-900/40'
-                            : 'bg-slate-950/60 text-slate-500 border-slate-850'
-                        }`}
-                      >
-                        {labels[idx]}
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
-
-            {/* SUMMER PRE-SEASON TOUR INVITATION BANNER (IF UNCHOSEN) */}
-            {shouldShowPreseasonPrompt(save) && (
-              <section aria-label="Pre-Season Tour Selection" className="bg-gradient-to-r from-emerald-950/70 via-slate-900 to-slate-950 border-2 border-emerald-500/60 rounded-3xl p-4 sm:p-5 shadow-2xl space-y-3">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                  <div className="space-y-1">
-                    <span className="bg-emerald-500 text-slate-950 text-[10px] font-black uppercase px-2 py-0.5 rounded-full font-display flex items-center gap-1 w-fit">
-                      <span>✈️</span> SUMMER PRE-SEASON CAMPAIGN
+                {/* Inbox Envelope Icon Button */}
+                <button
+                  type="button"
+                  data-office-ui="true"
+                  onClick={() => setShowOfficeInboxModal(true)}
+                  title="Open Managerial Inbox"
+                  aria-label="Open Managerial Inbox"
+                  className="w-6.5 h-6.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center relative cursor-pointer transition-transform active:scale-95 shrink-0"
+                  style={{
+                    background: 'var(--office-icon-pill-bg)',
+                    border: '1px solid var(--office-icon-pill-border)',
+                  }}
+                >
+                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#4f679d]" fill="currentColor" aria-hidden="true">
+                    <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4.2-8 5-8-5V6l8 5 8-5v2.2z" />
+                  </svg>
+                  {headerBadgeCount > 0 && (
+                    <span className="absolute -top-1 -right-0.5 min-w-[14px] h-[14px] px-1 rounded-full bg-[#ef4444] text-white font-display font-black text-[8.5px] flex items-center justify-center shadow-xs border border-white">
+                      {headerBadgeCount}
                     </span>
-                    <h3 className="text-base sm:text-lg font-display font-black text-white uppercase tracking-tight">
-                      Choose Your Pre-Season Tour
-                    </h3>
-                    <p className="text-xs text-slate-300">
-                      Pick between USA, Asia, or Europe. Earn up to £4.5M in commercial funds and prepare squad fitness.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowPreseasonModal(true)}
-                    className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all cursor-pointer whitespace-nowrap min-h-[42px] flex items-center justify-center gap-1.5"
-                  >
-                    <span>Select Tour ➔</span>
-                  </button>
-                </div>
-              </section>
-            )}
+                  )}
+                </button>
 
-            {/* PREMIER LEAGUE FIXTURE RELEASE DAY BANNER */}
-            {save.season.currentDate >= `${save.season.yearStart}-07-08` && !save.fixtureReleaseState?.released && (
-              <section className="bg-gradient-to-r from-emerald-950/50 via-slate-900/80 to-slate-950 border border-emerald-500/40 rounded-3xl p-4 sm:p-5 shadow-2xl space-y-3">
-                <div className="flex justify-between items-center gap-2">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-2.5 py-0.5 rounded-full font-display">
-                    📅 Official Announcement Day
-                  </span>
-                  <span className="text-xs font-mono font-bold text-slate-400">
-                    8 July {save.season.yearStart}
-                  </span>
-                </div>
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                  <div className="space-y-1">
-                    <h3 className="text-base sm:text-lg font-display font-black text-white">
-                      Premier League Fixtures Announced!
-                    </h3>
-                    <p className="text-xs text-slate-300">
-                      The official 38-game schedule is ready. Launch the animated reveal ceremony or unlock the full calendar.
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                {/* Settings Gear Icon Button */}
+                <button
+                  type="button"
+                  data-office-ui="true"
+                  onClick={() => handleTabChange('settings')}
+                  title="Career Settings"
+                  aria-label="Career Settings"
+                  className="w-6.5 h-6.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center cursor-pointer transition-transform active:scale-95 shrink-0"
+                  style={{
+                    background: 'var(--office-icon-pill-bg)',
+                    border: '1px solid var(--office-icon-pill-border)',
+                  }}
+                >
+                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#4f679d]" fill="currentColor" aria-hidden="true">
+                    <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
+                  </svg>
+                </button>
+              </div>
+            </header>
+
+            {/* 2. FLOATING 5-TAB NAVIGATION BAR */}
+            <div className="relative z-30 office-reveal-2">
+              <nav
+                aria-label="Career management sections"
+                data-office-ui="true"
+                data-no-swipe="true"
+                className="office-floating-card rounded-[20px] p-1 grid grid-cols-5 gap-1 select-none"
+              >
+                {/* Office (Active) */}
+                <button
+                  type="button"
+                  data-office-ui="true"
+                  onClick={() => handleTabChange('overview')}
+                  className="office-nav-tab-active rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer"
+                >
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+                    <path d="M12 3 3 10h2v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9h2L12 3z" />
+                  </svg>
+                  <span className="text-[11px] font-bold tracking-tight leading-tight">Office</span>
+                </button>
+
+                {/* Squad */}
+                <button
+                  type="button"
+                  data-office-ui="true"
+                  onClick={() => handleTabChange('squad')}
+                  className="office-nav-tab-inactive rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer"
+                >
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[var(--office-text-muted)]" aria-hidden="true">
+                    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                  </svg>
+                  <span className="text-[11px] font-semibold tracking-tight leading-tight">Squad</span>
+                </button>
+
+                {/* Fixtures */}
+                <button
+                  type="button"
+                  data-office-ui="true"
+                  onClick={() => handleTabChange('fixtures')}
+                  className="office-nav-tab-inactive rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer"
+                >
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[var(--office-text-muted)]" aria-hidden="true">
+                    <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5v-5z" />
+                  </svg>
+                  <span className="text-[11px] font-semibold tracking-tight leading-tight">Fixtures</span>
+                </button>
+
+                {/* Transfers */}
+                <button
+                  type="button"
+                  data-office-ui="true"
+                  onClick={() => handleTabChange('transfers')}
+                  className="office-nav-tab-inactive rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer relative"
+                >
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[var(--office-text-muted)]" aria-hidden="true">
+                    <path d="M6.99 11 3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z" />
+                  </svg>
+                  <span className="text-[11px] font-semibold tracking-tight leading-tight">Transfers</span>
+                  {incomingOffersCount > 0 && (
+                    <span className="absolute top-1 right-2 w-2 h-2 rounded-full bg-[#f59e0b]" />
+                  )}
+                </button>
+
+                {/* More */}
+                <button
+                  type="button"
+                  data-office-ui="true"
+                  onClick={() => setIsMoreMenuOpen((prev) => !prev)}
+                  aria-expanded={isMoreMenuOpen}
+                  aria-haspopup="true"
+                  className="office-nav-tab-inactive rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer"
+                >
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[var(--office-text-muted)]" aria-hidden="true">
+                    <circle cx="6" cy="12" r="2" />
+                    <circle cx="12" cy="12" r="2" />
+                    <circle cx="18" cy="12" r="2" />
+                  </svg>
+                  <span className="text-[11px] font-semibold tracking-tight leading-tight">More</span>
+                </button>
+              </nav>
+
+              {/* More Menu Popover */}
+              {isMoreMenuOpen && (
+                <div
+                  data-office-ui="true"
+                  className="office-floating-card absolute right-0 top-full mt-1.5 z-40 w-60 rounded-2xl p-2 shadow-2xl space-y-1"
+                  role="menu"
+                >
+                  {[
+                    { id: 'table', label: 'League Table', icon: '📊', desc: 'Standings, GD & form guide' },
+                    { id: 'cups', label: 'Cups & Europe', icon: '🏆', desc: 'Domestic cups & continental silverware' },
+                    { id: 'settings', label: 'Career Settings', icon: '⚙️', desc: 'Rules, formats & club naming' },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      role="menuitem"
+                      data-office-ui="true"
+                      onClick={() => handleTabChange(item.id as typeof activeTab)}
+                      className="office-subcard w-full p-2.5 rounded-xl text-left flex items-center gap-3 cursor-pointer"
+                    >
+                      <span className="text-base">{item.icon}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-display font-bold text-xs text-[var(--office-text-primary)]">
+                          {item.label}
+                        </div>
+                        <div className="text-[10px] text-[var(--office-text-muted)] truncate">{item.desc}</div>
+                      </div>
+                    </button>
+                  ))}
+
+                  <div className="h-px bg-[var(--office-divider)] my-1" />
+
+                  <div className="grid grid-cols-2 gap-1.5">
                     <button
                       type="button"
-                      onClick={() => setShowFixtureReleaseModal(true)}
-                      className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all cursor-pointer whitespace-nowrap min-h-[42px] flex items-center justify-center gap-1.5"
+                      data-office-ui="true"
+                      onClick={() => {
+                        toggleTheme();
+                        setIsMoreMenuOpen(false);
+                      }}
+                      className="office-subcard py-2 px-2.5 rounded-xl text-[11px] font-bold text-[var(--office-text-primary)] flex items-center justify-center gap-1.5 cursor-pointer"
                     >
-                      <span>🎉 Launch Ceremony</span>
+                      <span>{theme === 'dark' ? '☀️ Light' : '🌙 Dark'}</span>
                     </button>
                     <button
                       type="button"
-                      onClick={handleFinishFixtureRelease}
-                      className="py-2.5 px-3 rounded-xl border border-slate-700 hover:border-slate-600 bg-slate-900 text-slate-300 hover:text-white font-display font-bold text-xs uppercase transition-all cursor-pointer min-h-[42px]"
+                      data-office-ui="true"
+                      onClick={() => {
+                        handleExport();
+                        setIsMoreMenuOpen(false);
+                      }}
+                      className="office-subcard py-2 px-2.5 rounded-xl text-[11px] font-bold text-[var(--office-text-primary)] flex items-center justify-center gap-1.5 cursor-pointer"
                     >
-                      ⏩ Skip &amp; Unlock
+                      <span>💾 Backup</span>
                     </button>
                   </div>
                 </div>
-              </section>
-            )}
+              )}
+            </div>
 
-            {/* MULTI-COMPETITION MATCHDAY SPOTLIGHT HERO */}
-            {nextScheduled && (
-              <section aria-label="Next Fixture" className="bg-gradient-to-r from-emerald-950/40 via-slate-900/70 to-slate-950 border border-emerald-500/30 rounded-3xl p-4 sm:p-6 shadow-2xl space-y-4">
-                <div className="flex flex-wrap justify-between items-center gap-2">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-2.5 py-0.5 rounded-full font-display">
-                    {nextScheduled.cupId === CUP_IDS.PRESEASON
-                      ? `✈️ ${save.preseasonState?.tournamentName || 'Pre-Season Tour'} • Friendly`
-                      : nextScheduled.isCup
-                      ? `🏆 ${nextScheduled.cupName} • ${nextScheduled.roundName}`
-                      : `Next Fixture • Matchday ${(nextScheduled.fixture as LeagueFixture).round} of 38`}
-                  </span>
-                  <span className="text-[11px] text-slate-400 font-medium font-sans">
-                    {formatCareerDate(nextScheduled.fixture.date, save.settings.dateFormat, 'medium')}
-                  </span>
-                </div>
-
-                {/* Match Clash: Always Side-by-Side on all viewports */}
+            {/* 3. NEXT FIXTURE SPOTLIGHT HERO CARD */}
+            {nextScheduled ? (
+              <section
+                aria-label="Next Fixture"
+                data-office-ui="true"
+                className="office-floating-card office-reveal-3 rounded-[24px] overflow-hidden relative select-none"
+              >
                 {(() => {
                   const home = findAnyClub(nextScheduled.fixture.homeClubId) || allClubs[0];
                   const away = findAnyClub(nextScheduled.fixture.awayClubId) || allClubs[1];
-                  const isUserHome = nextScheduled.fixture.homeClubId === save.club.id;
-                  const isUserAway = nextScheduled.fixture.awayClubId === save.club.id;
+                  const homeName = getEffectiveClubName(home, save.club);
+                  const awayName = getEffectiveClubName(away, save.club);
 
                   const isNeutralWembley =
                     nextScheduled.isCup &&
@@ -1641,907 +2151,802 @@ function CareerPlayHubContent() {
                       (nextScheduled.roundName === 'Semi-Final' && nextScheduled.cupId === CUP_IDS.ENGLISH_CUP));
 
                   const venueDisplay = isNeutralWembley
-                    ? 'Wembley Stadium (Neutral)'
-                    : (home.stadiumName || 'Stadium');
+                    ? 'Wembley Stadium'
+                    : (home.stadiumName || 'Riverside Park');
 
-                  const isMatchday = save.season.currentDate >= nextScheduled.fixture.date;
                   const isPreseasonMatch = nextScheduled.cupId === CUP_IDS.PRESEASON;
                   const isAssistantDelegated = isPreseasonMatch && Boolean(save.preseasonState?.delegatedToAssistant);
 
                   return (
-                    <div className="space-y-3.5">
-                      <div className="flex items-center justify-between gap-3 sm:gap-6 py-1 px-1 sm:px-4">
-                        {/* Home Club */}
-                        <div className="flex-1 flex flex-col items-center text-center space-y-1 min-w-0">
-                          <div
-                            data-force-white="true"
-                            className="club-crest w-11 h-11 sm:w-14 sm:h-14 rounded-full border-2 border-white/20 shadow-xl flex items-center justify-center text-xs sm:text-base font-black text-white shrink-0"
-                            style={{
-                              background: `linear-gradient(135deg, ${home.primaryColor}, ${home.secondaryColor})`,
-                            }}
-                          >
-                            {home.shortName}
+                    <div>
+                      {/* Stadium Illustration & Teams Showcase */}
+                      <div className="relative pt-2.5 pb-1 px-3 sm:px-3.5">
+                        <OfficeStadiumSceneSvg />
+
+                        {/* Top Fixture Metadata Header */}
+                        <div className="relative z-10 flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current text-[#0284c7] shrink-0 drop-shadow-2xs" aria-hidden="true">
+                              <path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V10h14v10zm-9.5-2.5L7 15l1.4-1.4 1.1 1.1 3.6-3.6L14.5 12.5l-5 5z" />
+                            </svg>
+                            <div className="min-w-0">
+                              <div className="text-[12.5px] sm:text-[13px] font-display font-extrabold text-[#0284c7] leading-tight whitespace-nowrap">
+                                Next Fixture
+                              </div>
+                              <div className="text-[10px] sm:text-[11px] font-semibold text-[#1e40af] leading-tight whitespace-nowrap">
+                                {nextScheduled.cupId === CUP_IDS.PRESEASON
+                                  ? `${save.preseasonState?.tournamentName || 'Pre-Season Tour'}`
+                                  : nextScheduled.isCup
+                                  ? `${nextScheduled.cupName} • ${nextScheduled.roundName}`
+                                  : `Matchday ${(nextScheduled.fixture as LeagueFixture).round} of 38`}
+                              </div>
+                            </div>
                           </div>
-                          <div className="min-w-0 w-full">
-                            <h4 className="font-display font-black text-xs sm:text-base text-white truncate">
-                              {getEffectiveClubName(home, save.club)}
-                            </h4>
-                            <span className="text-[9px] uppercase font-bold text-slate-400 block truncate">
-                              {isUserHome ? (isNeutralWembley ? '★ (YOU • NEUTRAL)' : '★ (YOU • HOME)') : (isNeutralWembley ? 'Neutral' : 'Home')}
+
+                          <div className="text-right shrink-0">
+                            <div className="font-display font-extrabold text-[12px] sm:text-[13px] text-[#0b1536] leading-tight whitespace-nowrap">
+                              {formatOfficeFixtureDate(nextScheduled.fixture.date)}
+                            </div>
+                            <div className="text-[10px] sm:text-[11px] font-semibold text-[#1d4ed8] leading-tight flex items-center justify-end gap-1 mt-0.5 whitespace-nowrap">
+                              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current text-[#2563eb] shrink-0" aria-hidden="true">
+                                <path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zM2 22h19v-3H2v3zm14-12v7h3v-7h-3zm-4.5-9L2 6v2h19V6l-9.5-5z" />
+                              </svg>
+                              <span>{venueDisplay}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 3D Fictional Jerseys & VS Showcase */}
+                        <div className="relative z-10 grid grid-cols-[1fr_auto_1fr] items-center pt-1 pb-1 px-0.5">
+                          {/* Home Club Kit */}
+                          <div className="flex flex-col items-center text-center min-w-0 office-kit-enter-left">
+                            <OfficeClubJerseySvg
+                              club={home}
+                              displayName={homeName}
+                              uid="office-hero-home"
+                            />
+                            <h3 className="font-display font-extrabold text-[13px] sm:text-[14.5px] text-[#0b1536] tracking-tight whitespace-nowrap mt-0.5">
+                              {homeName}
+                            </h3>
+                            <span className="mt-1 inline-block px-3 py-0.5 rounded-full bg-[#d1fae5] text-[#0d9488] text-[9px] font-extrabold uppercase tracking-wider">
+                              {isNeutralWembley ? 'NEUTRAL' : 'HOME'}
                             </span>
                           </div>
-                        </div>
 
-                        {/* VS & Venue */}
-                        <div className="flex flex-col items-center justify-center shrink-0 px-2 space-y-0.5">
-                          <span className="text-lg sm:text-2xl font-display font-black text-emerald-400 tracking-wider">
-                            VS
-                          </span>
-                          <span className="text-[9.5px] text-slate-400 font-medium truncate max-w-[110px] sm:max-w-[200px]">
-                            🏟️ {venueDisplay}
-                          </span>
-                        </div>
-
-                        {/* Away Club */}
-                        <div className="flex-1 flex flex-col items-center text-center space-y-1 min-w-0">
-                          <div
-                            data-force-white="true"
-                            className="club-crest w-11 h-11 sm:w-14 sm:h-14 rounded-full border-2 border-white/20 shadow-xl flex items-center justify-center text-xs sm:text-base font-black text-white shrink-0"
-                            style={{
-                              background: `linear-gradient(135deg, ${away.primaryColor}, ${away.secondaryColor})`,
-                            }}
-                          >
-                            {away.shortName}
+                          {/* Center VS */}
+                          <div className="flex flex-col items-center justify-center px-1 -mt-4">
+                            <span className="font-display font-black text-[18px] sm:text-[20px] text-[#1d4ed8] tracking-wider drop-shadow-2xs">
+                              VS
+                            </span>
                           </div>
-                          <div className="min-w-0 w-full">
-                            <h4 className="font-display font-black text-xs sm:text-base text-white truncate">
-                              {getEffectiveClubName(away, save.club)}
-                            </h4>
-                            <span className="text-[9px] uppercase font-bold text-slate-400 block truncate">
-                              {isUserAway ? (isNeutralWembley ? '★ (YOU • NEUTRAL)' : '★ (YOU • AWAY)') : (isNeutralWembley ? 'Neutral' : 'Away')}
+
+                          {/* Away Club Kit */}
+                          <div className="flex flex-col items-center text-center min-w-0 office-kit-enter-right">
+                            <OfficeClubJerseySvg
+                              club={away}
+                              displayName={awayName}
+                              uid="office-hero-away"
+                            />
+                            <h3 className="font-display font-extrabold text-[13px] sm:text-[14.5px] text-[#0b1536] tracking-tight whitespace-nowrap mt-0.5">
+                              {awayName}
+                            </h3>
+                            <span className="mt-1 inline-block px-3 py-0.5 rounded-full bg-[#e0e7ff] text-[#2563eb] text-[9px] font-extrabold uppercase tracking-wider">
+                              {isNeutralWembley ? 'NEUTRAL' : 'AWAY'}
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      {/* Dynamic Action Buttons: Continue vs Prepare & Play Match */}
-                      {!isMatchday ? (
-                        /* NOT MATCHDAY YET: Clean day-by-day progression */
-                        <div className="space-y-2">
+                      {/* Primary & Secondary Action Buttons */}
+                      <div className="relative z-10 px-3 sm:px-3.5 pb-3 pt-1.5 space-y-2 bg-[var(--office-card-solid)]">
+                        <button
+                          type="button"
+                          data-office-ui="true"
+                          disabled={simulating}
+                          onClick={() => {
+                            if (shouldShowPreseasonPrompt(save)) {
+                              setShowPreseasonModal(true);
+                              return;
+                            }
+                            if (
+                              save.season.currentDate < `${save.season.yearStart}-07-08` &&
+                              nextScheduled.fixture.date >= `${save.season.yearStart}-07-08` &&
+                              !save.fixtureReleaseState?.released
+                            ) {
+                              setShowFixtureReleasePromptModal(true);
+                              return;
+                            }
+                            if (isAssistantDelegated) {
+                              handleSimulateAssistantPreseason(nextScheduled.fixture.id);
+                              return;
+                            }
+                            const summerDeadline = `${save.season.yearStart}-09-01`;
+                            const winterDeadline = `${save.season.yearStart + 1}-02-01`;
+                            const fixDate = nextScheduled.fixture.date;
+                            if (save.season.currentDate < summerDeadline && fixDate >= summerDeadline) {
+                              let deadlineSave = { ...save, season: { ...save.season, currentDate: summerDeadline } };
+                              deadlineSave = initializeDeadlineDay(deadlineSave);
+                              saveCareerSave(deadlineSave);
+                              setSave(deadlineSave);
+                              showToast('⏱️ Transfer Deadline Day has arrived! Complete negotiations before 23:00 BST.');
+                              return;
+                            }
+                            if (save.season.currentDate < winterDeadline && fixDate >= winterDeadline) {
+                              let deadlineSave = { ...save, season: { ...save.season, currentDate: winterDeadline } };
+                              deadlineSave = initializeDeadlineDay(deadlineSave);
+                              saveCareerSave(deadlineSave);
+                              setSave(deadlineSave);
+                              showToast('⏱️ Winter Transfer Deadline Day has arrived!');
+                              return;
+                            }
+                            setActiveMatchFixture(nextScheduled.fixture);
+                          }}
+                          className="office-play-match-btn w-full py-2.5 sm:py-3 px-4 rounded-2xl font-display font-bold text-[14.5px] sm:text-[15px] tracking-tight flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
+                        >
+                          <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                          <span>Prepare &amp; Play Match</span>
+                          <span className="text-lg leading-none font-normal ml-0.5">&rsaquo;</span>
+                        </button>
+
+                        <div className="grid grid-cols-2 gap-2">
                           <button
-                            onClick={handleContinueCalendar}
+                            type="button"
+                            data-office-ui="true"
                             disabled={simulating}
-                            className="w-full py-3 sm:py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-display font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/25 transition-all hover:scale-[1.01] active:scale-[0.98] cursor-pointer min-h-[48px]"
+                            onClick={handlePlayNextMatchInstant}
+                            className="office-subcard py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 font-display font-bold text-[12px] text-[var(--office-text-primary)] cursor-pointer min-h-[36px]"
                           >
-                            <span>▶️ Continue</span>
-                            <span className="text-[10.5px] font-bold font-mono opacity-85 lowercase">
-                              • next match: {formatCareerDate(nextScheduled.fixture.date, save.settings.dateFormat, 'medium')}
-                            </span>
+                            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[#1d5eff]" aria-hidden="true">
+                              <path d="M7 2v11h3v9l7-12h-4l4-8z" />
+                            </svg>
+                            <span>Instant Sim</span>
                           </button>
 
-                          <div className="grid grid-cols-2 gap-2">
-                            <button
-                              onClick={() => setPendingFastForward('next_match')}
-                              disabled={simulating}
-                              className="py-2.5 px-3 rounded-xl border border-slate-700 hover:border-slate-600 bg-slate-900/80 hover:bg-slate-850 text-slate-200 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer min-h-[42px] flex items-center justify-center gap-1.5"
-                              title="Advance calendar directly to this fixture's matchday"
-                            >
-                              <span>⏭️ Advance to Matchday</span>
-                            </button>
-                            <button
-                              onClick={() => setMatchOverviewModal({ type: 'preview', fixture: nextScheduled.fixture })}
-                              className="py-2.5 px-3 rounded-xl border border-emerald-500/40 hover:border-emerald-400 bg-emerald-950/20 hover:bg-emerald-950/40 text-emerald-400 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[42px]"
-                              title="View pre-match tactical dossier and opponent scouting"
-                            >
-                              <span>📋 Match Dossier</span>
-                            </button>
-                          </div>
-                        </div>
-                      ) : isAssistantDelegated ? (
-                        /* MATCHDAY: Assistant Manager pre-season delegation */
-                        <div className="space-y-2">
                           <button
-                            onClick={() => handleSimulateAssistantPreseason(nextScheduled.fixture.id)}
-                            disabled={simulating}
-                            className="w-full py-3 sm:py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600 hover:from-blue-400 hover:to-indigo-400 text-white font-display font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-blue-500/25 transition-all hover:scale-[1.01] active:scale-[0.98] cursor-pointer min-h-[48px]"
+                            type="button"
+                            data-office-ui="true"
+                            onClick={() => setMatchOverviewModal({ type: 'preview', fixture: nextScheduled.fixture })}
+                            className="office-subcard py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 font-display font-bold text-[12px] text-[var(--office-text-primary)] cursor-pointer min-h-[36px]"
                           >
-                            <span>📋 Assistant Manager Simulate Match</span>
+                            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[#1d5eff]" aria-hidden="true">
+                              <path d="M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zm5.6 8H19v6h-2.8v-6z" />
+                            </svg>
+                            <span>Match Dossier</span>
                           </button>
-                          <div className="grid grid-cols-2 gap-2">
-                            <button
-                              onClick={() => setActiveMatchFixture(nextScheduled.fixture)}
-                              disabled={simulating}
-                              className="py-2.5 px-3 rounded-xl border border-emerald-500/40 hover:border-emerald-400 bg-emerald-950/20 text-emerald-400 font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer min-h-[42px]"
-                            >
-                              <span>⚽ Take Charge (Play)</span>
-                            </button>
-                            <button
-                              onClick={() => setMatchOverviewModal({ type: 'preview', fixture: nextScheduled.fixture })}
-                              className="py-2.5 px-3 rounded-xl border border-slate-700 hover:border-slate-600 bg-slate-900/80 text-slate-200 font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer min-h-[42px]"
-                            >
-                              <span>📋 Match Dossier</span>
-                            </button>
-                          </div>
                         </div>
-                      ) : (
-                        /* MATCHDAY: Regular Matchday Action Controls */
-                        <div className="space-y-2">
-                          <button
-                            onClick={() => {
-                              const summerDeadline = `${save.season.yearStart}-09-01`;
-                              const winterDeadline = `${save.season.yearStart + 1}-02-01`;
-                              const fixDate = nextScheduled.fixture.date;
-                              if (save.season.currentDate < summerDeadline && fixDate >= summerDeadline) {
-                                let deadlineSave = { ...save, season: { ...save.season, currentDate: summerDeadline } };
-                                deadlineSave = initializeDeadlineDay(deadlineSave);
-                                saveCareerSave(deadlineSave);
-                                setSave(deadlineSave);
-                                showToast('⏱️ Transfer Deadline Day has arrived! The summer window shuts tonight at 23:00 BST. Complete negotiations and registrations.');
-                                return;
-                              }
-                              if (save.season.currentDate < winterDeadline && fixDate >= winterDeadline) {
-                                let deadlineSave = { ...save, season: { ...save.season, currentDate: winterDeadline } };
-                                deadlineSave = initializeDeadlineDay(deadlineSave);
-                                saveCareerSave(deadlineSave);
-                                setSave(deadlineSave);
-                                showToast('⏱️ Transfer Deadline Day has arrived! The winter window shuts tonight at 23:00 BST.');
-                                return;
-                              }
-                              setActiveMatchFixture(nextScheduled.fixture);
-                            }}
-                            disabled={simulating}
-                            className="w-full py-3 sm:py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-display font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/25 transition-all hover:scale-[1.01] active:scale-[0.98] cursor-pointer min-h-[48px]"
-                          >
-                            <span>⚽ Prepare &amp; Play Match</span>
-                          </button>
-
-                          <div className="grid grid-cols-2 gap-2">
-                            <button
-                              onClick={handlePlayNextMatchInstant}
-                              disabled={simulating}
-                              className="py-2.5 px-3 rounded-xl border border-slate-700 hover:border-slate-600 bg-slate-900/80 hover:bg-slate-850 text-slate-200 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer min-h-[42px] flex items-center justify-center gap-1.5"
-                              title="Quickly simulate this matchday"
-                            >
-                              <span>⚡ Instant Sim</span>
-                            </button>
-                            <button
-                              onClick={() => setMatchOverviewModal({ type: 'preview', fixture: nextScheduled.fixture })}
-                              className="py-2.5 px-3 rounded-xl border border-emerald-500/40 hover:border-emerald-400 bg-emerald-950/20 hover:bg-emerald-950/40 text-emerald-400 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[42px]"
-                              title="View pre-match tactical dossier and opponent scouting"
-                            >
-                              <span>📋 Match Dossier</span>
-                            </button>
-                          </div>
-                        </div>
-                      )}
+                      </div>
                     </div>
                   );
                 })()}
               </section>
+            ) : (
+              /* End-of-Season Card when all 38 fixtures concluded */
+              <section
+                data-office-ui="true"
+                className="office-floating-card office-reveal-3 rounded-[24px] p-4 space-y-3 text-left"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#1d5eff]">
+                      Season {save.season.seasonNumber} Complete
+                    </span>
+                    <h3 className="text-base font-display font-black text-[var(--office-text-primary)]">
+                      All Campaign Fixtures Concluded
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    data-office-ui="true"
+                    onClick={handleAdvanceToNextSeasonAction}
+                    disabled={simulating}
+                    className="office-play-match-btn py-2.5 px-4 rounded-xl font-display font-bold text-xs cursor-pointer"
+                  >
+                    Advance to Season {save.season.seasonNumber + 1} &rsaquo;
+                  </button>
+                </div>
+              </section>
             )}
 
-            {/* 3-COLUMN MANAGER STATUS & KPI ROW */}
-            <section aria-label="Key Performance Indicators" className="grid grid-cols-3 gap-1.5 sm:gap-2.5 select-none">
-              {/* 1. Finances */}
+            {/* 4. 3-COLUMN STATUS & KPI ROW */}
+            <section
+              aria-label="Key Performance Indicators"
+              data-office-ui="true"
+              className="grid grid-cols-3 gap-2 select-none office-reveal-4"
+            >
+              {/* Card 1: Transfer Budget */}
               <div
+                data-office-ui="true"
                 onClick={() => {
                   navigateToSection('transfers', 'market');
                   window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                 }}
-                className="bg-slate-900/60 hover:bg-slate-850/80 border border-slate-800 hover:border-emerald-500/40 p-2 sm:p-3 rounded-2xl transition-all cursor-pointer flex flex-col justify-between min-h-[64px]"
-                title="View Transfers & Finances"
+                className="office-kpi-card office-kpi-mint rounded-[20px] p-2.5 cursor-pointer flex flex-col justify-between relative"
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] sm:text-[9.5px] uppercase font-bold text-slate-500 block truncate">Warchest</span>
-                  <span className="text-xs text-slate-400 hidden xs:inline">💱</span>
-                </div>
-                <div className="mt-0.5">
-                  <span className="text-xs sm:text-base font-display font-black text-emerald-400 block truncate">
-                    {formatCareerCurrency(save.finances.transferBudget, save.settings.currency)}
-                  </span>
-                  <span className="text-[8.5px] sm:text-[10px] text-slate-400 block font-mono truncate">
-                    +{formatCareerWage(Math.max(0, save.finances.weeklyWageBudget - save.finances.currentWeeklyWages), save.settings.wageUnit, save.settings.currency)}/w
-                  </span>
-                </div>
-              </div>
-
-              {/* 2. League Rank & Form */}
-              <div
-                onClick={() => handleTabChange('table')}
-                className="bg-slate-900/60 hover:bg-slate-850/80 border border-slate-800 hover:border-emerald-500/40 p-2 sm:p-3 rounded-2xl transition-all cursor-pointer flex flex-col justify-between min-h-[64px]"
-                title="View League Table"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] sm:text-[9.5px] uppercase font-bold text-slate-500 block truncate">Standing</span>
-                  <span className="text-xs text-slate-400 hidden xs:inline">📊</span>
-                </div>
-                <div className="mt-0.5">
-                  <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
-                    {userStanding && userStanding.played > 0 ? (
-                      <>
-                        <span className="text-xs sm:text-base font-display font-black text-white">
-                          #{userRank}
-                        </span>
-                        <div className="flex gap-0.5">
-                          {recentFormResults.slice(-3).map((res, i) => (
-                            <span
-                              key={i}
-                              className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded text-[8px] sm:text-[9px] font-black flex items-center justify-center font-display ${
-                                res === 'W'
-                                  ? 'bg-emerald-500 text-slate-950'
-                                  : res === 'D'
-                                  ? 'bg-amber-500 text-slate-950'
-                                  : 'bg-rose-500 text-white'
-                              }`}
-                            >
-                              {res}
-                            </span>
-                          ))}
-                        </div>
-                      </>
-                    ) : (
-                      <span className="text-xs sm:text-base font-display font-black text-slate-300">
-                        Pre-Season
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-[8.5px] sm:text-[10px] text-slate-400 block font-mono truncate">
-                    {userStanding && userStanding.played > 0
-                      ? `${userStanding.points} pts (${userStanding.won}W ${userStanding.lost}L)`
-                      : 'Matchday 1 Pending'}
-                  </span>
-                </div>
-
-              </div>
-
-              {/* 3. Action Center / Urgent Alerts Pill */}
-              <div
-                onClick={() => {
-                  if (actionableAlerts.length > 0) {
-                    handleExecuteAlertAction(actionableAlerts[0]);
-                  } else if (managerialAlerts.length > 0) {
-                    handleExecuteAlertAction(managerialAlerts[0]);
-                  } else {
-                    if (activeTab === 'overview') {
-                      scrollToTarget('managerial-inbox', { behavior: 'smooth', block: 'start' });
-                    } else {
-                      navigateToSection('overview', undefined, 'managerial-inbox');
-                    }
-                  }
-                }}
-                className={`p-2 sm:p-3 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between min-h-[64px] ${
-                  actionableAlerts.length > 0
-                    ? 'bg-amber-950/30 hover:bg-amber-950/50 border-amber-500/40'
-                    : managerialAlerts.length > 0
-                    ? 'bg-blue-950/30 hover:bg-blue-950/50 border-blue-500/40'
-                    : 'bg-slate-900/60 hover:bg-slate-850/80 border-slate-800'
-                }`}
-                title={actionableAlerts.length > 0 ? 'Click to resolve urgent issues' : 'Squad & office status'}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] sm:text-[9.5px] uppercase font-bold text-slate-500 block truncate">Action</span>
-                  <span className="text-xs">{actionableAlerts.length > 0 ? '⚠️' : managerialAlerts.length > 0 ? 'ℹ️' : '✓'}</span>
-                </div>
-                <div className="mt-0.5">
-                  {actionableAlerts.length > 0 ? (
-                    <div>
-                      <span className="text-[11px] sm:text-xs font-display font-black text-amber-300 block truncate">
-                        🚨 Needs Action ({actionableAlerts.length})
-                      </span>
-                      <span className="text-[8.5px] sm:text-[10px] text-amber-200/90 block font-medium truncate">
-                        {actionableAlerts[0].title} ➔
-                      </span>
-                    </div>
-                  ) : managerialAlerts.length > 0 ? (
-                    <div>
-                      <span className="text-[11px] sm:text-xs font-display font-black text-blue-300 block truncate">
-                        📋 {managerialAlerts.length} Review Item{managerialAlerts.length > 1 ? 's' : ''}
-                      </span>
-                      <span className="text-[8.5px] sm:text-[10px] text-slate-400 block font-medium truncate">
-                        {managerialAlerts[0].title} ➔
-                      </span>
-                    </div>
-                  ) : (
-                    <div>
-                      <span className="text-[11px] sm:text-xs font-display font-black text-emerald-400 block truncate">
-                        🟢 All Clear
-                      </span>
-                      <span className="text-[8.5px] sm:text-[10px] text-slate-400 block font-medium truncate">
-                        No pending decisions
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </section>
-
-            {/* 4-COLUMN MOBILE SHORTCUT TOOLBAR */}
-            <nav aria-label="Quick management actions" data-no-swipe="true" className="grid grid-cols-4 gap-2 text-center text-xs">
-              <button
-                onClick={() => handleTabChange('squad')}
-                className="py-2.5 px-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 text-slate-200 font-display font-black uppercase text-[10.5px] flex flex-col items-center justify-center gap-1 transition-all cursor-pointer min-h-[48px]"
-              >
-                <span className="text-base">👥</span>
-                <span>Squad</span>
-              </button>
-              <button
-                onClick={() => {
-                  handleTabChange('squad');
-                  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-                }}
-                className="py-2.5 px-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 text-slate-200 font-display font-black uppercase text-[10.5px] flex flex-col items-center justify-center gap-1 transition-all cursor-pointer min-h-[48px]"
-              >
-                <span className="text-base">⚡</span>
-                <span>Tactics</span>
-              </button>
-              <button
-                onClick={() => {
-                  setTransferHubSubTab('market');
-                  handleTabChange('transfers');
-                  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-                }}
-                className="py-2.5 px-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 text-slate-200 font-display font-black uppercase text-[10.5px] flex flex-col items-center justify-center gap-1 transition-all cursor-pointer min-h-[48px] relative"
-              >
-                <span className="text-base">💱</span>
-                <span>Transfers</span>
-                {incomingOffersCount > 0 && (
-                  <span className="absolute top-1 right-2 w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                )}
-              </button>
-              <button
-                onClick={() => {
-                  handleTabChange('fixtures');
-                  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-                }}
-                className="py-2.5 px-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 text-slate-200 font-display font-black uppercase text-[10.5px] flex flex-col items-center justify-center gap-1 transition-all cursor-pointer min-h-[48px]"
-              >
-                <span className="text-base">📅</span>
-                <span>Fixtures</span>
-              </button>
-            </nav>
-
-            {/* PREVIOUS MATCH RESULT SUMMARY CARD */}
-            {prevScheduled && (
-              <section
-                aria-label="Previous Match Result"
-                onClick={() => setMatchOverviewModal({ type: 'result', fixture: prevScheduled.fixture })}
-                className="bg-slate-950/70 border border-slate-800/80 hover:border-emerald-500/50 rounded-2xl px-4 py-3 flex flex-col gap-2 text-xs transition-all cursor-pointer shadow-md hover:shadow-emerald-500/10 group select-none"
-                title="Click to view detailed match overview & statistics"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 font-display">
-                      {prevScheduled.isCup
-                        ? `Last Result (${prevScheduled.cupName}):`
-                        : `Last Result (MD ${(prevScheduled.fixture as LeagueFixture).round}):`}
-                    </span>
-                    {(() => {
-                      const isHome = prevScheduled.fixture.homeClubId === save.club.id;
-                      const userScore = isHome ? prevScheduled.fixture.homeScore! : prevScheduled.fixture.awayScore!;
-                      const oppScore = isHome ? prevScheduled.fixture.awayScore! : prevScheduled.fixture.homeScore!;
-                      const cupFix = prevScheduled.fixture as CupFixture;
-                      let outcome = userScore > oppScore ? 'W' : userScore === oppScore ? 'D' : 'L';
-                      if (userScore === oppScore && cupFix.penalties) {
-                        const userPens = isHome ? cupFix.penalties.homePenalties : cupFix.penalties.awayPenalties;
-                        const oppPens = isHome ? cupFix.penalties.awayPenalties : cupFix.penalties.homePenalties;
-                        outcome = userPens > oppPens ? 'W' : 'L';
-                      }
-                      return (
-                        <span
-                          className={`text-[9.5px] font-black px-2 py-0.5 rounded-full ${
-                            outcome === 'W'
-                              ? 'bg-emerald-500 text-slate-950'
-                              : outcome === 'D'
-                              ? 'bg-amber-500 text-slate-950'
-                              : 'bg-rose-500 text-white'
-                          }`}
-                        >
-                          {outcome === 'W' ? 'WON' : outcome === 'D' ? 'DRAW' : 'LOST'}
-                        </span>
-                      );
-                    })()}
-                  </div>
-
-                  <div className="flex items-center gap-2 font-display font-bold text-white text-xs">
-                    <span className="truncate max-w-[100px] sm:max-w-none">
-                      {getEffectiveClubName(findAnyClub(prevScheduled.fixture.homeClubId) || allClubs[0], save.club)}
-                    </span>
-                    <span className="bg-slate-900 border border-slate-700 px-2 py-0.5 rounded-lg text-emerald-400 font-mono font-black">
-                      {prevScheduled.fixture.homeScore} - {prevScheduled.fixture.awayScore}
-                    </span>
-                    <span className="truncate max-w-[100px] sm:max-w-none">
-                      {getEffectiveClubName(findAnyClub(prevScheduled.fixture.awayClubId) || allClubs[1], save.club)}
-                    </span>
-                  </div>
-
-                  <span className="text-emerald-400 font-display font-black group-hover:translate-x-0.5 transition-transform text-[10.5px] ml-auto sm:ml-0">
-                    📊 Stats ➔
-                  </span>
-                </div>
-              </section>
-            )}
-
-            {/* FAST-FORWARD CALENDAR TRACKER */}
-            <section aria-label="Calendar Controls" className="bg-slate-900/50 border border-slate-850 rounded-2xl p-2.5 sm:p-3 flex items-center justify-between gap-2 text-xs">
-              <div className="flex items-center gap-1.5 text-slate-300 shrink-0">
-                <span className="text-sm">⏱️</span>
-                <span className="text-[11px] font-bold uppercase tracking-wider hidden sm:inline">Fast Forward:</span>
-              </div>
-              <div className="grid grid-cols-3 gap-1.5 flex-1 max-w-sm ml-auto">
-                <button
-                  type="button"
-                  onClick={() => setPendingFastForward('next_match')}
-                  disabled={simulating || !nextScheduled}
-                  className="py-1.5 px-2 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-750 text-slate-200 font-display font-black text-[11px] uppercase transition-all cursor-pointer text-center truncate"
-                >
-                  ⏭️ Next Match
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPendingFastForward('next_week')}
-                  disabled={simulating}
-                  className="py-1.5 px-2 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-slate-800 text-slate-300 font-display font-black text-[11px] uppercase transition-all cursor-pointer text-center truncate"
-                >
-                  📅 7 Days
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPendingFastForward('next_month')}
-                  disabled={simulating}
-                  className="py-1.5 px-2 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-slate-800 text-slate-300 font-display font-black text-[11px] uppercase transition-all cursor-pointer text-center truncate"
-                >
-                  🗓️ 1 Month
-                </button>
-              </div>
-            </section>
-
-            {/* END-OF-SEASON TRANSITION HUB (WHEN ALL FIXTURES CONCLUDED) */}
-            {!nextScheduled && seasonCompleted && (
-              <section className="bg-gradient-to-br from-amber-950/40 via-slate-900/90 to-slate-950 border-2 border-amber-500/40 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 text-left">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <div className="space-y-1.5">
-                    <div className="text-xs font-display font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <span>🏆</span> Season {save.season.seasonNumber} Complete!
-                    </div>
-                    <h3 className="text-xl sm:text-2xl font-display font-black text-white uppercase tracking-tight">
-                      All Fixtures Concluded • What To Do Next
-                    </h3>
-                    <p className="text-xs text-slate-300 max-w-xl leading-relaxed">
-                      All 38 league matchdays and tournaments have concluded. Advance to Season {save.season.seasonNumber + 1} to claim your merit prize money, increase your transfer budget, age your squad, and begin the new summer transfer window!
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-2 w-full sm:w-auto">
-                    <button
-                      onClick={handleAdvanceToNextSeasonAction}
-                      disabled={simulating}
-                      className="w-full sm:w-auto py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-xl shadow-amber-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer whitespace-nowrap flex items-center justify-center gap-2 min-h-[44px]"
-                    >
-                      <span>🚀 Advance to Season {save.season.seasonNumber + 1} ➔</span>
-                    </button>
-                    {seasonSummary && (
-                      <button
-                        onClick={() => setShowSeasonReviewModal(true)}
-                        className="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-amber-500/30 text-amber-300 font-display font-bold text-xs uppercase tracking-wider transition-all cursor-pointer text-center min-h-[38px]"
-                      >
-                        📋 View Season Review &amp; Player Growth
-                      </button>
-                    )}
+                <div className="space-y-1">
+                  <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current text-[#10b981]" aria-hidden="true">
+                    <path d="M12 4C7.58 4 4 5.79 4 8s3.58 4 8 4 8-1.79 8-4-3.58-4-8-4zm0 10c-4.42 0-8-1.79-8-4v3c0 2.21 3.58 4 8 4s8-1.79 8-4v-3c0 2.21-3.58 4-8 4zm0 5c-4.42 0-8-1.79-8-4v3c0 2.21 3.58 4 8 4s8-1.79 8-4v-3c0 2.21-3.58 4-8 4z" />
+                  </svg>
+                  <div className="text-[10px] sm:text-[10.5px] font-semibold text-[#0f766e] leading-tight whitespace-nowrap">
+                    Transfer Budget
                   </div>
                 </div>
 
-                {/* Quick Financial Payout & Standings Breakdown */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1 text-xs">
-                  <div className="bg-slate-950/70 border border-slate-800 rounded-2xl p-3.5 space-y-1">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase">League Finish</span>
-                    <div className="font-display font-black text-base text-white">
-                      {seasonSummary?.leagueTitle ? '🥇 Champions' : `Position #${seasonSummary?.finalPosition || 1}`}
-                    </div>
+                <div className="mt-1">
+                  <div className="font-display font-black text-[17px] sm:text-[19px] text-[var(--office-text-primary)] leading-tight tracking-tight whitespace-nowrap">
+                    {formatOfficeBudget(save.finances.transferBudget, save.settings.currency)}
                   </div>
-                  <div className="bg-slate-950/70 border border-slate-800 rounded-2xl p-3.5 space-y-1">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase">Merit Prize Money</span>
-                    <div className="font-display font-black text-base text-emerald-400">
-                      +{formatCareerCurrency(seasonSummary?.prizeMoney || 10_000_000, save.settings.currency)}
-                    </div>
-                  </div>
-                  <div className="bg-slate-950/70 border border-slate-800 rounded-2xl p-3.5 space-y-1">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase">New War Chest</span>
-                    <div className="font-display font-black text-base text-emerald-300">
-                      {formatCareerCurrency(save.finances.transferBudget + (seasonSummary?.prizeMoney || 10_000_000), save.settings.currency)}
-                    </div>
-                  </div>
-                  <div className="bg-slate-950/70 border border-slate-800 rounded-2xl p-3.5 space-y-1">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase">Europe Status</span>
-                    <div className="font-display font-bold text-xs text-blue-300 truncate" title={seasonSummary?.europeanQualification || 'Domestic'}>
-                      {seasonSummary?.europeanQualification || 'Domestic Competitions'}
-                    </div>
+                  <div className="text-[8.5px] sm:text-[9.5px] font-semibold text-[#0d9488] whitespace-nowrap mt-0.5">
+                    Wage room: {formatOfficeWageRoom(save.finances.weeklyWageBudget - save.finances.currentWeeklyWages, save.settings.currency)}
                   </div>
                 </div>
-              </section>
-            )}
 
-            {/* PHYSIO ROOM & MEDICAL REPORT CARD */}
-            {injuredCount === 0 ? (
-              <section className="bg-slate-900/40 border border-slate-850 rounded-2xl px-4 py-2.5 flex items-center justify-between text-xs text-slate-400">
-                <div className="flex items-center gap-2">
-                  <span>🏥</span>
-                  <span className="font-display font-bold text-slate-300">Physio Room:</span>
-                  <span className="text-emerald-400 font-semibold">Clean Bill of Health</span>
-                  <span className="hidden sm:inline text-slate-500">• 100% Squad Fit</span>
-                </div>
-                <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-900 px-2 py-0.5 rounded-full">
-                  0 Injured ✓
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[#1d5eff] font-bold text-base leading-none">
+                  &rsaquo;
                 </span>
-              </section>
-            ) : (
-              <section className="bg-slate-900/50 border border-slate-850 rounded-3xl p-4 sm:p-5 shadow-md space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">🏥</span>
-                    <h3 className="text-xs font-display font-black uppercase tracking-wider text-slate-300">
-                      Physio Room &amp; Squad Medical Report
-                    </h3>
+              </div>
+
+              {/* Card 2: League Position */}
+              <div
+                data-office-ui="true"
+                onClick={() => handleTabChange('table')}
+                className="office-kpi-card office-kpi-blue rounded-[20px] p-2.5 cursor-pointer flex flex-col justify-between relative"
+              >
+                <div className="space-y-1">
+                  <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current text-[#1d5eff]" aria-hidden="true">
+                    <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 15.9V19H7v2h10v-2h-4v-3.1a5.01 5.01 0 0 0 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z" />
+                  </svg>
+                  <div className="text-[10px] sm:text-[10.5px] font-semibold text-[#1d5eff] leading-tight whitespace-nowrap">
+                    League Position
                   </div>
-                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse">
-                    {injuredCount} First-Team {injuredCount === 1 ? 'Player' : 'Players'} Injured
-                  </span>
                 </div>
 
-                <div className="space-y-2 pt-1">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                    {save.squad.filter((p) => p.injured).map((player) => (
-                      <div
-                        key={player.id}
-                        className="bg-slate-950/80 border border-rose-950 rounded-2xl p-3 flex items-center justify-between gap-3 text-xs"
+                <div className="mt-0.5">
+                  <div className="font-display font-black text-[16px] sm:text-[18px] text-[var(--office-text-primary)] leading-tight">
+                    {formatOrdinalRank(userRank)}
+                  </div>
+                  {/* 5 Form Badges */}
+                  <div className="flex items-center gap-0.5 my-1">
+                    {(recentFormResults.length > 0 ? recentFormResults.slice(-5) : (['W', 'W', 'D', 'W', 'W'] as const)).map((res, idx) => (
+                      <span
+                        key={idx}
+                        className={`w-3.5 h-3.5 rounded-[4px] text-[8px] font-display font-black text-white flex items-center justify-center ${
+                          res === 'W'
+                            ? 'bg-[#10b981]'
+                            : res === 'D'
+                            ? 'bg-[#f59e0b]'
+                            : 'bg-[#ef4444]'
+                        }`}
                       >
-                        <div className="space-y-0.5 min-w-0">
-                          <div className="font-display font-bold text-white truncate flex items-center gap-1.5">
-                            <span>{player.name}</span>
-                            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/50 px-1 rounded">
-                              {player.position}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-rose-350 truncate">
-                            {player.injuryDescription || 'Muscular rehabilitation'}
-                          </p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <span className="text-[10px] font-mono font-bold text-rose-400 bg-rose-950/40 border border-rose-800/40 px-2 py-0.5 rounded-lg block">
-                            {player.injuryWeeks || 1}w recovery
-                          </span>
-                        </div>
-                      </div>
+                        {res}
+                      </span>
                     ))}
                   </div>
-                  <div className="pt-1 flex justify-end">
+                  <div className="text-[8.5px] sm:text-[9.5px] font-medium text-[#2563eb] whitespace-nowrap">
+                    {userStanding && userStanding.played > 0
+                      ? `${userStanding.points} pts (${userStanding.won}W ${userStanding.lost}L)`
+                      : `${userStanding?.points || 0} pts (0W 0L)`}
+                  </div>
+                </div>
+
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[#1d5eff] font-bold text-base leading-none">
+                  &rsaquo;
+                </span>
+              </div>
+
+              {/* Card 3: Items for Review */}
+              <div
+                data-office-ui="true"
+                onClick={() => {
+                  if (contractReviewPlayers.length > 0) {
+                    navigateToSection('transfers', 'contracts', `contract-player-${contractReviewPlayers[0].id}`);
+                  } else {
+                    setShowOfficeInboxModal(true);
+                  }
+                }}
+                className="office-kpi-card office-kpi-lavender rounded-[20px] p-2.5 cursor-pointer flex flex-col justify-between relative"
+              >
+                <div className="space-y-1">
+                  <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current text-[#1d5eff]" aria-hidden="true">
+                    <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-2 14-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+                  </svg>
+                  <div className="text-[10px] sm:text-[10.5px] font-semibold text-[#1d5eff] leading-tight whitespace-nowrap">
+                    Items for Review
+                  </div>
+                </div>
+
+                <div className="mt-1">
+                  <div className="font-display font-black text-[18px] sm:text-[20px] text-[var(--office-text-primary)] leading-tight">
+                    {officeReviewCount}
+                  </div>
+                  <div className="text-[8.5px] sm:text-[9.5px] font-medium text-[#1d5eff] whitespace-nowrap mt-0.5">
+                    Contracts to review
+                  </div>
+                </div>
+
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[#1d5eff] font-bold text-base leading-none">
+                  &rsaquo;
+                </span>
+              </div>
+            </section>
+
+            {/* 5. CONTRACTS TO REVIEW CARD */}
+            <section
+              id="managerial-alerts"
+              aria-label="Contracts to Review"
+              data-office-ui="true"
+              className="office-floating-card office-reveal-5 rounded-[22px] p-2.5 sm:p-3 space-y-2 select-none"
+            >
+              <div className="flex items-center justify-between gap-2 px-0.5">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[#f59e0b] shrink-0" aria-hidden="true">
+                    <path d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 0 0 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
+                  </svg>
+                  <h2 className="font-display font-extrabold text-[12.5px] sm:text-[13px] text-[var(--office-text-primary)] truncate">
+                    {officeReviewCount} Contracts to Review
+                  </h2>
+                </div>
+
+                <button
+                  type="button"
+                  data-office-ui="true"
+                  onClick={() => navigateToSection('transfers', 'contracts')}
+                  className="text-[11px] sm:text-[11.5px] font-bold text-[#1d5eff] hover:underline flex items-center gap-1 cursor-pointer shrink-0"
+                >
+                  <span>View All ({save.squad.length})</span>
+                  <span>&rarr;</span>
+                </button>
+              </div>
+
+              <div className="space-y-1.5">
+                {contractReviewPlayers.slice(0, 2).map((player, idx) => (
+                  <div
+                    key={player.id}
+                    data-office-ui="true"
+                    onClick={() => navigateToSection('transfers', 'contracts', `contract-player-${player.id}`)}
+                    className="office-subcard rounded-2xl p-2 sm:p-2.5 flex items-center justify-between gap-2.5 cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div
+                        className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                          idx === 0
+                            ? 'bg-[#fff7ed] text-[#f59e0b] border border-[#fed7aa]'
+                            : 'bg-[#eff6ff] text-[#1d5eff] border border-[#bfdbfe]'
+                        }`}
+                      >
+                        <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+                          <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+                        </svg>
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-display font-bold text-[12px] sm:text-[12.5px] text-[var(--office-text-primary)] leading-tight truncate">
+                          {player.name}
+                        </div>
+                        <div className="text-[10px] sm:text-[10.5px] font-medium text-[#3b5998] leading-tight truncate mt-0.5">
+                          Contract expires in {Math.max(1, player.contractYears || 1)} {Math.max(1, player.contractYears || 1) === 1 ? 'year' : 'years'}
+                        </div>
+                      </div>
+                    </div>
+
+                    <span className="text-[#1d5eff] font-bold text-base leading-none pr-1">
+                      &rsaquo;
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* 6. QUICK ACTIONS CARD (2x2 GRID) */}
+            <section
+              aria-label="Quick Actions"
+              data-office-ui="true"
+              className="office-floating-card office-reveal-6 rounded-[22px] p-2.5 sm:p-3 space-y-2 select-none"
+            >
+              <div className="flex items-center justify-between gap-2 px-0.5">
+                <h2 className="font-display font-extrabold text-[13.5px] sm:text-[14px] text-[var(--office-text-primary)]">
+                  Quick Actions
+                </h2>
+                <button
+                  type="button"
+                  data-office-ui="true"
+                  onClick={() => setShowOfficeSeasonDrawer((prev) => !prev)}
+                  className="text-[11px] sm:text-[11.5px] font-semibold text-[#1d5eff] hover:underline cursor-pointer"
+                >
+                  Manage your season
+                </button>
+              </div>
+
+              {/* Optional Collapsible Fast-Forward / Calendar Strip */}
+              {showOfficeSeasonDrawer && (
+                <div className="office-subcard rounded-2xl p-2.5 space-y-2">
+                  <div className="flex items-center justify-between text-[10.5px] font-bold text-[var(--office-text-secondary)]">
+                    <span>Fast Forward Calendar</span>
+                    {injuredCount > 0 && (
+                      <span className="text-[#ef4444]">🏥 {injuredCount} Injured</span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-4 gap-1.5">
                     <button
-                      onClick={() => handleTabChange('squad')}
-                      className="text-xs font-display font-black uppercase text-emerald-400 hover:text-emerald-300 flex items-center gap-1 cursor-pointer"
+                      type="button"
+                      data-office-ui="true"
+                      onClick={handleContinueCalendar}
+                      disabled={simulating}
+                      className="office-subcard py-1.5 px-2 rounded-xl font-display font-bold text-[10.5px] text-[#1d5eff] cursor-pointer"
                     >
-                      <span>Adjust Tactics &amp; Replacements in Squad</span>
-                      <span>➔</span>
+                      +1 Day
+                    </button>
+                    <button
+                      type="button"
+                      data-office-ui="true"
+                      onClick={() => setPendingFastForward('next_match')}
+                      disabled={simulating || !nextScheduled}
+                      className="office-subcard py-1.5 px-2 rounded-xl font-display font-bold text-[10.5px] text-[var(--office-text-primary)] cursor-pointer"
+                    >
+                      Next Match
+                    </button>
+                    <button
+                      type="button"
+                      data-office-ui="true"
+                      onClick={() => setPendingFastForward('next_week')}
+                      disabled={simulating}
+                      className="office-subcard py-1.5 px-2 rounded-xl font-display font-bold text-[10.5px] text-[var(--office-text-primary)] cursor-pointer"
+                    >
+                      7 Days
+                    </button>
+                    <button
+                      type="button"
+                      data-office-ui="true"
+                      onClick={() => setPendingFastForward('next_month')}
+                      disabled={simulating}
+                      className="office-subcard py-1.5 px-2 rounded-xl font-display font-bold text-[10.5px] text-[var(--office-text-primary)] cursor-pointer"
+                    >
+                      1 Month
                     </button>
                   </div>
                 </div>
-              </section>
-            )}
+              )}
 
-            {/* BOARD ROOM CONFIDENCE BAR */}
-            <section className="bg-slate-900/40 border border-slate-850 rounded-2xl p-3.5 sm:p-4 flex flex-wrap items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2.5">
-                <span className="text-base">🏛️</span>
-                <div>
-                  <div className="font-display font-black uppercase text-white flex items-center gap-2">
-                    <span>Board Confidence</span>
-                    <span className={`text-[9.5px] font-black uppercase px-2 py-0.5 rounded-full ${
-                      boardConfidence >= 70
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                        : boardConfidence >= 50
-                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                        : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                    }`}>
-                      {boardConfidence}% Satisfaction
-                    </span>
+              <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+                {/* Tactics */}
+                <button
+                  type="button"
+                  data-office-ui="true"
+                  onClick={() => {
+                    handleTabChange('squad');
+                    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                  }}
+                  className="office-subcard rounded-2xl p-2 flex items-center justify-between gap-1 text-left cursor-pointer"
+                >
+                  <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 overflow-hidden">
+                    <div className="w-6.5 h-6.5 sm:w-7.5 sm:h-7.5 rounded-lg bg-[#0d9488] text-white flex items-center justify-center shrink-0">
+                      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-none stroke-current" strokeWidth="2" aria-hidden="true">
+                        <circle cx="6" cy="6" r="2" fill="currentColor" />
+                        <circle cx="18" cy="6" r="2" fill="currentColor" />
+                        <circle cx="12" cy="12" r="2" fill="currentColor" />
+                        <circle cx="6" cy="18" r="2" fill="currentColor" />
+                        <circle cx="18" cy="18" r="2" fill="currentColor" />
+                        <path d="M7.5 7.5 10.5 10.5M16.5 7.5 13.5 10.5M10.5 13.5 7.5 16.5M13.5 13.5 16.5 16.5" strokeLinecap="round" />
+                      </svg>
+                    </div>
+                    <div className="min-w-0 flex-1 overflow-hidden">
+                      <div className="font-display font-bold text-[11px] sm:text-[12px] text-[var(--office-text-primary)] leading-tight truncate">
+                        Tactics
+                      </div>
+                      <div className="text-[8.5px] sm:text-[9.5px] font-medium text-[#3b5998] leading-tight tracking-tight truncate mt-0.5">
+                        Set up for the next match
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-[10.5px] text-slate-400 mt-0.5">
-                    Objective: <strong className="text-white">{save.club.tier === 'elite' ? 'Win Title' : save.club.tier === 'upper' ? 'European Qualification' : 'Avoid Relegation'}</strong> • Status: <span className="text-emerald-400 font-bold">Job Safe</span>
+                  <span className="text-[#1d5eff] font-bold text-sm leading-none shrink-0">&rsaquo;</span>
+                </button>
+
+                {/* Calendar */}
+                <button
+                  type="button"
+                  data-office-ui="true"
+                  onClick={() => {
+                    handleTabChange('fixtures');
+                    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                  }}
+                  className="office-subcard rounded-2xl p-2 flex items-center justify-between gap-1 text-left cursor-pointer"
+                >
+                  <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 overflow-hidden">
+                    <div className="w-6.5 h-6.5 sm:w-7.5 sm:h-7.5 rounded-lg bg-[#ef4444] text-white flex items-center justify-center shrink-0">
+                      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" aria-hidden="true">
+                        <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm-12-8h5v5H7v-5z" />
+                      </svg>
+                    </div>
+                    <div className="min-w-0 flex-1 overflow-hidden">
+                      <div className="font-display font-bold text-[11px] sm:text-[12px] text-[var(--office-text-primary)] leading-tight truncate">
+                        Calendar
+                      </div>
+                      <div className="text-[8.5px] sm:text-[9.5px] font-medium text-[#3b5998] leading-tight tracking-tight truncate mt-0.5">
+                        View upcoming fixtures
+                      </div>
+                    </div>
                   </div>
-                </div>
+                  <span className="text-[#1d5eff] font-bold text-sm leading-none shrink-0">&rsaquo;</span>
+                </button>
+
+                {/* Training */}
+                <button
+                  type="button"
+                  data-office-ui="true"
+                  onClick={() => {
+                    handleTabChange('squad');
+                    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                  }}
+                  className="office-subcard rounded-2xl p-2 flex items-center justify-between gap-1 text-left cursor-pointer"
+                >
+                  <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 overflow-hidden">
+                    <div className="w-6.5 h-6.5 sm:w-7.5 sm:h-7.5 rounded-lg bg-[#ecfdf5] text-[#10b981] border border-[#a7f3d0] flex items-center justify-center shrink-0">
+                      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" aria-hidden="true">
+                        <path d="M20.57 14.86 22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z" />
+                      </svg>
+                    </div>
+                    <div className="min-w-0 flex-1 overflow-hidden">
+                      <div className="font-display font-bold text-[11px] sm:text-[12px] text-[var(--office-text-primary)] leading-tight truncate">
+                        Training
+                      </div>
+                      <div className="text-[8.5px] sm:text-[9.5px] font-medium text-[#3b5998] leading-tight tracking-tight truncate mt-0.5">
+                        Improve your squad
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-[#1d5eff] font-bold text-sm leading-none shrink-0">&rsaquo;</span>
+                </button>
+
+                {/* Boardroom */}
+                <button
+                  type="button"
+                  data-office-ui="true"
+                  onClick={() => navigateToSection('transfers', 'board', 'board-room-section')}
+                  className="office-subcard rounded-2xl p-2 flex items-center justify-between gap-1 text-left cursor-pointer"
+                >
+                  <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 overflow-hidden">
+                    <div className="w-6.5 h-6.5 sm:w-7.5 sm:h-7.5 rounded-lg bg-[#eff6ff] text-[#1d5eff] border border-[#bfdbfe] flex items-center justify-center shrink-0">
+                      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" aria-hidden="true">
+                        <path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zM2 22h19v-3H2v3zm14-12v7h3v-7h-3zm-4.5-9L2 6v2h19V6l-9.5-5z" />
+                      </svg>
+                    </div>
+                    <div className="min-w-0 flex-1 overflow-hidden">
+                      <div className="font-display font-bold text-[11px] sm:text-[12px] text-[var(--office-text-primary)] leading-tight truncate">
+                        Boardroom
+                      </div>
+                      <div className="text-[8.5px] sm:text-[9.5px] font-medium text-[#3b5998] leading-tight tracking-tight truncate mt-0.5">
+                        Club goals &amp; feedback
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-[#1d5eff] font-bold text-sm leading-none shrink-0">&rsaquo;</span>
+                </button>
               </div>
-
-              <button
-                onClick={() => navigateToSection('transfers', 'board', 'board-room-section')}
-                className="py-1.5 px-3 rounded-xl border border-slate-800 bg-slate-950/80 hover:bg-slate-900 text-slate-300 hover:text-white font-display font-bold text-[11px] uppercase tracking-wider transition-all cursor-pointer"
-              >
-                Board Objectives ➔
-              </button>
             </section>
 
-            {/* INTERACTIVE FOOTBALL MANAGER INBOX (ACTION ITEM: GENERAL INBOX) */}
+            {/* 7. LAST RESULT BOTTOM BAR */}
             {(() => {
-              const unreadInboxCount = allInbox.filter((m) => !m.isRead).length;
-              const actionableInboxCount = allInbox.filter((m) => {
-                const cl = classifyInboxMessage(m, save);
-                return cl.classification === 'action_required' && !cl.isResolved;
-              }).length;
+              const targetMatch = prevScheduled || nextScheduled;
+              if (!targetMatch) return null;
 
-              const filteredMessages = allInbox.filter((m) => {
-                if (inboxFilter === 'all') return true;
-                if (inboxFilter === 'action_required') {
-                  const cl = classifyInboxMessage(m, save);
-                  return cl.classification === 'action_required' && !cl.isResolved;
-                }
-                if (inboxFilter === 'unread') return !m.isRead;
-                return m.type === inboxFilter;
-              });
+              const fix = targetMatch.fixture;
+              const homeClub = findAnyClub(fix.homeClubId) || allClubs[0];
+              const awayClub = findAnyClub(fix.awayClubId) || allClubs[1];
+              const homeName = getEffectiveClubName(homeClub, save.club);
+              const awayName = getEffectiveClubName(awayClub, save.club);
+
+              const roundLabel = prevScheduled
+                ? prevScheduled.isCup
+                  ? prevScheduled.cupName
+                  : `MD ${(prevScheduled.fixture as LeagueFixture).round}`
+                : 'MD 1';
+
+              const scoreLabel = prevScheduled
+                ? `${fix.homeScore ?? 0} - ${fix.awayScore ?? 0}`
+                : 'vs';
 
               return (
-                <section id="managerial-inbox" className="bg-slate-900/50 border border-slate-850 rounded-3xl p-5 sm:p-6 shadow-md space-y-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-lg">📬</span>
-                      <h3 className="text-sm font-display font-black uppercase tracking-wider text-white flex items-center gap-2">
-                        <span>Managerial Inbox</span>
-                        {unreadInboxCount > 0 && (
-                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950">
-                            {unreadInboxCount} Unread
-                          </span>
-                        )}
-                        {actionableInboxCount > 0 && (
-                          <span className="text-[10px] font-mono font-black px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 animate-pulse">
-                            {actionableInboxCount} Action Required
-                          </span>
-                        )}
+                <section
+                  aria-label="Previous Match Result"
+                  data-office-ui="true"
+                  onClick={() =>
+                    setMatchOverviewModal({
+                      type: prevScheduled ? 'result' : 'preview',
+                      fixture: fix,
+                    })
+                  }
+                  className="office-floating-card office-reveal-7 rounded-[18px] px-2 sm:px-3 py-2 flex items-center justify-between gap-1 text-[8.5px] sm:text-[10px] cursor-pointer select-none"
+                >
+                  <div className="flex items-center gap-0.5 shrink-0 whitespace-nowrap">
+                    <span className="font-display font-extrabold text-[#1d4ed8]">
+                      {prevScheduled ? 'Last Result' : 'Preview'}
+                    </span>
+                    <span className="text-[var(--office-text-muted)] font-medium">
+                      ({roundLabel})
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-center gap-1 min-w-0 flex-1 overflow-hidden">
+                    <OfficeClubJerseySvg
+                      club={homeClub}
+                      displayName={homeName}
+                      size="sm"
+                      uid="office-last-home"
+                    />
+                    <span className="font-display font-bold text-[var(--office-text-primary)] truncate">
+                      {homeName}
+                    </span>
+
+                    <span className="px-1.5 py-0.5 rounded-md bg-[#dcfce7] text-[#0b1536] font-display font-black text-[9px] sm:text-[10px] shrink-0 whitespace-nowrap">
+                      {scoreLabel}
+                    </span>
+
+                    <OfficeClubJerseySvg
+                      club={awayClub}
+                      displayName={awayName}
+                      size="sm"
+                      uid="office-last-away"
+                    />
+                    <span className="font-medium text-[var(--office-text-secondary)] truncate">
+                      {awayName}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1 shrink-0 pl-1 border-l border-[var(--office-divider)] whitespace-nowrap">
+                    <svg viewBox="0 0 24 24" className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current text-[#1d5eff] shrink-0" aria-hidden="true">
+                      <path d="M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zm5.6 8H19v6h-2.8v-6z" />
+                    </svg>
+                    <span className="font-display font-bold text-[#1d5eff]">
+                      View Stats &rarr;
+                    </span>
+                  </div>
+                </section>
+              );
+            })()}
+
+            {/* MANAGERIAL INBOX SLIDE-UP MODAL / SHEET (Opened via Envelope or View All) */}
+            {showOfficeInboxModal && (
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-label="Managerial Inbox"
+                className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4 bg-slate-950/60 backdrop-blur-sm"
+                onClick={() => setShowOfficeInboxModal(false)}
+              >
+                <section
+                  id="managerial-inbox"
+                  data-office-ui="true"
+                  onClick={(e) => e.stopPropagation()}
+                  className="office-floating-card rounded-3xl p-4 sm:p-5 w-full max-w-lg max-h-[82vh] flex flex-col space-y-3"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">📬</span>
+                      <h3 className="font-display font-extrabold text-sm text-[var(--office-text-primary)]">
+                        Managerial Inbox ({allInbox.length})
                       </h3>
                     </div>
-
-                    {unreadInboxCount > 0 && (
+                    <div className="flex items-center gap-2">
+                      {unreadInboxCount > 0 && (
+                        <button
+                          type="button"
+                          data-office-ui="true"
+                          onClick={handleMarkAllMessagesRead}
+                          className="text-[11px] font-bold text-[#1d5eff] cursor-pointer"
+                        >
+                          ✓ Mark All Read
+                        </button>
+                      )}
                       <button
-                        onClick={handleMarkAllMessagesRead}
-                        className="text-[11px] font-bold text-slate-400 hover:text-emerald-400 transition-colors cursor-pointer"
+                        type="button"
+                        data-office-ui="true"
+                        onClick={() => setShowOfficeInboxModal(false)}
+                        className="office-subcard w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-[var(--office-text-primary)] cursor-pointer"
                       >
-                        ✓ Mark All as Read
+                        ✕
                       </button>
-                    )}
+                    </div>
                   </div>
 
                   {/* Filter Pills */}
-                  <nav aria-label="Inbox Filters" data-no-swipe="true" className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none border-b border-slate-800">
+                  <nav aria-label="Inbox Filters" data-no-swipe="true" className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
                     {[
                       { id: 'all', label: 'All', count: allInbox.length },
-                      { id: 'action_required', label: 'Action Needed', count: actionableInboxCount },
+                      { id: 'action_required', label: 'Action', count: actionableAlerts.length },
                       { id: 'unread', label: 'Unread', count: unreadInboxCount },
                       { id: 'board', label: 'Board', count: allInbox.filter((m) => m.type === 'board').length },
-                      { id: 'injury', label: 'Medical', count: allInbox.filter((m) => m.type === 'injury').length },
                       { id: 'transfer', label: 'Transfers', count: allInbox.filter((m) => m.type === 'transfer').length },
-                      { id: 'cup_draw', label: 'Competitions', count: allInbox.filter((m) => m.type === 'cup_draw').length },
                     ].map((filter) => {
                       const active = inboxFilter === filter.id;
                       return (
                         <button
                           key={filter.id}
+                          type="button"
+                          data-office-ui="true"
                           onClick={() => setInboxFilter(filter.id as typeof inboxFilter)}
-                          className={`py-1.5 px-3 rounded-xl text-xs font-display font-bold uppercase transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                          className={`py-1 px-2.5 rounded-xl text-[11px] font-display font-bold whitespace-nowrap cursor-pointer ${
                             active
-                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                              : 'bg-slate-950/60 text-slate-400 border border-slate-850 hover:text-slate-200'
+                              ? 'office-nav-tab-active'
+                              : 'office-subcard text-[var(--office-text-secondary)]'
                           }`}
                         >
-                          <span>{filter.label}</span>
-                          <span className="text-[10px] opacity-75 font-mono">({filter.count})</span>
+                          {filter.label} ({filter.count})
                         </button>
                       );
                     })}
                   </nav>
 
                   {/* Messages Feed */}
-                  {filteredMessages.length === 0 ? (
-                    <div className="text-center py-6 text-xs text-slate-500">
-                      No messages found in this folder.
-                    </div>
-                  ) : (
-                    <>
-                      <div className="space-y-2.5 max-h-[460px] overflow-y-auto pr-1 scrollbar-thin">
-                        {(inboxShowAll ? filteredMessages : filteredMessages.slice(0, 5)).map((msg) => {
-                          const isExpanded = expandedMessageId === msg.id;
-                          const classificationInfo = classifyInboxMessage(msg, save);
-                          const { classification, isResolved, effectiveActionLabel, effectiveActionTab, effectiveActionType, targetId } = classificationInfo;
+                  <div className="space-y-2 overflow-y-auto pr-1 flex-1">
+                    {allInbox
+                      .filter((m) => {
+                        if (inboxFilter === 'all') return true;
+                        if (inboxFilter === 'action_required') {
+                          const cl = classifyInboxMessage(m, save);
+                          return cl.classification === 'action_required' && !cl.isResolved;
+                        }
+                        if (inboxFilter === 'unread') return !m.isRead;
+                        return m.type === inboxFilter;
+                      })
+                      .map((msg) => {
+                        const isExpanded = expandedMessageId === msg.id;
+                        const { classification, isResolved, effectiveActionLabel, effectiveActionTab, effectiveActionType, targetId } =
+                          classifyInboxMessage(msg, save);
 
-                          return (
-                            <article
-                              key={msg.id}
-                              onClick={() => handleToggleMessageRead(msg.id)}
-                              className={`rounded-2xl border p-4 transition-all cursor-pointer select-none space-y-2 ${
-                                !msg.isRead
-                                  ? 'bg-slate-950/90 border-emerald-500/40 hover:border-emerald-500/70 shadow-sm'
-                                  : 'bg-slate-950/40 border-slate-850 hover:border-slate-800 text-slate-300'
-                              }`}
-                            >
-                              <div className="flex flex-wrap items-center justify-between gap-2">
-                                <div className="flex items-center gap-2">
-                                  {!msg.isRead && (
-                                    <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
-                                  )}
-                                  <span className="font-display font-bold text-xs text-white">
-                                    {msg.sender}
-                                  </span>
-                                  <span className="text-[10px] text-slate-500 font-sans">
-                                    • {msg.senderRole}
-                                  </span>
-                                </div>
-
-                                <div className="flex items-center gap-1.5 ml-auto text-[10px]">
-                                  {isResolved ? (
-                                    <span className="bg-slate-800 text-slate-400 border border-slate-700 px-2 py-0.5 rounded-full font-bold uppercase text-[9px]">
-                                      ✓ Resolved
-                                    </span>
-                                  ) : classification === 'action_required' ? (
-                                    <span className="bg-amber-400 text-slate-950 font-black uppercase px-2 py-0.5 rounded-full text-[9px] animate-pulse">
-                                      Action Required
-                                    </span>
-                                  ) : classification === 'important' ? (
-                                    <span className="bg-blue-500/20 text-blue-300 border border-blue-500/40 px-2 py-0.5 rounded-full font-black uppercase text-[9px]">
-                                      Important
-                                    </span>
-                                  ) : (
-                                    <span className="bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full font-medium text-[9px]">
-                                      Info
-                                    </span>
-                                  )}
-                                  <span className="font-mono text-slate-400">
-                                    {formatCareerDate(msg.date, save.settings.dateFormat, 'medium')}
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div className="font-semibold text-xs text-slate-200">
-                                {msg.subject}
-                              </div>
-
-                              {/* Message Preview or Expanded Content */}
-                              {isExpanded ? (
-                                <div className="pt-2 border-t border-slate-850 space-y-3">
-                                  <p className="text-xs text-slate-300 whitespace-pre-line leading-relaxed">
-                                    {msg.body}
-                                  </p>
-
-                                  {effectiveActionLabel && (
-                                    <div className="pt-1 flex justify-end">
-                                      <button
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleExecuteAlertAction({
-                                            actionTab: effectiveActionTab,
-                                            actionType: effectiveActionType,
-                                            targetId: targetId || msg.targetId,
-                                          });
-                                        }}
-                                        className={`py-2 px-3.5 rounded-xl font-display font-black text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer flex items-center gap-1.5 ${
-                                          classification === 'action_required' && !isResolved
-                                            ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-amber-500/20'
-                                            : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/20'
-                                        }`}
-                                      >
-                                        <span>{effectiveActionLabel}</span>
-                                        <span>➔</span>
-                                      </button>
-                                    </div>
-                                  )}
-                                </div>
-                              ) : (
-                                <p className="text-[11px] text-slate-400 truncate">
-                                  {msg.body.replace(/\n+/g, ' ')}
-                                </p>
-                              )}
-                            </article>
-                          );
-                        })}
-                      </div>
-
-                      {filteredMessages.length > 5 && (
-                        <div className="pt-2 flex justify-center">
-                          <button
-                            type="button"
-                            onClick={() => setInboxShowAll(!inboxShowAll)}
-                            className="text-xs font-display font-bold uppercase tracking-wider py-2 px-4 rounded-xl bg-slate-950/70 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
+                        return (
+                          <article
+                            key={msg.id}
+                            data-office-ui="true"
+                            onClick={() => handleToggleMessageRead(msg.id)}
+                            className="office-subcard rounded-2xl p-3 space-y-1.5 cursor-pointer text-left"
                           >
-                            <span>
-                              {inboxShowAll
-                                ? '▲ Show Recent (5 Messages)'
-                                : `▼ Show All (${filteredMessages.length} Messages)`}
-                            </span>
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  )}
+                            <div className="flex items-center justify-between gap-2 text-[10.5px]">
+                              <span className="font-display font-bold text-[var(--office-text-primary)]">
+                                {msg.sender}
+                              </span>
+                              <span className="font-mono text-[var(--office-text-muted)]">
+                                {formatOfficeShortDate(msg.date)}
+                              </span>
+                            </div>
+                            <div className="font-bold text-xs text-[var(--office-text-primary)]">
+                              {msg.subject}
+                            </div>
+                            {isExpanded ? (
+                              <div className="pt-1.5 border-t border-[var(--office-divider)] space-y-2">
+                                <p className="text-[11px] text-[var(--office-text-secondary)] whitespace-pre-line leading-relaxed">
+                                  {msg.body}
+                                </p>
+                                {effectiveActionLabel && !isResolved && (
+                                  <button
+                                    type="button"
+                                    data-office-ui="true"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setShowOfficeInboxModal(false);
+                                      handleExecuteAlertAction({
+                                        actionTab: effectiveActionTab,
+                                        actionType: effectiveActionType,
+                                        targetId: targetId || msg.targetId,
+                                      });
+                                    }}
+                                    className="office-play-match-btn py-1.5 px-3 rounded-xl font-display font-bold text-[11px] cursor-pointer"
+                                  >
+                                    {effectiveActionLabel} &rarr;
+                                  </button>
+                                )}
+                              </div>
+                            ) : (
+                              <p className="text-[11px] text-[var(--office-text-muted)] truncate">
+                                {msg.body.replace(/\n+/g, ' ')}
+                              </p>
+                            )}
+                          </article>
+                        );
+                      })}
+                  </div>
                 </section>
-              );
-            })()}
-
-            {/* Club Profile & Board Expectations (Secondary Context) */}
-            <div className="pt-2 border-t border-slate-850 space-y-4">
-              <h3 className="text-xs font-display font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                <span>🏛️</span>
-                <span>Club Profile &amp; Governance</span>
-              </h3>
-
-              {/* Hero Welcome Banner */}
-              <section className="bg-gradient-to-r from-slate-900/80 via-slate-900/50 to-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xl relative overflow-hidden">
-                <div
-                  className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-10 filter blur-3xl pointer-events-none"
-                  style={{ background: save.club.primaryColor }}
-                />
-
-                <div className="max-w-2xl space-y-2.5">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/60 border border-emerald-900/60 px-3 py-1 rounded-full font-display">
-                    English Top Flight • Season {save.season.seasonNumber}
-                  </span>
-                  <h2 className="text-xl sm:text-2xl font-display font-black text-white uppercase tracking-tight">
-                    Welcome to {effectiveClubName}, {save.manager.name}
-                  </h2>
-                  <p className="text-xs text-slate-350 leading-relaxed font-medium">
-                    Your management tenure has officially begun. You have been appointed with a{' '}
-                    <span className="text-emerald-400 font-bold">
-                      {formatCareerCurrency(save.finances.transferBudget, save.settings.currency)}
-                    </span>{' '}
-                    transfer budget and a wage allocation of{' '}
-                    <span className="text-slate-200 font-bold">
-                      {formatCareerWage(save.finances.weeklyWageBudget, save.settings.wageUnit, save.settings.currency)}
-                    </span>.
-                  </p>
-                </div>
-              </section>
-
-              {/* Club Vitals & Board Expectations */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-5 space-y-2">
-                  <span className="text-xl">🏟️</span>
-                  <h3 className="text-xs font-display font-black uppercase text-slate-300">
-                    Home Ground
-                  </h3>
-                  <div className="text-base font-display font-black text-white">
-                    {save.club.stadiumName}
-                  </div>
-                  <p className="text-[11px] text-slate-400 font-medium">
-                    Capacity: {save.club.stadiumCapacity.toLocaleString()} supporters
-                  </p>
-                </div>
-
-                <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-5 space-y-2">
-                  <span className="text-xl">🎯</span>
-                  <h3 className="text-xs font-display font-black uppercase text-slate-300">
-                    Board Objective
-                  </h3>
-                  <div className="text-base font-display font-black text-white">
-                    {save.club.tier === 'elite'
-                      ? 'Compete for the Title'
-                      : save.club.tier === 'upper'
-                      ? 'European Qualification'
-                      : save.club.tier === 'mid'
-                      ? 'Top Half Finish'
-                      : 'Avoid Relegation'}
-                  </div>
-                  <p className="text-[11px] text-slate-400 font-medium">
-                    Reputation tier: <span className="uppercase font-bold text-emerald-400">{save.club.tier}</span> ({save.club.reputation}/100)
-                  </p>
-                </div>
-
-                <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-5 space-y-2">
-                  <span className="text-xl">⚖️</span>
-                  <h3 className="text-xs font-display font-black uppercase text-slate-300">
-                    Career Rules
-                  </h3>
-                  <div className="text-base font-display font-black text-white flex items-center gap-2">
-                    <span className="capitalize">{save.settings.preset}</span>
-                    {save.settings.locked && <span title="Settings Locked">🔒</span>}
-                  </div>
-                  <p className="text-[11px] text-slate-400 font-medium">
-                    {save.settings.boardCanSack ? 'Board Sackings: Active' : 'No Sackings (Job Safe)'}
-                  </p>
-                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 

@@ -706,27 +706,27 @@ body {
 }
 
 /* Light theme pure white background (remove all green gradient wash) */
-[data-theme='light'] .pitch-bg,
-[data-theme='light'] body,
-[data-theme='light'] main {
+[data-theme='light'] .pitch-bg:not([data-office-ui]),
+[data-theme='light'] body:not(:has(#career-office-root[data-office-active="true"])),
+[data-theme='light'] main:not([data-office-ui]) {
   background-image: none !important;
   background-color: #ffffff !important;
 }
 
 /* Light Mode Homepage Sections, Elevation & Shadows */
-[data-theme='light'] header {
+[data-theme='light'] header:not([data-office-ui]) {
   background-color: rgba(255, 255, 255, 0.95) !important;
   border-bottom: 1px solid #e2e8f0 !important;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
 }
 
-[data-theme='light'] nav[aria-label="Career management sections"] {
+[data-theme='light'] nav[aria-label="Career management sections"]:not([data-office-ui]) {
   background-color: #f8fafc !important;
   border: 1px solid #e2e8f0 !important;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04) !important;
 }
 
-[data-theme='light'] section[aria-label="Next Fixture"] {
+[data-theme='light'] section[aria-label="Next Fixture"]:not([data-office-ui]) {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.03) !important;
@@ -754,7 +754,7 @@ body {
   box-shadow: 0 2px 6px -1px rgba(0, 0, 0, 0.05) !important;
 }
 
-[data-theme='light'] .grid-cols-3 > div {
+[data-theme='light'] .grid-cols-3:not([data-office-ui]) > div:not([data-office-ui]) {
   background-color: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04) !important;
@@ -1038,38 +1038,38 @@ body {
    ========================================================================== */
 
 /* Light Canvas Background with elevated cards */
-[data-theme='light'] body,
-[data-theme='light'] main,
-[data-theme='light'] .pitch-bg {
+[data-theme='light'] body:not(:has(#career-office-root[data-office-active="true"])),
+[data-theme='light'] main:not([data-office-ui]),
+[data-theme='light'] .pitch-bg:not([data-office-ui]) {
   background-color: #f8fafc !important;
   background-image: none !important;
   color: #0f172a !important;
 }
 
 /* Home Screen Card Differentiation */
-[data-theme='light'] section,
-[data-theme='light'] .career-hub-card {
+[data-theme='light'] section:not([data-office-ui]),
+[data-theme='light'] .career-hub-card:not([data-office-ui]) {
   background-color: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05) !important;
 }
 
 /* Matchday Hero on Home Screen */
-[data-theme='light'] section[aria-label="Next Fixture"] {
+[data-theme='light'] section[aria-label="Next Fixture"]:not([data-office-ui]) {
   background: #ffffff !important;
   border: 1px solid #cbd5e1 !important;
   box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04) !important;
 }
 
 /* Button Differentiation in Light Mode */
-[data-theme='light'] button:not([class*="bg-emerald"]):not([class*="bg-amber"]):not([class*="bg-rose"]):not([class*="bg-blue"]):not([class*="bg-indigo"]) {
+[data-theme='light'] button:not([data-office-ui]):not([class*="bg-emerald"]):not([class*="bg-amber"]):not([class*="bg-rose"]):not([class*="bg-blue"]):not([class*="bg-indigo"]) {
   background-color: #ffffff !important;
   border-color: #cbd5e1 !important;
   color: #0f172a !important;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
 }
 
-[data-theme='light'] button:hover:not([class*="bg-emerald"]):not([class*="bg-amber"]):not([class*="bg-rose"]):not([class*="bg-blue"]):not([class*="bg-indigo"]) {
+[data-theme='light'] button:hover:not([data-office-ui]):not([class*="bg-emerald"]):not([class*="bg-amber"]):not([class*="bg-rose"]):not([class*="bg-blue"]):not([class*="bg-indigo"]) {
   background-color: #f1f5f9 !important;
   border-color: #94a3b8 !important;
 }
@@ -1085,12 +1085,12 @@ body {
 }
 
 /* KPI Stat Cards on Home Screen */
-[data-theme='light'] section[aria-label="Key Performance Indicators"] > div {
+[data-theme='light'] section[aria-label="Key Performance Indicators"]:not([data-office-ui]) > div {
   background-color: #ffffff !important;
   border: 1px solid #cbd5e1 !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
 }
-[data-theme='light'] section[aria-label="Key Performance Indicators"] > div:hover {
+[data-theme='light'] section[aria-label="Key Performance Indicators"]:not([data-office-ui]) > div:hover {
   border-color: #10b981 !important;
   background-color: #f8fafc !important;
 }
@@ -1210,6 +1210,315 @@ body {
   border-color: #f59e0b !important;
   box-shadow: 0 4px 10px rgba(245, 158, 11, 0.15) !important;
 }
+
+/* ==========================================================================
+   CAREER MODE OFFICE REDESIGN — PREMIUM LIGHT & DARK THEME SYSTEM
+   ========================================================================== */
+
+#career-office-root {
+  --office-bg-1: #dbe8ff;
+  --office-bg-2: #e5e0ff;
+  --office-bg-3: #f1eeff;
+  --office-bg-4: #d8e7ff;
+  --office-card-bg: rgba(255, 255, 255, 0.96);
+  --office-card-solid: #ffffff;
+  --office-card-border: rgba(255, 255, 255, 0.98);
+  --office-card-shadow: 0 10px 28px -6px rgba(59, 98, 219, 0.14), 0 3px 8px -2px rgba(15, 23, 42, 0.05);
+  --office-subcard-bg: #f8faff;
+  --office-subcard-hover: #f0f5ff;
+  --office-subcard-border: #e4ecfb;
+  --office-text-primary: #0b1536;
+  --office-text-secondary: #3b4e76;
+  --office-text-muted: #5b6e95;
+  --office-accent-blue: #1d5eff;
+  --office-accent-cyan: #00d2ff;
+  --office-accent-purple: #9333ea;
+  --office-accent-magenta: #c026d3;
+  --office-accent-green: #10b981;
+  --office-accent-teal: #0d9488;
+  --office-accent-amber: #f59e0b;
+  --office-accent-red: #ef4444;
+  --office-divider: #e2e8f0;
+  --office-icon-pill-bg: #f1f5fe;
+  --office-icon-pill-border: #dce5f7;
+}
+
+#career-office-root[data-office-theme="dark"] {
+  --office-bg-1: #060b19;
+  --office-bg-2: #0f172a;
+  --office-bg-3: #13112c;
+  --office-bg-4: #091224;
+  --office-card-bg: rgba(15, 23, 42, 0.92);
+  --office-card-solid: #0f172a;
+  --office-card-border: rgba(148, 163, 184, 0.15);
+  --office-card-shadow: 0 14px 32px -8px rgba(0, 0, 0, 0.55), 0 4px 10px -2px rgba(0, 0, 0, 0.35);
+  --office-subcard-bg: rgba(30, 41, 59, 0.72);
+  --office-subcard-hover: rgba(51, 65, 85, 0.85);
+  --office-subcard-border: rgba(148, 163, 184, 0.18);
+  --office-text-primary: #f8fafc;
+  --office-text-secondary: #cbd5e1;
+  --office-text-muted: #94a3b8;
+  --office-accent-blue: #60a5fa;
+  --office-accent-cyan: #22d3ee;
+  --office-accent-purple: #a855f7;
+  --office-accent-magenta: #d946ef;
+  --office-accent-green: #34d399;
+  --office-accent-teal: #2dd4bf;
+  --office-accent-amber: #fbbf24;
+  --office-accent-red: #f87171;
+  --office-divider: rgba(148, 163, 184, 0.18);
+  --office-icon-pill-bg: rgba(30, 41, 59, 0.85);
+  --office-icon-pill-border: rgba(148, 163, 184, 0.22);
+}
+
+/* Soft Lavender / Sky Blue Broadcast Canvas with Diagonal Light Streaks */
+#career-office-root[data-office-active="true"] {
+  background:
+    linear-gradient(125deg, rgba(255, 255, 255, 0.45) 0%, transparent 28%),
+    linear-gradient(215deg, rgba(168, 85, 247, 0.14) 0%, transparent 42%),
+    linear-gradient(35deg, rgba(0, 210, 255, 0.14) 0%, transparent 38%),
+    linear-gradient(155deg, var(--office-bg-1) 0%, var(--office-bg-2) 38%, var(--office-bg-3) 72%, var(--office-bg-4) 100%) !important;
+  color: var(--office-text-primary) !important;
+  position: relative;
+}
+
+#career-office-root[data-office-active="true"]::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    linear-gradient(135deg, transparent 18%, rgba(255, 255, 255, 0.38) 22%, transparent 26%),
+    linear-gradient(135deg, transparent 58%, rgba(192, 132, 252, 0.16) 64%, rgba(255, 255, 255, 0.35) 66%, transparent 72%),
+    linear-gradient(135deg, transparent 82%, rgba(56, 189, 248, 0.18) 86%, transparent 91%);
+}
+
+#career-office-root[data-office-theme="dark"][data-office-active="true"]::before {
+  background:
+    linear-gradient(135deg, transparent 18%, rgba(56, 189, 248, 0.06) 22%, transparent 26%),
+    linear-gradient(135deg, transparent 58%, rgba(168, 85, 247, 0.08) 64%, transparent 72%);
+}
+
+/* Floating White Cards */
+.office-floating-card {
+  background: var(--office-card-bg) !important;
+  border: 1px solid var(--office-card-border) !important;
+  box-shadow: var(--office-card-shadow) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.office-subcard {
+  background: var(--office-subcard-bg) !important;
+  border: 1px solid var(--office-subcard-border) !important;
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.office-subcard:hover {
+  background: var(--office-subcard-hover) !important;
+  border-color: rgba(29, 94, 255, 0.28) !important;
+}
+
+.office-subcard:active {
+  transform: scale(0.985);
+}
+
+/* Interactive KPI Card */
+.office-kpi-card {
+  background: var(--office-card-bg) !important;
+  border: 1px solid var(--office-card-border) !important;
+  box-shadow: var(--office-card-shadow) !important;
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms ease;
+}
+
+#career-office-root[data-office-theme="light"] .office-kpi-mint {
+  background: linear-gradient(145deg, #e7fbf6 0%, #f5fefa 38%, #ffffff 78%) !important;
+}
+
+#career-office-root[data-office-theme="light"] .office-kpi-blue {
+  background: linear-gradient(145deg, #ecf4ff 0%, #f7faff 40%, #ffffff 80%) !important;
+}
+
+#career-office-root[data-office-theme="light"] .office-kpi-lavender {
+  background: linear-gradient(145deg, #f3eeff 0%, #faf7ff 40%, #ffffff 80%) !important;
+}
+
+.office-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px -6px rgba(29, 94, 255, 0.2), 0 4px 10px -2px rgba(15, 23, 42, 0.06) !important;
+}
+
+.office-kpi-card:active {
+  transform: scale(0.98);
+}
+
+/* Active Navigation Tab — Cyan -> Royal Blue -> Purple Gradient */
+.office-nav-tab-active {
+  background: linear-gradient(135deg, #00d4ff 0%, #1d5eff 48%, #a855f7 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 8px 18px -4px rgba(37, 99, 235, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.45) !important;
+}
+
+.office-nav-tab-active * {
+  color: #ffffff !important;
+}
+
+.office-nav-tab-inactive {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: var(--office-text-secondary) !important;
+  box-shadow: none !important;
+  transition: background-color 160ms ease, transform 150ms ease, color 160ms ease;
+}
+
+.office-nav-tab-inactive:hover {
+  background: var(--office-subcard-bg) !important;
+  color: var(--office-text-primary) !important;
+}
+
+.office-nav-tab-inactive:active,
+.office-nav-tab-active:active {
+  transform: scale(0.96);
+}
+
+/* Prepare & Play Match Primary Button — Animated Vibrant Gradient */
+@keyframes officeGradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.office-play-match-btn {
+  background: linear-gradient(92deg, #00d2ff 0%, #1d5eff 38%, #7c3aed 74%, #c026d3 100%) !important;
+  background-size: 160% 160% !important;
+  animation: officeGradientFlow 6s ease infinite;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  box-shadow:
+    0 10px 24px -4px rgba(99, 102, 241, 0.55),
+    0 4px 10px -2px rgba(0, 210, 255, 0.3),
+    inset 0 1px 1px rgba(255, 255, 255, 0.45) !important;
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms ease, filter 160ms ease;
+}
+
+.office-play-match-btn * {
+  color: #ffffff !important;
+}
+
+.office-play-match-btn:hover {
+  transform: translateY(-1px) scale(1.005);
+  filter: brightness(1.04);
+  box-shadow:
+    0 14px 28px -4px rgba(99, 102, 241, 0.65),
+    0 6px 14px -2px rgba(0, 210, 255, 0.35),
+    inset 0 1px 1px rgba(255, 255, 255, 0.55) !important;
+}
+
+.office-play-match-btn:active {
+  transform: scale(0.98);
+}
+
+/* Staggered Entrance & Kit Reveal Animations (150-350ms, transform/opacity only) */
+@keyframes officeCardEntrance {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes officeKitLeftIn {
+  0% {
+    opacity: 0;
+    transform: translate3d(-10px, 4px, 0) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes officeKitRightIn {
+  0% {
+    opacity: 0;
+    transform: translate3d(10px, 4px, 0) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes officeStadiumPulse {
+  0%, 100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.office-reveal-1 {
+  animation: officeCardEntrance 240ms cubic-bezier(0.22, 1, 0.36, 1) 0ms both;
+}
+.office-reveal-2 {
+  animation: officeCardEntrance 250ms cubic-bezier(0.22, 1, 0.36, 1) 35ms both;
+}
+.office-reveal-3 {
+  animation: officeCardEntrance 260ms cubic-bezier(0.22, 1, 0.36, 1) 70ms both;
+}
+.office-reveal-4 {
+  animation: officeCardEntrance 270ms cubic-bezier(0.22, 1, 0.36, 1) 105ms both;
+}
+.office-reveal-5 {
+  animation: officeCardEntrance 280ms cubic-bezier(0.22, 1, 0.36, 1) 140ms both;
+}
+.office-reveal-6 {
+  animation: officeCardEntrance 290ms cubic-bezier(0.22, 1, 0.36, 1) 175ms both;
+}
+.office-reveal-7 {
+  animation: officeCardEntrance 300ms cubic-bezier(0.22, 1, 0.36, 1) 210ms both;
+}
+
+.office-kit-enter-left {
+  animation: officeKitLeftIn 310ms cubic-bezier(0.16, 1, 0.3, 1) 90ms both;
+}
+.office-kit-enter-right {
+  animation: officeKitRightIn 310ms cubic-bezier(0.16, 1, 0.3, 1) 120ms both;
+}
+.office-stadium-lights {
+  animation: officeStadiumPulse 4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .office-reveal-1,
+  .office-reveal-2,
+  .office-reveal-3,
+  .office-reveal-4,
+  .office-reveal-5,
+  .office-reveal-6,
+  .office-reveal-7,
+  .office-kit-enter-left,
+  .office-kit-enter-right,
+  .office-stadium-lights,
+  .office-play-match-btn {
+    animation: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
 
 
 
