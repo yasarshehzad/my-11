@@ -1224,27 +1224,27 @@ body {
   --office-bg-2: #e5e0ff;
   --office-bg-3: #f1eeff;
   --office-bg-4: #d8e7ff;
-  --office-card-bg: rgba(255, 255, 255, 0.96);
+  --office-card-bg: rgba(255, 255, 255, 0.97);
   --office-card-solid: #ffffff;
-  --office-card-border: rgba(255, 255, 255, 0.98);
-  --office-card-shadow: 0 10px 28px -6px rgba(59, 98, 219, 0.14), 0 3px 8px -2px rgba(15, 23, 42, 0.05);
-  --office-subcard-bg: #f8faff;
-  --office-subcard-hover: #f0f5ff;
+  --office-card-border: rgba(255, 255, 255, 0.95);
+  --office-card-shadow: 0 10px 28px -6px rgba(50, 75, 175, 0.12), 0 3px 8px -2px rgba(15, 23, 42, 0.04);
+  --office-subcard-bg: #ffffff;
+  --office-subcard-hover: #f6f9fe;
   --office-subcard-border: #e4ecfb;
   --office-text-primary: #0b1536;
   --office-text-secondary: #3b4e76;
   --office-text-muted: #5b6e95;
   --office-accent-blue: #1d5eff;
   --office-accent-cyan: #00d2ff;
-  --office-accent-purple: #9333ea;
-  --office-accent-magenta: #c026d3;
+  --office-accent-purple: #8b2cf5;
+  --office-accent-magenta: #d916bb;
   --office-accent-green: #10b981;
   --office-accent-teal: #0d9488;
   --office-accent-amber: #f59e0b;
   --office-accent-red: #ef4444;
   --office-divider: #e2e8f0;
-  --office-icon-pill-bg: #f1f5fe;
-  --office-icon-pill-border: #dce5f7;
+  --office-icon-pill-bg: #ffffff;
+  --office-icon-pill-border: #e2e8f0;
 }
 
 [data-theme="dark"],
@@ -1278,14 +1278,15 @@ body {
   --office-icon-pill-border: rgba(148, 163, 184, 0.22);
 }
 
-/* Universal Soft Lavender / Sky Blue Broadcast Canvas with Diagonal Light Streaks */
+/* Universal Soft Lavender / Sky Blue Broadcast Canvas with Radiant Ambient Blooms & Diagonal Light Streaks */
 .my11-canvas,
 #career-office-root {
   background:
-    linear-gradient(125deg, rgba(255, 255, 255, 0.45) 0%, transparent 28%),
-    linear-gradient(215deg, rgba(168, 85, 247, 0.14) 0%, transparent 42%),
-    linear-gradient(35deg, rgba(0, 210, 255, 0.14) 0%, transparent 38%),
-    linear-gradient(155deg, var(--office-bg-1) 0%, var(--office-bg-2) 38%, var(--office-bg-3) 72%, var(--office-bg-4) 100%) !important;
+    radial-gradient(circle at 10% 8%, rgba(0, 210, 255, 0.22) 0%, rgba(29, 94, 255, 0.10) 32%, transparent 58%),
+    radial-gradient(circle at 92% 14%, rgba(217, 70, 239, 0.22) 0%, rgba(139, 44, 245, 0.12) 36%, transparent 64%),
+    radial-gradient(circle at 98% 46%, rgba(236, 72, 153, 0.16) 0%, rgba(168, 85, 247, 0.08) 30%, transparent 55%),
+    radial-gradient(circle at 88% 90%, rgba(192, 38, 211, 0.18) 0%, rgba(0, 210, 255, 0.14) 38%, transparent 65%),
+    linear-gradient(160deg, #d8e5fe 0%, #e2deff 35%, #edf0ff 65%, #d5e5ff 100%) !important;
   color: var(--office-text-primary) !important;
   position: relative;
 }
@@ -1298,9 +1299,21 @@ body {
   pointer-events: none;
   z-index: 0;
   background:
-    linear-gradient(135deg, transparent 18%, rgba(255, 255, 255, 0.38) 22%, transparent 26%),
-    linear-gradient(135deg, transparent 58%, rgba(192, 132, 252, 0.16) 64%, rgba(255, 255, 255, 0.35) 66%, transparent 72%),
-    linear-gradient(135deg, transparent 82%, rgba(56, 189, 248, 0.18) 86%, transparent 91%);
+    linear-gradient(132deg, transparent 15%, rgba(255, 255, 255, 0.5) 19%, transparent 23%),
+    linear-gradient(132deg, transparent 52%, rgba(217, 70, 239, 0.18) 56%, rgba(255, 255, 255, 0.45) 58%, transparent 63%),
+    linear-gradient(132deg, transparent 78%, rgba(0, 210, 255, 0.20) 82%, transparent 86%);
+}
+
+.my11-canvas::after,
+#career-office-root::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    linear-gradient(52deg, transparent 20%, rgba(255, 255, 255, 0.3) 24%, transparent 28%),
+    linear-gradient(52deg, transparent 65%, rgba(168, 85, 247, 0.12) 70%, transparent 75%);
 }
 
 [data-theme="dark"] .my11-canvas::before,
@@ -1311,27 +1324,58 @@ body {
     linear-gradient(135deg, transparent 58%, rgba(168, 85, 247, 0.08) 64%, transparent 72%);
 }
 
-/* Floating White Cards */
+[data-theme="dark"] .my11-canvas::after,
+[data-office-theme="dark"] #career-office-root::after,
+#career-office-root[data-office-theme="dark"]::after {
+  display: none;
+}
+
+/* Floating White Cards with Refined Depth & Light Source Simulation */
 .my11-card,
 .office-floating-card {
-  background: var(--office-card-bg) !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(253, 254, 255, 0.96) 65%, rgba(246, 250, 255, 0.95) 100%) !important;
   border: 1px solid var(--office-card-border) !important;
-  box-shadow: var(--office-card-shadow) !important;
+  box-shadow:
+    inset 0 1px 1px 0 rgba(255, 255, 255, 1),
+    0 8px 24px -4px rgba(50, 75, 175, 0.12),
+    0 2px 6px -1px rgba(15, 23, 42, 0.04) !important;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
 
+[data-theme="dark"] .my11-card,
+[data-theme="dark"] .office-floating-card,
+[data-office-theme="dark"] .office-floating-card {
+  background: var(--office-card-bg) !important;
+  border: 1px solid var(--office-card-border) !important;
+  box-shadow: var(--office-card-shadow) !important;
+}
+
 .my11-subcard,
 .office-subcard {
+  background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%) !important;
+  border: 1px solid var(--office-subcard-border) !important;
+  box-shadow:
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.9),
+    0 2px 6px -1px rgba(35, 65, 140, 0.05) !important;
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+[data-theme="dark"] .my11-subcard,
+[data-theme="dark"] .office-subcard,
+[data-office-theme="dark"] .office-subcard {
   background: var(--office-subcard-bg) !important;
   border: 1px solid var(--office-subcard-border) !important;
-  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  box-shadow: none !important;
 }
 
 .my11-subcard:hover,
 .office-subcard:hover {
-  background: var(--office-subcard-hover) !important;
-  border-color: rgba(29, 94, 255, 0.28) !important;
+  background: #ffffff !important;
+  border-color: rgba(29, 94, 255, 0.32) !important;
+  box-shadow:
+    0 4px 12px -2px rgba(29, 94, 255, 0.12),
+    0 1px 3px 0 rgba(0, 0, 0, 0.02) !important;
 }
 
 .my11-subcard:active,
@@ -1344,32 +1388,50 @@ body {
 .office-kpi-card {
   background: var(--office-card-bg) !important;
   border: 1px solid var(--office-card-border) !important;
-  box-shadow: var(--office-card-shadow) !important;
+  box-shadow:
+    inset 0 1px 1px 0 rgba(255, 255, 255, 1),
+    0 8px 22px -4px rgba(50, 75, 175, 0.10),
+    0 2px 6px -1px rgba(15, 23, 42, 0.04) !important;
   transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms ease;
 }
 
 :root[data-theme="light"] .office-kpi-mint,
 :root[data-theme="light"] .my11-kpi-mint,
 #career-office-root[data-office-theme="light"] .office-kpi-mint {
-  background: linear-gradient(145deg, #e7fbf6 0%, #f5fefa 38%, #ffffff 78%) !important;
+  background: linear-gradient(155deg, #e4faf4 0%, #f5fcf9 38%, #ffffff 78%) !important;
+  border: 1px solid #d1fae5 !important;
+  box-shadow:
+    inset 0 1px 1px 0 rgba(255, 255, 255, 1),
+    0 8px 22px -4px rgba(16, 185, 129, 0.12),
+    0 2px 5px -1px rgba(15, 23, 42, 0.04) !important;
 }
 
 :root[data-theme="light"] .office-kpi-blue,
 :root[data-theme="light"] .my11-kpi-blue,
 #career-office-root[data-office-theme="light"] .office-kpi-blue {
-  background: linear-gradient(145deg, #ecf4ff 0%, #f7faff 40%, #ffffff 80%) !important;
+  background: linear-gradient(155deg, #eaf2ff 0%, #f6f9ff 38%, #ffffff 78%) !important;
+  border: 1px solid #dbeafe !important;
+  box-shadow:
+    inset 0 1px 1px 0 rgba(255, 255, 255, 1),
+    0 8px 22px -4px rgba(29, 94, 255, 0.14),
+    0 2px 5px -1px rgba(15, 23, 42, 0.04) !important;
 }
 
 :root[data-theme="light"] .office-kpi-lavender,
 :root[data-theme="light"] .my11-kpi-lavender,
 #career-office-root[data-office-theme="light"] .office-kpi-lavender {
-  background: linear-gradient(145deg, #f3eeff 0%, #faf7ff 40%, #ffffff 80%) !important;
+  background: linear-gradient(155deg, #f2ecff 0%, #faf6ff 38%, #ffffff 78%) !important;
+  border: 1px solid #ede9fe !important;
+  box-shadow:
+    inset 0 1px 1px 0 rgba(255, 255, 255, 1),
+    0 8px 22px -4px rgba(147, 51, 234, 0.13),
+    0 2px 5px -1px rgba(15, 23, 42, 0.04) !important;
 }
 
 .my11-kpi-card:hover,
 .office-kpi-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 30px -6px rgba(29, 94, 255, 0.2), 0 4px 10px -2px rgba(15, 23, 42, 0.06) !important;
+  box-shadow: 0 14px 28px -6px rgba(29, 94, 255, 0.18), 0 4px 10px -2px rgba(15, 23, 42, 0.06) !important;
 }
 
 .my11-kpi-card:active,
@@ -1377,13 +1439,13 @@ body {
   transform: scale(0.98);
 }
 
-/* Active Navigation Tab — Cyan -> Royal Blue -> Purple Gradient */
+/* Active Navigation Tab — Cyan -> Royal Blue -> Purple -> Magenta Gradient */
 .my11-nav-pill-active,
 .office-nav-tab-active {
-  background: linear-gradient(135deg, #00d4ff 0%, #1d5eff 48%, #a855f7 100%) !important;
+  background: linear-gradient(135deg, #00d2ff 0%, #1d5eff 44%, #8b2cf5 82%, #d916bb 100%) !important;
   color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.35) !important;
-  box-shadow: 0 8px 18px -4px rgba(37, 99, 235, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.40) !important;
+  box-shadow: 0 8px 18px -4px rgba(29, 94, 255, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.5) !important;
 }
 
 .my11-nav-pill-active *,
@@ -1413,18 +1475,18 @@ body {
   transform: scale(0.96);
 }
 
-/* Primary CTA Button — Animated Vibrant Gradient */
+/* Primary CTA Button — Animated Vibrant Gradient: Cyan -> Blue -> Purple -> Magenta */
 .my11-btn-gradient,
 .office-play-match-btn {
-  background: linear-gradient(92deg, #00d2ff 0%, #1d5eff 38%, #7c3aed 74%, #c026d3 100%) !important;
-  background-size: 160% 160% !important;
+  background: linear-gradient(90deg, #00d2ff 0%, #1d5eff 34%, #8b2cf5 70%, #d916bb 100%) !important;
+  background-size: 180% 180% !important;
   animation: officeGradientFlow 6s ease infinite;
   color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  border: 1px solid rgba(255, 255, 255, 0.45) !important;
   box-shadow:
-    0 10px 24px -4px rgba(99, 102, 241, 0.55),
-    0 4px 10px -2px rgba(0, 210, 255, 0.3),
-    inset 0 1px 1px rgba(255, 255, 255, 0.45) !important;
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.55),
+    0 10px 24px -4px rgba(139, 44, 245, 0.42),
+    0 4px 12px -2px rgba(0, 210, 255, 0.32) !important;
   transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms ease, filter 160ms ease;
 }
 
@@ -1438,9 +1500,14 @@ body {
   transform: translateY(-1px) scale(1.005);
   filter: brightness(1.04);
   box-shadow:
-    0 14px 28px -4px rgba(99, 102, 241, 0.65),
-    0 6px 14px -2px rgba(0, 210, 255, 0.35),
-    inset 0 1px 1px rgba(255, 255, 255, 0.55) !important;
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.65),
+    0 14px 28px -4px rgba(139, 44, 245, 0.52),
+    0 6px 14px -2px rgba(0, 210, 255, 0.38) !important;
+}
+
+.my11-btn-gradient:active,
+.office-play-match-btn:active {
+  transform: scale(0.98);
 }
 
 .my11-btn-gradient:active,
@@ -1601,35 +1668,6 @@ body {
   }
 }
 
-.office-play-match-btn {
-  background: linear-gradient(92deg, #00d2ff 0%, #1d5eff 38%, #7c3aed 74%, #c026d3 100%) !important;
-  background-size: 160% 160% !important;
-  animation: officeGradientFlow 6s ease infinite;
-  color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.35) !important;
-  box-shadow:
-    0 10px 24px -4px rgba(99, 102, 241, 0.55),
-    0 4px 10px -2px rgba(0, 210, 255, 0.3),
-    inset 0 1px 1px rgba(255, 255, 255, 0.45) !important;
-  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms ease, filter 160ms ease;
-}
-
-.office-play-match-btn * {
-  color: #ffffff !important;
-}
-
-.office-play-match-btn:hover {
-  transform: translateY(-1px) scale(1.005);
-  filter: brightness(1.04);
-  box-shadow:
-    0 14px 28px -4px rgba(99, 102, 241, 0.65),
-    0 6px 14px -2px rgba(0, 210, 255, 0.35),
-    inset 0 1px 1px rgba(255, 255, 255, 0.55) !important;
-}
-
-.office-play-match-btn:active {
-  transform: scale(0.98);
-}
 
 /* Staggered Entrance & Kit Reveal Animations (150-350ms, transform/opacity only) */
 @keyframes officeCardEntrance {
