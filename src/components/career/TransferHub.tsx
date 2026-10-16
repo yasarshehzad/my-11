@@ -1254,7 +1254,7 @@ export function TransferHub({
                   const isSeniorFull = isSenior && seniorCount >= MAX_SENIOR_SQUAD_SIZE;
                   // Allow bidding even if senior squad is 25 - manager can sell or adjust registration later
                   const isBlocked = !windowIsOpen || isSquadFull;
-                  const fs = calculateEaFcFaceStats(player as unknown as CareerPlayer);
+                  const fs = player.faceStats || calculateEaFcFaceStats(player as unknown as CareerPlayer);
 
                   const badgeClass = isLegend
                     ? 'my11-badge-legend'
@@ -1877,7 +1877,7 @@ export function TransferHub({
                 const isSquadFull = save.squad.length >= MAX_SQUAD_SIZE;
                 const isSeniorFull = isSenior && seniorCount >= MAX_SENIOR_SQUAD_SIZE;
                 const isBlocked = !windowIsOpen || isSquadFull;
-                const fs = calculateEaFcFaceStats(player as unknown as CareerPlayer);
+                const fs = player.faceStats || calculateEaFcFaceStats(player as unknown as CareerPlayer);
                 const canAfford = player.value <= save.finances.transferBudget;
 
                 const badgeClass = player.rating >= 88

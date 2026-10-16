@@ -1,5 +1,73 @@
 import { CareerPlayer, PlayerFaceStats, FormTrend } from './types';
 import { calculatePlayerValue, calculateWeeklyWage } from './finance';
+import { categorizePosition } from './squad';
+import { players } from '../data/players';
+import { Player } from '../types/game';
+
+let cardLookupCache: Map<string, Player> | null = null;
+let nameLookupCache: Map<string, Player> | null = null;
+
+function getLookupCaches(): { cardLookup: Map<string, Player>; nameLookup: Map<string, Player> } {
+  if (!cardLookupCache || !nameLookupCache) {
+    cardLookupCache = new Map();
+    nameLookupCache = new Map();
+    for (const p of players) {
+      cardLookupCache.set(p.id, p);
+      const nameKey = p.playerName.toLowerCase().trim();
+      const existing = nameLookupCache.get(nameKey);
+      if (!existing || p.rating > existing.rating) {
+        nameLookupCache.set(nameKey, p);
+      }
+    }
+  }
+  return { cardLookup: cardLookupCache, nameLookup: nameLookupCache };
+}
+
+export function resolvePlayerRecord(player: CareerPlayer): Player | null {
+  const raw = player as unknown as Partial<Player>;
+  if (
+    typeof raw.pace === 'number' &&
+    typeof raw.finishing === 'number' &&
+    typeof raw.passing === 'number' &&
+    typeof raw.dribbling === 'number'
+  ) {
+    return raw as Player;
+  }
+
+  const { cardLookup, nameLookup } = getLookupCaches();
+  let candidate: Player | null = null;
+
+  if (player.cardId) {
+    const cleanId = player.cardId.replace(/_career$/, '').replace(/_card$/, '');
+    if (cardLookup.has(cleanId)) candidate = cardLookup.get(cleanId)!;
+    else if (cardLookup.has(player.cardId)) candidate = cardLookup.get(player.cardId)!;
+  }
+
+  if (!candidate && player.id) {
+    const cleanId = player.id.replace(/_career$/, '').replace(/_card$/, '');
+    if (cardLookup.has(cleanId)) candidate = cardLookup.get(cleanId)!;
+    else if (cardLookup.has(player.id)) candidate = cardLookup.get(player.id)!;
+  }
+
+  if (!candidate && player.name) {
+    const nameKey = player.name.toLowerCase().replace(/\s+\d{2}\/\d{2}$/, '').trim();
+    if (nameLookup.has(nameKey)) candidate = nameLookup.get(nameKey)!;
+  }
+
+  if (candidate) {
+    const rawPos = player.position || (player as any).primaryPosition;
+    if (!rawPos) {
+      return candidate;
+    }
+    const playerCategory = categorizePosition(rawPos);
+    const candidateCategory = categorizePosition(candidate.primaryPosition || (candidate as any).position);
+    if (playerCategory === candidateCategory) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
 
 /**
  * Deterministic hash based on a string (e.g., player ID or name)
@@ -20,7 +88,7 @@ function clamp(value: number, min: number = 30, max: number = 99): number {
 
 /**
  * Calculates EA FC card face stats for a player based on their overall rating,
- * position archetype, and unique player attributes.
+ * authentic player attributes from the database, and position archetype.
  *
  * Outfield Face Stats: PAC (Pace), SHO (Shooting), PAS (Passing), DRI (Dribbling), DEF (Defending), PHY (Physical)
  * Goalkeeper Face Stats: DIV (Diving), HAN (Handling), KIC (Kicking), REF (Reflexes), SPD (Speed), POS (Positioning)
@@ -28,31 +96,74 @@ function clamp(value: number, min: number = 30, max: number = 99): number {
  * If formBonus is applied (+1 or +2), the face stats receive an in-form boost.
  */
 export function calculateEaFcFaceStats(player: CareerPlayer, formBonus: number = 0): PlayerFaceStats {
+  const rawPos = (player.position || (player as any).primaryPosition || '').toUpperCase();
+  const isGk = rawPos === 'GK';
+  const record = resolvePlayerRecord(player);
+
+  if (record) {
+    const baseRating = record.rating || 84;
+    const ratio = player.rating / baseRating;
+
+    if (isGk) {
+      const div = clamp(Math.round(record.defence * ratio) + formBonus, 45, 99);
+      const han = clamp(Math.round((record.technique * 0.65 + record.mentality * 0.35) * ratio) + formBonus, 45, 99);
+      const kic = clamp(Math.round((record.passing * 0.75 + record.creativity * 0.25) * ratio) + formBonus, 40, 95);
+      const ref = clamp(Math.round((record.defence * 0.85 + record.pace * 0.15) * ratio) + formBonus + 1, 48, 99);
+      const spd = clamp(Math.round(record.pace * ratio), 28, 75);
+      const posStat = clamp(Math.round((record.physical * 0.6 + record.mentality * 0.4) * ratio) + formBonus, 45, 99);
+      return {
+        pac: div,
+        sho: han,
+        pas: kic,
+        dri: ref,
+        def: spd,
+        phy: posStat,
+        isGoalkeeper: true,
+      };
+    }
+
+    const pac = clamp(Math.round(record.pace * ratio) + formBonus, 35, 99);
+    const sho = clamp(Math.round((record.finishing * 0.82 + record.attack * 0.18) * ratio) + formBonus, 30, 99);
+    const pas = clamp(Math.round((record.passing * 0.72 + record.creativity * 0.28) * ratio) + formBonus, 30, 99);
+    const dri = clamp(Math.round((record.dribbling * 0.72 + record.technique * 0.28) * ratio) + formBonus, 30, 99);
+    const def = clamp(Math.round((record.defending * 0.75 + record.defence * 0.25) * ratio) + formBonus, 25, 99);
+    const phy = clamp(Math.round((record.physical * 0.70 + record.aerial * 0.30) * ratio) + formBonus, 30, 99);
+
+    return {
+      pac,
+      sho,
+      pas,
+      dri,
+      def,
+      phy,
+      isGoalkeeper: false,
+    };
+  }
+
+  // Fallback procedural archetypes for custom prodigies / generated youth prospects
   const effectiveRating = player.rating + formBonus;
-  const isGk = player.position === 'GK';
   const h = hashString(player.id || player.name || 'player');
 
   if (isGk) {
     const divVar = (h % 5) - 2;
     const hanVar = ((h >> 2) % 5) - 2;
     const kicVar = ((h >> 4) % 7) - 3;
-    const refVar = ((h >> 6) % 5) - 1; // Reflexes generally higher for top keepers
+    const refVar = ((h >> 6) % 5) - 1;
     const spdVar = ((h >> 8) % 9) - 4;
     const posVar = ((h >> 10) % 5) - 2;
 
     return {
-      pac: clamp(effectiveRating + divVar, 45, 99), // DIV
-      sho: clamp(effectiveRating - 1 + hanVar, 45, 99), // HAN
-      pas: clamp(effectiveRating - 5 + kicVar, 40, 95), // KIC
-      dri: clamp(effectiveRating + 1 + refVar, 48, 99), // REF
-      def: clamp(Math.round(effectiveRating * 0.58) + spdVar, 28, 75), // SPD
-      phy: clamp(effectiveRating + posVar, 45, 99), // POS
+      pac: clamp(effectiveRating + divVar, 45, 99),
+      sho: clamp(effectiveRating - 1 + hanVar, 45, 99),
+      pas: clamp(effectiveRating - 5 + kicVar, 40, 95),
+      dri: clamp(effectiveRating + 1 + refVar, 48, 99),
+      def: clamp(Math.round(effectiveRating * 0.58) + spdVar, 28, 75),
+      phy: clamp(effectiveRating + posVar, 45, 99),
       isGoalkeeper: true,
     };
   }
 
-  // Outfield archetypes
-  const pos = player.position.toUpperCase();
+  const pos = rawPos;
   const v1 = (h % 7) - 3;
   const v2 = ((h >> 2) % 7) - 3;
   const v3 = ((h >> 4) % 7) - 3;

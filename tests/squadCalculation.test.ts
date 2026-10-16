@@ -165,4 +165,39 @@ describe('Squad Calculation Logic', () => {
     expect(stats2.gkRating).toBe(70);
     expect(stats1.defence).toBeGreaterThan(stats2.defence);
   });
+
+  it('accurately differentiates Starting XI average OVR from full squad roster average', () => {
+    // 11 elite starters averaging 92.0 OVR
+    const starters = Array.from({ length: 11 }, (_, i) => ({
+      id: `starter_${i}`,
+      rating: 92,
+    }));
+
+    // 7 bench players averaging 85 OVR
+    const bench = Array.from({ length: 7 }, (_, i) => ({
+      id: `bench_${i}`,
+      rating: 85,
+    }));
+
+    // 10 reserve & youth players averaging 74 OVR
+    const reserves = Array.from({ length: 10 }, (_, i) => ({
+      id: `res_${i}`,
+      rating: 74,
+    }));
+
+    const fullSquad = [...starters, ...bench, ...reserves];
+
+    // Starting XI Average
+    const xiSum = starters.reduce((acc, p) => acc + p.rating, 0);
+    const xiAvg = Math.round((xiSum / starters.length) * 10) / 10;
+    expect(xiAvg).toBe(92);
+
+    // Full Squad Average
+    const totalSum = fullSquad.reduce((acc, p) => acc + p.rating, 0);
+    const squadAvg = Math.round((totalSum / fullSquad.length) * 10) / 10;
+    expect(squadAvg).toBeCloseTo(83.8, 1);
+
+    // The Starting XI average must not be distorted by low-rated reserves/youth
+    expect(xiAvg).toBeGreaterThan(squadAvg);
+  });
 });

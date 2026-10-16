@@ -35,6 +35,7 @@ import { CONTINENTAL_EUROPEAN_CLUBS } from './continentalClubs';
 import { getAllSupplementalPlayers } from './databaseExpansion';
 import { getPlayerBio, isCurrentPlayer, isIconPlayer } from './playerBioDatabase';
 import { getPlayerPhysicals } from './formatters';
+import { calculateEaFcFaceStats } from './formAndProgression';
 
 
 /**
@@ -370,6 +371,8 @@ export function getScoutingMarketPool(
       season: base.season || 'Classic',
       displayName: base.displayName || `${rawName} ${base.season || ''}`.trim(),
       rating: base.rating,
+      position: base.primaryPosition,
+      primaryPosition: base.primaryPosition,
       value,
       wageDemand,
       age,
@@ -394,14 +397,13 @@ export function getScoutingMarketPool(
     const isCurrent = isCurrentPlayer(cleanPlayerName);
     const bio = getPlayerBio(cleanPlayerName, group.base.primaryPosition);
 
-    // Sort variants by rating descending (and value descending).
-    // If ratings tie, prioritize curated peakSeason from bio
+    // Prioritize curated peakSeason from bio so legendary icon cards match their peak edition
     group.variants.sort((a, b) => {
-      if (b.rating !== a.rating) return b.rating - a.rating;
       if (bio.peakSeason) {
         if (a.season === bio.peakSeason) return -1;
         if (b.season === bio.peakSeason) return 1;
       }
+      if (b.rating !== a.rating) return b.rating - a.rating;
       return b.value - a.value;
     });
     const topVariant = group.variants[0];
@@ -459,6 +461,7 @@ export function getScoutingMarketPool(
       // Strictly peak version only; no choice of alternative historical editions
       versions: undefined,
       selectedVersionId: topVariant.id,
+      faceStats: calculateEaFcFaceStats(topVariant as unknown as CareerPlayer),
     });
   }
 
@@ -497,6 +500,7 @@ export function getScoutingMarketPool(
       rarity: supp.potential && supp.potential >= 86 ? 'Wonderkid' : 'Standard',
       isLegend: false,
       era: 'Modern',
+      faceStats: calculateEaFcFaceStats(supp as unknown as CareerPlayer),
     });
   }
 

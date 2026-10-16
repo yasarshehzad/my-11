@@ -75,7 +75,8 @@ export function getSquadHomegrownCount(squad: CareerPlayer[]): number {
   return squad.filter((p) => isHomegrownPlayer(p)).length;
 }
 
-export function categorizePosition(position: string): GeneralPositionGroup {
+export function categorizePosition(position?: string): GeneralPositionGroup {
+  if (!position) return 'MID';
   const pos = position.toUpperCase();
   if (pos === 'GK') return 'GK';
   if (['CB', 'LB', 'RB', 'LWB', 'RWB', 'SW'].includes(pos)) return 'DEF';

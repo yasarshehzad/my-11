@@ -30,6 +30,7 @@ import { getPresetSettings } from '../src/career/settings';
 import { CareerSaveFile, MarketPlayer, DetailedTransferTerms } from '../src/career/types';
 import { adaptLineupToFormation, getSquadOrderedByLineup, getBestStartingLineup } from '../src/career/squad';
 import { advanceTimeSkip } from '../src/career/sim';
+import { calculateEaFcFaceStats } from '../src/career/formAndProgression';
 
 // Mock localStorage for node environment
 const mockStorage: Record<string, string> = {};
@@ -73,6 +74,35 @@ describe('Career Mode Phase 6: Transfers, Scouting & Contracts', () => {
       // Spring Closed Window
       expect(isTransferWindowOpen('2027-02-02')).toBe(false);
       expect(isTransferWindowOpen('2027-04-10')).toBe(false);
+    });
+
+    it('verifies that historical legends possess authentic, differentiated six-stat profiles matching their playstyles rather than generic templates', () => {
+      const pool = getScoutingMarketPool([], { playerPoolType: 'all' });
+      const r9 = pool.find((p) => p.name.includes('Ronaldo Nazario'));
+      const henry = pool.find((p) => p.name.includes('Thierry Henry'));
+
+      expect(r9).toBeDefined();
+      expect(henry).toBeDefined();
+
+      // Peak editions selected
+      expect(r9!.id).toBe('ronaldo_nazario_barcelona_1996');
+      expect(henry!.id).toBe('thierry_henry_arsenal_2003');
+
+      const r9Fs = r9!.faceStats || calculateEaFcFaceStats(r9 as any);
+      const henryFs = henry!.faceStats || calculateEaFcFaceStats(henry as any);
+
+      // Verify they do NOT have identical six-stat profiles
+      expect(r9Fs).not.toEqual(henryFs);
+
+      // Verify Ronaldo Nazario has higher Pace, Dribbling, and Physicality (explosive direct runner)
+      expect(r9Fs.pac).toBeGreaterThanOrEqual(96);
+      expect(r9Fs.dri).toBeGreaterThanOrEqual(98);
+      expect(r9Fs.phy).toBeGreaterThanOrEqual(85);
+
+      // Verify Thierry Henry has superior passing and playmaking ability (Invincibles creator)
+      expect(henryFs.pas).toBeGreaterThanOrEqual(90);
+      expect(henryFs.pas).toBeGreaterThan(r9Fs.pas);
+      expect(r9Fs.phy).toBeGreaterThan(henryFs.phy);
     });
 
     it('accurately identifies transfer deadline dates across multiple seasons (2026, 2027, 2028 and beyond)', () => {

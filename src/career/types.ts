@@ -525,6 +525,7 @@ export interface MarketPlayer {
   era?: string;
   versions?: PlayerVersionVariant[];
   selectedVersionId?: string;
+  faceStats?: PlayerFaceStats;
 }
 
 export interface ScoutingFilters {

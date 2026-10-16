@@ -193,6 +193,11 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
   const bench = squad.filter((p) => benchIdsSet.has(p.id));
   const reserves = squad.filter((p) => !starterIdsSet.has(p.id) && !benchIdsSet.has(p.id));
 
+  const startingXiRatingSum = starters.reduce((acc, p) => acc + (p.rating || 75), 0);
+  const startingXiAvg = starters.length > 0
+    ? Math.round((startingXiRatingSum / starters.length) * 10) / 10
+    : 0;
+
   // Formation config
   const activeFormationConfig =
     SUPPORTED_CAREER_FORMATIONS.find((f) => f.name === currentFormation) ||
@@ -527,78 +532,84 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
 
   return (
     <div className="space-y-4">
-      {/* 1. Compact Squad Vitals Strip */}
-      <section className="office-floating-card bg-white rounded-3xl p-3.5 sm:p-4.5 border border-slate-200/90 shadow-md space-y-3" aria-label="Squad vitals">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
-          <div className="office-subcard office-kpi-blue rounded-2xl p-2.5 flex flex-col justify-between">
-            <span className="text-[9px] uppercase font-bold text-slate-500 block truncate tracking-wider">Avg OVR</span>
-            <span className="text-lg sm:text-xl font-display font-black text-blue-600 block mt-0.5">
-              {validation.averageRating}
+      {/* 1. Compact Squad Vitals & Registration Strip */}
+      <section className="office-floating-card bg-white rounded-2xl p-2.5 sm:p-3 border border-slate-200/90 shadow-sm space-y-2" aria-label="Squad vitals">
+        <div className="grid grid-cols-4 gap-1.5 sm:gap-2 text-center text-xs">
+          {/* XI & Squad OVR */}
+          <div className="office-subcard office-kpi-blue rounded-xl p-1.5 sm:p-2 flex flex-col justify-center min-h-[52px]">
+            <span className="text-[8.5px] uppercase font-bold text-slate-500 block truncate tracking-wider">XI OVR</span>
+            <span className="text-base sm:text-lg font-display font-black text-blue-600 block leading-tight my-0.5">
+              {startingXiAvg}
             </span>
-            <span className="text-[8.5px] text-slate-500 font-medium">Starting XI Quality</span>
+            <span className="text-[7.5px] text-slate-400 font-medium block truncate" title={`Starting XI avg: ${startingXiAvg} OVR • Entire squad avg: ${validation.averageRating} OVR`}>
+              Squad {validation.averageRating}
+            </span>
           </div>
 
-          <div className="office-subcard rounded-2xl p-2.5 flex flex-col justify-between">
-            <span className="text-[9px] uppercase font-bold text-slate-500 block truncate tracking-wider">Squad Size</span>
-            <div className="flex items-baseline justify-center gap-1 mt-0.5">
-              <span className="text-lg sm:text-xl font-display font-black text-[#0b1536]">
+          {/* Roster Size */}
+          <div className="office-subcard rounded-xl p-1.5 sm:p-2 flex flex-col justify-center min-h-[52px]">
+            <span className="text-[8.5px] uppercase font-bold text-slate-500 block truncate tracking-wider">Roster</span>
+            <div className="flex items-baseline justify-center gap-0.5 leading-tight my-0.5">
+              <span className="text-base sm:text-lg font-display font-black text-[#0b1536]">
                 {squad.length}
               </span>
-              <span className="text-xs text-slate-500 font-mono">/ 35 max</span>
+              <span className="text-[9px] text-slate-400 font-mono">/35</span>
             </div>
-            <span className="text-[8.5px] text-slate-500 font-medium">Total Roster Pool</span>
+            <span className="text-[7.5px] text-slate-400 font-medium block truncate">Total Pool</span>
           </div>
 
-          <div className="office-subcard rounded-2xl p-2.5 flex flex-col justify-between">
-            <span className="text-[9px] uppercase font-bold text-slate-500 block truncate tracking-wider">Homegrown</span>
-            <div className="flex items-center justify-center gap-1 mt-0.5">
-              <span className="text-lg sm:text-xl font-display font-black text-blue-600">
+          {/* Homegrown */}
+          <div className="office-subcard rounded-xl p-1.5 sm:p-2 flex flex-col justify-center min-h-[52px]">
+            <span className="text-[8.5px] uppercase font-bold text-slate-500 block truncate tracking-wider">Homegrown</span>
+            <div className="flex items-center justify-center gap-1 leading-tight my-0.5">
+              <span className="text-base sm:text-lg font-display font-black text-blue-600">
                 {validation.homegrownCount}
               </span>
-              <span className="text-xs font-bold text-slate-500">HG</span>
+              <span className="text-[9px] font-bold text-slate-400">HG</span>
               {(validation.nonHomegrownSeniorCount ?? 0) <= 17 ? (
-                <span className="text-xs font-bold text-emerald-600" title="Compliant with Premier League rules (max 17 foreign senior players allowed)">✓</span>
+                <span className="text-[10px] font-bold text-emerald-600" title="Compliant with Premier League rules (max 17 foreign senior players allowed)">✓</span>
               ) : (
-                <span className="text-xs text-rose-500 font-bold" title="Exceeds maximum 17 non-homegrown senior limit">⚠️</span>
+                <span className="text-[10px] text-rose-500 font-bold" title="Exceeds maximum 17 non-homegrown senior limit">⚠️</span>
               )}
             </div>
-            <span className="text-[8.5px] text-slate-500 font-medium">
-              {(validation.nonHomegrownSeniorCount ?? 0) <= 17 ? 'Quota Compliant' : 'Foreign Limit Exceeded'}
+            <span className="text-[7.5px] text-slate-400 font-medium block truncate">
+              {(validation.nonHomegrownSeniorCount ?? 0) <= 17 ? 'Compliant' : 'Over Limit'}
             </span>
           </div>
 
-          <div className="office-subcard office-kpi-mint rounded-2xl p-2.5 flex flex-col justify-between">
-            <span className="text-[9px] uppercase font-bold text-slate-500 block truncate tracking-wider">Wage Bill</span>
-            <span className="text-sm sm:text-base font-display font-black text-emerald-700 block truncate mt-0.5">
+          {/* Payroll */}
+          <div className="office-subcard office-kpi-mint rounded-xl p-1.5 sm:p-2 flex flex-col justify-center min-h-[52px]">
+            <span className="text-[8.5px] uppercase font-bold text-slate-500 block truncate tracking-wider">Wage Bill</span>
+            <span className="text-xs sm:text-sm font-display font-black text-emerald-700 block truncate leading-tight my-0.5">
               {formatWage(validation.totalWagesWeekly)}
             </span>
-            <span className="text-[8.5px] text-slate-500 font-medium">Weekly Payroll</span>
+            <span className="text-[7.5px] text-slate-400 font-medium block truncate">Weekly</span>
           </div>
         </div>
 
-        {/* 25-Man League Registration Quick Status */}
+        {/* 25-Man League Registration Quick Status (Single Compact Row) */}
         {(() => {
           const seniorCount = squad.filter((p) => p.age > U21_AGE_LIMIT).length;
           const registeredIds = getRegisteredSeniorPlayerIds(squad, save.registeredPlayerIds);
           const isOver = seniorCount > MAX_SENIOR_SQUAD_SIZE;
           return (
-            <div className="pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2.5 text-xs">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-display font-black uppercase tracking-wider text-slate-600 flex items-center gap-1">
-                  <span>📋</span> 25-Man Premier League Registration:
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-1.5 min-w-0 truncate">
+                <span className="text-[10px] font-bold text-slate-600 truncate flex items-center gap-1">
+                  <span>📋</span> 25-Man PL Registration:
                 </span>
                 <span
-                  className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border shadow-2xs ${
+                  className={`text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full border shadow-2xs whitespace-nowrap ${
                     isOver
                       ? 'bg-amber-50 border-amber-300 text-amber-800'
                       : 'bg-blue-50 border-blue-200 text-blue-700'
                   }`}
                 >
-                  {registeredIds.length} / {MAX_SENIOR_SQUAD_SIZE} Registered
+                  {registeredIds.length}/{MAX_SENIOR_SQUAD_SIZE} Registered
                 </span>
                 {isOver && (
-                  <span className="text-[9.5px] text-amber-700 font-bold flex items-center gap-1">
-                    <span>⚠️</span> {seniorCount - registeredIds.length} Senior{seniorCount - registeredIds.length > 1 ? 's' : ''} Unregistered
+                  <span className="text-[9px] text-amber-700 font-bold whitespace-nowrap hidden xs:inline">
+                    ⚠️ {seniorCount - registeredIds.length} Unregistered
                   </span>
                 )}
               </div>
@@ -606,33 +617,34 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
               <button
                 type="button"
                 onClick={() => setShowRegistrationModal(true)}
-                className="py-1.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-[11px] font-display font-black uppercase tracking-wider shadow-sm shadow-blue-500/20 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+                className="py-1 px-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-[10px] font-display font-black uppercase tracking-wider shadow-2xs transition-all cursor-pointer flex items-center gap-1 active:scale-95 whitespace-nowrap shrink-0"
               >
-                <span>📋</span>
-                <span>Manage Registration</span>
+                <span>Manage</span>
+                <span>›</span>
               </button>
             </div>
           );
         })()}
 
         {validation.errors.length > 0 && (
-          <div className="pt-2 border-t border-rose-100 flex items-center justify-between text-[11px] text-rose-600 bg-rose-50/50 p-2 rounded-xl">
-            <div className="flex items-center gap-1.5">
+          <div className="pt-1.5 border-t border-rose-100 flex items-center justify-between text-[10.5px] text-rose-600 bg-rose-50/50 p-1.5 rounded-lg">
+            <div className="flex items-center gap-1.5 truncate">
               <span>⚠️</span>
-              <span className="font-bold">{validation.errors[0]}</span>
+              <span className="font-bold truncate">{validation.errors[0]}</span>
             </div>
           </div>
         )}
       </section>
 
-      {/* 2. Controls Bar: Formation, Auto Pick, View Mode */}
-      <section className="office-floating-card bg-white border border-slate-200/90 p-2.5 sm:p-3 rounded-2xl shadow-sm flex flex-wrap justify-between items-center gap-2.5">
-        <div className="flex items-center gap-2 flex-wrap">
-          <label className="text-[10.5px] font-black uppercase tracking-wider text-slate-500">Formation:</label>
+      {/* 2. Tactical Controls Bar: Formation, Auto Pick, View Mode */}
+      <section className="office-floating-card bg-white border border-slate-200/90 p-2 sm:p-2.5 rounded-2xl shadow-xs flex flex-wrap justify-between items-center gap-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Formation:</label>
           <select
             value={currentFormation}
             onChange={(e) => handleFormationChange(e.target.value)}
-            className="bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-display font-black text-[#0b1536] focus:outline-none focus:border-blue-500 cursor-pointer shadow-2xs"
+            className="bg-slate-50 border border-slate-300 rounded-xl px-2 py-1 text-xs font-display font-black text-[#0b1536] focus:outline-none focus:border-blue-500 cursor-pointer shadow-2xs"
+            aria-label="Formation select"
           >
             {(['4 at the back', '3 at the back', '5 at the back'] as const).map((cat) => (
               <optgroup key={cat} label={cat} className="bg-white text-slate-700 font-bold">
@@ -647,15 +659,15 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
 
           <button
             onClick={handleAutoPick}
-            className="py-1.5 px-3 rounded-xl border border-blue-200 bg-blue-50/80 hover:bg-blue-100 text-blue-700 text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap min-h-[34px] shadow-2xs flex items-center gap-1 active:scale-95"
+            className="py-1 px-2.5 rounded-xl border border-blue-200 bg-blue-50/80 hover:bg-blue-100 text-blue-700 text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap min-h-[30px] shadow-2xs flex items-center gap-1 active:scale-95"
             title="Automatically pick highest-rated team sheet"
           >
             <span>⚡</span>
-            <span>Auto-Pick XI</span>
+            <span>Auto-Pick</span>
           </button>
         </div>
 
-        <div className="flex items-center gap-1 bg-slate-100 border border-slate-200/80 rounded-2xl p-1">
+        <div className="flex items-center gap-0.5 bg-slate-100 border border-slate-200/80 rounded-xl p-0.5">
           <button
             onClick={() => {
               if (viewMode === 'pitch') {
@@ -665,9 +677,9 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                 window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
               }
             }}
-            className={`py-1.5 px-3 rounded-xl text-xs font-display font-black uppercase transition-all cursor-pointer ${
+            className={`py-1 px-2.5 rounded-lg text-xs font-display font-black uppercase transition-all cursor-pointer ${
               viewMode === 'pitch'
-                ? 'office-nav-tab-active shadow-sm'
+                ? 'office-nav-tab-active shadow-xs'
                 : 'office-nav-tab-inactive'
             }`}
           >
@@ -682,9 +694,9 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                 window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
               }
             }}
-            className={`py-1.5 px-3 rounded-xl text-xs font-display font-black uppercase transition-all cursor-pointer ${
+            className={`py-1 px-2.5 rounded-lg text-xs font-display font-black uppercase transition-all cursor-pointer ${
               viewMode === 'list'
-                ? 'office-nav-tab-active shadow-sm'
+                ? 'office-nav-tab-active shadow-xs'
                 : 'office-nav-tab-inactive'
             }`}
           >
@@ -699,14 +711,14 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                 window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
               }
             }}
-            className={`py-1.5 px-3 rounded-xl text-xs font-display font-black uppercase transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`py-1 px-2 rounded-lg text-xs font-display font-black uppercase transition-all flex items-center gap-1 cursor-pointer ${
               viewMode === 'academy'
-                ? 'office-nav-tab-active shadow-sm'
+                ? 'office-nav-tab-active shadow-xs'
                 : 'office-nav-tab-inactive'
             }`}
           >
             <span>Academy</span>
-            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+            <span className={`text-[9.5px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
               viewMode === 'academy' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
             }`}>
               {academy.length}
@@ -717,19 +729,19 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
 
       {/* PITCH VIEW */}
       {viewMode === 'pitch' && (
-        <section id="squad-pitch-section" className="space-y-4 scroll-mt-20">
-          {/* Virtual Pitch Status Strip */}
-          <div className="office-subcard flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs shadow-xs">
-            <div className="flex items-center gap-2.5">
-              <span className="font-display font-black text-xs uppercase tracking-wider px-3 py-1 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-bold shadow-xs">
+        <section id="squad-pitch-section" className="space-y-3 scroll-mt-20">
+          {/* Virtual Pitch Status Strip (Compact) */}
+          <div className="office-subcard flex items-center justify-between px-3 py-1.5 rounded-xl text-xs shadow-xs">
+            <div className="flex items-center gap-2">
+              <span className="font-display font-black text-[11px] uppercase tracking-wider px-2.5 py-0.5 rounded-lg bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-bold shadow-xs">
                 ⚽ {currentFormation}
               </span>
-              <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+              <span className="text-[10.5px] font-bold text-slate-600 uppercase tracking-wider">
                 Starting XI • Matchday Canvas
               </span>
             </div>
             <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
-              Tap player card to substitute or view stats
+              Tap player to swap or inspect
             </span>
           </div>
 
