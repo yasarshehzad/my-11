@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { loadCareerSave, saveCareerSave, exportCareerSaveAsJson, isValidSlotId, ValidSlotId } from '../../../career/saves';
+import { loadCareerSave, saveCareerSave, deleteCareerSave, exportCareerSaveAsJson, isValidSlotId, ValidSlotId } from '../../../career/saves';
 import {
   CareerSaveFile,
   CareerSettings,
@@ -608,6 +608,7 @@ function CareerPlayHubContent() {
   const [showUclDrawModal, setShowUclDrawModal] = useState(false);
   const [showOfficeInboxModal, setShowOfficeInboxModal] = useState(false);
   const [showOfficeSeasonDrawer, setShowOfficeSeasonDrawer] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   // Auto-prompt pre-season tour selection or fixture release day
   useEffect(() => {
@@ -1080,6 +1081,11 @@ function CareerPlayHubContent() {
     setSave(updated);
     setEditableSettings(updatedSettings);
     showToast('Settings saved successfully.');
+  };
+
+  const handleResetSaveSlot = () => {
+    deleteCareerSave(slotId);
+    router.push('/career');
   };
 
   const handleUpdateSave = (updated: CareerSaveFile) => {
@@ -2675,21 +2681,30 @@ function CareerPlayHubContent() {
                 role="dialog"
                 aria-modal="true"
                 aria-label="Managerial Inbox"
-                className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4 bg-slate-950/60 backdrop-blur-sm"
+                className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in"
                 onClick={() => setShowOfficeInboxModal(false)}
               >
                 <section
                   id="managerial-inbox"
                   data-office-ui="true"
                   onClick={(e) => e.stopPropagation()}
-                  className="office-floating-card rounded-3xl p-4 sm:p-5 w-full max-w-lg max-h-[82vh] flex flex-col space-y-3"
+                  className="office-floating-card rounded-3xl p-4 sm:p-5 w-full max-w-lg max-h-[85vh] flex flex-col space-y-3.5 border border-indigo-100/80 shadow-2xl"
                 >
-                  <div className="flex items-center justify-between gap-2">
+                  {/* Header Bar */}
+                  <div className="flex items-center justify-between gap-2 border-b border-[var(--office-divider)] pb-2.5">
                     <div className="flex items-center gap-2">
-                      <span className="text-base">📬</span>
-                      <h3 className="font-display font-extrabold text-sm text-[var(--office-text-primary)]">
-                        Managerial Inbox ({allInbox.length})
-                      </h3>
+                      <span className="text-lg">📬</span>
+                      <div>
+                        <h3 className="font-display font-extrabold text-sm text-[var(--office-text-primary)] flex items-center gap-2">
+                          <span>Managerial Inbox</span>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-50 border border-indigo-200/60 text-[#1d5eff] font-bold">
+                            {allInbox.length}
+                          </span>
+                        </h3>
+                        <p className="text-[10px] text-[var(--office-text-muted)] font-medium">
+                          Official club notices, incoming offers &amp; board decisions
+                        </p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       {unreadInboxCount > 0 && (
@@ -2697,7 +2712,7 @@ function CareerPlayHubContent() {
                           type="button"
                           data-office-ui="true"
                           onClick={handleMarkAllMessagesRead}
-                          className="text-[11px] font-bold text-[#1d5eff] cursor-pointer"
+                          className="text-[11px] font-bold text-[#1d5eff] hover:underline cursor-pointer"
                         >
                           ✓ Mark All Read
                         </button>
@@ -2706,7 +2721,7 @@ function CareerPlayHubContent() {
                         type="button"
                         data-office-ui="true"
                         onClick={() => setShowOfficeInboxModal(false)}
-                        className="office-subcard w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-[var(--office-text-primary)] cursor-pointer"
+                        className="office-subcard w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] transition-colors cursor-pointer"
                       >
                         ✕
                       </button>
@@ -2717,7 +2732,7 @@ function CareerPlayHubContent() {
                   <nav aria-label="Inbox Filters" data-no-swipe="true" className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
                     {[
                       { id: 'all', label: 'All', count: allInbox.length },
-                      { id: 'action_required', label: 'Action', count: actionableAlerts.length },
+                      { id: 'action_required', label: 'Action Required', count: actionableAlerts.length },
                       { id: 'unread', label: 'Unread', count: unreadInboxCount },
                       { id: 'board', label: 'Board', count: allInbox.filter((m) => m.type === 'board').length },
                       { id: 'transfer', label: 'Transfers', count: allInbox.filter((m) => m.type === 'transfer').length },
@@ -2729,22 +2744,31 @@ function CareerPlayHubContent() {
                           type="button"
                           data-office-ui="true"
                           onClick={() => setInboxFilter(filter.id as typeof inboxFilter)}
-                          className={`py-1 px-2.5 rounded-xl text-[11px] font-display font-bold whitespace-nowrap cursor-pointer ${
+                          className={`py-1.5 px-3 rounded-xl text-[11px] font-display font-bold whitespace-nowrap cursor-pointer transition-all flex items-center gap-1.5 ${
                             active
-                              ? 'office-nav-tab-active'
-                              : 'office-subcard text-[var(--office-text-secondary)]'
+                              ? 'office-nav-tab-active shadow-sm'
+                              : 'office-subcard text-[var(--office-text-secondary)] hover:text-[var(--office-text-primary)]'
                           }`}
                         >
-                          {filter.label} ({filter.count})
+                          <span>{filter.label}</span>
+                          <span
+                            className={`text-[9px] px-1.5 py-0.2 rounded-full font-mono ${
+                              active
+                                ? 'bg-white/20 text-white'
+                                : 'bg-slate-100 text-[var(--office-text-muted)]'
+                            }`}
+                          >
+                            {filter.count}
+                          </span>
                         </button>
                       );
                     })}
                   </nav>
 
                   {/* Messages Feed */}
-                  <div className="space-y-2 overflow-y-auto pr-1 flex-1">
-                    {allInbox
-                      .filter((m) => {
+                  <div className="space-y-2.5 overflow-y-auto pr-1 flex-1 max-h-[58vh]">
+                    {(() => {
+                      const filteredMessages = allInbox.filter((m) => {
                         if (inboxFilter === 'all') return true;
                         if (inboxFilter === 'action_required') {
                           const cl = classifyInboxMessage(m, save);
@@ -2752,32 +2776,83 @@ function CareerPlayHubContent() {
                         }
                         if (inboxFilter === 'unread') return !m.isRead;
                         return m.type === inboxFilter;
-                      })
-                      .map((msg) => {
+                      });
+
+                      if (filteredMessages.length === 0) {
+                        return (
+                          <div className="office-subcard rounded-2xl p-8 text-center space-y-2 my-2">
+                            <span className="text-2xl block">📭</span>
+                            <h4 className="font-display font-extrabold text-xs text-[var(--office-text-primary)] uppercase tracking-wider">
+                              Inbox Clear
+                            </h4>
+                            <p className="text-[11px] text-[var(--office-text-muted)]">
+                              No messages found in this category. Your managerial desk is up to date.
+                            </p>
+                          </div>
+                        );
+                      }
+
+                      return filteredMessages.map((msg) => {
                         const isExpanded = expandedMessageId === msg.id;
                         const { classification, isResolved, effectiveActionLabel, effectiveActionTab, effectiveActionType, targetId } =
                           classifyInboxMessage(msg, save);
+
+                        const isActionRequired = classification === 'action_required' && !isResolved;
+                        const isImportant = classification === 'important';
 
                         return (
                           <article
                             key={msg.id}
                             data-office-ui="true"
                             onClick={() => handleToggleMessageRead(msg.id)}
-                            className="office-subcard rounded-2xl p-3 space-y-1.5 cursor-pointer text-left"
+                            className={`office-subcard rounded-2xl p-3.5 space-y-2 cursor-pointer text-left transition-all hover:bg-indigo-50/20 ${
+                              !msg.isRead
+                                ? 'border-l-4 border-l-[#1d5eff] bg-gradient-to-r from-indigo-50/30 via-white to-white'
+                                : ''
+                            }`}
                           >
+                            {/* Card Header & Priority Tag */}
                             <div className="flex items-center justify-between gap-2 text-[10.5px]">
-                              <span className="font-display font-bold text-[var(--office-text-primary)]">
-                                {msg.sender}
-                              </span>
-                              <span className="font-mono text-[var(--office-text-muted)]">
-                                {formatOfficeShortDate(msg.date)}
-                              </span>
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                {!msg.isRead && (
+                                  <span
+                                    className="w-2 h-2 rounded-full bg-[#1d5eff] shrink-0 animate-pulse"
+                                    title="Unread message"
+                                  />
+                                )}
+                                <span className="font-display font-bold text-[var(--office-text-primary)] truncate">
+                                  {msg.sender}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0">
+                                {isActionRequired ? (
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1">
+                                    <span>⚠️</span> Action Required
+                                  </span>
+                                ) : isImportant ? (
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
+                                    <span>⭐</span> Important
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-blue-50 text-[#1d5eff] border border-blue-200 flex items-center gap-1">
+                                    <span>ℹ️</span> Info
+                                  </span>
+                                )}
+                                <span className="font-mono text-[var(--office-text-muted)] text-[10px]">
+                                  {formatOfficeShortDate(msg.date)}
+                                </span>
+                              </div>
                             </div>
-                            <div className="font-bold text-xs text-[var(--office-text-primary)]">
+
+                            {/* Message Subject */}
+                            <div className="font-display font-bold text-xs text-[var(--office-text-primary)] leading-snug">
                               {msg.subject}
                             </div>
+
+                            {/* Body & Actions */}
                             {isExpanded ? (
-                              <div className="pt-1.5 border-t border-[var(--office-divider)] space-y-2">
+                              <div className="pt-2 border-t border-[var(--office-divider)] space-y-2.5 animate-fade-in">
                                 <p className="text-[11px] text-[var(--office-text-secondary)] whitespace-pre-line leading-relaxed">
                                   {msg.body}
                                 </p>
@@ -2794,20 +2869,30 @@ function CareerPlayHubContent() {
                                         targetId: targetId || msg.targetId,
                                       });
                                     }}
-                                    className="office-play-match-btn py-1.5 px-3 rounded-xl font-display font-bold text-[11px] cursor-pointer"
+                                    className="office-action-btn-primary w-full py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm cursor-pointer"
                                   >
-                                    {effectiveActionLabel} &rarr;
+                                    <span>{effectiveActionLabel}</span>
+                                    <span>&rarr;</span>
                                   </button>
                                 )}
                               </div>
                             ) : (
-                              <p className="text-[11px] text-[var(--office-text-muted)] truncate">
-                                {msg.body.replace(/\n+/g, ' ')}
-                              </p>
+                              <div className="space-y-1">
+                                <p className="text-[11px] text-[var(--office-text-muted)] truncate">
+                                  {msg.body.replace(/\n+/g, ' ')}
+                                </p>
+                                {isActionRequired && effectiveActionLabel && (
+                                  <div className="text-[10px] font-bold text-[#1d5eff] flex items-center gap-1 pt-0.5">
+                                    <span>⚡ {effectiveActionLabel}</span>
+                                    <span>&rsaquo;</span>
+                                  </div>
+                                )}
+                              </div>
                             )}
                           </article>
                         );
-                      })}
+                      });
+                    })()}
                   </div>
                 </section>
               </div>
@@ -2867,66 +2952,82 @@ function CareerPlayHubContent() {
           />
         )}
 
-        {/* TAB 6: SETTINGS & EDITING */}
+        {/* TAB 7: SETTINGS & EDITING */}
         {activeTab === 'settings' && editableSettings && (
-          <div className="max-w-2xl mx-auto w-full space-y-6">
+          <div className="max-w-2xl mx-auto w-full space-y-4">
             <header className="space-y-1">
-              <h3 className="text-xl font-display font-black uppercase text-white">
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#1d5eff] font-display">
+                ⚙️ Career Settings &amp; Rules
+              </span>
+              <h3 className="text-xl sm:text-2xl font-display font-extrabold uppercase text-[var(--office-text-primary)] tracking-tight">
                 Career Save Settings
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-[var(--office-text-muted)] font-medium">
                 {save.settings.locked
-                  ? 'This career has locked rules to protect save integrity and prevent mid-game changes.'
-                  : 'You can adjust mid-save settings and rename your club below.'}
+                  ? 'This career has locked rules to protect save integrity and prevent mid-game difficulty changes.'
+                  : 'You can adjust mid-save settings, regional preferences, and rename your club below.'}
               </p>
             </header>
 
             {/* Club Name Renaming */}
-            <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-5 space-y-3">
-              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
-                Club Display Name
-              </label>
-              <div className="flex gap-3">
+            <section
+              data-office-ui="true"
+              className="office-floating-card rounded-3xl p-4 sm:p-5 space-y-3 border border-indigo-100/80 shadow-sm"
+            >
+              <div className="flex items-center justify-between">
+                <label className="block text-[10px] font-black text-[var(--office-text-muted)] uppercase tracking-wider">
+                  Club Display Name
+                </label>
+                <span className="text-[9px] text-[var(--office-text-muted)] font-mono">
+                  Default: {save.club.defaultName}
+                </span>
+              </div>
+              <div className="flex gap-2.5">
                 <input
                   type="text"
                   value={editingClubName}
                   onChange={(e) => setEditingClubName(e.target.value)}
                   placeholder={save.club.defaultName}
-                  className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 font-semibold"
+                  className="flex-1 bg-white border border-slate-200/90 rounded-xl px-4 py-2.5 text-xs text-[var(--office-text-primary)] font-bold focus:outline-none focus:border-[#1d5eff] focus:ring-2 focus:ring-blue-100 shadow-2xs"
                 />
                 <button
+                  type="button"
+                  data-office-ui="true"
                   onClick={() => setEditingClubName(save.club.defaultName)}
-                  className="py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-xs font-bold text-slate-400 hover:text-white"
+                  className="office-subcard py-2.5 px-3.5 rounded-xl text-xs font-bold text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] hover:bg-slate-100 cursor-pointer"
                   title="Reset to default club name"
                 >
                   Reset
                 </button>
               </div>
-              <p className="text-[10px] text-slate-500">
-                Default: {save.club.defaultName}. Renaming is permitted on all difficulties.
+              <p className="text-[10px] text-[var(--office-text-muted)]">
+                Custom club names are displayed across all matchdays, press tickers, and league tables.
               </p>
-            </div>
+            </section>
 
             {/* Regional & Display Preferences (Always Editable) */}
-            <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-5 space-y-4">
-              <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+            <section
+              data-office-ui="true"
+              className="office-floating-card rounded-3xl p-4 sm:p-5 space-y-4 border border-indigo-100/80 shadow-sm"
+            >
+              <div className="flex justify-between items-center border-b border-[var(--office-divider)] pb-3">
                 <div className="space-y-0.5">
-                  <h4 className="text-xs font-display font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                    <span>🌐</span> Regional & Display Preferences
+                  <h4 className="text-xs font-display font-bold uppercase tracking-wider text-[var(--office-text-primary)] flex items-center gap-1.5">
+                    <span>🌐</span> Regional &amp; Display Preferences
                   </h4>
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-[10px] text-[var(--office-text-muted)]">
                     Football Manager-style units and formatting. Configurable mid-save on all difficulties.
                   </p>
                 </div>
-                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                <span className="text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                   Always Editable
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                 {/* Date Format */}
-                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-900 space-y-1.5">
-                  <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                <div className="office-subcard p-3 rounded-xl border border-indigo-50/80 bg-white/80 space-y-1.5 shadow-2xs">
+                  <label className="block text-[10px] font-bold text-[var(--office-text-muted)] uppercase tracking-wider">
                     Date Format
                   </label>
                   <select
@@ -2937,7 +3038,7 @@ function CareerPlayHubContent() {
                         dateFormat: e.target.value as DateFormatPreference,
                       })
                     }
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-[var(--office-text-primary)] font-bold focus:outline-none focus:border-[#1d5eff]"
                   >
                     <option value="uk">UK (14/08/2026 - DD/MM/YYYY)</option>
                     <option value="iso">ISO (2026-08-14 - YYYY-MM-DD)</option>
@@ -2946,8 +3047,8 @@ function CareerPlayHubContent() {
                 </div>
 
                 {/* Currency */}
-                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-900 space-y-1.5">
-                  <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                <div className="office-subcard p-3 rounded-xl border border-indigo-50/80 bg-white/80 space-y-1.5 shadow-2xs">
+                  <label className="block text-[10px] font-bold text-[var(--office-text-muted)] uppercase tracking-wider">
                     Currency Unit
                   </label>
                   <select
@@ -2958,7 +3059,7 @@ function CareerPlayHubContent() {
                         currency: e.target.value as CurrencyPreference,
                       })
                     }
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-[var(--office-text-primary)] font-bold focus:outline-none focus:border-[#1d5eff]"
                   >
                     <option value="GBP">GBP (£ - British Pound)</option>
                     <option value="EUR">EUR (€ - Euro)</option>
@@ -2967,8 +3068,8 @@ function CareerPlayHubContent() {
                 </div>
 
                 {/* Wage Unit */}
-                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-900 space-y-1.5">
-                  <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                <div className="office-subcard p-3 rounded-xl border border-indigo-50/80 bg-white/80 space-y-1.5 shadow-2xs">
+                  <label className="block text-[10px] font-bold text-[var(--office-text-muted)] uppercase tracking-wider">
                     Wage Rate Frequency
                   </label>
                   <select
@@ -2979,7 +3080,7 @@ function CareerPlayHubContent() {
                         wageUnit: e.target.value as WageUnitPreference,
                       })
                     }
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-[var(--office-text-primary)] font-bold focus:outline-none focus:border-[#1d5eff]"
                   >
                     <option value="weekly">Weekly (£/wk - FM Standard)</option>
                     <option value="monthly">Monthly (£/mo)</option>
@@ -2988,8 +3089,8 @@ function CareerPlayHubContent() {
                 </div>
 
                 {/* Height Unit */}
-                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-900 space-y-1.5">
-                  <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                <div className="office-subcard p-3 rounded-xl border border-indigo-50/80 bg-white/80 space-y-1.5 shadow-2xs">
+                  <label className="block text-[10px] font-bold text-[var(--office-text-muted)] uppercase tracking-wider">
                     Height Unit
                   </label>
                   <select
@@ -3000,7 +3101,7 @@ function CareerPlayHubContent() {
                         heightUnit: e.target.value as HeightUnitPreference,
                       })
                     }
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-[var(--office-text-primary)] font-bold focus:outline-none focus:border-[#1d5eff]"
                   >
                     <option value="ft_in">Feet &amp; Inches (5&apos; 11&quot;)</option>
                     <option value="cm">Centimetres (180 cm)</option>
@@ -3009,8 +3110,8 @@ function CareerPlayHubContent() {
                 </div>
 
                 {/* Weight Unit */}
-                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-900 space-y-1.5">
-                  <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                <div className="office-subcard p-3 rounded-xl border border-indigo-50/80 bg-white/80 space-y-1.5 shadow-2xs">
+                  <label className="block text-[10px] font-bold text-[var(--office-text-muted)] uppercase tracking-wider">
                     Weight Unit
                   </label>
                   <select
@@ -3021,7 +3122,7 @@ function CareerPlayHubContent() {
                         weightUnit: e.target.value as WeightUnitPreference,
                       })
                     }
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-[var(--office-text-primary)] font-bold focus:outline-none focus:border-[#1d5eff]"
                   >
                     <option value="kg">Kilograms (75 kg)</option>
                     <option value="st_lbs">Stone &amp; Pounds (11st 11lbs)</option>
@@ -3030,8 +3131,8 @@ function CareerPlayHubContent() {
                 </div>
 
                 {/* Number Format */}
-                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-900 space-y-1.5">
-                  <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                <div className="office-subcard p-3 rounded-xl border border-indigo-50/80 bg-white/80 space-y-1.5 shadow-2xs">
+                  <label className="block text-[10px] font-bold text-[var(--office-text-muted)] uppercase tracking-wider">
                     Number Formatting
                   </label>
                   <select
@@ -3042,7 +3143,7 @@ function CareerPlayHubContent() {
                         numberFormat: e.target.value as NumberFormatPreference,
                       })
                     }
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-[var(--office-text-primary)] font-bold focus:outline-none focus:border-[#1d5eff]"
                   >
                     <option value="comma">Standard Comma (1,000,000)</option>
                     <option value="dot">Continental Dot (1.000.000)</option>
@@ -3050,27 +3151,35 @@ function CareerPlayHubContent() {
                   </select>
                 </div>
               </div>
-            </div>
+            </section>
 
             {/* Gameplay Rules Status */}
-            <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-5 space-y-4">
-              <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                <h4 className="text-xs font-display font-black uppercase tracking-wider text-slate-300">
-                  Gameplay Rules
-                </h4>
+            <section
+              data-office-ui="true"
+              className="office-floating-card rounded-3xl p-4 sm:p-5 space-y-4 border border-indigo-100/80 shadow-sm"
+            >
+              <div className="flex justify-between items-center border-b border-[var(--office-divider)] pb-3">
+                <div className="space-y-0.5">
+                  <h4 className="text-xs font-display font-bold uppercase tracking-wider text-[var(--office-text-primary)]">
+                    Gameplay Rules &amp; Save Integrity
+                  </h4>
+                  <p className="text-[10px] text-[var(--office-text-muted)]">
+                    Preset: <strong className="text-[var(--office-text-primary)] uppercase">{save.settings.preset}</strong>
+                  </p>
+                </div>
                 {save.settings.locked && (
-                  <span className="text-[10px] font-bold text-amber-400 flex items-center gap-1">
+                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1">
                     <span>🔒</span> Locked Save
                   </span>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                 {/* Board Sackings */}
-                <div className="flex justify-between items-center bg-slate-950/60 p-3 rounded-xl border border-slate-900">
+                <div className="flex justify-between items-center office-subcard p-3 rounded-xl border border-indigo-50/80 bg-white/80 shadow-2xs">
                   <div>
-                    <div className="font-bold text-white">Board Can Sack You</div>
-                    <div className="text-[10px] text-slate-500">Dismissed on poor form</div>
+                    <div className="font-bold text-[var(--office-text-primary)] text-xs">Board Can Sack You</div>
+                    <div className="text-[10px] text-[var(--office-text-muted)]">Dismissed on prolonged poor form</div>
                   </div>
                   <input
                     type="checkbox"
@@ -3079,15 +3188,15 @@ function CareerPlayHubContent() {
                     onChange={(e) =>
                       setEditableSettings({ ...editableSettings, boardCanSack: e.target.checked })
                     }
-                    className="w-4 h-4 accent-blue-600 cursor-pointer"
+                    className="w-5 h-5 accent-[#1d5eff] cursor-pointer rounded"
                   />
                 </div>
 
                 {/* Match Retry */}
-                <div className="flex justify-between items-center bg-slate-950/60 p-3 rounded-xl border border-slate-900">
+                <div className="flex justify-between items-center office-subcard p-3 rounded-xl border border-indigo-50/80 bg-white/80 shadow-2xs">
                   <div>
-                    <div className="font-bold text-white">Allow Match Retry</div>
-                    <div className="text-[10px] text-slate-500">Replay a simulated match</div>
+                    <div className="font-bold text-[var(--office-text-primary)] text-xs">Allow Match Retry</div>
+                    <div className="text-[10px] text-[var(--office-text-muted)]">Replay simulated matches</div>
                   </div>
                   <input
                     type="checkbox"
@@ -3096,15 +3205,15 @@ function CareerPlayHubContent() {
                     onChange={(e) =>
                       setEditableSettings({ ...editableSettings, retryMatch: e.target.checked })
                     }
-                    className="w-4 h-4 accent-blue-600 cursor-pointer"
+                    className="w-5 h-5 accent-[#1d5eff] cursor-pointer rounded"
                   />
                 </div>
 
                 {/* Homegrown Rule */}
-                <div className="flex justify-between items-center bg-slate-950/60 p-3 rounded-xl border border-slate-900">
+                <div className="flex justify-between items-center office-subcard p-3 rounded-xl border border-indigo-50/80 bg-white/80 shadow-2xs">
                   <div>
-                    <div className="font-bold text-white">Homegrown Rule</div>
-                    <div className="text-[10px] text-slate-500">8+ domestic players required</div>
+                    <div className="font-bold text-[var(--office-text-primary)] text-xs">Homegrown Rule</div>
+                    <div className="text-[10px] text-[var(--office-text-muted)]">8+ domestic trained players required</div>
                   </div>
                   <input
                     type="checkbox"
@@ -3113,15 +3222,15 @@ function CareerPlayHubContent() {
                     onChange={(e) =>
                       setEditableSettings({ ...editableSettings, homegrownRule: e.target.checked })
                     }
-                    className="w-4 h-4 accent-blue-600 cursor-pointer"
+                    className="w-5 h-5 accent-[#1d5eff] cursor-pointer rounded"
                   />
                 </div>
 
                 {/* Financial Penalties */}
-                <div className="flex justify-between items-center bg-slate-950/60 p-3 rounded-xl border border-slate-900">
+                <div className="flex justify-between items-center office-subcard p-3 rounded-xl border border-indigo-50/80 bg-white/80 shadow-2xs">
                   <div>
-                    <div className="font-bold text-white">Financial Penalties</div>
-                    <div className="text-[10px] text-slate-500">Point deductions on debt</div>
+                    <div className="font-bold text-[var(--office-text-primary)] text-xs">Financial Penalties</div>
+                    <div className="text-[10px] text-[var(--office-text-muted)]">Point deductions on severe debt</div>
                   </div>
                   <input
                     type="checkbox"
@@ -3133,20 +3242,92 @@ function CareerPlayHubContent() {
                         financialPenalties: e.target.checked,
                       })
                     }
-                    className="w-4 h-4 accent-blue-600 cursor-pointer"
+                    className="w-5 h-5 accent-[#1d5eff] cursor-pointer rounded"
                   />
                 </div>
               </div>
 
               <div className="pt-2">
                 <button
+                  type="button"
+                  data-office-ui="true"
                   onClick={handleSaveSettings}
-                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
+                  className="office-action-btn-primary w-full py-3 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md cursor-pointer"
                 >
                   Save Changes
                 </button>
               </div>
-            </div>
+            </section>
+
+            {/* Save Slot & Storage Management (Safe vs Destructive Actions) */}
+            <section
+              data-office-ui="true"
+              className="office-floating-card rounded-3xl p-4 sm:p-5 space-y-4 border border-indigo-100/80 shadow-sm"
+            >
+              <div className="border-b border-[var(--office-divider)] pb-2.5">
+                <h4 className="text-xs font-display font-bold uppercase tracking-wider text-[var(--office-text-primary)] flex items-center gap-1.5">
+                  <span>💾</span> Save Slot &amp; Backup Management
+                </h4>
+                <p className="text-[10px] text-[var(--office-text-muted)]">
+                  Active Save Slot: <strong className="text-[var(--office-text-primary)] font-mono">{slotId}</strong>
+                </p>
+              </div>
+
+              {/* Safe action: Backup */}
+              <div className="flex flex-col sm:flex-row gap-2.5">
+                <button
+                  type="button"
+                  data-office-ui="true"
+                  onClick={handleExport}
+                  className="office-subcard flex-1 py-2.5 px-4 rounded-xl font-display font-bold text-xs text-[var(--office-text-primary)] hover:bg-indigo-50/50 flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+                >
+                  <span>💾 Backup Save (Export JSON)</span>
+                </button>
+              </div>
+
+              {/* Destructive Action: Reset Save */}
+              <div className="bg-rose-50/70 border border-rose-200/80 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-base text-rose-600">⚠️</span>
+                  <div className="min-w-0">
+                    <h5 className="font-display font-bold text-xs text-rose-800 uppercase tracking-wide">
+                      Danger Zone — Reset Career Save Slot
+                    </h5>
+                    <p className="text-[10px] text-rose-700 leading-relaxed">
+                      Permanently wipes all managerial records, transfers, and fixtures in <span className="font-mono font-bold">{slotId}</span>.
+                    </p>
+                  </div>
+                </div>
+
+                {!showResetConfirm ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowResetConfirm(true)}
+                    className="py-2 px-3.5 rounded-xl border border-rose-300 bg-white text-rose-700 hover:bg-rose-100/60 font-display font-bold text-xs uppercase cursor-pointer transition-colors shadow-2xs"
+                  >
+                    Reset This Save Slot...
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2 pt-1 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={handleResetSaveSlot}
+                      className="py-2 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-display font-black text-xs uppercase cursor-pointer shadow-sm transition-colors"
+                    >
+                      Confirm Reset &amp; Wipe Slot
+                    </button>
+                    <button
+                      type="button"
+                      data-office-ui="true"
+                      onClick={() => setShowResetConfirm(false)}
+                      className="office-subcard py-2 px-3.5 rounded-xl text-xs font-bold text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              </div>
+            </section>
           </div>
         )}
         </div>

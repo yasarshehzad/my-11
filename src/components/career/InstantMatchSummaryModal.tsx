@@ -102,27 +102,28 @@ export function InstantMatchSummaryModal({
       role="dialog"
       aria-modal="true"
       aria-label="Instant Match Summary"
-      className="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-hidden"
+      className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 overflow-hidden animate-fade-in"
       onClick={onClose}
     >
       <div
-        className="bg-slate-950 border border-slate-800 rounded-3xl p-4 sm:p-5 max-w-md w-full space-y-3.5 shadow-2xl relative my-auto motion-reduce:transition-none"
+        data-office-ui="true"
+        className="office-floating-card rounded-3xl p-4 sm:p-5 max-w-md w-full space-y-3.5 shadow-2xl relative my-auto border border-indigo-100/80 motion-reduce:transition-none"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Bar */}
-        <header className="flex items-center justify-between border-b border-slate-850 pb-2.5">
+        <header className="flex items-center justify-between border-b border-[var(--office-divider)] pb-2.5">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-[10px] font-black uppercase tracking-widest text-blue-400 font-display truncate">
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#1d5eff] font-display truncate">
               ⚡ Match Result
             </span>
             {isUserMatch && (
               <span
-                className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full shrink-0 ${
+                className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full shrink-0 border ${
                   userWon
-                    ? 'bg-emerald-500 text-slate-950'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                     : isDraw
-                    ? 'bg-amber-500 text-slate-950'
-                    : 'bg-rose-500 text-white'
+                    ? 'bg-amber-50 text-amber-700 border-amber-200'
+                    : 'bg-rose-50 text-rose-700 border-rose-200'
                 }`}
               >
                 {userWon ? 'VICTORY' : isDraw ? 'DRAW' : 'DEFEAT'}
@@ -132,7 +133,7 @@ export function InstantMatchSummaryModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-850 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer text-xs shrink-0"
+            className="office-subcard w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] transition-colors cursor-pointer shrink-0"
             title="Close"
             aria-label="Close modal"
           >
@@ -141,8 +142,8 @@ export function InstantMatchSummaryModal({
         </header>
 
         {/* Scoreboard Hero */}
-        <article className="bg-slate-900/80 border border-slate-850 rounded-2xl p-3 sm:p-4 space-y-2 shadow-inner">
-          <div className="text-center text-[10px] font-mono text-slate-400 font-medium truncate">
+        <article className="office-subcard rounded-2xl p-3 sm:p-4 space-y-2.5 border border-indigo-100/70 bg-gradient-to-br from-white via-indigo-50/20 to-purple-50/30">
+          <div className="text-center text-[10px] font-mono text-[var(--office-text-muted)] font-semibold truncate">
             {competitionTitle} • {roundTitle}
           </div>
 
@@ -151,7 +152,7 @@ export function InstantMatchSummaryModal({
             <div className="flex-1 flex flex-col items-center text-center space-y-1 min-w-0">
               <div
                 data-force-white="true"
-                className="club-crest w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-white/20 shadow-md flex items-center justify-center text-xs sm:text-sm font-black text-white shrink-0"
+                className="club-crest w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-white/60 shadow-md flex items-center justify-center text-xs sm:text-sm font-black text-white shrink-0"
                 style={{
                   background: `linear-gradient(135deg, ${homeClub.primaryColor}, ${homeClub.secondaryColor})`,
                 }}
@@ -159,10 +160,10 @@ export function InstantMatchSummaryModal({
                 {homeClub.shortName}
               </div>
               <div className="min-w-0 w-full">
-                <h3 className="font-display font-black text-xs text-white truncate">
+                <h3 className="font-display font-extrabold text-xs text-[var(--office-text-primary)] truncate">
                   {getEffectiveClubName(homeClub, save.club)}
                 </h3>
-                <span className="text-[9px] uppercase font-bold text-slate-400 block truncate">
+                <span className="text-[9px] uppercase font-bold text-[var(--office-text-muted)] block truncate">
                   {isUserHome ? '★ (YOU)' : 'Home'}
                 </span>
               </div>
@@ -170,15 +171,15 @@ export function InstantMatchSummaryModal({
 
             {/* Final Scoreline */}
             <div className="flex flex-col items-center justify-center shrink-0 px-2 space-y-1">
-              <div className="bg-slate-950 border border-slate-700 px-3.5 py-1.5 rounded-2xl font-mono font-black text-2xl sm:text-3xl text-foreground shadow-xl tracking-tight">
+              <div className="bg-white border-2 border-indigo-200/80 px-3.5 py-1.5 rounded-2xl font-mono font-black text-2xl sm:text-3xl text-[var(--office-text-primary)] shadow-sm tracking-tight">
                 {homeScore} - {awayScore}
               </div>
               {cupFixture?.penalties && (
-                <span className="text-[10px] font-mono text-amber-400 font-bold">
+                <span className="text-[10px] font-mono text-amber-600 font-bold">
                   ({cupFixture.penalties.homePenalties} - {cupFixture.penalties.awayPenalties} pens)
                 </span>
               )}
-              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 bg-slate-950/70 border border-slate-800/80 px-2 py-0.5 rounded-full">
+              <span className="text-[9px] font-black uppercase tracking-wider text-[#1d5eff] bg-indigo-50 border border-indigo-200/60 px-2 py-0.5 rounded-full">
                 Full Time
               </span>
             </div>
@@ -187,7 +188,7 @@ export function InstantMatchSummaryModal({
             <div className="flex-1 flex flex-col items-center text-center space-y-1 min-w-0">
               <div
                 data-force-white="true"
-                className="club-crest w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-white/20 shadow-md flex items-center justify-center text-xs sm:text-sm font-black text-white shrink-0"
+                className="club-crest w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-white/60 shadow-md flex items-center justify-center text-xs sm:text-sm font-black text-white shrink-0"
                 style={{
                   background: `linear-gradient(135deg, ${awayClub.primaryColor}, ${awayClub.secondaryColor})`,
                 }}
@@ -195,46 +196,46 @@ export function InstantMatchSummaryModal({
                 {awayClub.shortName}
               </div>
               <div className="min-w-0 w-full">
-                <h3 className="font-display font-black text-xs text-white truncate">
+                <h3 className="font-display font-extrabold text-xs text-[var(--office-text-primary)] truncate">
                   {getEffectiveClubName(awayClub, save.club)}
                 </h3>
-                <span className="text-[9px] uppercase font-bold text-slate-400 block truncate">
+                <span className="text-[9px] uppercase font-bold text-[var(--office-text-muted)] block truncate">
                   {isUserAway ? '★ (YOU)' : 'Away'}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 pt-1 border-t border-slate-800/60">
+          <div className="flex items-center justify-between text-[10px] font-mono text-[var(--office-text-muted)] pt-1 border-t border-[var(--office-divider)]">
             <span className="truncate max-w-[180px]">🏟️ {venueDisplay}</span>
             <span>{formatCareerDate(fixture.date, save.settings.dateFormat, 'short')}</span>
           </div>
         </article>
 
         {/* Compact Goalscorers */}
-        <section className="bg-slate-900/50 border border-slate-850 rounded-2xl p-2.5 sm:p-3 space-y-1.5">
-          <div className="text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
+        <section className="office-subcard rounded-2xl p-2.5 sm:p-3 space-y-1.5">
+          <div className="text-[10px] font-black uppercase text-[var(--office-text-muted)] tracking-wider flex items-center gap-1.5">
             <span>⚽</span> Goalscorers
           </div>
 
           {homeScore + awayScore === 0 ? (
-            <div className="text-center py-1.5 text-xs text-slate-400 italic">
+            <div className="text-center py-1.5 text-xs text-[var(--office-text-muted)] italic">
               Goalless draw — Stalemate at {venueDisplay.split(' ')[0]}.
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-2 text-xs divide-x divide-slate-800/80 pt-0.5">
+            <div className="grid grid-cols-2 gap-2 text-xs divide-x divide-[var(--office-divider)] pt-0.5">
               {/* Home Scorers */}
               <div className="space-y-1 pr-1.5 max-h-20 overflow-y-auto scrollbar-none">
                 {homeScorers.length > 0 ? (
                   homeScorers.map((s, idx) => (
-                    <div key={idx} className="flex items-center gap-1 text-[11px] text-slate-200">
+                    <div key={idx} className="flex items-center gap-1 text-[11px] text-[var(--office-text-primary)]">
                       <span>⚽</span>
-                      <span className="font-semibold truncate">{s.name}</span>
-                      <span className="text-slate-400 text-[10px] shrink-0 font-mono">({s.minute}&apos;)</span>
+                      <span className="font-bold truncate">{s.name}</span>
+                      <span className="text-[var(--office-text-muted)] text-[10px] shrink-0 font-mono">({s.minute}&apos;)</span>
                     </div>
                   ))
                 ) : (
-                  <span className="text-[10px] text-slate-500 italic">—</span>
+                  <span className="text-[10px] text-[var(--office-text-muted)] italic">—</span>
                 )}
               </div>
 
@@ -242,31 +243,31 @@ export function InstantMatchSummaryModal({
               <div className="space-y-1 pl-2 max-h-20 overflow-y-auto scrollbar-none">
                 {awayScorers.length > 0 ? (
                   awayScorers.map((s, idx) => (
-                    <div key={idx} className="flex items-center gap-1 text-[11px] text-slate-200">
+                    <div key={idx} className="flex items-center gap-1 text-[11px] text-[var(--office-text-primary)]">
                       <span>⚽</span>
-                      <span className="font-semibold truncate">{s.name}</span>
-                      <span className="text-slate-400 text-[10px] shrink-0 font-mono">({s.minute}&apos;)</span>
+                      <span className="font-bold truncate">{s.name}</span>
+                      <span className="text-[var(--office-text-muted)] text-[10px] shrink-0 font-mono">({s.minute}&apos;)</span>
                     </div>
                   ))
                 ) : (
-                  <span className="text-[10px] text-slate-500 italic">—</span>
+                  <span className="text-[10px] text-[var(--office-text-muted)] italic">—</span>
                 )}
               </div>
             </div>
           )}
         </section>
 
-        {/* Man of the Match Pill */}
-        <section className="bg-amber-950/20 border border-amber-500/30 rounded-xl px-3 py-2 flex items-center justify-between gap-2 text-xs">
+        {/* Man of the Match Spotlight */}
+        <section className="bg-gradient-to-r from-amber-50 via-amber-100/40 to-orange-50 border border-amber-200/80 rounded-xl px-3 py-2 flex items-center justify-between gap-2 text-xs">
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-base shrink-0">⭐</span>
             <div className="min-w-0 flex items-center gap-1.5 truncate">
-              <span className="text-[9px] font-black uppercase text-amber-400 shrink-0">MOTM:</span>
-              <span className="font-display font-black text-xs text-white truncate">{motm.name}</span>
-              <span className="text-[10px] text-slate-400 truncate">({getEffectiveClubName(motmClub, save.club)})</span>
+              <span className="text-[9px] font-black uppercase text-amber-700 shrink-0">MOTM:</span>
+              <span className="font-display font-extrabold text-xs text-[var(--office-text-primary)] truncate">{motm.name}</span>
+              <span className="text-[10px] text-[var(--office-text-muted)] truncate">({getEffectiveClubName(motmClub, save.club)})</span>
             </div>
           </div>
-          <div className="bg-amber-500 text-slate-950 px-2 py-0.5 rounded-lg font-display font-black text-[10px] shrink-0 shadow-sm">
+          <div className="bg-amber-500 text-white px-2 py-0.5 rounded-lg font-display font-black text-[10px] shrink-0 shadow-2xs">
             {motm.rating.toFixed(1)} ★
           </div>
         </section>
@@ -276,34 +277,38 @@ export function InstantMatchSummaryModal({
           <div className="flex gap-2">
             <button
               type="button"
+              data-office-ui="true"
               onClick={onViewDetailedDossier}
-              className="flex-1 py-2 px-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-850 hover:border-slate-700 text-slate-200 font-display font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1 transition-colors cursor-pointer"
+              className="office-subcard flex-1 py-2 px-2.5 rounded-xl hover:bg-indigo-50/50 text-[var(--office-text-primary)] font-display font-bold text-[11px] uppercase tracking-wider flex items-center justify-center gap-1 transition-colors cursor-pointer"
             >
               <span>📊 Full Dossier</span>
             </button>
             <button
               type="button"
+              data-office-ui="true"
               onClick={() => handleNavigate('table')}
-              className="flex-1 py-2 px-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-850 hover:border-slate-700 text-slate-200 font-display font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1 transition-colors cursor-pointer"
+              className="office-subcard flex-1 py-2 px-2.5 rounded-xl hover:bg-indigo-50/50 text-[var(--office-text-primary)] font-display font-bold text-[11px] uppercase tracking-wider flex items-center justify-center gap-1 transition-colors cursor-pointer"
             >
               <span>📈 Table</span>
             </button>
             <button
               type="button"
+              data-office-ui="true"
               onClick={() => handleNavigate('squad')}
-              className="flex-1 py-2 px-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-850 hover:border-slate-700 text-slate-200 font-display font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1 transition-colors cursor-pointer"
+              className="office-subcard flex-1 py-2 px-2.5 rounded-xl hover:bg-indigo-50/50 text-[var(--office-text-primary)] font-display font-bold text-[11px] uppercase tracking-wider flex items-center justify-center gap-1 transition-colors cursor-pointer"
             >
               <span>👥 Squad</span>
             </button>
           </div>
 
-          {/* Primary Action Button: "Close" */}
+          {/* Primary Action Button: "Continue" */}
           <button
             type="button"
+            data-office-ui="true"
             onClick={onClose}
-            className="w-full py-2.5 px-4 rounded-xl bg-slate-900 border border-slate-750 hover:bg-slate-850 hover:border-slate-700 text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md cursor-pointer transition-colors"
+            className="office-action-btn-primary w-full py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md cursor-pointer transition-colors"
           >
-            <span>Close</span>
+            <span>Continue</span>
           </button>
         </nav>
       </div>

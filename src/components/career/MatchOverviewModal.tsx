@@ -123,26 +123,29 @@ export function MatchOverviewModal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto"
+      className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-fade-in"
       onClick={onClose}
     >
       <div
-        className="bg-slate-950 border border-slate-800 rounded-3xl p-5 sm:p-7 max-w-xl w-full space-y-6 shadow-2xl relative my-auto max-h-[92vh] overflow-y-auto scrollbar-none"
+        data-office-ui="true"
+        className="office-floating-card rounded-3xl p-5 sm:p-7 max-w-xl w-full space-y-5 shadow-2xl relative my-auto max-h-[92vh] overflow-y-auto scrollbar-none border border-indigo-100/80"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Bar */}
-        <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
+        <div className="flex items-center justify-between border-b border-[var(--office-divider)] pb-4">
           <div className="space-y-0.5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-blue-400 font-display">
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#1d5eff] font-display">
               {type === 'result' ? '📊 Match Result & Statistics' : '📋 Pre-Match Tactical Dossier'}
             </span>
-            <h2 className="text-sm sm:text-base font-display font-black text-white uppercase tracking-tight">
+            <h2 className="text-sm sm:text-base font-display font-extrabold text-[var(--office-text-primary)] uppercase tracking-tight">
               {roundTitle} • {competitionTitle}
             </h2>
           </div>
           <button
+            type="button"
+            data-office-ui="true"
             onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-850 hover:border-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer text-xs"
+            className="office-subcard w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] transition-colors cursor-pointer"
             title="Close"
           >
             ✕
@@ -150,13 +153,13 @@ export function MatchOverviewModal({
         </div>
 
         {/* Clash & Scoreline Banner */}
-        <div className="bg-slate-900/70 border border-slate-850 rounded-2xl p-4 sm:p-5 space-y-3">
+        <div className="office-subcard rounded-2xl p-4 sm:p-5 space-y-3 bg-gradient-to-br from-white via-indigo-50/20 to-purple-50/30 border border-indigo-100/70">
           <div className="flex items-center justify-between gap-3 sm:gap-6">
             {/* Home Club */}
             <div className="flex-1 flex flex-col items-center text-center space-y-1.5 min-w-0">
               <div
                 data-force-white="true"
-                className="club-crest w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-white/20 shadow-lg flex items-center justify-center text-xs sm:text-sm font-black text-white shrink-0"
+                className="club-crest w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-white/60 shadow-lg flex items-center justify-center text-xs sm:text-sm font-black text-white shrink-0"
                 style={{
                   background: `linear-gradient(135deg, ${homeClub.primaryColor}, ${homeClub.secondaryColor})`,
                 }}
@@ -164,10 +167,10 @@ export function MatchOverviewModal({
                 {homeClub.shortName}
               </div>
               <div className="min-w-0 w-full">
-                <h4 className="font-display font-black text-xs sm:text-sm text-white truncate">
+                <h4 className="font-display font-extrabold text-xs sm:text-sm text-[var(--office-text-primary)] truncate">
                   {getEffectiveClubName(homeClub, save.club)}
                 </h4>
-                <span className="text-[9px] uppercase font-bold text-slate-400 block truncate">
+                <span className="text-[9px] uppercase font-bold text-[var(--office-text-muted)] block truncate">
                   {isUserHome ? '★ (YOU • HOME)' : 'Home'}
                 </span>
               </div>
@@ -177,22 +180,22 @@ export function MatchOverviewModal({
             <div className="flex flex-col items-center justify-center shrink-0 px-2 space-y-1">
               {fixture.played ? (
                 <div className="flex flex-col items-center gap-1">
-                  <div className="bg-slate-950 border border-slate-750 px-3.5 py-1.5 rounded-xl font-mono font-black text-lg sm:text-2xl text-foreground shadow-inner">
+                  <div className="bg-white border-2 border-indigo-200/80 px-3.5 py-1.5 rounded-xl font-mono font-black text-lg sm:text-2xl text-[var(--office-text-primary)] shadow-sm">
                     {fixture.homeScore} - {fixture.awayScore}
                   </div>
                   {cupFixture?.penalties && (
-                    <span className="text-[10px] font-mono text-amber-400 font-bold">
+                    <span className="text-[10px] font-mono text-amber-600 font-bold">
                       ({cupFixture.penalties.homePenalties} - {cupFixture.penalties.awayPenalties} pens)
                     </span>
                   )}
                   {isUserMatch && (
                     <span
-                      className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
+                      className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${
                         userWon
-                          ? 'bg-emerald-500 text-slate-950'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                           : isDraw
-                          ? 'bg-amber-500 text-slate-950'
-                          : 'bg-rose-500 text-white'
+                          ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : 'bg-rose-50 text-rose-700 border-rose-200'
                       }`}
                     >
                       {userWon ? 'VICTORY' : isDraw ? 'DRAW' : 'DEFEAT'}
@@ -200,21 +203,20 @@ export function MatchOverviewModal({
                   )}
                 </div>
               ) : (
-                <span className="text-xl sm:text-2xl font-display font-black text-blue-400 tracking-wider">
+                <span className="text-xl sm:text-2xl font-display font-black text-[#1d5eff] tracking-wider">
                   VS
                 </span>
               )}
-              <span className="text-[10px] text-slate-400 font-medium truncate max-w-[130px] sm:max-w-[170px] text-center">
+              <span className="text-[10px] text-[var(--office-text-muted)] font-medium truncate max-w-[130px] sm:max-w-[170px] text-center">
                 🏟️ {venueDisplay}
               </span>
-
             </div>
 
             {/* Away Club */}
             <div className="flex-1 flex flex-col items-center text-center space-y-1.5 min-w-0">
               <div
                 data-force-white="true"
-                className="club-crest w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-white/20 shadow-lg flex items-center justify-center text-xs sm:text-sm font-black text-white shrink-0"
+                className="club-crest w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-white/60 shadow-lg flex items-center justify-center text-xs sm:text-sm font-black text-white shrink-0"
                 style={{
                   background: `linear-gradient(135deg, ${awayClub.primaryColor}, ${awayClub.secondaryColor})`,
                 }}
@@ -222,69 +224,69 @@ export function MatchOverviewModal({
                 {awayClub.shortName}
               </div>
               <div className="min-w-0 w-full">
-                <h4 className="font-display font-black text-xs sm:text-sm text-white truncate">
+                <h4 className="font-display font-extrabold text-xs sm:text-sm text-[var(--office-text-primary)] truncate">
                   {getEffectiveClubName(awayClub, save.club)}
                 </h4>
-                <span className="text-[9px] uppercase font-bold text-slate-400 block truncate">
+                <span className="text-[9px] uppercase font-bold text-[var(--office-text-muted)] block truncate">
                   {isUserAway ? '★ (YOU • AWAY)' : 'Away'}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="text-center text-[11px] font-mono text-slate-400 pt-1 border-t border-slate-800/60">
+          <div className="text-center text-[11px] font-mono text-[var(--office-text-muted)] pt-1 border-t border-[var(--office-divider)]">
             {formatCareerDate(fixture.date, save.settings.dateFormat, 'long')}
           </div>
         </div>
 
         {/* MODE A: PLAYED MATCH RESULTS & STATISTICS */}
         {type === 'result' && (
-          <div className="space-y-5">
+          <div className="space-y-4">
             {/* Goalscorers Grid */}
-            <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-4 space-y-2">
-              <div className="text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
+            <div className="office-subcard rounded-2xl p-4 space-y-2">
+              <div className="text-[10px] font-black uppercase text-[var(--office-text-muted)] tracking-wider flex items-center gap-1.5">
                 <span>⚽</span> Goalscorers & Key Events
               </div>
 
               {(fixture.homeScore || 0) + (fixture.awayScore || 0) === 0 ? (
-                <div className="text-center py-2 text-xs text-slate-400 italic">
+                <div className="text-center py-2 text-xs text-[var(--office-text-muted)] italic">
                   No goals scored in this match (Goalless Draw).
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-3 text-xs divide-x divide-slate-800/80 pt-1">
+                <div className="grid grid-cols-2 gap-3 text-xs divide-x divide-[var(--office-divider)] pt-1">
                   {/* Home Scorers */}
                   <div className="space-y-1.5 pr-2">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase block truncate">
+                    <span className="text-[10px] font-bold text-[var(--office-text-muted)] uppercase block truncate">
                       {getEffectiveClubName(homeClub, save.club)} ({homeScorers.length})
                     </span>
                     {homeScorers.length > 0 ? (
                       homeScorers.map((s, idx) => (
-                        <div key={idx} className="flex items-center gap-1 text-[11px] text-slate-200">
+                        <div key={idx} className="flex items-center gap-1 text-[11px] text-[var(--office-text-primary)]">
                           <span>⚽</span>
-                          <span className="font-semibold">{s.name}</span>
-                          <span className="text-slate-400 text-[10px]">({s.minute}&apos;)</span>
+                          <span className="font-bold">{s.name}</span>
+                          <span className="text-[var(--office-text-muted)] text-[10px]">({s.minute}&apos;)</span>
                         </div>
                       ))
                     ) : (
-                      <span className="text-[10px] text-slate-500 italic">—</span>
+                      <span className="text-[10px] text-[var(--office-text-muted)] italic">—</span>
                     )}
                   </div>
 
                   {/* Away Scorers */}
                   <div className="space-y-1.5 pl-3">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase block truncate">
+                    <span className="text-[10px] font-bold text-[var(--office-text-muted)] uppercase block truncate">
                       {getEffectiveClubName(awayClub, save.club)} ({awayScorers.length})
                     </span>
                     {awayScorers.length > 0 ? (
                       awayScorers.map((s, idx) => (
-                        <div key={idx} className="flex items-center gap-1 text-[11px] text-slate-200">
+                        <div key={idx} className="flex items-center gap-1 text-[11px] text-[var(--office-text-primary)]">
                           <span>⚽</span>
-                          <span className="font-semibold">{s.name}</span>
-                          <span className="text-slate-400 text-[10px]">({s.minute}&apos;)</span>
+                          <span className="font-bold">{s.name}</span>
+                          <span className="text-[var(--office-text-muted)] text-[10px]">({s.minute}&apos;)</span>
                         </div>
                       ))
                     ) : (
-                      <span className="text-[10px] text-slate-500 italic">—</span>
+                      <span className="text-[10px] text-[var(--office-text-muted)] italic">—</span>
                     )}
                   </div>
                 </div>
@@ -292,47 +294,47 @@ export function MatchOverviewModal({
             </div>
 
             {/* Man of the Match Spotlight */}
-            <div className="bg-amber-950/20 border border-amber-500/30 rounded-2xl p-3.5 flex items-center justify-between gap-3 text-xs">
+            <div className="bg-gradient-to-r from-amber-50 via-amber-100/40 to-orange-50 border border-amber-200/80 rounded-2xl p-3.5 flex items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-2.5">
                 <span className="text-xl">⭐</span>
                 <div>
-                  <span className="text-[9px] font-black uppercase text-amber-400 tracking-wider block">
+                  <span className="text-[9px] font-black uppercase text-amber-700 tracking-wider block">
                     Man of the Match
                   </span>
-                  <span className="font-display font-black text-sm text-white">
+                  <span className="font-display font-extrabold text-sm text-[var(--office-text-primary)]">
                     {motm.name}
                   </span>
-                  <span className="text-[10px] text-slate-400 block">
+                  <span className="text-[10px] text-[var(--office-text-muted)] block">
                     {getEffectiveClubName(motmClub, save.club)}
                   </span>
                 </div>
               </div>
-              <div className="bg-amber-500 text-slate-950 px-2.5 py-1 rounded-xl font-display font-black text-xs shadow-md">
+              <div className="bg-amber-500 text-white px-2.5 py-1 rounded-xl font-display font-black text-xs shadow-2xs">
                 {motm.rating.toFixed(1)} ★
               </div>
             </div>
 
             {/* Manager Match Statistics */}
-            <div className="bg-slate-900/50 border border-slate-850 rounded-2xl p-4 sm:p-5 space-y-4">
-              <div className="text-[10px] font-black uppercase text-slate-300 tracking-wider flex items-center justify-between">
+            <div className="office-subcard rounded-2xl p-4 sm:p-5 space-y-4">
+              <div className="text-[10px] font-black uppercase text-[var(--office-text-muted)] tracking-wider flex items-center justify-between">
                 <span>📊 Match Statistics Comparison</span>
-                <span className="text-[9px] text-slate-500">Official Data</span>
+                <span className="text-[9px] text-[var(--office-text-muted)]">Official Match Data</span>
               </div>
 
               {/* Possession Comparison Bar */}
               <div className="space-y-1.5">
                 <div className="flex justify-between text-xs font-mono font-bold">
-                  <span className="text-blue-400">{stats.homePossession}%</span>
-                  <span className="text-[10px] font-sans uppercase font-bold text-slate-400">Possession</span>
-                  <span className="text-blue-400">{stats.awayPossession}%</span>
+                  <span className="text-[#1d5eff]">{stats.homePossession}%</span>
+                  <span className="text-[10px] font-sans uppercase font-bold text-[var(--office-text-muted)]">Possession</span>
+                  <span className="text-[#7c3aed]">{stats.awayPossession}%</span>
                 </div>
-                <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden flex">
+                <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden flex">
                   <div
-                    className="h-full bg-blue-500 transition-all duration-500"
+                    className="h-full bg-[#1d5eff] transition-all duration-500"
                     style={{ width: `${stats.homePossession}%` }}
                   />
                   <div
-                    className="h-full bg-blue-500 transition-all duration-500"
+                    className="h-full bg-[#7c3aed] transition-all duration-500"
                     style={{ width: `${stats.awayPossession}%` }}
                   />
                 </div>
@@ -346,10 +348,10 @@ export function MatchOverviewModal({
                   { label: 'Corners', home: stats.homeCorners, away: stats.awayCorners },
                   { label: 'Fouls Committed', home: stats.homeFouls, away: stats.awayFouls },
                 ].map((row, idx) => (
-                  <div key={idx} className="flex items-center justify-between py-1 border-b border-slate-850/60 last:border-b-0">
-                    <span className="font-mono font-bold text-slate-200 w-12 text-left">{row.home}</span>
-                    <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wide">{row.label}</span>
-                    <span className="font-mono font-bold text-slate-200 w-12 text-right">{row.away}</span>
+                  <div key={idx} className="flex items-center justify-between py-1.5 border-b border-[var(--office-divider)] last:border-b-0">
+                    <span className="font-mono font-bold text-[var(--office-text-primary)] w-12 text-left">{row.home}</span>
+                    <span className="text-[11px] font-bold text-[var(--office-text-muted)] uppercase tracking-wide">{row.label}</span>
+                    <span className="font-mono font-bold text-[var(--office-text-primary)] w-12 text-right">{row.away}</span>
                   </div>
                 ))}
               </div>
@@ -359,39 +361,39 @@ export function MatchOverviewModal({
 
         {/* MODE B: PRE-MATCH TACTICAL DOSSIER */}
         {type === 'preview' && (
-          <div className="space-y-5">
+          <div className="space-y-4">
             {/* Standings & Head-to-Head Form Comparison */}
-            <div className="bg-slate-900/60 border border-slate-850 rounded-2xl p-4 space-y-3">
-              <div className="text-[10px] font-black uppercase text-blue-400 tracking-wider flex items-center justify-between">
+            <div className="office-subcard rounded-2xl p-4 space-y-3">
+              <div className="text-[10px] font-black uppercase text-[#1d5eff] tracking-wider flex items-center justify-between">
                 <span>📈 League Table Standing & Form Guide</span>
-                <span className="text-slate-400 text-[10px] font-mono">Top Flight</span>
+                <span className="text-[var(--office-text-muted)] text-[10px] font-mono">Top Flight</span>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 text-xs divide-x divide-slate-800/80">
+              <div className="grid grid-cols-2 gap-3 text-xs divide-x divide-[var(--office-divider)]">
                 {/* Home Club Standing */}
                 <div className="space-y-1.5 pr-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase text-slate-400">Position</span>
-                    <span className="font-display font-black text-amber-400 text-sm">#{homeRank || '-'}</span>
+                    <span className="text-[10px] font-bold uppercase text-[var(--office-text-muted)]">Position</span>
+                    <span className="font-display font-black text-amber-600 text-sm">#{homeRank || '-'}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase text-slate-400">Points</span>
-                    <span className="font-mono font-bold text-slate-200">{homeStanding?.points ?? 0} pts</span>
+                    <span className="text-[10px] font-bold uppercase text-[var(--office-text-muted)]">Points</span>
+                    <span className="font-mono font-bold text-[var(--office-text-primary)]">{homeStanding?.points ?? 0} pts</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase text-slate-400">Goal Diff</span>
-                    <span className="font-mono font-bold text-slate-200">
+                    <span className="text-[10px] font-bold uppercase text-[var(--office-text-muted)]">Goal Diff</span>
+                    <span className="font-mono font-bold text-[var(--office-text-primary)]">
                       {(homeStanding?.goalDifference ?? 0) > 0 ? `+${homeStanding?.goalDifference}` : homeStanding?.goalDifference ?? 0}
                     </span>
                   </div>
                   <div className="pt-1">
-                    <span className="text-[9px] uppercase font-bold text-slate-500 block mb-1">Recent Form</span>
+                    <span className="text-[9px] uppercase font-bold text-[var(--office-text-muted)] block mb-1">Recent Form</span>
                     <div className="flex gap-1">
                       {(homeStanding?.form || ['W', 'D', 'W', 'L', 'W']).map((f, i) => (
                         <span
                           key={i}
                           className={`w-4 h-4 rounded text-[9px] font-black flex items-center justify-center ${
-                            f === 'W' ? 'bg-emerald-500 text-slate-950' : f === 'D' ? 'bg-amber-500 text-slate-950' : 'bg-rose-500 text-white'
+                            f === 'W' ? 'bg-emerald-500 text-white' : f === 'D' ? 'bg-amber-500 text-white' : 'bg-rose-500 text-white'
                           }`}
                         >
                           {f}
@@ -404,27 +406,27 @@ export function MatchOverviewModal({
                 {/* Away Club Standing */}
                 <div className="space-y-1.5 pl-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase text-slate-400">Position</span>
-                    <span className="font-display font-black text-amber-400 text-sm">#{awayRank || '-'}</span>
+                    <span className="text-[10px] font-bold uppercase text-[var(--office-text-muted)]">Position</span>
+                    <span className="font-display font-black text-amber-600 text-sm">#{awayRank || '-'}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase text-slate-400">Points</span>
-                    <span className="font-mono font-bold text-slate-200">{awayStanding?.points ?? 0} pts</span>
+                    <span className="text-[10px] font-bold uppercase text-[var(--office-text-muted)]">Points</span>
+                    <span className="font-mono font-bold text-[var(--office-text-primary)]">{awayStanding?.points ?? 0} pts</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase text-slate-400">Goal Diff</span>
-                    <span className="font-mono font-bold text-slate-200">
+                    <span className="text-[10px] font-bold uppercase text-[var(--office-text-muted)]">Goal Diff</span>
+                    <span className="font-mono font-bold text-[var(--office-text-primary)]">
                       {(awayStanding?.goalDifference ?? 0) > 0 ? `+${awayStanding?.goalDifference}` : awayStanding?.goalDifference ?? 0}
                     </span>
                   </div>
                   <div className="pt-1">
-                    <span className="text-[9px] uppercase font-bold text-slate-500 block mb-1">Recent Form</span>
+                    <span className="text-[9px] uppercase font-bold text-[var(--office-text-muted)] block mb-1">Recent Form</span>
                     <div className="flex gap-1">
                       {(awayStanding?.form || ['D', 'W', 'L', 'W', 'D']).map((f, i) => (
                         <span
                           key={i}
                           className={`w-4 h-4 rounded text-[9px] font-black flex items-center justify-center ${
-                            f === 'W' ? 'bg-emerald-500 text-slate-950' : f === 'D' ? 'bg-amber-500 text-slate-950' : 'bg-rose-500 text-white'
+                            f === 'W' ? 'bg-emerald-500 text-white' : f === 'D' ? 'bg-amber-500 text-white' : 'bg-rose-500 text-white'
                           }`}
                         >
                           {f}
@@ -437,54 +439,57 @@ export function MatchOverviewModal({
             </div>
 
             {/* Tactical Intel & Key Threat Card */}
-            <div className="bg-slate-900/50 border border-slate-850 rounded-2xl p-4 space-y-3">
-              <div className="text-[10px] font-black uppercase text-slate-300 tracking-wider flex items-center gap-1.5">
+            <div className="office-subcard rounded-2xl p-4 space-y-3">
+              <div className="text-[10px] font-black uppercase text-[var(--office-text-muted)] tracking-wider flex items-center gap-1.5">
                 <span>🛡️</span> Opponent Scouting Report & Danger Player
               </div>
 
-              <div className="flex items-center justify-between bg-slate-950/70 border border-slate-800 p-3 rounded-xl text-xs">
+              <div className="flex items-center justify-between bg-gradient-to-r from-amber-50/70 via-amber-100/30 to-orange-50/50 border border-amber-200/80 p-3 rounded-xl text-xs">
                 <div className="space-y-0.5">
-                  <span className="text-[9px] uppercase font-bold text-amber-400">Danger Man</span>
-                  <div className="font-display font-black text-sm text-white">
+                  <span className="text-[9px] uppercase font-bold text-amber-700">Danger Man</span>
+                  <div className="font-display font-extrabold text-sm text-[var(--office-text-primary)]">
                     {dangerPlayer.name}
                   </div>
-                  <span className="text-[10px] text-slate-400">
+                  <span className="text-[10px] text-[var(--office-text-muted)]">
                     {dangerPlayer.position} • {getEffectiveClubName(opponentClub, save.club)}
                   </span>
                 </div>
                 <div className="text-right">
-                  <span className="text-[9px] uppercase font-bold text-slate-500 block">Rating</span>
-                  <span className="font-mono font-black text-lg text-blue-400">
+                  <span className="text-[9px] uppercase font-bold text-[var(--office-text-muted)] block">Rating</span>
+                  <span className="font-mono font-black text-lg text-[#1d5eff]">
                     {dangerPlayer.rating}
                   </span>
                 </div>
               </div>
 
-              <p className="text-[11px] text-slate-400 leading-relaxed">
-                Tactical Mentality: <strong className="text-slate-200">Balanced / High Pressing</strong>.
-                Expect a competitive encounter at {venueDisplay}. Managers must ensure defensive discipline and manage fitness rotations carefully.
+              <p className="text-[11px] text-[var(--office-text-secondary)] leading-relaxed">
+                Tactical Mentality: <strong className="text-[var(--office-text-primary)]">Balanced / High Pressing</strong>.
+                Expect a competitive encounter at {venueDisplay}. Managers must ensure defensive discipline and manage squad rotation carefully.
               </p>
-
             </div>
 
             {/* Matchday Action Buttons */}
             {onPlayInteractiveMatch && onPlayInstantMatch && (
               <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
                 <button
+                  type="button"
+                  data-office-ui="true"
                   onClick={() => {
                     onClose();
                     onPlayInteractiveMatch();
                   }}
-                  className="flex-1 py-3 px-5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-blue-500/25 cursor-pointer"
+                  className="office-action-btn-primary flex-1 py-3 px-5 rounded-xl font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg cursor-pointer"
                 >
                   <span>▶ Play Match Now</span>
                 </button>
                 <button
+                  type="button"
+                  data-office-ui="true"
                   onClick={() => {
                     onClose();
                     onPlayInstantMatch();
                   }}
-                  className="py-3 px-4 rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-850 text-slate-200 font-display font-black text-xs uppercase tracking-wider cursor-pointer"
+                  className="office-subcard py-3 px-4 rounded-xl hover:bg-indigo-50/50 text-[var(--office-text-primary)] font-display font-bold text-xs uppercase tracking-wider cursor-pointer"
                 >
                   <span>⚡ Instant Result</span>
                 </button>
@@ -494,10 +499,12 @@ export function MatchOverviewModal({
         )}
 
         {/* Modal Footer */}
-        <div className="pt-2 border-t border-slate-850/80 flex justify-end">
+        <div className="pt-2 border-t border-[var(--office-divider)] flex justify-end">
           <button
+            type="button"
+            data-office-ui="true"
             onClick={onClose}
-            className="py-2.5 px-5 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-300 font-display font-black text-xs uppercase tracking-wider transition-colors cursor-pointer"
+            className="office-subcard py-2.5 px-5 rounded-xl hover:bg-indigo-50/50 text-[var(--office-text-primary)] font-display font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
           >
             Close
           </button>

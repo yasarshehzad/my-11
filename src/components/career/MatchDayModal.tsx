@@ -338,33 +338,38 @@ export function MatchDayModal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+      className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fade-in"
     >
-      <div className="bg-slate-950 border border-slate-800 rounded-3xl max-w-2xl w-full p-5 sm:p-7 space-y-6 shadow-2xl relative my-auto">
+      <div
+        data-office-ui="true"
+        className="office-floating-card rounded-3xl max-w-2xl w-full p-5 sm:p-7 space-y-5 shadow-2xl relative my-auto border border-indigo-100/80"
+      >
         {/* Header Bar */}
-        <header className="flex justify-between items-center border-b border-slate-900 pb-3">
+        <header className="flex justify-between items-center border-b border-[var(--office-divider)] pb-3">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-blue-600 dark:text-blue-400 font-display font-black text-xs uppercase tracking-wider">
+            <span className="text-[#1d5eff] font-display font-black text-xs uppercase tracking-wider">
               {'competitionName' in fixture
                 ? (fixture as CupFixture).roundName
                 : `Matchday ${fixture.round}`}
             </span>
-            <span className="text-slate-600">•</span>
-            <span className="text-xs text-slate-400 font-medium">
+            <span className="text-[var(--office-text-muted)]">•</span>
+            <span className="text-xs text-[var(--office-text-secondary)] font-semibold">
               {'competitionName' in fixture
                 ? (fixture as CupFixture).competitionName
                 : 'English Top Flight'}
             </span>
-            <span className="text-slate-600">•</span>
-            <span className="text-xs font-mono text-slate-400 font-medium">
+            <span className="text-[var(--office-text-muted)]">•</span>
+            <span className="text-xs font-mono text-[var(--office-text-muted)] font-medium">
               📅 {formatCareerDate(fixture.date, save.settings?.dateFormat)}
             </span>
           </div>
 
           {matchState === 'prematch' && (
             <button
+              type="button"
+              data-office-ui="true"
               onClick={onClose}
-              className="text-slate-500 hover:text-white text-xs font-bold cursor-pointer"
+              className="office-subcard py-1 px-2.5 rounded-lg text-xs font-bold text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] cursor-pointer"
             >
               ✕ Exit
             </button>
@@ -373,31 +378,32 @@ export function MatchDayModal({
 
         {/* PREMATCH VIEW */}
         {matchState === 'prematch' && (
-          <div className="space-y-6">
+          <div className="space-y-5">
             {/* Clash Presentation */}
-            <div className="grid grid-cols-3 gap-2 items-center text-center py-4 bg-slate-900/40 border border-slate-850 rounded-2xl p-4">
+            <div className="office-subcard rounded-2xl p-4 grid grid-cols-3 gap-2 items-center text-center bg-gradient-to-br from-white via-indigo-50/20 to-purple-50/30 border border-indigo-100/70">
               {/* Home */}
               <div className="flex flex-col items-center space-y-1.5">
                 <div
-                  className="w-12 h-12 rounded-full border-2 border-white/20 shadow-md flex items-center justify-center text-base font-black text-white"
+                  data-force-white="true"
+                  className="w-12 h-12 rounded-full border-2 border-white/60 shadow-md flex items-center justify-center text-base font-black text-white"
                   style={{
                     background: `linear-gradient(135deg, ${homeClub.primaryColor}, ${homeClub.secondaryColor})`,
                   }}
                 >
                   {homeClub.shortName}
                 </div>
-                <div className="font-display font-black text-sm text-white leading-tight">
+                <div className="font-display font-extrabold text-sm text-[var(--office-text-primary)] leading-tight">
                   {getEffectiveClubName(homeClub)}
                 </div>
-                <div className="text-[10px] text-slate-400 uppercase font-bold">
+                <div className="text-[10px] text-[var(--office-text-muted)] uppercase font-bold">
                   {isUserHome ? (isNeutralWembley ? 'YOU • NEUTRAL' : 'YOU • HOME') : (isNeutralWembley ? 'Neutral' : 'Home')}
                 </div>
               </div>
 
               {/* VS & Venue */}
               <div className="space-y-1">
-                <div className="text-xl font-display font-black text-blue-600 dark:text-blue-400">VS</div>
-                <div className="text-[10px] text-slate-400 truncate">
+                <div className="text-xl font-display font-black text-[#1d5eff]">VS</div>
+                <div className="text-[10px] text-[var(--office-text-muted)] truncate">
                   🏟️ {venueDisplay}
                 </div>
               </div>
@@ -405,37 +411,39 @@ export function MatchDayModal({
               {/* Away */}
               <div className="flex flex-col items-center space-y-1.5">
                 <div
-                  className="w-12 h-12 rounded-full border-2 border-white/20 shadow-md flex items-center justify-center text-base font-black text-white"
+                  data-force-white="true"
+                  className="w-12 h-12 rounded-full border-2 border-white/60 shadow-md flex items-center justify-center text-base font-black text-white"
                   style={{
                     background: `linear-gradient(135deg, ${awayClub.primaryColor}, ${awayClub.secondaryColor})`,
                   }}
                 >
                   {awayClub.shortName}
                 </div>
-                <div className="font-display font-black text-sm text-white leading-tight">
+                <div className="font-display font-extrabold text-sm text-[var(--office-text-primary)] leading-tight">
                   {getEffectiveClubName(awayClub)}
                 </div>
-                <div className="text-[10px] text-slate-400 uppercase font-bold">
+                <div className="text-[10px] text-[var(--office-text-muted)] uppercase font-bold">
                   {!isUserHome ? (isNeutralWembley ? 'YOU • NEUTRAL' : 'YOU • AWAY') : (isNeutralWembley ? 'Neutral' : 'Away')}
                 </div>
-
               </div>
             </div>
 
             {/* Tactical Mentality Selection */}
-            <div className="bg-slate-900/40 border border-slate-850 p-4 rounded-2xl space-y-2">
-              <label className="block text-xs font-display font-black uppercase text-slate-300">
+            <div className="office-subcard p-4 rounded-2xl space-y-2">
+              <label className="block text-xs font-display font-bold uppercase text-[var(--office-text-muted)]">
                 Team Tactical Mentality
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {(['defensive', 'balanced', 'attacking'] as const).map((m) => (
                   <button
                     key={m}
+                    type="button"
+                    data-office-ui="true"
                     onClick={() => setMentality(m)}
-                    className={`py-2 px-3 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all ${
+                    className={`py-2 px-3 rounded-xl text-xs font-display font-bold uppercase tracking-wider transition-all cursor-pointer ${
                       mentality === m
-                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-md'
-                        : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-white'
+                        ? 'office-action-btn-primary shadow-sm text-white'
+                        : 'office-subcard text-[var(--office-text-secondary)] hover:text-[var(--office-text-primary)] hover:bg-indigo-50/40'
                     }`}
                   >
                     {m}
@@ -447,24 +455,24 @@ export function MatchDayModal({
             {/* Starting 11 Confirmation */}
             <div className="space-y-2">
               <div className="flex justify-between items-center text-xs">
-                <span className="font-display font-black uppercase text-slate-300">
+                <span className="font-display font-bold uppercase text-[var(--office-text-muted)]">
                   Confirmed Starting XI ({starters.length})
                 </span>
-                <span className="text-slate-500 text-[10px]">Bench: {bench.length} subs</span>
+                <span className="text-[var(--office-text-muted)] text-[10px] font-medium">Bench: {bench.length} subs</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                 {starters.slice(0, 11).map((p) => (
                   <div
                     key={p.id}
-                    className="p-2 rounded-xl border border-slate-800 bg-slate-950/60 flex justify-between items-center"
+                    className="p-2 rounded-xl border border-indigo-50/80 bg-white/90 shadow-2xs flex justify-between items-center"
                   >
                     <div className="truncate">
-                      <div className="font-bold text-white truncate text-[11px]">{p.name}</div>
-                      <div className="text-[9px] text-slate-400">{p.position}</div>
+                      <div className="font-bold text-[var(--office-text-primary)] truncate text-[11px]">{p.name}</div>
+                      <div className="text-[9px] text-[var(--office-text-muted)]">{p.position}</div>
                     </div>
                     <div className="text-right flex-shrink-0 ml-1">
-                      <div className="font-display font-black text-blue-600 dark:text-blue-400 text-xs">{p.rating}</div>
-                      <div className="text-[8px] text-slate-400">{p.fitness}%</div>
+                      <div className="font-display font-black text-[#1d5eff] text-xs">{p.rating}</div>
+                      <div className="text-[8px] font-bold text-emerald-600">{p.fitness}%</div>
                     </div>
                   </div>
                 ))}
@@ -473,18 +481,19 @@ export function MatchDayModal({
 
             {/* Ineligibility Warning Banner */}
             {hasIneligiblePlayers && (
-              <div className="bg-rose-950/40 border border-rose-600/60 p-3.5 rounded-2xl space-y-2 text-xs">
-                <div className="flex items-center gap-2 text-rose-300 font-bold">
+              <div className="bg-rose-50 border border-rose-200 p-3.5 rounded-2xl space-y-2 text-xs">
+                <div className="flex items-center gap-2 text-rose-800 font-bold">
                   <span>⚠️</span>
                   <span>Unregistered Senior Player(s) in Matchday Squad</span>
                 </div>
-                <p className="text-[11px] text-rose-200/90 leading-relaxed">
-                  The following player(s) are not registered in your 25-man Premier League squad: <strong className="text-white">{[...ineligibleStarters, ...ineligibleBench].map((p) => p.name).join(', ')}</strong>. Unregistered senior players cannot participate in league fixtures.
+                <p className="text-[11px] text-rose-700 leading-relaxed">
+                  The following player(s) are not registered in your 25-man Premier League squad: <strong className="text-rose-950 font-bold">{[...ineligibleStarters, ...ineligibleBench].map((p) => p.name).join(', ')}</strong>. Unregistered senior players cannot participate in league fixtures.
                 </p>
                 <button
                   type="button"
+                  data-office-ui="true"
                   onClick={handleAutoPickEligible}
-                  className="py-1.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-blue-500/20 cursor-pointer"
+                  className="office-action-btn-primary py-1.5 px-3 rounded-xl font-display font-bold text-xs uppercase tracking-wider transition-all shadow-sm cursor-pointer"
                 >
                   ⚡ Auto-Pick Eligible Lineup
                 </button>
@@ -493,12 +502,14 @@ export function MatchDayModal({
 
             {/* Kick Off Button */}
             <button
+              type="button"
+              data-office-ui="true"
               onClick={handleKickOff}
               disabled={hasIneligiblePlayers}
-              className={`w-full py-3.5 px-6 rounded-2xl font-display font-black text-sm uppercase tracking-wider shadow-xl transition-all ${
+              className={`w-full py-3.5 px-6 rounded-2xl font-display font-black text-sm uppercase tracking-wider shadow-lg transition-all ${
                 hasIneligiblePlayers
-                  ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
-                  : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-xl shadow-blue-500/25 hover:scale-101 cursor-pointer'
+                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
+                  : 'office-action-btn-primary hover:scale-[1.01] active:scale-[0.99] cursor-pointer'
               }`}
             >
               {hasIneligiblePlayers ? '🚫 Lineup Ineligible (Resolve Registration)' : '⚽ Kick Off Match'}
@@ -508,19 +519,19 @@ export function MatchDayModal({
 
         {/* LIVE MATCH, HALFTIME & FULLTIME VIEW */}
         {(matchState === 'live' || matchState === 'halftime' || matchState === 'fulltime') && (
-          <div className="space-y-6">
+          <div className="space-y-5">
             {/* Live Scoreboard */}
-            <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-5 text-center space-y-2 shadow-xl">
+            <div className="office-subcard rounded-3xl p-5 text-center space-y-3 shadow-md bg-gradient-to-br from-white via-indigo-50/30 to-purple-50/30 border border-indigo-100">
               <div className="flex justify-center items-center gap-2">
                 <span
                   className={`text-[11px] font-mono font-black uppercase tracking-widest px-3 py-0.5 rounded-full border ${
                     matchState === 'fulltime'
-                      ? 'text-white bg-slate-800/80 border-slate-700'
+                      ? 'text-[var(--office-text-primary)] bg-slate-100 border-slate-300'
                       : matchState === 'halftime'
-                      ? 'text-amber-300 bg-amber-950/80 border-amber-500/60 font-display'
+                      ? 'text-amber-800 bg-amber-50 border-amber-300 font-display'
                       : isPaused
-                      ? 'text-amber-400 bg-amber-950/40 border-amber-800/60'
-                      : 'text-blue-400 bg-blue-950/60 border-blue-900/60 animate-pulse'
+                      ? 'text-amber-800 bg-amber-50 border-amber-300'
+                      : 'text-[#1d5eff] bg-indigo-50 border-indigo-200 animate-pulse'
                   }`}
                 >
                   {matchState === 'fulltime'
@@ -532,49 +543,63 @@ export function MatchDayModal({
               </div>
 
               <div className="grid grid-cols-3 gap-2 items-center">
-                <div className="font-display font-black text-base text-white truncate">
+                <div className="font-display font-extrabold text-base text-[var(--office-text-primary)] truncate">
                   {getEffectiveClubName(homeClub)}
                 </div>
 
-                <div className="font-display font-black text-3xl sm:text-4xl text-white tracking-widest">
+                <div className="font-display font-black text-3xl sm:text-4xl text-[var(--office-text-primary)] tracking-widest">
                   {homeLiveGoals} - {awayLiveGoals}
                 </div>
 
-                <div className="font-display font-black text-base text-white truncate">
+                <div className="font-display font-extrabold text-base text-[var(--office-text-primary)] truncate">
                   {getEffectiveClubName(awayClub)}
                 </div>
               </div>
 
               {/* Speed / Pause / Skip Controls during Live match */}
               {matchState === 'live' && (
-                <div className="flex flex-wrap justify-center items-center gap-2 pt-2">
+                <div className="flex flex-wrap justify-center items-center gap-2 pt-2 border-t border-[var(--office-divider)]">
                   <button
+                    type="button"
+                    data-office-ui="true"
                     onClick={() => setIsPaused(!isPaused)}
-                    className="px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-850 hover:bg-slate-800 border border-slate-750 text-slate-200 hover:text-white cursor-pointer transition-colors"
+                    className="office-subcard px-3 py-1 rounded-lg text-[10px] font-bold text-[var(--office-text-primary)] hover:bg-indigo-50/50 cursor-pointer transition-colors"
                   >
                     {isPaused ? '▶ Resume' : '⏸ Pause'}
                   </button>
                   <div className="flex items-center gap-1">
                     <button
+                      type="button"
+                      data-office-ui="true"
                       onClick={() => setSimSpeed(1)}
-                      className={`px-2 py-1 rounded-lg text-[10px] font-bold cursor-pointer ${
-                        simSpeed === 1 ? 'bg-blue-600 text-white font-bold' : 'bg-slate-900 text-slate-400'
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer transition-colors ${
+                        simSpeed === 1
+                          ? 'bg-[#1d5eff] text-white font-bold'
+                          : 'office-subcard text-[var(--office-text-muted)]'
                       }`}
                     >
                       1x
                     </button>
                     <button
+                      type="button"
+                      data-office-ui="true"
                       onClick={() => setSimSpeed(2)}
-                      className={`px-2 py-1 rounded-lg text-[10px] font-bold cursor-pointer ${
-                        simSpeed === 2 ? 'bg-blue-600 text-white font-bold' : 'bg-slate-900 text-slate-400'
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer transition-colors ${
+                        simSpeed === 2
+                          ? 'bg-[#1d5eff] text-white font-bold'
+                          : 'office-subcard text-[var(--office-text-muted)]'
                       }`}
                     >
                       2x
                     </button>
                     <button
+                      type="button"
+                      data-office-ui="true"
                       onClick={() => setSimSpeed(5)}
-                      className={`px-2 py-1 rounded-lg text-[10px] font-bold cursor-pointer ${
-                        simSpeed === 5 ? 'bg-blue-600 text-white font-bold' : 'bg-slate-900 text-slate-400'
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer transition-colors ${
+                        simSpeed === 5
+                          ? 'bg-[#1d5eff] text-white font-bold'
+                          : 'office-subcard text-[var(--office-text-muted)]'
                       }`}
                     >
                       5x
@@ -582,15 +607,19 @@ export function MatchDayModal({
                   </div>
                   {currentMinute < 45 ? (
                     <button
+                      type="button"
+                      data-office-ui="true"
                       onClick={handleSkipToHalfTime}
-                      className="px-3 py-1 rounded-lg text-[10px] font-display font-black uppercase bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-500/30 cursor-pointer"
+                      className="px-3 py-1 rounded-lg text-[10px] font-display font-black uppercase bg-amber-50 text-amber-700 hover:bg-amber-100/70 border border-amber-200 cursor-pointer"
                     >
                       Skip to HT ⏸️
                     </button>
                   ) : (
                     <button
+                      type="button"
+                      data-office-ui="true"
                       onClick={handleSkipToFullTime}
-                      className="px-3 py-1 rounded-lg text-[10px] font-display font-black uppercase bg-slate-800 text-slate-300 hover:text-white cursor-pointer"
+                      className="office-subcard px-3 py-1 rounded-lg text-[10px] font-display font-black uppercase text-[var(--office-text-primary)] hover:bg-indigo-50/50 cursor-pointer"
                     >
                       Skip to FT ⏩
                     </button>
@@ -600,21 +629,21 @@ export function MatchDayModal({
             </div>
 
             {/* Live Events Timeline Feed */}
-            <div className="bg-slate-900/30 border border-slate-850 rounded-2xl p-4 max-h-48 overflow-y-auto space-y-2 text-xs">
-              <div className="text-[10px] font-bold uppercase text-slate-500 mb-1">
+            <div className="office-subcard rounded-2xl p-4 max-h-48 overflow-y-auto space-y-2 text-xs">
+              <div className="text-[10px] font-bold uppercase text-[var(--office-text-muted)] mb-1">
                 Match Events Feed
               </div>
               {visibleEvents.length === 0 ? (
-                <div className="text-slate-500 text-center py-4 text-[11px]">
+                <div className="text-[var(--office-text-muted)] text-center py-4 text-[11px] italic">
                   Match underway. Both teams feeling each other out...
                 </div>
               ) : (
                 visibleEvents.map((evt, i) => (
                   <div
                     key={i}
-                    className="flex items-center gap-2 text-[11px] p-1.5 rounded-lg bg-slate-950/60 border border-slate-900"
+                    className="flex items-center gap-2 text-[11px] p-2 rounded-xl bg-white/90 border border-indigo-100/70 shadow-2xs"
                   >
-                    <span className="font-mono font-bold text-blue-400 w-8">{evt.minute}&apos;</span>
+                    <span className="font-mono font-bold text-[#1d5eff] w-8">{evt.minute}&apos;</span>
                     <span>
                       {evt.type === 'goal'
                         ? '⚽'
@@ -626,7 +655,7 @@ export function MatchDayModal({
                         ? '🔄'
                         : '🩹'}
                     </span>
-                    <span className="font-semibold text-slate-200">{evt.detail}</span>
+                    <span className="font-semibold text-[var(--office-text-primary)]">{evt.detail}</span>
                   </div>
                 ))
               )}
@@ -634,66 +663,72 @@ export function MatchDayModal({
 
             {/* HALF TIME DRESSING ROOM & TACTICAL ADJUSTMENTS */}
             {matchState === 'halftime' && (
-              <section className="bg-gradient-to-r from-amber-950/30 via-slate-900/60 to-slate-950 border border-amber-500/40 p-5 rounded-3xl space-y-4 shadow-xl">
+              <section className="bg-gradient-to-r from-amber-50/90 via-white to-orange-50/90 border border-amber-200 p-5 rounded-3xl space-y-4 shadow-sm">
                 <div className="flex flex-wrap justify-between items-center gap-2">
                   <div className="flex items-center gap-2">
                     <span className="text-xl">⏸️</span>
                     <div>
-                      <h4 className="font-display font-black text-sm text-white uppercase tracking-wider">
+                      <h4 className="font-display font-extrabold text-sm text-[var(--office-text-primary)] uppercase tracking-wider">
                         Half-Time Dressing Room
                       </h4>
-                      <p className="text-[11px] text-slate-400">
+                      <p className="text-[11px] text-[var(--office-text-secondary)]">
                         Address your squad, tweak mentality, or make substitutions before second half kick-off.
                       </p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-black uppercase text-amber-400 bg-amber-950/80 px-2.5 py-1 rounded-full border border-amber-800">
+                  <span className="text-[10px] font-black uppercase text-amber-800 bg-amber-100/80 px-2.5 py-1 rounded-full border border-amber-200">
                     45 Minutes Played
                   </span>
                 </div>
 
                 {/* Half-Time Team Talk Options */}
-                <div className="bg-slate-950/60 border border-slate-850 p-3.5 rounded-2xl space-y-2">
-                  <span className="text-[10px] font-bold uppercase text-slate-400 block tracking-wider">
+                <div className="office-subcard p-3.5 rounded-2xl space-y-2 bg-white/80 border border-amber-200/60">
+                  <span className="text-[10px] font-bold uppercase text-[var(--office-text-muted)] block tracking-wider">
                     Manager Team Talk
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                     <button
+                      type="button"
+                      data-office-ui="true"
                       onClick={() => handleTeamTalk('demand_more', '📣 You demanded more intensity! Players look fired up.')}
-                      className="p-2.5 rounded-xl border border-slate-800 bg-slate-900/70 hover:bg-slate-850 hover:border-amber-500/50 text-left text-slate-200 transition-all cursor-pointer"
+                      className="p-2.5 rounded-xl border border-amber-200 bg-white hover:bg-amber-50 text-left text-[var(--office-text-primary)] transition-all cursor-pointer shadow-2xs"
                     >
-                      <div className="font-bold text-amber-300">📣 Demand More</div>
-                      <div className="text-[10px] text-slate-400">Boosts second-half work rate</div>
+                      <div className="font-bold text-amber-800">📣 Demand More</div>
+                      <div className="text-[10px] text-[var(--office-text-muted)]">Boosts second-half work rate</div>
                     </button>
                     <button
+                      type="button"
+                      data-office-ui="true"
                       onClick={() => handleTeamTalk('encourage', '👏 You praised their composure! Morale is high.')}
-                      className="p-2.5 rounded-xl border border-slate-800 bg-slate-900/70 hover:bg-slate-850 hover:border-blue-500/50 text-left text-slate-200 transition-all cursor-pointer"
+                      className="p-2.5 rounded-xl border border-indigo-200 bg-white hover:bg-indigo-50 text-left text-[var(--office-text-primary)] transition-all cursor-pointer shadow-2xs"
                     >
-                      <div className="font-bold text-blue-300">👏 Keep Composed</div>
-                      <div className="text-[10px] text-slate-400">Reinforces shape and discipline</div>
+                      <div className="font-bold text-[#1d5eff]">👏 Keep Composed</div>
+                      <div className="text-[10px] text-[var(--office-text-muted)]">Reinforces shape and discipline</div>
                     </button>
                     <button
+                      type="button"
+                      data-office-ui="true"
                       onClick={() => handleTeamTalk('tighten_up', '🛡️ You instructed them to tighten defense! Backline organized.')}
-                      className="p-2.5 rounded-xl border border-slate-800 bg-slate-900/70 hover:bg-slate-850 hover:border-teal-500/50 text-left text-slate-200 transition-all cursor-pointer"
+                      className="p-2.5 rounded-xl border border-teal-200 bg-white hover:bg-teal-50 text-left text-[var(--office-text-primary)] transition-all cursor-pointer shadow-2xs"
                     >
-                      <div className="font-bold text-teal-300">🛡️ Tighten Defense</div>
-                      <div className="text-[10px] text-slate-400">Reduces defensive lapses</div>
+                      <div className="font-bold text-teal-800">🛡️ Tighten Defense</div>
+                      <div className="text-[10px] text-[var(--office-text-muted)]">Reduces defensive lapses</div>
                     </button>
                   </div>
                   {teamTalkNote && (
-                    <div className="text-[11px] font-bold text-blue-400 bg-blue-950/40 border border-blue-800/40 p-2 rounded-xl">
+                    <div className="text-[11px] font-bold text-[#1d5eff] bg-indigo-50 border border-indigo-200 p-2 rounded-xl">
                       {teamTalkNote}
                     </div>
                   )}
                 </div>
 
                 {/* Tactical Mentality Switcher at HT */}
-                <div className="bg-slate-950/60 border border-slate-850 p-3.5 rounded-2xl space-y-2">
+                <div className="office-subcard p-3.5 rounded-2xl space-y-2 bg-white/80 border border-amber-200/60">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">
+                    <span className="text-[10px] font-bold uppercase text-[var(--office-text-muted)] tracking-wider">
                       Second Half Tactical Mentality
                     </span>
-                    <span className="text-[10px] font-mono font-bold text-blue-400 uppercase">
+                    <span className="text-[10px] font-mono font-bold text-[#1d5eff] uppercase">
                       Current: {mentality}
                     </span>
                   </div>
@@ -701,11 +736,13 @@ export function MatchDayModal({
                     {(['defensive', 'balanced', 'attacking'] as const).map((m) => (
                       <button
                         key={m}
+                        type="button"
+                        data-office-ui="true"
                         onClick={() => setMentality(m)}
-                        className={`py-2 px-3 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
+                        className={`py-2 px-3 rounded-xl text-xs font-display font-bold uppercase tracking-wider transition-all cursor-pointer ${
                           mentality === m
-                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-md'
-                            : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+                            ? 'office-action-btn-primary text-white shadow-sm'
+                            : 'office-subcard text-[var(--office-text-secondary)] hover:text-[var(--office-text-primary)] hover:bg-indigo-50/40'
                         }`}
                       >
                         {m}
@@ -716,8 +753,10 @@ export function MatchDayModal({
 
                 {/* Resume Match Button */}
                 <button
+                  type="button"
+                  data-office-ui="true"
                   onClick={handleStartSecondHalf}
-                  className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-sm uppercase tracking-wider shadow-xl shadow-blue-500/25 transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
+                  className="office-action-btn-primary w-full py-3.5 px-6 rounded-2xl font-display font-black text-sm uppercase tracking-wider shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
                 >
                   <span>▶ Start 2nd Half (46&apos; - 90&apos;)</span>
                   <span>➔</span>
@@ -727,13 +766,13 @@ export function MatchDayModal({
 
             {/* In-Match Dugout & Substitutions (Max 5) */}
             {(matchState === 'live' || matchState === 'halftime') && (
-              <div className="bg-slate-900/40 border border-slate-850 p-4 rounded-2xl space-y-3">
+              <div className="office-subcard p-4 rounded-2xl space-y-3">
                 <div className="flex justify-between items-center text-xs">
-                  <div className="font-display font-black uppercase text-slate-300">
+                  <div className="font-display font-bold uppercase text-[var(--office-text-muted)]">
                     Dugout Substitutions (Remaining: {subsRemaining}/5)
                   </div>
                   {selectedPitchPlayerId && (
-                    <span className="text-[10px] text-amber-400 font-bold">
+                    <span className="text-[10px] text-amber-700 font-bold">
                       Now pick a sub to bring on:
                     </span>
                   )}
@@ -750,14 +789,14 @@ export function MatchDayModal({
                         onClick={() => setSelectedPitchPlayerId(s.player.id)}
                         className={`p-2 rounded-xl border text-xs cursor-pointer transition-all ${
                           selectedPitchPlayerId === s.player.id
-                            ? 'border-amber-400 bg-amber-950/40 ring-2 ring-amber-400'
-                            : 'border-slate-850 bg-slate-950/60 hover:border-slate-700'
+                            ? 'border-amber-400 bg-amber-50 ring-2 ring-amber-400'
+                            : 'border-slate-200/80 bg-white hover:border-indigo-300'
                         }`}
                       >
-                        <div className="font-bold text-white truncate text-[11px]">{s.player.name}</div>
-                        <div className="flex justify-between items-center text-[9px] text-slate-400 mt-0.5">
+                        <div className="font-bold text-[var(--office-text-primary)] truncate text-[11px]">{s.player.name}</div>
+                        <div className="flex justify-between items-center text-[9px] text-[var(--office-text-muted)] mt-0.5">
                           <span>{s.player.position}</span>
-                          <span className="text-emerald-400">{s.currentFitness}% Stamina</span>
+                          <span className="text-emerald-600 font-bold">{s.currentFitness}% Stamina</span>
                         </div>
                       </div>
                     ))}
@@ -765,21 +804,23 @@ export function MatchDayModal({
 
                 {/* Bench options */}
                 {selectedPitchPlayerId && subsRemaining > 0 && (
-                  <div className="pt-2 border-t border-slate-850 space-y-2">
-                    <span className="text-[10px] uppercase font-bold text-slate-400">Available Substitutes:</span>
+                  <div className="pt-2 border-t border-[var(--office-divider)] space-y-2">
+                    <span className="text-[10px] uppercase font-bold text-[var(--office-text-muted)]">Available Substitutes:</span>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {livePlayerStates
                         .filter((s) => !s.isOnPitch)
                         .map((s) => (
                           <button
                             key={s.player.id}
+                            type="button"
+                            data-office-ui="true"
                             onClick={() => handleMakeSubstitution(s.player)}
-                            className="p-2 rounded-xl border border-blue-500/40 bg-blue-950/20 hover:bg-blue-950/50 text-left text-xs transition-all cursor-pointer"
+                            className="p-2 rounded-xl border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100/70 text-left text-xs transition-all cursor-pointer"
                           >
-                            <div className="font-bold text-blue-300 truncate text-[11px]">
+                            <div className="font-bold text-[#1d5eff] truncate text-[11px]">
                               + {s.player.name}
                             </div>
-                            <div className="text-[9px] text-slate-400">
+                            <div className="text-[9px] text-[var(--office-text-muted)]">
                               {s.player.position} • {s.player.rating} OVR
                             </div>
                           </button>
@@ -794,55 +835,57 @@ export function MatchDayModal({
             {matchState === 'fulltime' && simResult && (
               <div className="space-y-4">
                 {/* MOTM */}
-                <div className="bg-blue-950/30 border border-blue-500/30 p-3.5 rounded-2xl flex justify-between items-center text-xs">
+                <div className="bg-gradient-to-r from-amber-50 via-amber-100/40 to-orange-50 border border-amber-200/80 p-3.5 rounded-2xl flex justify-between items-center text-xs">
                   <div>
-                    <span className="text-[9px] font-black uppercase tracking-wider text-blue-400">
+                    <span className="text-[9px] font-black uppercase tracking-wider text-amber-700">
                       ⭐ Man of the Match
                     </span>
-                    <div className="font-display font-black text-white text-sm">
+                    <div className="font-display font-extrabold text-[var(--office-text-primary)] text-sm">
                       {simResult.manOfTheMatch.name}
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-[9px] text-slate-500 uppercase font-bold">Match Rating</div>
-                    <div className="font-display font-black text-blue-400 text-sm">
+                    <div className="text-[9px] text-[var(--office-text-muted)] uppercase font-bold">Match Rating</div>
+                    <div className="font-display font-black text-[#1d5eff] text-sm">
                       {simResult.manOfTheMatch.rating}
                     </div>
                   </div>
                 </div>
 
                 {/* Match Stats Table */}
-                <div className="grid grid-cols-3 gap-2 bg-slate-900/40 border border-slate-850 p-4 rounded-2xl text-xs text-center">
-                  <div className="text-slate-300 font-bold">{simResult.stats.homePossession}%</div>
-                  <div className="text-slate-500 font-bold uppercase text-[10px]">Possession</div>
-                  <div className="text-slate-300 font-bold">{simResult.stats.awayPossession}%</div>
+                <div className="grid grid-cols-3 gap-2 office-subcard p-4 rounded-2xl text-xs text-center border border-indigo-100/70">
+                  <div className="text-[var(--office-text-primary)] font-bold">{simResult.stats.homePossession}%</div>
+                  <div className="text-[var(--office-text-muted)] font-bold uppercase text-[10px]">Possession</div>
+                  <div className="text-[var(--office-text-primary)] font-bold">{simResult.stats.awayPossession}%</div>
 
-                  <div className="text-slate-300 font-bold">{simResult.stats.homeShots}</div>
-                  <div className="text-slate-500 font-bold uppercase text-[10px]">Total Shots</div>
-                  <div className="text-slate-300 font-bold">{simResult.stats.awayShots}</div>
+                  <div className="text-[var(--office-text-primary)] font-bold">{simResult.stats.homeShots}</div>
+                  <div className="text-[var(--office-text-muted)] font-bold uppercase text-[10px]">Total Shots</div>
+                  <div className="text-[var(--office-text-primary)] font-bold">{simResult.stats.awayShots}</div>
 
-                  <div className="text-slate-300 font-bold">{simResult.stats.homeShotsOnTarget}</div>
-                  <div className="text-slate-500 font-bold uppercase text-[10px]">Shots on Target</div>
-                  <div className="text-slate-300 font-bold">{simResult.stats.awayShotsOnTarget}</div>
+                  <div className="text-[var(--office-text-primary)] font-bold">{simResult.stats.homeShotsOnTarget}</div>
+                  <div className="text-[var(--office-text-muted)] font-bold uppercase text-[10px]">Shots on Target</div>
+                  <div className="text-[var(--office-text-primary)] font-bold">{simResult.stats.awayShotsOnTarget}</div>
 
-                  <div className="text-slate-300 font-bold">{simResult.stats.homeCorners}</div>
-                  <div className="text-slate-500 font-bold uppercase text-[10px]">Corners</div>
-                  <div className="text-slate-300 font-bold">{simResult.stats.awayCorners}</div>
+                  <div className="text-[var(--office-text-primary)] font-bold">{simResult.stats.homeCorners}</div>
+                  <div className="text-[var(--office-text-muted)] font-bold uppercase text-[10px]">Corners</div>
+                  <div className="text-[var(--office-text-primary)] font-bold">{simResult.stats.awayCorners}</div>
                 </div>
 
                 {/* Action Buttons */}
                 <div className="flex gap-3 pt-2">
                   {save.settings.retryMatch ? (
                     <button
+                      type="button"
+                      data-office-ui="true"
                       onClick={handleRetryMatch}
-                      className="py-3 px-4 rounded-xl border border-amber-500/40 bg-amber-950/30 hover:bg-amber-950/60 text-amber-300 font-display font-black text-xs uppercase tracking-wider"
+                      className="office-subcard py-3 px-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100 font-display font-black text-xs uppercase tracking-wider cursor-pointer"
                       title="Retry match (allowed on Easy preset / Custom)"
                     >
                       🔄 Replay Match
                     </button>
                   ) : (
                     <div
-                      className="py-3 px-3 rounded-xl border border-slate-800 bg-slate-950 text-slate-600 text-[10px] font-bold flex items-center gap-1 select-none"
+                      className="py-3 px-3 rounded-xl border border-slate-200 bg-slate-100 text-slate-400 text-[10px] font-bold flex items-center gap-1 select-none"
                       title="Match replay locked on Hard difficulty"
                     >
                       🔒 Replay Locked
@@ -850,8 +893,10 @@ export function MatchDayModal({
                   )}
 
                   <button
+                    type="button"
+                    data-office-ui="true"
                     onClick={handleFinalizeMatch}
-                    className="flex-1 py-3 px-6 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider shadow-xl shadow-blue-500/25"
+                    className="office-action-btn-primary flex-1 py-3 px-6 rounded-xl font-display font-black text-xs uppercase tracking-wider shadow-lg cursor-pointer"
                   >
                     Confirm & Update Standings →
                   </button>
