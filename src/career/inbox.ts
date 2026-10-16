@@ -266,7 +266,7 @@ export function getManagerialAlerts(save: CareerSaveFile): ManagerialAlert[] {
       description: `Window shuts tonight at 23:00 BST (${save.deadlineDayState?.hoursRemaining ?? 14}h left). Complete urgent signings and outgoing deals.`,
       classification: 'action_required',
       actionLabel: 'Deadline Clock',
-      actionTab: 'transfers',
+      actionTab: 'overview',
       actionType: 'deadline_clock',
       isResolved: false,
       date: currentDate,

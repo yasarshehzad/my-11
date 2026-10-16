@@ -35,6 +35,7 @@ import { FixturesCalendar } from '../../../components/career/FixturesCalendar';
 import { LeagueTable } from '../../../components/career/LeagueTable';
 import { TournamentsHub } from '../../../components/career/TournamentsHub';
 import { TransferHub } from '../../../components/career/TransferHub';
+import { TransferDeadlineDayScreen } from '../../../components/career/TransferDeadlineDayScreen';
 import { MatchDayModal } from '../../../components/career/MatchDayModal';
 import { MatchOverviewModal } from '../../../components/career/MatchOverviewModal';
 import { InstantMatchSummaryModal } from '../../../components/career/InstantMatchSummaryModal';
@@ -621,6 +622,19 @@ function CareerPlayHubContent() {
     }
   }, [save?.season?.currentDate, save?.preseasonState?.hasChosenTour, save?.fixtureReleaseState?.released]);
 
+  useEffect(() => {
+    if (
+      save &&
+      isTransferDeadlineDay(save.season.currentDate, save.season.yearStart) &&
+      !save.deadlineDayState?.isActive &&
+      save.deadlineDayState?.phase !== 'closed'
+    ) {
+      const initialized = initializeDeadlineDay(save);
+      saveCareerSave(initialized);
+      setSave(initialized);
+    }
+  }, [save?.season?.currentDate, save?.season?.yearStart, save?.deadlineDayState?.isActive, save?.deadlineDayState?.phase]);
+
   const checkAndTriggerCelebration = useCallback((saveCandidate: CareerSaveFile, fixture?: LeagueFixture | CupFixture) => {
     const celebration = detectCelebrationEvent(saveCandidate, fixture);
     if (celebration) {
@@ -897,7 +911,7 @@ function CareerPlayHubContent() {
       navigateToSection('transfers', 'contracts', alert.targetId ? `contract-player-${alert.targetId}` : 'contracts-section');
     } else if (alert.actionType === 'deadline_clock') {
       setFocusedOfferId(undefined);
-      navigateToSection('transfers', 'market', 'market-section');
+      navigateToSection('overview', undefined, 'deadline-day-hero');
     } else if (alert.actionType === 'open_squad' || alert.actionType === 'review_injury') {
       navigateToSection('squad', undefined, alert.targetId ? `squad-player-${alert.targetId}` : 'squad-pitch-section');
     } else if (alert.actionType === 'view_cup_draw') {
@@ -1083,6 +1097,11 @@ function CareerPlayHubContent() {
   const intlBreakStatus = save ? isDateInInternationalBreak(save.season.currentDate) : { isActive: false, name: '', resumeDate: '' };
   const seasonCompleted = save ? isSeasonComplete(save.fixtures, save.club.id) : false;
   const seasonSummary = save && seasonCompleted ? getSeasonReviewSummary(save) : null;
+  const isDeadlineActive = Boolean(
+    save &&
+    (save.deadlineDayState?.isActive ||
+      (isTransferDeadlineDay(save.season.currentDate, save.season.yearStart) && save.deadlineDayState?.phase !== 'closed'))
+  );
 
   const handleAdvanceDeadlinePhase = () => {
     if (!save) return;
@@ -1920,8 +1939,17 @@ function CareerPlayHubContent() {
         {activeTab === 'overview' && (
           <div className="space-y-2.5">
 
-            {/* 3. NEXT FIXTURE SPOTLIGHT HERO CARD */}
-            {nextScheduled ? (
+            {/* 3. TRANSFER DEADLINE DAY WAR ROOM SCREEN (WHEN DEADLINE ACTIVE) OR NEXT FIXTURE SPOTLIGHT */}
+            {isDeadlineActive ? (
+              <TransferDeadlineDayScreen
+                save={save}
+                onUpdateSave={handleUpdateSave}
+                onAdvanceDeadlinePhase={handleAdvanceDeadlinePhase}
+                onNavigateToTransfers={(subTab, targetId) => navigateToSection('transfers', subTab, targetId)}
+                onNotification={showToast}
+                nextScheduled={nextScheduled}
+              />
+            ) : nextScheduled ? (
               <section
                 aria-label="Next Fixture"
                 data-office-ui="true"

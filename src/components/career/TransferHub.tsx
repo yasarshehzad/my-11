@@ -663,105 +663,43 @@ export function TransferHub({
 
   return (
     <div className="space-y-6 w-full">
-      {/* Transfer Deadline Day Clock & War Room Panel */}
+      {/* Transfer Deadline Day Status Strip */}
       {(save.deadlineDayState?.isActive || isTransferDeadlineDay(save.season.currentDate, save.season.yearStart)) && (
-        <section className="bg-gradient-to-r from-amber-500/20 via-yellow-500/10 to-slate-950 border-2 border-amber-500/60 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="bg-amber-400 text-slate-950 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full font-display animate-pulse flex items-center gap-1">
-                  <span>⏱️</span> DEADLINE DAY WAR ROOM
+        <section
+          data-office-ui="true"
+          className="office-floating-card rounded-2xl p-3 sm:p-4 border border-amber-300 bg-gradient-to-r from-amber-500/15 via-white to-amber-500/5 shadow-sm flex flex-wrap items-center justify-between gap-3"
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="bg-amber-400 text-slate-950 text-[10px] font-black uppercase px-2 py-0.5 rounded-full font-display flex items-center gap-1 shadow-2xs shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-950 motion-safe:animate-pulse inline-block" />
+              <span>DEADLINE DAY ACTIVE</span>
+            </span>
+            <div className="min-w-0">
+              <div className="font-display font-black text-xs text-slate-900 flex items-center gap-1.5 truncate">
+                <span>{save.deadlineDayState?.timeString || '09:00 BST'}</span>
+                <span className="text-amber-600">•</span>
+                <span className="text-amber-700 font-extrabold uppercase text-[11px] truncate">
+                  {save.deadlineDayState?.phase || 'morning'} Phase
                 </span>
-                <span className="text-white font-mono font-black text-xs bg-slate-900 px-2.5 py-0.5 rounded-full border border-amber-500/40">
-                  {save.deadlineDayState?.timeString || '09:00 BST'}
-                </span>
-                <span className="text-amber-300 text-xs font-mono font-bold">
-                  ⏳ {save.deadlineDayState?.hoursRemaining ?? 14} Hours to Window Close (23:00)
+                <span className="text-slate-500 font-normal text-[10.5px] hidden sm:inline">
+                  (⏳ {save.deadlineDayState?.hoursRemaining ?? 14}h left to 23:00 cutoff)
                 </span>
               </div>
-              <h3 className="text-lg sm:text-xl font-display font-black text-white uppercase tracking-tight flex items-center gap-2">
-                <span>Phase:</span>
-                <span className="text-amber-400">{save.deadlineDayState?.phase?.toUpperCase() || 'MORNING'}</span>
-                <span className="text-slate-500 text-xs font-sans font-normal hidden sm:inline">• Rapid-Fire Panic Bids &amp; Price Volatility Active</span>
-              </h3>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-              <button
-                type="button"
-                onClick={() => handleOpenPetitionModal('deadline_day_marquee')}
-                className="w-full sm:w-auto py-2.5 px-4 rounded-2xl bg-slate-900/90 hover:bg-slate-850 text-amber-300 border border-amber-500/50 font-display font-black text-xs uppercase tracking-wider shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap"
-              >
-                <span>🏛️</span>
-                <span>Emergency Board Funds</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleAdvanceDeadlinePhase}
-                className="w-full sm:w-auto py-2.5 px-5 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 hover:from-amber-300 hover:to-yellow-200 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap"
-              >
-                <span>⏩</span>
-                <span>
-                  {save.deadlineDayState?.phase === 'morning'
-                    ? 'Advance to Afternoon (13:00)'
-                    : save.deadlineDayState?.phase === 'afternoon'
-                    ? 'Advance to Evening (18:00)'
-                    : save.deadlineDayState?.phase === 'evening'
-                    ? 'Advance to Final Hour (22:00)'
-                    : '🚨 Slam Window Shut (23:00 BST)'}
-                </span>
-              </button>
+              <div className="text-[10px] text-slate-500 font-medium truncate mt-0.5">
+                Full War Room command center, worldwide deals &amp; emergency board funds on the Home Screen.
+              </div>
             </div>
           </div>
 
-          {/* 4-Phase Progress Indicator Bar */}
-          <div className="grid grid-cols-4 gap-1.5 pt-1 text-[10px] font-bold text-center">
-            {(['morning', 'afternoon', 'evening', 'deadline'] as const).map((ph, idx) => {
-              const currentPhase = save.deadlineDayState?.phase || 'morning';
-              const phaseOrder = ['morning', 'afternoon', 'evening', 'deadline'];
-              const isPastOrCurrent = phaseOrder.indexOf(currentPhase) >= idx;
-              const isCurrent = currentPhase === ph;
-              const labels = ['09:00 Morning', '13:00 Afternoon', '18:00 Evening', '22:00 Final Hour'];
-
-              return (
-                <div
-                  key={ph}
-                  className={`py-1.5 px-1 rounded-xl transition-all border ${
-                    isCurrent
-                      ? 'bg-amber-400 text-slate-950 font-black border-amber-300 shadow-md shadow-amber-500/20'
-                      : isPastOrCurrent
-                      ? 'bg-amber-950/40 text-amber-300 border-amber-900/40'
-                      : 'bg-slate-950/60 text-slate-500 border-slate-850'
-                  }`}
-                >
-                  {labels[idx]}
-                </div>
-              );
-            })}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={handleAdvanceDeadlinePhase}
+              className="py-1.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-display font-black text-[11px] uppercase tracking-wider shadow-xs cursor-pointer transition-transform active:scale-[0.98]"
+            >
+              Advance Clock ({save.deadlineDayState?.phase === 'morning' ? '13:00' : save.deadlineDayState?.phase === 'afternoon' ? '18:00' : save.deadlineDayState?.phase === 'evening' ? '22:00' : '23:00'}) &rsaquo;
+            </button>
           </div>
-
-          {/* Live Breaking News Ticker Feed */}
-          {save.deadlineDayState?.breakingNews && save.deadlineDayState.breakingNews.length > 0 && (
-            <div className="bg-slate-950/90 border border-amber-500/30 rounded-2xl p-3.5 space-y-2 text-xs">
-              <div className="flex items-center justify-between text-[10px] font-black uppercase font-display text-amber-400">
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping inline-block" />
-                  LIVE DEADLINE WIRE TICKER
-                </span>
-                <span className="text-slate-400 font-mono">
-                  {save.deadlineDayState.dealsCompletedCount} Deals Completed Worldwide
-                </span>
-              </div>
-              <div className="space-y-1.5 max-h-24 overflow-y-auto scrollbar-none font-mono text-[11px] text-slate-300">
-                {save.deadlineDayState.breakingNews.slice(0, 4).map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-2 truncate text-slate-200">
-                    <span className="text-amber-400">▪</span>
-                    <span className="truncate">{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </section>
       )}
 

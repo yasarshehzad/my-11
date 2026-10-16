@@ -135,7 +135,8 @@ export function initializeDeadlineDay(save: CareerSaveFile): CareerSaveFile {
     isRead: false,
     priority: 'urgent',
     actionLabel: 'Open Deadline Day War Room',
-    actionTab: 'transfers',
+    actionTab: 'overview',
+    actionType: 'deadline_clock',
   });
 
   return interimSave;

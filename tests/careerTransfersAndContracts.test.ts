@@ -22,6 +22,7 @@ import {
   initializeDeadlineDay,
   advanceDeadlineDayPhase,
   executeBuyBackReSigning,
+  evaluateBoardFinancialPetition,
 } from '../src/career/transfers';
 import { getAllClubs } from '../src/career/clubs';
 import { createNewCareerSave } from '../src/career/saves';
@@ -1366,5 +1367,48 @@ describe('Career Mode Phase 6: Transfers, Scouting & Contracts', () => {
       expect(res.error).toContain('Insufficient transfer budget');
     });
   });
+
+  describe('Transfer Deadline Day Home Screen Integration', () => {
+    it('routes deadline day inbox messages and managerial alerts to the overview Home Screen', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('normal'),
+      });
+
+      save.season.currentDate = '2026-09-01';
+      const initialized = initializeDeadlineDay(save);
+
+      // Check inbox message action tab
+      const deadlineMsg = initialized.inbox?.find((m) => m.subject.includes('Deadline Day Clock'));
+      expect(deadlineMsg).toBeDefined();
+      expect(deadlineMsg?.actionTab).toBe('overview');
+      expect(deadlineMsg?.actionType).toBe('deadline_clock');
+    });
+
+    it('processes emergency marquee warchest petition during deadline day on the home screen', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('normal'),
+      });
+
+      save.season.currentDate = '2026-09-01';
+      save.boardStatus = { confidence: 85, status: 'secure' };
+      const initialized = initializeDeadlineDay(save);
+
+      const petitionRes = evaluateBoardFinancialPetition(initialized, 'deadline_day_marquee', {
+        targetPlayerName: 'Star Striker',
+        justificationNotes: 'Need goalscorer before 23:00 buzzer',
+      });
+
+      expect(petitionRes.outcome).toBe('approved');
+      expect(petitionRes.amountGranted).toBeGreaterThan(0);
+      expect(petitionRes.updatedSave.finances.transferBudget).toBeGreaterThan(save.finances.transferBudget);
+    });
+  });
 });
+
 
