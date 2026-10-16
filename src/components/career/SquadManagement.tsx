@@ -528,45 +528,51 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
   return (
     <div className="space-y-4">
       {/* 1. Compact Squad Vitals Strip */}
-      <section className="bg-slate-900/40 border border-slate-850 rounded-2xl p-2.5 sm:p-3" aria-label="Squad vitals">
-        <div className="grid grid-cols-4 gap-2 text-center text-xs">
-          <div className="space-y-0.5">
-            <span className="text-[8.5px] sm:text-[9.5px] uppercase font-bold text-slate-500 block truncate">Avg OVR</span>
-            <span className="text-sm sm:text-base font-display font-black text-blue-600 dark:text-blue-400 block">
+      <section className="office-floating-card bg-white rounded-3xl p-3.5 sm:p-4.5 border border-slate-200/90 shadow-md space-y-3" aria-label="Squad vitals">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+          <div className="office-subcard office-kpi-blue rounded-2xl p-2.5 flex flex-col justify-between">
+            <span className="text-[9px] uppercase font-bold text-slate-500 block truncate tracking-wider">Avg OVR</span>
+            <span className="text-lg sm:text-xl font-display font-black text-blue-600 block mt-0.5">
               {validation.averageRating}
             </span>
+            <span className="text-[8.5px] text-slate-500 font-medium">Starting XI Quality</span>
           </div>
 
-          <div className="space-y-0.5">
-            <span className="text-[8.5px] sm:text-[9.5px] uppercase font-bold text-slate-500 block truncate">Squad Size</span>
-            <div className="flex items-center justify-center gap-1">
-              <span className="text-sm sm:text-base font-display font-black text-white">
+          <div className="office-subcard rounded-2xl p-2.5 flex flex-col justify-between">
+            <span className="text-[9px] uppercase font-bold text-slate-500 block truncate tracking-wider">Squad Size</span>
+            <div className="flex items-baseline justify-center gap-1 mt-0.5">
+              <span className="text-lg sm:text-xl font-display font-black text-[#0b1536]">
                 {squad.length}
               </span>
-              <span className="text-[10px] text-slate-500">/35</span>
+              <span className="text-xs text-slate-500 font-mono">/ 35 max</span>
             </div>
+            <span className="text-[8.5px] text-slate-500 font-medium">Total Roster Pool</span>
           </div>
 
-          <div className="space-y-0.5">
-            <span className="text-[8.5px] sm:text-[9.5px] uppercase font-bold text-slate-500 block truncate">Homegrown</span>
-            <div className="flex items-center justify-center gap-1">
-              <span className="text-sm sm:text-base font-display font-black text-white">
+          <div className="office-subcard rounded-2xl p-2.5 flex flex-col justify-between">
+            <span className="text-[9px] uppercase font-bold text-slate-500 block truncate tracking-wider">Homegrown</span>
+            <div className="flex items-center justify-center gap-1 mt-0.5">
+              <span className="text-lg sm:text-xl font-display font-black text-blue-600">
                 {validation.homegrownCount}
               </span>
-              <span className="text-[10px] text-slate-500">HG</span>
+              <span className="text-xs font-bold text-slate-500">HG</span>
               {(validation.nonHomegrownSeniorCount ?? 0) <= 17 ? (
-                <span className="text-xs text-blue-600 dark:text-blue-400" title="Compliant with Premier League rules (max 17 foreign senior players allowed)">✓</span>
+                <span className="text-xs font-bold text-emerald-600" title="Compliant with Premier League rules (max 17 foreign senior players allowed)">✓</span>
               ) : (
-                <span className="text-xs text-rose-400" title="Exceeds maximum 17 non-homegrown senior limit">⚠️</span>
+                <span className="text-xs text-rose-500 font-bold" title="Exceeds maximum 17 non-homegrown senior limit">⚠️</span>
               )}
             </div>
+            <span className="text-[8.5px] text-slate-500 font-medium">
+              {(validation.nonHomegrownSeniorCount ?? 0) <= 17 ? 'Quota Compliant' : 'Foreign Limit Exceeded'}
+            </span>
           </div>
 
-          <div className="space-y-0.5">
-            <span className="text-[8.5px] sm:text-[9.5px] uppercase font-bold text-slate-500 block truncate">Wage Bill</span>
-            <span className="text-xs sm:text-sm font-display font-black text-slate-200 block truncate">
+          <div className="office-subcard office-kpi-mint rounded-2xl p-2.5 flex flex-col justify-between">
+            <span className="text-[9px] uppercase font-bold text-slate-500 block truncate tracking-wider">Wage Bill</span>
+            <span className="text-sm sm:text-base font-display font-black text-emerald-700 block truncate mt-0.5">
               {formatWage(validation.totalWagesWeekly)}
             </span>
+            <span className="text-[8.5px] text-slate-500 font-medium">Weekly Payroll</span>
           </div>
         </div>
 
@@ -576,23 +582,23 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
           const registeredIds = getRegisteredSeniorPlayerIds(squad, save.registeredPlayerIds);
           const isOver = seniorCount > MAX_SENIOR_SQUAD_SIZE;
           return (
-            <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[10px] font-display font-black uppercase text-slate-300">
-                  📋 25-Man League Registration:
+            <div className="pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-display font-black uppercase tracking-wider text-slate-600 flex items-center gap-1">
+                  <span>📋</span> 25-Man Premier League Registration:
                 </span>
                 <span
-                  className={`text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+                  className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border shadow-2xs ${
                     isOver
-                      ? 'bg-amber-950/70 border-amber-600/70 text-amber-300'
-                      : 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/70 dark:border-blue-600/70 dark:text-blue-300'
+                      ? 'bg-amber-50 border-amber-300 text-amber-800'
+                      : 'bg-blue-50 border-blue-200 text-blue-700'
                   }`}
                 >
                   {registeredIds.length} / {MAX_SENIOR_SQUAD_SIZE} Registered
                 </span>
                 {isOver && (
-                  <span className="text-[9px] text-amber-400 font-bold">
-                    ⚠️ {seniorCount - registeredIds.length} Senior{seniorCount - registeredIds.length > 1 ? 's' : ''} Unregistered
+                  <span className="text-[9.5px] text-amber-700 font-bold flex items-center gap-1">
+                    <span>⚠️</span> {seniorCount - registeredIds.length} Senior{seniorCount - registeredIds.length > 1 ? 's' : ''} Unregistered
                   </span>
                 )}
               </div>
@@ -600,16 +606,17 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
               <button
                 type="button"
                 onClick={() => setShowRegistrationModal(true)}
-                className="py-1 px-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:hover:bg-blue-900 dark:border-blue-500/50 dark:text-blue-300 text-[10.5px] font-display font-black uppercase tracking-wider transition-colors cursor-pointer"
+                className="py-1.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-[11px] font-display font-black uppercase tracking-wider shadow-sm shadow-blue-500/20 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
               >
-                📋 Manage Registration
+                <span>📋</span>
+                <span>Manage Registration</span>
               </button>
             </div>
           );
         })()}
 
         {validation.errors.length > 0 && (
-          <div className="mt-2 pt-2 border-t border-rose-950/60 flex items-center justify-between text-[11px] text-rose-300">
+          <div className="pt-2 border-t border-rose-100 flex items-center justify-between text-[11px] text-rose-600 bg-rose-50/50 p-2 rounded-xl">
             <div className="flex items-center gap-1.5">
               <span>⚠️</span>
               <span className="font-bold">{validation.errors[0]}</span>
@@ -619,18 +626,18 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
       </section>
 
       {/* 2. Controls Bar: Formation, Auto Pick, View Mode */}
-      <section className="flex flex-wrap justify-between items-center gap-2.5 bg-slate-900/40 border border-slate-850 p-2.5 sm:p-3 rounded-2xl">
-        <div className="flex items-center gap-2">
-          <label className="text-[10.5px] font-bold uppercase text-slate-400">Formation:</label>
+      <section className="office-floating-card bg-white border border-slate-200/90 p-2.5 sm:p-3 rounded-2xl shadow-sm flex flex-wrap justify-between items-center gap-2.5">
+        <div className="flex items-center gap-2 flex-wrap">
+          <label className="text-[10.5px] font-black uppercase tracking-wider text-slate-500">Formation:</label>
           <select
             value={currentFormation}
             onChange={(e) => handleFormationChange(e.target.value)}
-            className="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs font-display font-black text-white focus:outline-none focus:border-blue-500 cursor-pointer"
+            className="bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-display font-black text-[#0b1536] focus:outline-none focus:border-blue-500 cursor-pointer shadow-2xs"
           >
             {(['4 at the back', '3 at the back', '5 at the back'] as const).map((cat) => (
-              <optgroup key={cat} label={cat} className="bg-slate-900 text-slate-300 font-bold">
+              <optgroup key={cat} label={cat} className="bg-white text-slate-700 font-bold">
                 {SUPPORTED_CAREER_FORMATIONS.filter((f) => f.category === cat).map((f) => (
-                  <option key={f.name} value={f.name} className="bg-slate-950 text-white font-medium">
+                  <option key={f.name} value={f.name} className="bg-white text-[#0b1536] font-medium">
                     {f.name}
                   </option>
                 ))}
@@ -640,14 +647,15 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
 
           <button
             onClick={handleAutoPick}
-            className="py-1.5 px-2.5 rounded-xl border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-white text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap min-h-[36px]"
+            className="py-1.5 px-3 rounded-xl border border-blue-200 bg-blue-50/80 hover:bg-blue-100 text-blue-700 text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap min-h-[34px] shadow-2xs flex items-center gap-1 active:scale-95"
             title="Automatically pick highest-rated team sheet"
           >
-            ⚡ Auto-Pick XI
+            <span>⚡</span>
+            <span>Auto-Pick XI</span>
           </button>
         </div>
 
-        <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-xl p-1">
+        <div className="flex items-center gap-1 bg-slate-100 border border-slate-200/80 rounded-2xl p-1">
           <button
             onClick={() => {
               if (viewMode === 'pitch') {
@@ -657,10 +665,10 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                 window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
               }
             }}
-            className={`py-1 px-2.5 rounded-lg text-xs font-display font-black uppercase transition-all cursor-pointer ${
+            className={`py-1.5 px-3 rounded-xl text-xs font-display font-black uppercase transition-all cursor-pointer ${
               viewMode === 'pitch'
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm shadow-blue-500/20'
-                : 'text-slate-400 hover:text-white'
+                ? 'office-nav-tab-active shadow-sm'
+                : 'office-nav-tab-inactive'
             }`}
           >
             Pitch
@@ -674,10 +682,10 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                 window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
               }
             }}
-            className={`py-1 px-2.5 rounded-lg text-xs font-display font-black uppercase transition-all cursor-pointer ${
+            className={`py-1.5 px-3 rounded-xl text-xs font-display font-black uppercase transition-all cursor-pointer ${
               viewMode === 'list'
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm shadow-blue-500/20'
-                : 'text-slate-400 hover:text-white'
+                ? 'office-nav-tab-active shadow-sm'
+                : 'office-nav-tab-inactive'
             }`}
           >
             List
@@ -691,14 +699,16 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                 window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
               }
             }}
-            className={`py-1 px-2.5 rounded-lg text-xs font-display font-black uppercase transition-all flex items-center gap-1 cursor-pointer ${
+            className={`py-1.5 px-3 rounded-xl text-xs font-display font-black uppercase transition-all flex items-center gap-1.5 cursor-pointer ${
               viewMode === 'academy'
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm shadow-blue-500/20'
-                : 'text-slate-400 hover:text-white'
+                ? 'office-nav-tab-active shadow-sm'
+                : 'office-nav-tab-inactive'
             }`}
           >
             <span>Academy</span>
-            <span className="text-[10px] px-1 py-0.2 rounded-full font-bold bg-slate-800 text-slate-300">
+            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+              viewMode === 'academy' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+            }`}>
               {academy.length}
             </span>
           </button>
@@ -709,12 +719,12 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
       {viewMode === 'pitch' && (
         <section id="squad-pitch-section" className="space-y-4 scroll-mt-20">
           {/* Virtual Pitch Status Strip */}
-          <div className="office-subcard flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs shadow-sm">
+          <div className="office-subcard flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs shadow-xs">
             <div className="flex items-center gap-2.5">
-              <span className="font-display font-black text-xs uppercase tracking-wider px-3 py-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-sm shadow-blue-500/20">
+              <span className="font-display font-black text-xs uppercase tracking-wider px-3 py-1 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-bold shadow-xs">
                 ⚽ {currentFormation}
               </span>
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
                 Starting XI • Matchday Canvas
               </span>
             </div>
@@ -723,19 +733,21 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
             </span>
           </div>
 
-          {/* Virtual Pitch Canvas */}
-          <div className="relative rounded-3xl border border-emerald-900/40 bg-gradient-to-b from-[#064e3b] via-[#022c22] to-[#011c15] p-3 sm:p-6 shadow-2xl overflow-hidden min-h-[500px] flex flex-col justify-between">
-            {/* Pitch Marking Lines */}
-            <div className="absolute inset-4 border-2 border-emerald-500/15 rounded-2xl pointer-events-none" />
-            <div className="absolute top-1/2 left-4 right-4 h-0.5 bg-emerald-500/15 -translate-y-1/2 pointer-events-none" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 border-2 border-emerald-500/15 rounded-full pointer-events-none" />
+          {/* Virtual Pitch Canvas with Broadcast Turf & Markings */}
+          <div className="my11-broadcast-pitch p-3 sm:p-6 min-h-[520px] flex flex-col justify-between relative select-none">
+            {/* Pitch Markings */}
+            <div className="my11-pitch-lines" />
+            <div className="my11-pitch-halfway" />
+            <div className="my11-pitch-center-circle" />
+            <div className="my11-pitch-penalty-box-top" />
+            <div className="my11-pitch-penalty-box-bottom" />
 
             {/* Starting XI Placed in Dedicated Tactical Lines */}
-            <div className="relative z-10 w-full flex flex-col justify-between h-full min-h-[450px] pt-6 pb-4 gap-3">
+            <div className="relative z-10 w-full flex flex-col justify-between h-full min-h-[460px] pt-6 pb-5 gap-3">
               {activeFormationConfig.lines.map((lineIndices, rowIndex) => (
                 <div
                   key={rowIndex}
-                  className="flex justify-around items-center w-full px-1 sm:px-2 gap-1 sm:gap-2"
+                  className="flex justify-around items-center w-full px-0.5 sm:px-2 gap-1 sm:gap-2"
                 >
                   {lineIndices.map((slotIndex) => {
                     const slotPos = activeFormationConfig.slots[slotIndex];
@@ -749,17 +761,18 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
           </div>
 
           {/* Bench Row (Substitutes) */}
-          <div className="bg-slate-900/40 border border-slate-850 rounded-3xl p-4 sm:p-5 space-y-3">
+          <div className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 space-y-3.5 shadow-md">
             <div className="flex justify-between items-center gap-2">
               <div className="flex items-center gap-2">
-                <h4 className="text-xs font-display font-black uppercase text-slate-300">
-                  Matchday Substitutes ({bench.length}/9)
+                <h4 className="text-xs font-display font-black uppercase tracking-wider text-[#0b1536] flex items-center gap-1.5">
+                  <span>💺</span>
+                  <span>Matchday Substitutes ({bench.length}/9)</span>
                 </h4>
                 {bench.length < 9 && (
                   <button
                     type="button"
                     onClick={handleAutoFillBench}
-                    className="py-1 px-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-950/70 dark:border-blue-500/50 dark:text-blue-300 dark:hover:bg-blue-900 text-[10px] font-display font-black uppercase tracking-wider transition-colors cursor-pointer"
+                    className="py-1 px-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[10px] font-display font-black uppercase tracking-wider transition-colors cursor-pointer shadow-2xs"
                     title="Automatically fill remaining bench spots with top reserves"
                   >
                     ⚡ Auto-Fill Bench
@@ -789,22 +802,24 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                     onTouchMove={handleTouchMove}
                     onTouchEnd={handleTouchEnd}
                     onClick={() => handlePlayerClick(player)}
-                    className={`p-2.5 rounded-xl border text-center cursor-grab active:cursor-grabbing transition-all scroll-mt-20 select-none ${
+                    className={`office-subcard p-2.5 rounded-2xl border text-center cursor-grab active:cursor-grabbing transition-all scroll-mt-20 select-none ${
                       isDragTarget
-                        ? 'border-blue-500 bg-blue-950/80 ring-4 ring-blue-500/60 scale-105 z-10'
+                        ? 'border-blue-500 ring-3 ring-blue-500/40 scale-105 z-10 shadow-lg'
                         : isSwapping
-                        ? 'border-amber-400 bg-amber-950/40 ring-2 ring-amber-400'
-                        : 'border-slate-800 bg-slate-950/60 hover:border-slate-700 hover:bg-slate-900/60'
+                        ? 'border-amber-400 ring-2 ring-amber-400 scale-105 shadow-md'
+                        : 'border-slate-200/90 hover:border-blue-400/80 shadow-xs'
                     }`}
                   >
                     <div className="flex justify-between items-center text-[10px] font-bold mb-1">
-                      <span className="text-blue-600 dark:text-blue-400">{player.position}</span>
-                      <span className="text-white font-display font-black">{player.rating}</span>
+                      <span className="text-blue-700 font-display font-black text-[9.5px] px-1 py-0.2 bg-blue-50 rounded border border-blue-100">
+                        {player.position}
+                      </span>
+                      <span className="text-[#0b1536] font-display font-black text-xs">{player.rating}</span>
                     </div>
-                    <div className="text-xs font-display font-black text-white truncate" title={player.name}>
+                    <div className="text-xs font-display font-black text-[#0b1536] truncate leading-tight" title={player.name}>
                       {player.name}
                     </div>
-                    <div className="text-[9px] text-slate-400 mt-1">
+                    <div className="text-[9px] text-slate-500 font-mono mt-1">
                       {formatCurrency(player.value)}
                     </div>
                   </div>
@@ -828,10 +843,10 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                       if (dragOverPlayerId === 'empty-bench') setDragOverPlayerId(null);
                     }}
                     onDrop={handleDropOnEmptyBench}
-                    className={`p-2.5 rounded-xl border-2 border-dashed text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[76px] select-none ${
+                    className={`office-subcard p-2.5 rounded-2xl border-2 border-dashed text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[76px] select-none ${
                       isTarget || (swapSourceId && !benchIdsSet.has(swapSourceId))
-                        ? 'border-amber-400/80 bg-amber-950/30 text-amber-300 animate-pulse'
-                        : 'border-slate-800/80 bg-slate-950/30 text-slate-500 hover:border-blue-500/50 hover:text-blue-500 hover:bg-slate-900/40'
+                        ? 'border-amber-400 bg-amber-50/70 text-amber-800 animate-pulse'
+                        : 'border-slate-300 bg-slate-50/70 text-slate-500 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50/50'
                     }`}
                     title="Empty Bench Slot — Click or drop player to add to bench"
                   >
@@ -839,7 +854,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                     <span className="text-[10px] font-display font-black uppercase tracking-wider">
                       Add Sub
                     </span>
-                    <span className="text-[8.5px] text-slate-500">
+                    <span className="text-[8.5px] text-slate-400">
                       Slot {bench.length + idx + 1}
                     </span>
                   </div>
@@ -850,9 +865,10 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
 
           {/* Reserves (Non-Matchday Squad) */}
           {reserves.length > 0 && (
-            <div className="bg-slate-900/20 border border-slate-850/60 rounded-3xl p-4 sm:p-5 space-y-3">
-              <h4 className="text-xs font-display font-black uppercase text-slate-400">
-                Reserves ({reserves.length})
+            <div className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 space-y-3.5 shadow-md">
+              <h4 className="text-xs font-display font-black uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                <span>👥</span>
+                <span>Reserves ({reserves.length})</span>
               </h4>
               <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2.5">
                 {reserves.map((player) => {
@@ -872,22 +888,24 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                       onTouchMove={handleTouchMove}
                       onTouchEnd={handleTouchEnd}
                       onClick={() => handlePlayerClick(player)}
-                      className={`p-2.5 rounded-xl border text-center cursor-grab active:cursor-grabbing transition-all scroll-mt-20 select-none ${
+                      className={`office-subcard p-2.5 rounded-2xl border text-center cursor-grab active:cursor-grabbing transition-all scroll-mt-20 select-none ${
                         isDragTarget
-                          ? 'border-blue-500 bg-blue-950/80 ring-4 ring-blue-500/60 scale-105 z-10 opacity-100'
+                          ? 'border-blue-500 ring-3 ring-blue-500/40 scale-105 z-10 shadow-lg'
                           : isSwapping
-                          ? 'border-amber-400 bg-amber-950/40 ring-2 ring-amber-400 opacity-100'
-                          : 'border-slate-850/60 bg-slate-950/40 hover:border-slate-700 opacity-80 hover:opacity-100'
+                          ? 'border-amber-400 ring-2 ring-amber-400 scale-105 shadow-md'
+                          : 'border-slate-200/80 hover:border-blue-400/80 shadow-2xs'
                       }`}
                     >
                       <div className="flex justify-between items-center text-[10px] font-bold mb-1">
-                        <span className="text-slate-400">{player.position}</span>
-                        <span className="text-slate-300 font-display font-black">{player.rating}</span>
+                        <span className="text-slate-500 font-display font-black text-[9px] px-1 py-0.2 bg-slate-100 rounded">
+                          {player.position}
+                        </span>
+                        <span className="text-slate-800 font-display font-black text-xs">{player.rating}</span>
                       </div>
-                      <div className="text-xs font-display font-black text-slate-200 truncate" title={player.name}>
+                      <div className="text-xs font-display font-black text-[#0b1536] truncate leading-tight" title={player.name}>
                         {player.name}
                       </div>
-                      <div className="text-[9px] text-slate-500 mt-1">
+                      <div className="text-[9px] text-slate-500 font-mono mt-1">
                         {formatCurrency(player.value)}
                       </div>
                     </div>
@@ -898,37 +916,37 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
           )}
 
           {/* Detailed Finances & Squad Registration Rules (Football First, Stats Second) */}
-          <section className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2" aria-label="Detailed squad statistics">
-            <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-3 space-y-1">
-              <span className="text-[9px] uppercase font-bold text-slate-500 block">Total Squad Value</span>
-              <div className="text-sm sm:text-base font-display font-black text-white truncate">
+          <section className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1" aria-label="Detailed squad statistics">
+            <div className="office-kpi-card office-kpi-blue rounded-2xl p-3 space-y-1">
+              <span className="text-[9px] uppercase font-bold text-slate-500 block tracking-wider">Total Squad Value</span>
+              <div className="text-sm sm:text-base font-display font-black text-blue-700 truncate">
                 {formatCurrency(validation.totalSquadValue)}
               </div>
-              <div className="text-[9px] text-slate-400">Transfer Assets</div>
+              <div className="text-[9px] text-slate-500">Transfer Assets</div>
             </div>
 
-            <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-3 space-y-1">
-              <span className="text-[9px] uppercase font-bold text-slate-500 block">Wage Headroom</span>
-              <div className="text-sm sm:text-base font-display font-black text-blue-600 dark:text-blue-400 truncate">
+            <div className="office-kpi-card office-kpi-mint rounded-2xl p-3 space-y-1">
+              <span className="text-[9px] uppercase font-bold text-slate-500 block tracking-wider">Wage Headroom</span>
+              <div className="text-sm sm:text-base font-display font-black text-emerald-700 truncate">
                 {formatWage(Math.max(0, save.finances.weeklyWageBudget - validation.totalWagesWeekly))}
               </div>
-              <div className="text-[9px] text-slate-400">Limit: {formatWage(save.finances.weeklyWageBudget)}</div>
+              <div className="text-[9px] text-slate-500">Limit: {formatWage(save.finances.weeklyWageBudget)}</div>
             </div>
 
-            <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-3 space-y-1">
-              <span className="text-[9px] uppercase font-bold text-slate-500 block">Roster Registration</span>
-              <div className="text-sm sm:text-base font-display font-black text-white truncate">
-                {validation.seniorCount}/25 <span className="text-xs text-slate-400 font-normal">Senior</span>
+            <div className="office-kpi-card office-kpi-lavender rounded-2xl p-3 space-y-1">
+              <span className="text-[9px] uppercase font-bold text-slate-500 block tracking-wider">Roster Registration</span>
+              <div className="text-sm sm:text-base font-display font-black text-purple-700 truncate">
+                {validation.seniorCount}/25 <span className="text-xs text-slate-500 font-normal">Senior</span>
               </div>
-              <div className="text-[9px] text-slate-400">U21 Exempt: {validation.u21Count}</div>
+              <div className="text-[9px] text-slate-500">U21 Exempt: {validation.u21Count}</div>
             </div>
 
-            <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-3 space-y-1">
-              <span className="text-[9px] uppercase font-bold text-slate-500 block">Domestic Quota</span>
-              <div className="text-sm sm:text-base font-display font-black text-white truncate">
-                {validation.homegrownCount} <span className="text-xs text-slate-400 font-normal">HG</span>
+            <div className="office-kpi-card rounded-2xl p-3 space-y-1">
+              <span className="text-[9px] uppercase font-bold text-slate-500 block tracking-wider">Domestic Quota</span>
+              <div className="text-sm sm:text-base font-display font-black text-[#0b1536] truncate">
+                {validation.homegrownCount} <span className="text-xs text-slate-500 font-normal">HG</span>
               </div>
-              <div className="text-[9px] text-slate-400">
+              <div className="text-[9px] text-slate-500">
                 {(validation.nonHomegrownSeniorCount ?? 0) <= 17
                   ? `✓ Compliant (${validation.nonHomegrownSeniorCount ?? 0}/17 Foreign)`
                   : `⚠️ ${validation.nonHomegrownSeniorCount ?? 0}/17 Foreign Over Limit`}
@@ -1365,18 +1383,18 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
               <div
                 ref={playerModalCardRef}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-slate-950 border border-slate-800 rounded-3xl p-4 sm:p-5 max-w-sm sm:max-w-md w-full space-y-3.5 shadow-2xl relative max-h-[90vh] overflow-y-auto scrollbar-none my-auto sm:my-0"
+                className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 max-w-sm sm:max-w-md w-full space-y-3.5 shadow-2xl relative max-h-[90vh] overflow-y-auto scrollbar-none my-auto sm:my-0 text-[#0b1536]"
               >
                 {/* Header: Segmented Switcher & Clear Accessible Close Button */}
                 <div className="flex items-center justify-between gap-2">
-                  <div className="grid grid-cols-3 gap-1 p-1 bg-slate-900/80 rounded-xl border border-slate-800 flex-1">
+                  <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 rounded-2xl border border-slate-200 flex-1">
                     <button
                       type="button"
                       onClick={() => setPlayerModalTab('profile')}
-                      className={`py-1.5 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate ${
+                      className={`py-1.5 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate ${
                         playerModalTab === 'profile'
-                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20'
-                          : 'text-slate-400 hover:text-white'
+                          ? 'office-nav-tab-active shadow-sm'
+                          : 'office-nav-tab-inactive'
                       }`}
                     >
                       🎴 Profile
@@ -1384,10 +1402,10 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                     <button
                       type="button"
                       onClick={() => setPlayerModalTab('stats')}
-                      className={`py-1.5 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate ${
+                      className={`py-1.5 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate ${
                         playerModalTab === 'stats'
-                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20'
-                          : 'text-slate-400 hover:text-white'
+                          ? 'office-nav-tab-active shadow-sm'
+                          : 'office-nav-tab-inactive'
                       }`}
                     >
                       📊 Stats
@@ -1395,10 +1413,10 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                     <button
                       type="button"
                       onClick={() => setPlayerModalTab('market')}
-                      className={`py-1.5 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate ${
+                      className={`py-1.5 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate ${
                         playerModalTab === 'market'
-                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20'
-                          : 'text-slate-400 hover:text-white'
+                          ? 'office-nav-tab-active shadow-sm'
+                          : 'office-nav-tab-inactive'
                       }`}
                     >
                       💱 Market
@@ -1408,7 +1426,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                   <button
                     type="button"
                     onClick={() => setSelectedPlayer(null)}
-                    className="w-10 h-10 rounded-full bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white flex items-center justify-center font-bold text-base shadow-md transition-colors cursor-pointer shrink-0"
+                    className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 hover:text-slate-900 flex items-center justify-center font-bold text-sm shadow-2xs transition-colors cursor-pointer shrink-0"
                     aria-label="Close player profile"
                   >
                     ✕
@@ -1427,15 +1445,15 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
 
                 {/* Financial and Contract details */}
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="bg-slate-900/60 border border-slate-850 p-2.5 rounded-xl">
+                  <div className="office-subcard p-2.5 rounded-2xl border border-slate-200/90 shadow-2xs">
                     <div className="text-[9px] uppercase font-bold text-slate-500">Market Value</div>
-                    <div className="text-sm font-display font-black text-white">
+                    <div className="text-sm font-display font-black text-[#0b1536] mt-0.5">
                       {formatCurrency(selectedPlayer.value, save.settings?.currency, save.settings?.numberFormat)}
                     </div>
                   </div>
-                  <div className="bg-slate-900/60 border border-slate-850 p-2.5 rounded-xl">
+                  <div className="office-subcard p-2.5 rounded-2xl border border-slate-200/90 shadow-2xs">
                     <div className="text-[9px] uppercase font-bold text-slate-500">Wage &amp; Contract</div>
-                    <div className="text-sm font-display font-bold text-slate-200">
+                    <div className="text-sm font-display font-bold text-slate-700 mt-0.5">
                       {formatWage(selectedPlayer.wageWeekly, save.settings?.wageUnit, save.settings?.currency, save.settings?.numberFormat)} ({selectedPlayer.contractYears}y)
                     </div>
                   </div>
@@ -1445,22 +1463,22 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                 {(() => {
                   const phys = getPlayerPhysicals(selectedPlayer);
                   return (
-                    <div className="grid grid-cols-3 gap-2 bg-slate-900/50 border border-slate-850 p-2 rounded-xl text-center text-xs">
+                    <div className="grid grid-cols-3 gap-2 office-subcard p-2.5 rounded-2xl border border-slate-200/90 text-center text-xs shadow-2xs">
                       <div>
                         <div className="text-[9px] uppercase font-bold text-slate-500">Height</div>
-                        <div className="font-display font-black text-white text-xs mt-0.5">
+                        <div className="font-display font-black text-[#0b1536] text-xs mt-0.5">
                           {formatCareerHeight(phys.heightCm, save.settings?.heightUnit)}
                         </div>
                       </div>
                       <div>
                         <div className="text-[9px] uppercase font-bold text-slate-500">Weight</div>
-                        <div className="font-display font-black text-white text-xs mt-0.5">
+                        <div className="font-display font-black text-[#0b1536] text-xs mt-0.5">
                           {formatCareerWeight(phys.weightKg, save.settings?.weightUnit)}
                         </div>
                       </div>
                       <div>
                         <div className="text-[9px] uppercase font-bold text-slate-500">Foot</div>
-                        <div className="font-display font-black text-blue-600 dark:text-blue-400 text-xs mt-0.5">
+                        <div className="font-display font-black text-blue-600 text-xs mt-0.5">
                           {phys.preferredFoot}
                         </div>
                       </div>
@@ -1964,25 +1982,25 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
         <aside
           role="region"
           aria-label="Active player swap"
-          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-lg bg-slate-950/95 border-2 border-amber-400/90 rounded-2xl p-3 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-4 flex items-center justify-between gap-2.5"
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-lg office-floating-card bg-white/95 border-2 border-amber-400 rounded-3xl p-3 sm:p-3.5 shadow-2xl backdrop-blur-md flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-4"
         >
           {(() => {
             const p = squad.find((sp) => sp.id === swapSourceId);
             return (
               <>
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-8 h-8 rounded-full bg-amber-950 border border-amber-400/60 flex items-center justify-center text-amber-300 font-bold shrink-0 text-xs">
+                  <div className="w-9 h-9 rounded-2xl bg-amber-50 border border-amber-300 flex items-center justify-center text-amber-700 font-bold shrink-0 text-sm shadow-2xs">
                     🔄
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[10px] font-black uppercase text-amber-400 tracking-wider font-display truncate">
+                    <div className="text-[10px] font-black uppercase text-amber-700 tracking-wider font-display truncate">
                       Swapping Active
                     </div>
-                    <div className="text-xs sm:text-sm font-display font-black text-white truncate">
-                      {p?.name} <span className="text-slate-400 text-[11px] font-normal">({p?.position} • {p?.rating} OVR)</span>
+                    <div className="text-xs sm:text-sm font-display font-black text-[#0b1536] truncate">
+                      {p?.name} <span className="text-slate-500 text-[11px] font-medium">({p?.position} • {p?.rating} OVR)</span>
                     </div>
-                    <div className="text-[9.5px] text-slate-400 truncate">
-                      Tap or drop on any player or empty bench slot
+                    <div className="text-[9.5px] text-slate-500 truncate">
+                      Tap or drop on any pitch player or bench slot
                     </div>
                   </div>
                 </div>
@@ -1992,7 +2010,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                     <button
                       type="button"
                       onClick={() => onOpenCompare(p)}
-                      className="py-1.5 px-2.5 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/70 dark:border-blue-500/50 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900 text-xs font-bold cursor-pointer"
+                      className="py-1.5 px-3 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 text-xs font-bold cursor-pointer transition-colors shadow-2xs"
                       title="Compare with squad rivals"
                     >
                       📊 Compare
@@ -2001,7 +2019,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                   <button
                     type="button"
                     onClick={() => setSwapSourceId(null)}
-                    className="py-1.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-display font-black uppercase tracking-wider cursor-pointer border border-slate-700"
+                    className="py-1.5 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-display font-black uppercase tracking-wider cursor-pointer border border-slate-300 transition-colors shadow-2xs"
                   >
                     Cancel
                   </button>
@@ -2143,14 +2161,13 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
           }}
-          className={`w-16 min-w-0 sm:w-22 rounded-xl border-2 border-dashed p-1.5 sm:p-2 text-center text-[10px] font-bold cursor-pointer transition-colors ${
-            swapSourceId
-              ? 'border-amber-400 bg-amber-950/30 text-amber-300 animate-pulse'
-              : 'border-blue-500/30 text-blue-400/60 hover:border-blue-500/60'
+          className={`my11-pitch-empty-slot w-[72px] min-w-0 sm:w-22 md:w-24 p-2 text-center cursor-pointer flex flex-col items-center justify-center min-h-[66px] select-none ${
+            swapSourceId ? 'border-amber-400 bg-amber-500/20 text-amber-200 animate-pulse' : ''
           }`}
           title={`${slotPos} (Empty) - Click or drop to assign`}
         >
-          {slotPos} (Empty)
+          <span className="text-xs leading-none mb-0.5">➕</span>
+          <span className="text-[10px] font-display font-black uppercase tracking-wider">{slotPos}</span>
         </div>
       );
     }
@@ -2160,6 +2177,22 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
     const isDragTarget = dragOverPlayerId === player.id;
     const bonus = calculateFormRatingBonus(player);
     const effectiveRating = getEffectiveRating(player);
+
+    const ratingBadgeClass =
+      effectiveRating >= 90
+        ? 'my11-badge-superstar'
+        : effectiveRating >= 84
+        ? 'my11-badge-elite'
+        : effectiveRating >= 78
+        ? 'my11-badge-strong'
+        : 'my11-badge-modest';
+
+    const fitBadgeClass =
+      fit === 'natural'
+        ? 'bg-blue-50 text-blue-700 border-blue-200/80'
+        : fit === 'competent'
+        ? 'bg-amber-50 text-amber-800 border-amber-300'
+        : 'bg-rose-50 text-rose-800 border-rose-300';
 
     return (
       <div
@@ -2177,55 +2210,45 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
         onClick={() => handlePlayerClick(player)}
         title={`${player.name} (${player.position}) • ${effectiveRating} OVR • Drag or click to swap`}
         aria-label={`${player.name}, position ${player.position}, rating ${effectiveRating}`}
-        className={`w-16 min-w-0 sm:w-22 p-1.5 sm:p-2 rounded-2xl border backdrop-blur-md text-center cursor-grab active:cursor-grabbing transition-all transform select-none scroll-mt-20 ${
+        className={`my11-pitch-player-card w-[74px] min-w-0 sm:w-22 md:w-24 p-1.5 sm:p-2 cursor-grab active:cursor-grabbing text-center scroll-mt-20 ${
           isDragTarget
-            ? 'border-blue-500 bg-blue-950/90 ring-4 ring-blue-500 scale-110 shadow-2xl z-20'
+            ? 'my11-pitch-player-card-target'
             : isSwapping
-            ? 'border-amber-400 bg-amber-950/80 ring-4 ring-amber-400/50 shadow-2xl scale-105 z-10'
+            ? 'my11-pitch-player-card-swapping'
             : fit === 'out_of_position'
-            ? 'border-rose-500/60 bg-slate-950/90 hover:border-rose-400 hover:scale-105 shadow-lg'
+            ? 'ring-2 ring-rose-400/80'
             : fit === 'competent'
-            ? 'border-amber-500/40 bg-slate-950/85 hover:border-amber-400 hover:scale-105 shadow-lg'
-            : bonus > 0
-            ? 'border-amber-400/80 bg-slate-950/90 hover:border-amber-300 hover:scale-105 shadow-lg ring-1 ring-amber-400/30'
-            : bonus < 0
-            ? 'border-blue-500/60 bg-slate-950/90 hover:border-blue-400 hover:scale-105 shadow-lg'
-            : 'border-slate-800/80 bg-slate-950/80 hover:border-blue-400/80 hover:scale-105 shadow-lg'
+            ? 'ring-1.5 ring-amber-400/80'
+            : ''
         }`}
       >
         <div className="flex justify-between items-center text-[9px] font-black leading-none mb-1">
-          <span
-            className={`px-1 py-0.2 rounded font-display ${
-              fit === 'natural'
-                ? 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
-                : fit === 'competent'
-                ? 'bg-amber-950 text-amber-300'
-                : 'bg-rose-950 text-rose-300'
-            }`}
-          >
+          <span className={`px-1 py-0.5 rounded font-display uppercase tracking-wider text-[8.5px] border ${fitBadgeClass}`}>
             {slotPos}
           </span>
           <div className="flex items-center gap-0.5">
-            <span className="font-display font-black text-white text-xs">{effectiveRating}</span>
-            {bonus > 0 && <span className="text-[9px]" title={`In-Form (+${bonus})`}>🔥</span>}
-            {bonus < 0 && <span className="text-[9px]" title={`Slump (${bonus})`}>❄️</span>}
+            <span className={`px-1.5 py-0.5 rounded-md font-display font-black text-[10.5px] ${ratingBadgeClass}`}>
+              {effectiveRating}
+            </span>
           </div>
         </div>
-        <div className="text-[10px] sm:text-[11px] font-display font-black text-white truncate leading-tight" title={player.name}>
+        <div className="text-[10px] sm:text-[11px] font-display font-black text-[#0b1536] truncate leading-tight mt-1" title={player.name}>
           {player.name}
         </div>
-        <div className="text-[8px] text-slate-400 truncate mt-0.5 flex items-center justify-center gap-1">
+        <div className="text-[8px] text-slate-500 font-semibold truncate mt-0.5 flex items-center justify-center gap-1">
           <span>{player.position}</span>
+          {bonus > 0 && <span title={`In-Form (+${bonus})`}>🔥</span>}
+          {bonus < 0 && <span title={`Slump (${bonus})`}>❄️</span>}
           {player.age <= 23 && typeof player.developmentProgress === 'number' && player.developmentProgress >= 40 && (
-            <span className="text-[8px] font-black text-blue-500" title={`In-Season Growth: ${player.developmentProgress}%`}>🌱</span>
+            <span title={`In-Season Growth: ${player.developmentProgress}%`}>🌱</span>
           )}
           {fit === 'out_of_position' && (
-            <span className="text-[7px] font-black px-1 rounded bg-rose-950 text-rose-300 border border-rose-800">
+            <span className="text-[7px] font-black px-1 rounded bg-rose-100 text-rose-700 border border-rose-300">
               OOP
             </span>
           )}
           {fit === 'competent' && (
-            <span className="text-[7px] font-black px-1 rounded bg-amber-950 text-amber-300 border border-amber-800">
+            <span className="text-[7px] font-black px-1 rounded bg-amber-100 text-amber-800 border border-amber-300">
               ALT
             </span>
           )}

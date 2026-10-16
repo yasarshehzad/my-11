@@ -257,18 +257,18 @@ export function PlayerComparisonModal({
 
   const modeBadge = {
     squad_vs_squad: { label: '👥 Squad Depth & Lineup Choice', color: 'text-blue-400 bg-blue-950/60 border-blue-800/60' },
-    target_vs_squad: { label: '🎯 Scouting Target vs Squad Rival', color: 'text-amber-300 bg-amber-950/60 border-amber-800/60' },
-    target_vs_target: { label: '💱 Shortlist & Market Comparison', color: 'text-sky-300 bg-sky-950/60 border-sky-800/60' },
+    target_vs_squad: { label: '🎯 Scouting Target vs Squad Rival', color: 'text-amber-800 bg-amber-50 border-amber-200' },
+    target_vs_target: { label: '💱 Shortlist & Market Comparison', color: 'text-blue-800 bg-blue-50 border-blue-200' },
   }[mode];
 
   const fitBadge = (fit: typeof fitA) => {
     if (fit === 'natural') {
-      return <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/40">✓ Natural Role</span>;
+      return <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">✓ Natural Role</span>;
     }
     if (fit === 'competent') {
-      return <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">⚡ Competent</span>;
+      return <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">⚡ Competent</span>;
     }
-    return <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40">⚠️ Out of Pos</span>;
+    return <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">⚠️ Out of Pos</span>;
   };
 
   return (
@@ -276,29 +276,29 @@ export function PlayerComparisonModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="comparison-title"
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/85 backdrop-blur-md overflow-hidden animate-in fade-in"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/40 backdrop-blur-md overflow-hidden animate-in fade-in"
     >
-      <div className="bg-slate-900 border-t sm:border border-slate-800 w-full max-w-2xl rounded-t-3xl sm:rounded-3xl max-h-[92vh] sm:max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
+      <div className="office-floating-card border-t sm:border border-white/80 w-full max-w-2xl rounded-t-3xl sm:rounded-3xl max-h-[92vh] sm:max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
         {/* MODAL HEADER */}
-        <header className="p-3.5 sm:p-4 border-b border-slate-800 flex items-center justify-between gap-2 shrink-0 bg-slate-950/60">
+        <header className="p-3.5 sm:p-4 border-b border-slate-200/80 flex items-center justify-between gap-2 shrink-0 bg-white/80 backdrop-blur-md">
           <div className="space-y-0.5 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border font-display tracking-wider ${modeBadge.color}`}>
                 {modeBadge.label}
               </span>
-              <span className="text-[10px] text-slate-400 font-mono">
-                Position: <strong className="text-white">{targetPosition}</strong>
+              <span className="text-[10px] text-slate-500 font-mono">
+                Position: <strong className="text-slate-900">{targetPosition}</strong>
               </span>
             </div>
-            <h2 id="comparison-title" className="text-sm sm:text-base font-display font-black text-white uppercase tracking-tight truncate">
-              {comparison.playerA.name} <span className="text-blue-400 font-sans font-light">vs</span> {comparison.playerB.name}
+            <h2 id="comparison-title" className="text-sm sm:text-base font-display font-black text-slate-900 uppercase tracking-tight truncate">
+              {comparison.playerA.name} <span className="text-blue-600 font-sans font-light">vs</span> {comparison.playerB.name}
             </h2>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full border border-slate-800 hover:border-slate-700 bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition-colors text-base font-bold cursor-pointer shrink-0"
+            className="w-8 h-8 rounded-full border border-slate-200 hover:border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors text-base font-bold cursor-pointer shrink-0"
             aria-label="Close comparison"
           >
             ×
@@ -310,10 +310,10 @@ export function PlayerComparisonModal({
           {/* TWO PLAYER PROFILE CARDS (360px optimized Side-by-Side Grid) */}
           <section aria-label="Compared Players Overview" className="grid grid-cols-2 gap-2 sm:gap-4 select-none">
             {/* PLAYER A COLUMN */}
-            <div className="bg-slate-950/70 border border-slate-800 rounded-2xl p-2.5 sm:p-3.5 space-y-2 flex flex-col justify-between">
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-2.5 sm:p-3.5 space-y-2 flex flex-col justify-between shadow-xs">
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between gap-1">
-                  <span className="text-[9px] uppercase font-bold text-slate-400">
+                  <span className="text-[9px] uppercase font-bold text-slate-500">
                     {comparison.playerA.isSquadPlayer ? 'Club Squad' : 'Scouted Target'}
                   </span>
                   <button
@@ -322,21 +322,23 @@ export function PlayerComparisonModal({
                       setSwitchingSlot('A');
                       setPickerTab(comparison.playerA.isSquadPlayer ? 'squad' : 'market');
                     }}
-                    className="text-[9.5px] font-bold text-blue-400 hover:text-blue-300 bg-blue-950/40 hover:bg-blue-950/70 border border-blue-800/40 px-2 py-0.5 rounded-md transition-colors cursor-pointer"
+                    className="text-[9.5px] font-bold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2 py-0.5 rounded-md transition-colors cursor-pointer"
                   >
                     Change ▾
                   </button>
                 </div>
 
                 <div className="flex items-start gap-2">
-                  <span className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-slate-900 border border-blue-500/40 text-blue-400 flex items-center justify-center font-display font-black text-xs sm:text-sm shrink-0 shadow-sm">
+                  <span className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-display font-black text-xs sm:text-sm shrink-0 shadow-sm ${
+                    comparison.playerA.effectiveRating >= 88 ? 'my11-badge-superstar' : comparison.playerA.effectiveRating >= 84 ? 'my11-badge-elite' : 'my11-badge-strong'
+                  }`}>
                     {comparison.playerA.effectiveRating}
                   </span>
                   <div className="min-w-0">
-                    <h3 className="font-display font-black text-xs sm:text-sm text-white truncate" title={comparison.playerA.name}>
+                    <h3 className="font-display font-black text-xs sm:text-sm text-slate-900 truncate" title={comparison.playerA.name}>
                       {comparison.playerA.name}
                     </h3>
-                    <p className="text-[10px] text-slate-400 truncate">
+                    <p className="text-[10px] text-slate-500 truncate">
                       {comparison.playerA.position} • {comparison.playerA.age}y • {comparison.playerA.cleanClubName}
                     </p>
                   </div>
@@ -345,13 +347,13 @@ export function PlayerComparisonModal({
                 <div className="flex flex-wrap items-center gap-1 pt-0.5">
                   {fitBadge(fitA)}
                   {comparison.playerA.isSquadPlayer && typeof comparison.playerA.fitness === 'number' && (
-                    <span className="text-[8.5px] font-mono font-bold text-slate-300 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
+                    <span className="text-[8.5px] font-mono font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
                       ⚡ {comparison.playerA.fitness}%
                     </span>
                   )}
                   {comparison.playerA.isSquadPlayer && comparison.playerA.formBonus !== undefined && comparison.playerA.formBonus !== 0 && (
                     <span className={`text-[8.5px] font-mono font-bold px-1.5 py-0.5 rounded border ${
-                      comparison.playerA.formBonus > 0 ? 'bg-emerald-950 text-emerald-400 border-emerald-800' : 'bg-rose-950 text-rose-400 border-rose-800'
+                      comparison.playerA.formBonus > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'
                     }`}>
                       {comparison.playerA.formBonus > 0 ? `+${comparison.playerA.formBonus}` : comparison.playerA.formBonus} Form
                     </span>
@@ -359,23 +361,23 @@ export function PlayerComparisonModal({
                 </div>
               </div>
 
-              <div className="border-t border-slate-850 pt-2 text-[10px] font-mono space-y-0.5">
+              <div className="border-t border-slate-100 pt-2 text-[10px] font-mono space-y-0.5">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Valuation:</span>
-                  <span className="font-bold text-white">{formatCurrency(comparison.playerA.value, settings?.currency)}</span>
+                  <span className="text-slate-500">Valuation:</span>
+                  <span className="font-bold text-slate-900">{formatCurrency(comparison.playerA.value, settings?.currency)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Wage:</span>
-                  <span className="font-bold text-foreground font-bold">{formatWage(comparison.playerA.wageWeekly, settings?.wageUnit, settings?.currency)}</span>
+                  <span className="text-slate-500">Wage:</span>
+                  <span className="font-bold text-blue-600">{formatWage(comparison.playerA.wageWeekly, settings?.wageUnit, settings?.currency)}</span>
                 </div>
               </div>
             </div>
 
             {/* PLAYER B COLUMN */}
-            <div className="bg-slate-950/70 border border-slate-800 rounded-2xl p-2.5 sm:p-3.5 space-y-2 flex flex-col justify-between">
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-2.5 sm:p-3.5 space-y-2 flex flex-col justify-between shadow-xs">
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between gap-1">
-                  <span className="text-[9px] uppercase font-bold text-slate-400">
+                  <span className="text-[9px] uppercase font-bold text-slate-500">
                     {comparison.playerB.isSquadPlayer ? 'Club Squad' : 'Scouted Target'}
                   </span>
                   <button
@@ -384,21 +386,23 @@ export function PlayerComparisonModal({
                       setSwitchingSlot('B');
                       setPickerTab(comparison.playerB.isSquadPlayer ? 'squad' : 'market');
                     }}
-                    className="text-[9.5px] font-bold text-blue-400 hover:text-blue-300 bg-blue-950/40 hover:bg-blue-950/70 border border-blue-800/40 px-2 py-0.5 rounded-md transition-colors cursor-pointer"
+                    className="text-[9.5px] font-bold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2 py-0.5 rounded-md transition-colors cursor-pointer"
                   >
                     Change ▾
                   </button>
                 </div>
 
                 <div className="flex items-start gap-2">
-                  <span className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-slate-900 border border-blue-500/40 text-blue-400 flex items-center justify-center font-display font-black text-xs sm:text-sm shrink-0 shadow-sm">
+                  <span className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-display font-black text-xs sm:text-sm shrink-0 shadow-sm ${
+                    comparison.playerB.effectiveRating >= 88 ? 'my11-badge-superstar' : comparison.playerB.effectiveRating >= 84 ? 'my11-badge-elite' : 'my11-badge-strong'
+                  }`}>
                     {comparison.playerB.effectiveRating}
                   </span>
                   <div className="min-w-0">
-                    <h3 className="font-display font-black text-xs sm:text-sm text-white truncate" title={comparison.playerB.name}>
+                    <h3 className="font-display font-black text-xs sm:text-sm text-slate-900 truncate" title={comparison.playerB.name}>
                       {comparison.playerB.name}
                     </h3>
-                    <p className="text-[10px] text-slate-400 truncate">
+                    <p className="text-[10px] text-slate-500 truncate">
                       {comparison.playerB.position} • {comparison.playerB.age}y • {comparison.playerB.cleanClubName}
                     </p>
                   </div>
@@ -407,13 +411,13 @@ export function PlayerComparisonModal({
                 <div className="flex flex-wrap items-center gap-1 pt-0.5">
                   {fitBadge(fitB)}
                   {comparison.playerB.isSquadPlayer && typeof comparison.playerB.fitness === 'number' && (
-                    <span className="text-[8.5px] font-mono font-bold text-slate-300 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
+                    <span className="text-[8.5px] font-mono font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
                       ⚡ {comparison.playerB.fitness}%
                     </span>
                   )}
                   {comparison.playerB.isSquadPlayer && comparison.playerB.formBonus !== undefined && comparison.playerB.formBonus !== 0 && (
                     <span className={`text-[8.5px] font-mono font-bold px-1.5 py-0.5 rounded border ${
-                      comparison.playerB.formBonus > 0 ? 'bg-emerald-950 text-emerald-400 border-emerald-800' : 'bg-rose-950 text-rose-400 border-rose-800'
+                      comparison.playerB.formBonus > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'
                     }`}>
                       {comparison.playerB.formBonus > 0 ? `+${comparison.playerB.formBonus}` : comparison.playerB.formBonus} Form
                     </span>
@@ -421,26 +425,26 @@ export function PlayerComparisonModal({
                 </div>
               </div>
 
-              <div className="border-t border-slate-850 pt-2 text-[10px] font-mono space-y-0.5">
+              <div className="border-t border-slate-100 pt-2 text-[10px] font-mono space-y-0.5">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Valuation:</span>
-                  <span className="font-bold text-white">{formatCurrency(comparison.playerB.value, settings?.currency)}</span>
+                  <span className="text-slate-500">Valuation:</span>
+                  <span className="font-bold text-slate-900">{formatCurrency(comparison.playerB.value, settings?.currency)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Wage:</span>
-                  <span className="font-bold text-foreground font-bold">{formatWage(comparison.playerB.wageWeekly, settings?.wageUnit, settings?.currency)}</span>
+                  <span className="text-slate-500">Wage:</span>
+                  <span className="font-bold text-blue-600">{formatWage(comparison.playerB.wageWeekly, settings?.wageUnit, settings?.currency)}</span>
                 </div>
               </div>
             </div>
           </section>
 
           {/* ATTRIBUTE COMPARISON TABLE */}
-          <section aria-label="Attribute Comparison" className="bg-slate-950/60 border border-slate-800 rounded-2xl p-3 sm:p-4 space-y-2.5">
-            <div className="flex items-center justify-between text-xs pb-1 border-b border-slate-850">
-              <span className="font-display font-black text-slate-300 uppercase tracking-wider text-[11px]">
+          <section aria-label="Attribute Comparison" className="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-3 sm:p-4 space-y-2.5">
+            <div className="flex items-center justify-between text-xs pb-1 border-b border-slate-200">
+              <span className="font-display font-black text-slate-700 uppercase tracking-wider text-[11px]">
                 Technical &amp; Physical Attributes
               </span>
-              <span className="text-[9px] text-slate-400">★ = Role Priority Stat</span>
+              <span className="text-[9px] text-slate-400 font-medium">★ = Role Priority Stat</span>
             </div>
 
             <div className="space-y-1.5">
@@ -452,19 +456,19 @@ export function PlayerComparisonModal({
                 return (
                   <div
                     key={attr.key}
-                    className={`py-1.5 px-2 rounded-xl border flex items-center justify-between text-xs transition-colors ${
+                    className={`py-1.5 px-2 rounded-xl border flex items-center justify-between text-xs transition-colors shadow-2xs ${
                       attr.isKeyForPosition
-                        ? 'bg-slate-900/90 border-slate-750'
-                        : 'bg-slate-900/40 border-slate-850/80'
+                        ? 'bg-amber-50/40 border-amber-200'
+                        : 'bg-white border-slate-200/80'
                     }`}
                   >
                     {/* Player A Stat */}
                     <div className="flex items-center gap-1.5 w-16 sm:w-20 justify-start">
                       {isAWinner && (
-                        <span className="text-[10px] font-black text-blue-400" aria-label="Stronger">▲</span>
+                        <span className="text-[10px] font-black text-blue-600" aria-label="Stronger">▲</span>
                       )}
                       <span className={`font-mono text-xs sm:text-sm ${
-                        isAWinner ? 'font-black text-blue-300' : 'text-slate-400'
+                        isAWinner ? 'font-black text-blue-600' : 'text-slate-500'
                       }`}>
                         {attr.valueA}
                       </span>
@@ -473,20 +477,20 @@ export function PlayerComparisonModal({
                     {/* Stat Label & Visual Indicator */}
                     <div className="flex-1 flex flex-col items-center justify-center px-1">
                       <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-display font-bold uppercase tracking-wider">
-                        <span className={attr.isKeyForPosition ? 'text-amber-300 font-black' : 'text-slate-300'}>
+                        <span className={attr.isKeyForPosition ? 'text-amber-800 font-black' : 'text-slate-700'}>
                           {attr.label}
                         </span>
-                        {attr.isKeyForPosition && <span className="text-[10px] text-amber-400">★</span>}
+                        {attr.isKeyForPosition && <span className="text-[10px] text-amber-500">★</span>}
                       </div>
 
                       {/* Compact comparison bar */}
-                      <div className="w-full max-w-[140px] sm:max-w-[200px] h-1.5 bg-slate-800 rounded-full overflow-hidden flex mt-1">
+                      <div className="w-full max-w-[140px] sm:max-w-[200px] h-1.5 bg-slate-200 rounded-full overflow-hidden flex mt-1">
                         <div
-                          className={`h-full transition-all ${isAWinner ? 'bg-blue-500' : 'bg-slate-600'}`}
+                          className={`h-full transition-all ${isAWinner ? 'bg-blue-600' : 'bg-slate-300'}`}
                           style={{ width: `${(attr.valueA / (attr.valueA + attr.valueB)) * 100}%` }}
                         />
                         <div
-                          className={`h-full transition-all ${isBWinner ? 'bg-blue-500' : 'bg-slate-600'}`}
+                          className={`h-full transition-all ${isBWinner ? 'bg-blue-600' : 'bg-slate-300'}`}
                           style={{ width: `${(attr.valueB / (attr.valueA + attr.valueB)) * 100}%` }}
                         />
                       </div>
@@ -495,12 +499,12 @@ export function PlayerComparisonModal({
                     {/* Player B Stat */}
                     <div className="flex items-center gap-1.5 w-16 sm:w-20 justify-end">
                       <span className={`font-mono text-xs sm:text-sm ${
-                        isBWinner ? 'font-black text-blue-300' : 'text-slate-400'
+                        isBWinner ? 'font-black text-blue-600' : 'text-slate-500'
                       }`}>
                         {attr.valueB}
                       </span>
                       {isBWinner && (
-                        <span className="text-[10px] font-black text-blue-400" aria-label="Stronger">▲</span>
+                        <span className="text-[10px] font-black text-blue-600" aria-label="Stronger">▲</span>
                       )}
                     </div>
                   </div>
@@ -510,31 +514,31 @@ export function PlayerComparisonModal({
           </section>
 
           {/* FOOTBALL-INTELLIGENT VERDICT */}
-          <section aria-label="Scouting Rationale & Tactical Verdict" className="bg-slate-950/80 border border-blue-500/30 rounded-2xl p-3 sm:p-4 space-y-2.5">
+          <section aria-label="Scouting Rationale & Tactical Verdict" className="bg-gradient-to-br from-blue-50/80 via-indigo-50/40 to-white border border-blue-200/80 rounded-2xl p-3 sm:p-4 space-y-2.5 shadow-xs">
             <div className="flex items-center gap-1.5">
               <span className="text-sm">🧠</span>
-              <h4 className="font-display font-black text-xs sm:text-sm text-blue-400 uppercase tracking-tight">
+              <h4 className="font-display font-black text-xs sm:text-sm text-blue-700 uppercase tracking-tight">
                 Tactical Rationale &amp; Verdict
               </h4>
             </div>
 
             <div className="space-y-1">
-              <p className="font-display font-black text-xs sm:text-sm text-white">
+              <p className="font-display font-black text-xs sm:text-sm text-slate-900">
                 {verdict.headline}
               </p>
-              <p className="text-[11px] sm:text-xs text-slate-300 leading-relaxed font-sans">
+              <p className="text-[11px] sm:text-xs text-slate-700 leading-relaxed font-sans">
                 {verdict.summary}
               </p>
             </div>
 
             {/* Key Advantages Side-by-Side */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-slate-850 text-[10.5px]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-blue-100 text-[10.5px]">
               <div className="space-y-1">
-                <span className="font-display font-bold text-slate-400 uppercase text-[9px] block">
+                <span className="font-display font-bold text-slate-500 uppercase text-[9px] block">
                   {comparison.playerA.name} Strengths:
                 </span>
                 {verdict.keyAdvantagesA.length > 0 ? (
-                  <ul className="space-y-0.5 list-disc list-inside text-slate-200">
+                  <ul className="space-y-0.5 list-disc list-inside text-slate-800">
                     {verdict.keyAdvantagesA.map((adv, i) => (
                       <li key={i} className="truncate">{adv}</li>
                     ))}
@@ -545,11 +549,11 @@ export function PlayerComparisonModal({
               </div>
 
               <div className="space-y-1">
-                <span className="font-display font-bold text-slate-400 uppercase text-[9px] block">
+                <span className="font-display font-bold text-slate-500 uppercase text-[9px] block">
                   {comparison.playerB.name} Strengths:
                 </span>
                 {verdict.keyAdvantagesB.length > 0 ? (
-                  <ul className="space-y-0.5 list-disc list-inside text-slate-200">
+                  <ul className="space-y-0.5 list-disc list-inside text-slate-800">
                     {verdict.keyAdvantagesB.map((adv, i) => (
                       <li key={i} className="truncate">{adv}</li>
                     ))}
@@ -562,41 +566,41 @@ export function PlayerComparisonModal({
           </section>
 
           {/* FINANCIAL & SQUAD REGISTRATION CLARITY (REQUIREMENT 8) */}
-          <section aria-label="Financial and Registration Rules" className="bg-slate-950/80 border border-slate-800 rounded-2xl p-3 sm:p-4 space-y-2.5">
+          <section aria-label="Financial and Registration Rules" className="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-3 sm:p-4 space-y-2.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <span className="text-xs">💼</span>
-                <h4 className="font-display font-black text-xs uppercase tracking-tight text-white">
+                <h4 className="font-display font-black text-xs uppercase tracking-tight text-slate-900">
                   Financial &amp; Registration Feasibility
                 </h4>
               </div>
-              <span className="text-[10px] font-mono text-slate-400">
-                Headroom: <strong className="text-emerald-400">+{formatWage(financialImpact.wageHeadroom, settings?.wageUnit, settings?.currency)}</strong>
+              <span className="text-[10px] font-mono text-slate-500">
+                Headroom: <strong className="text-emerald-700">+{formatWage(financialImpact.wageHeadroom, settings?.wageUnit, settings?.currency)}</strong>
               </span>
             </div>
 
             <div className="space-y-2 text-xs">
               {/* Registration Rule Status */}
-              <div className="p-2.5 rounded-xl border border-slate-800 bg-slate-900/60 space-y-1">
+              <div className="p-2.5 rounded-xl border border-slate-200 bg-white space-y-1">
                 <div className="flex items-center justify-between text-[11px] font-bold">
-                  <span className="text-slate-300">Premier League 25-Man Senior Squad Quota:</span>
-                  <span className={`font-mono ${financialImpact.isSeniorQuotaFull ? 'text-amber-400' : 'text-emerald-400'}`}>
+                  <span className="text-slate-700">Premier League 25-Man Senior Squad Quota:</span>
+                  <span className={`font-mono ${financialImpact.isSeniorQuotaFull ? 'text-amber-700' : 'text-emerald-700'}`}>
                     {financialImpact.seniorCount}/{financialImpact.maxSeniorCount} Slots Used
                   </span>
                 </div>
 
                 {financialImpact.registrationWarningA && (
-                  <div className="text-[10px] text-amber-300 bg-amber-950/40 p-1.5 rounded-lg border border-amber-800/40">
+                  <div className="text-[10px] text-amber-800 bg-amber-50 p-1.5 rounded-lg border border-amber-200">
                     ⚠️ {comparison.playerA.name}: {financialImpact.registrationWarningA}
                   </div>
                 )}
                 {financialImpact.registrationWarningB && (
-                  <div className="text-[10px] text-amber-300 bg-amber-950/40 p-1.5 rounded-lg border border-amber-800/40">
+                  <div className="text-[10px] text-amber-800 bg-amber-50 p-1.5 rounded-lg border border-amber-200">
                     ⚠️ {comparison.playerB.name}: {financialImpact.registrationWarningB}
                   </div>
                 )}
                 {!financialImpact.registrationWarningA && !financialImpact.registrationWarningB && (
-                  <p className="text-[10px] text-slate-400 font-sans">
+                  <p className="text-[10px] text-slate-500 font-sans">
                     ✓ Both candidates comply with senior registration rules or qualify for U-21 quota exemptions.
                   </p>
                 )}
@@ -604,7 +608,7 @@ export function PlayerComparisonModal({
 
               {/* Wage Headroom Status */}
               {(financialImpact.wageWarningA || financialImpact.wageWarningB) && (
-                <div className="p-2.5 rounded-xl border border-amber-500/40 bg-amber-950/30 text-[10.5px] text-amber-200 space-y-1.5">
+                <div className="p-2.5 rounded-xl border border-amber-300 bg-amber-50 text-[10.5px] text-amber-900 space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="font-bold flex items-center gap-1">
                       <span>⚠️</span> Wage Budget Notice
@@ -616,7 +620,7 @@ export function PlayerComparisonModal({
                           onClose();
                           onNavigateOfficeBudget();
                         }}
-                        className="text-[9.5px] font-black uppercase text-amber-400 underline hover:text-white cursor-pointer"
+                        className="text-[9.5px] font-black uppercase text-amber-700 underline hover:text-amber-900 cursor-pointer"
                       >
                         Adjust Wage Budget ➔
                       </button>
@@ -631,11 +635,11 @@ export function PlayerComparisonModal({
         </div>
 
         {/* MODAL FOOTER ACTIONS */}
-        <footer className="p-3 sm:p-4 border-t border-slate-800 bg-slate-950/90 flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <footer className="p-3 sm:p-4 border-t border-slate-200/80 bg-white/95 backdrop-blur-md flex flex-wrap items-center justify-between gap-2 shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="py-2.5 px-4 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-900 text-slate-300 font-display font-bold text-xs uppercase cursor-pointer"
+            className="py-2.5 px-4 rounded-xl border border-slate-200 hover:border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 font-display font-bold text-xs uppercase cursor-pointer"
           >
             Close
           </button>
@@ -698,35 +702,35 @@ export function PlayerComparisonModal({
 
       {/* PLAYER PICKER DRAWER / POPUP (For switching player A or B) */}
       {switchingSlot && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-2 sm:p-3 bg-slate-950/85 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-slate-900 border border-slate-750 w-full max-w-xl rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden">
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-2 sm:p-3 bg-slate-950/40 backdrop-blur-sm animate-in fade-in">
+          <div className="office-floating-card border border-white/80 w-full max-w-xl rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden">
             {/* Header */}
-            <div className="p-3 sm:p-3.5 border-b border-slate-800 flex items-center justify-between bg-slate-950/70">
+            <div className="p-3 sm:p-3.5 border-b border-slate-200/80 flex items-center justify-between bg-white/80">
               <div>
-                <h3 className="font-display font-black text-xs uppercase text-white tracking-wider flex items-center gap-2">
+                <h3 className="font-display font-black text-xs uppercase text-slate-900 tracking-wider flex items-center gap-2">
                   <span>Select Player for Slot {switchingSlot}</span>
-                  <span className="text-[10px] text-blue-400 font-mono">
+                  <span className="text-[10px] text-blue-600 font-mono">
                     ({getPickerList().length} Available)
                   </span>
                 </h3>
-                <span className="text-[10px] text-slate-400">Choose from Squad, Market, or Shortlist</span>
+                <span className="text-[10px] text-slate-500">Choose from Squad, Market, or Shortlist</span>
               </div>
               <button
                 type="button"
                 onClick={() => setSwitchingSlot(null)}
-                className="w-7 h-7 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer"
+                className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center font-bold text-sm cursor-pointer"
               >
                 ×
               </button>
             </div>
 
             {/* Tabs inside picker */}
-            <div className="p-2 border-b border-slate-800 flex gap-1 bg-slate-950/60 text-xs">
+            <div className="p-2 border-b border-slate-200/80 flex gap-1 bg-slate-50/60 text-xs">
               <button
                 type="button"
                 onClick={() => setPickerTab('squad')}
                 className={`flex-1 py-1.5 px-2 rounded-lg font-bold text-[10px] uppercase transition-all cursor-pointer ${
-                  pickerTab === 'squad' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                  pickerTab === 'squad' ? 'office-nav-tab-active shadow-sm' : 'office-nav-tab'
                 }`}
               >
                 Squad ({squad.length})
@@ -735,7 +739,7 @@ export function PlayerComparisonModal({
                 type="button"
                 onClick={() => setPickerTab('market')}
                 className={`flex-1 py-1.5 px-2 rounded-lg font-bold text-[10px] uppercase transition-all cursor-pointer ${
-                  pickerTab === 'market' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                  pickerTab === 'market' ? 'office-nav-tab-active shadow-sm' : 'office-nav-tab'
                 }`}
               >
                 Market ({marketPlayers.length})
@@ -744,7 +748,7 @@ export function PlayerComparisonModal({
                 type="button"
                 onClick={() => setPickerTab('shortlist')}
                 className={`flex-1 py-1.5 px-2 rounded-lg font-bold text-[10px] uppercase transition-all cursor-pointer ${
-                  pickerTab === 'shortlist' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                  pickerTab === 'shortlist' ? 'office-nav-tab-active shadow-sm' : 'office-nav-tab'
                 }`}
               >
                 Shortlist ({shortlistedPlayers.length})
@@ -752,25 +756,25 @@ export function PlayerComparisonModal({
             </div>
 
             {/* Search Input Bar */}
-            <div className="p-2 border-b border-slate-850 bg-slate-950/40">
+            <div className="p-2 border-b border-slate-200/80 bg-slate-50/40">
               <input
                 type="text"
                 placeholder="Search by player name, club, nationality, or position..."
                 value={pickerSearch}
                 onChange={(e) => setPickerSearch(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-sans"
+                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 font-sans"
               />
             </div>
 
             {/* Filter & Sort Controls Grid */}
-            <div className="p-2 border-b border-slate-850 bg-slate-950/20 grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[10.5px]">
+            <div className="p-2 border-b border-slate-200/80 bg-slate-50/30 grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[10.5px]">
               {/* Position Filter */}
               <div>
                 <span className="text-[8.5px] uppercase font-bold text-slate-500 block">Position</span>
                 <select
                   value={pickerPosFilter}
                   onChange={(e) => setPickerPosFilter(e.target.value as any)}
-                  className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-1.5 py-1 text-[10.5px] font-bold"
+                  className="w-full bg-white border border-slate-200 text-slate-800 rounded-lg px-1.5 py-1 text-[10.5px] font-bold"
                 >
                   <option value="all">All Positions</option>
                   <option value="same">{targetPosition} Only</option>
@@ -793,7 +797,7 @@ export function PlayerComparisonModal({
                 <select
                   value={pickerLeague}
                   onChange={(e) => setPickerLeague(e.target.value as any)}
-                  className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-1.5 py-1 text-[10.5px] font-bold"
+                  className="w-full bg-white border border-slate-200 text-slate-800 rounded-lg px-1.5 py-1 text-[10.5px] font-bold"
                 >
                   <option value="ALL">All Leagues</option>
                   <option value="pl">Premier League</option>
@@ -808,7 +812,7 @@ export function PlayerComparisonModal({
                 <select
                   value={pickerClub}
                   onChange={(e) => setPickerClub(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-1.5 py-1 text-[10.5px] font-bold truncate"
+                  className="w-full bg-white border border-slate-200 text-slate-800 rounded-lg px-1.5 py-1 text-[10.5px] font-bold truncate"
                 >
                   <option value="ALL">All Clubs</option>
                   {availableClubs.map((club) => (
@@ -825,7 +829,7 @@ export function PlayerComparisonModal({
                 <select
                   value={pickerSort}
                   onChange={(e) => setPickerSort(e.target.value as any)}
-                  className="w-full bg-slate-950 border border-slate-800 text-blue-400 rounded-lg px-1.5 py-1 text-[10.5px] font-bold"
+                  className="w-full bg-white border border-slate-200 text-blue-600 rounded-lg px-1.5 py-1 text-[10.5px] font-bold"
                 >
                   <option value="value_desc">Valuation (High-Low)</option>
                   <option value="rating_desc">Rating (High-Low)</option>
@@ -836,7 +840,7 @@ export function PlayerComparisonModal({
             </div>
 
             {/* List */}
-            <div className="flex-1 overflow-y-auto p-2 space-y-1 divide-y divide-slate-850/60 max-h-[380px] scrollbar-thin">
+            <div className="flex-1 overflow-y-auto p-2 space-y-1 divide-y divide-slate-100 max-h-[380px] scrollbar-thin">
               {getPickerList().length === 0 ? (
                 <div className="text-center py-8 text-xs text-slate-500 space-y-1">
                   <p>No matching players found with selected filters.</p>
@@ -849,7 +853,7 @@ export function PlayerComparisonModal({
                       setPickerNationality('ALL');
                       setPickerPosFilter('all');
                     }}
-                    className="text-[10.5px] text-blue-400 underline font-bold"
+                    className="text-[10.5px] text-blue-600 underline font-bold"
                   >
                     Reset Picker Filters
                   </button>
@@ -861,23 +865,25 @@ export function PlayerComparisonModal({
                     <div
                       key={p.id}
                       onClick={() => handleSelectFromPicker(p)}
-                      className="p-2 rounded-xl hover:bg-slate-800/60 flex items-center justify-between gap-2 cursor-pointer transition-colors"
+                      className="p-2 rounded-xl hover:bg-blue-50/60 flex items-center justify-between gap-2 cursor-pointer transition-colors border border-transparent hover:border-blue-100"
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="w-8 h-8 rounded-lg bg-slate-950 border border-slate-800 text-blue-400 text-xs font-display font-black flex items-center justify-center shrink-0">
+                        <span className={`w-8 h-8 rounded-lg text-xs font-display font-black flex items-center justify-center shrink-0 shadow-xs ${
+                          p.rating >= 88 ? 'my11-badge-superstar' : p.rating >= 84 ? 'my11-badge-elite' : 'my11-badge-strong'
+                        }`}>
                           {p.rating}
                         </span>
                         <div className="min-w-0">
-                          <div className="font-display font-bold text-xs text-white truncate flex items-center gap-1.5">
+                          <div className="font-display font-bold text-xs text-slate-900 truncate flex items-center gap-1.5">
                             <span>{p.name}</span>
                             {fit === 'natural' && (
-                              <span className="text-[8px] font-black uppercase px-1 rounded bg-blue-950 text-blue-300 border border-blue-800">
+                              <span className="text-[8px] font-black uppercase px-1 rounded bg-blue-50 text-blue-700 border border-blue-200">
                                 Fit
                               </span>
                             )}
                           </div>
-                          <div className="text-[10px] text-slate-400 truncate">
-                            <span className="text-blue-400 font-bold">{p.position}</span>
+                          <div className="text-[10px] text-slate-500 truncate">
+                            <span className="text-blue-600 font-bold">{p.position}</span>
                             <span> • {p.age}y</span>
                             <span> • {p.nationality}</span>
                             <span> • {p.club}</span>
@@ -885,10 +891,10 @@ export function PlayerComparisonModal({
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        <span className="text-[10px] font-mono text-foreground font-bold block">
+                        <span className="text-[10px] font-mono text-slate-900 font-bold block">
                           {formatCurrency(p.value, settings?.currency)}
                         </span>
-                        <span className="text-[9px] font-mono text-slate-400 block">
+                        <span className="text-[9px] font-mono text-slate-500 block">
                           {formatWage((p as CareerPlayer).wageWeekly || (p as MarketPlayer).wageDemand || 0, settings?.wageUnit, settings?.currency)}
                         </span>
                       </div>

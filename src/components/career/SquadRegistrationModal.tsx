@@ -131,29 +131,30 @@ export function SquadRegistrationModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="registration-modal-title"
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/85 backdrop-blur-md overflow-hidden animate-in fade-in"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/60 backdrop-blur-md overflow-hidden animate-in fade-in"
     >
-      <div className="bg-slate-900 border-t sm:border border-slate-800 w-full max-w-2xl rounded-t-3xl sm:rounded-3xl max-h-[92vh] sm:max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
+      <div className="office-floating-card bg-white border border-slate-200/90 w-full max-w-2xl rounded-t-3xl sm:rounded-3xl max-h-[92vh] sm:max-h-[88vh] flex flex-col shadow-2xl overflow-hidden text-[#0b1536]">
         {/* MODAL HEADER */}
-        <header className="p-3.5 sm:p-4 border-b border-slate-800 flex items-center justify-between gap-2 shrink-0 bg-slate-950/70">
+        <header className="p-3.5 sm:p-4 border-b border-slate-100 flex items-center justify-between gap-2 shrink-0 bg-slate-50/80">
           <div className="space-y-0.5 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/40 font-display">
+              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-display">
                 Premier League Squad Rules
               </span>
-              <span className="text-[10px] text-slate-400 font-mono">
+              <span className="text-[10px] text-slate-500 font-mono">
                 {seniors.length} Seniors in Club
               </span>
             </div>
-            <h2 id="registration-modal-title" className="text-sm sm:text-base font-display font-black text-white uppercase tracking-tight truncate">
-              📋 25-Man Senior Squad Registration
+            <h2 id="registration-modal-title" className="text-sm sm:text-base font-display font-black text-[#0b1536] uppercase tracking-tight truncate flex items-center gap-1.5">
+              <span>📋</span>
+              <span>25-Man Senior Squad Registration</span>
             </h2>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full border border-slate-800 hover:border-slate-700 bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition-colors text-base font-bold cursor-pointer shrink-0"
+            className="w-8 h-8 rounded-full border border-slate-200 bg-white hover:bg-slate-100 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors text-base font-bold cursor-pointer shrink-0 shadow-2xs"
             aria-label="Close squad registration"
           >
             ×
@@ -161,21 +162,21 @@ export function SquadRegistrationModal({
         </header>
 
         {/* STATUS BAR KPIs */}
-        <div className="p-3 sm:p-4 border-b border-slate-800/80 bg-slate-950/40 grid grid-cols-3 gap-2 text-xs">
+        <div className="p-3 sm:p-4 border-b border-slate-100 bg-slate-50/50 grid grid-cols-3 gap-2 text-xs">
           {/* Senior Slots Counter */}
-          <div className={`p-2.5 rounded-xl border flex flex-col justify-between ${
+          <div className={`office-subcard p-2.5 rounded-2xl border flex flex-col justify-between ${
             isOverLimit
-              ? 'bg-rose-950/40 border-rose-600/60 text-rose-300'
+              ? 'bg-rose-50 border-rose-300 text-rose-800'
               : selectedCount === MAX_SENIOR_SQUAD_SIZE
-              ? 'bg-emerald-950/40 border-emerald-600/60 text-emerald-300'
-              : 'bg-slate-950/60 border-slate-800 text-slate-200'
+              ? 'office-kpi-mint'
+              : 'office-kpi-blue'
           }`}>
-            <span className="text-[9px] uppercase font-bold text-slate-400 block">Senior Registered</span>
+            <span className="text-[9px] uppercase font-bold text-slate-500 block tracking-wider">Senior Registered</span>
             <div className="flex items-baseline gap-1 mt-0.5">
-              <span className="font-display font-black text-lg text-white">{selectedCount}</span>
-              <span className="font-mono text-slate-400 text-xs">/ {MAX_SENIOR_SQUAD_SIZE}</span>
+              <span className="font-display font-black text-xl text-[#0b1536]">{selectedCount}</span>
+              <span className="font-mono text-slate-500 text-xs">/ {MAX_SENIOR_SQUAD_SIZE}</span>
             </div>
-            <span className="text-[8.5px] font-medium opacity-80 mt-0.5">
+            <span className="text-[8.5px] font-medium opacity-85 mt-0.5">
               {selectedCount === MAX_SENIOR_SQUAD_SIZE
                 ? 'Full 25-Man Quota'
                 : `${MAX_SENIOR_SQUAD_SIZE - selectedCount} Slots Open`}
@@ -183,47 +184,47 @@ export function SquadRegistrationModal({
           </div>
 
           {/* Homegrown / Foreign Ratio */}
-          <div className={`p-2.5 rounded-xl border flex flex-col justify-between ${
+          <div className={`office-subcard p-2.5 rounded-2xl border flex flex-col justify-between ${
             isNonHomegrownOverLimit
-              ? 'bg-rose-950/40 border-rose-600/60 text-rose-300'
-              : 'bg-slate-950/60 border-slate-800 text-slate-200'
+              ? 'bg-rose-50 border-rose-300 text-rose-800'
+              : ''
           }`}>
-            <span className="text-[9px] uppercase font-bold text-slate-400 block">Homegrown / Foreign</span>
+            <span className="text-[9px] uppercase font-bold text-slate-500 block tracking-wider">Homegrown / Foreign</span>
             <div className="flex items-baseline gap-1 mt-0.5">
-              <span className="font-display font-black text-base text-blue-400">{registeredHomegrownCount}</span>
-              <span className="text-[10px] text-slate-400">HG •</span>
-              <span className="font-display font-black text-base text-slate-300">{registeredNonHomegrownCount}</span>
-              <span className="text-[10px] text-slate-400 font-mono">/ 17 max</span>
+              <span className="font-display font-black text-lg text-blue-600">{registeredHomegrownCount}</span>
+              <span className="text-[10px] text-slate-400 font-bold">HG •</span>
+              <span className="font-display font-black text-lg text-[#0b1536]">{registeredNonHomegrownCount}</span>
+              <span className="text-[10px] text-slate-500 font-mono">/ 17 max</span>
             </div>
-            <span className="text-[8.5px] font-medium text-slate-400 mt-0.5 truncate">
+            <span className="text-[8.5px] font-medium text-slate-500 mt-0.5 truncate">
               {registeredNonHomegrownCount <= MAX_SENIOR_NON_HOMEGROWN
-                ? '✓ Compliant (Max 17 Foreign OK)'
+                ? '✓ Compliant (Max 17 Foreign)'
                 : '⚠️ Exceeds 17 Foreign Limit'}
             </span>
           </div>
 
           {/* U21 Exempt */}
-          <div className="p-2.5 rounded-xl border border-blue-900/40 bg-blue-950/20 flex flex-col justify-between">
-            <span className="text-[9px] uppercase font-bold text-blue-400 block">U21 Prospects</span>
+          <div className="office-subcard office-kpi-lavender p-2.5 rounded-2xl border flex flex-col justify-between">
+            <span className="text-[9px] uppercase font-bold text-purple-700 block tracking-wider">U21 Prospects</span>
             <div className="flex items-baseline gap-1 mt-0.5">
-              <span className="font-display font-black text-lg text-blue-300">{u21Players.length}</span>
-              <span className="text-[10px] text-blue-400/80">Exempt</span>
+              <span className="font-display font-black text-xl text-purple-800">{u21Players.length}</span>
+              <span className="text-[10px] text-purple-600 font-bold">Exempt</span>
             </div>
-            <span className="text-[8.5px] font-medium text-blue-400/80 mt-0.5 truncate">
+            <span className="text-[8.5px] font-medium text-purple-700 mt-0.5 truncate">
               ✓ Eligible automatically
             </span>
           </div>
         </div>
 
         {/* QUICK ACTIONS & SEARCH BAR */}
-        <div className="px-3 sm:px-4 py-2 border-b border-slate-800 bg-slate-950/30 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div className="px-3 sm:px-4 py-2.5 border-b border-slate-100 bg-white flex flex-wrap items-center justify-between gap-2 text-xs">
           <div className="flex items-center gap-1.5 flex-1 min-w-[200px]">
             <input
               type="text"
               placeholder="Search senior players..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-[#0b1536] placeholder-slate-400 focus:outline-none focus:border-blue-500 shadow-2xs font-medium"
             />
           </div>
 
@@ -231,14 +232,14 @@ export function SquadRegistrationModal({
             <button
               type="button"
               onClick={handleAutoRegisterTop25}
-              className="py-1 px-2.5 rounded-lg bg-blue-950/60 hover:bg-blue-950 text-blue-300 border border-blue-800/60 font-display font-bold text-[10.5px] uppercase cursor-pointer"
+              className="py-1.5 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-display font-black text-[10.5px] uppercase cursor-pointer shadow-2xs transition-all active:scale-95"
             >
               ⚡ Auto Top 25
             </button>
             <button
               type="button"
               onClick={handleClear}
-              className="py-1 px-2 rounded-lg bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-white border border-slate-800 font-display font-bold text-[10.5px] uppercase cursor-pointer"
+              className="py-1.5 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 font-display font-black text-[10.5px] uppercase cursor-pointer shadow-2xs transition-all active:scale-95"
             >
               Clear
             </button>
@@ -246,16 +247,16 @@ export function SquadRegistrationModal({
         </div>
 
         {/* POSITION FILTER PILLS */}
-        <nav aria-label="Senior Position Filters" data-no-swipe="true" className="px-3 sm:px-4 py-1.5 border-b border-slate-850 flex gap-1 overflow-x-auto scrollbar-none text-xs">
+        <nav aria-label="Senior Position Filters" data-no-swipe="true" className="px-3 sm:px-4 py-2 border-b border-slate-100 flex gap-1.5 overflow-x-auto scrollbar-none text-xs bg-slate-50/50">
           {(['ALL', 'GK', 'DEF', 'MID', 'FWD'] as const).map((cat) => (
             <button
               key={cat}
               type="button"
               onClick={() => setFilterPos(cat)}
-              className={`py-1 px-2.5 rounded-lg font-display font-bold text-[10.5px] uppercase cursor-pointer transition-colors ${
+              className={`py-1 px-3 rounded-xl font-display font-black text-[10.5px] uppercase cursor-pointer transition-all ${
                 filterPos === cat
-                  ? 'bg-blue-600 text-white font-bold'
-                  : 'bg-slate-950 border border-slate-850 text-slate-400 hover:text-white'
+                  ? 'office-nav-tab-active shadow-sm'
+                  : 'office-nav-tab-inactive'
               }`}
             >
               {cat}
@@ -264,10 +265,10 @@ export function SquadRegistrationModal({
           <button
             type="button"
             onClick={() => setShowU21List((prev) => !prev)}
-            className={`py-1 px-2.5 rounded-lg font-display font-bold text-[10.5px] uppercase cursor-pointer ml-auto transition-colors flex items-center gap-1 ${
+            className={`py-1 px-3 rounded-xl font-display font-black text-[10.5px] uppercase cursor-pointer ml-auto transition-all flex items-center gap-1.5 ${
               showU21List
-                ? 'bg-blue-950 border border-blue-500 text-blue-300'
-                : 'bg-slate-900 border border-slate-800 text-blue-400'
+                ? 'office-nav-tab-active shadow-sm'
+                : 'office-nav-tab-inactive'
             }`}
           >
             <span>👶 U21 Exempt ({u21Players.length})</span>
@@ -279,12 +280,12 @@ export function SquadRegistrationModal({
         <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 scrollbar-thin">
           {/* U21 Collapsible Banner if toggled */}
           {showU21List && (
-            <div className="p-3 rounded-2xl bg-blue-950/30 border border-blue-800/40 space-y-2 mb-3">
+            <div className="p-3 rounded-2xl bg-blue-50/80 border border-blue-200 space-y-2 mb-3">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-display font-black text-blue-300 uppercase tracking-wider text-[11px]">
+                <span className="font-display font-black text-blue-800 uppercase tracking-wider text-[11px]">
                   👶 Under-21 Squad Players (Exempt from 25-man limit)
                 </span>
-                <span className="text-[10px] text-blue-400 font-mono">
+                <span className="text-[10px] text-blue-600 font-mono font-bold">
                   All {u21Players.length} automatically eligible
                 </span>
               </div>
@@ -292,16 +293,16 @@ export function SquadRegistrationModal({
                 {u21Players.map((p) => (
                   <div
                     key={p.id}
-                    className="p-1.5 px-2 rounded-lg bg-slate-950/60 border border-blue-900/30 flex items-center justify-between text-xs"
+                    className="p-2 px-2.5 rounded-xl bg-white border border-blue-200 flex items-center justify-between text-xs shadow-2xs"
                   >
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="w-6 h-6 rounded bg-slate-900 border border-slate-800 flex items-center justify-center font-display font-bold text-[10px] text-blue-400 shrink-0">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-6 h-6 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center font-display font-black text-[10px] text-blue-700 shrink-0">
                         {p.rating}
                       </span>
-                      <span className="font-display font-bold text-white truncate text-[11px]">{p.name}</span>
-                      <span className="text-[9.5px] text-slate-400">{p.position} • {p.age}y</span>
+                      <span className="font-display font-bold text-[#0b1536] truncate text-[11px]">{p.name}</span>
+                      <span className="text-[9.5px] text-slate-500 font-medium">{p.position} • {p.age}y</span>
                     </div>
-                    <span className="text-[9px] font-bold text-blue-400 bg-blue-950/80 px-1.5 py-0.2 rounded border border-blue-900 shrink-0">
+                    <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200 shrink-0">
                       Eligible ✓
                     </span>
                   </div>
@@ -312,7 +313,7 @@ export function SquadRegistrationModal({
 
           {/* Seniors List */}
           {filteredSeniors.length === 0 ? (
-            <div className="text-center py-8 text-xs text-slate-500">
+            <div className="text-center py-10 text-xs text-slate-400">
               No senior players matching current filters.
             </div>
           ) : (
@@ -321,50 +322,55 @@ export function SquadRegistrationModal({
               const isHg = isHomegrownPlayer(player);
               const atCapacity = !isSelected && selectedCount >= MAX_SENIOR_SQUAD_SIZE;
 
+              const ratingBadgeClass =
+                player.rating >= 90
+                  ? 'my11-badge-superstar'
+                  : player.rating >= 84
+                  ? 'my11-badge-elite'
+                  : player.rating >= 78
+                  ? 'my11-badge-strong'
+                  : 'my11-badge-modest';
+
               return (
                 <div
                   key={player.id}
                   onClick={() => togglePlayer(player.id)}
-                  className={`p-2.5 rounded-xl border flex items-center justify-between gap-2.5 transition-all cursor-pointer select-none ${
+                  className={`office-subcard p-2.5 sm:p-3 rounded-2xl border flex items-center justify-between gap-2.5 transition-all cursor-pointer select-none ${
                     isSelected
-                      ? 'bg-slate-950/90 border-blue-500/50 shadow-sm'
-                      : 'bg-slate-950/40 border-slate-850 hover:border-slate-750 opacity-80'
+                      ? 'border-blue-400 shadow-xs ring-1.5 ring-blue-500/20'
+                      : 'border-slate-200/90 opacity-85 hover:opacity-100 hover:border-slate-300'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-display font-black text-xs shrink-0 ${
-                      isSelected
-                        ? 'bg-blue-950 border border-blue-600/70 text-blue-300'
-                        : 'bg-slate-900 border border-slate-800 text-slate-400'
-                    }`}>
+                    <span className={`w-8 h-8 rounded-xl flex items-center justify-center font-display font-black text-xs shrink-0 shadow-2xs ${ratingBadgeClass}`}>
                       {player.rating}
                     </span>
 
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="font-display font-black text-xs text-white truncate max-w-[150px] sm:max-w-[200px]">
+                        <span className="font-display font-black text-xs sm:text-sm text-[#0b1536] truncate max-w-[150px] sm:max-w-[220px]">
                           {player.name}
                         </span>
                         {isHg ? (
-                          <span className="text-[8px] font-bold uppercase text-blue-400 bg-blue-950/60 border border-blue-900 px-1 py-0.2 rounded shrink-0">
+                          <span className="text-[8.5px] font-black uppercase text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.2 rounded-md shrink-0">
                             HG
                           </span>
                         ) : (
-                          <span className="text-[8px] font-bold uppercase text-slate-400 bg-slate-900 px-1 py-0.2 rounded shrink-0">
+                          <span className="text-[8.5px] font-bold uppercase text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.2 rounded-md shrink-0">
                             Foreign
                           </span>
                         )}
                       </div>
-                      <div className="text-[10px] text-slate-400 font-medium flex items-center gap-1 mt-0.5 truncate">
-                        <span className="text-blue-400 font-bold">{player.position}</span>
+                      <div className="text-[10px] text-slate-500 font-medium flex items-center gap-1 mt-0.5 truncate">
+                        <span className="text-blue-700 font-bold">{player.position}</span>
                         <span>•</span>
                         <span>{player.age}y</span>
                         <span>•</span>
                         <span>{player.nationality}</span>
                         <span>•</span>
-                        <span className="font-mono text-slate-300">{formatCurrency(player.value)}</span>
+                        <span className="font-mono text-slate-700">{formatCurrency(player.value)}</span>
                         <span>•</span>
-                        <span className="font-mono text-slate-400">{formatWage(player.wageWeekly)}</span>
+                        <span className="font-mono text-slate-500">{formatWage(player.wageWeekly)}</span>
                       </div>
                     </div>
                   </div>
@@ -377,12 +383,12 @@ export function SquadRegistrationModal({
                         togglePlayer(player.id);
                       }}
                       disabled={atCapacity}
-                      className={`py-1.5 px-3 rounded-lg font-display font-black text-[11px] uppercase tracking-wider transition-all cursor-pointer ${
+                      className={`py-1.5 px-3 rounded-xl font-display font-black text-[11px] uppercase tracking-wider transition-all cursor-pointer shadow-2xs active:scale-95 ${
                         isSelected
-                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-sm shadow-blue-500/20'
+                          ? 'office-nav-tab-active shadow-xs text-white'
                           : atCapacity
-                          ? 'bg-slate-900 text-slate-600 border border-slate-800 cursor-not-allowed'
-                          : 'bg-slate-850 hover:bg-slate-800 text-slate-300 border border-slate-700'
+                          ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                          : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-300'
                       }`}
                     >
                       {isSelected ? '✓ Registered' : atCapacity ? 'Limit (25/25)' : '+ Register'}
@@ -395,11 +401,11 @@ export function SquadRegistrationModal({
         </div>
 
         {/* MODAL FOOTER */}
-        <footer className="p-3 sm:p-4 border-t border-slate-800 bg-slate-950/90 flex items-center justify-between gap-2 shrink-0">
+        <footer className="p-3.5 sm:p-4 border-t border-slate-100 bg-white flex items-center justify-between gap-2.5 shrink-0 pb-safe sm:pb-4">
           <button
             type="button"
             onClick={onClose}
-            className="py-2.5 px-4 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-900 text-slate-300 font-display font-bold text-xs uppercase cursor-pointer"
+            className="py-2.5 px-4 rounded-xl border border-slate-200 hover:bg-slate-100 bg-white text-slate-700 font-display font-bold text-xs uppercase cursor-pointer transition-colors shadow-2xs"
           >
             Cancel
           </button>
@@ -408,13 +414,12 @@ export function SquadRegistrationModal({
             type="button"
             onClick={handleSave}
             disabled={isOverLimit}
-            className={`py-2.5 px-5 rounded-xl font-display font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-              isOverLimit
-                ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-xl shadow-blue-500/25 hover:scale-[1.02]'
+            className={`my11-btn-gradient py-2.5 px-5 rounded-xl font-display font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 ${
+              isOverLimit ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
-            <span>💾 Confirm 25-Man Registration ({selectedCount}/25)</span>
+            <span>💾</span>
+            <span>Confirm 25-Man Registration ({selectedCount}/25)</span>
           </button>
         </footer>
       </div>

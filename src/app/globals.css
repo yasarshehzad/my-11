@@ -1755,13 +1755,323 @@ body {
   .office-kit-enter-left,
   .office-kit-enter-right,
   .office-stadium-lights,
-  .office-play-match-btn {
+  .office-play-match-btn,
+  .my11-pitch-player-card,
+  .my11-scouting-card {
     animation: none !important;
     transform: none !important;
     transition: none !important;
   }
 }
 
+/* ==========================================================================
+   MY-11 PHASE 2: SQUAD & TRANSFERS PREMIUM DESIGN SYSTEM
+   ========================================================================== */
 
+/* 1. Broadcast-Quality Football Pitch Canvas */
+.my11-broadcast-pitch {
+  position: relative;
+  background-color: #1b5e20;
+  background-image: 
+    repeating-linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.038) 0px,
+      rgba(255, 255, 255, 0.038) 46px,
+      transparent 46px,
+      transparent 92px
+    ),
+    radial-gradient(ellipse 90% 60% at 50% 30%, #228b3a 0%, #156929 55%, #0d461b 100%);
+  border-radius: 28px;
+  border: 2px solid rgba(34, 139, 58, 0.35);
+  box-shadow: 
+    inset 0 0 60px rgba(0, 0, 0, 0.45),
+    0 16px 36px -6px rgba(13, 70, 27, 0.28),
+    0 4px 12px 0 rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
 
+/* Pitch Chalk Markings */
+.my11-pitch-lines {
+  position: absolute;
+  inset: 12px;
+  border: 1.5px solid rgba(255, 255, 255, 0.32);
+  border-radius: 18px;
+  pointer-events: none;
+}
 
+.my11-pitch-halfway {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  right: 12px;
+  height: 1.5px;
+  background: rgba(255, 255, 255, 0.30);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.my11-pitch-center-circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 90px;
+  height: 90px;
+  border: 1.5px solid rgba(255, 255, 255, 0.30);
+  border-radius: 9999px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.my11-pitch-penalty-box-top {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 150px;
+  height: 48px;
+  border-left: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-right: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  pointer-events: none;
+}
+
+.my11-pitch-penalty-box-bottom {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 150px;
+  height: 48px;
+  border-left: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-right: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-top: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  pointer-events: none;
+}
+
+/* 2. Floating Player Card on Pitch Canvas */
+.my11-pitch-player-card {
+  background: rgba(255, 255, 255, 0.96) !important;
+  color: #0b1536 !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1.5px solid rgba(255, 255, 255, 0.95) !important;
+  border-radius: 14px;
+  box-shadow: 
+    0 6px 16px -2px rgba(0, 0, 0, 0.25),
+    0 2px 6px -1px rgba(0, 0, 0, 0.12),
+    inset 0 1px 1px rgba(255, 255, 255, 0.95);
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 180ms ease, border-color 180ms ease;
+  user-select: none;
+}
+
+.my11-pitch-player-card:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 
+    0 10px 22px -3px rgba(0, 0, 0, 0.30),
+    0 4px 8px -1px rgba(0, 0, 0, 0.14);
+}
+
+.my11-pitch-player-card:active {
+  transform: scale(0.97);
+}
+
+.my11-pitch-player-card-swapping {
+  border-color: #f59e0b !important;
+  box-shadow: 
+    0 0 0 3px #f59e0b,
+    0 10px 24px -2px rgba(245, 158, 11, 0.45) !important;
+  transform: scale(1.05) !important;
+}
+
+.my11-pitch-player-card-target {
+  border-color: #1d5eff !important;
+  box-shadow: 
+    0 0 0 3.5px #1d5eff,
+    0 12px 28px -2px rgba(29, 94, 255, 0.50) !important;
+  transform: scale(1.08) !important;
+}
+
+/* Empty Pitch Slot */
+.my11-pitch-empty-slot {
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px dashed rgba(255, 255, 255, 0.55);
+  border-radius: 14px;
+  color: #ffffff;
+  transition: all 180ms ease;
+}
+
+.my11-pitch-empty-slot:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.90);
+  transform: scale(1.02);
+}
+
+/* 3. Scouting Player Card */
+.my11-scouting-card {
+  background: #ffffff !important;
+  color: #0b1536 !important;
+  border: 1px solid rgba(226, 232, 240, 0.9) !important;
+  border-radius: 20px;
+  box-shadow: 
+    0 4px 16px -2px rgba(29, 94, 255, 0.05),
+    0 2px 6px -1px rgba(15, 23, 42, 0.03),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.9) !important;
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.my11-scouting-card:hover {
+  border-color: rgba(29, 94, 255, 0.35) !important;
+  box-shadow: 
+    0 10px 24px -4px rgba(29, 94, 255, 0.12),
+    0 4px 8px -2px rgba(15, 23, 42, 0.04) !important;
+  transform: translateY(-1.5px);
+}
+
+.my11-scouting-card:active {
+  transform: scale(0.99);
+}
+
+.my11-scouting-card-legend {
+  background: linear-gradient(160deg, #fffdf7 0%, #fffbf0 60%, #ffffff 100%) !important;
+  border: 1.5px solid rgba(245, 158, 11, 0.40) !important;
+  box-shadow: 
+    0 6px 18px -2px rgba(245, 158, 11, 0.12),
+    0 2px 6px -1px rgba(15, 23, 42, 0.03) !important;
+}
+
+.my11-scouting-card-legend:hover {
+  border-color: rgba(245, 158, 11, 0.65) !important;
+  box-shadow: 0 12px 28px -4px rgba(245, 158, 11, 0.22) !important;
+}
+
+/* Rating Badge Tiers */
+.my11-badge-legend {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 2px 8px -1px rgba(245, 158, 11, 0.45) !important;
+}
+
+.my11-badge-superstar {
+  background: linear-gradient(135deg, #00d2ff 0%, #1d5eff 50%, #7c3aed 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 2px 8px -1px rgba(29, 94, 255, 0.45) !important;
+}
+
+.my11-badge-elite {
+  background: linear-gradient(135deg, #1d5eff 0%, #6366f1 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 2px 6px -1px rgba(29, 94, 255, 0.35) !important;
+}
+
+.my11-badge-strong {
+  background: #1e293b !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+}
+
+.my11-badge-modest {
+  background: #475569 !important;
+  color: #ffffff !important;
+}
+
+/* ==========================================================================
+   CAREER LIGHT MODE SCOPED HIGH-CONTRAST SLATE OVERRIDES
+   Prevents legacy dark theme inversion mappings from affecting Career UI
+   ========================================================================== */
+
+:root[data-theme="light"] .my11-canvas .text-slate-900,
+:root[data-theme="light"] .my11-canvas .text-slate-950,
+:root[data-theme="light"] .my11-canvas .text-slate-800,
+:root[data-theme="light"] #career-office-root .text-slate-900,
+:root[data-theme="light"] #career-office-root .text-slate-950,
+:root[data-theme="light"] #career-office-root .text-slate-800,
+:root[data-theme="light"] .office-floating-card .text-slate-900,
+:root[data-theme="light"] .office-floating-card .text-slate-950,
+:root[data-theme="light"] .office-floating-card .text-slate-800,
+:root[data-theme="light"] .office-subcard .text-slate-900,
+:root[data-theme="light"] .office-subcard .text-slate-950,
+:root[data-theme="light"] .office-subcard .text-slate-800,
+:root[data-theme="light"] .my11-scouting-card .text-slate-900,
+:root[data-theme="light"] .my11-scouting-card .text-slate-950,
+:root[data-theme="light"] .my11-scouting-card .text-slate-800,
+:root[data-theme="light"] .my11-pitch-player-card .text-slate-900,
+:root[data-theme="light"] .my11-pitch-player-card .text-slate-950,
+:root[data-theme="light"] .my11-pitch-player-card .text-slate-800 {
+  color: #0b1536 !important;
+}
+
+:root[data-theme="light"] .my11-canvas .text-slate-700,
+:root[data-theme="light"] #career-office-root .text-slate-700,
+:root[data-theme="light"] .office-floating-card .text-slate-700,
+:root[data-theme="light"] .office-subcard .text-slate-700,
+:root[data-theme="light"] .my11-scouting-card .text-slate-700,
+:root[data-theme="light"] .my11-pitch-player-card .text-slate-700 {
+  color: #1e293b !important;
+}
+
+:root[data-theme="light"] .my11-canvas .text-slate-600,
+:root[data-theme="light"] #career-office-root .text-slate-600,
+:root[data-theme="light"] .office-floating-card .text-slate-600,
+:root[data-theme="light"] .office-subcard .text-slate-600,
+:root[data-theme="light"] .my11-scouting-card .text-slate-600 {
+  color: #334155 !important;
+}
+
+:root[data-theme="light"] .my11-canvas .text-slate-500,
+:root[data-theme="light"] #career-office-root .text-slate-500,
+:root[data-theme="light"] .office-floating-card .text-slate-500,
+:root[data-theme="light"] .office-subcard .text-slate-500,
+:root[data-theme="light"] .my11-scouting-card .text-slate-500 {
+  color: #475569 !important;
+}
+
+:root[data-theme="light"] .my11-canvas .text-slate-400,
+:root[data-theme="light"] #career-office-root .text-slate-400,
+:root[data-theme="light"] .office-floating-card .text-slate-400,
+:root[data-theme="light"] .office-subcard .text-slate-400,
+:root[data-theme="light"] .my11-scouting-card .text-slate-400 {
+  color: #64748b !important;
+}
+
+:root[data-theme="light"] .my11-canvas .bg-slate-50,
+:root[data-theme="light"] .my11-canvas [class*="bg-slate-50"],
+:root[data-theme="light"] #career-office-root .bg-slate-50,
+:root[data-theme="light"] #career-office-root [class*="bg-slate-50"],
+:root[data-theme="light"] .office-floating-card .bg-slate-50,
+:root[data-theme="light"] .office-floating-card [class*="bg-slate-50"],
+:root[data-theme="light"] .office-subcard .bg-slate-50,
+:root[data-theme="light"] .office-subcard [class*="bg-slate-50"],
+:root[data-theme="light"] .my11-scouting-card .bg-slate-50,
+:root[data-theme="light"] .my11-scouting-card [class*="bg-slate-50"] {
+  background-color: #f8fafc !important;
+}
+
+:root[data-theme="light"] .my11-canvas .bg-slate-100,
+:root[data-theme="light"] .my11-canvas [class*="bg-slate-100"],
+:root[data-theme="light"] #career-office-root .bg-slate-100,
+:root[data-theme="light"] #career-office-root [class*="bg-slate-100"],
+:root[data-theme="light"] .office-floating-card .bg-slate-100,
+:root[data-theme="light"] .office-floating-card [class*="bg-slate-100"],
+:root[data-theme="light"] .office-subcard .bg-slate-100,
+:root[data-theme="light"] .office-subcard [class*="bg-slate-100"],
+:root[data-theme="light"] .my11-scouting-card .bg-slate-100,
+:root[data-theme="light"] .my11-scouting-card [class*="bg-slate-100"] {
+  background-color: #f1f5f9 !important;
+}
+
+:root[data-theme="light"] .my11-canvas [class*="hover:bg-slate-50"]:hover,
+:root[data-theme="light"] #career-office-root [class*="hover:bg-slate-50"]:hover,
+:root[data-theme="light"] .office-floating-card [class*="hover:bg-slate-50"]:hover,
+:root[data-theme="light"] .office-subcard [class*="hover:bg-slate-50"]:hover,
+:root[data-theme="light"] .my11-scouting-card [class*="hover:bg-slate-50"]:hover {
+  background-color: #f1f5f9 !important;
+}

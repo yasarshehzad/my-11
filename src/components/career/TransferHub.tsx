@@ -767,55 +767,57 @@ export function TransferHub({
 
       {/* Transfer Window Status Banner - Compact Header Bar */}
       <section
-        className={`px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl border flex flex-wrap sm:flex-nowrap justify-between items-center gap-2 shadow-md ${
+        className={`office-floating-card px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-2xl border border-white/80 flex flex-wrap sm:flex-nowrap justify-between items-center gap-2 shadow-xs ${
           windowIsOpen
-            ? 'bg-gradient-to-r from-blue-500/10 via-indigo-500/5 to-purple-500/10 dark:from-blue-950/40 dark:via-slate-900/90 dark:to-slate-950 border-blue-500/30 dark:border-blue-700/40'
-            : 'bg-slate-900/80 border-slate-800'
+            ? 'bg-gradient-to-r from-blue-50/60 via-indigo-50/40 to-white'
+            : 'bg-white'
         }`}
       >
         <div className="flex items-center gap-2 min-w-0">
           <span
             className={`w-2 h-2 rounded-full shrink-0 ${
-              windowIsOpen ? 'bg-blue-600 dark:bg-blue-400 animate-pulse' : 'bg-slate-400 dark:bg-slate-500'
+              windowIsOpen ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'
             }`}
           />
           <span
-            className={`text-[11px] font-display font-black uppercase tracking-wider shrink-0 ${
-              windowIsOpen ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400'
+            className={`text-[11px] font-display font-black uppercase tracking-wider shrink-0 px-2 py-0.5 rounded-full border ${
+              windowIsOpen
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80'
+                : 'bg-slate-100 text-slate-600 border-slate-200'
             }`}
           >
             {windowIsOpen ? 'Window Open' : 'Window Closed'}
           </span>
-          <span className="text-slate-700 text-xs hidden sm:inline">•</span>
-          <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
+          <span className="text-slate-300 text-xs hidden sm:inline">•</span>
+          <span className="text-[10px] text-slate-500 font-mono hidden sm:inline">
             {save.season.currentDate}
           </span>
         </div>
 
-        <div className="flex items-center gap-2.5 sm:gap-4 bg-slate-950/80 border border-slate-800/80 px-2.5 py-1 sm:px-3 sm:py-1 rounded-xl ml-auto text-[11px]">
+        <div className="flex items-center gap-2.5 sm:gap-4 bg-slate-50/90 border border-slate-200/80 px-2.5 py-1 sm:px-3 sm:py-1 rounded-xl ml-auto text-[11px] shadow-2xs">
           <div>
             <span className="text-[8px] uppercase font-bold text-slate-500 block leading-tight">
               Budget
             </span>
-            <span className="font-display font-black text-blue-600 dark:text-blue-400 text-xs sm:text-sm">
+            <span className="font-display font-black text-blue-600 text-xs sm:text-sm">
               {formatCurrency(save.finances.transferBudget)}
             </span>
           </div>
-          <div className="h-5 w-px bg-slate-800" />
+          <div className="h-5 w-px bg-slate-200" />
           <div>
             <span className="text-[8px] uppercase font-bold text-slate-500 block leading-tight">
               Wage Room
             </span>
-            <span className="font-display font-black text-slate-200 text-xs sm:text-sm">
+            <span className="font-display font-black text-slate-800 text-xs sm:text-sm">
               {formatCurrency(Math.max(0, save.finances.weeklyWageBudget - save.finances.currentWeeklyWages))}/w
             </span>
           </div>
-          <div className="h-5 w-px bg-slate-800" />
+          <div className="h-5 w-px bg-slate-200" />
           <div>
             <span className="text-[8px] uppercase font-bold text-slate-500 block leading-tight">
               Senior
             </span>
-            <span className="font-display font-black text-slate-300 text-xs sm:text-sm">
+            <span className="font-display font-black text-slate-700 text-xs sm:text-sm">
               {seniorCount}/25
             </span>
           </div>
@@ -823,7 +825,7 @@ export function TransferHub({
       </section>
 
       {/* Sub-Navigation Tabs */}
-      <nav aria-label="Transfer Sections" data-no-swipe="true" className="flex gap-1.5 overflow-x-auto pb-1.5 scrollbar-none border-b border-slate-800/80">
+      <nav aria-label="Transfer Sections" data-no-swipe="true" className="flex gap-1.5 overflow-x-auto pb-1.5 scrollbar-none border-b border-slate-200/80">
         {[
           { id: 'market', label: 'Market', icon: '🔍', badge: marketPlayers.length },
           { id: 'incoming', label: 'Incoming', icon: '📬', badge: save.incomingOffers?.length || 0 },
@@ -860,8 +862,10 @@ export function TransferHub({
               <span>{tab.label}</span>
               <span className={`text-[9px] font-mono px-1 py-0.2 rounded-md ${
                 tab.badgeAlert
-                  ? 'bg-rose-950 text-rose-300 border border-rose-700/60 font-bold animate-pulse'
-                  : 'bg-slate-950/60 opacity-80'
+                  ? 'bg-rose-100 text-rose-700 border border-rose-300 font-bold animate-pulse'
+                  : isSelected
+                  ? 'bg-white/20 text-white'
+                  : 'bg-slate-200/70 text-slate-700'
               }`}>
                 {tab.badge}
               </span>
@@ -874,11 +878,11 @@ export function TransferHub({
       {subTab === 'market' && (
         <section id="market-section" className="space-y-3 scroll-mt-20">
           {/* Search & Filter Controls */}
-          <div className="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-3 sm:p-4 space-y-2.5 shadow-md">
+          <div className="office-floating-card border border-white/80 rounded-3xl p-3 sm:p-4 space-y-2.5 shadow-xs bg-white">
             {/* Top Row: Immediate Search Input + Advanced Filters Toggle */}
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs">🔍</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
                 <input
                   type="text"
                   value={searchTerm}
@@ -887,7 +891,7 @@ export function TransferHub({
                     setCurrentPage(1);
                   }}
                   placeholder="Search player, club, or nationality..."
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-semibold"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-8 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-semibold"
                 />
                 {searchTerm && (
                   <button
@@ -896,7 +900,7 @@ export function TransferHub({
                       setSearchTerm('');
                       setCurrentPage(1);
                     }}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs px-1"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 text-xs px-1 cursor-pointer"
                   >
                     ✕
                   </button>
@@ -908,14 +912,14 @@ export function TransferHub({
                 onClick={() => setIsAdvancedFiltersOpen(!isAdvancedFiltersOpen)}
                 className={`px-3 py-2 rounded-xl text-xs font-display font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shrink-0 border ${
                   isAdvancedFiltersOpen || activeFilterCount > 0
-                    ? 'bg-blue-50 dark:bg-blue-950/70 border-blue-500/80 text-blue-700 dark:text-blue-300 shadow-sm'
-                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                    ? 'office-nav-tab-active shadow-sm'
+                    : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
                 }`}
                 aria-expanded={isAdvancedFiltersOpen}
               >
                 <span>Filters</span>
                 {activeFilterCount > 0 && (
-                  <span className="bg-blue-600 text-white text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center">
+                  <span className="bg-white/30 text-white text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center">
                     {activeFilterCount}
                   </span>
                 )}
@@ -924,19 +928,19 @@ export function TransferHub({
             </div>
 
             {/* Quick Filters Row: Era pills + Position pills + Target count */}
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-850/60">
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100">
               {/* Era Pills */}
-              <div className="flex items-center gap-1 bg-slate-950/80 p-0.5 rounded-lg border border-slate-800/80">
+              <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl border border-slate-200/80">
                 <button
                   type="button"
                   onClick={() => {
                     setPlayerPoolType('modern');
                     setCurrentPage(1);
                   }}
-                  className={`px-2 py-1 rounded-md text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
                     playerPoolType === 'modern'
                       ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-white'
+                      : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   ⚡ Modern
@@ -947,10 +951,10 @@ export function TransferHub({
                     setPlayerPoolType('legends');
                     setCurrentPage(1);
                   }}
-                  className={`px-2 py-1 rounded-md text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
                     playerPoolType === 'legends'
                       ? 'bg-amber-400 text-slate-950 font-black shadow-sm'
-                      : 'text-amber-400/80 hover:text-amber-300'
+                      : 'text-amber-800 hover:text-amber-900'
                   }`}
                 >
                   👑 Icons
@@ -961,10 +965,10 @@ export function TransferHub({
                     setPlayerPoolType('all');
                     setCurrentPage(1);
                   }}
-                  className={`px-2 py-1 rounded-md text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
                     playerPoolType === 'all'
-                      ? 'bg-slate-700 text-white'
-                      : 'text-slate-400 hover:text-white'
+                      ? 'bg-slate-700 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   🌐 All
@@ -981,10 +985,10 @@ export function TransferHub({
                       setSelectedPosCategory(cat);
                       setCurrentPage(1);
                     }}
-                    className={`px-2 py-1 rounded-lg text-[11px] font-display font-black uppercase tracking-wider cursor-pointer transition-colors ${
+                    className={`px-2.5 py-1 rounded-xl text-[11px] font-display font-black uppercase tracking-wider cursor-pointer transition-colors ${
                       selectedPosCategory === cat
-                        ? 'bg-blue-600 text-white shadow-sm'
-                        : 'bg-slate-950 border border-slate-850 text-slate-400 hover:text-white'
+                        ? 'office-nav-tab-active shadow-sm'
+                        : 'bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200'
                     }`}
                   >
                     {cat}
@@ -992,14 +996,14 @@ export function TransferHub({
                 ))}
               </div>
 
-              <span className="text-[10px] text-slate-400 font-mono ml-auto">
-                <strong className="text-white">{marketPlayers.length}</strong> targets
+              <span className="text-[10px] text-slate-500 font-mono ml-auto">
+                <strong className="text-slate-900">{marketPlayers.length}</strong> targets
               </span>
             </div>
 
             {/* Collapsible Advanced Filters Panel */}
             {isAdvancedFiltersOpen && (
-              <div className="pt-2.5 border-t border-slate-800 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2 text-xs">
+              <div className="pt-2.5 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2 text-xs">
                 {/* Specific Position Role */}
                 <div className="space-y-0.5">
                   <span className="text-[9px] uppercase font-bold text-slate-500 block">Specific Role</span>
@@ -1009,7 +1013,7 @@ export function TransferHub({
                       setSpecificPosition(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-2 py-1 text-xs font-display font-bold"
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-2 py-1.5 text-xs font-display font-bold focus:outline-none focus:border-blue-500"
                   >
                     <option value="ALL">All Roles</option>
                     <option value="GK">GK</option>
@@ -1036,7 +1040,7 @@ export function TransferHub({
                       setSelectedLeague(e.target.value as any);
                       setCurrentPage(1);
                     }}
-                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-2 py-1 text-xs font-display font-bold"
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-2 py-1.5 text-xs font-display font-bold focus:outline-none focus:border-blue-500"
                   >
                     <option value="ALL">All Leagues</option>
                     <option value="pl">Premier League</option>
@@ -1054,7 +1058,7 @@ export function TransferHub({
                       setSelectedClub(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-2 py-1 text-xs font-display font-bold truncate"
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-2 py-1.5 text-xs font-display font-bold truncate focus:outline-none focus:border-blue-500"
                   >
                     <option value="ALL">All Clubs</option>
                     {availableClubs.map((club) => (
@@ -1074,7 +1078,7 @@ export function TransferHub({
                       setSelectedNationality(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-2 py-1 text-xs font-display font-bold truncate"
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-2 py-1.5 text-xs font-display font-bold truncate focus:outline-none focus:border-blue-500"
                   >
                     <option value="ALL">All Nationalities</option>
                     {availableNationalities.map((nat) => (
@@ -1094,7 +1098,7 @@ export function TransferHub({
                       setSelectedSortBy(e.target.value as any);
                       setCurrentPage(1);
                     }}
-                    className="w-full bg-slate-950 border border-slate-800 text-blue-600 dark:text-blue-400 rounded-lg px-2 py-1 text-xs font-display font-bold"
+                    className="w-full bg-slate-50 border border-slate-200 text-blue-600 rounded-xl px-2 py-1.5 text-xs font-display font-bold focus:outline-none focus:border-blue-500"
                   >
                     <option value="value_desc">Valuation (High to Low)</option>
                     <option value="value_asc">Valuation (Low to High)</option>
@@ -1114,7 +1118,7 @@ export function TransferHub({
                       setAgeCategory(e.target.value as typeof ageCategory);
                       setCurrentPage(1);
                     }}
-                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-2 py-1 text-xs font-display font-bold"
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-2 py-1.5 text-xs font-display font-bold focus:outline-none focus:border-blue-500"
                   >
                     <option value="ALL">All Ages</option>
                     <option value="U21">U21 Wonderkids (≤21)</option>
@@ -1132,7 +1136,7 @@ export function TransferHub({
                       setMinRating(Number(e.target.value));
                       setCurrentPage(1);
                     }}
-                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-2 py-1 text-xs font-mono"
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-2 py-1.5 text-xs font-mono focus:outline-none focus:border-blue-500"
                   >
                     <option value={0}>Any Rating</option>
                     <option value={70}>70+ OVR</option>
@@ -1155,7 +1159,7 @@ export function TransferHub({
                       }}
                       className="w-3.5 h-3.5 accent-blue-600 rounded cursor-pointer"
                     />
-                    <span className="text-[11px] font-bold text-slate-300">Within Budget</span>
+                    <span className="text-[11px] font-bold text-slate-700">Within Budget</span>
                   </label>
                 </div>
 
@@ -1171,7 +1175,7 @@ export function TransferHub({
                       }}
                       className="w-3.5 h-3.5 accent-blue-600 rounded cursor-pointer"
                     />
-                    <span className="text-[11px] font-bold text-slate-300">Homegrown (8+)</span>
+                    <span className="text-[11px] font-bold text-slate-700">Homegrown (8+)</span>
                   </label>
                 </div>
 
@@ -1180,7 +1184,7 @@ export function TransferHub({
                   <button
                     type="button"
                     onClick={handleResetFilters}
-                    className="w-full py-1 px-2 rounded-lg border border-slate-800 bg-slate-950/80 hover:bg-slate-900 text-slate-400 hover:text-white text-[10px] font-display font-bold uppercase transition-all cursor-pointer"
+                    className="w-full py-1.5 px-2 rounded-xl border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 text-[10px] font-display font-bold uppercase transition-all cursor-pointer"
                   >
                     ↺ Reset All
                   </button>
@@ -1216,13 +1220,23 @@ export function TransferHub({
                   const isBlocked = !windowIsOpen || isSquadFull;
                   const fs = calculateEaFcFaceStats(player as unknown as CareerPlayer);
 
+                  const badgeClass = isLegend
+                    ? 'my11-badge-legend'
+                    : player.rating >= 88
+                    ? 'my11-badge-superstar'
+                    : player.rating >= 84
+                    ? 'my11-badge-elite'
+                    : player.rating >= 78
+                    ? 'my11-badge-strong'
+                    : 'my11-badge-modest';
+
                   return (
                     <article
                       key={player.id}
-                      className={`rounded-2xl border p-2.5 sm:p-3 space-y-2 transition-all ${
+                      className={`rounded-2xl p-2.5 sm:p-3 space-y-2 transition-all ${
                         isLegend
-                          ? 'bg-gradient-to-b from-amber-950/30 via-slate-900/80 to-slate-950 border-amber-500/50 hover:border-amber-400 shadow-md ring-1 ring-amber-400/20'
-                          : 'bg-slate-900/50 border-slate-800/80 hover:border-slate-700'
+                          ? 'my11-scouting-card-legend'
+                          : 'my11-scouting-card'
                       }`}
                     >
                       {/* Primary Header Row */}
@@ -1230,44 +1244,38 @@ export function TransferHub({
                         {/* Rating Badge + Name + Info */}
                         <div className="flex items-center gap-2 min-w-0">
                           <span
-                            className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-display font-black text-xs shrink-0 shadow-sm ${
-                              isLegend
-                                ? 'bg-amber-950 border border-amber-500/70 text-amber-300 shadow-amber-500/20'
-                                : player.rating >= 85
-                                ? 'bg-blue-950 border border-blue-600/70 text-blue-300'
-                                : 'bg-slate-950 border border-slate-800 text-slate-200'
-                            }`}
+                            className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-display font-black text-xs shrink-0 shadow-sm ${badgeClass}`}
                           >
                             {player.rating}
                           </span>
 
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
-                              <h3 className="font-display font-black text-xs sm:text-sm text-white truncate max-w-[120px] sm:max-w-[170px]">
+                              <h3 className="font-display font-black text-xs sm:text-sm text-slate-900 truncate max-w-[120px] sm:max-w-[170px]">
                                 {player.name}
                               </h3>
                               {isLegend && (
-                                <span className="text-[7.5px] font-black uppercase text-amber-400 bg-amber-950/80 border border-amber-600/70 px-1 rounded font-display shrink-0">
+                                <span className="text-[7.5px] font-black uppercase text-amber-800 bg-amber-100 border border-amber-300 px-1 rounded font-display shrink-0">
                                   👑 ICON
                                 </span>
                               )}
                             </div>
-                            <div className="text-[9.5px] text-slate-400 font-medium flex items-center gap-1 truncate mt-0.2">
-                              <span className={isLegend ? 'text-amber-400 font-bold' : 'text-blue-600 dark:text-blue-400 font-bold'}>
+                            <div className="text-[9.5px] text-slate-500 font-medium flex items-center gap-1 truncate mt-0.5">
+                              <span className={isLegend ? 'text-amber-700 font-bold' : 'text-blue-600 font-bold'}>
                                 {player.position}
                               </span>
-                              <span>•</span>
+                              <span className="text-slate-300">•</span>
                               <span>{player.age}y</span>
-                              <span>•</span>
-                              <span className={`font-mono font-bold ${isLegend ? 'text-amber-300' : 'text-white'}`}>
+                              <span className="text-slate-300">•</span>
+                              <span className="font-mono font-bold text-slate-900">
                                 {formatCurrency(player.value)}
                               </span>
-                              <span>•</span>
-                              <span className="font-mono text-slate-300">
+                              <span className="text-slate-300">•</span>
+                              <span className="font-mono text-slate-500">
                                 {formatWage(player.wageDemand)}
                               </span>
                             </div>
-                            <div className="text-[8.5px] text-slate-500 truncate mt-0.2">
+                            <div className="text-[8.5px] text-slate-500 truncate mt-0.5 font-medium">
                               {resolvedClub}
                             </div>
                           </div>
@@ -1281,8 +1289,8 @@ export function TransferHub({
                             title={isShortlisted ? 'Remove from Shortlist' : 'Add to Shortlist'}
                             className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-colors cursor-pointer ${
                               isShortlisted
-                                ? 'bg-amber-950/80 text-amber-400 border border-amber-800'
-                                : 'bg-slate-950 text-slate-500 hover:text-white border border-slate-800'
+                                ? 'bg-amber-100 text-amber-600 border border-amber-300 shadow-2xs font-bold'
+                                : 'bg-slate-100 text-slate-500 hover:text-slate-800 border border-slate-200'
                             }`}
                           >
                             ★
@@ -1293,7 +1301,7 @@ export function TransferHub({
                               type="button"
                               onClick={() => onOpenCompare(player)}
                               title={`Compare ${player.name} with squad or target`}
-                              className="w-7 h-7 rounded-lg flex items-center justify-center text-xs bg-slate-950 text-slate-400 hover:text-white border border-slate-800 transition-colors cursor-pointer"
+                              className="w-7 h-7 rounded-lg flex items-center justify-center text-xs bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 transition-colors cursor-pointer"
                             >
                               📊
                             </button>
@@ -1305,14 +1313,14 @@ export function TransferHub({
                             disabled={isBlocked}
                             className={`py-1.5 px-2.5 rounded-lg font-display font-black text-[10.5px] uppercase tracking-wider transition-all cursor-pointer ${
                               !windowIsOpen
-                                ? 'bg-slate-950 border border-slate-800 text-slate-600 cursor-not-allowed'
+                                ? 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed'
                                 : isSquadFull
-                                ? 'bg-rose-950/60 border border-rose-900 text-rose-400 cursor-not-allowed'
+                                ? 'bg-rose-50 border border-rose-200 text-rose-700 cursor-not-allowed'
                                 : isLegend
-                                ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-sm'
+                                ? 'my11-badge-legend shadow-sm'
                                 : canAfford
-                                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-sm shadow-blue-500/20'
-                                : 'bg-slate-850 hover:bg-slate-800 text-slate-300 border border-slate-700'
+                                ? 'my11-btn-gradient text-white shadow-sm shadow-blue-500/20'
+                                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
                             }`}
                           >
                             {!windowIsOpen ? 'Closed' : isSquadFull ? 'Squad Full' : isLegend ? '👑 Bid' : 'Bid'}
@@ -1321,45 +1329,45 @@ export function TransferHub({
                       </div>
 
                       {/* EA FC 6 Face Stats Bar (Always Visible by Default) */}
-                      <div className="grid grid-cols-6 gap-1 bg-slate-950/70 p-1.5 rounded-lg text-center font-display border border-white/5 text-[9px]">
+                      <div className="grid grid-cols-6 gap-1 bg-slate-50/90 border border-slate-200/80 p-1.5 rounded-xl text-center font-display text-[9px] shadow-2xs">
                         <div>
                           <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'DIV' : 'PAC'}</span>
-                          <span className="font-black text-white">{fs.pac}</span>
+                          <span className="font-black text-slate-900 text-[10.5px]">{fs.pac}</span>
                         </div>
                         <div>
                           <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'HAN' : 'SHO'}</span>
-                          <span className="font-black text-white">{fs.sho}</span>
+                          <span className="font-black text-slate-900 text-[10.5px]">{fs.sho}</span>
                         </div>
                         <div>
                           <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'KIC' : 'PAS'}</span>
-                          <span className="font-black text-white">{fs.pas}</span>
+                          <span className="font-black text-slate-900 text-[10.5px]">{fs.pas}</span>
                         </div>
                         <div>
                           <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'REF' : 'DRI'}</span>
-                          <span className="font-black text-white">{fs.dri}</span>
+                          <span className="font-black text-slate-900 text-[10.5px]">{fs.dri}</span>
                         </div>
                         <div>
                           <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'SPD' : 'DEF'}</span>
-                          <span className="font-black text-white">{fs.def}</span>
+                          <span className="font-black text-slate-900 text-[10.5px]">{fs.def}</span>
                         </div>
                         <div>
                           <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'POS' : 'PHY'}</span>
-                          <span className="font-black text-white">{fs.phy}</span>
+                          <span className="font-black text-slate-900 text-[10.5px]">{fs.phy}</span>
                         </div>
                       </div>
 
                       {/* Metadata Strip: Nationality, Homegrown, Senior Quota Notice */}
-                      <div className="flex flex-wrap items-center justify-between gap-1 text-[9px] text-slate-400 pt-0.5">
+                      <div className="flex flex-wrap items-center justify-between gap-1 text-[9px] text-slate-500 pt-0.5">
                         <div className="flex items-center gap-1.5">
-                          <span>{player.nationality}</span>
+                          <span className="font-medium text-slate-600">{player.nationality}</span>
                           {player.isHomegrown && (
-                            <span className="text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider text-[8px] bg-blue-50 dark:bg-blue-950/60 px-1 py-0.2 rounded border border-blue-200 dark:border-blue-900/60">
+                            <span className="text-blue-700 font-bold uppercase tracking-wider text-[8px] bg-blue-50 px-1 py-0.2 rounded border border-blue-200">
                               HG
                             </span>
                           )}
                         </div>
                         {isSeniorFull && !isSquadFull && (
-                          <span className="text-[8px] text-amber-400 font-mono">
+                          <span className="text-[8px] text-amber-700 font-mono font-medium">
                             Senior pool &gt;25 (registration required)
                           </span>
                         )}
@@ -1370,11 +1378,11 @@ export function TransferHub({
               </div>
 
               {/* Pagination Controls */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-850 text-xs">
-                <span className="text-slate-400 font-medium">
-                  Showing <span className="text-white font-bold">{Math.min(marketPlayers.length, (validPage - 1) * PAGE_SIZE + 1)}</span> to{' '}
-                  <span className="text-white font-bold">{Math.min(marketPlayers.length, validPage * PAGE_SIZE)}</span> of{' '}
-                  <span className="text-blue-600 dark:text-blue-400 font-bold">{marketPlayers.length}</span> scouting targets
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-200 text-xs">
+                <span className="text-slate-500 font-medium">
+                  Showing <span className="text-slate-900 font-bold">{Math.min(marketPlayers.length, (validPage - 1) * PAGE_SIZE + 1)}</span> to{' '}
+                  <span className="text-slate-900 font-bold">{Math.min(marketPlayers.length, validPage * PAGE_SIZE)}</span> of{' '}
+                  <span className="text-blue-600 font-bold">{marketPlayers.length}</span> scouting targets
                 </span>
 
                 <div className="flex items-center gap-1.5">
@@ -1382,18 +1390,18 @@ export function TransferHub({
                     type="button"
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={validPage <= 1}
-                    className="px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/60 text-slate-300 hover:bg-slate-850 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed font-display font-bold text-xs uppercase cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed font-display font-bold text-xs uppercase cursor-pointer"
                   >
                     ◀ Prev
                   </button>
-                  <span className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 font-mono text-xs">
-                    Page <span className="text-white font-bold">{validPage}</span> / {totalPages}
+                  <span className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-mono text-xs shadow-2xs">
+                    Page <span className="text-slate-900 font-bold">{validPage}</span> / {totalPages}
                   </span>
                   <button
                     type="button"
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={validPage >= totalPages}
-                    className="px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/60 text-slate-300 hover:bg-slate-850 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed font-display font-bold text-xs uppercase cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed font-display font-bold text-xs uppercase cursor-pointer"
                   >
                     Next ▶
                   </button>
@@ -1408,16 +1416,16 @@ export function TransferHub({
       {subTab === 'incoming' && (
         <section id="incoming-offers-section" className="space-y-4 scroll-mt-20">
           <header className="space-y-1">
-            <h3 className="text-base font-display font-black uppercase text-white">
+            <h3 className="text-base font-display font-black uppercase text-slate-900">
               Bids Received from AI Clubs
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500">
               Clubs seeking to buy your players during the open transfer window.
             </p>
           </header>
 
           {(!save.incomingOffers || save.incomingOffers.length === 0) ? (
-            <div className="bg-slate-900/20 border border-slate-850 rounded-2xl p-12 text-center text-slate-500 text-xs">
+            <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-500 text-xs shadow-xs">
               No active incoming offers at this moment. Advance through the transfer window to receive bids.
             </div>
           ) : (
@@ -1432,27 +1440,27 @@ export function TransferHub({
                   <article
                     key={offer.id}
                     id={`incoming-offer-${offer.id}`}
-                    className={`rounded-2xl p-4.5 space-y-3.5 border transition-all scroll-mt-20 ${
+                    className={`office-floating-card rounded-2xl p-4 sm:p-4.5 space-y-3.5 border transition-all scroll-mt-20 ${
                       isAccepted
-                        ? 'bg-blue-950/30 border-blue-500/50 shadow-md'
+                        ? 'bg-emerald-50/40 border-emerald-300 shadow-xs'
                         : isRejected
-                        ? 'bg-rose-950/20 border-rose-900/50 opacity-80'
+                        ? 'bg-rose-50/30 border-rose-200 opacity-80'
                         : isNegotiating
-                        ? 'bg-amber-950/20 border-amber-500/40 shadow-sm'
-                        : 'bg-slate-900/50 border-slate-800 hover:border-slate-700'
+                        ? 'bg-amber-50/40 border-amber-300 shadow-xs'
+                        : 'bg-white border-slate-200/90 hover:border-slate-300 shadow-xs'
                     }`}
                   >
                     <div className="flex justify-between items-start gap-2">
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className={`text-[10px] uppercase font-black px-2 py-0.5 rounded-full font-display ${
+                          <span className={`text-[10px] uppercase font-black px-2 py-0.5 rounded-full font-display border ${
                             isAccepted
-                              ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
                               : isRejected
-                              ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                              ? 'bg-rose-100 text-rose-800 border-rose-300'
                               : isNegotiating
-                              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                              : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                              ? 'bg-amber-100 text-amber-800 border-amber-300'
+                              : 'bg-blue-50 text-blue-700 border-blue-200'
                           }`}>
                             {isAccepted
                               ? 'Deal Agreed'
@@ -1463,22 +1471,22 @@ export function TransferHub({
                               : 'Official Bid'}
                           </span>
                           {(offer.patienceRemaining ?? 3) < 3 && !isRejected && (
-                            <span className="text-[10px] font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded-full border border-slate-800">
+                            <span className="text-[10px] font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
                               {offer.patienceRemaining} patience left
                             </span>
                           )}
                           {offer.isPanicBid && (
-                            <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 font-display shadow-md shadow-amber-400/20 animate-pulse">
+                            <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 font-display shadow-sm shadow-amber-400/20 animate-pulse">
                               🚨 Panic Bid (+{offer.panicMarkupPercent || 30}%)
                             </span>
                           )}
                         </div>
 
-                        <h4 className="font-display font-black text-base text-white pt-0.5">
+                        <h4 className="font-display font-black text-base text-slate-900 pt-0.5">
                           {offer.playerName}
                         </h4>
-                        <p className="text-[11px] text-slate-400">
-                          {offer.position} • {offer.rating} OVR • Valuation: <span className="text-white font-mono">{formatCurrency(squadPlayer?.value || offer.offeredFee)}</span>
+                        <p className="text-[11px] text-slate-500">
+                          {offer.position} • {offer.rating} OVR • Valuation: <span className="text-slate-900 font-mono font-bold">{formatCurrency(squadPlayer?.value || offer.offeredFee)}</span>
                         </p>
                       </div>
 
@@ -1486,16 +1494,16 @@ export function TransferHub({
                         <span className="text-[9px] uppercase font-bold text-slate-500 block">
                           Offered Fee
                         </span>
-                        <span className="font-display font-black text-blue-600 dark:text-blue-400 text-lg">
+                        <span className="font-display font-black text-blue-600 text-lg">
                           {formatCurrency(offer.offeredFee)}
                         </span>
                         {offer.sellOnPercent && offer.sellOnPercent > 0 && (
-                          <span className="text-[10px] font-mono text-blue-300 block font-bold">
+                          <span className="text-[10px] font-mono text-blue-700 block font-bold">
                             +{offer.sellOnPercent}% Sell-On
                           </span>
                         )}
                         {(offer.appearanceMilestoneFee || offer.goalMilestoneFee || offer.buyBackFee) && (
-                          <div className="flex flex-col gap-0.5 text-[10px] text-amber-300 font-mono pt-1 text-right">
+                          <div className="flex flex-col gap-0.5 text-[10px] text-amber-700 font-mono pt-1 text-right">
                             {offer.appearanceMilestoneFee && (
                               <span>+{formatCurrency(offer.appearanceMilestoneFee)} ({offer.appearanceThreshold || 20} apps)</span>
                             )}
@@ -1503,17 +1511,17 @@ export function TransferHub({
                               <span>+{formatCurrency(offer.goalMilestoneFee)} ({offer.goalThreshold || 15} goals)</span>
                             )}
                             {offer.buyBackFee && (
-                              <span className="text-blue-300 font-bold">🔁 {formatCurrency(offer.buyBackFee)} Buy-Back</span>
+                              <span className="text-blue-700 font-bold">🔁 {formatCurrency(offer.buyBackFee)} Buy-Back</span>
                             )}
                           </div>
                         )}
                       </div>
                     </div>
 
-                    <div className="bg-slate-950/80 p-2.5 rounded-xl text-xs flex justify-between items-center text-slate-300 border border-slate-850">
+                    <div className="bg-slate-50/90 border border-slate-200/80 p-2.5 rounded-xl text-xs flex justify-between items-center text-slate-700 shadow-2xs">
                       <div>
                         <span className="text-slate-500 text-[10px] block">Bidding Club</span>
-                        <span className="font-bold text-white text-xs">{offer.buyingClubName}</span>
+                        <span className="font-bold text-slate-900 text-xs">{offer.buyingClubName}</span>
                       </div>
                       {offer.originalOfferedFee && offer.originalOfferedFee !== offer.offeredFee && (
                         <div className="text-right">
@@ -1526,7 +1534,7 @@ export function TransferHub({
                     </div>
 
                     {offer.lastFeedback && (
-                      <div className="text-[11px] bg-slate-950/40 border border-slate-800/60 p-2 rounded-xl text-slate-400 italic">
+                      <div className="text-[11px] bg-slate-50 border border-slate-200 p-2 rounded-xl text-slate-600 italic">
                         &ldquo;{offer.lastFeedback}&rdquo;
                       </div>
                     )}
@@ -1535,7 +1543,7 @@ export function TransferHub({
                       <button
                         type="button"
                         onClick={() => handleRejectIncomingOffer(offer.id)}
-                        className="py-2 px-3 rounded-xl border border-slate-800 bg-slate-950 hover:bg-slate-900 text-slate-400 hover:text-white font-display font-bold text-xs uppercase tracking-wider cursor-pointer"
+                        className="py-2 px-3 rounded-xl border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-700 font-display font-bold text-xs uppercase tracking-wider cursor-pointer"
                       >
                         Reject
                       </button>
@@ -1543,7 +1551,7 @@ export function TransferHub({
                       <button
                         type="button"
                         onClick={() => handleOpenIncomingNegotiation(offer)}
-                        className="flex-1 py-2 px-3 rounded-xl border border-amber-500/40 bg-amber-950/30 hover:bg-amber-950/60 text-amber-300 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                        className="flex-1 py-2 px-3 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5"
                       >
                         <span>💬</span>
                         <span>Counter &amp; Negotiate</span>
@@ -1555,8 +1563,8 @@ export function TransferHub({
                         disabled={save.squad.length <= 18}
                         className={`py-2 px-3.5 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer ${
                           save.squad.length <= 18
-                            ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-md shadow-blue-500/20'
+                            ? 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed'
+                            : 'my11-btn-gradient text-white shadow-md shadow-blue-500/20'
                         }`}
                       >
                         {save.squad.length <= 18 ? 'Min Squad (18)' : isAccepted ? 'Finalize Deal' : 'Accept & Sell'}
@@ -1576,36 +1584,36 @@ export function TransferHub({
           {/* Header & Sporting Director Overview */}
           <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <span className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider font-display">
+              <span className="text-[10px] font-black uppercase text-blue-600 tracking-wider font-display">
                 Contract Management Hub
               </span>
-              <h3 className="text-xl sm:text-2xl font-display font-black text-white uppercase tracking-tight flex items-center gap-2">
+              <h3 className="text-xl sm:text-2xl font-display font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
                 <span>📝</span> Squad Contracts &amp; Expirations
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 Track expiring player deals, assign squad roles, set release clauses, or delegate renewals to your Director of Football.
               </p>
             </div>
 
             {/* Quick KPI Counters */}
-            <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 p-2 rounded-2xl">
-              <div className="px-3 py-1.5 rounded-xl bg-slate-950 text-center">
+            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 p-2 rounded-2xl shadow-2xs">
+              <div className="px-3 py-1.5 rounded-xl bg-white border border-slate-200/80 text-center shadow-xs">
                 <span className="text-[9px] uppercase font-bold text-slate-500 block">Critical (&le;1y)</span>
                 <span className={`text-sm font-display font-black ${
-                  criticalExpiringCount > 0 ? 'text-rose-400 font-bold' : 'text-slate-400'
+                  criticalExpiringCount > 0 ? 'text-rose-600 font-bold' : 'text-slate-400'
                 }`}>
                   {criticalExpiringCount}
                 </span>
               </div>
-              <div className="px-3 py-1.5 rounded-xl bg-slate-950 text-center">
+              <div className="px-3 py-1.5 rounded-xl bg-white border border-slate-200/80 text-center shadow-xs">
                 <span className="text-[9px] uppercase font-bold text-slate-500 block">2 Years</span>
-                <span className="text-sm font-display font-black text-amber-400">
+                <span className="text-sm font-display font-black text-amber-700">
                   {save.squad.filter((p) => (p.contractYears ?? 2) === 2).length}
                 </span>
               </div>
-              <div className="px-3 py-1.5 rounded-xl bg-slate-950 text-center">
+              <div className="px-3 py-1.5 rounded-xl bg-white border border-slate-200/80 text-center shadow-xs">
                 <span className="text-[9px] uppercase font-bold text-slate-500 block">Secured (3y+)</span>
-                <span className="text-sm font-display font-black text-blue-600 dark:text-blue-400">
+                <span className="text-sm font-display font-black text-blue-600">
                   {save.squad.filter((p) => (p.contractYears ?? 2) >= 3).length}
                 </span>
               </div>
@@ -1613,23 +1621,23 @@ export function TransferHub({
           </header>
 
           {/* Sporting Director Delegation Control Bar (Compact) */}
-          <div className="p-2.5 sm:p-3 rounded-2xl border border-indigo-500/30 bg-slate-900/60 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 shadow-md">
+          <div className="p-2.5 sm:p-3 rounded-2xl border border-indigo-200/80 bg-gradient-to-r from-indigo-50/60 via-purple-50/40 to-white flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 shadow-xs">
             <div className="flex items-center gap-2 min-w-0">
               <span className="text-lg shrink-0">👔</span>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <h4 className="font-display font-black text-white text-xs sm:text-sm uppercase tracking-tight truncate">
+                  <h4 className="font-display font-black text-slate-900 text-xs sm:text-sm uppercase tracking-tight truncate">
                     Director of Football
                   </h4>
                   <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded border shrink-0 ${
                     save.settings.sportingDirectorHandlesRenewals
-                      ? 'bg-blue-950/80 border-blue-500/50 text-blue-300'
-                      : 'bg-slate-950 border-slate-700 text-slate-400'
+                      ? 'bg-blue-50 border-blue-200 text-blue-700'
+                      : 'bg-slate-100 border-slate-200 text-slate-600'
                   }`}>
                     {save.settings.sportingDirectorHandlesRenewals ? 'AUTOMATED' : 'MANUAL'}
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-400 truncate">
+                <p className="text-[10px] text-slate-500 truncate">
                   Auto-renews key expiring contracts (≥74 OVR or U23) within authorized wage limits.
                 </p>
               </div>
@@ -1641,8 +1649,8 @@ export function TransferHub({
                 onClick={handleToggleSportingDirectorRenewals}
                 className={`py-1.5 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap border ${
                   save.settings.sportingDirectorHandlesRenewals
-                    ? 'bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-400 shadow-sm'
-                    : 'bg-slate-950 hover:bg-slate-800 text-slate-200 border-slate-700'
+                    ? 'bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-500 shadow-sm'
+                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
                 }`}
               >
                 {save.settings.sportingDirectorHandlesRenewals ? '✓ Auto-Renew Active' : 'Delegate Auto-Renew'}
@@ -1652,7 +1660,7 @@ export function TransferHub({
                   type="button"
                   onClick={handleRunSportingDirectorBatchRenewals}
                   title="Run automated renewal check now"
-                  className="py-1.5 px-2.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 text-slate-300 border border-slate-800 text-[11px] font-bold cursor-pointer"
+                  className="py-1.5 px-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-[11px] font-bold cursor-pointer shadow-2xs"
                 >
                   ⚡ Run Now
                 </button>
@@ -1673,13 +1681,13 @@ export function TransferHub({
                 onClick={() => setContractsFilter(f.id as typeof contractsFilter)}
                 className={`py-1.5 px-3 rounded-xl border text-xs font-display font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
                   contractsFilter === f.id
-                    ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-500 text-blue-700 dark:text-blue-300 font-bold'
-                    : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-white'
+                    ? 'office-nav-tab-active shadow-sm'
+                    : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
                 }`}
               >
                 <span>{f.label}</span>
                 <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-md ${
-                  f.alert ? 'bg-rose-950 text-rose-300 font-bold' : 'bg-slate-950/80'
+                  f.alert ? 'bg-rose-100 text-rose-700 font-bold border border-rose-300' : 'bg-slate-200 text-slate-700'
                 }`}>
                   {f.count}
                 </span>
@@ -1704,7 +1712,7 @@ export function TransferHub({
 
             if (filteredSquad.length === 0) {
               return (
-                <div className="bg-slate-900/20 border border-slate-850 rounded-2xl p-12 text-center text-slate-500 text-xs">
+                <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-500 text-xs shadow-xs">
                   No squad players match the current contract filter criteria.
                 </div>
               );
@@ -1718,32 +1726,36 @@ export function TransferHub({
                   const isMedium = yearsLeft === 2;
                   const expYear = save.season.yearStart + yearsLeft;
 
+                  const badgeClass = player.rating >= 88
+                    ? 'my11-badge-superstar'
+                    : player.rating >= 84
+                    ? 'my11-badge-elite'
+                    : player.rating >= 78
+                    ? 'my11-badge-strong'
+                    : 'my11-badge-modest';
+
                   return (
                     <article
                       key={player.id}
                       id={`contract-player-${player.id}`}
-                      className={`p-4 rounded-2xl border transition-all space-y-3 scroll-mt-20 ${
+                      className={`office-floating-card p-4 rounded-2xl border transition-all space-y-3 scroll-mt-20 bg-white shadow-xs ${
                         isCritical
-                          ? 'bg-gradient-to-b from-rose-950/20 to-slate-900/60 border-rose-800/60 hover:border-rose-600'
+                          ? 'border-rose-300'
                           : isMedium
-                          ? 'bg-gradient-to-b from-amber-950/15 to-slate-900/60 border-amber-800/40 hover:border-amber-600'
-                          : 'bg-slate-900/40 border-slate-850 hover:border-slate-700'
+                          ? 'border-amber-200'
+                          : 'border-slate-200/90'
                       }`}
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex items-center gap-2.5">
-                          <span className={`w-9 h-9 rounded-xl border flex items-center justify-center font-display font-black text-xs ${
-                            player.rating >= 80
-                              ? 'bg-blue-950/80 border-blue-500/50 text-blue-300'
-                              : 'bg-slate-950 border-slate-800 text-slate-200'
-                          }`}>
+                          <span className={`w-9 h-9 rounded-xl flex items-center justify-center font-display font-black text-xs shadow-sm ${badgeClass}`}>
                             {player.rating}
                           </span>
                           <div>
-                            <h4 className="font-display font-black text-sm text-white truncate max-w-[170px]">
+                            <h4 className="font-display font-black text-sm text-slate-900 truncate max-w-[170px]">
                               {player.name}
                             </h4>
-                            <div className="text-[10px] text-slate-400">
+                            <div className="text-[10px] text-slate-500">
                               {player.position} • {player.age} yrs • {player.nationality}
                             </div>
                           </div>
@@ -1751,10 +1763,10 @@ export function TransferHub({
 
                         <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg border ${
                           isCritical
-                            ? 'bg-rose-950 text-rose-300 border-rose-700/80 animate-pulse'
+                            ? 'bg-rose-50 text-rose-700 border-rose-200 animate-pulse'
                             : isMedium
-                            ? 'bg-amber-950/80 text-amber-300 border-amber-700/50'
-                            : 'bg-slate-950 text-blue-400 border-slate-800'
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : 'bg-blue-50 text-blue-700 border-blue-200'
                         }`}>
                           {yearsLeft} {yearsLeft === 1 ? 'Year Left' : 'Years Left'}
                         </span>
@@ -1762,23 +1774,23 @@ export function TransferHub({
 
                       {/* Contract Terms Matrix */}
                       <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="bg-slate-950/70 p-2 rounded-xl border border-slate-850">
+                        <div className="bg-slate-50/90 p-2 rounded-xl border border-slate-200/80 shadow-2xs">
                           <span className="text-[9px] uppercase font-bold text-slate-500 block">Weekly Wage</span>
-                          <span className="font-mono font-bold text-slate-200">{formatWage(player.wageWeekly)}</span>
+                          <span className="font-mono font-bold text-slate-900">{formatWage(player.wageWeekly)}</span>
                         </div>
-                        <div className="bg-slate-950/70 p-2 rounded-xl border border-slate-850">
+                        <div className="bg-slate-50/90 p-2 rounded-xl border border-slate-200/80 shadow-2xs">
                           <span className="text-[9px] uppercase font-bold text-slate-500 block">Squad Role</span>
-                          <span className="font-mono font-bold uppercase text-blue-400 text-[11px]">
+                          <span className="font-mono font-bold uppercase text-blue-600 text-[11px]">
                             {player.squadRole || (player.rating >= 82 ? 'Crucial' : player.rating >= 76 ? 'Important' : 'Squad')}
                           </span>
                         </div>
-                        <div className="bg-slate-950/70 p-2 rounded-xl border border-slate-850">
+                        <div className="bg-slate-50/90 p-2 rounded-xl border border-slate-200/80 shadow-2xs">
                           <span className="text-[9px] uppercase font-bold text-slate-500 block">Expires</span>
-                          <span className="font-mono font-bold text-slate-300 text-[11px]">June {expYear}</span>
+                          <span className="font-mono font-bold text-slate-700 text-[11px]">June {expYear}</span>
                         </div>
-                        <div className="bg-slate-950/70 p-2 rounded-xl border border-slate-850">
+                        <div className="bg-slate-50/90 p-2 rounded-xl border border-slate-200/80 shadow-2xs">
                           <span className="text-[9px] uppercase font-bold text-slate-500 block">Release Clause</span>
-                          <span className="font-mono font-bold text-slate-300 text-[11px]">
+                          <span className="font-mono font-bold text-slate-700 text-[11px]">
                             {player.releaseClause ? formatCurrency(player.releaseClause) : 'None'}
                           </span>
                         </div>
@@ -1790,8 +1802,8 @@ export function TransferHub({
                         onClick={() => handleStartRenewal(player)}
                         className={`w-full py-2.5 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                           isCritical
-                            ? 'bg-rose-500 hover:bg-rose-400 text-slate-950 shadow-md shadow-rose-500/20'
-                            : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-md shadow-blue-500/20'
+                            ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-500/20'
+                            : 'my11-btn-gradient text-white shadow-md shadow-blue-500/20'
                         }`}
                       >
                         <span>✍️</span>
@@ -1806,20 +1818,20 @@ export function TransferHub({
         </section>
       )}
 
-      {/* SUB-VIEW 3: SHORTLIST */}
+      {/* SUB-VIEW 4: SHORTLIST */}
       {subTab === 'shortlist' && (
         <section id="shortlist-section" className="space-y-4 scroll-mt-20">
           <header className="space-y-1">
-            <h3 className="text-base font-display font-black uppercase text-white">
+            <h3 className="text-base font-display font-black uppercase text-slate-900">
               Manager Shortlist
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500">
               Players earmarked for acquisition in upcoming transfer windows.
             </p>
           </header>
 
           {shortlistedPlayers.length === 0 ? (
-            <div className="bg-slate-900/20 border border-slate-850 rounded-2xl p-12 text-center text-slate-500 text-xs">
+            <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-500 text-xs shadow-xs">
               Your shortlist is currently empty. Star players in the Player Market to track them here.
             </div>
           ) : (
@@ -1832,22 +1844,30 @@ export function TransferHub({
                 const fs = calculateEaFcFaceStats(player as unknown as CareerPlayer);
                 const canAfford = player.value <= save.finances.transferBudget;
 
+                const badgeClass = player.rating >= 88
+                  ? 'my11-badge-superstar'
+                  : player.rating >= 84
+                  ? 'my11-badge-elite'
+                  : player.rating >= 78
+                  ? 'my11-badge-strong'
+                  : 'my11-badge-modest';
+
                 return (
                   <article
                     key={player.id}
-                    className="bg-slate-900/50 border border-slate-800 rounded-2xl p-2.5 sm:p-3 space-y-2 hover:border-slate-700 transition-all"
+                    className="my11-scouting-card p-2.5 sm:p-3 space-y-2 transition-all shadow-xs"
                   >
                     <div className="flex justify-between items-start gap-2">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="w-8 h-8 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center font-display font-black text-xs text-blue-400 shrink-0">
+                        <span className={`w-8 h-8 rounded-xl flex items-center justify-center font-display font-black text-xs shrink-0 shadow-sm ${badgeClass}`}>
                           {player.rating}
                         </span>
                         <div className="min-w-0">
-                          <h4 className="font-display font-black text-xs sm:text-sm text-white truncate max-w-[130px] sm:max-w-[170px]">
+                          <h4 className="font-display font-black text-xs sm:text-sm text-slate-900 truncate max-w-[130px] sm:max-w-[170px]">
                             {player.name}
                           </h4>
-                          <div className="text-[9.5px] text-slate-400 truncate mt-0.2">
-                            <span className="text-blue-400 font-bold">{player.position}</span>
+                          <div className="text-[9.5px] text-slate-500 truncate mt-0.5">
+                            <span className="text-blue-600 font-bold">{player.position}</span>
                             <span> • {player.age}y</span>
                             <span> • {player.nationality}</span>
                           </div>
@@ -1857,7 +1877,7 @@ export function TransferHub({
                       <button
                         type="button"
                         onClick={() => handleToggleShortlist(player.id)}
-                        className="text-amber-400 hover:text-slate-500 text-sm cursor-pointer p-0.5"
+                        className="text-amber-500 hover:text-amber-600 text-sm cursor-pointer p-0.5"
                         title="Remove from shortlist"
                       >
                         ★
@@ -1865,36 +1885,36 @@ export function TransferHub({
                     </div>
 
                     {/* EA FC 6 Face Stats Bar */}
-                    <div className="grid grid-cols-6 gap-1 bg-slate-950/70 p-1.5 rounded-lg text-center font-display border border-white/5 text-[9px]">
+                    <div className="grid grid-cols-6 gap-1 bg-slate-50/90 border border-slate-200/80 p-1.5 rounded-xl text-center font-display text-[9px] shadow-2xs">
                       <div>
                         <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'DIV' : 'PAC'}</span>
-                        <span className="font-black text-white">{fs.pac}</span>
+                        <span className="font-black text-slate-900 text-[10.5px]">{fs.pac}</span>
                       </div>
                       <div>
                         <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'HAN' : 'SHO'}</span>
-                        <span className="font-black text-white">{fs.sho}</span>
+                        <span className="font-black text-slate-900 text-[10.5px]">{fs.sho}</span>
                       </div>
                       <div>
                         <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'KIC' : 'PAS'}</span>
-                        <span className="font-black text-white">{fs.pas}</span>
+                        <span className="font-black text-slate-900 text-[10.5px]">{fs.pas}</span>
                       </div>
                       <div>
                         <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'REF' : 'DRI'}</span>
-                        <span className="font-black text-white">{fs.dri}</span>
+                        <span className="font-black text-slate-900 text-[10.5px]">{fs.dri}</span>
                       </div>
                       <div>
                         <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'SPD' : 'DEF'}</span>
-                        <span className="font-black text-white">{fs.def}</span>
+                        <span className="font-black text-slate-900 text-[10.5px]">{fs.def}</span>
                       </div>
                       <div>
                         <span className="text-slate-500 block text-[7px] font-bold">{fs.isGoalkeeper ? 'POS' : 'PHY'}</span>
-                        <span className="font-black text-white">{fs.phy}</span>
+                        <span className="font-black text-slate-900 text-[10.5px]">{fs.phy}</span>
                       </div>
                     </div>
 
-                    <div className="bg-slate-950/60 p-1.5 px-2 rounded-lg flex justify-between text-xs font-mono">
-                      <span className="text-foreground font-bold">{formatCurrency(player.value)}</span>
-                      <span className="text-slate-400">{formatWage(player.wageDemand)}</span>
+                    <div className="bg-slate-50 border border-slate-200/80 p-1.5 px-2 rounded-xl flex justify-between text-xs font-mono shadow-2xs">
+                      <span className="text-slate-900 font-bold">{formatCurrency(player.value)}</span>
+                      <span className="text-slate-500">{formatWage(player.wageDemand)}</span>
                     </div>
 
                     <div className="flex items-center gap-1.5">
@@ -1902,7 +1922,7 @@ export function TransferHub({
                         <button
                           type="button"
                           onClick={() => onOpenCompare(player)}
-                          className="py-1.5 px-2.5 rounded-lg font-display font-bold text-xs uppercase tracking-wider bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 flex items-center justify-center gap-1 cursor-pointer transition-colors shrink-0"
+                          className="py-1.5 px-2.5 rounded-xl font-display font-bold text-xs uppercase tracking-wider bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 flex items-center justify-center gap-1 cursor-pointer transition-colors shrink-0"
                         >
                           <span>📊</span>
                           <span>Compare</span>
@@ -1912,14 +1932,14 @@ export function TransferHub({
                         type="button"
                         onClick={() => handleStartNegotiation(player)}
                         disabled={isBlocked}
-                        className={`flex-1 py-1.5 px-3 rounded-lg font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer ${
+                        className={`flex-1 py-1.5 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer ${
                           !windowIsOpen
-                            ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                            ? 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed'
                             : isSquadFull
-                            ? 'bg-rose-950 text-rose-400 cursor-not-allowed border border-rose-800'
+                            ? 'bg-rose-50 text-rose-700 cursor-not-allowed border border-rose-200'
                             : canAfford
-                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-sm shadow-blue-500/20'
-                            : 'bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700'
+                            ? 'my11-btn-gradient text-white shadow-sm shadow-blue-500/20'
+                            : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
                         }`}
                       >
                         {!windowIsOpen
@@ -1940,17 +1960,17 @@ export function TransferHub({
       {/* SUB-VIEW 4: TRANSFER HISTORY */}
       {subTab === 'history' && (
         <section id="history-section" className="space-y-4 scroll-mt-20">
-          <header className="space-y-1">
-            <h3 className="text-base font-display font-black uppercase text-white">
+          <header className="office-floating-card p-4 space-y-1">
+            <h3 className="text-base font-display font-black uppercase text-slate-900 tracking-tight">
               Career Transfer Ledger
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500">
               Verified record of all signings and sales completed under your regime.
             </p>
           </header>
 
           {(!save.transfersHistory || save.transfersHistory.length === 0) ? (
-            <div className="bg-slate-900/20 border border-slate-850 rounded-2xl p-12 text-center text-slate-500 text-xs">
+            <div className="office-subcard p-12 text-center text-slate-500 text-xs">
               No transfers completed yet. Make a signing or cash in on a player to record history.
             </div>
           ) : (
@@ -1958,47 +1978,47 @@ export function TransferHub({
               {save.transfersHistory.map((tx) => (
                 <div
                   key={tx.id}
-                  className="bg-slate-900/40 border border-slate-850 p-3.5 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs"
+                  className="office-subcard p-3.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs"
                 >
                   <div className="flex items-start sm:items-center gap-3">
                     <span
                       className={`px-2 py-0.5 rounded text-[10px] font-display font-black uppercase tracking-wider ${
                         tx.type === 'signing'
-                          ? 'bg-blue-950 text-blue-400 border border-blue-900'
-                          : 'bg-amber-950 text-amber-400 border border-amber-900'
+                          ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                          : 'bg-amber-100 text-amber-800 border border-amber-200'
                       }`}
                     >
                       {tx.type}
                     </span>
                     <div className="space-y-1">
-                      <div className="font-display font-black text-white text-sm">
-                        {tx.playerName} <span className="text-xs font-normal text-slate-400">({tx.position} • {tx.rating})</span>
+                      <div className="font-display font-black text-slate-900 text-sm">
+                        {tx.playerName} <span className="text-xs font-normal text-slate-500">({tx.position} • {tx.rating})</span>
                       </div>
-                      <div className="text-[10px] text-slate-500">
+                      <div className="text-[10px] text-slate-500 font-medium">
                         {tx.fromClubName} → {tx.toClubName}
                       </div>
                       {/* Active Clauses / Add-Ons */}
                       <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
                         {tx.sellOnPercent ? (
-                          <span className="bg-slate-950 text-slate-400 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-slate-800">
+                          <span className="bg-slate-100 text-slate-700 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-slate-200">
                             {tx.sellOnPercent}% Sell-On
                           </span>
                         ) : null}
                         {tx.appearanceMilestoneFee ? (
-                          <span className="bg-blue-950/70 text-blue-300 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-blue-800/40">
+                          <span className="bg-blue-50 text-blue-700 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-blue-200">
                             +{formatCurrency(tx.appearanceMilestoneFee)} @ {tx.appearanceThreshold} Apps
                           </span>
                         ) : null}
                         {tx.goalMilestoneFee ? (
-                          <span className="bg-blue-950/70 text-blue-300 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-blue-800/40">
+                          <span className="bg-blue-50 text-blue-700 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-blue-200">
                             +{formatCurrency(tx.goalMilestoneFee)} @ {tx.goalThreshold} Goals/CS
                           </span>
                         ) : null}
                         {tx.buyBackFee ? (
                           <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border ${
                             tx.buyBackActive
-                              ? 'bg-amber-950/70 text-amber-300 border-amber-800/50'
-                              : 'bg-slate-950 text-slate-500 border-slate-800 line-through'
+                              ? 'bg-amber-50 text-amber-800 border-amber-200'
+                              : 'bg-slate-100 text-slate-400 border-slate-200 line-through'
                           }`}>
                             🔁 Buy-Back: {formatCurrency(tx.buyBackFee)} {tx.buyBackActive ? '(Active)' : '(Exercised/Expired)'}
                           </span>
@@ -2008,8 +2028,8 @@ export function TransferHub({
                   </div>
 
                   <div className="flex sm:flex-col items-start sm:items-end justify-between w-full sm:w-auto gap-2">
-                    <div className="flex sm:flex-col items-center sm:items-end gap-1">
-                      <span className="font-display font-black text-blue-400 text-sm">
+                    <div className="flex sm:flex-col items-center sm:items-end gap-0.5">
+                      <span className="font-display font-black text-blue-600 text-sm">
                         {formatCurrency(tx.fee)}
                       </span>
                       <span className="text-[10px] font-mono text-slate-500">
@@ -2049,30 +2069,30 @@ export function TransferHub({
       {subTab === 'board' && (
         <section id="board-room-section" className="space-y-3.5 scroll-mt-20">
           {/* Header */}
-          <header className="bg-slate-900/40 border border-slate-800 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3">
+          <header className="office-floating-card p-3 sm:p-4 flex items-center justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="text-base sm:text-lg">🏛️</span>
-                <h3 className="text-base sm:text-lg font-display font-black text-white uppercase tracking-tight truncate">
+                <h3 className="text-base sm:text-lg font-display font-black text-slate-900 uppercase tracking-tight truncate">
                   Board Room &amp; Governance
                 </h3>
               </div>
-              <p className="text-[11px] text-slate-400 truncate">
+              <p className="text-[11px] text-slate-500 truncate">
                 Directives &amp; review from {getEffectiveClubName(save.club)} board.
               </p>
             </div>
 
-            <div className="bg-slate-950/80 border border-slate-800 px-3 py-1.5 rounded-xl text-center shrink-0">
+            <div className="bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-xl text-center shrink-0 shadow-xs">
               <span className="text-[9px] uppercase font-bold text-slate-500 block leading-none">
                 Confidence
               </span>
               <span
                 className={`text-base sm:text-lg font-display font-black leading-tight ${
                   boardStatus.confidence >= 75
-                    ? 'text-emerald-400'
+                    ? 'text-emerald-600'
                     : boardStatus.confidence >= 50
-                    ? 'text-amber-400'
-                    : 'text-rose-400'
+                    ? 'text-amber-600'
+                    : 'text-rose-600'
                 }`}
               >
                 {boardStatus.confidence}%
@@ -2082,118 +2102,118 @@ export function TransferHub({
 
           {/* 3 Governance Pillars (Compact) */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-            <div className="bg-slate-900/40 border border-slate-850 rounded-xl p-2.5 sm:p-3 space-y-1">
+            <div className="office-subcard p-2.5 sm:p-3 space-y-1">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
+                <span className="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1">
                   <span>🎯</span> Objective
                 </span>
-                <span className="text-[9px] uppercase font-bold text-blue-400 bg-blue-950/60 px-1.5 py-0.2 rounded border border-blue-900/60 font-mono">
+                <span className="text-[9px] uppercase font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 font-mono">
                   {save.club.tier?.toUpperCase() || 'PL'} Tier
                 </span>
               </div>
-              <div className="text-sm font-display font-black text-white truncate">
+              <div className="text-sm font-display font-black text-slate-900 truncate">
                 {boardStatus.expectation}
               </div>
-              <p className="text-[10px] text-slate-400 truncate">
+              <p className="text-[10px] text-slate-500 truncate">
                 League finish mandate
               </p>
             </div>
 
-            <div className="bg-slate-900/40 border border-slate-850 rounded-xl p-2.5 sm:p-3 space-y-1">
+            <div className="office-subcard p-2.5 sm:p-3 space-y-1">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
+                <span className="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1">
                   <span>⚖️</span> Job Security
                 </span>
-                <span className={`text-[9px] uppercase font-black px-1.5 py-0.2 rounded font-mono ${
+                <span className={`text-[9px] uppercase font-black px-1.5 py-0.5 rounded font-mono ${
                   boardStatus.status === 'secure'
-                    ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800'
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                     : boardStatus.status === 'stable'
-                    ? 'bg-slate-900 text-slate-300 border border-slate-800'
-                    : 'bg-rose-950/80 text-rose-300 border border-rose-800'
+                    ? 'bg-slate-100 text-slate-700 border border-slate-200'
+                    : 'bg-rose-50 text-rose-700 border border-rose-200'
                 }`}>
                   {boardStatus.status.replace('_', ' ')}
                 </span>
               </div>
-              <div className="text-sm font-display font-black text-white truncate capitalize">
+              <div className="text-sm font-display font-black text-slate-900 truncate capitalize">
                 {boardStatus.status.replace('_', ' ')}
               </div>
-              <p className="text-[10px] text-slate-400 truncate">
+              <p className="text-[10px] text-slate-500 truncate">
                 {save.settings.boardCanSack ? 'Sackings enabled' : 'Safe Job mode'}
               </p>
             </div>
 
-            <div className="bg-slate-900/40 border border-slate-850 rounded-xl p-2.5 sm:p-3 space-y-1">
+            <div className="office-subcard p-2.5 sm:p-3 space-y-1">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
+                <span className="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1">
                   <span>⚠️</span> Board Warnings
                 </span>
-                <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded ${
+                <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${
                   boardStatus.warningsCount > 0
-                    ? 'bg-rose-950 text-rose-400 border border-rose-800'
-                    : 'bg-slate-950 text-slate-400 border border-slate-850'
+                    ? 'bg-rose-100 text-rose-700 border border-rose-200'
+                    : 'bg-slate-100 text-slate-600 border border-slate-200'
                 }`}>
                   {boardStatus.warningsCount}/3
                 </span>
               </div>
-              <div className="text-sm font-display font-black text-white truncate">
+              <div className="text-sm font-display font-black text-slate-900 truncate">
                 {boardStatus.warningsCount} Warnings
               </div>
-              <p className="text-[10px] text-slate-400 truncate">
+              <p className="text-[10px] text-slate-500 truncate">
                 {boardStatus.warningsCount > 0 ? 'Urgent points required' : 'Board is satisfied'}
               </p>
             </div>
           </div>
 
           {/* FM-STYLE TRANSFER & WAGE BUDGET REALLOCATION (COMPACT) */}
-          <section className="bg-slate-900/40 border border-slate-800 rounded-2xl p-3.5 sm:p-4 space-y-3">
+          <section className="office-floating-card p-3.5 sm:p-4 space-y-3">
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <h4 className="text-xs sm:text-sm font-display font-black text-white uppercase tracking-tight flex items-center gap-1.5 truncate">
+                <h4 className="text-xs sm:text-sm font-display font-black text-slate-900 uppercase tracking-tight flex items-center gap-1.5 truncate">
                   <span>⚖️</span> FM Budget Adjustment
                 </h4>
-                <p className="text-[10px] text-slate-400 truncate">
+                <p className="text-[10px] text-slate-500 truncate">
                   Reallocate between Transfer Funds and Weekly Wage Headroom (1y = 52×).
                 </p>
               </div>
               <div className="text-right shrink-0">
-                <span className="text-[8.5px] uppercase font-bold text-slate-500 block">Flexible Capital</span>
-                <span className="text-xs font-mono font-bold text-blue-400">{formatCurrency(budgetBounds.totalFlexibleFund)}</span>
+                <span className="text-[8.5px] uppercase font-bold text-slate-400 block">Flexible Capital</span>
+                <span className="text-xs font-mono font-bold text-blue-600">{formatCurrency(budgetBounds.totalFlexibleFund)}</span>
               </div>
             </div>
 
             {/* Dual Metric Cards */}
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="bg-slate-950/70 border border-slate-850 rounded-xl p-2.5 space-y-1">
+              <div className="office-subcard p-2.5 space-y-1">
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-400 font-bold uppercase text-[9px]">Transfer Warchest</span>
-                  <span className="text-[9px] font-mono text-slate-500 hidden sm:inline">
+                  <span className="text-slate-500 font-bold uppercase text-[9px]">Transfer Warchest</span>
+                  <span className="text-[9px] font-mono text-slate-400 hidden sm:inline">
                     Max: {formatCurrency(budgetBounds.maxTransferBudget)}
                   </span>
                 </div>
                 <div className="flex items-baseline justify-between">
-                  <span className="text-base sm:text-lg font-display font-black text-blue-400">
+                  <span className="text-base sm:text-lg font-display font-black text-blue-600">
                     {formatCurrency(allocatedTransferBudget)}
                   </span>
                   {allocatedTransferBudget !== save.finances.transferBudget && (
-                    <span className={`text-[10px] font-mono ${allocatedTransferBudget > save.finances.transferBudget ? 'text-emerald-400' : 'text-amber-400'}`}>
+                    <span className={`text-[10px] font-mono font-bold ${allocatedTransferBudget > save.finances.transferBudget ? 'text-emerald-600' : 'text-amber-600'}`}>
                       {allocatedTransferBudget > save.finances.transferBudget ? '+' : ''}{formatCurrency(allocatedTransferBudget - save.finances.transferBudget)}
                     </span>
                   )}
                 </div>
               </div>
 
-              <div className="bg-slate-950/70 border border-slate-850 rounded-xl p-2.5 space-y-1">
+              <div className="office-subcard p-2.5 space-y-1">
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-400 font-bold uppercase text-[9px]">Weekly Wage Ceiling</span>
-                  <span className="text-[9px] font-mono text-slate-500 hidden sm:inline">
+                  <span className="text-slate-500 font-bold uppercase text-[9px]">Weekly Wage Ceiling</span>
+                  <span className="text-[9px] font-mono text-slate-400 hidden sm:inline">
                     Payroll: {formatWage(save.finances.currentWeeklyWages)}
                   </span>
                 </div>
                 <div className="flex items-baseline justify-between">
-                  <span className="text-base sm:text-lg font-display font-black text-white">
+                  <span className="text-base sm:text-lg font-display font-black text-slate-900">
                     {formatWage(derivedWeeklyWage)}
                   </span>
-                  <span className={`text-[10px] font-mono font-bold ${derivedWeeklySpare > 0 ? 'text-emerald-400' : 'text-slate-500'}`}>
+                  <span className={`text-[10px] font-mono font-bold ${derivedWeeklySpare > 0 ? 'text-emerald-600' : 'text-slate-400'}`}>
                     {derivedWeeklySpare > 0 ? `+${formatWage(derivedWeeklySpare)}` : 'Cap'}
                   </span>
                 </div>
@@ -2201,11 +2221,11 @@ export function TransferHub({
             </div>
 
             {/* Range Slider & Quick Presets Strip */}
-            <div className="bg-slate-950/50 border border-slate-850 p-2.5 rounded-xl space-y-2">
+            <div className="bg-slate-50/80 border border-slate-200/80 p-2.5 rounded-xl space-y-2">
               <div className="space-y-1">
-                <div className="flex justify-between text-[10px] font-mono font-bold text-slate-400">
+                <div className="flex justify-between text-[10px] font-mono font-bold text-slate-500">
                   <span>Max Wages</span>
-                  <span className="text-blue-400">{Math.round((allocatedTransferBudget / (budgetBounds.totalFlexibleFund || 1)) * 100)}% Transfers</span>
+                  <span className="text-blue-600 font-bold">{Math.round((allocatedTransferBudget / (budgetBounds.totalFlexibleFund || 1)) * 100)}% Transfers</span>
                   <span>Max Transfers</span>
                 </div>
                 <input
@@ -2215,7 +2235,7 @@ export function TransferHub({
                   step={50000}
                   value={allocatedTransferBudget}
                   onChange={(e) => setAllocatedTransferBudget(Number(e.target.value))}
-                  className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 />
               </div>
 
@@ -2224,21 +2244,21 @@ export function TransferHub({
                   <button
                     type="button"
                     onClick={() => setAllocatedTransferBudget(budgetBounds.maxTransferBudget)}
-                    className="py-1 px-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-[9.5px] font-bold border border-slate-800 cursor-pointer"
+                    className="py-1 px-2 rounded-lg bg-white hover:bg-slate-100 text-slate-700 font-mono text-[9.5px] font-bold border border-slate-200 cursor-pointer shadow-xs"
                   >
                     Max Transfers
                   </button>
                   <button
                     type="button"
                     onClick={() => setAllocatedTransferBudget(Math.round((budgetBounds.totalFlexibleFund * 0.5) / 50_000) * 50_000)}
-                    className="py-1 px-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-[9.5px] font-bold border border-slate-800 cursor-pointer"
+                    className="py-1 px-2 rounded-lg bg-white hover:bg-slate-100 text-slate-700 font-mono text-[9.5px] font-bold border border-slate-200 cursor-pointer shadow-xs"
                   >
                     50/50
                   </button>
                   <button
                     type="button"
                     onClick={() => setAllocatedTransferBudget(0)}
-                    className="py-1 px-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-[9.5px] font-bold border border-slate-800 cursor-pointer"
+                    className="py-1 px-2 rounded-lg bg-white hover:bg-slate-100 text-slate-700 font-mono text-[9.5px] font-bold border border-slate-200 cursor-pointer shadow-xs"
                   >
                     Max Wages
                   </button>
@@ -2246,7 +2266,7 @@ export function TransferHub({
                     type="button"
                     onClick={() => setAllocatedTransferBudget(save.finances.transferBudget)}
                     disabled={allocatedTransferBudget === save.finances.transferBudget}
-                    className="py-1 px-2 rounded-lg bg-slate-900/60 text-slate-500 font-mono text-[9.5px] font-bold border border-slate-850 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="py-1 px-2 rounded-lg bg-slate-100 text-slate-400 font-mono text-[9.5px] font-bold border border-slate-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     Reset
                   </button>
@@ -2256,7 +2276,7 @@ export function TransferHub({
                   type="button"
                   onClick={handleApplyBudgetReallocation}
                   disabled={allocatedTransferBudget === save.finances.transferBudget}
-                  className="py-1.5 px-3 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-[10.5px] uppercase tracking-wider shadow-sm shadow-blue-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+                  className="py-1.5 px-3 rounded-lg my11-btn-gradient hover:opacity-95 text-white font-display font-black text-[10.5px] uppercase tracking-wider shadow-sm shadow-blue-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
                 >
                   <span>💾 Apply Reallocation</span>
                 </button>
@@ -2265,12 +2285,12 @@ export function TransferHub({
           </section>
 
           {/* BOARD PETITIONS & CAPITAL REQUESTS (COMPACT 2x2) */}
-          <section className="bg-slate-900/40 border border-slate-800 rounded-2xl p-3.5 sm:p-4 space-y-2.5">
+          <section className="office-floating-card p-3.5 sm:p-4 space-y-2.5">
             <div>
-              <h4 className="text-xs sm:text-sm font-display font-black text-white uppercase tracking-tight flex items-center gap-1.5">
+              <h4 className="text-xs sm:text-sm font-display font-black text-slate-900 uppercase tracking-tight flex items-center gap-1.5">
                 <span>🏛️</span> Board Petitions &amp; Capital Requests
               </h4>
-              <p className="text-[10px] text-slate-400">
+              <p className="text-[10px] text-slate-500">
                 Appeal to ownership for financial interventions under specific sporting circumstances.
               </p>
             </div>
@@ -2282,22 +2302,22 @@ export function TransferHub({
                 return (
                   <div className={`p-2.5 sm:p-3 rounded-xl border transition-all space-y-2 flex flex-col justify-between ${
                     isDeadline
-                      ? 'bg-amber-950/30 border-amber-500/60 shadow-sm'
-                      : 'bg-slate-950/60 border-slate-850 opacity-80'
+                      ? 'bg-amber-50/80 border-amber-300 shadow-xs'
+                      : 'office-subcard opacity-80'
                   }`}>
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
                         <span className="text-base">⏱️</span>
-                        <span className={`text-[8.5px] font-black uppercase px-1.5 py-0.2 rounded-full font-mono ${
-                          isDeadline ? 'bg-amber-400 text-slate-950 animate-pulse' : 'bg-slate-900 text-slate-500 border border-slate-800'
+                        <span className={`text-[8.5px] font-black uppercase px-1.5 py-0.5 rounded-full font-mono ${
+                          isDeadline ? 'bg-amber-400 text-slate-950 animate-pulse' : 'bg-slate-100 text-slate-500 border border-slate-200'
                         }`}>
                           {isDeadline ? 'Active' : 'Deadline Only'}
                         </span>
                       </div>
-                      <h5 className="font-display font-black text-xs text-white uppercase">
+                      <h5 className="font-display font-black text-xs text-slate-900 uppercase">
                         Emergency Deadline Warchest
                       </h5>
-                      <p className="text-[10px] text-slate-400 line-clamp-2">
+                      <p className="text-[10px] text-slate-500 line-clamp-2">
                         Urgent eleventh-hour cash injection before the 23:00 transfer cutoff.
                       </p>
                     </div>
@@ -2308,7 +2328,7 @@ export function TransferHub({
                       className={`w-full py-1.5 px-2.5 rounded-lg font-display font-black text-[10.5px] uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1 ${
                         isDeadline
                           ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-sm'
-                          : 'bg-slate-900 text-slate-600 border border-slate-800 cursor-not-allowed'
+                          : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
                       }`}
                     >
                       <span>{isDeadline ? '🏛️ Petition Warchest' : 'Window Not at Deadline'}</span>
@@ -2324,22 +2344,22 @@ export function TransferHub({
                 return (
                   <div className={`p-2.5 sm:p-3 rounded-xl border transition-all space-y-2 flex flex-col justify-between ${
                     hasInjuries
-                      ? 'bg-rose-950/30 border-rose-500/50 shadow-sm'
-                      : 'bg-slate-950/60 border-slate-850'
+                      ? 'bg-rose-50/80 border-rose-300 shadow-xs'
+                      : 'office-subcard'
                   }`}>
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
                         <span className="text-base">🏥</span>
-                        <span className={`text-[8.5px] font-black uppercase px-1.5 py-0.2 rounded-full font-mono ${
-                          hasInjuries ? 'bg-rose-500 text-slate-950 animate-pulse' : 'bg-emerald-950 text-emerald-400 border border-emerald-900'
+                        <span className={`text-[8.5px] font-black uppercase px-1.5 py-0.5 rounded-full font-mono ${
+                          hasInjuries ? 'bg-rose-500 text-white animate-pulse' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                         }`}>
                           {hasInjuries ? `${injuredCount} Out` : 'Fit'}
                         </span>
                       </div>
-                      <h5 className="font-display font-black text-xs text-white uppercase">
+                      <h5 className="font-display font-black text-xs text-slate-900 uppercase">
                         Injury Crisis Grant
                       </h5>
-                      <p className="text-[10px] text-slate-400 line-clamp-2">
+                      <p className="text-[10px] text-slate-500 line-clamp-2">
                         Emergency replacement fund when starters suffer serious injuries.
                       </p>
                     </div>
@@ -2349,8 +2369,8 @@ export function TransferHub({
                       disabled={!hasInjuries}
                       className={`w-full py-1.5 px-2.5 rounded-lg font-display font-black text-[10.5px] uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1 ${
                         hasInjuries
-                          ? 'bg-rose-500 hover:bg-rose-400 text-slate-950 shadow-sm'
-                          : 'bg-slate-900 text-slate-600 border border-slate-850 cursor-not-allowed'
+                          ? 'bg-rose-500 hover:bg-rose-400 text-white shadow-sm'
+                          : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
                       }`}
                     >
                       <span>{hasInjuries ? '🏥 Request Injury Cover' : 'No Injury Crisis'}</span>
@@ -2360,50 +2380,50 @@ export function TransferHub({
               })()}
 
               {/* 3. General Transfer Budget Expansion */}
-              <div className="p-2.5 sm:p-3 rounded-xl bg-slate-950/60 border border-slate-850 transition-all space-y-2 flex flex-col justify-between">
+              <div className="office-subcard p-2.5 sm:p-3 transition-all space-y-2 flex flex-col justify-between">
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="text-base">📈</span>
-                    <span className="text-[8.5px] font-black uppercase px-1.5 py-0.2 rounded-full font-mono bg-slate-900 text-blue-400 border border-slate-850">
+                    <span className="text-[8.5px] font-black uppercase px-1.5 py-0.5 rounded-full font-mono bg-blue-50 text-blue-700 border border-blue-200">
                       Conf. {boardStatus.confidence}%
                     </span>
                   </div>
-                  <h5 className="font-display font-black text-xs text-white uppercase">
+                  <h5 className="font-display font-black text-xs text-slate-900 uppercase">
                     Transfer Budget Expansion
                   </h5>
-                  <p className="text-[10px] text-slate-400 line-clamp-2">
+                  <p className="text-[10px] text-slate-500 line-clamp-2">
                     Table a standard petition for additional transfer capital from club reserves.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => handleOpenPetitionModal('general_transfer_funds')}
-                  className="w-full py-1.5 px-2.5 rounded-lg bg-slate-900 hover:bg-slate-850 text-blue-400 border border-blue-500/40 hover:border-blue-400 font-display font-black text-[10.5px] uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1"
+                  className="w-full py-1.5 px-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-display font-black text-[10.5px] uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1"
                 >
                   <span>📈 Petition Budget Top-Up</span>
                 </button>
               </div>
 
               {/* 4. Wage Budget Headroom Expansion */}
-              <div className="p-2.5 sm:p-3 rounded-xl bg-slate-950/60 border border-slate-850 transition-all space-y-2 flex flex-col justify-between">
+              <div className="office-subcard p-2.5 sm:p-3 transition-all space-y-2 flex flex-col justify-between">
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="text-base">💼</span>
-                    <span className="text-[8.5px] font-black uppercase px-1.5 py-0.2 rounded-full font-mono bg-slate-900 text-slate-400 border border-slate-850">
+                    <span className="text-[8.5px] font-black uppercase px-1.5 py-0.5 rounded-full font-mono bg-slate-100 text-slate-600 border border-slate-200">
                       Payroll {formatWage(save.finances.currentWeeklyWages)}
                     </span>
                   </div>
-                  <h5 className="font-display font-black text-xs text-white uppercase">
+                  <h5 className="font-display font-black text-xs text-slate-900 uppercase">
                     Wage Budget Headroom
                   </h5>
-                  <p className="text-[10px] text-slate-400 line-clamp-2">
+                  <p className="text-[10px] text-slate-500 line-clamp-2">
                     Higher weekly wage ceiling to authorize vital contract extensions.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => handleOpenPetitionModal('wage_budget_increase')}
-                  className="w-full py-1.5 px-2.5 rounded-lg bg-slate-900 hover:bg-slate-850 text-blue-300 border border-blue-500/40 hover:border-blue-400 font-display font-black text-[10.5px] uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1"
+                  className="w-full py-1.5 px-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-display font-black text-[10.5px] uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1"
                 >
                   <span>💼 Request Wage Increase</span>
                 </button>
@@ -2418,22 +2438,22 @@ export function TransferHub({
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+          className="fixed inset-0 bg-slate-950/40 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
         >
-          <div className="bg-slate-950 border border-slate-800 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative my-auto">
-            <header className="flex justify-between items-center border-b border-slate-900 pb-3">
+          <div className="office-floating-card rounded-3xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl relative my-auto border border-white/80">
+            <header className="flex justify-between items-center border-b border-slate-100 pb-3">
               <div>
-                <span className="font-display font-black text-xs uppercase tracking-wider text-blue-400">
+                <span className="font-display font-black text-xs uppercase tracking-wider text-blue-600">
                   Contract Extension Negotiations
                 </span>
-                <h3 className="text-lg font-display font-black text-white uppercase">
+                <h3 className="text-lg font-display font-black text-slate-900 uppercase">
                   {renewingPlayer.name}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setRenewingPlayer(null)}
-                className="text-slate-500 hover:text-white text-xs font-bold cursor-pointer"
+                className="text-slate-400 hover:text-slate-700 text-xs font-bold cursor-pointer"
               >
                 ✕ Cancel
               </button>
@@ -2450,31 +2470,31 @@ export function TransferHub({
             {(() => {
               const pref = getPlayerPreferredTerms(renewingPlayer);
               return (
-                <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-2.5 text-xs">
-                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-blue-400 font-display">
+                <div className="office-subcard p-4 space-y-2.5 text-xs">
+                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-blue-600 font-display">
                     <span>🎯 Player &amp; Agent Preferred Terms</span>
-                    <span className="font-mono text-slate-400">Agent Demands</span>
+                    <span className="font-mono text-slate-500">Agent Demands</span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    <div className="bg-slate-950 p-2 rounded-xl border border-slate-850">
+                    <div className="bg-slate-50 p-2 rounded-xl border border-slate-200/80">
                       <span className="text-[9px] uppercase font-bold text-slate-500 block">Preferred Wage</span>
-                      <span className="font-bold text-white font-mono">{formatWage(pref.preferredWageWeekly)}</span>
+                      <span className="font-bold text-slate-900 font-mono">{formatWage(pref.preferredWageWeekly)}</span>
                     </div>
-                    <div className="bg-slate-950 p-2 rounded-xl border border-slate-850">
+                    <div className="bg-slate-50 p-2 rounded-xl border border-slate-200/80">
                       <span className="text-[9px] uppercase font-bold text-slate-500 block">Desired Length</span>
-                      <span className="font-bold text-white font-mono">{pref.preferredContractYears} Years</span>
+                      <span className="font-bold text-slate-900 font-mono">{pref.preferredContractYears} Years</span>
                     </div>
-                    <div className="bg-slate-950 p-2 rounded-xl border border-slate-850">
+                    <div className="bg-slate-50 p-2 rounded-xl border border-slate-200/80">
                       <span className="text-[9px] uppercase font-bold text-slate-500 block">Expected Role</span>
-                      <span className="font-bold text-blue-400 uppercase font-mono">{pref.expectedSquadRole}</span>
+                      <span className="font-bold text-blue-600 uppercase font-mono">{pref.expectedSquadRole}</span>
                     </div>
-                    <div className="bg-slate-950 p-2 rounded-xl border border-slate-850">
+                    <div className="bg-slate-50 p-2 rounded-xl border border-slate-200/80">
                       <span className="text-[9px] uppercase font-bold text-slate-500 block">Loyalty Bonus</span>
-                      <span className="font-bold text-slate-300 font-mono">{formatCurrency(pref.expectedSigningBonus)}</span>
+                      <span className="font-bold text-slate-700 font-mono">{formatCurrency(pref.expectedSigningBonus)}</span>
                     </div>
-                    <div className="bg-slate-950 p-2 rounded-xl border border-slate-850 col-span-2 sm:col-span-1">
+                    <div className="bg-slate-50 p-2 rounded-xl border border-slate-200/80 col-span-2 sm:col-span-1">
                       <span className="text-[9px] uppercase font-bold text-slate-500 block">Release Clause</span>
-                      <span className="font-bold text-slate-300 font-mono">
+                      <span className="font-bold text-slate-700 font-mono">
                         {pref.releaseClausePreference ? formatCurrency(pref.releaseClausePreference) : 'None'}
                       </span>
                     </div>
@@ -2487,9 +2507,9 @@ export function TransferHub({
             <div className="space-y-4 text-xs">
               {/* Weekly Wage */}
               <div className="space-y-1.5">
-                <div className="flex justify-between text-slate-300 font-bold">
+                <div className="flex justify-between text-slate-700 font-bold">
                   <span>Weekly Wage Offer:</span>
-                  <span className="font-mono text-blue-400">{formatWage(renewWage)}</span>
+                  <span className="font-mono text-blue-600 font-black">{formatWage(renewWage)}</span>
                 </div>
                 <input
                   type="range"
@@ -2508,17 +2528,17 @@ export function TransferHub({
 
               {/* Contract Length */}
               <div className="space-y-1.5">
-                <label className="block text-slate-300 font-bold">Contract Duration:</label>
+                <label className="block text-slate-700 font-bold">Contract Duration:</label>
                 <div className="grid grid-cols-5 gap-2">
                   {[1, 2, 3, 4, 5].map((yrs) => (
                     <button
                       key={yrs}
                       type="button"
                       onClick={() => setRenewYears(yrs)}
-                      className={`py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+                      className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         renewYears === yrs
                           ? 'bg-blue-600 text-white font-black shadow-sm'
-                          : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+                          : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs'
                       }`}
                     >
                       {yrs} {yrs === 1 ? 'Year' : 'Years'}
@@ -2529,17 +2549,17 @@ export function TransferHub({
 
               {/* Squad Role Selection */}
               <div className="space-y-1.5">
-                <label className="block text-slate-300 font-bold">Promised Squad Role:</label>
+                <label className="block text-slate-700 font-bold">Promised Squad Role:</label>
                 <div className="grid grid-cols-5 gap-1.5">
                   {(['crucial', 'important', 'squad', 'sporadic', 'prospect'] as SquadRole[]).map((role) => (
                     <button
                       key={role}
                       type="button"
                       onClick={() => setRenewSquadRole(role)}
-                      className={`py-1.5 px-1 rounded-xl text-[10px] font-bold uppercase transition-colors cursor-pointer truncate ${
+                      className={`py-1.5 px-1 rounded-xl text-[10px] font-bold uppercase transition-all cursor-pointer truncate ${
                         renewSquadRole === role
                           ? 'bg-blue-600 text-white font-black shadow-sm'
-                          : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+                          : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs'
                       }`}
                     >
                       {role}
@@ -2552,8 +2572,8 @@ export function TransferHub({
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-400 font-bold">Signing Bonus:</span>
-                    <span className="font-mono text-blue-400 font-bold">{formatCurrency(renewSigningBonus)}</span>
+                    <span className="text-slate-600 font-bold">Signing Bonus:</span>
+                    <span className="font-mono text-blue-600 font-bold">{formatCurrency(renewSigningBonus)}</span>
                   </div>
                   <input
                     type="number"
@@ -2561,14 +2581,14 @@ export function TransferHub({
                     step={100_000}
                     value={renewSigningBonus}
                     onChange={(e) => setRenewSigningBonus(Math.max(0, Number(e.target.value)))}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-blue-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono text-xs focus:outline-none focus:border-blue-500 shadow-xs"
                   />
                   <span className="text-[10px] text-slate-500 block">Deducted from transfer budget</span>
                 </div>
                 <div className="space-y-1">
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-400 font-bold">Release Clause:</span>
-                    <span className="font-mono text-blue-400 font-bold">{renewReleaseClause ? formatCurrency(renewReleaseClause) : 'None'}</span>
+                    <span className="text-slate-600 font-bold">Release Clause:</span>
+                    <span className="font-mono text-blue-600 font-bold">{renewReleaseClause ? formatCurrency(renewReleaseClause) : 'None'}</span>
                   </div>
                   <input
                     type="number"
@@ -2580,7 +2600,7 @@ export function TransferHub({
                       setRenewReleaseClause(val > 0 ? val : undefined);
                     }}
                     placeholder="None"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-blue-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono text-xs focus:outline-none focus:border-blue-500 shadow-xs"
                   />
                   <span className="text-[10px] text-slate-500 block">0 = No buy-out clause</span>
                 </div>
@@ -2594,24 +2614,24 @@ export function TransferHub({
               const hasWageRoom = wageDelta <= Math.max(0, save.finances.weeklyWageBudget - save.finances.currentWeeklyWages);
 
               return (
-                <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5 space-y-2 text-xs">
-                  <div className="flex justify-between items-center text-[10px] uppercase font-bold text-slate-400">
+                <div className="office-subcard p-3.5 space-y-2 text-xs">
+                  <div className="flex justify-between items-center text-[10px] uppercase font-bold text-slate-500">
                     <span>Wage Change</span>
-                    <span className={wageDelta >= 0 ? 'text-amber-400' : 'text-emerald-400'}>
+                    <span className={wageDelta >= 0 ? 'text-amber-600 font-bold' : 'text-emerald-600 font-bold'}>
                       {wageDelta >= 0 ? `+${formatWage(wageDelta)}` : `-${formatWage(Math.abs(wageDelta))}`}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center text-[10px] uppercase font-bold text-slate-400">
+                  <div className="flex justify-between items-center text-[10px] uppercase font-bold text-slate-500">
                     <span>Signing Bonus Cost</span>
-                    <span className="text-rose-400">-{formatCurrency(renewSigningBonus)}</span>
+                    <span className="text-rose-600 font-bold">-{formatCurrency(renewSigningBonus)}</span>
                   </div>
                   {!hasBudget && (
-                    <div className="p-2 rounded-xl bg-rose-950/60 border border-rose-800 text-rose-300 text-[11px]">
+                    <div className="p-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-medium">
                       ⚠️ Insufficient transfer budget for signing bonus! Available: {formatCurrency(save.finances.transferBudget)}.
                     </div>
                   )}
                   {!hasWageRoom && wageDelta > 0 && (
-                    <div className="p-2 rounded-xl bg-amber-950/60 border border-amber-800 text-amber-300 text-[11px]">
+                    <div className="p-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-medium">
                       ⚠️ Wage budget will be exceeded by {formatWage(wageDelta - Math.max(0, save.finances.weeklyWageBudget - save.finances.currentWeeklyWages))}.
                     </div>
                   )}
@@ -2620,7 +2640,7 @@ export function TransferHub({
             })()}
 
             {renewFeedback && (
-              <div className="p-3 rounded-xl bg-rose-950/70 border border-rose-800 text-rose-300 text-xs">
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
                 {renewFeedback}
               </div>
             )}
@@ -2629,7 +2649,7 @@ export function TransferHub({
               <button
                 type="button"
                 onClick={() => setRenewingPlayer(null)}
-                className="py-3 px-4 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-xs font-bold text-slate-300 uppercase tracking-wider cursor-pointer"
+                className="py-3 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 uppercase tracking-wider cursor-pointer shadow-xs"
               >
                 Cancel
               </button>
@@ -2637,7 +2657,7 @@ export function TransferHub({
                 type="button"
                 onClick={handleConfirmRenewal}
                 disabled={renewSigningBonus > save.finances.transferBudget}
-                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 font-display font-black text-xs uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 cursor-pointer"
+                className="flex-1 py-3 px-4 rounded-xl my11-btn-gradient hover:opacity-95 disabled:opacity-40 disabled:cursor-not-allowed font-display font-black text-xs uppercase tracking-wider text-white shadow-lg shadow-blue-500/20 cursor-pointer"
               >
                 Sign Contract Extension
               </button>
@@ -2651,24 +2671,24 @@ export function TransferHub({
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+          className="fixed inset-0 bg-slate-950/40 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
         >
-          <div className="bg-slate-950 border border-slate-800 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative my-auto">
-            <header className="flex justify-between items-center border-b border-slate-900 pb-3">
+          <div className="office-floating-card rounded-3xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl relative my-auto border border-white/80">
+            <header className="flex justify-between items-center border-b border-slate-100 pb-3">
               <div>
                 <span className={`font-display font-black text-xs uppercase tracking-wider ${
-                  negotiatingPlayer.isLegend ? 'text-amber-400' : 'text-blue-400'
+                  negotiatingPlayer.isLegend ? 'text-amber-600' : 'text-blue-600'
                 }`}>
                   {negotiatingPlayer.isLegend ? '👑 Legend Transfer Negotiations' : 'Transfer Negotiations'}
                 </span>
-                <h3 className="text-lg font-display font-black text-white uppercase">
+                <h3 className="text-lg font-display font-black text-slate-900 uppercase">
                   {negotiatingPlayer.name}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setNegotiatingPlayer(null)}
-                className="text-slate-500 hover:text-white text-xs font-bold cursor-pointer"
+                className="text-slate-400 hover:text-slate-700 text-xs font-bold cursor-pointer"
               >
                 ✕ Cancel
               </button>
@@ -2684,14 +2704,14 @@ export function TransferHub({
               />
               <div className={`p-3 rounded-2xl flex justify-between items-center text-xs ${
                 negotiatingPlayer.isLegend
-                  ? 'bg-amber-950/20 border border-amber-500/30'
-                  : 'bg-slate-900/60'
+                  ? 'bg-amber-50/80 border border-amber-200'
+                  : 'office-subcard'
               }`}>
                 <div>
                   <span className="text-slate-500 text-[10px] uppercase font-bold block">
-                    Club & Position
+                    Club &amp; Position
                   </span>
-                  <span className="text-white font-bold">
+                  <span className="text-slate-900 font-bold">
                     {negotiatingPlayer.club} • {negotiatingPlayer.position} ({negotiatingPlayer.rating} OVR)
                   </span>
                 </div>
@@ -2700,7 +2720,7 @@ export function TransferHub({
                     Market Valuation
                   </span>
                   <span className={`font-bold font-mono text-sm ${
-                    negotiatingPlayer.isLegend ? 'text-amber-400' : 'text-blue-400'
+                    negotiatingPlayer.isLegend ? 'text-amber-700' : 'text-blue-600'
                   }`}>
                     {formatCurrency(negotiatingPlayer.value)}
                   </span>
@@ -2712,31 +2732,31 @@ export function TransferHub({
             {(() => {
               const pref = getPlayerPreferredTerms(negotiatingPlayer as unknown as CareerPlayer);
               return (
-                <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-2.5 text-xs">
-                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-blue-400 font-display">
+                <div className="office-subcard p-4 space-y-2.5 text-xs">
+                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-blue-600 font-display">
                     <span>🎯 Player &amp; Agent Preferred Terms</span>
-                    <span className="font-mono text-slate-400">Demands</span>
+                    <span className="font-mono text-slate-500">Demands</span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    <div className="bg-slate-950 p-2 rounded-xl border border-slate-850">
+                    <div className="bg-slate-50 p-2 rounded-xl border border-slate-200/80">
                       <span className="text-[9px] uppercase font-bold text-slate-500 block">Preferred Wage</span>
-                      <span className="font-bold text-white font-mono">{formatWage(pref.preferredWageWeekly)}</span>
+                      <span className="font-bold text-slate-900 font-mono">{formatWage(pref.preferredWageWeekly)}</span>
                     </div>
-                    <div className="bg-slate-950 p-2 rounded-xl border border-slate-850">
+                    <div className="bg-slate-50 p-2 rounded-xl border border-slate-200/80">
                       <span className="text-[9px] uppercase font-bold text-slate-500 block">Desired Length</span>
-                      <span className="font-bold text-white font-mono">{pref.preferredContractYears} Years</span>
+                      <span className="font-bold text-slate-900 font-mono">{pref.preferredContractYears} Years</span>
                     </div>
-                    <div className="bg-slate-950 p-2 rounded-xl border border-slate-850">
+                    <div className="bg-slate-50 p-2 rounded-xl border border-slate-200/80">
                       <span className="text-[9px] uppercase font-bold text-slate-500 block">Expected Role</span>
-                      <span className="font-bold text-blue-400 uppercase font-mono">{pref.expectedSquadRole}</span>
+                      <span className="font-bold text-blue-600 uppercase font-mono">{pref.expectedSquadRole}</span>
                     </div>
-                    <div className="bg-slate-950 p-2 rounded-xl border border-slate-850">
+                    <div className="bg-slate-50 p-2 rounded-xl border border-slate-200/80">
                       <span className="text-[9px] uppercase font-bold text-slate-500 block">Signing Bonus</span>
-                      <span className="font-bold text-slate-300 font-mono">{formatCurrency(pref.expectedSigningBonus)}</span>
+                      <span className="font-bold text-slate-700 font-mono">{formatCurrency(pref.expectedSigningBonus)}</span>
                     </div>
-                    <div className="bg-slate-950 p-2 rounded-xl border border-slate-850 col-span-2 sm:col-span-1">
+                    <div className="bg-slate-50 p-2 rounded-xl border border-slate-200/80 col-span-2 sm:col-span-1">
                       <span className="text-[9px] uppercase font-bold text-slate-500 block">Release Clause</span>
-                      <span className="font-bold text-slate-300 font-mono">
+                      <span className="font-bold text-slate-700 font-mono">
                         {pref.releaseClausePreference ? formatCurrency(pref.releaseClausePreference) : 'Optional'}
                       </span>
                     </div>
@@ -2749,9 +2769,9 @@ export function TransferHub({
             <div className="space-y-4 text-xs">
               {/* Transfer Base Fee */}
               <div className="space-y-1.5">
-                <div className="flex justify-between text-slate-300 font-bold">
+                <div className="flex justify-between text-slate-700 font-bold">
                   <span>Base Transfer Fee Offer:</span>
-                  <span className="font-mono text-blue-400">{formatCurrency(offeredFee)}</span>
+                  <span className="font-mono text-blue-600 font-black">{formatCurrency(offeredFee)}</span>
                 </div>
                 <input
                   type="range"
@@ -2772,9 +2792,9 @@ export function TransferHub({
               {/* Structured Add-Ons & Sell-on Clause */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <div className="flex justify-between text-slate-400 text-[11px] font-bold">
+                  <div className="flex justify-between text-slate-600 text-[11px] font-bold">
                     <span>Performance Add-ons:</span>
-                    <span className="font-mono text-slate-300">{formatCurrency(offeredAddOnFee)}</span>
+                    <span className="font-mono text-slate-800">{formatCurrency(offeredAddOnFee)}</span>
                   </div>
                   <input
                     type="range"
@@ -2789,9 +2809,9 @@ export function TransferHub({
                 </div>
 
                 <div className="space-y-1">
-                  <div className="flex justify-between text-slate-400 text-[11px] font-bold">
+                  <div className="flex justify-between text-slate-600 text-[11px] font-bold">
                     <span>Sell-on Clause:</span>
-                    <span className="font-mono text-slate-300">{offeredSellOnClause}%</span>
+                    <span className="font-mono text-slate-800">{offeredSellOnClause}%</span>
                   </div>
                   <input
                     type="range"
@@ -2808,9 +2828,9 @@ export function TransferHub({
 
               {/* Weekly Wage Offer */}
               <div className="space-y-1.5">
-                <div className="flex justify-between text-slate-300 font-bold">
+                <div className="flex justify-between text-slate-700 font-bold">
                   <span>Weekly Wage Offer:</span>
-                  <span className="font-mono text-slate-200">{formatWage(offeredWage)}</span>
+                  <span className="font-mono text-blue-600 font-black">{formatWage(offeredWage)}</span>
                 </div>
                 <input
                   type="range"
@@ -2829,17 +2849,17 @@ export function TransferHub({
 
               {/* Contract Length */}
               <div className="space-y-1.5">
-                <label className="block text-slate-300 font-bold">Contract Duration:</label>
+                <label className="block text-slate-700 font-bold">Contract Duration:</label>
                 <div className="grid grid-cols-5 gap-2">
                   {[1, 2, 3, 4, 5].map((yrs) => (
                     <button
                       key={yrs}
                       type="button"
                       onClick={() => setOfferedContractYears(yrs)}
-                      className={`py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+                      className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         offeredContractYears === yrs
                           ? 'bg-blue-600 text-white font-black shadow-sm'
-                          : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+                          : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs'
                       }`}
                     >
                       {yrs} {yrs === 1 ? 'Year' : 'Years'}
@@ -2850,17 +2870,17 @@ export function TransferHub({
 
               {/* Promised Squad Role */}
               <div className="space-y-1.5">
-                <label className="block text-slate-300 font-bold">Squad Role:</label>
+                <label className="block text-slate-700 font-bold">Squad Role:</label>
                 <div className="grid grid-cols-5 gap-1.5">
                   {(['crucial', 'important', 'squad', 'sporadic', 'prospect'] as SquadRole[]).map((role) => (
                     <button
                       key={role}
                       type="button"
                       onClick={() => setOfferedSquadRole(role)}
-                      className={`py-1.5 px-1 rounded-xl text-[10px] font-bold uppercase transition-colors cursor-pointer truncate ${
+                      className={`py-1.5 px-1 rounded-xl text-[10px] font-bold uppercase transition-all cursor-pointer truncate ${
                         offeredSquadRole === role
                           ? 'bg-blue-600 text-white font-black shadow-sm'
-                          : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+                          : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs'
                       }`}
                     >
                       {role}
@@ -2873,8 +2893,8 @@ export function TransferHub({
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-400 font-bold">Signing Bonus:</span>
-                    <span className="font-mono text-blue-400 font-bold">{formatCurrency(offeredSigningBonus)}</span>
+                    <span className="text-slate-600 font-bold">Signing Bonus:</span>
+                    <span className="font-mono text-blue-600 font-bold">{formatCurrency(offeredSigningBonus)}</span>
                   </div>
                   <input
                     type="number"
@@ -2882,14 +2902,14 @@ export function TransferHub({
                     step={250_000}
                     value={offeredSigningBonus}
                     onChange={(e) => setOfferedSigningBonus(Math.max(0, Number(e.target.value)))}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-blue-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono text-xs focus:outline-none focus:border-blue-500 shadow-xs"
                   />
                   <span className="text-[10px] text-slate-500 block">Upfront loyalty payment</span>
                 </div>
                 <div className="space-y-1">
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-400 font-bold">Release Clause:</span>
-                    <span className="font-mono text-blue-400 font-bold">{offeredReleaseClause ? formatCurrency(offeredReleaseClause) : 'None'}</span>
+                    <span className="text-slate-600 font-bold">Release Clause:</span>
+                    <span className="font-mono text-blue-600 font-bold">{offeredReleaseClause ? formatCurrency(offeredReleaseClause) : 'None'}</span>
                   </div>
                   <input
                     type="number"
@@ -2901,7 +2921,7 @@ export function TransferHub({
                       setOfferedReleaseClause(val > 0 ? val : undefined);
                     }}
                     placeholder="None"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-blue-500"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono text-xs focus:outline-none focus:border-blue-500 shadow-xs"
                   />
                   <span className="text-[10px] text-slate-500 block">0 = None</span>
                 </div>
@@ -2920,46 +2940,46 @@ export function TransferHub({
               const isOverWageRoom = remainingWageRoom < 0;
 
               return (
-                <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 space-y-3">
-                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center justify-between font-display">
+                <div className="office-subcard p-4 space-y-3">
+                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center justify-between font-display">
                     <span>💼 Financial Impact Analysis</span>
-                    <span className="font-mono text-slate-500">Board Authorization</span>
+                    <span className="font-mono text-slate-400">Board Authorization</span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 text-xs">
                     {/* Transfer Fee Math */}
-                    <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-850 space-y-1">
+                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 space-y-1">
                       <span className="text-[9px] uppercase font-bold text-slate-500 block">Transfer Budget</span>
                       <div className="flex justify-between items-center font-mono">
-                        <span className="text-slate-400 text-[10px]">Current:</span>
-                        <span className="font-bold text-white">{formatCurrency(currentBudget)}</span>
+                        <span className="text-slate-500 text-[10px]">Current:</span>
+                        <span className="font-bold text-slate-900">{formatCurrency(currentBudget)}</span>
                       </div>
                       <div className="flex justify-between items-center font-mono">
-                        <span className="text-slate-400 text-[10px]">Upfront Cost:</span>
-                        <span className="font-bold text-rose-400">-{formatCurrency(totalUpfrontCost)}</span>
+                        <span className="text-slate-500 text-[10px]">Upfront Cost:</span>
+                        <span className="font-bold text-rose-600">-{formatCurrency(totalUpfrontCost)}</span>
                       </div>
-                      <div className="pt-1 border-t border-slate-850 flex justify-between items-center font-mono">
-                        <span className="text-[10px] font-bold text-slate-300">Remaining:</span>
-                        <span className={`font-bold ${isOverBudget ? 'text-rose-400' : 'text-emerald-400'}`}>
+                      <div className="pt-1 border-t border-slate-200/80 flex justify-between items-center font-mono">
+                        <span className="text-[10px] font-bold text-slate-700">Remaining:</span>
+                        <span className={`font-bold ${isOverBudget ? 'text-rose-600' : 'text-emerald-600'}`}>
                           {formatCurrency(remainingBudget)}
                         </span>
                       </div>
                     </div>
 
                     {/* Wage Room Math */}
-                    <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-850 space-y-1">
+                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 space-y-1">
                       <span className="text-[9px] uppercase font-bold text-slate-500 block">Wage Budget</span>
                       <div className="flex justify-between items-center font-mono">
-                        <span className="text-slate-400 text-[10px]">Wage Room:</span>
-                        <span className="font-bold text-white">{formatCurrency(currentWageRoom)}/w</span>
+                        <span className="text-slate-500 text-[10px]">Wage Room:</span>
+                        <span className="font-bold text-slate-900">{formatCurrency(currentWageRoom)}/w</span>
                       </div>
                       <div className="flex justify-between items-center font-mono">
-                        <span className="text-slate-400 text-[10px]">Offered Wage:</span>
-                        <span className="font-bold text-rose-400">-{formatWage(offeredWage)}</span>
+                        <span className="text-slate-500 text-[10px]">Offered Wage:</span>
+                        <span className="font-bold text-rose-600">-{formatWage(offeredWage)}</span>
                       </div>
-                      <div className="pt-1 border-t border-slate-850 flex justify-between items-center font-mono">
-                        <span className="text-[10px] font-bold text-slate-300">Net Room:</span>
-                        <span className={`font-bold ${isOverWageRoom ? 'text-amber-400' : 'text-emerald-400'}`}>
+                      <div className="pt-1 border-t border-slate-200/80 flex justify-between items-center font-mono">
+                        <span className="text-[10px] font-bold text-slate-700">Net Room:</span>
+                        <span className={`font-bold ${isOverWageRoom ? 'text-amber-600' : 'text-emerald-600'}`}>
                           {formatCurrency(remainingWageRoom)}/w
                         </span>
                       </div>
@@ -2967,7 +2987,7 @@ export function TransferHub({
                   </div>
 
                   {isOverBudget && (
-                    <div className="p-2.5 rounded-xl bg-rose-950/60 border border-rose-800 text-rose-300 text-xs flex items-center gap-2">
+                    <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2 font-medium">
                       <span>⚠️</span>
                       <span>Insufficient transfer budget! Upfront cost exceeds available funds by {formatCurrency(Math.abs(remainingBudget))}.</span>
                     </div>
@@ -2981,10 +3001,10 @@ export function TransferHub({
               <div
                 className={`p-3 rounded-xl text-xs font-medium ${
                   negotiationFeedback.status === 'accepted'
-                    ? 'bg-emerald-950/70 border border-emerald-800 text-emerald-300'
+                    ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
                     : negotiationFeedback.status === 'counter_offer'
-                    ? 'bg-amber-950/70 border border-amber-800 text-amber-300'
-                    : 'bg-rose-950/70 border border-rose-800 text-rose-300'
+                    ? 'bg-amber-50 border border-amber-200 text-amber-800'
+                    : 'bg-rose-50 border border-rose-200 text-rose-800'
                 }`}
               >
                 {negotiationFeedback.message}
@@ -2996,7 +3016,7 @@ export function TransferHub({
               <button
                 type="button"
                 onClick={() => setNegotiatingPlayer(null)}
-                className="py-3 px-4 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-xs font-bold text-slate-300 uppercase tracking-wider cursor-pointer"
+                className="py-3 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 uppercase tracking-wider cursor-pointer shadow-xs"
               >
                 Withdraw
               </button>
@@ -3006,10 +3026,10 @@ export function TransferHub({
                 disabled={offeredFee + offeredSigningBonus > save.finances.transferBudget}
                 className={`flex-1 py-3 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer ${
                   offeredFee + offeredSigningBonus > save.finances.transferBudget
-                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
                     : negotiatingPlayer.isLegend
                     ? 'bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 shadow-lg shadow-amber-500/25'
-                    : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-500/20'
+                    : 'my11-btn-gradient hover:opacity-95 text-white shadow-lg shadow-blue-500/20'
                 }`}
               >
                 {offeredFee + offeredSigningBonus > save.finances.transferBudget ? 'Cannot Afford Bid' : 'Submit Formal Bid'}
@@ -3024,12 +3044,12 @@ export function TransferHub({
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4"
+          className="fixed inset-0 bg-slate-950/40 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4"
         >
-          <div className="bg-slate-950 border border-slate-800 rounded-3xl p-5 sm:p-7 max-w-xl w-full space-y-5 shadow-2xl relative max-h-[92vh] overflow-y-auto">
+          <div className="office-floating-card rounded-3xl p-5 sm:p-7 max-w-xl w-full space-y-4 shadow-2xl relative max-h-[92vh] overflow-y-auto border border-white/80">
             <button
               onClick={() => setNegotiatingIncomingOffer(null)}
-              className="absolute top-5 right-5 text-slate-500 hover:text-white text-base cursor-pointer z-20"
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 text-base cursor-pointer z-20"
             >
               ✕
             </button>
@@ -3037,22 +3057,22 @@ export function TransferHub({
             {/* Modal Header */}
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-wider text-blue-400 bg-blue-950/60 border border-blue-900/60 px-2.5 py-0.5 rounded-full font-display">
+                <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full font-display">
                   Transfer Negotiation Room
                 </span>
                 <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
                   (negotiatingIncomingOffer.patienceRemaining ?? 3) > 1
-                    ? 'bg-amber-950/60 text-amber-300 border border-amber-900/60'
-                    : 'bg-rose-950/60 text-rose-300 border border-rose-900/60 animate-pulse'
+                    ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                    : 'bg-rose-50 text-rose-700 border border-rose-200 animate-pulse'
                 }`}>
                   ⏳ {negotiatingIncomingOffer.patienceRemaining ?? 3}/3 Buyer Patience Left
                 </span>
               </div>
-              <h3 className="text-xl sm:text-2xl font-display font-black text-white uppercase tracking-tight">
+              <h3 className="text-xl sm:text-2xl font-display font-black text-slate-900 uppercase tracking-tight">
                 {negotiatingIncomingOffer.playerName}
               </h3>
-              <p className="text-xs text-slate-400">
-                Bid from <strong className="text-white">{negotiatingIncomingOffer.buyingClubName}</strong> • {negotiatingIncomingOffer.position} • {negotiatingIncomingOffer.rating} OVR
+              <p className="text-xs text-slate-500">
+                Bid from <strong className="text-slate-900">{negotiatingIncomingOffer.buyingClubName}</strong> • {negotiatingIncomingOffer.position} • {negotiatingIncomingOffer.rating} OVR
               </p>
             </div>
 
@@ -3070,21 +3090,21 @@ export function TransferHub({
                 <div className="space-y-4 text-xs">
                   {/* Valuation Breakdown Grid */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    <div className="bg-slate-900/60 border border-slate-850 p-2.5 rounded-2xl">
+                    <div className="office-subcard p-2.5 rounded-2xl">
                       <span className="text-[9px] uppercase font-bold text-slate-500 block">Market Value</span>
-                      <span className="font-display font-black text-white text-sm">
+                      <span className="font-display font-black text-slate-900 text-sm">
                         {formatCurrency(player?.value || negotiatingIncomingOffer.offeredFee)}
                       </span>
                     </div>
-                    <div className="bg-slate-900/60 border border-slate-850 p-2.5 rounded-2xl">
+                    <div className="office-subcard p-2.5 rounded-2xl">
                       <span className="text-[9px] uppercase font-bold text-slate-500 block">Current Offer</span>
-                      <span className="font-display font-black text-blue-400 text-sm">
+                      <span className="font-display font-black text-blue-600 text-sm">
                         {formatCurrency(negotiatingIncomingOffer.offeredFee)}
                       </span>
                     </div>
-                    <div className="bg-slate-900/60 border border-slate-850 p-2.5 rounded-2xl col-span-2 sm:col-span-1">
+                    <div className="office-subcard p-2.5 rounded-2xl col-span-2 sm:col-span-1">
                       <span className="text-[9px] uppercase font-bold text-slate-500 block">Buyer Capacity</span>
-                      <span className="font-display font-bold text-blue-300 text-xs truncate">
+                      <span className="font-display font-bold text-blue-700 text-xs truncate">
                         ~{formatCurrency(ballpark?.buyerCeiling || (negotiatingIncomingOffer.offeredFee * 1.2))}
                       </span>
                     </div>
@@ -3092,10 +3112,10 @@ export function TransferHub({
 
                   {/* Ballpark Figures & Risk Zones */}
                   {ballpark && (
-                    <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
+                    <div className="office-subcard p-4 space-y-3">
                       <div className="flex justify-between items-center text-[10px] font-black uppercase font-display">
-                        <span className="text-slate-300">📊 Market Expectation &amp; Ballpark Guidance</span>
-                        <span className="text-blue-400 font-mono">
+                        <span className="text-slate-700">📊 Market Expectation &amp; Ballpark Guidance</span>
+                        <span className="text-blue-600 font-mono">
                           Fair Ceiling: {formatCurrency(ballpark.maxReasonable)}
                         </span>
                       </div>
@@ -3103,13 +3123,13 @@ export function TransferHub({
                       {/* 3-Tier Ballpark Visual Range Bar */}
                       <div className="space-y-1.5">
                         <div className="grid grid-cols-3 gap-1 text-[9px] font-bold text-center">
-                          <span className="text-blue-400 bg-blue-950/60 border border-blue-900/40 rounded py-0.5">
+                          <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 rounded py-0.5">
                             🟢 Fair (&le; {formatCurrency(ballpark.maxReasonable)})
                           </span>
-                          <span className="text-amber-400 bg-amber-950/60 border border-amber-900/40 rounded py-0.5">
+                          <span className="text-amber-800 bg-amber-50 border border-amber-200 rounded py-0.5">
                             🟡 Ambitious ({formatCurrency(ballpark.maxReasonable)} - {formatCurrency(ballpark.ambitiousLimit)})
                           </span>
-                          <span className="text-rose-400 bg-rose-950/60 border border-rose-900/40 rounded py-0.5">
+                          <span className="text-rose-700 bg-rose-50 border border-rose-200 rounded py-0.5">
                             🔴 Danger (&gt; {formatCurrency(ballpark.ambitiousLimit)})
                           </span>
                         </div>
@@ -3120,10 +3140,10 @@ export function TransferHub({
                         <div
                           className={`p-3 rounded-xl border flex flex-col gap-1 ${
                             sentiment.zone === 'fair'
-                              ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300'
+                              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
                               : sentiment.zone === 'ambitious'
-                              ? 'bg-amber-950/60 border-amber-500/40 text-amber-300'
-                              : 'bg-rose-950/60 border-rose-500/40 text-rose-300'
+                              ? 'bg-amber-50 border-amber-200 text-amber-800'
+                              : 'bg-rose-50 border-rose-200 text-rose-800'
                           }`}
                         >
                           <div className="flex justify-between items-center text-xs font-display font-black uppercase">
@@ -3144,12 +3164,12 @@ export function TransferHub({
                   )}
 
                   {/* Counter-Offer Controls */}
-                  <div className="space-y-3 bg-slate-900/40 border border-slate-850 p-4 rounded-2xl">
+                  <div className="space-y-3 office-subcard p-4">
                     <div className="flex justify-between items-center">
-                      <label className="font-display font-black uppercase text-slate-300 text-xs">
+                      <label className="font-display font-black uppercase text-slate-700 text-xs">
                         Proposed Counter-Fee:
                       </label>
-                      <span className="text-lg font-display font-black text-white font-mono">
+                      <span className="text-lg font-display font-black text-blue-600 font-mono">
                         {formatCurrency(counterFeeInput)}
                       </span>
                     </div>
@@ -3159,42 +3179,42 @@ export function TransferHub({
                       <button
                         type="button"
                         onClick={() => setCounterFeeInput(Math.max(100_000, counterFeeInput - 1_000_000))}
-                        className="py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-300 cursor-pointer"
+                        className="py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer shadow-xs"
                       >
                         -£1M
                       </button>
                       <button
                         type="button"
                         onClick={() => setCounterFeeInput(Math.max(100_000, counterFeeInput - 250_000))}
-                        className="py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-300 cursor-pointer"
+                        className="py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer shadow-xs"
                       >
                         -£250k
                       </button>
                       <button
                         type="button"
                         onClick={() => setCounterFeeInput(counterFeeInput + 250_000)}
-                        className="py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:border-slate-700 text-blue-400 cursor-pointer"
+                        className="py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-blue-600 cursor-pointer shadow-xs"
                       >
                         +£250k
                       </button>
                       <button
                         type="button"
                         onClick={() => setCounterFeeInput(counterFeeInput + 500_000)}
-                        className="py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:border-slate-700 text-blue-400 cursor-pointer"
+                        className="py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-blue-600 cursor-pointer shadow-xs"
                       >
                         +£500k
                       </button>
                       <button
                         type="button"
                         onClick={() => setCounterFeeInput(counterFeeInput + 1_000_000)}
-                        className="py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:border-slate-700 text-blue-400 cursor-pointer"
+                        className="py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-blue-600 cursor-pointer shadow-xs"
                       >
                         +£1M
                       </button>
                       <button
                         type="button"
                         onClick={() => setCounterFeeInput(counterFeeInput + 2_000_000)}
-                        className="py-1.5 rounded-lg bg-slate-950 border border-slate-800 hover:border-slate-700 text-blue-400 cursor-pointer"
+                        className="py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-blue-600 cursor-pointer shadow-xs"
                       >
                         +£2M
                       </button>
@@ -3205,7 +3225,7 @@ export function TransferHub({
                       <button
                         type="button"
                         onClick={() => setCounterFeeInput(negotiatingIncomingOffer.offeredFee)}
-                        className="text-slate-400 hover:text-white underline cursor-pointer"
+                        className="text-slate-500 hover:text-slate-800 underline cursor-pointer"
                       >
                         Reset to Bid ({formatCurrency(negotiatingIncomingOffer.offeredFee)})
                       </button>
@@ -3213,7 +3233,7 @@ export function TransferHub({
                         <button
                           type="button"
                           onClick={() => setCounterFeeInput(ballpark.recommendedCounter)}
-                          className="text-blue-400 hover:text-blue-300 underline ml-auto cursor-pointer"
+                          className="text-blue-600 hover:text-blue-700 underline ml-auto cursor-pointer"
                         >
                           Target Recommendation ({formatCurrency(ballpark.recommendedCounter)})
                         </button>
@@ -3221,12 +3241,12 @@ export function TransferHub({
                     </div>
 
                     {/* Sell-on Clause Selector */}
-                    <div className="pt-2 border-t border-slate-800 space-y-1.5">
+                    <div className="pt-2 border-t border-slate-200 space-y-1.5">
                       <div className="flex justify-between items-center">
-                        <label className="text-slate-400 font-bold text-[11px]">
+                        <label className="text-slate-600 font-bold text-[11px]">
                           Future Resale Sell-On Clause:
                         </label>
-                        <span className="font-mono text-blue-400 font-bold text-xs">
+                        <span className="font-mono text-blue-600 font-bold text-xs">
                           {counterSellOnPercent}%
                         </span>
                       </div>
@@ -3239,7 +3259,7 @@ export function TransferHub({
                             className={`py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                               counterSellOnPercent === pct
                                 ? 'bg-blue-600 text-white font-black shadow-sm'
-                                : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-white'
+                                : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs'
                             }`}
                           >
                             {pct === 0 ? 'None' : `${pct}%`}
@@ -3249,12 +3269,12 @@ export function TransferHub({
                     </div>
 
                     {/* Performance Add-Ons: Appearances Milestone */}
-                    <div className="pt-2 border-t border-slate-800 space-y-1.5">
+                    <div className="pt-2 border-t border-slate-200 space-y-1.5">
                       <div className="flex justify-between items-center">
-                        <label className="text-slate-400 font-bold text-[11px]">
+                        <label className="text-slate-600 font-bold text-[11px]">
                           Appearance Milestone (+Fee after 20 Apps):
                         </label>
-                        <span className="font-mono text-blue-400 font-bold text-xs">
+                        <span className="font-mono text-blue-600 font-bold text-xs">
                           {counterAppearanceFee > 0 ? `+${formatCurrency(counterAppearanceFee)}` : 'None'}
                         </span>
                       </div>
@@ -3267,7 +3287,7 @@ export function TransferHub({
                             className={`py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                               counterAppearanceFee === fee
                                 ? 'bg-blue-600 text-white font-black shadow-sm'
-                                : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-white'
+                                : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs'
                             }`}
                           >
                             {fee === 0 ? 'None' : `+${formatCurrency(fee)}`}
@@ -3277,12 +3297,12 @@ export function TransferHub({
                     </div>
 
                     {/* Performance Add-Ons: Goals / Clean Sheets Milestone */}
-                    <div className="pt-2 border-t border-slate-800 space-y-1.5">
+                    <div className="pt-2 border-t border-slate-200 space-y-1.5">
                       <div className="flex justify-between items-center">
-                        <label className="text-slate-400 font-bold text-[11px]">
+                        <label className="text-slate-600 font-bold text-[11px]">
                           Goal / Clean Sheet Milestone (+Fee after 15 Goals/CS):
                         </label>
-                        <span className="font-mono text-blue-400 font-bold text-xs">
+                        <span className="font-mono text-blue-600 font-bold text-xs">
                           {counterGoalFee > 0 ? `+${formatCurrency(counterGoalFee)}` : 'None'}
                         </span>
                       </div>
@@ -3295,7 +3315,7 @@ export function TransferHub({
                             className={`py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                               counterGoalFee === fee
                                 ? 'bg-blue-600 text-white font-black shadow-sm'
-                                : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-white'
+                                : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs'
                             }`}
                           >
                             {fee === 0 ? 'None' : `+${formatCurrency(fee)}`}
@@ -3305,9 +3325,9 @@ export function TransferHub({
                     </div>
 
                     {/* Buy-Back Clause Controls */}
-                    <div className="pt-2 border-t border-slate-800 space-y-2">
+                    <div className="pt-2 border-t border-slate-200 space-y-2">
                       <div className="flex justify-between items-center">
-                        <label className="text-slate-300 font-bold text-[11px] flex items-center gap-1.5 cursor-pointer">
+                        <label className="text-slate-700 font-bold text-[11px] flex items-center gap-1.5 cursor-pointer">
                           <input
                             type="checkbox"
                             checked={includeBuyBack}
@@ -3323,66 +3343,66 @@ export function TransferHub({
                           <span>Insert Buy-Back Clause for {save.club.shortName}</span>
                         </label>
                         {includeBuyBack && (
-                          <span className="font-mono text-blue-300 font-black text-xs">
+                          <span className="font-mono text-blue-700 font-black text-xs">
                             🔁 {formatCurrency(counterBuyBackFee)}
                           </span>
                         )}
                       </div>
 
                       {includeBuyBack && (
-                        <div className="bg-slate-950/70 p-2.5 rounded-xl border border-blue-950 space-y-2">
+                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 space-y-2">
                           <div className="flex justify-between items-center text-[10px]">
-                            <span className="text-slate-400">Guaranteed Re-Purchase Price:</span>
-                            <span className="font-mono text-white font-bold">{formatCurrency(counterBuyBackFee)}</span>
+                            <span className="text-slate-500">Guaranteed Re-Purchase Price:</span>
+                            <span className="font-mono text-slate-900 font-bold">{formatCurrency(counterBuyBackFee)}</span>
                           </div>
                           <div className="grid grid-cols-5 gap-1.5 text-[10px] font-bold">
                             <button
                               type="button"
                               onClick={() => setCounterBuyBackFee(Math.max(counterFeeInput, counterBuyBackFee - 2_000_000))}
-                              className="py-1 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 cursor-pointer"
+                              className="py-1 rounded bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer shadow-xs"
                             >
                               -£2M
                             </button>
                             <button
                               type="button"
                               onClick={() => setCounterBuyBackFee(Math.max(counterFeeInput, counterBuyBackFee - 1_000_000))}
-                              className="py-1 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 cursor-pointer"
+                              className="py-1 rounded bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer shadow-xs"
                             >
                               -£1M
                             </button>
                             <button
                               type="button"
                               onClick={() => setCounterBuyBackFee(Math.round((counterFeeInput * 1.6) / 100_000) * 100_000)}
-                              className="py-1 rounded bg-blue-950 border border-blue-800 text-blue-300 cursor-pointer col-span-1"
+                              className="py-1 rounded bg-blue-50 border border-blue-200 text-blue-700 cursor-pointer col-span-1 shadow-xs"
                             >
                               1.6x
                             </button>
                             <button
                               type="button"
                               onClick={() => setCounterBuyBackFee(counterBuyBackFee + 1_000_000)}
-                              className="py-1 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 text-blue-400 cursor-pointer"
+                              className="py-1 rounded bg-white border border-slate-200 hover:bg-slate-50 text-blue-600 cursor-pointer shadow-xs"
                             >
                               +£1M
                             </button>
                             <button
                               type="button"
                               onClick={() => setCounterBuyBackFee(counterBuyBackFee + 2_000_000)}
-                              className="py-1 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 text-blue-400 cursor-pointer"
+                              className="py-1 rounded bg-white border border-slate-200 hover:bg-slate-50 text-blue-600 cursor-pointer shadow-xs"
                             >
                               +£2M
                             </button>
                           </div>
-                          <div className="text-[10px] text-slate-400">
+                          <div className="text-[10px] text-slate-500">
                             {(() => {
                               const pAge = player?.age || 23;
                               const minAcceptable = Math.round(counterFeeInput * (pAge <= 23 ? 1.45 : 1.30));
                               const isFeasible = counterBuyBackFee >= minAcceptable;
                               return isFeasible ? (
-                                <span className="text-emerald-400">
+                                <span className="text-emerald-700 font-medium">
                                   🟢 Buyer is comfortable with this buy-back valuation.
                                 </span>
                               ) : (
-                                <span className="text-rose-400">
+                                <span className="text-rose-600 font-medium">
                                   ⚠️ Risk: Buy-back is low (&lt; {formatCurrency(minAcceptable)}); buyer may reject!
                                 </span>
                               );
@@ -3394,9 +3414,9 @@ export function TransferHub({
 
                     {/* Total Package Summary */}
                     {(counterAppearanceFee > 0 || counterGoalFee > 0) && (
-                      <div className="pt-2 border-t border-slate-800 flex justify-between items-center text-[11px] bg-slate-950/60 p-2 rounded-xl">
-                        <span className="text-slate-400 font-bold uppercase font-display">Total Package Potential:</span>
-                        <span className="font-mono text-blue-400 font-black">
+                      <div className="pt-2 border-t border-slate-200 flex justify-between items-center text-[11px] bg-slate-50 p-2 rounded-xl">
+                        <span className="text-slate-600 font-bold uppercase font-display">Total Package Potential:</span>
+                        <span className="font-mono text-blue-600 font-black">
                           {formatCurrency(counterFeeInput + counterAppearanceFee + counterGoalFee)}{' '}
                           <span className="text-slate-500 font-normal">
                             ({formatCurrency(counterFeeInput)} upfront + {formatCurrency(counterAppearanceFee + counterGoalFee)} add-ons)
@@ -3411,10 +3431,10 @@ export function TransferHub({
                     <div
                       className={`p-3.5 rounded-2xl border text-xs font-medium space-y-1 ${
                         counterFeedback.status === 'accepted'
-                          ? 'bg-emerald-950/70 border-emerald-600/50 text-emerald-300'
+                          ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
                           : counterFeedback.status === 'compromise'
-                          ? 'bg-amber-950/70 border-amber-600/50 text-amber-300'
-                          : 'bg-rose-950/70 border-rose-600/50 text-rose-300'
+                          ? 'bg-amber-50 border-amber-200 text-amber-800'
+                          : 'bg-rose-50 border-rose-200 text-rose-800'
                       }`}
                     >
                       <div className="font-display font-black uppercase text-xs">
@@ -3430,17 +3450,17 @@ export function TransferHub({
 
                   {/* Negotiation History Log */}
                   {negotiatingIncomingOffer.history && negotiatingIncomingOffer.history.length > 0 && (
-                    <div className="bg-slate-950/60 border border-slate-850 p-3 rounded-2xl space-y-1.5 text-[11px]">
+                    <div className="bg-slate-50 border border-slate-200 p-3 rounded-2xl space-y-1.5 text-[11px]">
                       <div className="text-[10px] font-bold uppercase text-slate-500 font-display">
                         Negotiation Rounds Ledger
                       </div>
                       <div className="space-y-1">
                         {negotiatingIncomingOffer.history.map((h, i) => (
-                          <div key={i} className="flex justify-between items-center text-slate-400">
+                          <div key={i} className="flex justify-between items-center text-slate-600">
                             <span className="truncate max-w-[70%]">
                               {h.proposedBy === 'user' ? '👤 Manager:' : '🏛️ Buyer:'} {h.message}
                             </span>
-                            <span className="font-mono text-white shrink-0">
+                            <span className="font-mono text-slate-900 font-bold shrink-0">
                               {formatCurrency(h.fee)}
                             </span>
                           </div>
@@ -3454,7 +3474,7 @@ export function TransferHub({
                     <button
                       type="button"
                       onClick={() => handleRejectIncomingOffer(negotiatingIncomingOffer.id)}
-                      className="py-3 px-4 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-white font-display font-bold text-xs uppercase cursor-pointer"
+                      className="py-3 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-display font-bold text-xs uppercase cursor-pointer shadow-xs"
                     >
                       Reject Offer
                     </button>
@@ -3466,8 +3486,8 @@ export function TransferHub({
                         disabled={(negotiatingIncomingOffer.patienceRemaining ?? 3) <= 0}
                         className={`flex-1 py-3 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer ${
                           (negotiatingIncomingOffer.patienceRemaining ?? 3) <= 0
-                            ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                            : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-lg shadow-amber-500/20'
+                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+                            : 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-md shadow-amber-500/20'
                         }`}
                       >
                         Submit Counter ({formatCurrency(counterFeeInput)})
@@ -3478,7 +3498,7 @@ export function TransferHub({
                       type="button"
                       onClick={() => handleAcceptIncomingOffer(negotiatingIncomingOffer.id)}
                       disabled={save.squad.length <= 18}
-                      className="py-3 px-5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 cursor-pointer"
+                      className="py-3 px-5 rounded-xl my11-btn-gradient hover:opacity-95 text-white font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 cursor-pointer disabled:opacity-40"
                     >
                       Accept &amp; Sell ({formatCurrency(negotiatingIncomingOffer.offeredFee)})
                     </button>
@@ -3495,15 +3515,15 @@ export function TransferHub({
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+          className="fixed inset-0 bg-slate-950/40 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
         >
-          <div className="bg-slate-950 border border-slate-800 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative my-auto">
-            <header className="flex justify-between items-center border-b border-slate-900 pb-3">
+          <div className="office-floating-card rounded-3xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl relative my-auto border border-white/80">
+            <header className="flex justify-between items-center border-b border-slate-100 pb-3">
               <div>
-                <span className="font-display font-black text-xs uppercase tracking-wider text-blue-400">
+                <span className="font-display font-black text-xs uppercase tracking-wider text-blue-600">
                   Board of Directors • Formal Petition
                 </span>
-                <h3 className="text-lg font-display font-black text-white uppercase">
+                <h3 className="text-lg font-display font-black text-slate-900 uppercase">
                   {selectedPetitionType === 'deadline_day_marquee'
                     ? 'Emergency Deadline Day Warchest'
                     : selectedPetitionType === 'injury_crisis'
@@ -3519,7 +3539,7 @@ export function TransferHub({
                   setPetitionModalOpen(false);
                   setPetitionResult(null);
                 }}
-                className="text-slate-500 hover:text-white text-xs font-bold cursor-pointer"
+                className="text-slate-400 hover:text-slate-700 text-xs font-bold cursor-pointer"
               >
                 ✕ Close
               </button>
@@ -3528,22 +3548,22 @@ export function TransferHub({
             {!petitionResult ? (
               <div className="space-y-4">
                 {/* Board Sentiment Preview */}
-                <div className="bg-slate-900/80 border border-slate-850 p-3.5 rounded-2xl flex items-center justify-between text-xs">
+                <div className="office-subcard p-3.5 flex items-center justify-between text-xs">
                   <div className="space-y-0.5">
                     <span className="text-[10px] uppercase font-bold text-slate-500 block">Board Confidence</span>
                     <span className={`font-display font-black text-base ${
                       boardStatus.confidence >= 75
-                        ? 'text-emerald-400'
+                        ? 'text-emerald-600'
                         : boardStatus.confidence >= 50
-                        ? 'text-amber-400'
-                        : 'text-rose-400'
+                        ? 'text-amber-600'
+                        : 'text-rose-600'
                     }`}>
                       {boardStatus.confidence}% ({boardStatus.status.replace('_', ' ')})
                     </span>
                   </div>
                   <div className="text-right space-y-0.5">
                     <span className="text-[10px] uppercase font-bold text-slate-500 block">Club Cash Reserves</span>
-                    <span className="font-mono font-bold text-white text-sm">
+                    <span className="font-mono font-bold text-slate-900 text-sm">
                       {formatCurrency(save.finances.balance)}
                     </span>
                   </div>
@@ -3551,8 +3571,8 @@ export function TransferHub({
 
                 {/* Specific Petition Inputs */}
                 {selectedPetitionType === 'deadline_day_marquee' && (
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-300 uppercase block">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 uppercase block">
                       Target Marquee Player (Optional)
                     </label>
                     <input
@@ -3560,23 +3580,23 @@ export function TransferHub({
                       placeholder="e.g. World-Class Striker, Marquee Playmaker..."
                       value={petitionTargetPlayer}
                       onChange={(e) => setPetitionTargetPlayer(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400 font-sans"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-blue-500 font-sans shadow-xs"
                     />
-                    <p className="text-[10px] text-amber-300/80">
+                    <p className="text-[10px] text-amber-700 font-medium">
                       ⏱️ Deadline Day active: The Board will evaluate the commercial and sporting impact of unlocking emergency reserves before 23:00 BST.
                     </p>
                   </div>
                 )}
 
                 {selectedPetitionType === 'injury_crisis' && (
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-300 uppercase block">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 uppercase block">
                       Select Depleted Position / Injured Squad Member
                     </label>
                     <select
                       value={petitionInjuredPlayerId}
                       onChange={(e) => setPetitionInjuredPlayerId(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-rose-400 font-sans"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-blue-500 font-sans shadow-xs"
                     >
                       {save.squad.filter((p) => p.injured).map((p) => (
                         <option key={p.id} value={p.id}>
@@ -3584,14 +3604,14 @@ export function TransferHub({
                         </option>
                       ))}
                     </select>
-                    <p className="text-[10px] text-slate-400">
+                    <p className="text-[10px] text-slate-500">
                       The board inspects player rating and recovery timetable to determine emergency loan/purchase funding.
                     </p>
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-300 uppercase block">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 uppercase block">
                     Manager Justification Memo
                   </label>
                   <textarea
@@ -3599,7 +3619,7 @@ export function TransferHub({
                     placeholder="Provide additional context to the board..."
                     value={petitionJustification}
                     onChange={(e) => setPetitionJustification(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-blue-500 font-sans resize-none"
+                    className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-900 focus:outline-none focus:border-blue-500 font-sans resize-none shadow-xs"
                   />
                 </div>
 
@@ -3607,7 +3627,7 @@ export function TransferHub({
                   <button
                     type="button"
                     onClick={() => setPetitionModalOpen(false)}
-                    className="w-1/3 py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-850 text-slate-400 text-xs font-bold transition-all cursor-pointer"
+                    className="w-1/3 py-2.5 px-3 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold border border-slate-200 transition-all cursor-pointer shadow-xs"
                   >
                     Cancel
                   </button>
@@ -3615,11 +3635,11 @@ export function TransferHub({
                     type="button"
                     onClick={handleSubmitBoardPetition}
                     disabled={petitionSubmitting}
-                    className="w-2/3 py-2.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-2/3 py-2.5 px-3 rounded-xl my11-btn-gradient hover:opacity-95 text-white font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {petitionSubmitting ? (
                       <>
-                        <span className="inline-block w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                        <span className="inline-block w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                         <span>Board Deliberating...</span>
                       </>
                     ) : (
@@ -3635,29 +3655,29 @@ export function TransferHub({
               <div className="space-y-4">
                 <div className={`p-4 rounded-2xl border text-center space-y-2 ${
                   petitionResult.outcome === 'approved'
-                    ? 'bg-emerald-950/40 border-emerald-500/60'
+                    ? 'bg-emerald-50 border-emerald-200'
                     : petitionResult.outcome === 'compromised'
-                    ? 'bg-amber-950/40 border-amber-500/60'
-                    : 'bg-rose-950/40 border-rose-500/60'
+                    ? 'bg-amber-50 border-amber-200'
+                    : 'bg-rose-50 border-rose-200'
                 }`}>
                   <span className="text-3xl block">
                     {petitionResult.outcome === 'approved' ? '🎉' : petitionResult.outcome === 'compromised' ? '💬' : '⚠️'}
                   </span>
                   <div className={`font-display font-black text-sm uppercase tracking-wider ${
                     petitionResult.outcome === 'approved'
-                      ? 'text-emerald-400'
+                      ? 'text-emerald-700'
                       : petitionResult.outcome === 'compromised'
-                      ? 'text-amber-400'
-                      : 'text-rose-400'
+                      ? 'text-amber-800'
+                      : 'text-rose-700'
                   }`}>
                     Petition {petitionResult.outcome.toUpperCase()}
                   </div>
                   {petitionResult.amountGranted > 0 && (
-                    <div className="text-xl font-display font-black text-white font-mono">
+                    <div className="text-xl font-display font-black text-slate-900 font-mono">
                       +{petitionResult.grantType === 'wage' ? formatWage(petitionResult.amountGranted) : formatCurrency(petitionResult.amountGranted)}
                     </div>
                   )}
-                  <p className="text-xs text-slate-300 text-left pt-2 leading-relaxed bg-slate-950/60 p-3 rounded-xl border border-slate-850">
+                  <p className="text-xs text-slate-700 text-left pt-2 leading-relaxed bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
                     &ldquo;{petitionResult.feedback}&rdquo;
                   </p>
                 </div>
@@ -3668,7 +3688,7 @@ export function TransferHub({
                     setPetitionModalOpen(false);
                     setPetitionResult(null);
                   }}
-                  className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-850 text-white font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer"
+                  className="w-full py-2.5 px-4 rounded-xl my11-btn-gradient hover:opacity-95 text-white font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md"
                 >
                   Understood • Return to Board Room
                 </button>
