@@ -1,0 +1,605 @@
+'use client';
+
+import React, { useState } from 'react';
+import {
+  CareerSaveFile,
+  LeagueFixture,
+  CupFixture,
+  DeadlineDayPhase,
+  CurrencyPreference,
+} from '../../career/types';
+import { evaluateBoardFinancialPetition } from '../../career/transfers';
+
+function formatOfficeFixtureDate(dateStr: string): string {
+  const parts = dateStr.split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) return dateStr;
+  const [year, month, day] = parts;
+  const d = new Date(Date.UTC(year, month - 1, day));
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${days[d.getUTCDay()]} ${day} ${months[month - 1]} ${year}`;
+}
+
+function formatOfficeBudget(amount: number, currency: CurrencyPreference = 'GBP'): string {
+  const sym = currency === 'EUR' ? '€' : currency === 'USD' ? '$' : '£';
+  if (amount >= 1_000_000) {
+    const m = amount / 1_000_000;
+    const str = Number.isInteger(m) ? m.toFixed(0) : m.toFixed(1).replace(/\.0$/, '');
+    return `${sym}${str}M`;
+  }
+  if (amount >= 1_000) {
+    return `${sym}${Math.round(amount / 1_000)}k`;
+  }
+  return `${sym}${amount}`;
+}
+
+function formatOfficeWageRoom(weeklyAmount: number, currency: CurrencyPreference = 'GBP'): string {
+  const sym = currency === 'EUR' ? '€' : currency === 'USD' ? '$' : '£';
+  const k = Math.max(0, Math.round(weeklyAmount / 1_000));
+  return `${sym}${k}k / w`;
+}
+
+export interface OfficeDeadlineHeroTakeoverProps {
+  save: CareerSaveFile;
+  onUpdateSave: (updated: CareerSaveFile) => void;
+  onAdvanceDeadlinePhase: () => void;
+  onNavigateToTransfers: (
+    subTab?: 'board' | 'history' | 'market' | 'incoming' | 'contracts' | 'shortlist',
+    targetId?: string
+  ) => void;
+  onNotification?: (msg: string) => void;
+  nextScheduled?: {
+    fixture: LeagueFixture | CupFixture;
+    isCup: boolean;
+    cupId?: string;
+    cupName?: string;
+    roundName?: string;
+  } | null;
+  onOpenMatchOverview?: (fixture: LeagueFixture | CupFixture) => void;
+  onPlayMatch?: (fixture: LeagueFixture | CupFixture) => void;
+  urgentDecisionCount?: number;
+  onReviewUrgentDecisions?: () => void;
+}
+
+export function OfficeDeadlineHeroTakeover({
+  save,
+  onUpdateSave,
+  onAdvanceDeadlinePhase,
+  onNavigateToTransfers,
+  onNotification,
+  nextScheduled,
+  onOpenMatchOverview,
+  onPlayMatch,
+  urgentDecisionCount = 0,
+  onReviewUrgentDecisions,
+}: OfficeDeadlineHeroTakeoverProps) {
+  const currentPhase: DeadlineDayPhase = save.deadlineDayState?.phase || 'morning';
+  const hoursLeft = save.deadlineDayState?.hoursRemaining ?? 14;
+  const timeString = (save.deadlineDayState?.timeString || '09:00').replace(' BST', '');
+
+  // Phase metadata for high-impact display
+  const phaseMetadata: Record<
+    DeadlineDayPhase,
+    {
+      title: string;
+      timeRange: string;
+      nextTime: string;
+      nextPhaseName: string;
+      ctaSublabel: string;
+      summary: string;
+    }
+  > = {
+    morning: {
+      title: 'Morning',
+      timeRange: '09:00 – 13:00',
+      nextTime: '13:00',
+      nextPhaseName: 'Afternoon',
+      ctaSublabel: 'Advance to Afternoon (13:00)',
+      summary: 'Window closes tonight at 23:00. Review offers and targets before the cutoff.',
+    },
+    afternoon: {
+      title: 'Afternoon',
+      timeRange: '13:00 – 18:00',
+      nextTime: '18:00',
+      nextPhaseName: 'Evening',
+      ctaSublabel: 'Advance to Evening (18:00)',
+      summary: 'Bids escalating rapidly. Push negotiations toward formal contract terms.',
+    },
+    evening: {
+      title: 'Evening',
+      timeRange: '18:00 – 22:00',
+      nextTime: '22:00',
+      nextPhaseName: 'Final Hour',
+      ctaSublabel: 'Advance to Final Hour (22:00)',
+      summary: 'Five hours remaining. Finalize key transfer deals before the cutoff.',
+    },
+    deadline: {
+      title: 'Final Hour',
+      timeRange: '22:00 – 23:00',
+      nextTime: '23:00',
+      nextPhaseName: 'Window Closed',
+      ctaSublabel: '🚨 Slam Window Shut (23:00)',
+      summary: 'Final countdown to the buzzer. Submit deal sheets and finalize registrations.',
+    },
+    closed: {
+      title: 'Window Closed',
+      timeRange: '23:00 (Closed)',
+      nextTime: 'Concluded',
+      nextPhaseName: 'Rosters Locked',
+      ctaSublabel: 'View Squad & Roster',
+      summary: 'The transfer window is closed. Roster registrations are locked for competition.',
+    },
+  };
+
+  const meta = phaseMetadata[currentPhase] || phaseMetadata.morning;
+
+  // Key metrics
+  const transferBudget = save.finances.transferBudget || 0;
+  const weeklyWageBudget = save.finances.weeklyWageBudget || 0;
+  const weeklyWagesSpent = save.finances.currentWeeklyWages || 0;
+  const wageHeadroom = Math.max(0, weeklyWageBudget - weeklyWagesSpent);
+
+  const pendingOffers = (save.incomingOffers || []).filter(
+    (o) => o.status === 'pending' || !o.status
+  );
+  const shortlistCount = save.shortlistPlayerIds?.length || 0;
+
+  // Emergency Board Petition Modal State
+  const [boardModalOpen, setBoardModalOpen] = useState(false);
+  const [targetPlayer, setTargetPlayer] = useState('');
+  const [justification, setJustification] = useState('');
+  const [isSubmittingPetition, setIsSubmittingPetition] = useState(false);
+  const [petitionFeedback, setPetitionFeedback] = useState<string | null>(null);
+
+  const handleOpenBoardModal = () => {
+    setPetitionFeedback(null);
+    setTargetPlayer('');
+    setJustification('');
+    setBoardModalOpen(true);
+  };
+
+  const handleSubmitPetition = () => {
+    setIsSubmittingPetition(true);
+    setTimeout(() => {
+      const res = evaluateBoardFinancialPetition(save, 'deadline_day_marquee', {
+        targetPlayerName: targetPlayer.trim() || undefined,
+        justificationNotes: justification.trim() || undefined,
+      });
+
+      setIsSubmittingPetition(false);
+      onUpdateSave(res.updatedSave);
+
+      if (res.outcome === 'approved') {
+        setPetitionFeedback(
+          `🎉 Board Approved! ${formatOfficeBudget(res.amountGranted, save.settings?.currency)} added to Transfer Warchest.`
+        );
+        onNotification?.(
+          `🎉 Board granted ${formatOfficeBudget(res.amountGranted, save.settings?.currency)} for deadline day!`
+        );
+      } else if (res.outcome === 'compromised') {
+        setPetitionFeedback(
+          `💬 Compromise Granted: ${formatOfficeBudget(res.amountGranted, save.settings?.currency)} released.`
+        );
+        onNotification?.(
+          `💬 Board approved compromise grant of ${formatOfficeBudget(res.amountGranted, save.settings?.currency)}.`
+        );
+      } else {
+        setPetitionFeedback(`⚠️ Petition Declined: ${res.feedback}`);
+        onNotification?.(`⚠️ Board declined petition: ${res.feedback}`);
+      }
+    }, 350);
+  };
+
+  const nextOpponentClub = nextScheduled
+    ? save.club.id === nextScheduled.fixture.homeClubId
+      ? nextScheduled.fixture.awayClubId
+      : nextScheduled.fixture.homeClubId
+    : null;
+
+  return (
+    <section
+      aria-label="Transfer Deadline Day War Room Hero"
+      data-office-ui="true"
+      className="office-floating-card office-reveal-3 rounded-[24px] overflow-hidden relative select-none border border-amber-300/90 bg-gradient-to-b from-amber-500/[0.08] via-white to-amber-500/[0.02] shadow-md shadow-amber-500/10"
+    >
+      {/* Decorative Warm Ambient Glow Background */}
+      <div
+        className="absolute top-0 right-0 w-80 h-44 bg-gradient-to-bl from-amber-400/20 via-yellow-200/15 to-transparent rounded-full blur-2xl pointer-events-none -mr-16 -mt-16"
+        aria-hidden="true"
+      />
+
+      <div className="relative z-10 p-3.5 sm:p-4 space-y-3">
+        {/* Top Header: Broadcast Badge, Time & Countdown */}
+        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200/70 pb-2.5">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 font-display font-black text-[10px] tracking-wider uppercase shadow-xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-950 motion-safe:animate-pulse inline-block" />
+              <span>DEADLINE DAY WAR ROOM</span>
+            </span>
+
+            <span className="text-[11px] font-mono font-black text-amber-950 bg-amber-100/90 px-2 py-0.5 rounded-md border border-amber-300/80">
+              {timeString}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-300/80">
+              <span>⏳</span>
+              <span>{hoursLeft}h Left (23:00 Cutoff)</span>
+            </span>
+          </div>
+        </header>
+
+        {/* Urgent Action / Manager Decision Alert (If Active) */}
+        {urgentDecisionCount > 0 && (
+          <aside
+            aria-label="Urgent decisions requiring attention"
+            className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-amber-100/80 border border-amber-300 text-xs text-amber-950 shadow-2xs"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-amber-600 text-sm shrink-0">⚠️</span>
+              <span className="font-extrabold truncate">
+                {urgentDecisionCount} urgent {urgentDecisionCount === 1 ? 'matter' : 'matters'} require response before the deadline.
+              </span>
+            </div>
+            {onReviewUrgentDecisions && (
+              <button
+                type="button"
+                onClick={onReviewUrgentDecisions}
+                className="shrink-0 px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-display font-black text-[10.5px] uppercase tracking-wide hover:bg-amber-400 active:scale-95 cursor-pointer"
+              >
+                Review &rsaquo;
+              </button>
+            )}
+          </aside>
+        )}
+
+        {/* Phase Headline & Progress Tracker */}
+        <div className="space-y-2">
+          <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
+            <h2 className="text-xl sm:text-2xl font-display font-black text-slate-900 tracking-tight flex items-center gap-2">
+              <span>Transfer Deadline Day</span>
+              <span className="text-amber-500 text-base sm:text-lg">•</span>
+              <span className="text-amber-600 font-extrabold text-base sm:text-lg">
+                {meta.title}
+              </span>
+            </h2>
+            <span className="text-[10.5px] font-mono font-bold text-amber-900/80 tracking-wide uppercase">
+              {meta.timeRange}
+            </span>
+          </div>
+
+          <p className="text-xs text-slate-600 font-medium leading-relaxed">
+            {meta.summary}
+          </p>
+
+          {/* 4-Phase Progress Timeline */}
+          <nav
+            aria-label="Deadline Day Clock Timeline"
+            className="grid grid-cols-4 gap-1 sm:gap-2 pt-0.5"
+          >
+            {[
+              { id: 'morning', label: 'Morning', time: '09:00' },
+              { id: 'afternoon', label: 'Afternoon', time: '13:00' },
+              { id: 'evening', label: 'Evening', time: '18:00' },
+              { id: 'deadline', label: 'Final Hour', time: '22:00' },
+            ].map((step, idx) => {
+              const phaseOrder = ['morning', 'afternoon', 'evening', 'deadline'];
+              const currentIdx = phaseOrder.indexOf(currentPhase);
+              const isCurrent = currentPhase === step.id;
+              const isPast = currentIdx > idx;
+
+              return (
+                <div
+                  key={step.id}
+                  className={`py-1.5 px-1 sm:px-1.5 rounded-xl text-center border transition-all ${
+                    isCurrent
+                      ? 'bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-slate-950 font-black border-amber-400 shadow-xs scale-[1.01]'
+                      : isPast
+                      ? 'bg-amber-100/70 text-amber-900 font-bold border-amber-200/80'
+                      : 'bg-white/70 text-slate-400 font-semibold border-slate-200/80'
+                  }`}
+                >
+                  <div className="font-mono text-[9px] sm:text-[9.5px] opacity-80 leading-tight">
+                    {step.time}
+                  </div>
+                  <div className="font-display font-extrabold text-[9.5px] min-[390px]:text-[10.5px] sm:text-[11px] tracking-tight truncate leading-tight mt-0.5">
+                    {step.label}
+                  </div>
+                </div>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Key Metrics Strip: Budget, Wage Headroom, Pending Offers, Targets */}
+        <section
+          aria-label="Deadline Day Recruitment Metrics"
+          className="grid grid-cols-2 min-[410px]:grid-cols-4 gap-2 pt-1"
+        >
+          {/* Transfer Budget */}
+          <div className="office-kpi-card office-kpi-blue rounded-2xl p-2.5 sm:p-3 space-y-0.5 border border-blue-200/70 bg-gradient-to-br from-blue-50/90 via-white to-blue-50/30">
+            <span className="text-[9px] uppercase font-bold text-slate-500 block tracking-wider">
+              Transfer Budget
+            </span>
+            <div className="text-sm sm:text-base font-display font-black text-blue-700 truncate">
+              {formatOfficeBudget(transferBudget, save.settings?.currency)}
+            </div>
+          </div>
+
+          {/* Wage Headroom */}
+          <div className="office-kpi-card office-kpi-mint rounded-2xl p-2.5 sm:p-3 space-y-0.5 border border-emerald-200/70 bg-gradient-to-br from-emerald-50/90 via-white to-emerald-50/30">
+            <span className="text-[9px] uppercase font-bold text-slate-500 block tracking-wider">
+              Wage Headroom
+            </span>
+            <div className="text-sm sm:text-base font-display font-black text-emerald-700 truncate">
+              {formatOfficeWageRoom(wageHeadroom, save.settings?.currency)}
+            </div>
+          </div>
+
+          {/* Pending Offers */}
+          <div
+            onClick={() => onNavigateToTransfers('incoming')}
+            className={`office-kpi-card rounded-2xl p-2.5 sm:p-3 space-y-0.5 border cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] ${
+              pendingOffers.length > 0
+                ? 'border-amber-300 bg-gradient-to-br from-amber-50 via-white to-amber-50/50 shadow-xs'
+                : 'border-slate-200/80 bg-white/90'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] uppercase font-bold text-slate-500 block tracking-wider">
+                Pending Bids
+              </span>
+              {pendingOffers.length > 0 && (
+                <span className="w-2 h-2 rounded-full bg-amber-500 motion-safe:animate-ping" />
+              )}
+            </div>
+            <div className="text-sm sm:text-base font-display font-black text-amber-700 truncate flex items-center gap-1.5">
+              <span>{pendingOffers.length}</span>
+              <span className="text-[10px] font-semibold text-slate-500">
+                {pendingOffers.length === 1 ? 'incoming' : 'incoming'}
+              </span>
+            </div>
+          </div>
+
+          {/* Shortlisted Targets */}
+          <div
+            onClick={() => onNavigateToTransfers('shortlist')}
+            className="office-kpi-card office-kpi-lavender rounded-2xl p-2.5 sm:p-3 space-y-0.5 border border-purple-200/70 bg-gradient-to-br from-purple-50/90 via-white to-purple-50/30 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99]"
+          >
+            <span className="text-[9px] uppercase font-bold text-slate-500 block tracking-wider">
+              Shortlist
+            </span>
+            <div className="text-sm sm:text-base font-display font-black text-purple-700 truncate flex items-center gap-1.5">
+              <span>{shortlistCount}</span>
+              <span className="text-[10px] font-semibold text-slate-500">targets</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Concurrent Matchday / Fixture Context Strip */}
+        {nextScheduled && (
+          <aside
+            aria-label="Upcoming Matchday Status"
+            className="flex items-center justify-between gap-2 p-2 sm:p-2.5 rounded-xl bg-slate-100/90 border border-slate-200/90 text-xs text-slate-700"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="px-1.5 py-0.5 rounded-md bg-amber-200 text-amber-900 font-display font-black text-[9px] uppercase tracking-wider shrink-0">
+                Matchday Paused
+              </span>
+              <span className="truncate text-[11px] sm:text-xs">
+                Next fixture vs <strong className="text-slate-900">{nextOpponentClub || 'Opponent'}</strong> ({formatOfficeFixtureDate(nextScheduled.fixture.date)})
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {onOpenMatchOverview && (
+                <button
+                  type="button"
+                  onClick={() => onOpenMatchOverview(nextScheduled.fixture)}
+                  className="text-blue-600 hover:text-blue-700 font-display font-bold text-[11px] hover:underline cursor-pointer"
+                >
+                  Match Dossier &rsaquo;
+                </button>
+              )}
+              {onPlayMatch && (
+                <button
+                  type="button"
+                  onClick={() => onPlayMatch(nextScheduled.fixture)}
+                  className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 font-display font-black text-[10px] uppercase cursor-pointer"
+                  title="Prepare and play match if scheduled for today"
+                >
+                  Play
+                </button>
+              )}
+            </div>
+          </aside>
+        )}
+
+        {/* Action Controls: Primary CTA & Quick Access Strip */}
+        <div className="pt-1 space-y-2">
+          {/* Primary CTA: "Continue Deadline Day" */}
+          <button
+            type="button"
+            data-office-ui="true"
+            onClick={onAdvanceDeadlinePhase}
+            className="w-full py-3 px-5 rounded-full font-display font-black text-[14.5px] sm:text-[15px] tracking-tight flex items-center justify-center gap-2 cursor-pointer min-h-[46px] shadow-lg shadow-amber-500/20 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-200 text-slate-950 transition-all hover:scale-[1.01] active:scale-[0.98]"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="w-4 h-4 fill-current shrink-0"
+              aria-hidden="true"
+            >
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            <span>Continue Deadline Day</span>
+            <span className="text-xs sm:text-sm font-semibold opacity-90">
+              • {meta.ctaSublabel}
+            </span>
+            <span className="text-base leading-none font-bold ml-auto">&rsaquo;</span>
+          </button>
+
+          {/* Quick Access Secondary Action Buttons */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {/* 1. Incoming Offers */}
+            <button
+              type="button"
+              data-office-ui="true"
+              onClick={() => onNavigateToTransfers('incoming')}
+              className="office-subcard py-2.5 px-3 rounded-2xl flex items-center justify-center gap-1.5 font-display font-bold text-[11.5px] sm:text-[12px] text-slate-800 cursor-pointer min-h-[38px] shadow-2xs hover:border-amber-400/60 active:scale-[0.98]"
+            >
+              <span className="text-sm">📥</span>
+              <span>Incoming Bids</span>
+              {pendingOffers.length > 0 && (
+                <span className="ml-1 px-1.5 py-0.2 rounded-full text-[9px] font-black bg-amber-400 text-slate-950">
+                  {pendingOffers.length}
+                </span>
+              )}
+            </button>
+
+            {/* 2. Transfer Market */}
+            <button
+              type="button"
+              data-office-ui="true"
+              onClick={() => onNavigateToTransfers('market')}
+              className="office-subcard py-2.5 px-3 rounded-2xl flex items-center justify-center gap-1.5 font-display font-bold text-[11.5px] sm:text-[12px] text-slate-800 cursor-pointer min-h-[38px] shadow-2xs hover:border-amber-400/60 active:scale-[0.98]"
+            >
+              <span className="text-sm">🔍</span>
+              <span>Transfer Market</span>
+            </button>
+
+            {/* 3. Emergency Board Funds */}
+            <button
+              type="button"
+              data-office-ui="true"
+              onClick={handleOpenBoardModal}
+              className="office-subcard py-2.5 px-3 rounded-2xl flex items-center justify-center gap-1.5 font-display font-bold text-[11.5px] sm:text-[12px] text-slate-800 cursor-pointer min-h-[38px] shadow-2xs hover:border-amber-400/60 active:scale-[0.98]"
+            >
+              <span className="text-sm">🏛️</span>
+              <span>Board Funds</span>
+            </button>
+
+            {/* 4. Full War Room in Transfers */}
+            <button
+              type="button"
+              data-office-ui="true"
+              onClick={() => onNavigateToTransfers('market')}
+              className="office-subcard py-2.5 px-3 rounded-2xl flex items-center justify-center gap-1.5 font-display font-bold text-[11.5px] sm:text-[12px] text-slate-800 cursor-pointer min-h-[38px] shadow-2xs hover:border-amber-400/60 active:scale-[0.98]"
+            >
+              <span className="text-sm">⏱️</span>
+              <span>Full War Room</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Emergency Board Petition Modal (Accessible from Office) */}
+      {boardModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="petition-modal-title"
+          className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4"
+          onClick={() => setBoardModalOpen(false)}
+        >
+          <div
+            className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 max-w-md w-full space-y-4 shadow-2xl relative text-slate-900"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <header className="flex justify-between items-start gap-2 border-b border-slate-100 pb-3">
+              <div>
+                <span className="text-[10px] font-display font-black uppercase tracking-wider text-amber-600 block">
+                  Board of Directors • Emergency Session
+                </span>
+                <h3
+                  id="petition-modal-title"
+                  className="text-base sm:text-lg font-display font-black text-slate-900"
+                >
+                  Emergency Deadline Day Warchest
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBoardModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold flex items-center justify-center text-sm cursor-pointer"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </header>
+
+            <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200 text-xs text-amber-950 space-y-1">
+              <div className="font-bold">⏱️ Eleventh-Hour Warchest Grant</div>
+              <p className="text-[11px] text-amber-900 leading-snug">
+                The Board can release emergency reserves before the 23:00 buzzer based on your current confidence ({save.boardStatus?.confidence || 80}%) and club financial health.
+              </p>
+            </div>
+
+            {petitionFeedback ? (
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-3">
+                <p className="font-semibold text-slate-800">{petitionFeedback}</p>
+                <button
+                  type="button"
+                  onClick={() => setBoardModalOpen(false)}
+                  className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-display font-black text-xs uppercase cursor-pointer"
+                >
+                  Close &amp; Return to War Room
+                </button>
+              </div>
+            ) : (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSubmitPetition();
+                }}
+                className="space-y-3 text-xs"
+              >
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase text-slate-500 block">
+                    Target Marquee Player (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={targetPlayer}
+                    onChange={(e) => setTargetPlayer(e.target.value)}
+                    placeholder="e.g. World-Class Striker, Elite Playmaker..."
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium text-xs focus:outline-blue-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase text-slate-500 block">
+                    Manager Justification Memo
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={justification}
+                    onChange={(e) => setJustification(e.target.value)}
+                    placeholder="Provide context on why this signing will achieve seasonal objectives..."
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium text-xs focus:outline-blue-500"
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setBoardModalOpen(false)}
+                    className="flex-1 py-2.5 rounded-xl border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-700 font-display font-bold text-xs uppercase cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingPetition}
+                    className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-display font-black text-xs uppercase shadow-sm cursor-pointer disabled:opacity-50"
+                  >
+                    {isSubmittingPetition ? 'Petitioning Board...' : 'Submit Emergency Petition'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}

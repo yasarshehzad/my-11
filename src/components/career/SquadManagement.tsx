@@ -1212,15 +1212,15 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
       {viewMode === 'academy' && (
         <section className="space-y-6" aria-label="Youth Academy">
           {/* Academy Status & Scout Action Banner */}
-          <div className="bg-gradient-to-r from-blue-950/40 via-slate-900/60 to-slate-950/80 border border-blue-900/40 rounded-3xl p-6 shadow-xl relative overflow-hidden flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="office-floating-card rounded-3xl p-5 sm:p-6 border border-blue-200/80 bg-gradient-to-r from-blue-50/80 via-white to-indigo-50/40 shadow-sm relative overflow-hidden flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="space-y-1 z-10">
               <div className="flex items-center gap-2">
                 <span className="text-xl">🌟</span>
-                <h3 className="text-lg font-display font-black text-white uppercase tracking-tight">
-                  Youth Academy & Wonderkid Pipeline
+                <h3 className="text-lg font-display font-black text-slate-900 uppercase tracking-tight">
+                  Youth Academy &amp; Wonderkid Pipeline
                 </h3>
               </div>
-              <p className="text-xs text-slate-400 font-medium max-w-xl">
+              <p className="text-xs text-slate-600 font-medium max-w-xl">
                 Scout and nurture homegrown prodigies. Under-21 prospects are exempt from the 25-man senior squad cap and gain rapid development (+1 to +3 OVR annually) towards their wonderkid ceiling. Total club capacity: {squad.length}/35.
               </p>
             </div>
@@ -1228,7 +1228,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
             <div className="flex items-center gap-3 z-10 w-full sm:w-auto">
               <button
                 onClick={handleGenerateIntake}
-                className="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-display font-black uppercase tracking-wider transition-all shadow-md shadow-blue-500/20 flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-display font-black uppercase tracking-wider transition-all shadow-md shadow-blue-500/20 flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
               >
                 <span>🔍</span>
                 <span>Scout New Intake</span>
@@ -1241,8 +1241,8 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
               role="alert"
               className={`p-3.5 rounded-2xl border text-xs font-bold flex items-center justify-between ${
                 academyToast.type === 'success'
-                  ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:border-blue-500/40 dark:text-blue-300'
-                  : 'bg-rose-950/60 border-rose-500/40 text-rose-300'
+                  ? 'bg-blue-50 text-blue-700 border-blue-200'
+                  : 'bg-rose-50 border-rose-200 text-rose-700'
               }`}
             >
               <span>{academyToast.message}</span>
@@ -1251,17 +1251,17 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
           )}
 
           {academy.length === 0 ? (
-            <div className="bg-slate-900/40 border border-slate-800 rounded-3xl p-12 text-center space-y-4">
+            <div className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-12 text-center space-y-4 shadow-sm">
               <span className="text-4xl block">🌱</span>
-              <h4 className="text-base font-display font-black text-white uppercase">
+              <h4 className="text-base font-display font-black text-slate-900 uppercase">
                 No Prospects Currently in Academy
               </h4>
-              <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+              <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
                 Send out your scouting network to discover promising young talents across England and the British Isles.
               </p>
               <button
                 onClick={handleGenerateIntake}
-                className="py-2.5 px-6 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-display font-black uppercase tracking-wider transition-all font-bold shadow-lg shadow-blue-500/20 cursor-pointer"
+                className="py-2.5 px-6 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-display font-black uppercase tracking-wider transition-all font-bold shadow-lg shadow-blue-500/20 cursor-pointer active:scale-95"
               >
                 Run Annual Youth Intake
               </button>
@@ -1275,20 +1275,20 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                 return (
                   <article
                     key={prospect.id}
-                    className="bg-slate-900/60 border border-slate-850 hover:border-slate-750 rounded-2xl p-5 space-y-4 transition-all flex flex-col justify-between relative group"
+                    className="office-floating-card bg-white border border-slate-200/90 hover:border-blue-300 rounded-2xl p-4 sm:p-5 space-y-4 transition-all flex flex-col justify-between relative group shadow-xs"
                   >
                     <div className="space-y-3">
                       {/* Top Badges */}
                       <div className="flex justify-between items-center text-xs">
                         <div className="flex items-center gap-1.5">
-                          <span className="bg-slate-950 border border-slate-800 text-blue-400 font-display font-black px-2 py-0.5 rounded-md text-[10px]">
+                          <span className="bg-blue-100 text-blue-800 font-display font-black px-2 py-0.5 rounded-md text-[10px]">
                             {prospect.position}
                           </span>
-                          <span className="text-slate-400 text-[11px] font-medium">
+                          <span className="text-slate-500 text-[11px] font-medium">
                             {prospect.age} yrs • {prospect.nationality}
                           </span>
                         </div>
-                        <span className="text-[10px] bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:border-blue-800/40 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">
+                        <span className="text-[10px] bg-blue-50 text-blue-700 border border-blue-200 font-bold px-1.5 py-0.5 rounded">
                           Homegrown
                         </span>
                       </div>
@@ -1296,21 +1296,21 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                       {/* Name & OVR/Potential */}
                       <div className="flex justify-between items-start gap-2">
                         <div>
-                          <h4 className="text-base font-display font-black text-white leading-tight">
+                          <h4 className="text-base font-display font-black text-slate-900 leading-tight">
                             {prospect.name}
                           </h4>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs font-display font-black text-blue-600 dark:text-blue-400">
+                            <span className="text-xs font-display font-black text-blue-700 font-mono">
                               {prospect.rating} OVR
                             </span>
-                            <span className="text-[10px] text-slate-500">•</span>
+                            <span className="text-[10px] text-slate-400">•</span>
                             <span
                               className={`text-[10px] font-display font-black px-1.5 py-0.5 rounded ${
                                 isWonderkid
-                                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                                  ? 'bg-amber-100 text-amber-900 border border-amber-300'
                                   : isHighPotential
-                                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/20 dark:text-indigo-300 dark:border-indigo-500/30'
-                                  : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                                  : 'bg-blue-50 text-blue-700 border border-blue-200'
                               }`}
                             >
                               ⭐ POT: {prospect.potential}
@@ -1323,32 +1323,32 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                       </div>
 
                       {/* Valuation & Wage */}
-                      <div className="grid grid-cols-2 gap-2 text-[11px] py-1 bg-slate-950/50 rounded-xl px-2.5 border border-slate-850/60">
+                      <div className="grid grid-cols-2 gap-2 text-[11px] py-1 bg-slate-50/90 rounded-xl px-2.5 border border-slate-200/80">
                         <div>
                           <span className="text-[9px] uppercase font-bold text-slate-500 block">Valuation</span>
-                          <span className="font-semibold text-slate-200">{formatCurrency(prospect.value)}</span>
+                          <span className="font-semibold text-slate-800">{formatCurrency(prospect.value)}</span>
                         </div>
                         <div>
                           <span className="text-[9px] uppercase font-bold text-slate-500 block">Wage Demand</span>
-                          <span className="font-semibold text-slate-200">{formatWage(prospect.wageWeekly)}</span>
+                          <span className="font-semibold text-slate-800">{formatWage(prospect.wageWeekly)}</span>
                         </div>
                       </div>
 
                       {/* Scout Report Note */}
-                      <div className="text-[11px] text-slate-400 italic bg-slate-950/30 p-2.5 rounded-xl border border-slate-850/40 leading-relaxed">
+                      <div className="text-[11px] text-slate-600 italic bg-slate-50 p-2.5 rounded-xl border border-slate-200/70 leading-relaxed">
                         &ldquo;{prospect.scoutReport}&rdquo;
                       </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex gap-2 pt-2 border-t border-slate-850/60">
+                    <div className="flex gap-2 pt-2 border-t border-slate-100">
                       <button
                         onClick={() => handlePromoteProspect(prospect.id)}
                         disabled={squad.length >= 35}
                         className={`flex-1 py-2 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1 cursor-pointer ${
                           squad.length >= 35
-                            ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-md shadow-blue-500/20'
+                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-md shadow-blue-500/20 active:scale-95'
                         }`}
                         title={squad.length >= 35 ? 'Club squad is at full capacity (35/35)' : 'Promote to First Team'}
                       >
@@ -1358,7 +1358,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
 
                       <button
                         onClick={() => handleReleaseProspect(prospect.id)}
-                        className="py-2 px-3 rounded-xl border border-slate-800 hover:border-rose-900/60 bg-slate-950 hover:bg-rose-950/30 text-slate-500 hover:text-rose-400 text-xs font-bold transition-all cursor-pointer"
+                        className="py-2 px-3 rounded-xl border border-slate-200 hover:border-rose-300 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 text-xs font-bold transition-all cursor-pointer active:scale-95"
                         title="Release prospect"
                       >
                         Release
@@ -1551,51 +1551,51 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                 return (
                   <div className="space-y-3.5 text-xs">
                     {/* Current Season Header */}
-                    <div className="bg-gradient-to-r from-blue-950/40 via-slate-900/60 to-slate-950 border border-blue-500/30 rounded-2xl p-3 flex items-center justify-between gap-2 shadow-sm">
+                    <div className="bg-gradient-to-r from-blue-50 via-white to-indigo-50/40 border border-blue-200/80 rounded-2xl p-3 flex items-center justify-between gap-2 shadow-2xs">
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="text-xl shrink-0">📊</span>
                         <div className="min-w-0">
-                          <span className="text-[10px] font-black uppercase text-blue-400 tracking-wider font-display block">
+                          <span className="text-[10px] font-black uppercase text-blue-700 tracking-wider font-display block">
                             Season {save.season?.seasonNumber || 1} • {pStats.currentSeason.seasonLabel}
                           </span>
-                          <span className="text-xs font-bold text-white truncate block">
+                          <span className="text-xs font-bold text-slate-900 truncate block">
                             {selectedPlayer.name} ({selectedPlayer.position})
                           </span>
                         </div>
                       </div>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/40 font-bold shrink-0">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 border border-blue-200 font-bold shrink-0">
                         {pStats.currentSeason.competition}
                       </span>
                     </div>
 
                     {/* Current Season Key Metrics Grid */}
                     <div className="grid grid-cols-4 gap-1.5 text-center">
-                      <div className="bg-slate-900/70 border border-slate-800 p-2 rounded-xl">
-                        <span className="text-[9px] uppercase font-bold text-slate-400 block">Apps</span>
-                        <span className="font-display font-black text-white text-base">
+                      <div className="bg-slate-50 border border-slate-200 p-2 rounded-xl">
+                        <span className="text-[9px] uppercase font-bold text-slate-500 block">Apps</span>
+                        <span className="font-display font-black text-slate-900 text-base">
                           {pStats.currentSeason.appearances}
                         </span>
                         <span className="text-[8px] text-slate-500 block">({pStats.currentSeason.starts} starts)</span>
                       </div>
-                      <div className="bg-slate-900/70 border border-slate-800 p-2 rounded-xl">
-                        <span className="text-[9px] uppercase font-bold text-slate-400 block">Goals</span>
-                        <span className="font-display font-black text-blue-600 dark:text-blue-400 text-base">
+                      <div className="bg-slate-50 border border-slate-200 p-2 rounded-xl">
+                        <span className="text-[9px] uppercase font-bold text-slate-500 block">Goals</span>
+                        <span className="font-display font-black text-blue-700 text-base">
                           {pStats.currentSeason.goals}
                         </span>
                         <span className="text-[8px] text-slate-500 block">⚽ Goals</span>
                       </div>
-                      <div className="bg-slate-900/70 border border-slate-800 p-2 rounded-xl">
-                        <span className="text-[9px] uppercase font-bold text-slate-400 block">Assists</span>
-                        <span className="font-display font-black text-blue-400 text-base">
+                      <div className="bg-slate-50 border border-slate-200 p-2 rounded-xl">
+                        <span className="text-[9px] uppercase font-bold text-slate-500 block">Assists</span>
+                        <span className="font-display font-black text-blue-600 text-base">
                           {pStats.currentSeason.assists}
                         </span>
                         <span className="text-[8px] text-slate-500 block">🎯 Assists</span>
                       </div>
-                      <div className="bg-slate-900/70 border border-slate-800 p-2 rounded-xl">
-                        <span className="text-[9px] uppercase font-bold text-slate-400 block">
+                      <div className="bg-slate-50 border border-slate-200 p-2 rounded-xl">
+                        <span className="text-[9px] uppercase font-bold text-slate-500 block">
                           {isGkOrDef ? 'Clean Sh' : 'Rating'}
                         </span>
-                        <span className="font-display font-black text-amber-400 text-base">
+                        <span className="font-display font-black text-amber-700 text-base">
                           {isGkOrDef ? pStats.currentSeason.cleanSheets : (pStats.currentSeason.averageRating || '7.1')}
                         </span>
                         <span className="text-[8px] text-slate-500 block">
@@ -1605,23 +1605,23 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                     </div>
 
                     {/* Secondary Disciplinary & Accolades */}
-                    <div className="grid grid-cols-3 gap-2 bg-slate-900/50 border border-slate-850 p-2.5 rounded-xl text-center text-xs">
+                    <div className="grid grid-cols-3 gap-2 bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-center text-xs">
                       <div>
-                        <span className="text-[9px] uppercase font-bold text-slate-400 block">Cards</span>
+                        <span className="text-[9px] uppercase font-bold text-slate-500 block">Cards</span>
                         <span className="font-mono font-bold text-xs mt-0.5 inline-flex items-center gap-1.5">
-                          <span className="text-amber-400">🟨 {pStats.currentSeason.yellowCards}</span>
-                          <span className="text-rose-400">🟥 {pStats.currentSeason.redCards}</span>
+                          <span className="text-amber-600 font-extrabold">🟨 {pStats.currentSeason.yellowCards}</span>
+                          <span className="text-rose-600 font-extrabold">🟥 {pStats.currentSeason.redCards}</span>
                         </span>
                       </div>
                       <div>
-                        <span className="text-[9px] uppercase font-bold text-slate-400 block">Man of Match</span>
-                        <span className="font-display font-black text-amber-300 text-xs mt-0.5 block">
+                        <span className="text-[9px] uppercase font-bold text-slate-500 block">Man of Match</span>
+                        <span className="font-display font-black text-amber-700 text-xs mt-0.5 block">
                           🏆 {pStats.currentSeason.manOfTheMatch} Awards
                         </span>
                       </div>
                       <div>
-                        <span className="text-[9px] uppercase font-bold text-slate-400 block">Avg Match Rating</span>
-                        <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-xs mt-0.5 block">
+                        <span className="text-[9px] uppercase font-bold text-slate-500 block">Avg Match Rating</span>
+                        <span className="font-mono font-black text-blue-700 text-xs mt-0.5 block">
                           ⭐ {pStats.currentSeason.averageRating || '7.0'} / 10
                         </span>
                       </div>
@@ -1630,18 +1630,18 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                     {/* Previous Seasons Career History Table */}
                     <div className="space-y-1.5 pt-1">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-display font-black text-slate-300 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                        <span className="font-display font-black text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
                           <span>📜</span> Career History &amp; Previous Seasons
                         </span>
-                        <span className="text-[9px] font-mono text-slate-400">
+                        <span className="text-[9px] font-mono text-slate-500">
                           {pStats.careerTotals.appearances} Total Career Apps
                         </span>
                       </div>
 
-                      <div className="rounded-xl border border-slate-800 overflow-hidden bg-slate-950/70">
+                      <div className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-2xs">
                         <div className="overflow-x-auto max-h-48 scrollbar-thin">
                           <table className="w-full text-left text-[11px]">
-                            <thead className="bg-slate-900 text-[9px] font-bold uppercase text-slate-400 border-b border-slate-800 sticky top-0">
+                            <thead className="bg-slate-100 text-[9px] font-bold uppercase text-slate-600 border-b border-slate-200 sticky top-0">
                               <tr>
                                 <th className="py-2 px-2.5">Season</th>
                                 <th className="py-2 px-2">Club</th>
@@ -1652,9 +1652,9 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                                 <th className="py-2 px-2 text-right">Avg</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-850/60 font-medium">
+                            <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
                               {/* Current season row */}
-                              <tr className="bg-blue-50 text-blue-700 dark:bg-blue-950/20 dark:text-blue-300 font-bold">
+                              <tr className="bg-blue-50/70 text-blue-900 font-bold">
                                 <td className="py-1.5 px-2.5 font-mono">{pStats.currentSeason.seasonLabel}</td>
                                 <td className="py-1.5 px-2 truncate max-w-[90px]">{pStats.currentSeason.clubName}</td>
                                 <td className="py-1.5 px-1.5 text-center font-mono">{pStats.currentSeason.appearances}</td>
@@ -1663,36 +1663,36 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                                 <td className="py-1.5 px-1.5 text-center font-mono">
                                   {isGkOrDef ? pStats.currentSeason.cleanSheets : pStats.currentSeason.goals + pStats.currentSeason.assists}
                                 </td>
-                                <td className="py-1.5 px-2 text-right font-mono font-black">{pStats.currentSeason.averageRating || '7.1'}</td>
+                                <td className="py-1.5 px-2 text-right font-mono font-black text-blue-700">{pStats.currentSeason.averageRating || '7.1'}</td>
                               </tr>
 
                               {/* Previous seasons rows */}
                               {pStats.previousSeasons.map((prev) => (
-                                <tr key={prev.seasonLabel} className="text-slate-300 hover:bg-slate-900/50">
-                                  <td className="py-1.5 px-2.5 font-mono text-slate-400">{prev.seasonLabel}</td>
+                                <tr key={prev.seasonLabel} className="text-slate-700 hover:bg-slate-50">
+                                  <td className="py-1.5 px-2.5 font-mono text-slate-500">{prev.seasonLabel}</td>
                                   <td className="py-1.5 px-2 truncate max-w-[90px]">{prev.clubName}</td>
                                   <td className="py-1.5 px-1.5 text-center font-mono">{prev.appearances}</td>
-                                  <td className="py-1.5 px-1.5 text-center font-mono font-bold text-white">{prev.goals}</td>
+                                  <td className="py-1.5 px-1.5 text-center font-mono font-bold text-slate-900">{prev.goals}</td>
                                   <td className="py-1.5 px-1.5 text-center font-mono">{prev.assists}</td>
                                   <td className="py-1.5 px-1.5 text-center font-mono">
                                     {isGkOrDef ? prev.cleanSheets : prev.goals + prev.assists}
                                   </td>
-                                  <td className="py-1.5 px-2 text-right font-mono font-bold text-blue-600 dark:text-blue-400">{prev.averageRating}</td>
+                                  <td className="py-1.5 px-2 text-right font-mono font-bold text-blue-700">{prev.averageRating}</td>
                                 </tr>
                               ))}
                             </tbody>
-                            <tfoot className="bg-slate-900/90 text-white font-bold border-t border-slate-800 text-[10px]">
+                            <tfoot className="bg-slate-50 text-slate-900 font-bold border-t border-slate-200 text-[10px]">
                               <tr>
-                                <td colSpan={2} className="py-2 px-2.5 font-display uppercase tracking-wider text-amber-400">
+                                <td colSpan={2} className="py-2 px-2.5 font-display uppercase tracking-wider text-amber-700">
                                   Career Totals
                                 </td>
                                 <td className="py-2 px-1.5 text-center font-mono">{pStats.careerTotals.appearances}</td>
-                                <td className="py-2 px-1.5 text-center font-mono text-blue-600 dark:text-blue-400">{pStats.careerTotals.goals}</td>
-                                <td className="py-2 px-1.5 text-center font-mono text-blue-400">{pStats.careerTotals.assists}</td>
+                                <td className="py-2 px-1.5 text-center font-mono text-blue-700">{pStats.careerTotals.goals}</td>
+                                <td className="py-2 px-1.5 text-center font-mono text-blue-600">{pStats.careerTotals.assists}</td>
                                 <td className="py-2 px-1.5 text-center font-mono">
                                   {isGkOrDef ? pStats.careerTotals.cleanSheets : pStats.careerTotals.goals + pStats.careerTotals.assists}
                                 </td>
-                                <td className="py-2 px-2 text-right font-mono text-amber-400">{pStats.careerTotals.averageRating}</td>
+                                <td className="py-2 px-2 text-right font-mono text-amber-700">{pStats.careerTotals.averageRating}</td>
                               </tr>
                             </tfoot>
                           </table>
@@ -1765,10 +1765,10 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                 </div>
 
                 {/* Asking Price Controls */}
-                <div className="space-y-1.5 bg-slate-950/60 border border-slate-800/80 p-2.5 rounded-xl">
+                <div className="space-y-1.5 bg-slate-50 border border-slate-200/80 p-2.5 rounded-xl">
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] uppercase font-bold text-slate-400">Asking Price</span>
-                    <span className="font-display font-black text-blue-600 dark:text-blue-400 text-sm">
+                    <span className="text-[10px] uppercase font-bold text-slate-500">Asking Price</span>
+                    <span className="font-display font-black text-blue-700 text-sm">
                       {formatCurrency(askingPriceInput)}
                     </span>
                   </div>
@@ -1777,28 +1777,28 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                     <button
                       type="button"
                       onClick={() => setAskingPriceInput(Math.max(100_000, askingPriceInput - 1_000_000))}
-                      className="py-1 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 cursor-pointer"
+                      className="py-1 rounded bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer shadow-2xs"
                     >
                       -£1M
                     </button>
                     <button
                       type="button"
                       onClick={() => setAskingPriceInput(Math.max(100_000, askingPriceInput - 250_000))}
-                      className="py-1 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 cursor-pointer"
+                      className="py-1 rounded bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer shadow-2xs"
                     >
                       -£250k
                     </button>
                     <button
                       type="button"
                       onClick={() => setAskingPriceInput(askingPriceInput + 500_000)}
-                      className="py-1 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 text-blue-600 dark:text-blue-400 cursor-pointer"
+                      className="py-1 rounded bg-white border border-slate-200 hover:bg-slate-50 text-blue-700 cursor-pointer shadow-2xs"
                     >
                       +£500k
                     </button>
                     <button
                       type="button"
                       onClick={() => setAskingPriceInput(askingPriceInput + 1_000_000)}
-                      className="py-1 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 text-blue-600 dark:text-blue-400 cursor-pointer"
+                      className="py-1 rounded bg-white border border-slate-200 hover:bg-slate-50 text-blue-700 cursor-pointer shadow-2xs"
                     >
                       +£1M
                     </button>
@@ -1808,14 +1808,14 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                     <button
                       type="button"
                       onClick={() => setAskingPriceInput(selectedPlayer.value)}
-                      className="text-slate-400 hover:text-white underline cursor-pointer"
+                      className="text-slate-500 hover:text-slate-800 underline cursor-pointer"
                     >
                       Reset to Valuation ({formatCurrency(selectedPlayer.value)})
                     </button>
                     <button
                       type="button"
                       onClick={handleUpdateTransferStatus}
-                      className="px-2.5 py-1 rounded bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold hover:from-blue-500 hover:to-indigo-500 shadow-sm shadow-blue-500/20 cursor-pointer"
+                      className="px-2.5 py-1 rounded bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold hover:from-blue-500 hover:to-indigo-500 shadow-sm shadow-blue-500/20 cursor-pointer active:scale-95"
                     >
                       Save Status
                     </button>
@@ -1827,14 +1827,14 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                   <button
                     type="button"
                     onClick={handleOfferToClubs}
-                    className="p-2 rounded-xl border border-blue-500/30 bg-blue-950/20 hover:bg-blue-950/40 text-blue-300 font-display font-bold text-xs uppercase tracking-wider text-left transition-all cursor-pointer flex items-center justify-between gap-1"
+                    className="p-2.5 rounded-xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100/70 text-blue-900 font-display font-bold text-xs uppercase tracking-wider text-left transition-all cursor-pointer flex items-center justify-between gap-1 shadow-2xs active:scale-95"
                   >
                     <div>
-                      <div className="font-black text-white flex items-center gap-1">
+                      <div className="font-black text-slate-900 flex items-center gap-1">
                         <span>📢</span>
                         <span>Offer to Clubs</span>
                       </div>
-                      <div className="text-[9.5px] text-slate-400 font-normal">
+                      <div className="text-[9.5px] text-slate-500 font-normal">
                         Circulate worldwide
                       </div>
                     </div>
@@ -1843,14 +1843,14 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                   <button
                     type="button"
                     onClick={handleHireIntermediary}
-                    className="p-2 rounded-xl border border-purple-500/30 bg-purple-950/20 hover:bg-purple-950/40 text-purple-300 font-display font-bold text-xs uppercase tracking-wider text-left transition-all cursor-pointer flex items-center justify-between gap-1"
+                    className="p-2.5 rounded-xl border border-purple-200 bg-purple-50/70 hover:bg-purple-100/70 text-purple-900 font-display font-bold text-xs uppercase tracking-wider text-left transition-all cursor-pointer flex items-center justify-between gap-1 shadow-2xs active:scale-95"
                   >
                     <div>
-                      <div className="font-black text-white flex items-center gap-1">
+                      <div className="font-black text-slate-900 flex items-center gap-1">
                         <span>🤝</span>
                         <span>Intermediary</span>
                       </div>
-                      <div className="text-[9.5px] text-slate-400 font-normal">
+                      <div className="text-[9.5px] text-slate-500 font-normal">
                         Broker firm bids (5%)
                       </div>
                     </div>
@@ -1862,7 +1862,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                   <button
                     type="button"
                     onClick={() => setShowReleaseModal(!showReleaseModal)}
-                    className="w-full py-1.5 px-3 rounded-xl border border-rose-900/50 hover:border-rose-700 bg-rose-950/20 hover:bg-rose-950/40 text-rose-300 font-display font-bold text-[11px] uppercase tracking-wider text-center transition-all cursor-pointer flex items-center justify-center gap-2"
+                    className="w-full py-2 px-3 rounded-xl border border-rose-200 hover:border-rose-300 bg-rose-50/70 hover:bg-rose-100/70 text-rose-800 font-display font-bold text-[11px] uppercase tracking-wider text-center transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95 shadow-2xs"
                   >
                     <span>⚠️</span>
                     <span>Release Player on Free Transfer</span>
@@ -1871,9 +1871,9 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
 
                 {/* Release Confirmation & Payout Calculation */}
                 {showReleaseModal && (
-                  <div className="bg-rose-950/30 border border-rose-500/40 p-2.5 rounded-xl space-y-2">
-                    <p className="text-[11px] text-slate-300 leading-relaxed">
-                      Releasing <strong className="text-white">{selectedPlayer.name}</strong> will remove him from your squad and free up <strong className="text-emerald-400">+{formatWage(selectedPlayer.wageWeekly)}/wk</strong> in wages.
+                  <div className="bg-rose-50 border border-rose-200 p-3 rounded-xl space-y-2 text-slate-800">
+                    <p className="text-[11px] text-slate-700 leading-relaxed">
+                      Releasing <strong className="text-slate-900">{selectedPlayer.name}</strong> will remove him from your squad and free up <strong className="text-emerald-700">+{formatWage(selectedPlayer.wageWeekly)}/wk</strong> in wages.
                     </p>
 
                     {(() => {
@@ -2059,26 +2059,27 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
       {/* Reserve Picker Modal for Empty Bench Slots */}
       {showReservePickerModal && isMounted && createPortal(
             <div
-              className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in"
+              className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
               onClick={() => setShowReservePickerModal(false)}
             >
           <div
-            className="bg-slate-950 border border-slate-850 rounded-3xl max-w-md w-full p-4 sm:p-5 shadow-2xl space-y-4 max-h-[85vh] flex flex-col"
+            className="office-floating-card bg-white border border-slate-200/90 rounded-3xl max-w-md w-full p-4 sm:p-5 shadow-2xl space-y-4 max-h-[85vh] flex flex-col text-slate-900"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-850">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div>
-                <h3 className="text-sm font-display font-black uppercase tracking-wider text-white">
+                <h3 className="text-sm font-display font-black uppercase tracking-wider text-slate-900">
                   Add Substitute to Bench
                 </h3>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-slate-500 font-medium">
                   Select an eligible reserve player ({bench.length}/9 slots filled)
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowReservePickerModal(false)}
-                className="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-xs font-bold cursor-pointer"
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-xs font-bold cursor-pointer transition-colors"
+                aria-label="Close"
               >
                 ✕
               </button>
@@ -2096,26 +2097,26 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                       handleMovePlayerToBench(player.id);
                       setShowReservePickerModal(false);
                     }}
-                    className="w-full p-2.5 rounded-xl border border-slate-850 bg-slate-900/60 hover:bg-blue-50/60 dark:hover:bg-blue-950/40 hover:border-blue-500/50 flex items-center justify-between gap-2 transition-all cursor-pointer text-left"
+                    className="w-full p-2.5 rounded-xl border border-slate-200/80 bg-slate-50/80 hover:bg-blue-50/80 hover:border-blue-300 flex items-center justify-between gap-2 transition-all cursor-pointer text-left shadow-2xs active:scale-[0.99]"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="w-8 text-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-blue-600 dark:text-blue-400 font-display">
+                      <span className="w-8 text-center px-1.5 py-0.5 rounded text-[10px] font-black bg-blue-100 text-blue-800 font-display">
                         {player.position}
                       </span>
                       <div className="min-w-0">
-                        <div className="text-xs font-display font-black text-white truncate">
+                        <div className="text-xs font-display font-black text-slate-900 truncate">
                           {player.name}
                         </div>
-                        <div className="text-[10px] text-slate-400">
+                        <div className="text-[10px] text-slate-500 font-medium">
                           Age {player.age} • {formatCurrency(player.value)}
                         </div>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <div className="text-sm font-display font-black text-blue-600 dark:text-blue-400 font-mono">
+                      <div className="text-sm font-display font-black text-blue-700 font-mono">
                         {player.rating}
                       </div>
-                      <span className="text-[9.5px] text-blue-600 dark:text-blue-400 font-bold uppercase">
+                      <span className="text-[9.5px] text-blue-600 font-bold uppercase">
                         + Add
                       </span>
                     </div>
@@ -2123,17 +2124,17 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                 ))}
 
               {reserves.filter((p) => isPlayerRegisteredForMatch(p, squad, save.registeredPlayerIds, save.season?.yearStart)).length === 0 && (
-                <div className="text-center py-6 text-xs text-slate-400">
+                <div className="text-center py-6 text-xs text-slate-500">
                   No eligible reserve players available. Register senior players in the 25-man squad first.
                 </div>
               )}
             </div>
 
-            <div className="pt-2 border-t border-slate-850 flex justify-end">
+            <div className="pt-2 border-t border-slate-100 flex justify-end">
               <button
                 type="button"
                 onClick={() => setShowReservePickerModal(false)}
-                className="py-2 px-4 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 text-xs font-bold hover:text-white cursor-pointer"
+                className="py-2 px-4 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 text-xs font-bold hover:bg-slate-200 cursor-pointer transition-colors"
               >
                 Close
               </button>

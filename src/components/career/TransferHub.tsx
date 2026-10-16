@@ -612,6 +612,9 @@ export function TransferHub({
     feedback: string;
   } | null>(null);
 
+  // Collapsible News Ticker State for Transfers War Room
+  const [tickerExpanded, setTickerExpanded] = useState<boolean>(true);
+
   const handleApplyBudgetReallocation = () => {
     const res = reallocateBudgetDistribution(save, allocatedTransferBudget);
     if (res.success) {
@@ -663,43 +666,138 @@ export function TransferHub({
 
   return (
     <div className="space-y-6 w-full">
-      {/* Transfer Deadline Day Status Strip */}
+      {/* Transfer Deadline Day Clock & Full War Room Panel */}
       {(save.deadlineDayState?.isActive || isTransferDeadlineDay(save.season.currentDate, save.season.yearStart)) && (
         <section
           data-office-ui="true"
-          className="office-floating-card rounded-2xl p-3 sm:p-4 border border-amber-300 bg-gradient-to-r from-amber-500/15 via-white to-amber-500/5 shadow-sm flex flex-wrap items-center justify-between gap-3"
+          className="office-floating-card rounded-3xl p-4 sm:p-5 border border-amber-300/90 bg-gradient-to-b from-amber-500/[0.08] via-white to-amber-500/[0.02] shadow-md space-y-3.5"
         >
-          <div className="flex items-center gap-2.5 min-w-0">
-            <span className="bg-amber-400 text-slate-950 text-[10px] font-black uppercase px-2 py-0.5 rounded-full font-display flex items-center gap-1 shadow-2xs shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-950 motion-safe:animate-pulse inline-block" />
-              <span>DEADLINE DAY ACTIVE</span>
-            </span>
-            <div className="min-w-0">
-              <div className="font-display font-black text-xs text-slate-900 flex items-center gap-1.5 truncate">
-                <span>{save.deadlineDayState?.timeString || '09:00 BST'}</span>
-                <span className="text-amber-600">•</span>
-                <span className="text-amber-700 font-extrabold uppercase text-[11px] truncate">
-                  {save.deadlineDayState?.phase || 'morning'} Phase
+          {/* Header Strip */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 pb-2 border-b border-amber-200/80">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full font-display flex items-center gap-1.5 shadow-2xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-950 motion-safe:animate-pulse inline-block" />
+                <span>DEADLINE DAY WAR ROOM</span>
+              </span>
+              <span className="text-amber-950 font-mono font-black text-xs bg-amber-100/90 px-2.5 py-0.5 rounded-md border border-amber-300/80">
+                {save.deadlineDayState?.timeString || '09:00 BST'}
+              </span>
+              <span className="text-[11px] font-bold text-amber-900 bg-amber-100/80 px-2.5 py-0.5 rounded-full border border-amber-300/80">
+                ⏳ {save.deadlineDayState?.hoursRemaining ?? 14}h Left (23:00 Cutoff)
+              </span>
+            </div>
+
+            {/* Quick Action Buttons */}
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={() => handleOpenPetitionModal('deadline_day_marquee')}
+                className="flex-1 sm:flex-none py-2 px-3.5 rounded-xl bg-white hover:bg-amber-50 text-amber-900 border border-amber-300 font-display font-black text-xs uppercase tracking-wider shadow-2xs cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+              >
+                <span>🏛️</span>
+                <span>Board Funds</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleAdvanceDeadlinePhase}
+                className="flex-1 sm:flex-none py-2 px-4 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-sm cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+              >
+                <span>⏩</span>
+                <span>
+                  {save.deadlineDayState?.phase === 'morning'
+                    ? 'Advance (13:00)'
+                    : save.deadlineDayState?.phase === 'afternoon'
+                    ? 'Advance (18:00)'
+                    : save.deadlineDayState?.phase === 'evening'
+                    ? 'Advance (22:00)'
+                    : '🚨 Slam Window Shut (23:00)'}
                 </span>
-                <span className="text-slate-500 font-normal text-[10.5px] hidden sm:inline">
-                  (⏳ {save.deadlineDayState?.hoursRemaining ?? 14}h left to 23:00 cutoff)
-                </span>
-              </div>
-              <div className="text-[10px] text-slate-500 font-medium truncate mt-0.5">
-                Full War Room command center, worldwide deals &amp; emergency board funds on the Home Screen.
-              </div>
+              </button>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={handleAdvanceDeadlinePhase}
-              className="py-1.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-display font-black text-[11px] uppercase tracking-wider shadow-xs cursor-pointer transition-transform active:scale-[0.98]"
-            >
-              Advance Clock ({save.deadlineDayState?.phase === 'morning' ? '13:00' : save.deadlineDayState?.phase === 'afternoon' ? '18:00' : save.deadlineDayState?.phase === 'evening' ? '22:00' : '23:00'}) &rsaquo;
-            </button>
-          </div>
+          {/* 4-Phase Step Progression Track */}
+          <nav
+            aria-label="Deadline Day Timeline Track"
+            className="grid grid-cols-4 gap-1.5 text-center text-xs pt-0.5"
+          >
+            {[
+              { id: 'morning', label: 'Morning', time: '09:00' },
+              { id: 'afternoon', label: 'Afternoon', time: '13:00' },
+              { id: 'evening', label: 'Evening', time: '18:00' },
+              { id: 'deadline', label: 'Final Hour', time: '22:00' },
+            ].map((step, idx) => {
+              const currentPhase = save.deadlineDayState?.phase || 'morning';
+              const phaseOrder = ['morning', 'afternoon', 'evening', 'deadline'];
+              const currentIdx = phaseOrder.indexOf(currentPhase);
+              const isPastOrCurrent = currentIdx >= idx;
+              const isCurrent = currentPhase === step.id;
+
+              return (
+                <div
+                  key={step.id}
+                  className={`py-1.5 px-1 sm:px-1.5 rounded-xl transition-all border ${
+                    isCurrent
+                      ? 'bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-slate-950 font-black border-amber-400 shadow-xs scale-[1.01]'
+                      : isPastOrCurrent
+                      ? 'bg-amber-100/70 text-amber-900 font-bold border-amber-200/80'
+                      : 'bg-white/70 text-slate-400 font-semibold border-slate-200/80'
+                  }`}
+                >
+                  <div className="font-mono text-[9px] sm:text-[9.5px] opacity-80 leading-tight">
+                    {step.time}
+                  </div>
+                  <div className="font-display font-extrabold text-[9.5px] min-[390px]:text-[10.5px] sm:text-[11px] tracking-tight truncate leading-tight mt-0.5">
+                    {step.label}
+                  </div>
+                </div>
+              );
+            })}
+          </nav>
+
+          {/* Collapsible Live Breaking News Ticker Feed */}
+          {save.deadlineDayState?.breakingNews && save.deadlineDayState.breakingNews.length > 0 && (
+            <div className="rounded-2xl border border-amber-300/80 bg-amber-50/50 p-3 space-y-2 text-xs">
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 text-[10px] font-black uppercase font-display text-amber-800">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 motion-safe:animate-pulse inline-block" />
+                  <span>LIVE DEADLINE WIRE TICKER</span>
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500 font-mono text-[10px]">
+                    {save.deadlineDayState.dealsCompletedCount} Deals Worldwide
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setTickerExpanded(!tickerExpanded)}
+                    className="text-[10.5px] font-bold text-amber-800 hover:text-amber-950 underline cursor-pointer"
+                  >
+                    {tickerExpanded ? 'Collapse ▴' : 'Expand ▾'}
+                  </button>
+                </div>
+              </div>
+
+              {tickerExpanded ? (
+                <div className="space-y-1.5 max-h-24 overflow-y-auto scrollbar-none font-mono text-[11px] text-slate-700 pt-0.5">
+                  {save.deadlineDayState.breakingNews.slice(0, 6).map((item, idx) => (
+                    <div key={idx} className="flex items-baseline gap-2 truncate">
+                      <span className="text-amber-500 font-bold">▪</span>
+                      <span className="truncate">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div
+                  onClick={() => setTickerExpanded(true)}
+                  className="font-mono text-[11px] text-slate-600 truncate cursor-pointer hover:text-slate-900"
+                >
+                  <span className="text-amber-500 font-bold mr-1.5">▪</span>
+                  <span>{save.deadlineDayState.breakingNews[0]}</span>
+                </div>
+              )}
+            </div>
+          )}
         </section>
       )}
 

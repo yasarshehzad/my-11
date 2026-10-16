@@ -1408,7 +1408,85 @@ describe('Career Mode Phase 6: Transfers, Scouting & Contracts', () => {
       expect(petitionRes.amountGranted).toBeGreaterThan(0);
       expect(petitionRes.updatedSave.finances.transferBudget).toBeGreaterThan(save.finances.transferBudget);
     });
+
+    it('advances through all 4 deadline day phases via Continue Deadline Day and automatically restores normal state upon closing', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('normal'),
+      });
+
+      save.season.currentDate = '2026-09-01';
+      let current = initializeDeadlineDay(save);
+
+      // Phase 1: Morning (09:00)
+      expect(current.deadlineDayState?.isActive).toBe(true);
+      expect(current.deadlineDayState?.phase).toBe('morning');
+      expect(current.deadlineDayState?.timeString).toBe('09:00 BST');
+      expect(current.deadlineDayState?.hoursRemaining).toBe(14);
+
+      // Advance 1: Morning -> Afternoon (13:00)
+      let res = advanceDeadlineDayPhase(current);
+      current = res.updatedSave;
+      expect(current.deadlineDayState?.isActive).toBe(true);
+      expect(current.deadlineDayState?.phase).toBe('afternoon');
+      expect(current.deadlineDayState?.timeString).toBe('13:00 BST');
+      expect(current.deadlineDayState?.hoursRemaining).toBe(10);
+
+      // Advance 2: Afternoon -> Evening (18:00)
+      res = advanceDeadlineDayPhase(current);
+      current = res.updatedSave;
+      expect(current.deadlineDayState?.isActive).toBe(true);
+      expect(current.deadlineDayState?.phase).toBe('evening');
+      expect(current.deadlineDayState?.timeString).toBe('18:00 BST');
+      expect(current.deadlineDayState?.hoursRemaining).toBe(5);
+
+      // Advance 3: Evening -> Final Hour (22:00)
+      res = advanceDeadlineDayPhase(current);
+      current = res.updatedSave;
+      expect(current.deadlineDayState?.isActive).toBe(true);
+      expect(current.deadlineDayState?.phase).toBe('deadline');
+      expect(current.deadlineDayState?.timeString).toBe('22:00 BST');
+      expect(current.deadlineDayState?.hoursRemaining).toBe(1);
+
+      // Advance 4: Final Hour -> Window Closed (23:00 cutoff)
+      res = advanceDeadlineDayPhase(current);
+      current = res.updatedSave;
+      // Window is closed: isActive is false, allowing normal Next Fixture hero to restore
+      expect(current.deadlineDayState?.isActive).toBe(false);
+      expect(current.deadlineDayState?.phase).toBe('closed');
+      expect(current.season.currentDate).toBe('2026-09-02');
+      expect(current.season.transferWindowOpen).toBe(false);
+    });
+
+    it('preserves incoming pending offers, budget, and wage headroom throughout deadline day hero takeover', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('normal'),
+      });
+
+      save.season.currentDate = '2026-09-01';
+      save.finances.transferBudget = 45_000_000;
+      save.finances.weeklyWageBudget = 2_000_000;
+      save.finances.currentWeeklyWages = 1_500_000;
+
+      const initialized = initializeDeadlineDay(save);
+
+      // Verify finances are preserved
+      expect(initialized.finances.transferBudget).toBe(45_000_000);
+      const wageHeadroom = initialized.finances.weeklyWageBudget - initialized.finances.currentWeeklyWages;
+      expect(wageHeadroom).toBe(500_000);
+
+      // Verify incoming offers generated
+      expect(initialized.incomingOffers).toBeDefined();
+      expect(initialized.incomingOffers!.length).toBeGreaterThan(0);
+      expect(initialized.incomingOffers![0].status).toBe('pending');
+    });
   });
 });
+
 
 

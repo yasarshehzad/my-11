@@ -35,7 +35,7 @@ import { FixturesCalendar } from '../../../components/career/FixturesCalendar';
 import { LeagueTable } from '../../../components/career/LeagueTable';
 import { TournamentsHub } from '../../../components/career/TournamentsHub';
 import { TransferHub } from '../../../components/career/TransferHub';
-import { TransferDeadlineDayScreen } from '../../../components/career/TransferDeadlineDayScreen';
+import { OfficeDeadlineHeroTakeover } from '../../../components/career/OfficeDeadlineHeroTakeover';
 import { MatchDayModal } from '../../../components/career/MatchDayModal';
 import { MatchOverviewModal } from '../../../components/career/MatchOverviewModal';
 import { InstantMatchSummaryModal } from '../../../components/career/InstantMatchSummaryModal';
@@ -1939,15 +1939,21 @@ function CareerPlayHubContent() {
         {activeTab === 'overview' && (
           <div className="space-y-2.5">
 
-            {/* 3. TRANSFER DEADLINE DAY WAR ROOM SCREEN (WHEN DEADLINE ACTIVE) OR NEXT FIXTURE SPOTLIGHT */}
+            {/* 3. TRANSFER DEADLINE DAY HERO TAKEOVER (WHEN DEADLINE ACTIVE) OR NEXT FIXTURE SPOTLIGHT */}
             {isDeadlineActive ? (
-              <TransferDeadlineDayScreen
+              <OfficeDeadlineHeroTakeover
                 save={save}
                 onUpdateSave={handleUpdateSave}
                 onAdvanceDeadlinePhase={handleAdvanceDeadlinePhase}
                 onNavigateToTransfers={(subTab, targetId) => navigateToSection('transfers', subTab, targetId)}
                 onNotification={showToast}
                 nextScheduled={nextScheduled}
+                onOpenMatchOverview={(fix) => setMatchOverviewModal({ type: 'preview', fixture: fix })}
+                onPlayMatch={(fix) => setActiveMatchFixture(fix)}
+                urgentDecisionCount={actionableAlerts.length}
+                onReviewUrgentDecisions={() => {
+                  if (actionableAlerts[0]) handleExecuteAlertAction(actionableAlerts[0]);
+                }}
               />
             ) : nextScheduled ? (
               <section
