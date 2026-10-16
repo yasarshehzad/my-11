@@ -141,7 +141,7 @@ function SetupWizardContent() {
       </header>
 
       {/* Main Wizard */}
-      <main className="flex-1 w-full max-w-4xl mx-auto px-2 sm:px-4 py-4 flex flex-col">
+      <main className="flex-1 w-full max-w-4xl mx-auto px-2 sm:px-4 py-4 flex flex-col safe-pb">
         {/* Step Progress Indicators */}
         <nav aria-label="Setup steps" className="flex items-center justify-center gap-2 mb-6">
           <button

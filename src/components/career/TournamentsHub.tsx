@@ -101,40 +101,61 @@ export function TournamentsHub({
 
   return (
     <div id="tournaments-hub" data-office-ui="true" className="space-y-4 w-full scroll-mt-20">
-      {/* Tournament Selection Bar */}
-      <nav
-        aria-label="Cup Tournaments Selector"
-        data-no-swipe="true"
-        className="office-floating-card p-1.5 rounded-2xl shadow-xs flex items-center gap-1 overflow-x-auto no-scrollbar"
-      >
-        {tournamentList.map((t) => {
-          const isSelected = selectedTournamentId === t.id;
-          return (
-            <button
-              key={t.id}
-              onClick={() => {
-                if (selectedTournamentId === t.id) {
-                  window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-                } else {
-                  setSelectedTournamentId(t.id);
-                  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-                }
-              }}
-              className={`py-1.5 px-3 rounded-xl text-xs font-display font-black uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap cursor-pointer transition-all shrink-0 ${
-                isSelected
-                  ? 'office-nav-tab-active shadow-xs'
-                  : 'office-nav-tab-inactive'
-              }`}
-            >
-              <span className="text-sm">{t.icon}</span>
-              <span>{t.name}</span>
-              <span className={`text-[10px] font-mono ${isSelected ? 'opacity-90' : 'text-slate-400'}`}>
-                ({t.prize})
-              </span>
-            </button>
-          );
-        })}
-      </nav>
+      {/* Tournament Selection Bar with Scroll Affordances */}
+      <div className="relative">
+        <nav
+          aria-label="Cup Tournaments Selector"
+          data-no-swipe="true"
+          className="office-floating-card p-1.5 rounded-2xl shadow-xs flex items-center gap-1.5 overflow-x-auto no-scrollbar overscroll-x-contain touch-pan-x"
+        >
+          {tournamentList.map((t) => {
+            const isSelected = selectedTournamentId === t.id;
+            const isCabinet = t.id === 'cabinet';
+            return (
+              <button
+                key={t.id}
+                onClick={() => {
+                  if (selectedTournamentId === t.id) {
+                    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+                  } else {
+                    setSelectedTournamentId(t.id);
+                    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                  }
+                }}
+                className={`py-1.5 px-3 rounded-xl text-xs font-display font-black uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap cursor-pointer transition-all shrink-0 ${
+                  isSelected
+                    ? isCabinet
+                      ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 font-black shadow-xs border border-amber-300'
+                      : 'office-nav-tab-active shadow-xs'
+                    : 'office-nav-tab-inactive'
+                }`}
+              >
+                <span className="text-sm">{t.icon}</span>
+                <span>{t.name}</span>
+                <span className={`text-[10px] font-mono ${isSelected ? 'opacity-90' : 'text-slate-400'}`}>
+                  ({t.prize})
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+        {/* Subtle right-edge scroll fade indicator on mobile screens */}
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-[#f8fafc] to-transparent sm:hidden" />
+      </div>
+
+      {/* Active Tournament Status Bar */}
+      <div className="flex items-center justify-between text-xs px-2 py-1 bg-white/80 rounded-xl border border-slate-200/80 shadow-2xs">
+        <span className="flex items-center gap-1.5 truncate">
+          <span className="text-amber-500 text-sm">🏆</span>
+          <span className="text-slate-600 font-medium truncate">
+            Viewing: <strong className="text-slate-900 font-bold">{selectedTournamentId === 'cabinet' ? 'Trophy Cabinet & Honours' : currentTournament?.name || 'Tournament'}</strong>
+            {currentTournament && ` (${currentTournament.currentRound})`}
+          </span>
+        </span>
+        <span className="text-[10px] font-mono text-slate-400 shrink-0 ml-2 hidden xs:inline">
+          Swipe bar for 7 competitions ➔
+        </span>
+      </div>
 
       {/* VIEW 1: TROPHY CABINET */}
       {selectedTournamentId === 'cabinet' ? (

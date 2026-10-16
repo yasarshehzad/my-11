@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen my11-canvas font-sans flex flex-col p-6 sm:p-12">
+    <div className="min-h-screen my11-canvas font-sans flex flex-col p-6 sm:p-12 safe-pb">
       <main className="flex-1 w-full max-w-2xl mx-auto flex flex-col justify-center my-8 office-floating-card rounded-3xl p-8 sm:p-10 shadow-2xl space-y-6">
         <h1 className="text-3xl sm:text-4xl font-display font-black text-[#0b1536] uppercase tracking-tight border-b border-[var(--office-divider)] pb-4">
           Privacy Policy

@@ -191,7 +191,7 @@ export function DraftScreen({
   }, [revealedPlayer]);
 
   return (
-    <div className={`flex flex-col gap-6 px-4 sm:px-6 py-6 w-full max-w-lg mx-auto min-h-[90vh] relative overflow-hidden ${isFinished ? 'pb-24' : ''}`}>
+    <div className={`flex flex-col gap-6 px-4 sm:px-6 py-6 w-full max-w-lg mx-auto min-h-[90vh] relative overflow-hidden ${isFinished ? 'pb-28 safe-pb' : 'safe-pb'}`}>
       {/* Polite screen reader live announcements */}
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {timerAnnouncement}
@@ -441,9 +441,9 @@ export function DraftScreen({
         </div>
       )}
 
-      {/* Sticky Proceed Button for Mobile (Bottom of screen) */}
+      {/* Sticky Proceed Button for Mobile (Bottom of screen with safe area) */}
       {isFinished && simResult && (
-        <div className="fixed bottom-3 left-3 right-3 md:relative md:bottom-auto md:left-auto md:right-auto z-40 flex justify-center">
+        <div className="fixed bottom-[max(0.75rem,env(safe-area-inset-bottom,16px))] left-3 right-3 md:relative md:bottom-auto md:left-auto md:right-auto z-40 flex justify-center">
           <button
             onClick={onStartSimulation}
             className="office-play-match-btn w-full max-w-sm py-4 px-6 rounded-2xl text-white font-display font-black text-sm uppercase tracking-wider shadow-2xl cursor-pointer text-center"

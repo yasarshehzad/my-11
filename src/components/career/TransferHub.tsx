@@ -82,6 +82,7 @@ export function TransferHub({
 
   // Incoming offer counter-negotiation state
   const [negotiatingIncomingOffer, setNegotiatingIncomingOffer] = useState<IncomingTransferOffer | null>(null);
+  const [forceExpandWarRoom, setForceExpandWarRoom] = useState<boolean>(false);
   const [counterFeeInput, setCounterFeeInput] = useState<number>(0);
   const [counterSellOnPercent, setCounterSellOnPercent] = useState<number>(0);
   const [counterAppearanceFee, setCounterAppearanceFee] = useState<number>(0);
@@ -666,139 +667,187 @@ export function TransferHub({
 
   return (
     <div className="space-y-6 w-full">
-      {/* Transfer Deadline Day Clock & Full War Room Panel */}
+      {/* Transfer Deadline Day Clock: Full War Room on Market (or when expanded), Compact Bar on subviews */}
       {(save.deadlineDayState?.isActive || isTransferDeadlineDay(save.season.currentDate, save.season.yearStart)) && (
-        <section
-          data-office-ui="true"
-          className="office-floating-card rounded-3xl p-4 sm:p-5 border border-amber-300/90 bg-gradient-to-b from-amber-500/[0.08] via-white to-amber-500/[0.02] shadow-md space-y-3.5"
-        >
-          {/* Header Strip */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 pb-2 border-b border-amber-200/80">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full font-display flex items-center gap-1.5 shadow-2xs">
+        subTab === 'market' || forceExpandWarRoom ? (
+          <section
+            data-office-ui="true"
+            className="office-floating-card rounded-3xl p-4 sm:p-5 border border-amber-300/90 bg-gradient-to-b from-amber-500/[0.08] via-white to-amber-500/[0.02] shadow-md space-y-3.5"
+          >
+            {/* Header Strip */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 pb-2 border-b border-amber-200/80">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full font-display flex items-center gap-1.5 shadow-2xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-950 motion-safe:animate-pulse inline-block" />
+                  <span>DEADLINE DAY WAR ROOM</span>
+                </span>
+                <span className="text-amber-950 font-mono font-black text-xs bg-amber-100/90 px-2.5 py-0.5 rounded-md border border-amber-300/80">
+                  {save.deadlineDayState?.timeString || '09:00 BST'}
+                </span>
+                <span className="text-[11px] font-bold text-amber-900 bg-amber-100/80 px-2.5 py-0.5 rounded-full border border-amber-300/80">
+                  ⏳ {save.deadlineDayState?.hoursRemaining ?? 14}h Left (23:00 Cutoff)
+                </span>
+              </div>
+
+              {/* Quick Action Buttons */}
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                {subTab !== 'market' && (
+                  <button
+                    type="button"
+                    onClick={() => setForceExpandWarRoom(false)}
+                    className="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-display font-bold text-xs uppercase cursor-pointer"
+                  >
+                    Collapse ▴
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleOpenPetitionModal('deadline_day_marquee')}
+                  className="flex-1 sm:flex-none py-2 px-3.5 rounded-xl bg-white hover:bg-amber-50 text-amber-900 border border-amber-300 font-display font-black text-xs uppercase tracking-wider shadow-2xs cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                >
+                  <span>🏛️</span>
+                  <span>Board Funds</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleAdvanceDeadlinePhase}
+                  className="flex-1 sm:flex-none py-2 px-4 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-sm cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                >
+                  <span>⏩</span>
+                  <span>
+                    {save.deadlineDayState?.phase === 'morning'
+                      ? 'Advance (13:00)'
+                      : save.deadlineDayState?.phase === 'afternoon'
+                      ? 'Advance (18:00)'
+                      : save.deadlineDayState?.phase === 'evening'
+                      ? 'Advance (22:00)'
+                      : '🚨 Slam Window Shut (23:00)'}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* 4-Phase Step Progression Track */}
+            <nav
+              aria-label="Deadline Day Timeline Track"
+              className="grid grid-cols-4 gap-1.5 text-center text-xs pt-0.5"
+            >
+              {[
+                { id: 'morning', label: 'Morning', time: '09:00' },
+                { id: 'afternoon', label: 'Afternoon', time: '13:00' },
+                { id: 'evening', label: 'Evening', time: '18:00' },
+                { id: 'deadline', label: 'Final Hour', time: '22:00' },
+              ].map((step, idx) => {
+                const currentPhase = save.deadlineDayState?.phase || 'morning';
+                const phaseOrder = ['morning', 'afternoon', 'evening', 'deadline'];
+                const currentIdx = phaseOrder.indexOf(currentPhase);
+                const isPastOrCurrent = currentIdx >= idx;
+                const isCurrent = currentPhase === step.id;
+
+                return (
+                  <div
+                    key={step.id}
+                    className={`py-1.5 px-1 sm:px-1.5 rounded-xl transition-all border ${
+                      isCurrent
+                        ? 'bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-slate-950 font-black border-amber-400 shadow-xs scale-[1.01]'
+                        : isPastOrCurrent
+                        ? 'bg-amber-100/70 text-amber-900 font-bold border-amber-200/80'
+                        : 'bg-white/70 text-slate-400 font-semibold border-slate-200/80'
+                    }`}
+                  >
+                    <div className="font-mono text-[9px] sm:text-[9.5px] opacity-80 leading-tight">
+                      {step.time}
+                    </div>
+                    <div className="font-display font-extrabold text-[9.5px] min-[390px]:text-[10.5px] sm:text-[11px] tracking-tight truncate leading-tight mt-0.5">
+                      {step.label}
+                    </div>
+                  </div>
+                );
+              })}
+            </nav>
+
+            {/* Collapsible Live Breaking News Ticker Feed */}
+            {save.deadlineDayState?.breakingNews && save.deadlineDayState.breakingNews.length > 0 && (
+              <div className="rounded-2xl border border-amber-300/80 bg-amber-50/50 p-3 space-y-2 text-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-1.5 text-[10px] font-black uppercase font-display text-amber-800">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 motion-safe:animate-pulse inline-block" />
+                    <span>LIVE DEADLINE WIRE TICKER</span>
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 font-mono text-[10px]">
+                      {save.deadlineDayState.dealsCompletedCount} Deals Worldwide
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setTickerExpanded(!tickerExpanded)}
+                      className="text-[10.5px] font-bold text-amber-800 hover:text-amber-950 underline cursor-pointer"
+                    >
+                      {tickerExpanded ? 'Collapse ▴' : 'Expand ▾'}
+                    </button>
+                  </div>
+                </div>
+
+                {tickerExpanded ? (
+                  <div className="space-y-1.5 max-h-36 overflow-y-auto scrollbar-none font-mono text-[11px] text-slate-700 pt-0.5">
+                    {save.deadlineDayState.breakingNews.slice(0, 8).map((item, idx) => (
+                      <div key={idx} className="flex items-start gap-1.5 leading-relaxed">
+                        <span className="text-amber-500 font-bold shrink-0 mt-0.5">▪</span>
+                        <span className="break-words">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => setTickerExpanded(true)}
+                    className="font-mono text-[11px] text-slate-600 truncate cursor-pointer hover:text-slate-900"
+                  >
+                    <span className="text-amber-500 font-bold mr-1.5">▪</span>
+                    <span>{save.deadlineDayState.breakingNews[0]}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        ) : (
+          /* Compact Deadline Summary Bar for Subviews */
+          <section
+            data-office-ui="true"
+            className="office-floating-card rounded-2xl px-3.5 py-2.5 sm:px-4 sm:py-3 border border-amber-300/85 bg-gradient-to-r from-amber-500/[0.08] via-white to-amber-500/[0.04] shadow-xs flex flex-wrap items-center justify-between gap-2.5 text-xs"
+          >
+            <div className="flex items-center gap-2 min-w-0 flex-wrap">
+              <span className="bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 text-[9.5px] font-black uppercase px-2 py-0.5 rounded-full font-display flex items-center gap-1 shadow-2xs shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-950 motion-safe:animate-pulse inline-block" />
-                <span>DEADLINE DAY WAR ROOM</span>
+                <span>Deadline Day</span>
               </span>
-              <span className="text-amber-950 font-mono font-black text-xs bg-amber-100/90 px-2.5 py-0.5 rounded-md border border-amber-300/80">
+              <span className="text-amber-950 font-mono font-bold text-xs bg-amber-100/90 px-2 py-0.5 rounded border border-amber-300/80 shrink-0">
                 {save.deadlineDayState?.timeString || '09:00 BST'}
               </span>
-              <span className="text-[11px] font-bold text-amber-900 bg-amber-100/80 px-2.5 py-0.5 rounded-full border border-amber-300/80">
-                ⏳ {save.deadlineDayState?.hoursRemaining ?? 14}h Left (23:00 Cutoff)
+              <span className="text-[11px] font-bold text-amber-900 truncate">
+                ⏳ {save.deadlineDayState?.hoursRemaining ?? 14}h Left &bull; {save.deadlineDayState?.dealsCompletedCount || 0} Deals Worldwide
               </span>
             </div>
 
-            {/* Quick Action Buttons */}
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <button
-                type="button"
-                onClick={() => handleOpenPetitionModal('deadline_day_marquee')}
-                className="flex-1 sm:flex-none py-2 px-3.5 rounded-xl bg-white hover:bg-amber-50 text-amber-900 border border-amber-300 font-display font-black text-xs uppercase tracking-wider shadow-2xs cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
-              >
-                <span>🏛️</span>
-                <span>Board Funds</span>
-              </button>
-
+            <div className="flex items-center gap-1.5 shrink-0 ml-auto">
               <button
                 type="button"
                 onClick={handleAdvanceDeadlinePhase}
-                className="flex-1 sm:flex-none py-2 px-4 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-sm cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                className="py-1 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-2xs cursor-pointer flex items-center gap-1 active:scale-95"
               >
                 <span>⏩</span>
-                <span>
-                  {save.deadlineDayState?.phase === 'morning'
-                    ? 'Advance (13:00)'
-                    : save.deadlineDayState?.phase === 'afternoon'
-                    ? 'Advance (18:00)'
-                    : save.deadlineDayState?.phase === 'evening'
-                    ? 'Advance (22:00)'
-                    : '🚨 Slam Window Shut (23:00)'}
-                </span>
+                <span>Advance</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setForceExpandWarRoom(true)}
+                className="py-1 px-2.5 rounded-xl bg-white hover:bg-amber-50 text-amber-900 border border-amber-300 font-display font-bold text-xs cursor-pointer shadow-2xs"
+              >
+                Expand War Room ▾
               </button>
             </div>
-          </div>
-
-          {/* 4-Phase Step Progression Track */}
-          <nav
-            aria-label="Deadline Day Timeline Track"
-            className="grid grid-cols-4 gap-1.5 text-center text-xs pt-0.5"
-          >
-            {[
-              { id: 'morning', label: 'Morning', time: '09:00' },
-              { id: 'afternoon', label: 'Afternoon', time: '13:00' },
-              { id: 'evening', label: 'Evening', time: '18:00' },
-              { id: 'deadline', label: 'Final Hour', time: '22:00' },
-            ].map((step, idx) => {
-              const currentPhase = save.deadlineDayState?.phase || 'morning';
-              const phaseOrder = ['morning', 'afternoon', 'evening', 'deadline'];
-              const currentIdx = phaseOrder.indexOf(currentPhase);
-              const isPastOrCurrent = currentIdx >= idx;
-              const isCurrent = currentPhase === step.id;
-
-              return (
-                <div
-                  key={step.id}
-                  className={`py-1.5 px-1 sm:px-1.5 rounded-xl transition-all border ${
-                    isCurrent
-                      ? 'bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-slate-950 font-black border-amber-400 shadow-xs scale-[1.01]'
-                      : isPastOrCurrent
-                      ? 'bg-amber-100/70 text-amber-900 font-bold border-amber-200/80'
-                      : 'bg-white/70 text-slate-400 font-semibold border-slate-200/80'
-                  }`}
-                >
-                  <div className="font-mono text-[9px] sm:text-[9.5px] opacity-80 leading-tight">
-                    {step.time}
-                  </div>
-                  <div className="font-display font-extrabold text-[9.5px] min-[390px]:text-[10.5px] sm:text-[11px] tracking-tight truncate leading-tight mt-0.5">
-                    {step.label}
-                  </div>
-                </div>
-              );
-            })}
-          </nav>
-
-          {/* Collapsible Live Breaking News Ticker Feed */}
-          {save.deadlineDayState?.breakingNews && save.deadlineDayState.breakingNews.length > 0 && (
-            <div className="rounded-2xl border border-amber-300/80 bg-amber-50/50 p-3 space-y-2 text-xs">
-              <div className="flex items-center justify-between gap-2">
-                <span className="flex items-center gap-1.5 text-[10px] font-black uppercase font-display text-amber-800">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 motion-safe:animate-pulse inline-block" />
-                  <span>LIVE DEADLINE WIRE TICKER</span>
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-500 font-mono text-[10px]">
-                    {save.deadlineDayState.dealsCompletedCount} Deals Worldwide
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setTickerExpanded(!tickerExpanded)}
-                    className="text-[10.5px] font-bold text-amber-800 hover:text-amber-950 underline cursor-pointer"
-                  >
-                    {tickerExpanded ? 'Collapse ▴' : 'Expand ▾'}
-                  </button>
-                </div>
-              </div>
-
-              {tickerExpanded ? (
-                <div className="space-y-1.5 max-h-24 overflow-y-auto scrollbar-none font-mono text-[11px] text-slate-700 pt-0.5">
-                  {save.deadlineDayState.breakingNews.slice(0, 6).map((item, idx) => (
-                    <div key={idx} className="flex items-baseline gap-2 truncate">
-                      <span className="text-amber-500 font-bold">▪</span>
-                      <span className="truncate">{item}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div
-                  onClick={() => setTickerExpanded(true)}
-                  className="font-mono text-[11px] text-slate-600 truncate cursor-pointer hover:text-slate-900"
-                >
-                  <span className="text-amber-500 font-bold mr-1.5">▪</span>
-                  <span>{save.deadlineDayState.breakingNews[0]}</span>
-                </div>
-              )}
-            </div>
-          )}
-        </section>
+          </section>
+        )
       )}
 
       {/* Transfer Window Status Banner - Compact Header Bar */}
@@ -860,55 +909,65 @@ export function TransferHub({
         </div>
       </section>
 
-      {/* Sub-Navigation Tabs */}
-      <nav aria-label="Transfer Sections" data-no-swipe="true" className="flex gap-1.5 overflow-x-auto pb-1.5 scrollbar-none border-b border-slate-200/80">
-        {[
-          { id: 'market', label: 'Market', icon: '🔍', badge: marketPlayers.length },
-          { id: 'incoming', label: 'Incoming', icon: '📬', badge: save.incomingOffers?.length || 0 },
-          {
-            id: 'contracts',
-            label: 'Contracts',
-            icon: '📝',
-            badge: criticalExpiringCount > 0 ? `${criticalExpiringCount} Due` : expiringContracts.length,
-            badgeAlert: criticalExpiringCount > 0,
-          },
-          { id: 'shortlist', label: 'Shortlist', icon: '⭐', badge: shortlistedPlayers.length },
-          { id: 'history', label: 'History', icon: '📜', badge: save.transfersHistory?.length || 0 },
-          { id: 'board', label: 'Board', icon: '🏛️', badge: `${boardStatus.confidence}%` },
-        ].map((tab) => {
-          const isSelected = subTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => {
-                if (subTab === tab.id) {
-                  window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-                } else {
-                  setSubTab(tab.id as typeof subTab);
-                  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-                }
-              }}
-              className={`py-1.5 px-2.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-display font-black uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap cursor-pointer transition-all ${
-                isSelected
-                  ? 'office-nav-tab-active shadow-sm'
-                  : 'office-nav-tab'
-              }`}
-            >
-              <span>{tab.icon}</span>
-              <span>{tab.label}</span>
-              <span className={`text-[9px] font-mono px-1 py-0.2 rounded-md ${
-                tab.badgeAlert
-                  ? 'bg-rose-100 text-rose-700 border border-rose-300 font-bold animate-pulse'
-                  : isSelected
-                  ? 'bg-white/20 text-white'
-                  : 'bg-slate-200/70 text-slate-700'
-              }`}>
-                {tab.badge}
-              </span>
-            </button>
-          );
-        })}
-      </nav>
+      {/* Sub-Navigation Tabs with Scroll Affordance */}
+      <div className="relative">
+        <nav
+          aria-label="Transfer Sections"
+          data-no-swipe="true"
+          className="flex gap-1.5 overflow-x-auto pb-1.5 scrollbar-none border-b border-slate-200/80 overscroll-x-contain touch-pan-x px-0.5"
+        >
+          {[
+            { id: 'market', label: 'Market', icon: '🔍', badge: marketPlayers.length },
+            { id: 'incoming', label: 'Incoming', icon: '📬', badge: save.incomingOffers?.length || 0 },
+            {
+              id: 'contracts',
+              label: 'Contracts',
+              icon: '📝',
+              badge: criticalExpiringCount > 0 ? `${criticalExpiringCount} Due` : expiringContracts.length,
+              badgeAlert: criticalExpiringCount > 0,
+            },
+            { id: 'shortlist', label: 'Shortlist', icon: '⭐', badge: shortlistedPlayers.length },
+            { id: 'history', label: 'History', icon: '📜', badge: save.transfersHistory?.length || 0 },
+            { id: 'board', label: 'Board', icon: '🏛️', badge: `${boardStatus.confidence}%` },
+          ].map((tab) => {
+            const isSelected = subTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  if (subTab === tab.id) {
+                    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+                  } else {
+                    setSubTab(tab.id as typeof subTab);
+                    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                  }
+                }}
+                className={`py-1.5 px-2.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-display font-black uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap cursor-pointer transition-all ${
+                  isSelected
+                    ? 'office-nav-tab-active shadow-sm'
+                    : 'office-nav-tab'
+                }`}
+              >
+                <span>{tab.icon}</span>
+                <span>{tab.label}</span>
+                <span className={`text-[9px] font-mono px-1.5 py-0.2 rounded-md ${
+                  isSelected
+                    ? tab.badgeAlert
+                      ? 'bg-rose-500 text-white font-bold'
+                      : 'bg-white/25 text-white font-bold'
+                    : tab.badgeAlert
+                    ? 'bg-rose-100 text-rose-700 border border-rose-300 font-bold animate-pulse'
+                    : 'bg-slate-200/90 text-slate-700 font-bold'
+                }`}>
+                  {tab.badge}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+        {/* Subtle right-edge scroll fade indicator on mobile screens */}
+        <div className="pointer-events-none absolute right-0 top-0 bottom-1.5 w-6 bg-gradient-to-l from-[#f8fafc] to-transparent sm:hidden" />
+      </div>
 
       {/* SUB-VIEW 1: PLAYER MARKET */}
       {subTab === 'market' && (
@@ -1533,21 +1592,21 @@ export function TransferHub({
                         <span className="font-display font-black text-blue-600 text-lg">
                           {formatCurrency(offer.offeredFee)}
                         </span>
-                        {offer.sellOnPercent && offer.sellOnPercent > 0 && (
+                        {(offer.sellOnPercent ?? 0) > 0 && (
                           <span className="text-[10px] font-mono text-blue-700 block font-bold">
                             +{offer.sellOnPercent}% Sell-On
                           </span>
                         )}
-                        {(offer.appearanceMilestoneFee || offer.goalMilestoneFee || offer.buyBackFee) && (
+                        {Boolean((offer.appearanceMilestoneFee ?? 0) > 0 || (offer.goalMilestoneFee ?? 0) > 0 || (offer.buyBackFee ?? 0) > 0) && (
                           <div className="flex flex-col gap-0.5 text-[10px] text-amber-700 font-mono pt-1 text-right">
-                            {offer.appearanceMilestoneFee && (
-                              <span>+{formatCurrency(offer.appearanceMilestoneFee)} ({offer.appearanceThreshold || 20} apps)</span>
+                            {(offer.appearanceMilestoneFee ?? 0) > 0 && (
+                              <span>+{formatCurrency(offer.appearanceMilestoneFee!)} ({offer.appearanceThreshold || 20} apps)</span>
                             )}
-                            {offer.goalMilestoneFee && (
-                              <span>+{formatCurrency(offer.goalMilestoneFee)} ({offer.goalThreshold || 15} goals)</span>
+                            {(offer.goalMilestoneFee ?? 0) > 0 && (
+                              <span>+{formatCurrency(offer.goalMilestoneFee!)} ({offer.goalThreshold || 15} goals)</span>
                             )}
-                            {offer.buyBackFee && (
-                              <span className="text-blue-700 font-bold">🔁 {formatCurrency(offer.buyBackFee)} Buy-Back</span>
+                            {(offer.buyBackFee ?? 0) > 0 && (
+                              <span className="text-blue-700 font-bold">🔁 {formatCurrency(offer.buyBackFee!)} Buy-Back</span>
                             )}
                           </div>
                         )}
@@ -1634,7 +1693,7 @@ export function TransferHub({
             {/* Quick KPI Counters */}
             <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 p-2 rounded-2xl shadow-2xs">
               <div className="px-3 py-1.5 rounded-xl bg-white border border-slate-200/80 text-center shadow-xs">
-                <span className="text-[9px] uppercase font-bold text-slate-500 block">Critical (&le;1y)</span>
+                <span className="text-[9px] uppercase font-bold text-slate-500 block">Critical (≤ 1y)</span>
                 <span className={`text-sm font-display font-black ${
                   criticalExpiringCount > 0 ? 'text-rose-600 font-bold' : 'text-slate-400'
                 }`}>
@@ -1708,7 +1767,7 @@ export function TransferHub({
           <div data-no-swipe="true" className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
             {[
               { id: 'all', label: 'All Players', count: save.squad.length },
-              { id: 'critical', label: 'Critical (&le; 1 Yr)', count: criticalExpiringCount, alert: criticalExpiringCount > 0 },
+              { id: 'critical', label: 'Critical (≤ 1 Yr)', count: criticalExpiringCount, alert: criticalExpiringCount > 0 },
               { id: 'two_years', label: '2 Years Left', count: save.squad.filter((p) => (p.contractYears ?? 2) === 2).length },
             ].map((f) => (
               <button
@@ -1723,7 +1782,11 @@ export function TransferHub({
               >
                 <span>{f.label}</span>
                 <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-md ${
-                  f.alert ? 'bg-rose-100 text-rose-700 font-bold border border-rose-300' : 'bg-slate-200 text-slate-700'
+                  contractsFilter === f.id
+                    ? 'bg-white/25 text-white border border-white/40 font-bold'
+                    : f.alert
+                    ? 'bg-rose-100 text-rose-700 font-bold border border-rose-300'
+                    : 'bg-white text-slate-700 border border-slate-300/80 font-bold'
                 }`}>
                   {f.count}
                 </span>
@@ -3160,7 +3223,7 @@ export function TransferHub({
                       <div className="space-y-1.5">
                         <div className="grid grid-cols-3 gap-1 text-[9px] font-bold text-center">
                           <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 rounded py-0.5">
-                            🟢 Fair (&le; {formatCurrency(ballpark.maxReasonable)})
+                            🟢 Fair (≤ {formatCurrency(ballpark.maxReasonable)})
                           </span>
                           <span className="text-amber-800 bg-amber-50 border border-amber-200 rounded py-0.5">
                             🟡 Ambitious ({formatCurrency(ballpark.maxReasonable)} - {formatCurrency(ballpark.ambitiousLimit)})

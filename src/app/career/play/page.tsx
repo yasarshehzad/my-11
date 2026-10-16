@@ -1662,7 +1662,7 @@ function CareerPlayHubContent() {
       {/* Main Hub Layout */}
       <main
         data-office-ui="true"
-        className={`relative z-10 flex-1 w-full mx-auto flex flex-col gap-2.5 sm:gap-3 px-2 sm:px-4 py-2 sm:py-4 ${
+        className={`relative z-10 flex-1 w-full mx-auto flex flex-col gap-2.5 sm:gap-3 px-2 sm:px-4 py-2 sm:py-4 safe-pb ${
           activeTab === 'overview'
             ? 'max-w-[440px] sm:max-w-[480px]'
             : 'max-w-4xl'
@@ -1876,10 +1876,44 @@ function CareerPlayHubContent() {
                 <circle cx="18" cy="12" r="2" />
               </svg>
               <span className="text-[11px] font-bold tracking-tight leading-tight">
-                {activeTab === 'table' ? 'Table' : activeTab === 'cups' ? 'Cups' : activeTab === 'settings' ? 'Settings' : 'More'}
+                {['table', 'cups', 'settings'].includes(activeTab) ? 'More ▾' : 'More'}
               </span>
             </button>
           </nav>
+
+          {/* Persistent Subsection Switcher when inside More views (Table / Cups / Settings) */}
+          {['table', 'cups', 'settings'].includes(activeTab) && (
+            <nav
+              aria-label="More Subsections Switcher"
+              data-office-ui="true"
+              data-no-swipe="true"
+              className="office-floating-card rounded-2xl p-1 mt-2 grid grid-cols-3 gap-1 select-none shadow-xs text-xs"
+            >
+              {[
+                { id: 'table', label: 'League Table', icon: '📊' },
+                { id: 'cups', label: 'Cups & Europe', icon: '🏆' },
+                { id: 'settings', label: 'Settings', icon: '⚙️' },
+              ].map((sub) => {
+                const isSubActive = activeTab === sub.id;
+                return (
+                  <button
+                    key={sub.id}
+                    type="button"
+                    data-office-ui="true"
+                    onClick={() => handleTabChange(sub.id as typeof activeTab)}
+                    className={`py-1.5 px-1.5 sm:px-2 rounded-xl font-display font-black text-[11px] sm:text-xs uppercase tracking-wider flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                      isSubActive
+                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs'
+                        : 'office-nav-tab-inactive hover:bg-slate-100'
+                    }`}
+                  >
+                    <span className="text-xs">{sub.icon}</span>
+                    <span className="truncate">{sub.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          )}
 
           {/* More Menu Popover */}
           {isMoreMenuOpen && (
@@ -3430,11 +3464,11 @@ function CareerPlayHubContent() {
         >
           <div className="bg-slate-900 border border-slate-700/80 rounded-3xl p-6 sm:p-7 max-w-lg w-full space-y-5 shadow-2xl text-left relative">
             <header className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-widest text-blue-400 bg-blue-950/80 border border-blue-800/80 px-2.5 py-0.5 rounded-full inline-block font-display">
-                  Official Calendar Announcement
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full inline-block font-display">
+                  Official Announcement
                 </span>
-                <span className="text-xs font-mono font-bold text-slate-400">
+                <span className="text-xs font-mono font-bold text-slate-500">
                   8 July {save.season.yearStart}
                 </span>
               </div>

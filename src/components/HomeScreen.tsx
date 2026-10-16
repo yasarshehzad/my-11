@@ -113,7 +113,7 @@ export function HomeScreen({
             <span className="text-emerald-500">●</span> 38-Game Rapid Sim
           </span>
           <span className="text-[10px] font-bold office-subcard px-2.5 py-1 rounded-full text-[var(--office-text-primary)] flex items-center gap-1 shadow-2xs">
-            <span className="text-cyan-500">●</span> 344 Iconic Season Cards
+            <span className="text-cyan-500">●</span> 3,200+ Iconic Season Cards
           </span>
           <span className="text-[10px] font-bold office-subcard px-2.5 py-1 rounded-full text-[var(--office-text-primary)] flex items-center gap-1 shadow-2xs">
             <span className="text-indigo-500">●</span> 20 English Top-Flight Clubs

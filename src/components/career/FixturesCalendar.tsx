@@ -503,17 +503,17 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
                 }
 
                 // Visual Accents depending on outcome or state
-                let cardAccent = 'border-slate-200/90 bg-white hover:border-slate-300';
+                let cardAccent = 'border-slate-200/80 bg-white hover:border-slate-300';
                 if (isUpcoming) {
-                  cardAccent = 'border-blue-500 bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-white shadow-xs ring-1 ring-blue-500/30';
+                  cardAccent = 'border-l-[3px] border-l-blue-600 border-slate-200/80 bg-gradient-to-r from-blue-50/50 via-indigo-50/20 to-white shadow-xs ring-1 ring-blue-500/20';
                 } else if (userResult === 'W') {
-                  cardAccent = 'border-l-4 border-l-emerald-500 border-slate-200/90 bg-white hover:border-slate-300';
+                  cardAccent = 'border-l-[3px] border-l-emerald-500 border-slate-200/80 bg-white hover:border-slate-300';
                 } else if (userResult === 'D') {
-                  cardAccent = 'border-l-4 border-l-amber-500 border-slate-200/90 bg-white hover:border-slate-300';
+                  cardAccent = 'border-l-[3px] border-l-amber-500 border-slate-200/80 bg-white hover:border-slate-300';
                 } else if (userResult === 'L') {
-                  cardAccent = 'border-l-4 border-l-rose-500 border-slate-200/90 bg-white hover:border-slate-300';
+                  cardAccent = 'border-l-[3px] border-l-rose-500 border-slate-200/80 bg-white hover:border-slate-300';
                 } else if (isUserMatch) {
-                  cardAccent = 'border-l-4 border-l-blue-400 border-slate-200/90 bg-white hover:border-slate-300';
+                  cardAccent = 'border-l-[3px] border-l-blue-400 border-slate-200/80 bg-white hover:border-slate-300';
                 }
 
                 return (

@@ -617,7 +617,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
               <button
                 type="button"
                 onClick={() => setShowRegistrationModal(true)}
-                className="py-1 px-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-[10px] font-display font-black uppercase tracking-wider shadow-2xs transition-all cursor-pointer flex items-center gap-1 active:scale-95 whitespace-nowrap shrink-0"
+                className="py-1 px-2.5 rounded-lg bg-gradient-to-r from-teal-600 via-emerald-600 to-blue-600 hover:from-teal-500 hover:to-blue-500 text-white text-[10px] font-display font-black uppercase tracking-wider shadow-2xs transition-all cursor-pointer flex items-center gap-1 active:scale-95 whitespace-nowrap shrink-0"
               >
                 <span>Manage</span>
                 <span>›</span>
@@ -643,7 +643,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
           <select
             value={currentFormation}
             onChange={(e) => handleFormationChange(e.target.value)}
-            className="bg-slate-50 border border-slate-300 rounded-xl px-2 py-1 text-xs font-display font-black text-[#0b1536] focus:outline-none focus:border-blue-500 cursor-pointer shadow-2xs"
+            className="bg-slate-50 border border-slate-300 rounded-xl px-2 py-1 text-xs font-display font-black text-[#0b1536] focus:outline-none focus:border-teal-500 cursor-pointer shadow-2xs"
             aria-label="Formation select"
           >
             {(['4 at the back', '3 at the back', '5 at the back'] as const).map((cat) => (
@@ -659,7 +659,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
 
           <button
             onClick={handleAutoPick}
-            className="py-1 px-2.5 rounded-xl border border-blue-200 bg-blue-50/80 hover:bg-blue-100 text-blue-700 text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap min-h-[30px] shadow-2xs flex items-center gap-1 active:scale-95"
+            className="py-1 px-2.5 rounded-xl border border-teal-200 bg-teal-50/90 hover:bg-teal-100 text-teal-800 text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap min-h-[30px] shadow-2xs flex items-center gap-1 active:scale-95"
             title="Automatically pick highest-rated team sheet"
           >
             <span>⚡</span>
@@ -679,7 +679,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
             }}
             className={`py-1 px-2.5 rounded-lg text-xs font-display font-black uppercase transition-all cursor-pointer ${
               viewMode === 'pitch'
-                ? 'office-nav-tab-active shadow-xs'
+                ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-xs'
                 : 'office-nav-tab-inactive'
             }`}
           >
@@ -696,7 +696,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
             }}
             className={`py-1 px-2.5 rounded-lg text-xs font-display font-black uppercase transition-all cursor-pointer ${
               viewMode === 'list'
-                ? 'office-nav-tab-active shadow-xs'
+                ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-xs'
                 : 'office-nav-tab-inactive'
             }`}
           >
@@ -713,7 +713,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
             }}
             className={`py-1 px-2 rounded-lg text-xs font-display font-black uppercase transition-all flex items-center gap-1 cursor-pointer ${
               viewMode === 'academy'
-                ? 'office-nav-tab-active shadow-xs'
+                ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-xs'
                 : 'office-nav-tab-inactive'
             }`}
           >
@@ -2245,7 +2245,10 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
             </span>
           </div>
         </div>
-        <div className="text-[10px] sm:text-[11px] font-display font-black text-[#0b1536] truncate leading-tight mt-1" title={player.name}>
+        <div
+          className="text-[9.5px] sm:text-[10.5px] font-display font-black text-[#0b1536] leading-[1.12] mt-0.5 line-clamp-2 break-words min-h-[22px] flex items-center justify-center text-center px-0.5"
+          title={player.name}
+        >
           {player.name}
         </div>
         <div className="text-[8px] text-slate-500 font-semibold truncate mt-0.5 flex items-center justify-center gap-1">

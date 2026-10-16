@@ -101,7 +101,7 @@ export default function CareerEntryPage() {
   return (
     <div
       data-theme={theme}
-      className="min-h-screen my11-canvas text-foreground font-sans flex flex-col w-full overflow-x-hidden"
+      className="min-h-screen my11-canvas text-foreground font-sans flex flex-col w-full overflow-x-hidden safe-pb"
     >
       {/* Toast Notification */}
       {toastMessage && (

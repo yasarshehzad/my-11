@@ -158,24 +158,24 @@ export function LeagueTable({ standings, userClubId, userClub, fixtures = [], us
                     const zone = getQualificationZone(position);
 
                     let posBadgeClass = 'text-slate-500 font-bold';
-                    let rowBorderClass = 'border-l-4 border-l-transparent';
+                    let rowBorderClass = 'border-l-[3px] border-l-transparent';
                     let zoneBg = '';
 
                     if (zone === 'champions_league') {
                       posBadgeClass = 'text-blue-700 font-display font-black';
-                      rowBorderClass = 'border-l-4 border-l-blue-600';
+                      rowBorderClass = 'border-l-[3px] border-l-blue-600';
                       zoneBg = 'bg-blue-50/15';
                     } else if (zone === 'europa_league') {
                       posBadgeClass = 'text-amber-700 font-display font-black';
-                      rowBorderClass = 'border-l-4 border-l-amber-500';
+                      rowBorderClass = 'border-l-[3px] border-l-amber-500';
                       zoneBg = 'bg-amber-50/15';
                     } else if (zone === 'conference_league') {
                       posBadgeClass = 'text-teal-700 font-display font-black';
-                      rowBorderClass = 'border-l-4 border-l-teal-500';
+                      rowBorderClass = 'border-l-[3px] border-l-teal-500';
                       zoneBg = 'bg-teal-50/15';
                     } else if (zone === 'relegation') {
                       posBadgeClass = 'text-rose-700 font-display font-black';
-                      rowBorderClass = 'border-l-4 border-l-rose-500';
+                      rowBorderClass = 'border-l-[3px] border-l-rose-500';
                       zoneBg = 'bg-rose-50/15';
                     }
 
