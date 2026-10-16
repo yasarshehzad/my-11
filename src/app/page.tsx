@@ -106,10 +106,10 @@ export default function DraftedXIGame() {
   return (
     <div className="min-h-screen my11-canvas text-foreground font-sans flex flex-col w-full overflow-x-hidden p-3 sm:p-5 select-none">
       {/* Floating MY-11 Header Card */}
-      <header className="office-floating-card w-full max-w-4xl mx-auto rounded-[24px] p-3 sm:p-4 mb-4 flex items-center justify-between shadow-md">
+      <header className="office-floating-card w-full max-w-4xl mx-auto rounded-[24px] p-3 sm:p-4 mb-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-400 via-blue-500 to-fuchsia-500 p-0.5 shadow-md flex items-center justify-center">
-            <div className="w-full h-full rounded-full bg-[var(--office-card-bg)] flex items-center justify-center font-display font-black text-xs text-[var(--office-text-primary)]">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-400 via-blue-500 to-fuchsia-500 p-0.5 shadow-sm flex items-center justify-center">
+            <div className="w-full h-full rounded-full bg-white flex items-center justify-center font-display font-black text-xs text-[#1d5eff]">
               👑
             </div>
           </div>
@@ -120,7 +120,7 @@ export default function DraftedXIGame() {
                 game.returnHome();
               }
             }}
-            className="text-base sm:text-lg font-display font-black tracking-tight text-[var(--office-text-primary)] uppercase hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+            className="text-base sm:text-lg font-display font-black tracking-tight text-[var(--office-text-primary)] uppercase hover:text-[#1d5eff] transition-colors cursor-pointer"
           >
             MY-<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600">11</span>
           </button>
@@ -128,7 +128,7 @@ export default function DraftedXIGame() {
 
         <div className="flex items-center gap-2">
           {game.streakStats.currentDailyStreak > 0 && (
-            <span className="office-subcard text-[10px] font-mono font-bold text-slate-300 px-2.5 py-1 rounded-full uppercase tracking-wider leading-none">
+            <span className="office-subcard text-[10px] font-mono font-bold text-amber-700 bg-amber-50/80 px-2.5 py-1 rounded-full uppercase tracking-wider leading-none border border-amber-200">
               🔥 {game.streakStats.currentDailyStreak}d
             </span>
           )}
@@ -138,7 +138,7 @@ export default function DraftedXIGame() {
             <Link
               href="/career"
               title="Career Mode"
-              className="office-subcard text-[10px] font-mono font-bold tracking-wider uppercase px-2.5 py-1.5 rounded-xl text-slate-300 hover:text-white transition-colors flex items-center gap-1 leading-none"
+              className="office-subcard text-[10px] font-mono font-bold tracking-wider uppercase px-2.5 py-1.5 rounded-xl text-[var(--office-text-secondary)] hover:text-[var(--office-text-primary)] transition-colors flex items-center gap-1 leading-none shadow-2xs"
             >
               Career Mode
             </Link>
@@ -154,7 +154,7 @@ export default function DraftedXIGame() {
               }
             }}
             title="View Squad History & Personal Bests"
-            className="w-8 h-8 rounded-full flex items-center justify-center office-subcard text-xs text-slate-400 hover:text-white cursor-pointer active:scale-95 transition-transform"
+            className="w-8 h-8 rounded-full flex items-center justify-center office-subcard text-xs text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] cursor-pointer active:scale-95 transition-transform shadow-2xs"
           >
             📜
           </button>
@@ -163,7 +163,7 @@ export default function DraftedXIGame() {
           <button
             onClick={handleOpenHelpModal}
             title="How to Play & Game Guides"
-            className="w-8 h-8 rounded-full flex items-center justify-center office-subcard text-xs text-slate-400 hover:text-white cursor-pointer active:scale-95 transition-transform"
+            className="w-8 h-8 rounded-full flex items-center justify-center office-subcard text-xs text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] cursor-pointer active:scale-95 transition-transform shadow-2xs"
           >
             ❓
           </button>
@@ -291,17 +291,17 @@ export default function DraftedXIGame() {
       </main>
 
       {/* App Footer */}
-      <footer className="w-full py-8 text-center border-t border-slate-900 text-[9px] font-bold text-slate-500 uppercase tracking-widest select-none space-y-4 px-4 bg-slate-950/60 backdrop-blur-sm">
-        <p className="max-w-md mx-auto text-[8px] text-slate-600 leading-normal font-semibold">
-          This is an unofficial football draft game and is not affiliated with any club, league, player, governing body, or rights holder.
+      <footer className="w-full py-8 text-center border-t border-[var(--office-divider)] text-[10px] font-bold text-[var(--office-text-muted)] uppercase tracking-widest select-none space-y-3 px-4 bg-white/60 backdrop-blur-md mt-8">
+        <p className="max-w-md mx-auto text-[9px] text-[var(--office-text-muted)] leading-relaxed font-medium normal-case">
+          MY-11 is an unofficial, independent football draft and management simulation game. Not affiliated with, sponsored by, or endorsed by any club, league, or governing body.
         </p>
-        <div className="flex justify-center gap-4 text-slate-400 normal-case">
-          <Link href="/privacy" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Privacy Policy</Link>
-          <span>•</span>
-          <Link href="/terms" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Terms of Service</Link>
+        <div className="flex justify-center items-center gap-4 text-[var(--office-text-secondary)] normal-case text-xs font-semibold">
+          <Link href="/privacy" className="hover:text-[#1d5eff] transition-colors">Privacy Policy</Link>
+          <span className="text-[var(--office-text-muted)]">•</span>
+          <Link href="/terms" className="hover:text-[#1d5eff] transition-colors">Terms of Service</Link>
         </div>
-        <p className="text-slate-600">
-          MY-11 © 2026 • CREATED FOR FANS
+        <p className="text-[var(--office-text-muted)] text-[9px] font-mono tracking-wider">
+          MY-11 © 2026 • BUILT FOR FOOTBALL FANS
         </p>
       </footer>
 

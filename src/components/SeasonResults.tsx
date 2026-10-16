@@ -116,8 +116,8 @@ export function SeasonResults({
 
   const getFinishAccentClass = (pos: number) => {
     if (pos === 1) return 'from-amber-400 to-yellow-500 text-yellow-950 border-yellow-500 shadow-amber-500/20';
-    if (pos <= 4) return 'from-slate-200 to-slate-450 text-zinc-950 border-slate-350';
-    return 'from-slate-900 to-slate-950 text-slate-300 border-slate-900';
+    if (pos <= 4) return 'from-indigo-100 to-blue-100 text-blue-950 border-blue-200';
+    return 'from-slate-100 to-slate-200 text-slate-800 border-slate-300';
   };
 
   const isSoClose = simResult.wins === 36 || simResult.wins === 37;
@@ -219,22 +219,22 @@ export function SeasonResults({
 
       {/* Results Header */}
       <div className="text-center mt-2 relative z-10 leading-none">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-950/60 border border-blue-500/25 text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-3">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold uppercase tracking-widest mb-3 shadow-sm">
           ⚽ FIXTURES COMPLETE
         </div>
         
-        <h2 className="text-3xl font-display font-black text-foreground uppercase tracking-tight">
+        <h2 className="text-3xl font-display font-black text-[#0b1536] uppercase tracking-tight">
           CAMPAIGN DEBRIEF
         </h2>
         
         {isDailyChallenge && todayChallenge && (
-          <p className="text-[10px] text-slate-400 font-bold tracking-widest uppercase mt-2">
-            Daily Challenge: <span className="text-blue-400 font-display">{todayChallenge.title}</span>
+          <p className="text-[10px] text-slate-600 font-bold tracking-widest uppercase mt-2">
+            Daily Challenge: <span className="text-blue-600 font-display">{todayChallenge.title}</span>
           </p>
         )}
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mt-1.5">
-          <p className="text-[10px] text-slate-450 font-bold tracking-widest uppercase">
-            League: <span className="text-blue-400 font-display">
+          <p className="text-[10px] text-slate-600 font-bold tracking-widest uppercase">
+            League: <span className="text-blue-600 font-display">
               {
                 {
                   english: 'English Premier League 🇬🇧',
@@ -246,9 +246,9 @@ export function SeasonResults({
               }
             </span>
           </p>
-          <span className="text-slate-700 hidden sm:inline">•</span>
-          <p className="text-[10px] text-slate-450 font-bold tracking-widest uppercase">
-            Mode: <span className="text-blue-400 font-display">
+          <span className="text-slate-300 hidden sm:inline">•</span>
+          <p className="text-[10px] text-slate-600 font-bold tracking-widest uppercase">
+            Mode: <span className="text-blue-600 font-display">
               {simResult.draftModifier === 'quick' ? '⚡ QUICK DRAFT' : simResult.draftModifier === 'mystery' ? '❓ MYSTERY DRAFT' : '⏱️ CLASSIC DRAFT'}
             </span>
           </p>
@@ -257,20 +257,20 @@ export function SeasonResults({
 
       {/* Heartbreak / Celebratory Banner */}
       {isSoClose && (
-        <div className="w-full p-4.5 rounded-3xl bg-gradient-to-r from-rose-950/60 to-slate-950/80 border border-rose-500/25 relative z-10 text-center animate-pulse shadow-xl">
+        <div className="w-full p-4.5 rounded-3xl office-subcard border-rose-200 bg-rose-50/90 relative z-10 text-center animate-pulse shadow-sm">
           <span className="text-xl">💔</span>
-          <h3 className="text-sm font-display font-black text-rose-455 uppercase mt-1 leading-none">So close to perfection!</h3>
-          <p className="text-[10px] text-slate-450 mt-1.5 leading-relaxed max-w-xs mx-auto font-medium">
+          <h3 className="text-sm font-display font-black text-rose-800 uppercase mt-1 leading-none">So close to perfection!</h3>
+          <p className="text-[10px] text-rose-700 mt-1.5 leading-relaxed max-w-xs mx-auto font-medium">
             Just {38 - simResult.wins} slip-up{38 - simResult.wins > 1 ? 's' : ''} cost you the legendary 38-0 Invincibles campaign.
           </p>
         </div>
       )}
 
       {simResult.wins === 38 && (
-        <div className="w-full p-5 rounded-3xl bg-gradient-to-r from-amber-950/60 to-slate-950/80 border border-amber-500/25 relative z-10 text-center animate-bounce shadow-xl">
+        <div className="w-full p-5 rounded-3xl office-subcard border-amber-300 bg-amber-50/90 relative z-10 text-center animate-bounce shadow-sm">
           <span className="text-xl">👑</span>
-          <h3 className="text-sm font-display font-black text-amber-400 uppercase mt-1 leading-none">THE PERFECT SEASON!</h3>
-          <p className="text-[10px] text-slate-450 mt-1.5 leading-relaxed max-w-xs mx-auto font-semibold">
+          <h3 className="text-sm font-display font-black text-amber-800 uppercase mt-1 leading-none">THE PERFECT SEASON!</h3>
+          <p className="text-[10px] text-amber-700 mt-1.5 leading-relaxed max-w-xs mx-auto font-semibold">
             38 wins. 0 draws. 0 losses. You have achieved absolute football immortality!
           </p>
         </div>
@@ -278,12 +278,12 @@ export function SeasonResults({
 
       {/* Target Replay Outcome Banner */}
       {simResult.beatTargetResult && (
-        <div className={`w-full p-4.5 rounded-3xl border relative z-10 text-center shadow-xl ${
+        <div className={`w-full p-4.5 rounded-3xl border relative z-10 text-center shadow-sm ${
           simResult.beatTargetResult.beaten
-            ? 'bg-gradient-to-r from-blue-500/10 via-indigo-500/5 to-purple-500/10 border-blue-500/40 text-blue-400'
+            ? 'office-subcard border-blue-200 bg-blue-50/80 text-blue-900'
             : simResult.beatTargetResult.matched
-            ? 'bg-gradient-to-r from-amber-950/80 to-slate-950/80 border-amber-500/40 text-amber-400'
-            : 'bg-gradient-to-r from-slate-900/80 to-slate-950/80 border-slate-800 text-slate-400'
+            ? 'office-subcard border-amber-200 bg-amber-50/80 text-amber-900'
+            : 'office-subcard border-slate-200 bg-slate-50/80 text-slate-800'
         }`}>
           <div className="flex items-center justify-center gap-1.5">
             <span className="text-lg">
@@ -297,7 +297,7 @@ export function SeasonResults({
                 : `SO CLOSE (${simResult.wins} wins vs target ${simResult.beatTargetResult.targetWins})`}
             </h3>
           </div>
-          <p className="text-[10px] text-slate-300 mt-1 font-semibold">
+          <p className="text-[10px] text-slate-600 mt-1 font-semibold">
             {simResult.beatTargetResult.beaten
               ? `You conquered the challenge target of ${simResult.beatTargetResult.targetWins} wins with ${simResult.wins} wins!`
               : simResult.beatTargetResult.matched
@@ -309,10 +309,10 @@ export function SeasonResults({
 
       {/* New Personal Best Banner */}
       {simResult.newPersonalBests && simResult.newPersonalBests.length > 0 && (
-        <div className="w-full p-4 rounded-3xl bg-gradient-to-r from-blue-500/15 via-indigo-500/10 to-purple-500/15 border border-blue-500/40 relative z-10 text-center shadow-2xl animate-pulse">
+        <div className="w-full p-4 rounded-3xl office-subcard border-blue-200 bg-blue-50/90 relative z-10 text-center shadow-sm animate-pulse">
           <div className="flex items-center justify-center gap-1.5">
             <span className="text-lg">🏆</span>
-            <h3 className="text-xs font-display font-black text-blue-400 uppercase tracking-widest">
+            <h3 className="text-xs font-display font-black text-blue-700 uppercase tracking-widest">
               NEW PERSONAL BEST!
             </h3>
           </div>
@@ -320,7 +320,7 @@ export function SeasonResults({
             {simResult.newPersonalBests.map((record, idx) => (
               <span
                 key={idx}
-                className="text-[9px] font-display font-black uppercase px-2.5 py-1 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-300"
+                className="text-[9px] font-display font-black uppercase px-2.5 py-1 rounded-full bg-blue-100 border border-blue-200 text-blue-800"
               >
                 {record}
               </span>
@@ -338,43 +338,43 @@ export function SeasonResults({
           <div className={`px-5 py-2 rounded-2xl bg-gradient-to-r border shadow-lg font-display font-black text-sm uppercase tracking-wider mb-4 leading-none ${
             challengeBeaten 
               ? 'from-blue-600 via-indigo-600 to-violet-600 text-white border-blue-400 shadow-blue-500/20'
-              : 'from-rose-500 to-red-700 text-rose-950 border-rose-500'
+              : 'from-rose-500 to-red-700 text-white border-rose-400'
           }`}>
             {challengeBeaten ? '✅ CHALLENGE CLEARED!' : '❌ CHALLENGE FAILED'}
           </div>
         ) : (
-          <div className={`px-5 py-2 rounded-2xl bg-gradient-to-r border shadow-lg font-display font-black text-xs uppercase tracking-wider ${getFinishAccentClass(simResult.leaguePosition)} mb-4 leading-none`}>
+          <div className={`px-5 py-2 rounded-2xl bg-gradient-to-r border shadow-sm font-display font-black text-xs uppercase tracking-wider ${getFinishAccentClass(simResult.leaguePosition)} mb-4 leading-none`}>
             {leagueFinishLabel}
           </div>
         )}
 
-        <p className="text-5xl font-display font-black text-foreground leading-none tracking-tight">
+        <p className="text-5xl font-display font-black text-[#0b1536] leading-none tracking-tight">
           {simResult.wins}W - {simResult.draws}D - {simResult.losses}L
         </p>
         
-        <p className="text-xs font-bold text-muted-foreground mt-2 leading-none uppercase tracking-wide">
-          Record: <span className="text-foreground font-extrabold">{simResult.points} PTS</span> • Goals: <span className="text-foreground font-extrabold">{simResult.goalsFor}F / {simResult.goalsAgainst}A</span>
+        <p className="text-xs font-bold text-slate-600 mt-2 leading-none uppercase tracking-wide">
+          Record: <span className="text-[#0b1536] font-extrabold">{simResult.points} PTS</span> • Goals: <span className="text-[#0b1536] font-extrabold">{simResult.goalsFor}F / {simResult.goalsAgainst}A</span>
         </p>
 
-        <div className="h-[1.5px] w-12 bg-border my-4" />
+        <div className="h-[1.5px] w-12 bg-[var(--office-divider)] my-4" />
 
-        <p className="text-xs font-semibold text-muted-foreground max-w-sm leading-relaxed italic">
+        <p className="text-xs font-semibold text-slate-600 max-w-sm leading-relaxed italic">
           "{simResult.summary}"
         </p>
 
         {/* Season Verdict & Expectation Band */}
         {simResult.seasonStory && (
-          <div className="flex flex-wrap items-center justify-center gap-2 mt-4 pt-3 border-t border-border/40 w-full">
+          <div className="flex flex-wrap items-center justify-center gap-2 mt-4 pt-3 border-t border-[var(--office-divider)] w-full">
             <span className={`text-[9px] font-black px-3 py-1 rounded-full border uppercase tracking-wider font-display leading-none ${
               simResult.seasonStory.verdict === 'Exceeded expectations'
-                ? 'bg-blue-500/15 text-blue-400 border-blue-500/30'
+                ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
                 : simResult.seasonStory.verdict === 'Underperformed'
-                ? 'bg-rose-500/15 text-rose-400 border-rose-500/30'
-                : 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30'
+                ? 'bg-rose-100 text-rose-800 border-rose-300'
+                : 'bg-indigo-100 text-indigo-800 border-indigo-300'
             }`}>
               VERDICT: {simResult.seasonStory.verdict}
             </span>
-            <span className="text-[9px] font-bold text-muted-foreground office-subcard px-2.5 py-1 rounded-full uppercase tracking-wider font-display">
+            <span className="text-[9px] font-bold text-slate-600 office-subcard px-2.5 py-1 rounded-full uppercase tracking-wider font-display">
               Expected: {simResult.seasonStory.expectedWinsBand}
             </span>
           </div>
@@ -384,58 +384,58 @@ export function SeasonResults({
       {/* Season Narrative & Story Review Card */}
       {simResult.seasonStory && (
         <div className="w-full p-6 office-floating-card z-10 flex flex-col gap-4 select-none">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 pb-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--office-divider)] pb-3">
             <div>
-              <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">
+              <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">
                 Official Season Review
               </span>
               <h3 className="text-lg font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 uppercase tracking-tight mt-0.5">
                 {simResult.seasonStory.title}
               </h3>
             </div>
-            <span className="text-[9px] font-extrabold px-2.5 py-1 rounded-xl office-subcard text-foreground font-display">
+            <span className="text-[9px] font-extrabold px-2.5 py-1 rounded-xl office-subcard text-[#0b1536] font-display">
               {simResult.seasonStory.longestStreak.description}
             </span>
           </div>
 
-          <div className="flex flex-col gap-3 text-xs leading-relaxed text-muted-foreground">
+          <div className="flex flex-col gap-3 text-xs leading-relaxed text-slate-600">
             <div className="p-3.5 rounded-2xl office-subcard">
-              <span className="text-[9.5px] font-extrabold text-blue-500 uppercase tracking-wider font-display block mb-1">
+              <span className="text-[9.5px] font-extrabold text-blue-600 uppercase tracking-wider font-display block mb-1">
                 🏁 The Opening 10 Matchdays
               </span>
-              <p className="text-foreground/80 font-medium">{simResult.seasonStory.howStarted}</p>
+              <p className="text-slate-800 font-medium">{simResult.seasonStory.howStarted}</p>
             </div>
 
             {simResult.seasonStory.turningPoint && (
               <div className="p-3.5 rounded-2xl office-subcard">
-                <span className="text-[9.5px] font-extrabold text-amber-500 uppercase tracking-wider font-display block mb-1">
+                <span className="text-[9.5px] font-extrabold text-amber-600 uppercase tracking-wider font-display block mb-1">
                   ⚡ The Turning Point
                 </span>
-                <p className="text-foreground/80 font-medium">{simResult.seasonStory.turningPoint}</p>
+                <p className="text-slate-800 font-medium">{simResult.seasonStory.turningPoint}</p>
               </div>
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="p-3.5 rounded-2xl bg-blue-950/10 border border-blue-500/20">
-                <span className="text-[9.5px] font-extrabold text-blue-500 uppercase tracking-wider font-display block mb-1">
+              <div className="p-3.5 rounded-2xl office-subcard border-blue-200 bg-blue-50/60">
+                <span className="text-[9.5px] font-extrabold text-blue-600 uppercase tracking-wider font-display block mb-1">
                   💪 Why It Worked
                 </span>
-                <p className="text-foreground/80 font-medium text-[11px]">{simResult.seasonStory.whyItWorked}</p>
+                <p className="text-slate-800 font-medium text-[11px]">{simResult.seasonStory.whyItWorked}</p>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-rose-950/10 border border-rose-500/20">
-                <span className="text-[9.5px] font-extrabold text-rose-500 uppercase tracking-wider font-display block mb-1">
+              <div className="p-3.5 rounded-2xl office-subcard border-rose-200 bg-rose-50/60">
+                <span className="text-[9.5px] font-extrabold text-rose-600 uppercase tracking-wider font-display block mb-1">
                   ⚠️ What Held You Back
                 </span>
-                <p className="text-foreground/80 font-medium text-[11px]">{simResult.seasonStory.whatHeldBack}</p>
+                <p className="text-slate-800 font-medium text-[11px]">{simResult.seasonStory.whatHeldBack}</p>
               </div>
             </div>
 
             <div className="p-3.5 rounded-2xl office-subcard">
-              <span className="text-[9.5px] font-extrabold text-indigo-500 uppercase tracking-wider font-display block mb-1">
+              <span className="text-[9.5px] font-extrabold text-indigo-600 uppercase tracking-wider font-display block mb-1">
                 🏆 Final Campaign Appraisal
               </span>
-              <p className="text-foreground/80 font-medium">{simResult.seasonStory.howEnded}</p>
+              <p className="text-slate-800 font-medium">{simResult.seasonStory.howEnded}</p>
             </div>
           </div>
         </div>
@@ -453,11 +453,11 @@ export function SeasonResults({
             {simResult.highlights.map((hl, i) => (
               <div
                 key={i}
-                className="p-4 rounded-2xl glass border border-slate-900 flex flex-col justify-between gap-3 text-left"
+                className="p-4 rounded-2xl office-subcard border-[var(--office-divider)] bg-white/95 flex flex-col justify-between gap-3 text-left shadow-sm"
               >
                 <div>
                   <div className="flex justify-between items-center mb-1.5 leading-none">
-                    <span className="text-[8.5px] font-black uppercase text-amber-400 font-display tracking-wider">
+                    <span className="text-[8.5px] font-black uppercase text-amber-700 font-display tracking-wider">
                       {hl.categoryLabel}
                     </span>
                     <span className="text-[9px] font-extrabold text-slate-500 font-display">
@@ -465,29 +465,29 @@ export function SeasonResults({
                     </span>
                   </div>
                   <div className="flex justify-between items-baseline mb-1">
-                    <h4 className="text-sm font-display font-black text-foreground uppercase truncate">
+                    <h4 className="text-sm font-display font-black text-[#0b1536] uppercase truncate">
                       vs {hl.match.opponent}
                     </h4>
-                    <span className="text-sm font-display font-black text-blue-400">
+                    <span className="text-sm font-display font-black text-blue-600">
                       {hl.match.ourScore} - {hl.match.opponentScore}
                     </span>
                   </div>
                   {hl.match.headline && (
-                    <p className="text-[11px] font-bold text-slate-300 leading-snug">
+                    <p className="text-[11px] font-bold text-slate-700 leading-snug">
                       "{hl.match.headline}"
                     </p>
                   )}
                   {hl.match.scorers && hl.match.scorers.length > 0 && (
-                    <p className="text-[9.5px] text-blue-400 font-semibold mt-1">
+                    <p className="text-[9.5px] text-blue-600 font-semibold mt-1">
                       ⚽ {hl.match.scorers.join(', ')}
                     </p>
                   )}
                 </div>
 
-                <div className="pt-2 border-t border-slate-900/60 flex flex-col gap-1">
+                <div className="pt-2 border-t border-[var(--office-divider)] flex flex-col gap-1">
                   {hl.match.motm && (
-                    <span className="text-[8.5px] text-slate-400 font-medium">
-                      ⭐ <span className="font-bold text-foreground">{hl.match.motm.player.displayName}</span>: {hl.match.motm.reason}
+                    <span className="text-[8.5px] text-slate-600 font-medium">
+                      ⭐ <span className="font-bold text-[#0b1536]">{hl.match.motm.player.displayName}</span>: {hl.match.motm.reason}
                     </span>
                   )}
                   <p className="text-[9.5px] text-slate-500 font-normal leading-normal italic">
@@ -541,11 +541,11 @@ export function SeasonResults({
       </div>
 
       {/* Manager's Tactical Report Card */}
-      <div className="w-full p-6 rounded-[32px] glass border border-slate-900 z-10 flex flex-col gap-4 shadow-xl">
+      <div className="w-full p-6 rounded-3xl office-floating-card z-10 flex flex-col gap-4 shadow-md">
         <div className="flex items-center gap-2">
           <span className="text-xl">📋</span>
           <div className="flex-1 leading-none">
-            <h3 className="text-md font-display font-black text-foreground uppercase tracking-tight">
+            <h3 className="text-md font-display font-black text-[#0b1536] uppercase tracking-tight">
               Manager's Tactical Report
             </h3>
             <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">
@@ -557,9 +557,9 @@ export function SeasonResults({
         <div className="flex flex-col gap-3.5 mt-2">
           {getManagerAdvice().map((adv, idx) => {
             const borderColors = {
-              warning: 'border-rose-500/25 bg-rose-950/10 text-rose-350',
-              good: 'border-blue-500/25 bg-blue-950/10 text-blue-300',
-              info: 'border-indigo-500/25 bg-indigo-950/10 text-indigo-350',
+              warning: 'border-rose-200 bg-rose-50/70 text-rose-900',
+              good: 'border-emerald-200 bg-emerald-50/70 text-emerald-900',
+              info: 'border-indigo-200 bg-indigo-50/70 text-indigo-900',
             }[adv.status as 'warning' | 'good' | 'info'];
 
             const icon = {
@@ -572,10 +572,10 @@ export function SeasonResults({
               <div key={idx} className={`p-4.5 rounded-2xl border ${borderColors} flex gap-3.5 leading-normal text-xs`}>
                 <span className="text-base flex-shrink-0 mt-0.5">{icon}</span>
                 <div className="flex-1 space-y-1">
-                  <h4 className="font-extrabold uppercase text-[11px] tracking-wide leading-tight text-foreground">
+                  <h4 className="font-extrabold uppercase text-[11px] tracking-wide leading-tight text-[#0b1536]">
                     {adv.title}
                   </h4>
-                  <p className="text-slate-400 font-medium leading-relaxed">
+                  <p className="text-slate-600 font-medium leading-relaxed">
                     {adv.desc}
                   </p>
                 </div>
@@ -589,30 +589,30 @@ export function SeasonResults({
       {(simResult.topScorer || simResult.cleanSheets !== undefined) && (
         <div className="w-full grid grid-cols-2 gap-3 z-10">
           {simResult.topScorer && (
-            <div className="p-4 rounded-2xl glass border border-amber-500/20 bg-amber-950/10 flex flex-col justify-between">
-              <span className="text-[9px] font-black uppercase text-amber-400 tracking-wider flex items-center gap-1">
+            <div className="p-4 rounded-2xl office-subcard border-amber-200 bg-amber-50/80 flex flex-col justify-between shadow-sm">
+              <span className="text-[9px] font-black uppercase text-amber-800 tracking-wider flex items-center gap-1">
                 🥇 Golden Boot
               </span>
               <div className="mt-2">
-                <h4 className="text-sm font-display font-black text-foreground uppercase truncate">
+                <h4 className="text-sm font-display font-black text-[#0b1536] uppercase truncate">
                   {simResult.topScorer.player.displayName}
                 </h4>
-                <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
+                <p className="text-[10px] text-slate-600 font-semibold mt-0.5">
                   {simResult.topScorer.goals} Goals in 38 Matches
                 </p>
               </div>
             </div>
           )}
           {simResult.cleanSheets !== undefined && (
-            <div className="p-4 rounded-2xl glass border border-blue-500/20 bg-blue-950/10 flex flex-col justify-between">
-              <span className="text-[9px] font-black uppercase text-blue-400 tracking-wider flex items-center gap-1">
+            <div className="p-4 rounded-2xl office-subcard border-blue-200 bg-blue-50/80 flex flex-col justify-between shadow-sm">
+              <span className="text-[9px] font-black uppercase text-blue-800 tracking-wider flex items-center gap-1">
                 🧤 Golden Glove
               </span>
               <div className="mt-2">
-                <h4 className="text-sm font-display font-black text-foreground uppercase">
+                <h4 className="text-sm font-display font-black text-[#0b1536] uppercase">
                   {simResult.cleanSheets} Clean Sheets
                 </h4>
-                <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
+                <p className="text-[10px] text-slate-600 font-semibold mt-0.5">
                   {38 - simResult.cleanSheets} Matches Conceded
                 </p>
               </div>
@@ -625,38 +625,38 @@ export function SeasonResults({
       <div className="w-full z-10 flex flex-col gap-3">
         <button
           onClick={onToggleFixturesBreakdown}
-          className="w-full p-4.5 rounded-2xl bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 transition-all duration-300 flex items-center justify-between cursor-pointer active:scale-99"
+          className="w-full p-4.5 rounded-2xl office-subcard border-[var(--office-divider)] hover:bg-slate-50 transition-all duration-300 flex items-center justify-between cursor-pointer active:scale-99 shadow-sm"
         >
           <div className="flex items-center gap-2.5">
             <span className="text-lg">📅</span>
-            <span className="text-xs font-display font-black text-foreground uppercase tracking-wider">
+            <span className="text-xs font-display font-black text-[#0b1536] uppercase tracking-wider">
               {showFixturesBreakdown ? 'Hide' : 'Show'} Detailed Season Fixtures
             </span>
           </div>
-          <span className="text-xs text-slate-450 font-extrabold font-display">
+          <span className="text-xs text-slate-500 font-extrabold font-display">
             {showFixturesBreakdown ? '▲' : '▼'}
           </span>
         </button>
 
         {showFixturesBreakdown && (
-          <div className="w-full p-4.5 rounded-[32px] glass border border-slate-900 max-h-[420px] overflow-y-auto flex flex-col gap-2.5 scroll-smooth custom-scrollbar animate-card-deal">
+          <div className="w-full p-4.5 rounded-3xl office-floating-card max-h-[420px] overflow-y-auto flex flex-col gap-2.5 scroll-smooth custom-scrollbar animate-card-deal shadow-md">
             {simResult.matches.map((match, idx) => {
               const outcomeColors = {
-                W: 'bg-emerald-950/20 border-emerald-500/20 text-emerald-450',
-                D: 'bg-slate-500/10 border-slate-900 text-slate-350',
-                L: 'bg-rose-950/20 border-rose-500/20 text-rose-455',
+                W: 'bg-emerald-50/80 border-emerald-200 text-emerald-900',
+                D: 'bg-slate-50/80 border-slate-200 text-slate-800',
+                L: 'bg-rose-50/80 border-rose-200 text-rose-900',
               }[match.outcome];
 
               const outcomeBadge = {
-                W: 'bg-emerald-950/30 border-emerald-500/30 text-emerald-450',
-                D: 'bg-slate-900 border-slate-800 text-slate-450',
-                L: 'bg-rose-950/30 border-rose-500/30 text-rose-455',
+                W: 'bg-emerald-100 border-emerald-300 text-emerald-800',
+                D: 'bg-slate-200 border-slate-300 text-slate-700',
+                L: 'bg-rose-100 border-rose-300 text-rose-800',
               }[match.outcome];
 
               return (
                 <div
                   key={idx}
-                  className={`flex items-start gap-4 p-3.5 rounded-2xl border ${outcomeColors} text-left leading-normal`}
+                  className={`flex items-start gap-4 p-3.5 rounded-2xl border ${outcomeColors} text-left leading-normal shadow-sm`}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center w-full leading-none">
@@ -667,31 +667,31 @@ export function SeasonResults({
                         {match.outcome === 'W' ? 'WIN' : match.outcome === 'D' ? 'DRAW' : 'LOSS'}
                       </span>
                     </div>
-                    <h4 className="text-sm font-display font-black text-foreground mt-1.5 leading-none uppercase">
+                    <h4 className="text-sm font-display font-black text-[#0b1536] mt-1.5 leading-none uppercase">
                       vs {match.opponent}
                     </h4>
                     {match.headline && (
-                      <p className="text-[11px] font-bold text-slate-300 leading-snug mt-1">
+                      <p className="text-[11px] font-bold text-slate-700 leading-snug mt-1">
                         "{match.headline}"
                       </p>
                     )}
                     {match.scorers && match.scorers.length > 0 && (
-                      <p className="text-[10px] text-blue-400 font-bold leading-normal mt-1 flex items-center gap-1 flex-wrap">
+                      <p className="text-[10px] text-blue-600 font-bold leading-normal mt-1 flex items-center gap-1 flex-wrap">
                         <span>⚽</span> {match.scorers.join(', ')}
                       </p>
                     )}
                     {match.motm && (
-                      <p className="text-[9.5px] text-amber-400 font-semibold mt-1">
+                      <p className="text-[9.5px] text-amber-700 font-semibold mt-1">
                         ⭐ MOTM: {match.motm.player.displayName} ({match.motm.reason})
                       </p>
                     )}
-                    <p className="text-[10px] text-slate-400 leading-normal mt-1 italic">
+                    <p className="text-[10px] text-slate-500 leading-normal mt-1 italic">
                       {match.summary || getMatchCommentary(match)}
                     </p>
                   </div>
 
                   <div className="text-right flex flex-col items-end gap-1 flex-shrink-0 self-center leading-none">
-                    <span className="text-md font-display font-black text-foreground tracking-tight">
+                    <span className="text-md font-display font-black text-[#0b1536] tracking-tight">
                       {match.ourScore} - {match.opponentScore}
                     </span>
                     <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">
@@ -709,7 +709,7 @@ export function SeasonResults({
       <div className="mt-4 mb-6 relative z-10 flex flex-col sm:flex-row gap-3 w-full">
         <button
           onClick={onStartDraft}
-          className="flex-1 py-4 px-6 rounded-2xl office-subcard text-foreground hover:bg-slate-200/50 dark:hover:bg-slate-800/50 font-display font-black text-sm uppercase tracking-wider transition-all duration-300 transform active:scale-98 cursor-pointer text-center shadow-sm"
+          className="flex-1 py-4 px-6 rounded-2xl office-subcard text-[#0b1536] hover:bg-slate-100 font-display font-black text-sm uppercase tracking-wider transition-all duration-300 transform active:scale-98 cursor-pointer text-center shadow-sm"
         >
           🎮 Build Another Team
         </button>

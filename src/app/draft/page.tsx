@@ -103,22 +103,22 @@ function DraftPageContent() {
   return (
     <div className="min-h-screen my11-canvas text-foreground font-sans flex flex-col w-full overflow-x-hidden p-3 sm:p-5 select-none">
       {/* Draft Mode Floating MY-11 Header */}
-      <header className="office-floating-card w-full max-w-4xl mx-auto rounded-[24px] p-3 sm:p-4 mb-4 flex items-center justify-between shadow-md">
+      <header className="office-floating-card w-full max-w-4xl mx-auto rounded-[24px] p-3 sm:p-4 mb-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-2.5">
           <button
             onClick={handleReturnHome}
             title="Return to Home"
-            className="office-subcard px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-colors flex items-center gap-1.5 cursor-pointer"
+            className="office-subcard px-3 py-1.5 rounded-xl text-xs font-bold text-[var(--office-text-secondary)] hover:text-[var(--office-text-primary)] transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
           >
             ← <span>Home</span>
           </button>
           <div className="h-4 w-px bg-[var(--office-divider)]" />
           <button
             onClick={handleReturnHome}
-            className="text-base sm:text-lg font-display font-black tracking-tight text-[var(--office-text-primary)] uppercase hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer flex items-center gap-1.5"
+            className="text-base sm:text-lg font-display font-black tracking-tight text-[var(--office-text-primary)] uppercase hover:text-[#1d5eff] transition-colors cursor-pointer flex items-center gap-1.5"
           >
             <span>MY-11</span>
-            <span className="text-[10px] font-mono font-bold tracking-wider text-blue-600 dark:text-blue-400 office-subcard px-2 py-0.5 rounded-full uppercase">
+            <span className="text-[10px] font-mono font-bold tracking-wider text-[#1d5eff] bg-blue-50/80 border border-blue-200 px-2 py-0.5 rounded-full uppercase">
               Draft
             </span>
           </button>
@@ -126,7 +126,7 @@ function DraftPageContent() {
 
         <div className="flex items-center gap-2">
           {game.streakStats.currentDailyStreak > 0 && (
-            <span className="office-subcard text-[10px] font-mono font-bold text-slate-300 px-2.5 py-1 rounded-full uppercase tracking-wider leading-none">
+            <span className="office-subcard text-[10px] font-mono font-bold text-amber-700 bg-amber-50/80 px-2.5 py-1 rounded-full uppercase tracking-wider leading-none border border-amber-200">
               🔥 {game.streakStats.currentDailyStreak}d
             </span>
           )}
@@ -135,7 +135,7 @@ function DraftPageContent() {
           <Link
             href="/career"
             title="Career Mode"
-            className="office-subcard text-[10px] font-mono font-bold tracking-wider uppercase px-2.5 py-1.5 rounded-xl text-slate-300 hover:text-white transition-colors flex items-center gap-1 leading-none"
+            className="office-subcard text-[10px] font-mono font-bold tracking-wider uppercase px-2.5 py-1.5 rounded-xl text-[var(--office-text-secondary)] hover:text-[var(--office-text-primary)] transition-colors flex items-center gap-1 leading-none shadow-2xs"
           >
             Career
           </Link>
@@ -150,7 +150,7 @@ function DraftPageContent() {
               }
             }}
             title="View Squad History & Personal Bests"
-            className="w-8 h-8 rounded-full flex items-center justify-center office-subcard text-xs text-slate-400 hover:text-white cursor-pointer active:scale-95 transition-transform"
+            className="w-8 h-8 rounded-full flex items-center justify-center office-subcard text-xs text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] cursor-pointer active:scale-95 transition-transform shadow-2xs"
           >
             📜
           </button>
@@ -159,7 +159,7 @@ function DraftPageContent() {
           <button
             onClick={() => setShowTutorial(true)}
             title="How to Play & Game Guides"
-            className="w-8 h-8 rounded-full flex items-center justify-center office-subcard text-xs text-slate-400 hover:text-white cursor-pointer active:scale-95 transition-transform"
+            className="w-8 h-8 rounded-full flex items-center justify-center office-subcard text-xs text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] cursor-pointer active:scale-95 transition-transform shadow-2xs"
           >
             ❓
           </button>
@@ -270,17 +270,17 @@ function DraftPageContent() {
       </main>
 
       {/* App Footer */}
-      <footer className="w-full py-8 text-center border-t border-slate-900 text-[9px] font-bold text-slate-500 uppercase tracking-widest select-none space-y-4 px-4 bg-slate-950/60 backdrop-blur-sm">
-        <p className="max-w-md mx-auto text-[8px] text-slate-600 leading-normal font-semibold">
-          This is an unofficial football draft game and is not affiliated with any club, league, player, governing body, or rights holder.
+      <footer className="w-full py-8 text-center border-t border-[var(--office-divider)] text-[10px] font-bold text-[var(--office-text-muted)] uppercase tracking-widest select-none space-y-3 px-4 bg-white/60 backdrop-blur-md mt-8">
+        <p className="max-w-md mx-auto text-[9px] text-[var(--office-text-muted)] leading-relaxed font-medium normal-case">
+          MY-11 is an unofficial, independent football draft and management simulation game. Not affiliated with, sponsored by, or endorsed by any club, league, or governing body.
         </p>
-        <div className="flex justify-center gap-4 text-slate-400 normal-case">
-          <Link href="/privacy" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Privacy Policy</Link>
-          <span>•</span>
-          <Link href="/terms" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Terms of Service</Link>
+        <div className="flex justify-center items-center gap-4 text-[var(--office-text-secondary)] normal-case text-xs font-semibold">
+          <Link href="/privacy" className="hover:text-[#1d5eff] transition-colors">Privacy Policy</Link>
+          <span className="text-[var(--office-text-muted)]">•</span>
+          <Link href="/terms" className="hover:text-[#1d5eff] transition-colors">Terms of Service</Link>
         </div>
-        <p className="text-slate-600">
-          MY-11 © 2026 • CREATED FOR FANS
+        <p className="text-[var(--office-text-muted)] text-[9px] font-mono tracking-wider">
+          MY-11 © 2026 • BUILT FOR FOOTBALL FANS
         </p>
       </footer>
 
@@ -316,7 +316,7 @@ export default function DraftPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center font-display font-black uppercase text-sm">
+        <div className="min-h-screen my11-canvas text-[var(--office-text-primary)] flex items-center justify-center font-display font-black uppercase text-sm">
           Loading Draft Mode...
         </div>
       }

@@ -56,42 +56,42 @@ export function SimulationScreen({
   return (
     <div className={`flex flex-col items-center justify-between min-h-[80vh] w-full max-w-sm mx-auto px-4 sm:px-6 py-8 space-y-6 overflow-hidden ${simIndex === 38 ? 'pb-24' : ''}`}>
       <div className="text-center w-full mt-2 leading-none">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-950/60 border border-blue-500/25 text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-3">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold uppercase tracking-widest mb-3 shadow-sm">
           ⚡ SIMULATING LEAGUE SEASON
         </div>
-        <h2 className="text-3xl font-display font-black text-foreground uppercase tracking-tight">
+        <h2 className="text-3xl font-display font-black text-[#0b1536] uppercase tracking-tight">
           FIXTURES PROGRESS
         </h2>
-        <p className="text-xs text-slate-400 mt-2 font-bold tracking-wider uppercase">
+        <p className="text-xs text-slate-600 mt-2 font-bold tracking-wider uppercase">
           Game {simIndex}/38 played ({progressPercent}%)
         </p>
       </div>
 
       {/* Standings Widget */}
       <div className="w-full office-floating-card p-5 flex flex-col gap-3">
-        <div className="flex justify-between items-center border-b border-border/40 pb-3 leading-none">
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Live Standings</span>
-          <span className="text-sm font-display font-black text-blue-600 dark:text-blue-400 uppercase tracking-wide">
+        <div className="flex justify-between items-center border-b border-[var(--office-divider)] pb-3 leading-none">
+          <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Live Standings</span>
+          <span className="text-sm font-display font-black text-blue-600 uppercase tracking-wide">
             {livePoints} PTS
           </span>
         </div>
 
         <div className="grid grid-cols-4 gap-2.5 text-center">
           <div className="office-subcard p-2.5 leading-none">
-            <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider">Wins</span>
-            <p className="text-lg font-display font-black text-foreground mt-1">{liveWins}</p>
+            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Wins</span>
+            <p className="text-lg font-display font-black text-[#0b1536] mt-1">{liveWins}</p>
           </div>
           <div className="office-subcard p-2.5 leading-none">
-            <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider">Draws</span>
-            <p className="text-lg font-display font-black text-foreground mt-1">{liveDraws}</p>
+            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Draws</span>
+            <p className="text-lg font-display font-black text-[#0b1536] mt-1">{liveDraws}</p>
           </div>
           <div className="office-subcard p-2.5 leading-none">
-            <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider">Losses</span>
-            <p className="text-lg font-display font-black text-foreground mt-1">{liveLosses}</p>
+            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Losses</span>
+            <p className="text-lg font-display font-black text-[#0b1536] mt-1">{liveLosses}</p>
           </div>
           <div className="office-subcard p-2.5 leading-none">
-            <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider">Diff</span>
-            <p className="text-lg font-display font-black text-blue-600 dark:text-blue-400 mt-1">
+            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Diff</span>
+            <p className="text-lg font-display font-black text-blue-600 mt-1">
               {liveGoalsFor - liveGoalsAgainst > 0 ? '+' : ''}
               {liveGoalsFor - liveGoalsAgainst}
             </p>
@@ -101,7 +101,7 @@ export function SimulationScreen({
 
       {/* Season Match Outcome Grid */}
       <div className="w-full office-floating-card p-4 flex flex-col gap-2 select-none">
-        <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest px-1">
+        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest px-1">
           Season Fixtures Progress Tracker
         </span>
         <div 
@@ -112,23 +112,23 @@ export function SimulationScreen({
             const played = idx < simIndex;
             const match = played && simResult ? simResult.matches[idx] : null;
             
-            let bgColor = 'bg-slate-900 border border-slate-800';
+            let bgColor = 'bg-slate-200 border border-slate-300';
             let textLabel = '';
             let glowEffect = '';
             
             if (match) {
               if (match.outcome === 'W') {
-                bgColor = 'bg-blue-600 border border-blue-400';
+                bgColor = 'bg-emerald-500 border border-emerald-400 text-white';
                 textLabel = 'W';
-                glowEffect = 'shadow-[0_0_8px_rgba(16,185,129,0.5)]';
+                glowEffect = 'shadow-[0_0_8px_rgba(16,185,129,0.3)]';
               } else if (match.outcome === 'D') {
-                bgColor = 'bg-slate-500 border border-slate-400';
+                bgColor = 'bg-slate-400 border border-slate-300 text-white';
                 textLabel = 'D';
-                glowEffect = 'shadow-[0_0_6px_rgba(148,163,184,0.4)]';
+                glowEffect = 'shadow-[0_0_6px_rgba(148,163,184,0.3)]';
               } else {
-                bgColor = 'bg-rose-500 border border-rose-450';
+                bgColor = 'bg-rose-500 border border-rose-400 text-white';
                 textLabel = 'L';
-                glowEffect = 'shadow-[0_0_8px_rgba(239,68,68,0.5)]';
+                glowEffect = 'shadow-[0_0_8px_rgba(239,68,68,0.3)]';
               }
             }
 
@@ -138,8 +138,8 @@ export function SimulationScreen({
               <div
                 key={idx}
                 title={match ? `Game ${idx + 1} vs ${match.opponent}: ${match.ourScore}-${match.opponentScore} (${match.outcome})` : `Game ${idx + 1} (Unplayed)`}
-                className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-black font-display leading-none text-zinc-950 transition-all duration-300 ${bgColor} ${glowEffect} ${
-                  isCurrent ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-950 animate-pulse' : ''
+                className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-black font-display leading-none transition-all duration-300 ${bgColor} ${glowEffect} ${
+                  isCurrent ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-white animate-pulse' : ''
                 } ${played ? 'animate-card-deal' : ''}`}
               >
                 {textLabel}
@@ -159,7 +159,7 @@ export function SimulationScreen({
             <button
               onClick={onSkipSimulation}
               type="button"
-              className="text-[9px] font-bold text-slate-400 hover:text-blue-400 transition-colors uppercase tracking-wider flex items-center gap-1 cursor-pointer active:scale-95"
+              className="text-[9px] font-bold text-slate-500 hover:text-blue-600 transition-colors uppercase tracking-wider flex items-center gap-1 cursor-pointer active:scale-95"
             >
               Skip to Results ⏩
             </button>
@@ -170,13 +170,13 @@ export function SimulationScreen({
         {liveMoment && (
           <div 
             aria-live="polite"
-            className="w-full mb-2 px-3 py-2 rounded-xl bg-slate-900/90 border border-blue-500/25 flex items-center justify-between text-[10px] text-slate-200 animate-fade-in shadow-sm select-none"
+            className="w-full mb-2 px-3 py-2 rounded-xl office-subcard border-blue-200 bg-blue-50/70 flex items-center justify-between text-[10px] text-slate-800 animate-fade-in shadow-sm select-none"
           >
             <div className="flex items-center gap-1.5 truncate">
-              <span className="text-blue-400 font-extrabold font-display uppercase tracking-wider flex-shrink-0">
+              <span className="text-blue-600 font-extrabold font-display uppercase tracking-wider flex-shrink-0">
                 {liveMoment.badge}:
               </span>
-              <span className="truncate text-slate-300 font-medium">
+              <span className="truncate text-slate-700 font-medium">
                 {liveMoment.text}
               </span>
             </div>
@@ -190,9 +190,15 @@ export function SimulationScreen({
           {liveMatches.length > 0 ? (
             liveMatches.map((match, idx) => {
               const outcomeColors = {
-                W: 'bg-emerald-950/20 border-emerald-500/20 text-emerald-450',
-                D: 'bg-slate-500/10 border-slate-800 text-slate-350',
-                L: 'bg-rose-950/20 border-rose-500/20 text-rose-455',
+                W: 'bg-emerald-50/80 border-emerald-200 text-emerald-900',
+                D: 'bg-slate-50/80 border-slate-200 text-slate-800',
+                L: 'bg-rose-50/80 border-rose-200 text-rose-900',
+              }[match.outcome];
+
+              const badgeColors = {
+                W: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+                D: 'bg-slate-200 text-slate-700 border-slate-300',
+                L: 'bg-rose-100 text-rose-800 border-rose-300',
               }[match.outcome];
 
               const outcomeLabel = {
@@ -204,32 +210,32 @@ export function SimulationScreen({
               return (
                 <div
                   key={38 - idx}
-                  className={`flex justify-between items-center p-3 rounded-2xl border ${outcomeColors} animate-card-deal`}
+                  className={`flex justify-between items-center p-3 rounded-2xl border ${outcomeColors} animate-card-deal shadow-sm`}
                 >
                   <div className="flex flex-col leading-none">
                     <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">
                       Game {38 - idx}
                     </span>
-                    <span className="text-xs font-bold text-foreground uppercase mt-1">
+                    <span className="text-xs font-bold text-[#0b1536] uppercase mt-1">
                       vs {match.opponent}
                     </span>
                     {match.headline && (
-                      <span className="text-[8.5px] text-slate-400 font-medium mt-1 truncate max-w-[200px]">
+                      <span className="text-[8.5px] text-slate-600 font-medium mt-1 truncate max-w-[200px]">
                         {match.headline}
                       </span>
                     )}
                     {match.scorers && match.scorers.length > 0 && (
-                      <span className="text-[8.5px] text-blue-400 font-bold mt-1 flex items-center gap-1">
+                      <span className="text-[8.5px] text-blue-600 font-bold mt-1 flex items-center gap-1">
                         ⚽ {match.scorers.join(', ')}
                       </span>
                     )}
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-display font-black text-foreground">
+                    <span className="text-sm font-display font-black text-[#0b1536]">
                       {match.ourScore} - {match.opponentScore}
                     </span>
-                    <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border uppercase leading-none font-display">
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border uppercase leading-none font-display ${badgeColors}`}>
                       {outcomeLabel}
                     </span>
                   </div>
@@ -237,8 +243,8 @@ export function SimulationScreen({
               );
             })
           ) : (
-            <div className="h-full flex items-center justify-center border border-dashed border-slate-900 rounded-3xl py-12">
-              <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest animate-pulse">
+            <div className="h-full flex items-center justify-center border border-dashed border-slate-300 rounded-3xl py-12">
+              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest animate-pulse">
                 Awaiting kick-off...
               </span>
             </div>
@@ -248,7 +254,7 @@ export function SimulationScreen({
 
       {/* Progress Bar & Proceed Action Button */}
       <div className="w-full mt-4 space-y-4">
-        <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-900">
+        <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden border border-slate-300/80">
           <div
             style={{ width: `${progressPercent}%` }}
             className="h-full bg-gradient-to-r from-[#00d2ff] via-[#1d5eff] to-[#7c3aed] rounded-full transition-all duration-300 ease-out"
@@ -260,7 +266,7 @@ export function SimulationScreen({
             <button
               onClick={onSkipSimulation}
               type="button"
-              className="py-2.5 px-5 rounded-2xl text-xs font-black uppercase tracking-wider office-subcard text-foreground hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all cursor-pointer active:scale-95 flex items-center gap-1.5 shadow-sm"
+              className="py-2.5 px-5 rounded-2xl text-xs font-black uppercase tracking-wider office-subcard text-[#0b1536] hover:bg-slate-100 transition-all cursor-pointer active:scale-95 flex items-center gap-1.5 shadow-sm"
             >
               <span>⏩</span> Skip Simulation
             </button>

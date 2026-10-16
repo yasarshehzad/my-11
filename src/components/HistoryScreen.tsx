@@ -52,14 +52,14 @@ export function HistoryScreen({
   const getModeBadge = (mode: DraftModifier | 'daily_challenge') => {
     switch (mode) {
       case 'quick':
-        return { label: '⚡ QUICK', bg: 'bg-amber-500/15 text-amber-400 border-amber-500/30' };
+        return { label: '⚡ QUICK', bg: 'bg-amber-100 text-amber-800 border-amber-300' };
       case 'mystery':
-        return { label: '❓ MYSTERY', bg: 'bg-purple-500/15 text-purple-400 border-purple-500/30' };
+        return { label: '❓ MYSTERY', bg: 'bg-purple-100 text-purple-800 border-purple-300' };
       case 'daily_challenge':
-        return { label: '🏆 CHALLENGE', bg: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30' };
+        return { label: '🏆 CHALLENGE', bg: 'bg-indigo-100 text-indigo-800 border-indigo-300' };
       case 'classic':
       default:
-        return { label: '⏱️ CLASSIC', bg: 'bg-blue-500/15 text-blue-500 border-blue-500/30' };
+        return { label: '⏱️ CLASSIC', bg: 'bg-blue-100 text-blue-800 border-blue-300' };
     }
   };
 
@@ -74,7 +74,7 @@ export function HistoryScreen({
         <div className="flex justify-between items-center w-full">
           <button
             onClick={() => setActiveEntry(null)}
-            className="py-2 px-3.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+            className="office-subcard py-2 px-3.5 rounded-xl text-slate-700 hover:text-[#0b1536] font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 shadow-sm"
           >
             ← Back to History
           </button>
@@ -86,36 +86,36 @@ export function HistoryScreen({
 
         {/* Run Outcome Hero Card */}
         <div className="w-full flex flex-col items-center p-6 office-floating-card text-center relative overflow-hidden">
-          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
             {formatDate(activeEntry.completedAt)} • {activeEntry.formation}
           </div>
 
-          <h2 className="text-2xl font-display font-black text-foreground uppercase tracking-tight">
+          <h2 className="text-2xl font-display font-black text-[#0b1536] uppercase tracking-tight">
             {activeEntry.titleHonour || `Finished #${activeEntry.leaguePosition}`}
           </h2>
 
-          <div className="text-3xl font-display font-black text-blue-500 mt-2">
-            {activeEntry.wins}W <span className="text-slate-600">-</span> {activeEntry.draws}D <span className="text-slate-600">-</span> {activeEntry.losses}L
+          <div className="text-3xl font-display font-black text-blue-600 mt-2">
+            {activeEntry.wins}W <span className="text-slate-400">-</span> {activeEntry.draws}D <span className="text-slate-400">-</span> {activeEntry.losses}L
           </div>
-          <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">
+          <div className="text-xs font-bold text-slate-600 uppercase tracking-wider mt-1">
             {activeEntry.points} Points • {gd >= 0 ? `+${gd}` : gd} GD • {activeEntry.cleanSheets} Clean Sheets
           </div>
 
           {/* Quick Stats Pill */}
-          <div className="flex gap-4 mt-4 pt-4 border-t border-slate-800/60 w-full justify-around text-center">
+          <div className="flex gap-4 mt-4 pt-4 border-t border-[var(--office-divider)] w-full justify-around text-center">
             <div>
               <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block">Squad OVR</span>
-              <span className="text-sm font-display font-black text-foreground">{activeEntry.squadRating}</span>
+              <span className="text-sm font-display font-black text-[#0b1536]">{activeEntry.squadRating}</span>
             </div>
-            <div className="w-[1px] bg-slate-800" />
+            <div className="w-[1px] bg-[var(--office-divider)]" />
             <div>
               <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block">Chemistry</span>
-              <span className="text-sm font-display font-black text-blue-500">{activeEntry.chemistryScore}/100 ({activeEntry.chemistryGrade})</span>
+              <span className="text-sm font-display font-black text-blue-600">{activeEntry.chemistryScore}/100 ({activeEntry.chemistryGrade})</span>
             </div>
-            <div className="w-[1px] bg-slate-800" />
+            <div className="w-[1px] bg-[var(--office-divider)]" />
             <div>
               <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block">MVP</span>
-              <span className="text-sm font-display font-black text-amber-400 truncate max-w-[100px] block">{activeEntry.mvp.name}</span>
+              <span className="text-sm font-display font-black text-amber-700 truncate max-w-[100px] block">{activeEntry.mvp.name}</span>
             </div>
           </div>
         </div>
@@ -123,7 +123,7 @@ export function HistoryScreen({
         {/* Try To Beat This CTA */}
         <button
           onClick={() => onTryToBeat(activeEntry)}
-          className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-blue-500/20 hover:from-blue-500 hover:to-indigo-500 hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer flex items-center justify-center gap-2"
+          className="w-full py-4 px-6 rounded-2xl office-play-match-btn text-white font-display font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer flex items-center justify-center gap-2"
         >
           <span>🎯</span> Try to Beat This ({activeEntry.wins} Wins)
         </button>
@@ -131,7 +131,7 @@ export function HistoryScreen({
         {/* Squad Pitch */}
         <div className="space-y-3">
           <div className="flex justify-between items-center px-1">
-            <h3 className="text-xs font-display font-black text-foreground uppercase tracking-wider">
+            <h3 className="text-xs font-display font-black text-[#0b1536] uppercase tracking-wider">
               Squad XI ({activeEntry.formation})
             </h3>
             <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
@@ -156,12 +156,12 @@ export function HistoryScreen({
       <div className="flex justify-between items-center w-full">
         <button
           onClick={onBackToHome}
-          className="py-2 px-3.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+          className="office-subcard py-2 px-3.5 rounded-xl text-slate-700 hover:text-[#0b1536] font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 shadow-sm"
         >
           ← Home
         </button>
 
-        <h1 className="text-sm font-display font-black text-foreground uppercase tracking-wider">
+        <h1 className="text-sm font-display font-black text-[#0b1536] uppercase tracking-wider">
           📜 Squads & History
         </h1>
 
@@ -173,7 +173,7 @@ export function HistoryScreen({
               }
             }}
             title="Clear history"
-            className="py-1.5 px-2.5 rounded-lg border border-rose-900/40 bg-rose-950/20 text-[9px] font-black text-rose-400 hover:bg-rose-950/40 transition-colors uppercase cursor-pointer"
+            className="py-1.5 px-2.5 rounded-lg border border-rose-200 bg-rose-50 text-[9px] font-black text-rose-700 hover:bg-rose-100 transition-colors uppercase cursor-pointer"
           >
             Clear
           </button>
@@ -186,7 +186,7 @@ export function HistoryScreen({
       <div className="office-floating-card p-4 space-y-3">
         <div className="flex items-center gap-1.5">
           <span className="text-xs">🏆</span>
-          <h2 className="text-[10px] font-display font-black uppercase text-foreground tracking-wider">
+          <h2 className="text-[10px] font-display font-black uppercase text-[#0b1536] tracking-wider">
             Personal Bests
           </h2>
         </div>
@@ -194,44 +194,44 @@ export function HistoryScreen({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
           {/* Overall PB */}
           <div className="office-subcard p-2.5">
-            <span className="text-[7.5px] font-bold text-blue-500 uppercase tracking-widest block">All-Time</span>
-            <div className="text-base font-display font-black text-foreground mt-0.5">
+            <span className="text-[7.5px] font-bold text-blue-600 uppercase tracking-widest block">All-Time</span>
+            <div className="text-base font-display font-black text-[#0b1536] mt-0.5">
               {personalBests.overall ? `${personalBests.overall.bestWins}W` : '—'}
             </div>
-            <span className="text-[8px] font-bold text-muted-foreground block">
+            <span className="text-[8px] font-bold text-slate-500 block">
               {personalBests.overall ? `${personalBests.overall.bestPoints} pts` : 'No runs'}
             </span>
           </div>
 
           {/* Classic PB */}
           <div className="office-subcard p-2.5">
-            <span className="text-[7.5px] font-bold text-muted-foreground uppercase tracking-widest block">Classic</span>
-            <div className="text-base font-display font-black text-foreground mt-0.5">
+            <span className="text-[7.5px] font-bold text-slate-500 uppercase tracking-widest block">Classic</span>
+            <div className="text-base font-display font-black text-[#0b1536] mt-0.5">
               {personalBests.classic ? `${personalBests.classic.bestWins}W` : '—'}
             </div>
-            <span className="text-[8px] font-bold text-muted-foreground block">
+            <span className="text-[8px] font-bold text-slate-500 block">
               {personalBests.classic ? `${personalBests.classic.bestPoints} pts` : 'No runs'}
             </span>
           </div>
 
           {/* Quick PB */}
           <div className="office-subcard p-2.5">
-            <span className="text-[7.5px] font-bold text-amber-500 uppercase tracking-widest block">Quick</span>
-            <div className="text-base font-display font-black text-foreground mt-0.5">
+            <span className="text-[7.5px] font-bold text-amber-700 uppercase tracking-widest block">Quick</span>
+            <div className="text-base font-display font-black text-[#0b1536] mt-0.5">
               {personalBests.quick ? `${personalBests.quick.bestWins}W` : '—'}
             </div>
-            <span className="text-[8px] font-bold text-muted-foreground block">
+            <span className="text-[8px] font-bold text-slate-500 block">
               {personalBests.quick ? `${personalBests.quick.bestPoints} pts` : 'No runs'}
             </span>
           </div>
 
           {/* Mystery PB */}
           <div className="office-subcard p-2.5">
-            <span className="text-[7.5px] font-bold text-purple-500 uppercase tracking-widest block">Mystery</span>
-            <div className="text-base font-display font-black text-foreground mt-0.5">
+            <span className="text-[7.5px] font-bold text-purple-700 uppercase tracking-widest block">Mystery</span>
+            <div className="text-base font-display font-black text-[#0b1536] mt-0.5">
               {personalBests.mystery ? `${personalBests.mystery.bestWins}W` : '—'}
             </div>
-            <span className="text-[8px] font-bold text-muted-foreground block">
+            <span className="text-[8px] font-bold text-slate-500 block">
               {personalBests.mystery ? `${personalBests.mystery.bestPoints} pts` : 'No runs'}
             </span>
           </div>
@@ -258,9 +258,9 @@ export function HistoryScreen({
       {/* History List */}
       <div className="space-y-3">
         {filteredHistory.length === 0 ? (
-          <div className="py-12 px-6 rounded-3xl border border-slate-900 bg-slate-950/40 text-center space-y-3">
+          <div className="py-12 px-6 rounded-3xl border border-slate-200 bg-white/60 text-center space-y-3 shadow-sm">
             <span className="text-3xl block">📋</span>
-            <h3 className="text-sm font-display font-black uppercase text-foreground">
+            <h3 className="text-sm font-display font-black uppercase text-[#0b1536]">
               No Campaign Runs Found
             </h3>
             <p className="text-xs text-slate-500 max-w-xs mx-auto">
@@ -270,7 +270,7 @@ export function HistoryScreen({
             </p>
             <button
               onClick={onBackToHome}
-              className="mt-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-display font-black text-xs uppercase tracking-wider hover:from-blue-500 hover:to-indigo-500 transition-all shadow-sm shadow-blue-500/20 cursor-pointer"
+              className="mt-2 py-2.5 px-4 rounded-xl office-play-match-btn text-white font-display font-black text-xs uppercase tracking-wider shadow-sm cursor-pointer"
             >
               Draft a Squad
             </button>
@@ -278,13 +278,12 @@ export function HistoryScreen({
         ) : (
           filteredHistory.map((entry) => {
             const badge = getModeBadge(entry.draftMode);
-            const isWinRecord = entry.wins >= 30;
 
             return (
               <div
                 key={entry.id}
                 onClick={() => setActiveEntry(entry)}
-                className="w-full rounded-2xl border border-slate-850 bg-slate-900/40 hover:bg-slate-900/80 hover:border-blue-500/30 p-4 transition-all duration-200 cursor-pointer flex flex-col gap-2.5 group active:scale-[0.99]"
+                className="w-full rounded-2xl office-subcard border-[var(--office-divider)] hover:border-blue-400 p-4 transition-all duration-200 cursor-pointer flex flex-col gap-2.5 group active:scale-[0.99] shadow-sm"
               >
                 {/* Header row */}
                 <div className="flex justify-between items-center text-[10px]">
@@ -292,7 +291,7 @@ export function HistoryScreen({
                     <span className={`px-2 py-0.5 rounded-full border text-[8px] font-display font-black uppercase ${badge.bg}`}>
                       {badge.label}
                     </span>
-                    <span className="font-bold text-slate-400 uppercase tracking-wider">
+                    <span className="font-bold text-slate-500 uppercase tracking-wider">
                       {entry.formation}
                     </span>
                   </div>
@@ -304,32 +303,32 @@ export function HistoryScreen({
                 {/* Score & Record row */}
                 <div className="flex justify-between items-baseline">
                   <div>
-                    <span className="text-lg font-display font-black text-foreground group-hover:text-blue-500 transition-colors">
-                      {entry.wins}W <span className="text-slate-600">-</span> {entry.draws}D <span className="text-slate-600">-</span> {entry.losses}L
+                    <span className="text-lg font-display font-black text-[#0b1536] group-hover:text-blue-600 transition-colors">
+                      {entry.wins}W <span className="text-slate-400">-</span> {entry.draws}D <span className="text-slate-400">-</span> {entry.losses}L
                     </span>
-                    <span className="text-xs font-bold text-blue-500 ml-2">
+                    <span className="text-xs font-bold text-blue-600 ml-2">
                       {entry.points} pts
                     </span>
                   </div>
 
                   <span className={`text-[10px] font-display font-black uppercase tracking-wider ${
-                    entry.leaguePosition === 1 ? 'text-amber-400' : 'text-slate-400'
+                    entry.leaguePosition === 1 ? 'text-amber-700' : 'text-slate-600'
                   }`}>
                     {entry.titleHonour || `#${entry.leaguePosition}`}
                   </span>
                 </div>
 
                 {/* Footer details row */}
-                <div className="flex justify-between items-center pt-2 border-t border-slate-800/40 text-[9px] text-slate-400">
+                <div className="flex justify-between items-center pt-2 border-t border-[var(--office-divider)] text-[9px] text-slate-500">
                   <div className="flex items-center gap-2">
                     <span>{entry.squadRating} OVR</span>
                     <span>•</span>
                     <span>{entry.chemistryScore} CHEM ({entry.chemistryGrade})</span>
                     <span>•</span>
-                    <span className="text-amber-400/90 font-semibold truncate max-w-[90px]">★ {entry.mvp.name}</span>
+                    <span className="text-amber-800 font-semibold truncate max-w-[90px]">★ {entry.mvp.name}</span>
                   </div>
 
-                  <span className="text-blue-500 font-bold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
+                  <span className="text-blue-600 font-bold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
                     View Squad ➔
                   </span>
                 </div>

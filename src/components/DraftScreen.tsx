@@ -211,10 +211,10 @@ export function DraftScreen({
       
       {/* Floating Chemistry Toast Notification (Micro-interaction) */}
       {chemistryToast && (
-        <div className={`fixed bottom-36 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-full border shadow-2xl animate-card-deal text-xs font-black uppercase tracking-wider ${
+        <div className={`fixed bottom-36 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-full border shadow-2xl animate-card-deal text-xs font-black uppercase tracking-wider backdrop-blur-md ${
           chemistryToast.type === 'positive'
-            ? 'bg-blue-50 dark:bg-blue-950/90 text-blue-600 dark:text-blue-400 border-blue-500/35 shadow-blue-500/15'
-            : 'bg-rose-950/90 text-rose-455 border-rose-500/35 shadow-rose-500/15'
+            ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-emerald-500/20'
+            : 'bg-rose-50 text-rose-800 border-rose-300 shadow-rose-500/20'
         }`}>
           {chemistryToast.type === 'positive' ? '💚 ' : '💔 '}
           {chemistryToast.text}
@@ -223,11 +223,11 @@ export function DraftScreen({
 
       {/* Replay Target Banner */}
       {targetToBeat && (
-        <div className="w-full py-2.5 px-4 rounded-2xl bg-amber-950/50 border border-amber-500/35 text-amber-300 text-[10px] font-display font-black uppercase tracking-wider flex items-center justify-between shadow-lg shadow-amber-950/30">
+        <div className="w-full py-2.5 px-4 rounded-2xl office-subcard border-amber-300 bg-amber-50/90 text-amber-900 text-[10px] font-display font-black uppercase tracking-wider flex items-center justify-between shadow-sm">
           <span className="flex items-center gap-1.5">
-            <span>🎯</span> TARGET TO BEAT: <span className="text-white font-black">{targetToBeat.targetWins} WINS</span> ({targetToBeat.targetPoints} PTS)
+            <span>🎯</span> TARGET TO BEAT: <span className="text-[#0b1536] font-black">{targetToBeat.targetWins} WINS</span> ({targetToBeat.targetPoints} PTS)
           </span>
-          <span className="text-[8px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-black border border-amber-500/30">
+          <span className="text-[8px] px-2 py-0.5 rounded-full bg-amber-200/80 text-amber-900 font-black border border-amber-300">
             REPLAY
           </span>
         </div>
@@ -237,21 +237,21 @@ export function DraftScreen({
       <div className="flex justify-between items-center w-full leading-none">
         <div>
           <div className="flex items-center gap-1.5 mb-1">
-            <span className="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest block">
+            <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest block">
               {isDailyChallenge ? `🏆 CHALLENGE: ${todayChallenge?.title}` : '⚽ CLASSIC LEAGUE RUN'}
             </span>
             {draftModifier === 'quick' && (
-              <span className="text-[8px] font-display font-black uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">
+              <span className="text-[8px] font-display font-black uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 font-bold">
                 ⚡ Quick
               </span>
             )}
             {draftModifier === 'mystery' && (
-              <span className="text-[8px] font-display font-black uppercase px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30">
+              <span className="text-[8px] font-display font-black uppercase px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-300 font-bold">
                 ❓ Mystery
               </span>
             )}
           </div>
-          <h2 className="text-lg font-display font-black text-foreground uppercase tracking-wider">
+          <h2 className="text-lg font-display font-black text-[#0b1536] uppercase tracking-wider">
             {isFinished ? 'Draft Completed!' : `Pick #${currentSlotIndex + 1} of 11`}
           </h2>
         </div>
@@ -261,7 +261,7 @@ export function DraftScreen({
             <button
               onClick={onUndoPick}
               title="Undo last pick"
-              className="py-2.5 px-3.5 rounded-2xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-foreground hover:bg-slate-800 hover:border-slate-700 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+              className="py-2.5 px-3.5 rounded-2xl office-subcard text-slate-700 hover:text-[#0b1536] font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 shadow-sm"
             >
               <span>↩️</span> Undo
             </button>
@@ -279,7 +279,7 @@ export function DraftScreen({
             <button
               onClick={onUndoPick}
               title="Undo previous pick"
-              className="office-subcard py-2 px-3.5 rounded-xl text-slate-400 hover:text-white font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+              className="office-subcard py-2 px-3.5 rounded-xl text-slate-600 hover:text-[#0b1536] font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 shadow-sm"
             >
               <span>↩️</span> Undo
             </button>
@@ -312,37 +312,37 @@ export function DraftScreen({
       {/* Quick Draft Countdown Timer Bar */}
       {isQuick && (
         <div 
-          className="w-full glass rounded-2xl p-3 border border-amber-500/20 bg-amber-950/10 flex flex-col gap-2 select-none animate-card-deal"
+          className="w-full office-subcard rounded-2xl p-3 border border-amber-300 bg-amber-50/80 flex flex-col gap-2 select-none animate-card-deal shadow-sm"
           role="timer"
           aria-live="off"
           aria-label={`Draft Timer: ${timeLeft} seconds remaining`}
         >
           <div className="flex justify-between items-center text-xs">
-            <span className="font-display font-black uppercase tracking-wider flex items-center gap-1.5 text-foreground text-[11px]">
+            <span className="font-display font-black uppercase tracking-wider flex items-center gap-1.5 text-[#0b1536] text-[11px]">
               <span>⏱️</span>
               <span>QUICK DRAFT TIMER</span>
               {timeLeft <= 3 && (
-                <span className="text-[8.5px] bg-rose-500/20 text-rose-400 border border-rose-500/40 px-1.5 py-0.2 rounded font-sans uppercase font-bold animate-pulse">
+                <span className="text-[8.5px] bg-rose-100 text-rose-700 border border-rose-300 px-1.5 py-0.2 rounded font-sans uppercase font-bold animate-pulse">
                   ⚠️ TIME RUNNING OUT!
                 </span>
               )}
             </span>
             <span className={`font-display font-black text-sm tracking-tight ${
-              timeLeft <= 3 ? 'text-rose-400 animate-pulse text-base' : timeLeft <= 5 ? 'text-amber-400' : 'text-blue-500'
+              timeLeft <= 3 ? 'text-rose-600 animate-pulse text-base' : timeLeft <= 5 ? 'text-amber-700' : 'text-blue-600'
             }`}>
               00:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}
             </span>
           </div>
           
           {/* Progress Bar */}
-          <div className="h-2 w-full bg-slate-950/80 rounded-full overflow-hidden border border-slate-900">
+          <div className="h-2 w-full bg-slate-200/90 rounded-full overflow-hidden border border-slate-300/70">
             <div 
               style={{ width: `${(timeLeft / ROUND_SECONDS) * 100}%` }}
               className={`h-full transition-all duration-1000 ease-linear rounded-full ${
                 timeLeft <= 3 
-                  ? 'bg-gradient-to-r from-rose-600 to-rose-400 shadow-[0_0_10px_rgba(244,63,94,0.5)]'
+                  ? 'bg-gradient-to-r from-rose-600 to-rose-400 shadow-[0_0_10px_rgba(244,63,94,0.3)]'
                   : timeLeft <= 5 
-                  ? 'bg-gradient-to-r from-amber-600 to-amber-400'
+                  ? 'bg-gradient-to-r from-amber-500 to-amber-400'
                   : 'bg-gradient-to-r from-blue-600 to-indigo-600'
               }`}
             />
@@ -386,20 +386,20 @@ export function DraftScreen({
       {/* Mystery Reveal Modal */}
       {revealedPlayer && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-card-deal"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-card-deal"
           role="dialog"
           aria-modal="true"
           aria-labelledby="mystery-reveal-title"
         >
-          <div className="bg-slate-950 border border-purple-500/40 rounded-3xl p-6 w-full max-w-sm shadow-2xl flex flex-col items-center gap-4 text-center relative overflow-hidden">
+          <div className="office-floating-card border-purple-300 rounded-3xl p-6 w-full max-w-sm shadow-2xl flex flex-col items-center gap-4 text-center relative overflow-hidden bg-white/95">
             {/* Glow */}
             <div className="absolute inset-0 bg-gradient-to-b from-purple-500/10 via-transparent to-transparent pointer-events-none" />
 
             <div className="relative z-10 flex flex-col items-center">
-              <span className="text-[10px] font-black text-purple-400 tracking-widest uppercase mb-1">
+              <span className="text-[10px] font-black text-purple-600 tracking-widest uppercase mb-1">
                 ✨ MYSTERY SCOUT UNLOCKED
               </span>
-              <h3 id="mystery-reveal-title" className="text-xl font-display font-black text-foreground uppercase tracking-tight">
+              <h3 id="mystery-reveal-title" className="text-xl font-display font-black text-[#0b1536] uppercase tracking-tight">
                 You Drafted...
               </h3>
             </div>
@@ -414,15 +414,15 @@ export function DraftScreen({
             </div>
 
             {/* Chemistry Impact Summary */}
-            <div className="w-full relative z-10 bg-purple-950/30 border border-purple-500/20 rounded-2xl p-3 flex justify-between items-center text-xs">
+            <div className="w-full relative z-10 office-subcard border-purple-200 bg-purple-50/70 rounded-2xl p-3 flex justify-between items-center text-xs">
               <div className="text-left">
-                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Chemistry Impact</span>
-                <span className="text-slate-300 font-medium truncate max-w-[190px] block text-[11px]">
+                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">Chemistry Impact</span>
+                <span className="text-slate-800 font-medium truncate max-w-[190px] block text-[11px]">
                   {revealedPlayer.projected.topReason}
                 </span>
               </div>
               <span className={`text-base font-display font-black ${
-                revealedPlayer.projected.delta >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                revealedPlayer.projected.delta >= 0 ? 'text-emerald-600' : 'text-rose-600'
               }`}>
                 {revealedPlayer.projected.delta >= 0 ? `+${revealedPlayer.projected.delta}` : revealedPlayer.projected.delta} CHEM
               </span>
