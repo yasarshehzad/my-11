@@ -49,11 +49,11 @@ describe('Comprehensive Full-Site & Element-by-Element Audit', () => {
   });
 
   describe('1. Global Theme, Storage & Navigation Guardrails', () => {
-    it('handles theme toggling between dark and light seamlessly', () => {
+    it('enforces light mode default system-wide with dark mode option removed', () => {
       saveTheme('light');
       expect(getSavedTheme()).toBe('light');
       saveTheme('dark');
-      expect(getSavedTheme()).toBe('dark');
+      expect(getSavedTheme()).toBe('light');
     });
 
     it('maintains streak tracking without drift or corruption', () => {

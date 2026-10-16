@@ -36,7 +36,7 @@ function SetupWizardContent() {
   const targetSlot: ValidSlotId = isValidSlotId(rawSlot) ? rawSlot : 'slot_1';
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => getSavedTheme());
+  const [theme] = useState<'dark' | 'light'>('light');
 
   // Step 1: Manager
   const [managerName, setManagerName] = useState('Alex Manager');
@@ -53,14 +53,8 @@ function SetupWizardContent() {
   const [customSettings, setCustomSettings] = useState<CareerSettings>(getPresetSettings('easy'));
 
   useEffect(() => {
-    saveTheme(getSavedTheme());
+    saveTheme('light');
   }, []);
-
-  const toggleTheme = () => {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    saveTheme(next);
-  };
 
   const handlePresetSelect = (newPreset: DifficultyPreset) => {
     setPreset(newPreset);
@@ -144,14 +138,6 @@ function SetupWizardContent() {
             </p>
           </div>
         </div>
-
-        <button
-          onClick={toggleTheme}
-          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-          className="w-8 h-8 rounded-full flex items-center justify-center office-subcard text-xs cursor-pointer active:scale-95 transition-transform"
-        >
-          {theme === 'dark' ? '🌙' : '☀️'}
-        </button>
       </header>
 
       {/* Main Wizard */}

@@ -564,17 +564,7 @@ function CareerPlayHubContent() {
     }
     return null;
   });
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('drafted_xi_theme');
-        if (saved === 'dark' || saved === 'light') return saved;
-      } catch {
-        // fallback to light
-      }
-    }
-    return 'light';
-  });
+  const [theme] = useState<'dark' | 'light'>('light');
   const [activeTab, setActiveTab] = useState<'overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings'>('overview');
   const [tabHistory, setTabHistory] = useState<('overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings')[]>([]);
   const [showExitConfirmModal, setShowExitConfirmModal] = useState(false);
@@ -1028,12 +1018,6 @@ function CareerPlayHubContent() {
       }
     }
   }, [checkAndTriggerCelebration]);
-
-  const toggleTheme = () => {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    saveTheme(next);
-  };
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -1635,7 +1619,7 @@ function CareerPlayHubContent() {
   return (
     <div
       id="career-office-root"
-      data-office-theme={theme}
+      data-office-theme="light"
       data-office-active={activeTab === 'overview' ? 'true' : 'false'}
       className="min-h-screen bg-slate-950 text-foreground font-sans flex flex-col pitch-bg w-full overflow-x-hidden"
     >
@@ -1903,18 +1887,7 @@ function CareerPlayHubContent() {
 
               <div className="h-px bg-[var(--office-divider)] my-1" />
 
-              <div className="grid grid-cols-2 gap-1.5">
-                <button
-                  type="button"
-                  data-office-ui="true"
-                  onClick={() => {
-                    toggleTheme();
-                    setIsMoreMenuOpen(false);
-                  }}
-                  className="office-subcard py-2 px-2.5 rounded-xl text-[11px] font-bold text-[var(--office-text-primary)] flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <span>{theme === 'dark' ? '☀️ Light' : '🌙 Dark'}</span>
-                </button>
+              <div className="pt-1">
                 <button
                   type="button"
                   data-office-ui="true"
@@ -1922,9 +1895,9 @@ function CareerPlayHubContent() {
                     handleExport();
                     setIsMoreMenuOpen(false);
                   }}
-                  className="office-subcard py-2 px-2.5 rounded-xl text-[11px] font-bold text-[var(--office-text-primary)] flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="office-subcard w-full py-2 px-2.5 rounded-xl text-[11px] font-bold text-[var(--office-text-primary)] flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  <span>💾 Backup</span>
+                  <span>💾 Backup Save</span>
                 </button>
               </div>
             </div>

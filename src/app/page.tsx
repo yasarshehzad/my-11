@@ -27,24 +27,16 @@ export default function DraftedXIGame() {
   const router = useRouter();
 
   // --- Theme & Tutorial Modal States ---
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [theme] = useState<'dark' | 'light'>('light');
   const [showTutorial, setShowTutorial] = useState(false);
   const [tutorialMode, setTutorialMode] = useState<'draft' | 'career' | 'all'>('draft');
   const exportRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const saved = getSavedTheme();
-    setTheme(saved);
-    saveTheme(saved);
+    saveTheme('light');
     // NOTE: Intentionally do NOT show introductory popup immediately on initial landing.
     // It is saved for later when a user chooses an avenue (Draft Mode or Career Mode).
   }, []);
-
-  const toggleTheme = () => {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    saveTheme(next);
-  };
 
   const handleStartDraftWithTutorialCheck = () => {
     const hide = getHideTutorial();
@@ -174,15 +166,6 @@ export default function DraftedXIGame() {
             className="w-8 h-8 rounded-full flex items-center justify-center office-subcard text-xs text-slate-400 hover:text-white cursor-pointer active:scale-95 transition-transform"
           >
             ❓
-          </button>
-
-          {/* Theme Switcher Button */}
-          <button
-            onClick={toggleTheme}
-            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className="w-8 h-8 rounded-full flex items-center justify-center office-subcard text-xs cursor-pointer active:scale-95 transition-transform"
-          >
-            {theme === 'dark' ? '🌙' : '☀️'}
           </button>
         </div>
       </header>

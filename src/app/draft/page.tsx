@@ -28,15 +28,13 @@ function DraftPageContent() {
   const game = useDraftGame('formation');
 
   // --- Theme & Tutorial Modal States ---
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [theme] = useState<'dark' | 'light'>('light');
   const [showTutorial, setShowTutorial] = useState(false);
   const exportRef = useRef<HTMLDivElement | null>(null);
   const initializedRef = useRef(false);
 
   useEffect(() => {
-    const saved = getSavedTheme();
-    setTheme(saved);
-    saveTheme(saved);
+    saveTheme('light');
 
     // Check if tutorial has been dismissed
     const hide = getHideTutorial();
@@ -65,12 +63,6 @@ function DraftPageContent() {
       game.handleStartDraft();
     }
   }, [mode, phaseParam, game.todayChallenge]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const toggleTheme = () => {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    saveTheme(next);
-  };
 
   const handleReturnHome = () => {
     if (game.phase === 'results' || game.phase === 'history' || window.confirm('Abandon current draft run and return to homepage?')) {
@@ -170,15 +162,6 @@ function DraftPageContent() {
             className="w-8 h-8 rounded-full flex items-center justify-center office-subcard text-xs text-slate-400 hover:text-white cursor-pointer active:scale-95 transition-transform"
           >
             ❓
-          </button>
-
-          {/* Theme Switcher Button */}
-          <button
-            onClick={toggleTheme}
-            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className="w-8 h-8 rounded-full flex items-center justify-center office-subcard text-xs cursor-pointer active:scale-95 transition-transform"
-          >
-            {theme === 'dark' ? '🌙' : '☀️'}
           </button>
         </div>
       </header>

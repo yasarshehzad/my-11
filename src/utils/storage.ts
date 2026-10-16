@@ -35,32 +35,23 @@ export const DEFAULT_STREAKS: StreakStats = {
 const isClient = () => typeof window !== 'undefined' && typeof localStorage !== 'undefined';
 
 /**
- * Safe retrieval of saved theme (defaults to light mode system-wide)
+ * Safe retrieval of saved theme (defaults to light mode system-wide).
+ * Note: Dark mode is temporarily disabled across the UI per design review.
  */
 export function getSavedTheme(): 'dark' | 'light' {
-  if (!isClient()) return 'light';
-  try {
-    const saved = localStorage.getItem(THEME_KEY);
-    return saved === 'dark' ? 'dark' : 'light';
-  } catch (e) {
-    console.warn('Failed to read theme from localStorage:', e);
-    return 'light';
-  }
+  return 'light';
 }
 
 /**
- * Safe update of theme
+ * Safe update of theme (enforces light mode system-wide)
  */
 export function saveTheme(theme: 'dark' | 'light'): void {
   if (!isClient()) return;
   try {
-    localStorage.setItem(THEME_KEY, theme);
-    document.documentElement.setAttribute('data-theme', theme);
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    // Only light mode is currently active across the game
+    localStorage.setItem(THEME_KEY, 'light');
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.documentElement.classList.remove('dark');
   } catch (e) {
     console.warn('Failed to save theme to localStorage:', e);
   }

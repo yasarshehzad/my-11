@@ -14,7 +14,7 @@ export default function CareerEntryPage() {
     }
     return [];
   });
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => getSavedTheme());
+  const [theme] = useState<'dark' | 'light'>('light');
   const [deleteConfirmSlot, setDeleteConfirmSlot] = useState<string | null>(null);
   const [importingSlot, setImportingSlot] = useState<ValidSlotId | null>(null);
   const [importJsonText, setImportJsonText] = useState('');
@@ -27,14 +27,8 @@ export default function CareerEntryPage() {
   };
 
   useEffect(() => {
-    saveTheme(getSavedTheme());
+    saveTheme('light');
   }, []);
-
-  const toggleTheme = () => {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    saveTheme(next);
-  };
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -173,13 +167,6 @@ export default function CareerEntryPage() {
               className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold office-subcard cursor-pointer"
             >
               ❓
-            </button>
-            <button
-              onClick={toggleTheme}
-              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs office-subcard cursor-pointer"
-            >
-              {theme === 'dark' ? '🌙' : '☀️'}
             </button>
           </div>
         </div>

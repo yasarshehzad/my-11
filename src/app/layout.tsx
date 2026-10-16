@@ -62,14 +62,9 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `(function(){
               try {
-                var t = localStorage.getItem('drafted_xi_theme');
-                var theme = (t === 'dark') ? 'dark' : 'light';
-                document.documentElement.setAttribute('data-theme', theme);
-                if (theme === 'dark') {
-                  document.documentElement.classList.add('dark');
-                } else {
-                  document.documentElement.classList.remove('dark');
-                }
+                localStorage.setItem('drafted_xi_theme', 'light');
+                document.documentElement.setAttribute('data-theme', 'light');
+                document.documentElement.classList.remove('dark');
               } catch(e) {}
             })()`,
           }}
