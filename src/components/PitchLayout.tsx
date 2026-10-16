@@ -254,7 +254,7 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
 
       {/* 4. Active Link Summary Banner overlay when player is tapped */}
       {selectedSlotIndex !== null && selectedPlayers[selectedSlotIndex] && (
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 bg-slate-950/90 border border-emerald-500/40 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider text-emerald-400 shadow-xl flex items-center gap-1.5 animate-card-deal">
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 bg-slate-950/90 border border-blue-500/40 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider text-blue-400 shadow-xl flex items-center gap-1.5 animate-card-deal">
           <span>🔗</span>
           <span>
             {selectedPlayers[selectedSlotIndex]?.displayName}: {getPlayerLinkCount(selectedSlotIndex)} teammate connection{getPlayerLinkCount(selectedSlotIndex) !== 1 ? 's' : ''}
@@ -310,7 +310,7 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
             {player ? (
               // Player card is drafted for this slot
               <div
-                className="relative cursor-pointer group rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                className="relative cursor-pointer group rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
                 role="button"
                 tabIndex={0}
                 aria-label={accessibleLabel}
@@ -333,8 +333,8 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
                   <span
                     className={`absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-full text-[7px] font-black font-display uppercase tracking-tight shadow-md border leading-none transition-transform ${
                       isLinkedToFocused || isFocused
-                        ? 'bg-emerald-500 text-zinc-950 border-emerald-400 scale-110'
-                        : 'bg-slate-900/90 text-emerald-450 border-emerald-500/30'
+                        ? 'bg-blue-500 text-white border-blue-400 scale-110'
+                        : 'bg-slate-900/90 text-blue-400 border-blue-500/30'
                     }`}
                     title={`${linkCount} teammate link${linkCount !== 1 ? 's' : ''} (tap to inspect)`}
                   >
@@ -347,9 +347,9 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
               <button
                 onClick={() => handleSlotClick(index)}
                 aria-label={accessibleLabel}
-                className={`w-[68px] h-[100px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition-all duration-300 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:outline-none cursor-pointer ${
+                className={`w-[68px] h-[100px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition-all duration-300 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:outline-none cursor-pointer ${
                   isActive
-                    ? 'border-emerald-400 bg-emerald-950/45 text-emerald-300 shadow-[0_0_15px_rgba(52,211,153,0.3)] scale-105 ring-2 ring-emerald-400/40 motion-safe:animate-pulse'
+                    ? 'border-blue-400 bg-blue-950/45 text-blue-300 shadow-[0_0_15px_rgba(59,130,246,0.3)] scale-105 ring-2 ring-blue-400/40 motion-safe:animate-pulse'
                     : 'border-slate-800 bg-slate-950/40 text-slate-500 hover:border-slate-700 hover:text-slate-400 hover:scale-102'
                 }`}
               >
@@ -359,7 +359,7 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
                 
                 {/* Active marker indicator */}
                 {isActive && (
-                  <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-emerald-400 motion-safe:animate-ping" />
+                  <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-blue-400 motion-safe:animate-ping" />
                 )}
               </button>
             )}

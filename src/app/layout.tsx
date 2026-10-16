@@ -3,7 +3,7 @@ import Script from "next/script";
 import "./globals.css";
 
 export const viewport: Viewport = {
-  themeColor: "#020617",
+  themeColor: "#f8fafc",
   width: "device-width",
   initialScale: 1,
 };
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   authors: [{ name: "MY-11" }],
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "MY-11",
   },
   openGraph: {
@@ -56,8 +56,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased">
+    <html lang="en" className="h-full antialiased" data-theme="light">
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){
+              try {
+                var t = localStorage.getItem('drafted_xi_theme');
+                var theme = (t === 'dark') ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+                if (theme === 'dark') {
+                  document.documentElement.classList.add('dark');
+                } else {
+                  document.documentElement.classList.remove('dark');
+                }
+              } catch(e) {}
+            })()`,
+          }}
+        />
         {/* Google tag (gtag.js) */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-C5ETLYL50J"
@@ -73,7 +89,7 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body className="min-h-full flex flex-col bg-slate-950 text-foreground select-none">
+      <body className="min-h-full flex flex-col bg-background text-foreground select-none">
         {children}
       </body>
     </html>

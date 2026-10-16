@@ -128,9 +128,9 @@ export default function DraftedXIGame() {
                 game.returnHome();
               }
             }}
-            className="text-base sm:text-lg font-display font-black tracking-tight text-[var(--office-text-primary)] uppercase hover:text-emerald-400 transition-colors cursor-pointer"
+            className="text-base sm:text-lg font-display font-black tracking-tight text-[var(--office-text-primary)] uppercase hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
           >
-            MY-<span className="text-emerald-400">11</span>
+            MY-<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600">11</span>
           </button>
         </div>
 
@@ -313,9 +313,9 @@ export default function DraftedXIGame() {
           This is an unofficial football draft game and is not affiliated with any club, league, player, governing body, or rights holder.
         </p>
         <div className="flex justify-center gap-4 text-slate-400 normal-case">
-          <Link href="/privacy" className="hover:text-emerald-400 transition-colors">Privacy Policy</Link>
+          <Link href="/privacy" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Privacy Policy</Link>
           <span>•</span>
-          <Link href="/terms" className="hover:text-emerald-400 transition-colors">Terms of Service</Link>
+          <Link href="/terms" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Terms of Service</Link>
         </div>
         <p className="text-slate-600">
           MY-11 © 2026 • CREATED FOR FANS

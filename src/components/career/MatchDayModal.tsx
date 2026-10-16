@@ -338,7 +338,7 @@ export function MatchDayModal({
         {/* Header Bar */}
         <header className="flex justify-between items-center border-b border-slate-900 pb-3">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-emerald-400 font-display font-black text-xs uppercase tracking-wider">
+            <span className="text-blue-600 dark:text-blue-400 font-display font-black text-xs uppercase tracking-wider">
               {'competitionName' in fixture
                 ? (fixture as CupFixture).roundName
                 : `Matchday ${fixture.round}`}
@@ -390,7 +390,7 @@ export function MatchDayModal({
 
               {/* VS & Venue */}
               <div className="space-y-1">
-                <div className="text-xl font-display font-black text-emerald-400">VS</div>
+                <div className="text-xl font-display font-black text-blue-600 dark:text-blue-400">VS</div>
                 <div className="text-[10px] text-slate-400 truncate">
                   🏟️ {venueDisplay}
                 </div>
@@ -428,7 +428,7 @@ export function MatchDayModal({
                     onClick={() => setMentality(m)}
                     className={`py-2 px-3 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all ${
                       mentality === m
-                        ? 'bg-emerald-500 text-slate-950 shadow-md'
+                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-md'
                         : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-white'
                     }`}
                   >
@@ -457,7 +457,7 @@ export function MatchDayModal({
                       <div className="text-[9px] text-slate-400">{p.position}</div>
                     </div>
                     <div className="text-right flex-shrink-0 ml-1">
-                      <div className="font-display font-black text-emerald-400 text-xs">{p.rating}</div>
+                      <div className="font-display font-black text-blue-600 dark:text-blue-400 text-xs">{p.rating}</div>
                       <div className="text-[8px] text-slate-400">{p.fitness}%</div>
                     </div>
                   </div>
@@ -478,7 +478,7 @@ export function MatchDayModal({
                 <button
                   type="button"
                   onClick={handleAutoPickEligible}
-                  className="py-1.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                  className="py-1.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-blue-500/20 cursor-pointer"
                 >
                   ⚡ Auto-Pick Eligible Lineup
                 </button>
@@ -492,7 +492,7 @@ export function MatchDayModal({
               className={`w-full py-3.5 px-6 rounded-2xl font-display font-black text-sm uppercase tracking-wider shadow-xl transition-all ${
                 hasIneligiblePlayers
                   ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
-                  : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 shadow-emerald-500/20 hover:scale-101 cursor-pointer'
+                  : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-xl shadow-blue-500/25 hover:scale-101 cursor-pointer'
               }`}
             >
               {hasIneligiblePlayers ? '🚫 Lineup Ineligible (Resolve Registration)' : '⚽ Kick Off Match'}
@@ -514,7 +514,7 @@ export function MatchDayModal({
                       ? 'text-amber-300 bg-amber-950/80 border-amber-500/60 font-display'
                       : isPaused
                       ? 'text-amber-400 bg-amber-950/40 border-amber-800/60'
-                      : 'text-emerald-400 bg-emerald-950/60 border-emerald-900/60 animate-pulse'
+                      : 'text-blue-400 bg-blue-950/60 border-blue-900/60 animate-pulse'
                   }`}
                 >
                   {matchState === 'fulltime'
@@ -552,7 +552,7 @@ export function MatchDayModal({
                     <button
                       onClick={() => setSimSpeed(1)}
                       className={`px-2 py-1 rounded-lg text-[10px] font-bold cursor-pointer ${
-                        simSpeed === 1 ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-slate-400'
+                        simSpeed === 1 ? 'bg-blue-600 text-white font-bold' : 'bg-slate-900 text-slate-400'
                       }`}
                     >
                       1x
@@ -560,7 +560,7 @@ export function MatchDayModal({
                     <button
                       onClick={() => setSimSpeed(2)}
                       className={`px-2 py-1 rounded-lg text-[10px] font-bold cursor-pointer ${
-                        simSpeed === 2 ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-slate-400'
+                        simSpeed === 2 ? 'bg-blue-600 text-white font-bold' : 'bg-slate-900 text-slate-400'
                       }`}
                     >
                       2x
@@ -568,7 +568,7 @@ export function MatchDayModal({
                     <button
                       onClick={() => setSimSpeed(5)}
                       className={`px-2 py-1 rounded-lg text-[10px] font-bold cursor-pointer ${
-                        simSpeed === 5 ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-slate-400'
+                        simSpeed === 5 ? 'bg-blue-600 text-white font-bold' : 'bg-slate-900 text-slate-400'
                       }`}
                     >
                       5x
@@ -608,7 +608,7 @@ export function MatchDayModal({
                     key={i}
                     className="flex items-center gap-2 text-[11px] p-1.5 rounded-lg bg-slate-950/60 border border-slate-900"
                   >
-                    <span className="font-mono font-bold text-emerald-400 w-8">{evt.minute}&apos;</span>
+                    <span className="font-mono font-bold text-blue-400 w-8">{evt.minute}&apos;</span>
                     <span>
                       {evt.type === 'goal'
                         ? '⚽'
@@ -661,9 +661,9 @@ export function MatchDayModal({
                     </button>
                     <button
                       onClick={() => handleTeamTalk('encourage', '👏 You praised their composure! Morale is high.')}
-                      className="p-2.5 rounded-xl border border-slate-800 bg-slate-900/70 hover:bg-slate-850 hover:border-emerald-500/50 text-left text-slate-200 transition-all cursor-pointer"
+                      className="p-2.5 rounded-xl border border-slate-800 bg-slate-900/70 hover:bg-slate-850 hover:border-blue-500/50 text-left text-slate-200 transition-all cursor-pointer"
                     >
-                      <div className="font-bold text-emerald-300">👏 Keep Composed</div>
+                      <div className="font-bold text-blue-300">👏 Keep Composed</div>
                       <div className="text-[10px] text-slate-400">Reinforces shape and discipline</div>
                     </button>
                     <button
@@ -675,7 +675,7 @@ export function MatchDayModal({
                     </button>
                   </div>
                   {teamTalkNote && (
-                    <div className="text-[11px] font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-800/40 p-2 rounded-xl">
+                    <div className="text-[11px] font-bold text-blue-400 bg-blue-950/40 border border-blue-800/40 p-2 rounded-xl">
                       {teamTalkNote}
                     </div>
                   )}
@@ -687,7 +687,7 @@ export function MatchDayModal({
                     <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">
                       Second Half Tactical Mentality
                     </span>
-                    <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase">
+                    <span className="text-[10px] font-mono font-bold text-blue-400 uppercase">
                       Current: {mentality}
                     </span>
                   </div>
@@ -698,7 +698,7 @@ export function MatchDayModal({
                         onClick={() => setMentality(m)}
                         className={`py-2 px-3 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
                           mentality === m
-                            ? 'bg-emerald-500 text-slate-950 shadow-md'
+                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-md'
                             : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
                         }`}
                       >
@@ -711,7 +711,7 @@ export function MatchDayModal({
                 {/* Resume Match Button */}
                 <button
                   onClick={handleStartSecondHalf}
-                  className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-display font-black text-sm uppercase tracking-wider shadow-xl shadow-emerald-500/25 transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-sm uppercase tracking-wider shadow-xl shadow-blue-500/25 transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
                 >
                   <span>▶ Start 2nd Half (46&apos; - 90&apos;)</span>
                   <span>➔</span>
@@ -768,9 +768,9 @@ export function MatchDayModal({
                           <button
                             key={s.player.id}
                             onClick={() => handleMakeSubstitution(s.player)}
-                            className="p-2 rounded-xl border border-emerald-500/40 bg-emerald-950/20 hover:bg-emerald-950/50 text-left text-xs transition-all cursor-pointer"
+                            className="p-2 rounded-xl border border-blue-500/40 bg-blue-950/20 hover:bg-blue-950/50 text-left text-xs transition-all cursor-pointer"
                           >
-                            <div className="font-bold text-emerald-300 truncate text-[11px]">
+                            <div className="font-bold text-blue-300 truncate text-[11px]">
                               + {s.player.name}
                             </div>
                             <div className="text-[9px] text-slate-400">
@@ -788,9 +788,9 @@ export function MatchDayModal({
             {matchState === 'fulltime' && simResult && (
               <div className="space-y-4">
                 {/* MOTM */}
-                <div className="bg-emerald-950/30 border border-emerald-500/30 p-3.5 rounded-2xl flex justify-between items-center text-xs">
+                <div className="bg-blue-950/30 border border-blue-500/30 p-3.5 rounded-2xl flex justify-between items-center text-xs">
                   <div>
-                    <span className="text-[9px] font-black uppercase tracking-wider text-emerald-400">
+                    <span className="text-[9px] font-black uppercase tracking-wider text-blue-400">
                       ⭐ Man of the Match
                     </span>
                     <div className="font-display font-black text-white text-sm">
@@ -799,7 +799,7 @@ export function MatchDayModal({
                   </div>
                   <div className="text-right">
                     <div className="text-[9px] text-slate-500 uppercase font-bold">Match Rating</div>
-                    <div className="font-display font-black text-emerald-400 text-sm">
+                    <div className="font-display font-black text-blue-400 text-sm">
                       {simResult.manOfTheMatch.rating}
                     </div>
                   </div>
@@ -845,7 +845,7 @@ export function MatchDayModal({
 
                   <button
                     onClick={handleFinalizeMatch}
-                    className="flex-1 py-3 px-6 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20"
+                    className="flex-1 py-3 px-6 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider shadow-xl shadow-blue-500/25"
                   >
                     Confirm & Update Standings →
                   </button>

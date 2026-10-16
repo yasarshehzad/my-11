@@ -114,7 +114,7 @@ export default function CareerEntryPage() {
         <aside
           role="status"
           aria-live="polite"
-          className="fixed top-18 left-1/2 -translate-x-1/2 z-50 bg-emerald-500 text-slate-950 px-4 py-2 rounded-xl font-display font-black text-xs uppercase tracking-wider shadow-xl flex items-center gap-2 motion-reduce:animate-none animate-bounce"
+          className="fixed top-18 left-1/2 -translate-x-1/2 z-50 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-xl font-display font-black text-xs uppercase tracking-wider shadow-xl shadow-blue-500/25 flex items-center gap-2 motion-reduce:animate-none animate-bounce"
         >
           <span>✓</span> {toastMessage}
         </aside>
@@ -292,7 +292,7 @@ export default function CareerEntryPage() {
                         s.preset === 'hard'
                           ? 'bg-rose-950/60 border-rose-800/60 text-rose-300'
                           : s.preset === 'easy'
-                          ? 'bg-emerald-950/60 border-emerald-800/60 text-emerald-300'
+                          ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-500/40 text-blue-700 dark:text-blue-300 font-bold'
                           : 'bg-amber-950/60 border-amber-800/60 text-amber-300'
                       }`}
                     >
@@ -308,7 +308,7 @@ export default function CareerEntryPage() {
                     </div>
                     <div>
                       <div className="text-[9px] font-bold uppercase text-[var(--office-text-muted)]">Budget</div>
-                      <div className="font-display font-black text-emerald-500">
+                      <div className="font-display font-black text-blue-600 dark:text-blue-400">
                         £{(s.budget / 1_000_000).toFixed(1)}M
                       </div>
                     </div>
@@ -436,7 +436,7 @@ export default function CareerEntryPage() {
               onChange={(e) => setImportJsonText(e.target.value)}
               placeholder="Paste JSON content here..."
               rows={8}
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs font-mono text-slate-200 focus:outline-none focus:border-emerald-500"
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs font-mono text-slate-200 focus:outline-none focus:border-blue-500"
             />
             {importError && (
               <p className="text-xs text-rose-400 font-medium">{importError}</p>
@@ -450,7 +450,7 @@ export default function CareerEntryPage() {
               </button>
               <button
                 onClick={handleImportSubmit}
-                className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-display font-black uppercase tracking-wider"
+                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-display font-black uppercase tracking-wider shadow-md shadow-blue-500/20"
               >
                 Import Save
               </button>

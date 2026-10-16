@@ -182,7 +182,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
       {/* Loading Overlay when generating image */}
       {generating && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex flex-col items-center justify-center animate-card-deal">
-          <div className="w-12 h-12 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin mb-4" />
+          <div className="w-12 h-12 rounded-full border-4 border-blue-500 border-t-transparent animate-spin mb-4" />
           <h3 className="text-lg font-display font-black text-foreground uppercase tracking-wider">Generating Share Card...</h3>
           <p className="text-xs text-slate-400 mt-1 uppercase font-semibold">Creating high-res 1080x1920 PNG</p>
         </div>
@@ -191,15 +191,15 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
       {/* Visual Share Card (UI Preview only) */}
       <div 
         id="share-card-container"
-        className="w-full max-w-sm rounded-3xl p-6 relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950/40 border border-emerald-500/20 shadow-2xl"
+        className="w-full max-w-sm rounded-3xl p-6 relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950/40 border border-blue-500/20 shadow-2xl"
       >
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent opacity-60 pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-48 h-48 rounded-full bg-emerald-500/5 filter blur-3xl pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent opacity-60 pointer-events-none" />
+        <div className="absolute -bottom-24 -left-24 w-48 h-48 rounded-full bg-blue-500/5 filter blur-3xl pointer-events-none" />
 
         <div className="flex justify-between items-start mb-5 relative z-10">
           <div>
             <h2 className="text-2xl font-display font-black tracking-tight text-foreground uppercase leading-none">
-              MY-<span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">11</span>
+              MY-<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600">11</span>
             </h2>
             <p className="text-[9px] font-bold text-slate-500 tracking-widest uppercase mt-1">
               {isDailyChallenge 
@@ -211,7 +211,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
           {isDailyChallenge ? (
             <span className={`text-[9px] font-extrabold px-3 py-1 rounded-full border uppercase tracking-wider font-display leading-none ${
               dailyChallengeBeaten 
-                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' 
+                ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40' 
                 : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
             }`}>
               {dailyChallengeBeaten ? '✅ CLEARED' : '❌ FAILED'}
@@ -238,7 +238,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
                 {simResult.wins}W - {simResult.draws}D - {simResult.losses}L
               </p>
               <p className="text-xs text-slate-455 font-semibold mt-1.5 leading-none">
-                Points: <span className="text-foreground font-bold">{simResult.points} PTS</span> • Tier: <span className="text-emerald-450 font-bold">Top {simResult.percentile}%</span>
+                Points: <span className="text-foreground font-bold">{simResult.points} PTS</span> • Tier: <span className="text-blue-400 font-bold">Top {simResult.percentile}%</span>
               </p>
             </div>
 
@@ -261,14 +261,14 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
 
           <div className="mt-3.5 pt-2.5 border-t border-slate-900 flex justify-between items-center text-[10px]">
             <span className="font-semibold text-slate-500 uppercase tracking-wider">Playstyle:</span>
-            <span className="font-bold text-emerald-400 uppercase tracking-wide">
+            <span className="font-bold text-blue-400 uppercase tracking-wide">
               {simResult.playstyle}
             </span>
           </div>
 
           {simResult.seasonStory && (
             <div className="mt-2 pt-2 border-t border-slate-900/60 flex justify-between items-center text-[8.5px]">
-              <span className="font-extrabold uppercase text-emerald-450 tracking-wider font-display">
+              <span className="font-extrabold uppercase text-blue-400 tracking-wider font-display">
                 {simResult.seasonStory.title}
               </span>
               <span className="text-slate-450 font-medium truncate max-w-[170px]">
@@ -282,7 +282,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
         <div className="grid grid-cols-4 gap-2 mb-4 relative z-10">
           <div className="bg-slate-900/45 rounded-xl p-2 border border-slate-900 text-center leading-none">
             <p className="text-[8px] font-semibold text-slate-500 uppercase tracking-wider">ATT</p>
-            <p className="text-sm font-bold text-emerald-400 font-display mt-1">{stats.attack}</p>
+            <p className="text-sm font-bold text-blue-400 font-display mt-1">{stats.attack}</p>
           </div>
           <div className="bg-slate-900/45 rounded-xl p-2 border border-slate-900 text-center leading-none">
             <p className="text-[8px] font-semibold text-slate-500 uppercase tracking-wider">MID</p>
@@ -316,9 +316,9 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
 
         {/* MVP and Weak Link */}
         <div className="flex gap-2.5 mb-4 relative z-10">
-          <div className="flex-1 bg-slate-950/60 rounded-xl p-3 border border-emerald-500/10 flex flex-col justify-between h-[80px]">
+          <div className="flex-1 bg-slate-950/60 rounded-xl p-3 border border-blue-500/10 flex flex-col justify-between h-[80px]">
             <div>
-              <span className="text-[8px] font-bold text-emerald-450 uppercase tracking-widest block leading-none">⭐ Season MVP</span>
+              <span className="text-[8px] font-bold text-blue-400 uppercase tracking-widest block leading-none">⭐ Season MVP</span>
               <span className="text-sm font-display font-black text-foreground uppercase truncate block mt-1 leading-tight">
                 {simResult.mvp.displayName}
               </span>
@@ -364,7 +364,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
         {/* Status Toast */}
         {feedbackMessage && (
           <div
-            className="w-full py-2.5 px-4 rounded-2xl bg-emerald-950/90 border border-emerald-500/40 text-emerald-400 font-display font-black text-xs uppercase tracking-wider text-center shadow-lg shadow-emerald-950/50 animate-card-deal"
+            className="w-full py-2.5 px-4 rounded-2xl bg-blue-950/90 border border-blue-500/40 text-blue-400 font-display font-black text-xs uppercase tracking-wider text-center shadow-lg shadow-blue-950/50 animate-card-deal"
             role="status"
           >
             ✓ {feedbackMessage}
@@ -383,7 +383,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
         {/* Primary Action: Copy Challenge Link */}
         <button
           onClick={handleCopyChallengeLink}
-          className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-zinc-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 hover:-translate-y-0.5 transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+          className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-blue-500/20 hover:from-blue-500 hover:to-indigo-500 hover:-translate-y-0.5 transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center justify-center gap-2"
         >
           <span>🎯</span> Copy Challenge Link ({simResult.wins} Wins)
         </button>

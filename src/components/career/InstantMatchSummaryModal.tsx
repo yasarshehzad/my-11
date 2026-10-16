@@ -112,7 +112,7 @@ export function InstantMatchSummaryModal({
         {/* Header Bar */}
         <header className="flex items-center justify-between border-b border-slate-850 pb-2.5">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 font-display truncate">
+            <span className="text-[10px] font-black uppercase tracking-widest text-blue-400 font-display truncate">
               ⚡ Match Result
             </span>
             {isUserMatch && (
@@ -170,7 +170,7 @@ export function InstantMatchSummaryModal({
 
             {/* Final Scoreline */}
             <div className="flex flex-col items-center justify-center shrink-0 px-2 space-y-1">
-              <div className="bg-slate-950 border border-slate-700 px-3.5 py-1.5 rounded-2xl font-mono font-black text-2xl sm:text-3xl text-emerald-400 shadow-xl tracking-tight">
+              <div className="bg-slate-950 border border-slate-700 px-3.5 py-1.5 rounded-2xl font-mono font-black text-2xl sm:text-3xl text-foreground shadow-xl tracking-tight">
                 {homeScore} - {awayScore}
               </div>
               {cupFixture?.penalties && (

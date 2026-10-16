@@ -133,7 +133,7 @@ export function MatchOverviewModal({
         {/* Header Bar */}
         <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
           <div className="space-y-0.5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 font-display">
+            <span className="text-[10px] font-black uppercase tracking-widest text-blue-400 font-display">
               {type === 'result' ? '📊 Match Result & Statistics' : '📋 Pre-Match Tactical Dossier'}
             </span>
             <h2 className="text-sm sm:text-base font-display font-black text-white uppercase tracking-tight">
@@ -177,7 +177,7 @@ export function MatchOverviewModal({
             <div className="flex flex-col items-center justify-center shrink-0 px-2 space-y-1">
               {fixture.played ? (
                 <div className="flex flex-col items-center gap-1">
-                  <div className="bg-slate-950 border border-slate-750 px-3.5 py-1.5 rounded-xl font-mono font-black text-lg sm:text-2xl text-emerald-400 shadow-inner">
+                  <div className="bg-slate-950 border border-slate-750 px-3.5 py-1.5 rounded-xl font-mono font-black text-lg sm:text-2xl text-foreground shadow-inner">
                     {fixture.homeScore} - {fixture.awayScore}
                   </div>
                   {cupFixture?.penalties && (
@@ -200,7 +200,7 @@ export function MatchOverviewModal({
                   )}
                 </div>
               ) : (
-                <span className="text-xl sm:text-2xl font-display font-black text-emerald-400 tracking-wider">
+                <span className="text-xl sm:text-2xl font-display font-black text-blue-400 tracking-wider">
                   VS
                 </span>
               )}
@@ -322,13 +322,13 @@ export function MatchOverviewModal({
               {/* Possession Comparison Bar */}
               <div className="space-y-1.5">
                 <div className="flex justify-between text-xs font-mono font-bold">
-                  <span className="text-emerald-400">{stats.homePossession}%</span>
+                  <span className="text-blue-400">{stats.homePossession}%</span>
                   <span className="text-[10px] font-sans uppercase font-bold text-slate-400">Possession</span>
                   <span className="text-blue-400">{stats.awayPossession}%</span>
                 </div>
                 <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden flex">
                   <div
-                    className="h-full bg-emerald-500 transition-all duration-500"
+                    className="h-full bg-blue-500 transition-all duration-500"
                     style={{ width: `${stats.homePossession}%` }}
                   />
                   <div
@@ -362,7 +362,7 @@ export function MatchOverviewModal({
           <div className="space-y-5">
             {/* Standings & Head-to-Head Form Comparison */}
             <div className="bg-slate-900/60 border border-slate-850 rounded-2xl p-4 space-y-3">
-              <div className="text-[10px] font-black uppercase text-emerald-400 tracking-wider flex items-center justify-between">
+              <div className="text-[10px] font-black uppercase text-blue-400 tracking-wider flex items-center justify-between">
                 <span>📈 League Table Standing & Form Guide</span>
                 <span className="text-slate-400 text-[10px] font-mono">Top Flight</span>
               </div>
@@ -454,7 +454,7 @@ export function MatchOverviewModal({
                 </div>
                 <div className="text-right">
                   <span className="text-[9px] uppercase font-bold text-slate-500 block">Rating</span>
-                  <span className="font-mono font-black text-lg text-emerald-400">
+                  <span className="font-mono font-black text-lg text-blue-400">
                     {dangerPlayer.rating}
                   </span>
                 </div>
@@ -475,7 +475,7 @@ export function MatchOverviewModal({
                     onClose();
                     onPlayInteractiveMatch();
                   }}
-                  className="flex-1 py-3 px-5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/20 cursor-pointer"
+                  className="flex-1 py-3 px-5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-blue-500/25 cursor-pointer"
                 >
                   <span>▶ Play Match Now</span>
                 </button>

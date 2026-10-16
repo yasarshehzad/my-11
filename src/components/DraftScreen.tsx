@@ -213,7 +213,7 @@ export function DraftScreen({
       {chemistryToast && (
         <div className={`fixed bottom-36 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-full border shadow-2xl animate-card-deal text-xs font-black uppercase tracking-wider ${
           chemistryToast.type === 'positive'
-            ? 'bg-emerald-950/90 text-emerald-400 border-emerald-500/35 shadow-emerald-500/15'
+            ? 'bg-blue-50 dark:bg-blue-950/90 text-blue-600 dark:text-blue-400 border-blue-500/35 shadow-blue-500/15'
             : 'bg-rose-950/90 text-rose-455 border-rose-500/35 shadow-rose-500/15'
         }`}>
           {chemistryToast.type === 'positive' ? '💚 ' : '💔 '}
@@ -237,7 +237,7 @@ export function DraftScreen({
       <div className="flex justify-between items-center w-full leading-none">
         <div>
           <div className="flex items-center gap-1.5 mb-1">
-            <span className="text-[9px] font-black text-emerald-450 uppercase tracking-widest block">
+            <span className="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest block">
               {isDailyChallenge ? `🏆 CHALLENGE: ${todayChallenge?.title}` : '⚽ CLASSIC LEAGUE RUN'}
             </span>
             {draftModifier === 'quick' && (
@@ -328,7 +328,7 @@ export function DraftScreen({
               )}
             </span>
             <span className={`font-display font-black text-sm tracking-tight ${
-              timeLeft <= 3 ? 'text-rose-400 animate-pulse text-base' : timeLeft <= 5 ? 'text-amber-400' : 'text-emerald-400'
+              timeLeft <= 3 ? 'text-rose-400 animate-pulse text-base' : timeLeft <= 5 ? 'text-amber-400' : 'text-blue-500'
             }`}>
               00:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}
             </span>
@@ -343,7 +343,7 @@ export function DraftScreen({
                   ? 'bg-gradient-to-r from-rose-600 to-rose-400 shadow-[0_0_10px_rgba(244,63,94,0.5)]'
                   : timeLeft <= 5 
                   ? 'bg-gradient-to-r from-amber-600 to-amber-400'
-                  : 'bg-gradient-to-r from-emerald-600 to-emerald-400'
+                  : 'bg-gradient-to-r from-blue-600 to-indigo-600'
               }`}
             />
           </div>

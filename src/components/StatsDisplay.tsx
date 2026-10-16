@@ -38,7 +38,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
           className="flex flex-col items-center justify-center w-24 h-24 rounded-full bg-slate-950 border border-slate-900 shadow-xl relative flex-shrink-0"
           aria-label={`Overall squad rating: ${overall || 0}`}
         >
-          <div className="absolute inset-1.5 rounded-full bg-emerald-500/5 filter blur-sm" />
+          <div className="absolute inset-1.5 rounded-full bg-blue-500/5 filter blur-sm" />
           
           <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
             <circle
@@ -53,7 +53,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
               cx="50"
               cy="50"
               r="43"
-              className="stroke-emerald-400 transition-all duration-700 ease-out"
+              className="stroke-blue-500 transition-all duration-700 ease-out"
               strokeWidth="5.5"
               fill="transparent"
               strokeDasharray={270.1}
@@ -76,12 +76,12 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
           <div>
             <div className="flex justify-between items-center text-xs mb-1">
               <span className="font-bold text-slate-400 tracking-wider uppercase text-[9px]">Attack</span>
-              <span className="font-bold text-emerald-400 font-display text-sm">{attack || '--'}</span>
+              <span className="font-bold text-blue-600 dark:text-blue-400 font-display text-sm">{attack || '--'}</span>
             </div>
             <div className="h-2 w-full bg-slate-950/80 rounded-full overflow-hidden border border-slate-900">
               <div
                 style={{ width: `${attack || 0}%` }}
-                className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-full transition-all duration-500 ease-out"
+                className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full transition-all duration-500 ease-out"
               />
             </div>
           </div>
@@ -162,9 +162,9 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
             <div className="mt-3 flex flex-col gap-2 max-h-[160px] overflow-y-auto pr-1 leading-normal text-[11px] animate-card-deal">
               {positiveLogs.length > 0 && (
                 <div className="flex flex-col gap-1.5">
-                  <span className="text-[8px] font-bold text-emerald-500 uppercase tracking-widest">Synergy Bonuses</span>
+                  <span className="text-[8px] font-bold text-blue-500 uppercase tracking-widest">Synergy Bonuses</span>
                   {positiveLogs.map((log, idx) => (
-                    <div key={`pos-${idx}`} className="flex justify-between items-center text-emerald-400 bg-emerald-950/20 px-3 py-1.5 rounded-xl border border-emerald-900/20 shadow-inner">
+                    <div key={`pos-${idx}`} className="flex justify-between items-center text-blue-400 bg-blue-950/20 px-3 py-1.5 rounded-xl border border-blue-900/20 shadow-inner">
                       <span className="truncate max-w-[210px] font-medium">{log.reason}</span>
                       <span className="font-display font-black text-xs flex-shrink-0">+{log.delta}</span>
                     </div>
@@ -230,16 +230,16 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
             {breakdown && (
               <div className="grid grid-cols-2 gap-2.5 text-xs">
                 {/* Club Links */}
-                <div className="p-3 rounded-2xl bg-emerald-950/20 border border-emerald-900/30 flex flex-col gap-1">
-                  <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider flex items-center justify-between">
+                <div className="p-3 rounded-2xl bg-blue-950/20 border border-blue-900/30 flex flex-col gap-1">
+                  <span className="text-[9px] font-bold text-blue-400 uppercase tracking-wider flex items-center justify-between">
                     <span>🛡️ Club Links</span>
                     {breakdown.clubLinks.count > 0 && (
-                      <span className="text-[8px] bg-emerald-500/20 text-emerald-300 px-1 py-0.5 rounded font-display">
+                      <span className="text-[8px] bg-blue-500/20 text-blue-300 px-1 py-0.5 rounded font-display">
                         {breakdown.clubLinks.count} links
                       </span>
                     )}
                   </span>
-                  <span className="text-lg font-display font-black text-emerald-300">+{breakdown.clubLinks.delta}</span>
+                  <span className="text-lg font-display font-black text-blue-400">+{breakdown.clubLinks.delta}</span>
                   <span className="text-[9px] text-slate-400 leading-tight">Same club teammates sharing familiarity</span>
                 </div>
 
@@ -314,7 +314,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Active Synergies & Deductions</span>
               <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1 text-xs">
                 {positiveLogs.map((log, idx) => (
-                  <div key={`modal-pos-${idx}`} className="flex justify-between items-center text-emerald-400 bg-emerald-950/20 px-3 py-1.5 rounded-xl border border-emerald-900/20">
+                  <div key={`modal-pos-${idx}`} className="flex justify-between items-center text-blue-400 bg-blue-950/20 px-3 py-1.5 rounded-xl border border-blue-900/20">
                     <span className="truncate max-w-[240px]">{log.reason}</span>
                     <span className="font-display font-black">+{log.delta}</span>
                   </div>

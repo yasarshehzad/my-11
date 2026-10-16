@@ -194,14 +194,14 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
             Season {save.season.seasonNumber} Calendar
           </span>
           <span className="text-slate-600 text-xs">•</span>
-          <span className="text-[10px] font-mono text-emerald-400 font-bold">
+          <span className="text-[10px] font-mono text-blue-400 font-bold">
             {formatCareerDate(save.season.currentDate, save.settings?.dateFormat)}
           </span>
         </div>
         {onNavigateOffice && (
           <button
             onClick={onNavigateOffice}
-            className="py-1 px-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-[11px] uppercase tracking-wider transition-all shadow-sm shrink-0 cursor-pointer ml-auto"
+            className="py-1 px-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-[11px] uppercase tracking-wider transition-all shadow-sm shadow-blue-500/20 shrink-0 cursor-pointer ml-auto"
           >
             Office / Next Match ➔
           </button>
@@ -210,7 +210,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
 
       {/* Season Complete & Transition Spotlight */}
       {seasonFinished && seasonSummary && (
-        <section className="bg-gradient-to-r from-amber-950/40 via-slate-900/60 to-emerald-950/40 border border-amber-500/40 rounded-3xl p-5 shadow-2xl space-y-3">
+        <section className="bg-gradient-to-r from-amber-500/10 via-slate-900/60 to-blue-500/10 border border-amber-500/40 rounded-3xl p-5 shadow-2xl space-y-3">
           <div className="flex justify-between items-center">
             <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-950/60 border border-amber-800/60 px-3 py-1 rounded-full font-display">
               Season {save.season.seasonNumber} Complete • All 38 Matchdays Played
@@ -230,7 +230,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
 
             <button
               onClick={() => setShowSeasonReviewModal(true)}
-              className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer"
+              className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-indigo-600 hover:from-amber-400 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer"
             >
               🎉 Review & Advance to Season {save.season.seasonNumber + 1}
             </button>
@@ -246,14 +246,14 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
             <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-xl">
               <span className="text-4xl block">🔒</span>
               <div className="space-y-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-3 py-1 rounded-full font-display inline-block">
+                <span className="text-[10px] font-black uppercase tracking-widest text-blue-400 bg-blue-950/80 border border-blue-800/80 px-3 py-1 rounded-full font-display inline-block">
                   Embargo Active • Calendar Compilation
                 </span>
                 <h3 className="text-xl sm:text-2xl font-display font-black text-white uppercase tracking-tight mt-2">
                   Official Fixtures Released on 8 July {save.season.yearStart}
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-400 max-w-lg mx-auto leading-relaxed pt-1">
-                  The Premier League computer is currently compiling the official 38-game schedule. Head to your Manager Office and click <strong className="text-emerald-400">▶️ Continue</strong> to advance day-by-day through pre-season until Fixture Release Day.
+                  The Premier League computer is currently compiling the official 38-game schedule. Head to your Manager Office and click <strong className="text-blue-400">▶️ Continue</strong> to advance day-by-day through pre-season until Fixture Release Day.
                 </p>
               </div>
 
@@ -262,7 +262,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
                   <button
                     type="button"
                     onClick={onNavigateOffice}
-                    className="py-2.5 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer inline-flex items-center gap-1.5"
+                    className="py-2.5 px-5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-blue-500/20 cursor-pointer inline-flex items-center gap-1.5"
                   >
                     <span>➔ Go to Manager Office</span>
                   </button>
@@ -271,9 +271,9 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
             </div>
           ) : (
             /* ON OR AFTER RELEASE DAY (July 8+) BUT UNREVEALED */
-            <div className="bg-gradient-to-r from-emerald-950/50 via-slate-900/80 to-slate-950 border border-emerald-500/40 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-3">
+            <div className="bg-gradient-to-r from-blue-500/10 via-indigo-500/5 to-purple-500/10 dark:from-blue-950/50 dark:via-slate-900/80 dark:to-slate-950 border border-blue-500/40 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-3">
               <div className="flex justify-between items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-3 py-1 rounded-full font-display">
+                <span className="text-[10px] font-black uppercase tracking-widest text-blue-400 bg-blue-950/80 border border-blue-800/80 px-3 py-1 rounded-full font-display">
                   Official Announcement Day • 8 July
                 </span>
                 <span className="text-xs font-mono font-bold text-slate-400">38 Matches Ready</span>
@@ -293,7 +293,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
                   <button
                     type="button"
                     onClick={() => setShowFixtureReleaseCeremonyModal(true)}
-                    className="py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer"
+                    className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 transition-all cursor-pointer"
                   >
                     🎉 Launch Live Reveal Ceremony
                   </button>
@@ -332,7 +332,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
                     <p className="text-[10px] text-slate-400">Pre-season conditioning tour matches</p>
                   </div>
                 </div>
-                <span className="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-950/60 border border-emerald-900 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] text-blue-400 font-mono font-bold bg-blue-950/60 border border-blue-900 px-2 py-0.5 rounded-full">
                   {preseasonCup.fixtures.filter((f) => f.played).length} / {preseasonCup.fixtures.length} Played
                 </span>
               </div>
@@ -346,7 +346,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
                       className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-3 flex items-center justify-between gap-3 text-xs"
                     >
                       <div className="space-y-0.5 min-w-0">
-                        <span className="text-[9.5px] uppercase font-bold text-emerald-400">
+                        <span className="text-[9.5px] uppercase font-bold text-blue-400">
                           {fix.roundName} • {formatCareerDate(fix.date, 'uk', 'medium')}
                         </span>
                         <div className="font-display font-bold text-white truncate">
@@ -356,7 +356,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
                       </div>
                       <div className="text-right shrink-0">
                         {fix.played ? (
-                          <span className="font-display font-black text-sm text-emerald-400">
+                          <span className="font-display font-black text-sm text-blue-400">
                             {fix.homeScore} - {fix.awayScore}
                           </span>
                         ) : (
@@ -445,7 +445,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
               onChange={(e) =>
                 setSelectedRound(e.target.value === 'all' ? 'all' : parseInt(e.target.value))
               }
-              className="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1 text-xs text-white focus:outline-none focus:border-emerald-500 font-semibold"
+              className="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1 text-xs text-white focus:outline-none focus:border-blue-500 font-semibold"
             >
               <option value="all">All Rounds</option>
               {Array.from({ length: 38 }, (_, i) => i + 1).map((r) => (
@@ -462,7 +462,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
               onClick={() => setFilterScope('my_club')}
               className={`py-1 px-2.5 rounded-md text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
                 filterScope === 'my_club'
-                  ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/60'
+                  ? 'bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700/60 font-bold'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -505,9 +505,9 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
                 key={fixture.id}
                 className={`p-3 rounded-2xl border transition-all ${
                   isPlayed
-                    ? 'border-slate-850 hover:border-emerald-500/40 bg-slate-900/50 shadow-sm'
+                    ? 'border-slate-850 hover:border-blue-500/40 bg-slate-900/50 shadow-sm'
                     : isUpcoming
-                    ? 'border-emerald-500/70 bg-gradient-to-r from-emerald-950/40 via-slate-900/70 to-slate-900/50 shadow-md ring-1 ring-emerald-500/30'
+                    ? 'border-blue-500/70 bg-gradient-to-r from-blue-500/10 via-indigo-500/5 to-transparent dark:from-blue-950/40 dark:via-slate-900/70 dark:to-slate-900/50 shadow-md ring-1 ring-blue-500/30'
                     : isUserMatch
                     ? 'border-slate-800 bg-slate-900/40'
                     : 'border-slate-850/80 bg-slate-950/40'
@@ -520,7 +520,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
                     <span className="text-slate-700">•</span>
                     <span>{formatCareerDate(fixture.date, save.settings?.dateFormat)}</span>
                     {isUpcoming && (
-                      <span className="bg-emerald-500 text-slate-950 text-[9px] font-black uppercase px-1.5 py-0.2 rounded font-display">
+                      <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[9px] font-black uppercase px-1.5 py-0.2 rounded font-display shadow-sm shadow-blue-500/30">
                         Next Up
                       </span>
                     )}
@@ -530,7 +530,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
                       <button
                         type="button"
                         onClick={() => setMatchOverviewModal({ type: 'result', fixture })}
-                        className="text-emerald-400 hover:text-emerald-300 font-display font-black text-[10px] cursor-pointer"
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-500 font-display font-black text-[10px] cursor-pointer"
                       >
                         📊 Match Stats
                       </button>
@@ -538,7 +538,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
                       <button
                         type="button"
                         onClick={() => setMatchOverviewModal({ type: 'preview', fixture })}
-                        className="text-emerald-400 hover:text-emerald-300 font-display font-black text-[10px] cursor-pointer"
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-500 font-display font-black text-[10px] cursor-pointer"
                       >
                         📋 Dossier
                       </button>
@@ -580,7 +580,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
                     />
                     <span
                       className={`truncate text-xs ${
-                        fixture.homeClubId === userClubId ? 'text-emerald-300 font-black' : 'text-white font-medium'
+                        fixture.homeClubId === userClubId ? 'text-blue-600 dark:text-blue-400 font-black' : 'text-foreground font-medium'
                       }`}
                     >
                       {getEffectiveClubName(home, save.club)}
@@ -604,7 +604,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
                   <div className="flex items-center gap-2 flex-1 justify-end min-w-0 text-right">
                     <span
                       className={`truncate text-xs ${
-                        fixture.awayClubId === userClubId ? 'text-emerald-300 font-black' : 'text-white font-medium'
+                        fixture.awayClubId === userClubId ? 'text-blue-600 dark:text-blue-400 font-black' : 'text-foreground font-medium'
                       }`}
                     >
                       {getEffectiveClubName(away, save.club)}
@@ -742,7 +742,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
 
               <div className="bg-slate-900/60 border border-slate-850 p-3.5 rounded-2xl text-center space-y-1">
                 <div className="text-[9px] uppercase font-bold text-slate-500">Prize Revenue</div>
-                <div className="text-lg font-display font-black text-emerald-400">
+                <div className="text-lg font-display font-black text-blue-600 dark:text-blue-400">
                   {formatCurrency(seasonSummary.prizeMoney)}
                 </div>
                 <div className="text-[9px] text-slate-400 font-medium">Added to Budget</div>
@@ -778,7 +778,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
 
             {/* Squad Seasonal Progression Logs */}
             <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-4 space-y-2">
-              <div className="text-[10px] font-black uppercase text-emerald-400 tracking-wider flex items-center gap-1.5">
+              <div className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider flex items-center gap-1.5">
                 <span>🌱</span> Squad Development & Veteran Aging
               </div>
               <p className="text-[11px] text-slate-400 leading-relaxed">
@@ -808,7 +808,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
               </button>
               <button
                 onClick={handleAdvanceSeason}
-                className="flex-1 py-3 px-5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2"
+                className="flex-1 py-3 px-5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider shadow-xl shadow-blue-500/25 transition-all cursor-pointer flex items-center justify-center gap-2"
               >
                 <span>🚀 Kick Off Season {save.season.seasonNumber + 1}</span>
               </button>

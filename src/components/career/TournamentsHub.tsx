@@ -266,7 +266,7 @@ export function TournamentsHub({
           <header className="bg-slate-900/50 border border-slate-800 rounded-2xl px-4 py-2.5 flex flex-wrap sm:flex-nowrap justify-between items-center gap-2 shadow-sm">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/60 border border-emerald-900/60 px-2 py-0.2 rounded-full font-display">
+                <span className="text-[9px] font-black uppercase tracking-widest text-blue-400 bg-blue-950/60 border border-blue-900/60 px-2 py-0.2 rounded-full font-display">
                   Prize: £{(currentTournament.prizeMoney / 1_000_000).toFixed(1)}M
                 </span>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
@@ -279,10 +279,10 @@ export function TournamentsHub({
             </div>
 
             {currentTournament.isCompleted && currentTournament.winnerClubId && (
-              <div className="bg-emerald-950/40 border border-emerald-800/60 rounded-xl px-3 py-1.5 flex items-center gap-2 ml-auto">
+              <div className="bg-blue-950/40 border border-blue-800/60 rounded-xl px-3 py-1.5 flex items-center gap-2 ml-auto">
                 <span className="text-xl">🏆</span>
                 <div>
-                  <span className="text-[8px] uppercase font-bold text-emerald-400 block tracking-wider">
+                  <span className="text-[8px] uppercase font-bold text-blue-400 block tracking-wider">
                     Champion
                   </span>
                   <span className="text-xs font-display font-black text-white uppercase">
@@ -352,7 +352,7 @@ export function TournamentsHub({
                                       key={cId}
                                       className={`text-[10px] px-2 py-0.5 rounded-lg border font-bold ${
                                         isUser
-                                          ? 'bg-emerald-950/70 border-emerald-500 text-emerald-300'
+                                          ? 'bg-blue-50 dark:bg-blue-950/70 border-blue-500 text-blue-700 dark:text-blue-300 font-bold'
                                           : 'bg-slate-900 border-slate-800 text-slate-300'
                                       }`}
                                     >
@@ -372,9 +372,9 @@ export function TournamentsHub({
                         const away = findAnyClub(userTie.awayClubId);
 
                         return (
-                          <article className="p-3.5 rounded-2xl border border-emerald-500/70 bg-gradient-to-r from-emerald-950/40 via-slate-900/80 to-slate-950 shadow-md ring-1 ring-emerald-500/30">
+                          <article className="p-3.5 rounded-2xl border border-blue-500/70 bg-gradient-to-r from-blue-500/10 via-slate-900/80 to-slate-950 shadow-md ring-1 ring-blue-500/30">
                             <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono mb-2">
-                              <span className="bg-emerald-500 text-slate-950 font-display font-black px-2 py-0.2 rounded text-[9px] uppercase tracking-wider">
+                              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-display font-black px-2 py-0.2 rounded text-[9px] uppercase tracking-wider shadow-sm">
                                 ⭐ Your Cup Fixture
                               </span>
                               <span>📅 {formatCareerDate(userTie.date, save.settings?.dateFormat)}</span>
@@ -392,7 +392,7 @@ export function TournamentsHub({
                                 <span
                                   className={`text-xs font-bold truncate ${
                                     userTie.homeClubId === userClubId
-                                      ? 'text-emerald-300 font-black'
+                                      ? 'text-blue-400 font-black'
                                       : 'text-white'
                                   }`}
                                 >
@@ -425,7 +425,7 @@ export function TournamentsHub({
                                 <span
                                   className={`text-xs font-bold truncate ${
                                     userTie.awayClubId === userClubId
-                                      ? 'text-emerald-300 font-black'
+                                      ? 'text-blue-400 font-black'
                                       : 'text-white'
                                   }`}
                                 >
@@ -446,7 +446,7 @@ export function TournamentsHub({
                                 <button
                                   type="button"
                                   onClick={() => setActiveCupMatch(userTie)}
-                                  className="w-full py-2 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1 shadow-md shadow-emerald-500/20 cursor-pointer transition-all"
+                                  className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1 shadow-md shadow-blue-500/20 cursor-pointer transition-all"
                                 >
                                   <span>🎮</span> Play Matchday Command Center
                                 </button>

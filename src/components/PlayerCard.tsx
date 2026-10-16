@@ -209,7 +209,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     // Archetype badge styling
     const archetypeStyle = {
       star: 'bg-amber-500/15 border-amber-500/35 text-amber-400',
-      system: 'bg-emerald-500/15 border-emerald-500/35 text-emerald-400',
+      system: 'bg-blue-500/15 border-blue-500/35 text-blue-400',
       wildcard: 'bg-cyan-500/15 border-cyan-500/35 text-cyan-400',
     }[projectedInfo?.archetype || 'star'];
 
@@ -217,7 +217,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     const delta = projectedInfo?.delta ?? 0;
     const chemPillStyle =
       delta > 0
-        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.2)]'
+        ? 'bg-blue-500/20 text-blue-400 border-blue-500/40 shadow-[0_0_10px_rgba(59,130,246,0.2)]'
         : delta < 0
         ? 'bg-rose-500/20 text-rose-400 border-rose-500/40'
         : 'bg-slate-900/80 text-slate-400 border-slate-800';
@@ -293,7 +293,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
               <span className="text-slate-400 font-semibold">
                 {mysteryClues.affiliationHint.type === 'nation' ? '🌍 Country:' : '🛡️ Club:'}
               </span>
-              <span className="font-display font-bold text-emerald-400">
+              <span className="font-display font-bold text-blue-400">
                 {mysteryClues.affiliationHint.label}
               </span>
             </div>
@@ -322,8 +322,8 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         onMouseLeave={() => onHover && onHover(false)}
         aria-label={accessibleLabel}
         className={`w-full max-w-[245px] min-h-[395px] rounded-2xl border ${rarityConfig.border} ${rarityConfig.bg} ${rarityConfig.glow} card-shine flex flex-col p-4 text-left relative transition-all duration-300 transform hover:-translate-y-2 active:scale-95 ${
-          selected ? 'ring-2 ring-emerald-400 ring-offset-4 ring-offset-slate-950 scale-102' : ''
-        } ${pulse ? 'animate-pulse' : ''} cursor-pointer select-none overflow-hidden focus:outline-none focus:ring-2 focus:ring-emerald-400`}
+          selected ? 'ring-2 ring-blue-500 ring-offset-4 ring-offset-slate-950 scale-102' : ''
+        } ${pulse ? 'animate-pulse' : ''} cursor-pointer select-none overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500`}
       >
         {/* Dynamic Card Overlay Light Effect */}
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none" />
@@ -393,7 +393,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         <div className="mt-3 flex flex-col gap-1.5 relative z-10 flex-1 w-full">
           {projectedInfo ? (
             <div className={`${rarityConfig.subBg} border ${rarityConfig.subBorder} rounded-xl px-2.5 py-1.5 flex flex-col gap-0.5 leading-none`}>
-              <span className="text-[8.5px] font-black font-display tracking-wider uppercase text-emerald-450">
+              <span className="text-[8.5px] font-black font-display tracking-wider uppercase text-blue-400">
                 {projectedInfo.archetypeDetail}
               </span>
               <span className="text-[8px] text-slate-400 font-semibold truncate">
@@ -404,7 +404,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
             <div
               className={`${rarityConfig.subBg} border ${rarityConfig.subBorder} rounded px-2.5 py-1 w-fit flex items-center leading-none`}
             >
-              <span className="text-[9px] font-bold text-emerald-450 font-display tracking-wider uppercase">
+              <span className="text-[9px] font-bold text-blue-400 font-display tracking-wider uppercase">
                 ✨ {specialTrait}
               </span>
             </div>
@@ -422,7 +422,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
                 </p>
                 {projectedInfo.linkedTeammates.length > 0 && (
                   <p className="truncate">
-                    • Link: <span className="font-bold text-emerald-400">{projectedInfo.linkedTeammates[0].displayName} ({projectedInfo.linkedTeammates[0].reason})</span>
+                    • Link: <span className="font-bold text-blue-400">{projectedInfo.linkedTeammates[0].displayName} ({projectedInfo.linkedTeammates[0].reason})</span>
                   </p>
                 )}
                 {projectedInfo.tacticalRoleNote && (

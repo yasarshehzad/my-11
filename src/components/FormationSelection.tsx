@@ -72,7 +72,7 @@ export function FormationSelection({
                   onClick={() => onSelectLeague(lg.id)}
                   className={`w-full p-3 rounded-2xl text-left transition-all duration-200 flex items-center gap-3 cursor-pointer relative active:scale-99 ${
                     active
-                      ? 'border-2 border-emerald-400 bg-emerald-500/10 shadow-md ring-2 ring-emerald-400/30'
+                      ? 'border-2 border-blue-500 bg-blue-500/10 shadow-md ring-2 ring-blue-500/30'
                       : 'office-subcard hover:border-slate-700/60'
                   }`}
                 >
@@ -91,7 +91,7 @@ export function FormationSelection({
                     </p>
                   </div>
                   {active && (
-                    <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-md shrink-0" />
+                    <div className="w-2 h-2 rounded-full bg-blue-500 shadow-md shrink-0" />
                   )}
                 </button>
               );
@@ -120,7 +120,7 @@ export function FormationSelection({
                   onClick={() => onSelectDraftModifier?.(mode.id)}
                   className={`p-2.5 rounded-2xl text-center transition-all duration-200 flex flex-col items-center justify-between gap-1 cursor-pointer relative active:scale-98 ${
                     active
-                      ? 'border-2 border-emerald-400 bg-emerald-500/10 shadow-md ring-2 ring-emerald-400/30'
+                      ? 'border-2 border-blue-500 bg-blue-500/10 shadow-md ring-2 ring-blue-500/30'
                       : 'office-subcard hover:border-slate-700/60'
                   }`}
                 >
@@ -154,7 +154,7 @@ export function FormationSelection({
             type="button"
             onClick={onToggleDraftIQMode}
             className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-200 cursor-pointer shrink-0 relative ${
-              draftIQMode ? 'bg-emerald-500' : 'bg-slate-700'
+              draftIQMode ? 'bg-blue-600' : 'bg-slate-700'
             }`}
             aria-label="Toggle Tactical Scouting Intel"
           >
@@ -181,7 +181,7 @@ export function FormationSelection({
               type="button"
               onClick={onToggleFreeSearch}
               className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-200 cursor-pointer shrink-0 relative ${
-                freeSearchEnabled ? 'bg-emerald-500' : 'bg-slate-700'
+                freeSearchEnabled ? 'bg-blue-600' : 'bg-slate-700'
               }`}
               aria-label="Toggle Free Player Search"
             >
@@ -210,12 +210,12 @@ export function FormationSelection({
                   onClick={() => onSelectFormation(f.type)}
                   className={`w-full p-3 rounded-2xl text-left transition-all duration-200 group active:scale-98 cursor-pointer flex flex-col justify-between ${
                     active
-                      ? 'border-2 border-emerald-400 bg-emerald-500/10 shadow-md ring-2 ring-emerald-400/30'
+                      ? 'border-2 border-blue-500 bg-blue-500/10 shadow-md ring-2 ring-blue-500/30'
                       : 'office-subcard hover:border-slate-700/60'
                   }`}
                 >
                   <div className="flex justify-between items-center w-full leading-none">
-                    <span className={`text-sm sm:text-base font-display font-black ${active ? 'text-emerald-400' : 'text-[var(--office-text-primary)]'}`}>
+                    <span className={`text-sm sm:text-base font-display font-black ${active ? 'text-blue-600 dark:text-blue-400' : 'text-[var(--office-text-primary)]'}`}>
                       {f.label}
                     </span>
                     <span className="text-[9px] font-mono font-bold text-slate-400 office-subcard px-1.5 py-0.5 rounded-full">

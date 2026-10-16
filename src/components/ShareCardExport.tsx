@@ -128,7 +128,7 @@ export const ShareCardExport: React.FC<ShareCardExportProps> = ({
       {/* 1. Header Area */}
       <div className="flex justify-between items-center w-full border-b-2 border-slate-900 pb-8 relative z-10">
         <div>
-          <h1 className="text-6xl font-display font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-emerald-450 uppercase leading-none">
+          <h1 className="text-6xl font-display font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-blue-400 uppercase leading-none">
             MY-11
           </h1>
           <p className="text-lg font-bold text-slate-500 tracking-widest uppercase mt-3.5">
@@ -139,7 +139,7 @@ export const ShareCardExport: React.FC<ShareCardExportProps> = ({
         {isDailyChallenge ? (
           <span className={`text-xl font-black px-7 py-3 rounded-2xl border uppercase tracking-wider font-display ${
             dailyChallengeBeaten 
-              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.25)]' 
+              ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40 shadow-[0_0_20px_rgba(59,130,246,0.25)]' 
               : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
           }`}>
             {dailyChallengeBeaten ? '✅ CHALLENGE CLEARED' : '❌ CHALLENGE FAILED'}
@@ -245,7 +245,7 @@ export const ShareCardExport: React.FC<ShareCardExportProps> = ({
 
         <div className="flex gap-4">
           {/* Overall Badge */}
-          <div className="flex flex-col items-center bg-slate-950 border-2 border-emerald-500/20 px-6 py-4.5 rounded-3xl shadow-lg leading-none">
+          <div className="flex flex-col items-center bg-slate-950 border-2 border-blue-500/20 px-6 py-4.5 rounded-3xl shadow-lg leading-none">
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">TEAM OVR</span>
             <span className="text-5xl font-display font-black text-white mt-2.5">{stats.overall}</span>
           </div>
@@ -262,7 +262,7 @@ export const ShareCardExport: React.FC<ShareCardExportProps> = ({
       <div className="grid grid-cols-5 gap-4 mt-6 relative z-10">
         <div className="bg-slate-900/60 rounded-2xl p-4.5 border border-slate-800 text-center">
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">ATTACK</span>
-          <p className="text-2xl font-display font-black text-emerald-450 mt-2">{stats.attack}</p>
+          <p className="text-2xl font-display font-black text-blue-400 mt-2">{stats.attack}</p>
         </div>
         <div className="bg-slate-900/60 rounded-2xl p-4.5 border border-slate-800 text-center">
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">MIDFIELD</span>
@@ -287,16 +287,16 @@ export const ShareCardExport: React.FC<ShareCardExportProps> = ({
         <p className="text-base font-semibold text-slate-350 leading-relaxed italic">
           "{simResult.summary}"
         </p>
-        <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest mt-2.5">
+        <p className="text-xs font-bold text-blue-400 uppercase tracking-widest mt-2.5">
           TACTICAL PLAYSTYLE: {simResult.playstyle}
         </p>
       </div>
 
       {/* 5. MVP & Isolated Spotlight */}
       <div className="grid grid-cols-2 gap-6 mt-6 relative z-10">
-        <div className="bg-slate-950/60 rounded-3xl p-5.5 border border-emerald-500/10 flex flex-col justify-between h-[90px] leading-none">
+        <div className="bg-slate-950/60 rounded-3xl p-5.5 border border-blue-500/10 flex flex-col justify-between h-[90px] leading-none">
           <div>
-            <span className="text-[10px] font-bold text-emerald-450 uppercase tracking-widest block mb-1">⭐ SEASON MVP</span>
+            <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest block mb-1">⭐ SEASON MVP</span>
             <span className="text-2xl font-display font-extrabold text-white uppercase leading-tight truncate block">
               {simResult.mvp.displayName}
             </span>
@@ -329,7 +329,7 @@ export const ShareCardExport: React.FC<ShareCardExportProps> = ({
           <div className="w-[1.5px] bg-slate-800" />
           <div className="flex-grow">
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Best League Record</span>
-            <p className="text-2xl font-display font-black text-emerald-400 mt-1">{streakStats.bestPoints} pts</p>
+            <p className="text-2xl font-display font-black text-blue-400 mt-1">{streakStats.bestPoints} pts</p>
           </div>
           <div className="w-[1.5px] bg-slate-800" />
           <div className="flex-grow">
@@ -350,7 +350,7 @@ export const ShareCardExport: React.FC<ShareCardExportProps> = ({
           <p className="text-2xl font-display font-black tracking-tight text-white uppercase leading-none">
             CAN YOU BEAT {simResult.wins} WINS?
           </p>
-          <p className="text-xs text-emerald-450 mt-2 font-black uppercase leading-none tracking-widest font-display">
+          <p className="text-xs text-blue-400 mt-2 font-black uppercase leading-none tracking-widest font-display">
             PLAY NOW AT MY-11.COM
           </p>
         </div>

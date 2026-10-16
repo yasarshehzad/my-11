@@ -123,10 +123,10 @@ function DraftPageContent() {
           <div className="h-4 w-px bg-[var(--office-divider)]" />
           <button
             onClick={handleReturnHome}
-            className="text-base sm:text-lg font-display font-black tracking-tight text-[var(--office-text-primary)] uppercase hover:text-emerald-400 transition-colors cursor-pointer flex items-center gap-1.5"
+            className="text-base sm:text-lg font-display font-black tracking-tight text-[var(--office-text-primary)] uppercase hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer flex items-center gap-1.5"
           >
             <span>MY-11</span>
-            <span className="text-[10px] font-mono font-bold tracking-wider text-emerald-400 office-subcard px-2 py-0.5 rounded-full uppercase">
+            <span className="text-[10px] font-mono font-bold tracking-wider text-blue-600 dark:text-blue-400 office-subcard px-2 py-0.5 rounded-full uppercase">
               Draft
             </span>
           </button>
@@ -292,9 +292,9 @@ function DraftPageContent() {
           This is an unofficial football draft game and is not affiliated with any club, league, player, governing body, or rights holder.
         </p>
         <div className="flex justify-center gap-4 text-slate-400 normal-case">
-          <Link href="/privacy" className="hover:text-emerald-400 transition-colors">Privacy Policy</Link>
+          <Link href="/privacy" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Privacy Policy</Link>
           <span>•</span>
-          <Link href="/terms" className="hover:text-emerald-400 transition-colors">Terms of Service</Link>
+          <Link href="/terms" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Terms of Service</Link>
         </div>
         <p className="text-slate-600">
           MY-11 © 2026 • CREATED FOR FANS

@@ -138,7 +138,7 @@ export function SquadRegistrationModal({
         <header className="p-3.5 sm:p-4 border-b border-slate-800 flex items-center justify-between gap-2 shrink-0 bg-slate-950/70">
           <div className="space-y-0.5 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-display">
+              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/40 font-display">
                 Premier League Squad Rules
               </span>
               <span className="text-[10px] text-slate-400 font-mono">
@@ -190,7 +190,7 @@ export function SquadRegistrationModal({
           }`}>
             <span className="text-[9px] uppercase font-bold text-slate-400 block">Homegrown / Foreign</span>
             <div className="flex items-baseline gap-1 mt-0.5">
-              <span className="font-display font-black text-base text-emerald-400">{registeredHomegrownCount}</span>
+              <span className="font-display font-black text-base text-blue-400">{registeredHomegrownCount}</span>
               <span className="text-[10px] text-slate-400">HG •</span>
               <span className="font-display font-black text-base text-slate-300">{registeredNonHomegrownCount}</span>
               <span className="text-[10px] text-slate-400 font-mono">/ 17 max</span>
@@ -203,13 +203,13 @@ export function SquadRegistrationModal({
           </div>
 
           {/* U21 Exempt */}
-          <div className="p-2.5 rounded-xl border border-emerald-900/40 bg-emerald-950/20 flex flex-col justify-between">
-            <span className="text-[9px] uppercase font-bold text-emerald-400 block">U21 Prospects</span>
+          <div className="p-2.5 rounded-xl border border-blue-900/40 bg-blue-950/20 flex flex-col justify-between">
+            <span className="text-[9px] uppercase font-bold text-blue-400 block">U21 Prospects</span>
             <div className="flex items-baseline gap-1 mt-0.5">
-              <span className="font-display font-black text-lg text-emerald-300">{u21Players.length}</span>
-              <span className="text-[10px] text-emerald-400/80">Exempt</span>
+              <span className="font-display font-black text-lg text-blue-300">{u21Players.length}</span>
+              <span className="text-[10px] text-blue-400/80">Exempt</span>
             </div>
-            <span className="text-[8.5px] font-medium text-emerald-400/80 mt-0.5 truncate">
+            <span className="text-[8.5px] font-medium text-blue-400/80 mt-0.5 truncate">
               ✓ Eligible automatically
             </span>
           </div>
@@ -223,7 +223,7 @@ export function SquadRegistrationModal({
               placeholder="Search senior players..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
             />
           </div>
 
@@ -231,7 +231,7 @@ export function SquadRegistrationModal({
             <button
               type="button"
               onClick={handleAutoRegisterTop25}
-              className="py-1 px-2.5 rounded-lg bg-emerald-950/60 hover:bg-emerald-950 text-emerald-300 border border-emerald-800/60 font-display font-bold text-[10.5px] uppercase cursor-pointer"
+              className="py-1 px-2.5 rounded-lg bg-blue-950/60 hover:bg-blue-950 text-blue-300 border border-blue-800/60 font-display font-bold text-[10.5px] uppercase cursor-pointer"
             >
               ⚡ Auto Top 25
             </button>
@@ -254,7 +254,7 @@ export function SquadRegistrationModal({
               onClick={() => setFilterPos(cat)}
               className={`py-1 px-2.5 rounded-lg font-display font-bold text-[10.5px] uppercase cursor-pointer transition-colors ${
                 filterPos === cat
-                  ? 'bg-emerald-500 text-slate-950'
+                  ? 'bg-blue-600 text-white font-bold'
                   : 'bg-slate-950 border border-slate-850 text-slate-400 hover:text-white'
               }`}
             >
@@ -266,8 +266,8 @@ export function SquadRegistrationModal({
             onClick={() => setShowU21List((prev) => !prev)}
             className={`py-1 px-2.5 rounded-lg font-display font-bold text-[10.5px] uppercase cursor-pointer ml-auto transition-colors flex items-center gap-1 ${
               showU21List
-                ? 'bg-emerald-950 border border-emerald-500 text-emerald-300'
-                : 'bg-slate-900 border border-slate-800 text-emerald-400'
+                ? 'bg-blue-950 border border-blue-500 text-blue-300'
+                : 'bg-slate-900 border border-slate-800 text-blue-400'
             }`}
           >
             <span>👶 U21 Exempt ({u21Players.length})</span>
@@ -279,12 +279,12 @@ export function SquadRegistrationModal({
         <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 scrollbar-thin">
           {/* U21 Collapsible Banner if toggled */}
           {showU21List && (
-            <div className="p-3 rounded-2xl bg-emerald-950/30 border border-emerald-800/40 space-y-2 mb-3">
+            <div className="p-3 rounded-2xl bg-blue-950/30 border border-blue-800/40 space-y-2 mb-3">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-display font-black text-emerald-300 uppercase tracking-wider text-[11px]">
+                <span className="font-display font-black text-blue-300 uppercase tracking-wider text-[11px]">
                   👶 Under-21 Squad Players (Exempt from 25-man limit)
                 </span>
-                <span className="text-[10px] text-emerald-400 font-mono">
+                <span className="text-[10px] text-blue-400 font-mono">
                   All {u21Players.length} automatically eligible
                 </span>
               </div>
@@ -292,16 +292,16 @@ export function SquadRegistrationModal({
                 {u21Players.map((p) => (
                   <div
                     key={p.id}
-                    className="p-1.5 px-2 rounded-lg bg-slate-950/60 border border-emerald-900/30 flex items-center justify-between text-xs"
+                    className="p-1.5 px-2 rounded-lg bg-slate-950/60 border border-blue-900/30 flex items-center justify-between text-xs"
                   >
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="w-6 h-6 rounded bg-slate-900 border border-slate-800 flex items-center justify-center font-display font-bold text-[10px] text-emerald-400 shrink-0">
+                      <span className="w-6 h-6 rounded bg-slate-900 border border-slate-800 flex items-center justify-center font-display font-bold text-[10px] text-blue-400 shrink-0">
                         {p.rating}
                       </span>
                       <span className="font-display font-bold text-white truncate text-[11px]">{p.name}</span>
                       <span className="text-[9.5px] text-slate-400">{p.position} • {p.age}y</span>
                     </div>
-                    <span className="text-[9px] font-bold text-emerald-400 bg-emerald-950/80 px-1.5 py-0.2 rounded border border-emerald-900 shrink-0">
+                    <span className="text-[9px] font-bold text-blue-400 bg-blue-950/80 px-1.5 py-0.2 rounded border border-blue-900 shrink-0">
                       Eligible ✓
                     </span>
                   </div>
@@ -327,14 +327,14 @@ export function SquadRegistrationModal({
                   onClick={() => togglePlayer(player.id)}
                   className={`p-2.5 rounded-xl border flex items-center justify-between gap-2.5 transition-all cursor-pointer select-none ${
                     isSelected
-                      ? 'bg-slate-950/90 border-emerald-500/50 shadow-sm'
+                      ? 'bg-slate-950/90 border-blue-500/50 shadow-sm'
                       : 'bg-slate-950/40 border-slate-850 hover:border-slate-750 opacity-80'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-display font-black text-xs shrink-0 ${
                       isSelected
-                        ? 'bg-emerald-950 border border-emerald-600/70 text-emerald-300'
+                        ? 'bg-blue-950 border border-blue-600/70 text-blue-300'
                         : 'bg-slate-900 border border-slate-800 text-slate-400'
                     }`}>
                       {player.rating}
@@ -346,7 +346,7 @@ export function SquadRegistrationModal({
                           {player.name}
                         </span>
                         {isHg ? (
-                          <span className="text-[8px] font-bold uppercase text-emerald-400 bg-emerald-950/60 border border-emerald-900 px-1 py-0.2 rounded shrink-0">
+                          <span className="text-[8px] font-bold uppercase text-blue-400 bg-blue-950/60 border border-blue-900 px-1 py-0.2 rounded shrink-0">
                             HG
                           </span>
                         ) : (
@@ -356,7 +356,7 @@ export function SquadRegistrationModal({
                         )}
                       </div>
                       <div className="text-[10px] text-slate-400 font-medium flex items-center gap-1 mt-0.5 truncate">
-                        <span className="text-emerald-400 font-bold">{player.position}</span>
+                        <span className="text-blue-400 font-bold">{player.position}</span>
                         <span>•</span>
                         <span>{player.age}y</span>
                         <span>•</span>
@@ -379,7 +379,7 @@ export function SquadRegistrationModal({
                       disabled={atCapacity}
                       className={`py-1.5 px-3 rounded-lg font-display font-black text-[11px] uppercase tracking-wider transition-all cursor-pointer ${
                         isSelected
-                          ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-sm'
+                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-sm shadow-blue-500/20'
                           : atCapacity
                           ? 'bg-slate-900 text-slate-600 border border-slate-800 cursor-not-allowed'
                           : 'bg-slate-850 hover:bg-slate-800 text-slate-300 border border-slate-700'
@@ -411,7 +411,7 @@ export function SquadRegistrationModal({
             className={`py-2.5 px-5 rounded-xl font-display font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer flex items-center gap-1.5 ${
               isOverLimit
                 ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 shadow-emerald-500/20 hover:scale-[1.02]'
+                : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-xl shadow-blue-500/25 hover:scale-[1.02]'
             }`}
           >
             <span>💾 Confirm 25-Man Registration ({selectedCount}/25)</span>

@@ -85,7 +85,7 @@ export function DraftOptions({
         <div className="flex items-center gap-1.5">
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">
             Choose Player for:{' '}
-            <span className="text-emerald-400 font-display font-black">
+            <span className="text-blue-600 dark:text-blue-400 font-display font-black">
               {currentSlot?.label}
             </span>
           </span>
@@ -150,7 +150,7 @@ export function DraftOptions({
             onClick={() => onSetDraftTab('recommended')}
             className={`flex-grow py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
               draftTab === 'recommended'
-                ? 'bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/25 text-emerald-400 font-black shadow-md'
+                ? 'bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/25 text-blue-600 dark:text-blue-400 font-black shadow-md'
                 : 'border border-transparent text-slate-405 hover:text-foreground'
             }`}
           >
@@ -160,7 +160,7 @@ export function DraftOptions({
             onClick={() => onSetDraftTab('search')}
             className={`flex-grow py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
               draftTab === 'search'
-                ? 'bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/25 text-emerald-400 font-black shadow-md'
+                ? 'bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/25 text-blue-600 dark:text-blue-400 font-black shadow-md'
                 : 'border border-transparent text-slate-405 hover:text-foreground'
             }`}
           >
@@ -199,7 +199,7 @@ export function DraftOptions({
               value={searchQuery}
               onChange={(e) => onSetSearchQuery(e.target.value)}
               placeholder="Search name, club, season..."
-              className="w-full bg-slate-950/80 border border-slate-900 rounded-2xl py-3.5 pl-10 pr-10 text-xs text-foreground placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all font-semibold"
+              className="w-full bg-slate-950/80 border border-slate-900 rounded-2xl py-3.5 pl-10 pr-10 text-xs text-foreground placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all font-semibold"
             />
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs">🔍</span>
             {searchQuery !== '' && (
@@ -220,7 +220,7 @@ export function DraftOptions({
               <select
                 value={selectedClub}
                 onChange={(e) => onSetSelectedClub(e.target.value)}
-                className="w-full bg-slate-950/85 border border-slate-900 rounded-xl py-2 px-3 text-[10px] text-foreground font-bold tracking-wide focus:outline-none focus:border-emerald-500/50 cursor-pointer"
+                className="w-full bg-slate-950/85 border border-slate-900 rounded-xl py-2 px-3 text-[10px] text-foreground font-bold tracking-wide focus:outline-none focus:border-blue-500 cursor-pointer"
               >
                 <option value="" className="text-foreground bg-background">All Clubs</option>
                 {allClubs.map((club) => (
@@ -237,7 +237,7 @@ export function DraftOptions({
               <select
                 value={selectedEra}
                 onChange={(e) => onSetSelectedEra(e.target.value)}
-                className="w-full bg-slate-950/85 border border-slate-900 rounded-xl py-2 px-3 text-[10px] text-foreground font-bold tracking-wide focus:outline-none focus:border-emerald-500/50 cursor-pointer"
+                className="w-full bg-slate-950/85 border border-slate-900 rounded-xl py-2 px-3 text-[10px] text-foreground font-bold tracking-wide focus:outline-none focus:border-blue-500 cursor-pointer"
               >
                 <option value="" className="text-foreground bg-background">All Eras</option>
                 {allEras.map((era) => {
@@ -260,7 +260,7 @@ export function DraftOptions({
           {/* Position lock status toggle */}
           <div className="flex items-center justify-between bg-slate-900/20 px-3.5 py-2.5 rounded-xl border border-slate-900/50 leading-none">
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-              Position Filter: <span className="text-emerald-450 font-display font-black">{currentSlot?.position}</span>
+              Position Filter: <span className="text-blue-600 dark:text-blue-400 font-display font-black">{currentSlot?.position}</span>
             </span>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -269,7 +269,7 @@ export function DraftOptions({
                 onChange={(e) => onSetOnlyMatchingPosition(e.target.checked)}
                 className="sr-only peer"
               />
-              <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 peer-checked:after:bg-emerald-450 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-950/60 border border-slate-700 peer-checked:border-emerald-500/40 font-semibold"></div>
+              <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 peer-checked:after:bg-blue-600 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500/20 border border-slate-700 peer-checked:border-blue-500/40 font-semibold"></div>
             </label>
           </div>
 

@@ -31,7 +31,7 @@ export default function TermsPage() {
         <div className="pt-4">
           <Link
             href="/"
-            className="inline-block py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-zinc-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/10 hover:from-emerald-400 hover:to-teal-400 transition-all duration-300 transform active:scale-95 cursor-pointer text-center"
+            className="inline-block py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 hover:from-blue-500 hover:to-indigo-500 transition-all duration-300 transform active:scale-95 cursor-pointer text-center"
           >
             ➔ Return to Main Game
           </Link>

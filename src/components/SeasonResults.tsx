@@ -219,7 +219,7 @@ export function SeasonResults({
 
       {/* Results Header */}
       <div className="text-center mt-2 relative z-10 leading-none">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/25 text-emerald-450 text-[10px] font-bold uppercase tracking-widest mb-3">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-950/60 border border-blue-500/25 text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-3">
           ⚽ FIXTURES COMPLETE
         </div>
         
@@ -229,12 +229,12 @@ export function SeasonResults({
         
         {isDailyChallenge && todayChallenge && (
           <p className="text-[10px] text-slate-400 font-bold tracking-widest uppercase mt-2">
-            Daily Challenge: <span className="text-emerald-450 font-display">{todayChallenge.title}</span>
+            Daily Challenge: <span className="text-blue-400 font-display">{todayChallenge.title}</span>
           </p>
         )}
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mt-1.5">
           <p className="text-[10px] text-slate-450 font-bold tracking-widest uppercase">
-            League: <span className="text-emerald-450 font-display">
+            League: <span className="text-blue-400 font-display">
               {
                 {
                   english: 'English Premier League 🇬🇧',
@@ -248,7 +248,7 @@ export function SeasonResults({
           </p>
           <span className="text-slate-700 hidden sm:inline">•</span>
           <p className="text-[10px] text-slate-450 font-bold tracking-widest uppercase">
-            Mode: <span className="text-emerald-450 font-display">
+            Mode: <span className="text-blue-400 font-display">
               {simResult.draftModifier === 'quick' ? '⚡ QUICK DRAFT' : simResult.draftModifier === 'mystery' ? '❓ MYSTERY DRAFT' : '⏱️ CLASSIC DRAFT'}
             </span>
           </p>
@@ -280,7 +280,7 @@ export function SeasonResults({
       {simResult.beatTargetResult && (
         <div className={`w-full p-4.5 rounded-3xl border relative z-10 text-center shadow-xl ${
           simResult.beatTargetResult.beaten
-            ? 'bg-gradient-to-r from-emerald-950/80 to-slate-950/80 border-emerald-500/40 text-emerald-400'
+            ? 'bg-gradient-to-r from-blue-500/10 via-indigo-500/5 to-purple-500/10 border-blue-500/40 text-blue-400'
             : simResult.beatTargetResult.matched
             ? 'bg-gradient-to-r from-amber-950/80 to-slate-950/80 border-amber-500/40 text-amber-400'
             : 'bg-gradient-to-r from-slate-900/80 to-slate-950/80 border-slate-800 text-slate-400'
@@ -309,10 +309,10 @@ export function SeasonResults({
 
       {/* New Personal Best Banner */}
       {simResult.newPersonalBests && simResult.newPersonalBests.length > 0 && (
-        <div className="w-full p-4 rounded-3xl bg-gradient-to-r from-emerald-950/70 via-slate-950/90 to-emerald-950/70 border border-emerald-500/40 relative z-10 text-center shadow-2xl animate-pulse">
+        <div className="w-full p-4 rounded-3xl bg-gradient-to-r from-blue-500/15 via-indigo-500/10 to-purple-500/15 border border-blue-500/40 relative z-10 text-center shadow-2xl animate-pulse">
           <div className="flex items-center justify-center gap-1.5">
             <span className="text-lg">🏆</span>
-            <h3 className="text-xs font-display font-black text-emerald-400 uppercase tracking-widest">
+            <h3 className="text-xs font-display font-black text-blue-400 uppercase tracking-widest">
               NEW PERSONAL BEST!
             </h3>
           </div>
@@ -320,7 +320,7 @@ export function SeasonResults({
             {simResult.newPersonalBests.map((record, idx) => (
               <span
                 key={idx}
-                className="text-[9px] font-display font-black uppercase px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300"
+                className="text-[9px] font-display font-black uppercase px-2.5 py-1 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-300"
               >
                 {record}
               </span>
@@ -331,13 +331,13 @@ export function SeasonResults({
 
       {/* 1. Main League Outcome Card */}
       <div className="w-full flex flex-col items-center p-6 office-floating-card relative overflow-hidden text-center z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none" />
 
         {/* Daily Challenge Clear Status Badge */}
         {isDailyChallenge ? (
           <div className={`px-5 py-2 rounded-2xl bg-gradient-to-r border shadow-lg font-display font-black text-sm uppercase tracking-wider mb-4 leading-none ${
             challengeBeaten 
-              ? 'from-emerald-400 to-teal-500 text-zinc-950 border-emerald-400 shadow-emerald-500/20'
+              ? 'from-blue-600 via-indigo-600 to-violet-600 text-white border-blue-400 shadow-blue-500/20'
               : 'from-rose-500 to-red-700 text-rose-950 border-rose-500'
           }`}>
             {challengeBeaten ? '✅ CHALLENGE CLEARED!' : '❌ CHALLENGE FAILED'}
@@ -367,7 +367,7 @@ export function SeasonResults({
           <div className="flex flex-wrap items-center justify-center gap-2 mt-4 pt-3 border-t border-border/40 w-full">
             <span className={`text-[9px] font-black px-3 py-1 rounded-full border uppercase tracking-wider font-display leading-none ${
               simResult.seasonStory.verdict === 'Exceeded expectations'
-                ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                ? 'bg-blue-500/15 text-blue-400 border-blue-500/30'
                 : simResult.seasonStory.verdict === 'Underperformed'
                 ? 'bg-rose-500/15 text-rose-400 border-rose-500/30'
                 : 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30'
@@ -389,7 +389,7 @@ export function SeasonResults({
               <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">
                 Official Season Review
               </span>
-              <h3 className="text-lg font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400 uppercase tracking-tight mt-0.5">
+              <h3 className="text-lg font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 uppercase tracking-tight mt-0.5">
                 {simResult.seasonStory.title}
               </h3>
             </div>
@@ -400,7 +400,7 @@ export function SeasonResults({
 
           <div className="flex flex-col gap-3 text-xs leading-relaxed text-muted-foreground">
             <div className="p-3.5 rounded-2xl office-subcard">
-              <span className="text-[9.5px] font-extrabold text-emerald-500 uppercase tracking-wider font-display block mb-1">
+              <span className="text-[9.5px] font-extrabold text-blue-500 uppercase tracking-wider font-display block mb-1">
                 🏁 The Opening 10 Matchdays
               </span>
               <p className="text-foreground/80 font-medium">{simResult.seasonStory.howStarted}</p>
@@ -416,8 +416,8 @@ export function SeasonResults({
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="p-3.5 rounded-2xl bg-emerald-950/10 border border-emerald-500/20">
-                <span className="text-[9.5px] font-extrabold text-emerald-500 uppercase tracking-wider font-display block mb-1">
+              <div className="p-3.5 rounded-2xl bg-blue-950/10 border border-blue-500/20">
+                <span className="text-[9.5px] font-extrabold text-blue-500 uppercase tracking-wider font-display block mb-1">
                   💪 Why It Worked
                 </span>
                 <p className="text-foreground/80 font-medium text-[11px]">{simResult.seasonStory.whyItWorked}</p>
@@ -468,7 +468,7 @@ export function SeasonResults({
                     <h4 className="text-sm font-display font-black text-foreground uppercase truncate">
                       vs {hl.match.opponent}
                     </h4>
-                    <span className="text-sm font-display font-black text-emerald-400">
+                    <span className="text-sm font-display font-black text-blue-400">
                       {hl.match.ourScore} - {hl.match.opponentScore}
                     </span>
                   </div>
@@ -478,7 +478,7 @@ export function SeasonResults({
                     </p>
                   )}
                   {hl.match.scorers && hl.match.scorers.length > 0 && (
-                    <p className="text-[9.5px] text-emerald-450 font-semibold mt-1">
+                    <p className="text-[9.5px] text-blue-400 font-semibold mt-1">
                       ⚽ {hl.match.scorers.join(', ')}
                     </p>
                   )}
@@ -558,7 +558,7 @@ export function SeasonResults({
           {getManagerAdvice().map((adv, idx) => {
             const borderColors = {
               warning: 'border-rose-500/25 bg-rose-950/10 text-rose-350',
-              good: 'border-emerald-500/25 bg-emerald-950/10 text-emerald-350',
+              good: 'border-blue-500/25 bg-blue-950/10 text-blue-300',
               info: 'border-indigo-500/25 bg-indigo-950/10 text-indigo-350',
             }[adv.status as 'warning' | 'good' | 'info'];
 
@@ -604,8 +604,8 @@ export function SeasonResults({
             </div>
           )}
           {simResult.cleanSheets !== undefined && (
-            <div className="p-4 rounded-2xl glass border border-emerald-500/20 bg-emerald-950/10 flex flex-col justify-between">
-              <span className="text-[9px] font-black uppercase text-emerald-400 tracking-wider flex items-center gap-1">
+            <div className="p-4 rounded-2xl glass border border-blue-500/20 bg-blue-950/10 flex flex-col justify-between">
+              <span className="text-[9px] font-black uppercase text-blue-400 tracking-wider flex items-center gap-1">
                 🧤 Golden Glove
               </span>
               <div className="mt-2">
@@ -676,7 +676,7 @@ export function SeasonResults({
                       </p>
                     )}
                     {match.scorers && match.scorers.length > 0 && (
-                      <p className="text-[10px] text-emerald-450 font-bold leading-normal mt-1 flex items-center gap-1 flex-wrap">
+                      <p className="text-[10px] text-blue-400 font-bold leading-normal mt-1 flex items-center gap-1 flex-wrap">
                         <span>⚽</span> {match.scorers.join(', ')}
                       </p>
                     )}

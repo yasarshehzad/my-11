@@ -532,7 +532,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
         <div className="grid grid-cols-4 gap-2 text-center text-xs">
           <div className="space-y-0.5">
             <span className="text-[8.5px] sm:text-[9.5px] uppercase font-bold text-slate-500 block truncate">Avg OVR</span>
-            <span className="text-sm sm:text-base font-display font-black text-emerald-400 block">
+            <span className="text-sm sm:text-base font-display font-black text-blue-600 dark:text-blue-400 block">
               {validation.averageRating}
             </span>
           </div>
@@ -555,7 +555,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
               </span>
               <span className="text-[10px] text-slate-500">HG</span>
               {(validation.nonHomegrownSeniorCount ?? 0) <= 17 ? (
-                <span className="text-xs text-emerald-400" title="Compliant with Premier League rules (max 17 foreign senior players allowed)">✓</span>
+                <span className="text-xs text-blue-600 dark:text-blue-400" title="Compliant with Premier League rules (max 17 foreign senior players allowed)">✓</span>
               ) : (
                 <span className="text-xs text-rose-400" title="Exceeds maximum 17 non-homegrown senior limit">⚠️</span>
               )}
@@ -585,7 +585,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                   className={`text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full border ${
                     isOver
                       ? 'bg-amber-950/70 border-amber-600/70 text-amber-300'
-                      : 'bg-emerald-950/70 border-emerald-600/70 text-emerald-300'
+                      : 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/70 dark:border-blue-600/70 dark:text-blue-300'
                   }`}
                 >
                   {registeredIds.length} / {MAX_SENIOR_SQUAD_SIZE} Registered
@@ -600,7 +600,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
               <button
                 type="button"
                 onClick={() => setShowRegistrationModal(true)}
-                className="py-1 px-2.5 rounded-lg bg-emerald-950/60 hover:bg-emerald-900 border border-emerald-500/50 text-emerald-300 text-[10.5px] font-display font-black uppercase tracking-wider transition-colors cursor-pointer"
+                className="py-1 px-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:hover:bg-blue-900 dark:border-blue-500/50 dark:text-blue-300 text-[10.5px] font-display font-black uppercase tracking-wider transition-colors cursor-pointer"
               >
                 📋 Manage Registration
               </button>
@@ -625,7 +625,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
           <select
             value={currentFormation}
             onChange={(e) => handleFormationChange(e.target.value)}
-            className="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs font-display font-black text-white focus:outline-none focus:border-emerald-500 cursor-pointer"
+            className="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs font-display font-black text-white focus:outline-none focus:border-blue-500 cursor-pointer"
           >
             {(['4 at the back', '3 at the back', '5 at the back'] as const).map((cat) => (
               <optgroup key={cat} label={cat} className="bg-slate-900 text-slate-300 font-bold">
@@ -640,7 +640,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
 
           <button
             onClick={handleAutoPick}
-            className="py-1.5 px-2.5 rounded-xl border border-emerald-500/30 bg-emerald-950/30 hover:bg-emerald-900/50 text-emerald-300 hover:text-white text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap min-h-[36px]"
+            className="py-1.5 px-2.5 rounded-xl border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-white text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap min-h-[36px]"
             title="Automatically pick highest-rated team sheet"
           >
             ⚡ Auto-Pick XI
@@ -659,7 +659,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
             }}
             className={`py-1 px-2.5 rounded-lg text-xs font-display font-black uppercase transition-all cursor-pointer ${
               viewMode === 'pitch'
-                ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm shadow-blue-500/20'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -676,7 +676,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
             }}
             className={`py-1 px-2.5 rounded-lg text-xs font-display font-black uppercase transition-all cursor-pointer ${
               viewMode === 'list'
-                ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm shadow-blue-500/20'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -693,7 +693,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
             }}
             className={`py-1 px-2.5 rounded-lg text-xs font-display font-black uppercase transition-all flex items-center gap-1 cursor-pointer ${
               viewMode === 'academy'
-                ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm shadow-blue-500/20'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -711,7 +711,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
           {/* Virtual Pitch Status Strip */}
           <div className="office-subcard flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs shadow-sm">
             <div className="flex items-center gap-2.5">
-              <span className="font-display font-black text-xs uppercase tracking-wider px-3 py-1 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold shadow-sm">
+              <span className="font-display font-black text-xs uppercase tracking-wider px-3 py-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-sm shadow-blue-500/20">
                 ⚽ {currentFormation}
               </span>
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
@@ -759,7 +759,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                   <button
                     type="button"
                     onClick={handleAutoFillBench}
-                    className="py-1 px-2.5 rounded-lg bg-emerald-950/70 border border-emerald-500/50 text-emerald-300 hover:bg-emerald-900 text-[10px] font-display font-black uppercase tracking-wider transition-colors cursor-pointer"
+                    className="py-1 px-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-950/70 dark:border-blue-500/50 dark:text-blue-300 dark:hover:bg-blue-900 text-[10px] font-display font-black uppercase tracking-wider transition-colors cursor-pointer"
                     title="Automatically fill remaining bench spots with top reserves"
                   >
                     ⚡ Auto-Fill Bench
@@ -791,14 +791,14 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                     onClick={() => handlePlayerClick(player)}
                     className={`p-2.5 rounded-xl border text-center cursor-grab active:cursor-grabbing transition-all scroll-mt-20 select-none ${
                       isDragTarget
-                        ? 'border-emerald-400 bg-emerald-950/80 ring-4 ring-emerald-400/60 scale-105 z-10'
+                        ? 'border-blue-500 bg-blue-950/80 ring-4 ring-blue-500/60 scale-105 z-10'
                         : isSwapping
                         ? 'border-amber-400 bg-amber-950/40 ring-2 ring-amber-400'
                         : 'border-slate-800 bg-slate-950/60 hover:border-slate-700 hover:bg-slate-900/60'
                     }`}
                   >
                     <div className="flex justify-between items-center text-[10px] font-bold mb-1">
-                      <span className="text-emerald-400">{player.position}</span>
+                      <span className="text-blue-600 dark:text-blue-400">{player.position}</span>
                       <span className="text-white font-display font-black">{player.rating}</span>
                     </div>
                     <div className="text-xs font-display font-black text-white truncate" title={player.name}>
@@ -831,7 +831,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                     className={`p-2.5 rounded-xl border-2 border-dashed text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[76px] select-none ${
                       isTarget || (swapSourceId && !benchIdsSet.has(swapSourceId))
                         ? 'border-amber-400/80 bg-amber-950/30 text-amber-300 animate-pulse'
-                        : 'border-slate-800/80 bg-slate-950/30 text-slate-500 hover:border-emerald-500/50 hover:text-emerald-400 hover:bg-slate-900/40'
+                        : 'border-slate-800/80 bg-slate-950/30 text-slate-500 hover:border-blue-500/50 hover:text-blue-500 hover:bg-slate-900/40'
                     }`}
                     title="Empty Bench Slot — Click or drop player to add to bench"
                   >
@@ -874,7 +874,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                       onClick={() => handlePlayerClick(player)}
                       className={`p-2.5 rounded-xl border text-center cursor-grab active:cursor-grabbing transition-all scroll-mt-20 select-none ${
                         isDragTarget
-                          ? 'border-emerald-400 bg-emerald-950/80 ring-4 ring-emerald-400/60 scale-105 z-10 opacity-100'
+                          ? 'border-blue-500 bg-blue-950/80 ring-4 ring-blue-500/60 scale-105 z-10 opacity-100'
                           : isSwapping
                           ? 'border-amber-400 bg-amber-950/40 ring-2 ring-amber-400 opacity-100'
                           : 'border-slate-850/60 bg-slate-950/40 hover:border-slate-700 opacity-80 hover:opacity-100'
@@ -909,7 +909,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
 
             <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-3 space-y-1">
               <span className="text-[9px] uppercase font-bold text-slate-500 block">Wage Headroom</span>
-              <div className="text-sm sm:text-base font-display font-black text-emerald-400 truncate">
+              <div className="text-sm sm:text-base font-display font-black text-blue-600 dark:text-blue-400 truncate">
                 {formatWage(Math.max(0, save.finances.weeklyWageBudget - validation.totalWagesWeekly))}
               </div>
               <div className="text-[9px] text-slate-400">Limit: {formatWage(save.finances.weeklyWageBudget)}</div>
@@ -949,7 +949,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                 onClick={() => setFilterGroup(group)}
                 className={`py-1.5 px-3 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all ${
                   filterGroup === group
-                    ? 'bg-emerald-500 text-slate-950 shadow-md'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20'
                     : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
                 }`}
               >
@@ -995,11 +995,11 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                         <td className="py-3 px-4 font-semibold text-white">
                           <button
                             onClick={() => handleSelectPlayerWithActions(player)}
-                            className="hover:text-emerald-400 text-left font-display font-black text-sm flex items-center gap-1.5 flex-wrap cursor-pointer"
+                            className="hover:text-blue-500 text-left font-display font-black text-sm flex items-center gap-1.5 flex-wrap cursor-pointer"
                           >
                             <span>{player.name}</span>
                             {player.age <= 23 && (
-                              <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/60 font-mono">
+                              <span className="text-[9px] px-1 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800/60 font-mono">
                                 U23
                               </span>
                             )}
@@ -1029,7 +1029,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                             <span
                               className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${
                                 isStarter
-                                  ? 'bg-emerald-950/60 border-emerald-800/60 text-emerald-300'
+                                  ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:border-blue-800/60 dark:text-blue-300'
                                   : isBench
                                   ? 'bg-blue-950/60 border-blue-800/60 text-blue-300'
                                   : 'bg-slate-950 border-slate-800 text-slate-500'
@@ -1048,7 +1048,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                         <td className="py-3 px-3 text-center font-bold text-slate-300">
                           <div>{player.position}</div>
                           {player.naturalPositions && player.naturalPositions.filter((p) => p !== player.position).length > 0 && (
-                            <div className="text-[9px] font-semibold text-emerald-400" title={`Natural in: ${player.naturalPositions.join(', ')}`}>
+                            <div className="text-[9px] font-semibold text-blue-600 dark:text-blue-400" title={`Natural in: ${player.naturalPositions.join(', ')}`}>
                               +{player.naturalPositions.filter((p) => p !== player.position).join('/')}
                             </div>
                           )}
@@ -1056,7 +1056,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
 
                         <td className="py-3 px-3 text-center">
                           <div className="flex items-center justify-center gap-1">
-                            <span className="font-display font-black text-sm text-emerald-400">
+                            <span className="font-display font-black text-sm text-blue-600 dark:text-blue-400">
                               {effectiveRating}
                             </span>
                             {bonus !== 0 && (
@@ -1081,7 +1081,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                                     key={i}
                                     className={`text-[9px] font-mono font-bold px-1 rounded ${
                                       r >= 7.8
-                                        ? 'bg-emerald-950 text-emerald-300'
+                                        ? 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
                                         : r >= 6.4
                                         ? 'bg-slate-800 text-slate-300'
                                         : 'bg-rose-950 text-rose-300'
@@ -1104,7 +1104,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                         <td className="py-3 px-3 text-center font-display font-bold text-xs text-amber-400">
                           {player.potential ? `⭐ ${player.potential}` : '-'}
                           {player.age <= 23 && typeof player.developmentProgress === 'number' && player.developmentProgress > 0 && (
-                            <div className="text-[9px] font-mono text-emerald-400 font-semibold mt-0.5" title="In-season XP progress">
+                            <div className="text-[9px] font-mono text-blue-600 dark:text-blue-400 font-semibold mt-0.5" title="In-season XP progress">
                               🌱 {player.developmentProgress}%
                             </div>
                           )}
@@ -1128,7 +1128,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
 
                         <td className="py-3 px-3 text-center">
                           {player.isHomegrown ? (
-                            <span className="text-emerald-400 font-bold" title="Homegrown">✓</span>
+                            <span className="text-blue-600 dark:text-blue-400 font-bold" title="Homegrown">✓</span>
                           ) : (
                             <span className="text-slate-600">-</span>
                           )}
@@ -1143,7 +1143,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                               className={`px-2 py-1 rounded text-[10px] font-bold ${
                                 isStarter
                                   ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                                  : 'bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-800/60 text-emerald-300'
+                                  : 'bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 dark:bg-blue-950/80 dark:hover:bg-blue-900 dark:border-blue-800/60 dark:text-blue-300'
                               }`}
                             >
                               XI
@@ -1194,7 +1194,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
       {viewMode === 'academy' && (
         <section className="space-y-6" aria-label="Youth Academy">
           {/* Academy Status & Scout Action Banner */}
-          <div className="bg-gradient-to-r from-emerald-950/40 via-slate-900/60 to-slate-950/80 border border-emerald-900/40 rounded-3xl p-6 shadow-xl relative overflow-hidden flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="bg-gradient-to-r from-blue-950/40 via-slate-900/60 to-slate-950/80 border border-blue-900/40 rounded-3xl p-6 shadow-xl relative overflow-hidden flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="space-y-1 z-10">
               <div className="flex items-center gap-2">
                 <span className="text-xl">🌟</span>
@@ -1210,7 +1210,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
             <div className="flex items-center gap-3 z-10 w-full sm:w-auto">
               <button
                 onClick={handleGenerateIntake}
-                className="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-display font-black uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-display font-black uppercase tracking-wider transition-all shadow-md shadow-blue-500/20 flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <span>🔍</span>
                 <span>Scout New Intake</span>
@@ -1223,7 +1223,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
               role="alert"
               className={`p-3.5 rounded-2xl border text-xs font-bold flex items-center justify-between ${
                 academyToast.type === 'success'
-                  ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300'
+                  ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:border-blue-500/40 dark:text-blue-300'
                   : 'bg-rose-950/60 border-rose-500/40 text-rose-300'
               }`}
             >
@@ -1243,7 +1243,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
               </p>
               <button
                 onClick={handleGenerateIntake}
-                className="py-2.5 px-6 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-display font-black uppercase tracking-wider transition-all font-bold shadow-lg cursor-pointer"
+                className="py-2.5 px-6 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-display font-black uppercase tracking-wider transition-all font-bold shadow-lg shadow-blue-500/20 cursor-pointer"
               >
                 Run Annual Youth Intake
               </button>
@@ -1263,14 +1263,14 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                       {/* Top Badges */}
                       <div className="flex justify-between items-center text-xs">
                         <div className="flex items-center gap-1.5">
-                          <span className="bg-slate-950 border border-slate-800 text-emerald-400 font-display font-black px-2 py-0.5 rounded-md text-[10px]">
+                          <span className="bg-slate-950 border border-slate-800 text-blue-400 font-display font-black px-2 py-0.5 rounded-md text-[10px]">
                             {prospect.position}
                           </span>
                           <span className="text-slate-400 text-[11px] font-medium">
                             {prospect.age} yrs • {prospect.nationality}
                           </span>
                         </div>
-                        <span className="text-[10px] bg-emerald-950/60 border border-emerald-800/40 text-emerald-300 font-bold px-1.5 py-0.5 rounded">
+                        <span className="text-[10px] bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:border-blue-800/40 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded">
                           Homegrown
                         </span>
                       </div>
@@ -1282,7 +1282,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                             {prospect.name}
                           </h4>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs font-display font-black text-emerald-400">
+                            <span className="text-xs font-display font-black text-blue-600 dark:text-blue-400">
                               {prospect.rating} OVR
                             </span>
                             <span className="text-[10px] text-slate-500">•</span>
@@ -1291,7 +1291,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                                 isWonderkid
                                   ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                                   : isHighPotential
-                                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/20 dark:text-indigo-300 dark:border-indigo-500/30'
                                   : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
                               }`}
                             >
@@ -1330,7 +1330,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                         className={`flex-1 py-2 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1 cursor-pointer ${
                           squad.length >= 35
                             ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                            : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md'
+                            : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-md shadow-blue-500/20'
                         }`}
                         title={squad.length >= 35 ? 'Club squad is at full capacity (35/35)' : 'Promote to First Team'}
                       >
@@ -1375,7 +1375,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                       onClick={() => setPlayerModalTab('profile')}
                       className={`py-1.5 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate ${
                         playerModalTab === 'profile'
-                          ? 'bg-emerald-500 text-slate-950 shadow-md'
+                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20'
                           : 'text-slate-400 hover:text-white'
                       }`}
                     >
@@ -1386,7 +1386,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                       onClick={() => setPlayerModalTab('stats')}
                       className={`py-1.5 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate ${
                         playerModalTab === 'stats'
-                          ? 'bg-emerald-500 text-slate-950 shadow-md'
+                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20'
                           : 'text-slate-400 hover:text-white'
                       }`}
                     >
@@ -1397,7 +1397,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                       onClick={() => setPlayerModalTab('market')}
                       className={`py-1.5 rounded-lg text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate ${
                         playerModalTab === 'market'
-                          ? 'bg-emerald-500 text-slate-950 shadow-md'
+                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20'
                           : 'text-slate-400 hover:text-white'
                       }`}
                     >
@@ -1460,7 +1460,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                       </div>
                       <div>
                         <div className="text-[9px] uppercase font-bold text-slate-500">Foot</div>
-                        <div className="font-display font-black text-emerald-400 text-xs mt-0.5">
+                        <div className="font-display font-black text-blue-600 dark:text-blue-400 text-xs mt-0.5">
                           {phys.preferredFoot}
                         </div>
                       </div>
@@ -1474,16 +1474,16 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                   return (
                     <div
                       onClick={() => setPlayerModalTab('stats')}
-                      className="bg-emerald-950/20 hover:bg-emerald-950/40 border border-emerald-500/30 rounded-xl p-2.5 flex items-center justify-between text-xs cursor-pointer transition-colors shadow-sm group"
+                      className="bg-blue-50 hover:bg-blue-100 border border-blue-200 dark:bg-blue-950/20 dark:hover:bg-blue-950/40 dark:border-blue-500/30 rounded-xl p-2.5 flex items-center justify-between text-xs cursor-pointer transition-colors shadow-sm group"
                       title="Click to view full statistical dossier & historical career records"
                     >
-                      <div className="flex items-center gap-2.5 sm:gap-3 font-mono text-[11px] text-emerald-300">
+                      <div className="flex items-center gap-2.5 sm:gap-3 font-mono text-[11px] text-blue-700 dark:text-blue-300">
                         <span>⚽ <strong>{pStats.currentSeason.goals}</strong> G</span>
                         <span>🎯 <strong>{pStats.currentSeason.assists}</strong> A</span>
                         <span>👕 <strong>{pStats.currentSeason.appearances}</strong> Apps</span>
                         <span>⭐ <strong>{pStats.currentSeason.averageRating || '7.1'}</strong> Avg</span>
                       </div>
-                      <span className="text-[10px] font-display font-black text-emerald-400 uppercase tracking-wider group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
+                      <span className="text-[10px] font-display font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
                         Stats ➔
                       </span>
                     </div>
@@ -1500,7 +1500,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                         setSelectedPlayer(null);
                         onOpenCompare(p);
                       }}
-                      className="py-2.5 px-3 rounded-xl border border-emerald-500/40 bg-emerald-950/40 hover:bg-emerald-950/70 text-emerald-300 font-display font-black text-xs uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5"
+                      className="py-2.5 px-3 rounded-xl border border-blue-200 dark:border-blue-500/40 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-950/70 text-blue-700 dark:text-blue-300 font-display font-black text-xs uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5"
                       title="Compare player with squad rivals or transfer targets"
                     >
                       <span>📊 Compare</span>
@@ -1533,11 +1533,11 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                 return (
                   <div className="space-y-3.5 text-xs">
                     {/* Current Season Header */}
-                    <div className="bg-gradient-to-r from-emerald-950/40 via-slate-900/60 to-slate-950 border border-emerald-500/30 rounded-2xl p-3 flex items-center justify-between gap-2 shadow-sm">
+                    <div className="bg-gradient-to-r from-blue-950/40 via-slate-900/60 to-slate-950 border border-blue-500/30 rounded-2xl p-3 flex items-center justify-between gap-2 shadow-sm">
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="text-xl shrink-0">📊</span>
                         <div className="min-w-0">
-                          <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider font-display block">
+                          <span className="text-[10px] font-black uppercase text-blue-400 tracking-wider font-display block">
                             Season {save.season?.seasonNumber || 1} • {pStats.currentSeason.seasonLabel}
                           </span>
                           <span className="text-xs font-bold text-white truncate block">
@@ -1545,7 +1545,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                           </span>
                         </div>
                       </div>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold shrink-0">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/40 font-bold shrink-0">
                         {pStats.currentSeason.competition}
                       </span>
                     </div>
@@ -1561,7 +1561,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                       </div>
                       <div className="bg-slate-900/70 border border-slate-800 p-2 rounded-xl">
                         <span className="text-[9px] uppercase font-bold text-slate-400 block">Goals</span>
-                        <span className="font-display font-black text-emerald-400 text-base">
+                        <span className="font-display font-black text-blue-600 dark:text-blue-400 text-base">
                           {pStats.currentSeason.goals}
                         </span>
                         <span className="text-[8px] text-slate-500 block">⚽ Goals</span>
@@ -1603,7 +1603,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                       </div>
                       <div>
                         <span className="text-[9px] uppercase font-bold text-slate-400 block">Avg Match Rating</span>
-                        <span className="font-mono font-black text-emerald-400 text-xs mt-0.5 block">
+                        <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-xs mt-0.5 block">
                           ⭐ {pStats.currentSeason.averageRating || '7.0'} / 10
                         </span>
                       </div>
@@ -1636,7 +1636,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                             </thead>
                             <tbody className="divide-y divide-slate-850/60 font-medium">
                               {/* Current season row */}
-                              <tr className="bg-emerald-950/20 text-emerald-300 font-bold">
+                              <tr className="bg-blue-50 text-blue-700 dark:bg-blue-950/20 dark:text-blue-300 font-bold">
                                 <td className="py-1.5 px-2.5 font-mono">{pStats.currentSeason.seasonLabel}</td>
                                 <td className="py-1.5 px-2 truncate max-w-[90px]">{pStats.currentSeason.clubName}</td>
                                 <td className="py-1.5 px-1.5 text-center font-mono">{pStats.currentSeason.appearances}</td>
@@ -1659,7 +1659,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                                   <td className="py-1.5 px-1.5 text-center font-mono">
                                     {isGkOrDef ? prev.cleanSheets : prev.goals + prev.assists}
                                   </td>
-                                  <td className="py-1.5 px-2 text-right font-mono font-bold text-emerald-400">{prev.averageRating}</td>
+                                  <td className="py-1.5 px-2 text-right font-mono font-bold text-blue-600 dark:text-blue-400">{prev.averageRating}</td>
                                 </tr>
                               ))}
                             </tbody>
@@ -1669,7 +1669,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                                   Career Totals
                                 </td>
                                 <td className="py-2 px-1.5 text-center font-mono">{pStats.careerTotals.appearances}</td>
-                                <td className="py-2 px-1.5 text-center font-mono text-emerald-400">{pStats.careerTotals.goals}</td>
+                                <td className="py-2 px-1.5 text-center font-mono text-blue-600 dark:text-blue-400">{pStats.careerTotals.goals}</td>
                                 <td className="py-2 px-1.5 text-center font-mono text-blue-400">{pStats.careerTotals.assists}</td>
                                 <td className="py-2 px-1.5 text-center font-mono">
                                   {isGkOrDef ? pStats.careerTotals.cleanSheets : pStats.careerTotals.goals + pStats.careerTotals.assists}
@@ -1691,7 +1691,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                   <div
                     className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-between ${
                       squadActionMessage.type === 'success'
-                        ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300'
+                        ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/70 dark:border-blue-500/50 dark:text-blue-300'
                         : 'bg-rose-950/70 border-rose-500/50 text-rose-300'
                     }`}
                   >
@@ -1730,7 +1730,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                       type="checkbox"
                       checked={transferListedInput}
                       onChange={(e) => setTransferListedInput(e.target.checked)}
-                      className="accent-emerald-500 rounded"
+                      className="accent-blue-600 rounded"
                     />
                     <span className="text-[11px] font-bold text-slate-200">Transfer Listed</span>
                   </label>
@@ -1750,7 +1750,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                 <div className="space-y-1.5 bg-slate-950/60 border border-slate-800/80 p-2.5 rounded-xl">
                   <div className="flex justify-between items-center">
                     <span className="text-[10px] uppercase font-bold text-slate-400">Asking Price</span>
-                    <span className="font-display font-black text-emerald-400 text-sm">
+                    <span className="font-display font-black text-blue-600 dark:text-blue-400 text-sm">
                       {formatCurrency(askingPriceInput)}
                     </span>
                   </div>
@@ -1773,14 +1773,14 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                     <button
                       type="button"
                       onClick={() => setAskingPriceInput(askingPriceInput + 500_000)}
-                      className="py-1 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 text-emerald-400 cursor-pointer"
+                      className="py-1 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 text-blue-600 dark:text-blue-400 cursor-pointer"
                     >
                       +£500k
                     </button>
                     <button
                       type="button"
                       onClick={() => setAskingPriceInput(askingPriceInput + 1_000_000)}
-                      className="py-1 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 text-emerald-400 cursor-pointer"
+                      className="py-1 rounded bg-slate-900 border border-slate-800 hover:border-slate-700 text-blue-600 dark:text-blue-400 cursor-pointer"
                     >
                       +£1M
                     </button>
@@ -1797,7 +1797,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                     <button
                       type="button"
                       onClick={handleUpdateTransferStatus}
-                      className="px-2.5 py-1 rounded bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold hover:bg-emerald-500/30 cursor-pointer"
+                      className="px-2.5 py-1 rounded bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold hover:from-blue-500 hover:to-indigo-500 shadow-sm shadow-blue-500/20 cursor-pointer"
                     >
                       Save Status
                     </button>
@@ -1992,7 +1992,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                     <button
                       type="button"
                       onClick={() => onOpenCompare(p)}
-                      className="py-1.5 px-2.5 rounded-xl bg-emerald-950/70 border border-emerald-500/50 text-emerald-300 hover:bg-emerald-900 text-xs font-bold cursor-pointer"
+                      className="py-1.5 px-2.5 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/70 dark:border-blue-500/50 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900 text-xs font-bold cursor-pointer"
                       title="Compare with squad rivals"
                     >
                       📊 Compare
@@ -2023,16 +2023,16 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
             pointerEvents: 'none',
             zIndex: 9999,
           }}
-          className="w-24 p-2 rounded-2xl border-2 border-emerald-400 bg-slate-950/95 shadow-2xl backdrop-blur-md opacity-90 text-center select-none"
+          className="w-24 p-2 rounded-2xl border-2 border-blue-500 bg-slate-950/95 shadow-2xl backdrop-blur-md opacity-90 text-center select-none"
         >
-          <div className="flex justify-between items-center text-[9px] font-black text-emerald-400 mb-0.5">
+          <div className="flex justify-between items-center text-[9px] font-black text-blue-400 mb-0.5">
             <span>{touchDragPlayer.position}</span>
             <span className="text-white font-mono">{touchDragPlayer.rating}</span>
           </div>
           <div className="text-[10px] font-display font-black text-white truncate">
             {touchDragPlayer.name}
           </div>
-          <div className="text-[8px] text-emerald-300 font-bold mt-0.5">
+          <div className="text-[8px] text-blue-300 font-bold mt-0.5">
             Dragging...
           </div>
         </div>
@@ -2078,10 +2078,10 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                       handleMovePlayerToBench(player.id);
                       setShowReservePickerModal(false);
                     }}
-                    className="w-full p-2.5 rounded-xl border border-slate-850 bg-slate-900/60 hover:bg-emerald-950/40 hover:border-emerald-500/50 flex items-center justify-between gap-2 transition-all cursor-pointer text-left"
+                    className="w-full p-2.5 rounded-xl border border-slate-850 bg-slate-900/60 hover:bg-blue-50/60 dark:hover:bg-blue-950/40 hover:border-blue-500/50 flex items-center justify-between gap-2 transition-all cursor-pointer text-left"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="w-8 text-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-emerald-400 font-display">
+                      <span className="w-8 text-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-blue-600 dark:text-blue-400 font-display">
                         {player.position}
                       </span>
                       <div className="min-w-0">
@@ -2094,10 +2094,10 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <div className="text-sm font-display font-black text-emerald-400 font-mono">
+                      <div className="text-sm font-display font-black text-blue-600 dark:text-blue-400 font-mono">
                         {player.rating}
                       </div>
-                      <span className="text-[9.5px] text-emerald-400/80 font-bold uppercase">
+                      <span className="text-[9.5px] text-blue-600 dark:text-blue-400 font-bold uppercase">
                         + Add
                       </span>
                     </div>
@@ -2146,7 +2146,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
           className={`w-16 min-w-0 sm:w-22 rounded-xl border-2 border-dashed p-1.5 sm:p-2 text-center text-[10px] font-bold cursor-pointer transition-colors ${
             swapSourceId
               ? 'border-amber-400 bg-amber-950/30 text-amber-300 animate-pulse'
-              : 'border-emerald-500/30 text-emerald-400/60 hover:border-emerald-500/60'
+              : 'border-blue-500/30 text-blue-400/60 hover:border-blue-500/60'
           }`}
           title={`${slotPos} (Empty) - Click or drop to assign`}
         >
@@ -2179,7 +2179,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
         aria-label={`${player.name}, position ${player.position}, rating ${effectiveRating}`}
         className={`w-16 min-w-0 sm:w-22 p-1.5 sm:p-2 rounded-2xl border backdrop-blur-md text-center cursor-grab active:cursor-grabbing transition-all transform select-none scroll-mt-20 ${
           isDragTarget
-            ? 'border-emerald-400 bg-emerald-950/90 ring-4 ring-emerald-400 scale-110 shadow-2xl z-20'
+            ? 'border-blue-500 bg-blue-950/90 ring-4 ring-blue-500 scale-110 shadow-2xl z-20'
             : isSwapping
             ? 'border-amber-400 bg-amber-950/80 ring-4 ring-amber-400/50 shadow-2xl scale-105 z-10'
             : fit === 'out_of_position'
@@ -2190,14 +2190,14 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
             ? 'border-amber-400/80 bg-slate-950/90 hover:border-amber-300 hover:scale-105 shadow-lg ring-1 ring-amber-400/30'
             : bonus < 0
             ? 'border-blue-500/60 bg-slate-950/90 hover:border-blue-400 hover:scale-105 shadow-lg'
-            : 'border-slate-800/80 bg-slate-950/80 hover:border-emerald-400/80 hover:scale-105 shadow-lg'
+            : 'border-slate-800/80 bg-slate-950/80 hover:border-blue-400/80 hover:scale-105 shadow-lg'
         }`}
       >
         <div className="flex justify-between items-center text-[9px] font-black leading-none mb-1">
           <span
             className={`px-1 py-0.2 rounded font-display ${
               fit === 'natural'
-                ? 'bg-emerald-950 text-emerald-300'
+                ? 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
                 : fit === 'competent'
                 ? 'bg-amber-950 text-amber-300'
                 : 'bg-rose-950 text-rose-300'
@@ -2217,7 +2217,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
         <div className="text-[8px] text-slate-400 truncate mt-0.5 flex items-center justify-center gap-1">
           <span>{player.position}</span>
           {player.age <= 23 && typeof player.developmentProgress === 'number' && player.developmentProgress >= 40 && (
-            <span className="text-[8px] font-black text-emerald-400" title={`In-Season Growth: ${player.developmentProgress}%`}>🌱</span>
+            <span className="text-[8px] font-black text-blue-500" title={`In-Season Growth: ${player.developmentProgress}%`}>🌱</span>
           )}
           {fit === 'out_of_position' && (
             <span className="text-[7px] font-black px-1 rounded bg-rose-950 text-rose-300 border border-rose-800">

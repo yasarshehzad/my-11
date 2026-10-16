@@ -101,7 +101,7 @@ export function FixtureReleaseModal({
     return (
       <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3">
         <div className="flex justify-between items-center text-[11px] text-slate-400">
-          <span className="font-bold uppercase tracking-wider text-emerald-400">
+          <span className="font-bold uppercase tracking-wider text-blue-400">
             {subtitle || `Matchday ${fix.round} of 38`}
           </span>
           <span className="font-mono">{formatCareerDate(fix.date, 'uk', 'medium')}</span>
@@ -121,13 +121,13 @@ export function FixtureReleaseModal({
             <h4 className="font-display font-black text-xs sm:text-sm text-white truncate">
               {getEffectiveClubName(actualClub)}
             </h4>
-            <span className="text-[9px] font-bold uppercase px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300">
+            <span className="text-[9px] font-bold uppercase px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-300">
               {isHome ? 'Home' : 'Away'}
             </span>
           </div>
 
           <div className="flex flex-col items-center justify-center px-2">
-            <span className="text-base sm:text-xl font-display font-black text-emerald-400">
+            <span className="text-base sm:text-xl font-display font-black text-blue-400">
               VS
             </span>
             <span className="text-[10px] text-slate-500 font-mono">
@@ -166,12 +166,12 @@ export function FixtureReleaseModal({
     >
       <div className="relative w-full max-w-xl bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden my-auto">
         {/* Header */}
-        <header className="bg-gradient-to-r from-emerald-950 via-slate-900 to-slate-950 border-b border-slate-800 p-4 sm:p-5">
+        <header className="bg-gradient-to-r from-blue-500/10 via-indigo-500/5 to-transparent dark:from-blue-950 dark:via-slate-900 dark:to-slate-950 border-b border-slate-800 p-4 sm:p-5">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <span className="text-2xl">{current.icon}</span>
               <div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-2 py-0.2 rounded-full inline-block">
+                <span className="text-[10px] font-black uppercase tracking-widest text-blue-400 bg-blue-950/80 border border-blue-800/80 px-2 py-0.2 rounded-full inline-block">
                   {current.category} • Step {currentStep + 1} of {steps.length}
                 </span>
                 <h2 id="fixture-release-title" className="text-base sm:text-xl font-display font-black text-white mt-0.5">
@@ -218,7 +218,7 @@ export function FixtureReleaseModal({
               <span
                 key={i}
                 className={`w-2 h-2 rounded-full transition-all ${
-                  i === currentStep ? 'w-5 bg-emerald-400' : 'bg-slate-700'
+                  i === currentStep ? 'w-5 bg-blue-500' : 'bg-slate-700'
                 }`}
               />
             ))}
@@ -228,7 +228,7 @@ export function FixtureReleaseModal({
             <button
               type="button"
               onClick={handleDone}
-              className="px-6 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer"
+              className="px-6 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-blue-500/20 cursor-pointer"
             >
               Complete & View Full Calendar ➔
             </button>
@@ -236,7 +236,7 @@ export function FixtureReleaseModal({
             <button
               type="button"
               onClick={() => setCurrentStep((s) => s + 1)}
-              className="px-6 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer"
+              className="px-6 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-blue-500/20 cursor-pointer"
             >
               Next Reveal ➔
             </button>

@@ -91,7 +91,7 @@ export function HomeScreen({
       {/* Hero Header - compact, focused, no duplicate logo */}
       {/* Hero Header - compact, focused, no wasted vertical space */}
       <header className="mb-2 sm:mb-3">
-        <p className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-emerald-400 font-bold">
+        <p className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-blue-600 dark:text-blue-400 font-bold">
           Football Draft & Management
         </p>
         <h1 className="text-lg sm:text-2xl font-display font-black tracking-tight text-foreground uppercase mt-0.5">
@@ -117,7 +117,7 @@ export function HomeScreen({
 
           <div>
             <div className="flex items-center justify-between mb-1 pt-1">
-              <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-emerald-400 font-bold">
+              <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-blue-600 dark:text-blue-400 font-bold">
                 Draft Mode
               </span>
               <span className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold office-subcard px-2 py-0.5 rounded-full">
@@ -140,7 +140,7 @@ export function HomeScreen({
                 Chemistry Links
               </span>
               {streakStats.gamesPlayed > 0 && (
-                <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-medium font-mono">
+                <span className="text-[9px] px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-600 dark:text-blue-400 font-medium font-mono">
                   {personalBests.overall?.bestWins !== undefined
                     ? `Best: ${personalBests.overall.bestWins}W`
                     : `Best: ${streakStats.bestPoints} pts`}
@@ -175,7 +175,7 @@ export function HomeScreen({
               {onRandomDraft && (
                 <button
                   onClick={onRandomDraft}
-                  className="py-1.5 px-2 rounded-xl office-subcard hover:border-emerald-400/50 text-slate-300 hover:text-emerald-400 font-mono uppercase text-[9px] font-bold text-center transition-colors cursor-pointer min-h-[36px] flex items-center justify-center"
+                  className="py-1.5 px-2 rounded-xl office-subcard hover:border-blue-500/50 hover:text-blue-600 dark:hover:text-blue-400 font-mono uppercase text-[9px] font-bold text-center transition-colors cursor-pointer min-h-[36px] flex items-center justify-center"
                 >
                   Instant Draft ➔
                 </button>
@@ -183,7 +183,7 @@ export function HomeScreen({
               {onViewHistory && (
                 <button
                   onClick={onViewHistory}
-                  className="py-1.5 px-2 rounded-xl office-subcard hover:border-emerald-400/50 text-slate-300 hover:text-emerald-400 font-mono uppercase text-[9px] font-bold text-center transition-colors cursor-pointer min-h-[36px] flex items-center justify-center"
+                  className="py-1.5 px-2 rounded-xl office-subcard hover:border-blue-500/50 hover:text-blue-600 dark:hover:text-blue-400 font-mono uppercase text-[9px] font-bold text-center transition-colors cursor-pointer min-h-[36px] flex items-center justify-center"
                 >
                   📜 History ➔
                 </button>

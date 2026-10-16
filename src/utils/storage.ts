@@ -35,16 +35,16 @@ export const DEFAULT_STREAKS: StreakStats = {
 const isClient = () => typeof window !== 'undefined' && typeof localStorage !== 'undefined';
 
 /**
- * Safe retrieval of saved theme
+ * Safe retrieval of saved theme (defaults to light mode system-wide)
  */
 export function getSavedTheme(): 'dark' | 'light' {
-  if (!isClient()) return 'dark';
+  if (!isClient()) return 'light';
   try {
     const saved = localStorage.getItem(THEME_KEY);
-    return saved === 'light' ? 'light' : 'dark';
+    return saved === 'dark' ? 'dark' : 'light';
   } catch (e) {
     console.warn('Failed to read theme from localStorage:', e);
-    return 'dark';
+    return 'light';
   }
 }
 
@@ -56,6 +56,11 @@ export function saveTheme(theme: 'dark' | 'light'): void {
   try {
     localStorage.setItem(THEME_KEY, theme);
     document.documentElement.setAttribute('data-theme', theme);
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
   } catch (e) {
     console.warn('Failed to save theme to localStorage:', e);
   }

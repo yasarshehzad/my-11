@@ -20,12 +20,12 @@ export function DailyChallengeBanner({
   }
 
   return (
-    <div className="w-full max-w-[340px] rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-emerald-500/15 to-slate-950/70 p-5 text-left relative glass shadow-2xl animate-card-deal">
-      <div className="absolute top-4 right-4 text-[8px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-400 uppercase tracking-widest">
+    <div className="w-full max-w-[340px] rounded-3xl border border-blue-500/25 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-slate-950/70 p-5 text-left relative glass shadow-2xl animate-card-deal">
+      <div className="absolute top-4 right-4 text-[8px] font-extrabold px-2.5 py-0.5 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-400 uppercase tracking-widest">
         Daily Mode
       </div>
 
-      <span className="text-[9px] font-extrabold text-emerald-400 uppercase tracking-widest">
+      <span className="text-[9px] font-extrabold text-blue-400 uppercase tracking-widest">
         Today's Challenge
       </span>
       
@@ -43,7 +43,7 @@ export function DailyChallengeBanner({
             Status: <span className={dailyStatus.beaten ? 'text-emerald-450' : 'text-rose-455'}>{dailyStatus.beaten ? 'Cleared ✅' : 'Failed ❌'}</span>
           </span>
           <span className="text-[9px] font-black text-slate-500 uppercase">
-            Score: <span className="text-emerald-450">{dailyStatus.score}</span>
+            Score: <span className="text-blue-400 font-bold">{dailyStatus.score}</span>
           </span>
         </div>
       ) : (
@@ -52,7 +52,7 @@ export function DailyChallengeBanner({
 
       <button
         onClick={onPlay}
-        className="w-full py-3 px-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-display font-black text-xs uppercase tracking-wider shadow hover:shadow-emerald-400/10 mt-4 transition-all duration-300 transform active:scale-98 cursor-pointer text-center"
+        className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/25 mt-4 transition-all duration-300 transform active:scale-98 cursor-pointer text-center"
       >
         {dailyStatus.completed ? "Re-play Daily Challenge" : "Play Today's Challenge"}
       </button>

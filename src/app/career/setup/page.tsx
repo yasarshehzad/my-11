@@ -209,7 +209,7 @@ function SetupWizardContent() {
                   value={managerName}
                   onChange={(e) => setManagerName(e.target.value)}
                   placeholder="e.g. Alex Ferguson"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-emerald-500 font-semibold"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-blue-500 font-semibold"
                 />
               </div>
 
@@ -220,7 +220,7 @@ function SetupWizardContent() {
                 <select
                   value={nationality}
                   onChange={(e) => setNationality(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-emerald-500 font-semibold cursor-pointer"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-blue-500 font-semibold cursor-pointer"
                 >
                   {NATIONALITIES.map((n) => (
                     <option key={n} value={n}>
@@ -262,7 +262,7 @@ function SetupWizardContent() {
                   <span>📅</span>
                   <span>Roster Database Season</span>
                 </span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 font-bold">
                   {databaseSeason === '2026/27' ? 'Current 26/27' : databaseSeason === '2025/26' ? 'Previous 25/26' : 'Classic 24/25'}
                 </span>
               </div>
@@ -273,15 +273,15 @@ function SetupWizardContent() {
                   onClick={() => handleDatabaseSeasonChange('2026/27')}
                   className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all ${
                     databaseSeason === '2026/27'
-                      ? 'bg-emerald-500/10 border-emerald-500 text-white shadow-md'
+                      ? 'bg-blue-500/10 border-blue-500 text-foreground font-bold shadow-md'
                       : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-black uppercase text-foreground">2026/27</span>
-                    {databaseSeason === '2026/27' && <span className="text-emerald-400 text-xs font-bold">✓ Active</span>}
+                    {databaseSeason === '2026/27' && <span className="text-blue-600 dark:text-blue-400 text-xs font-bold">✓ Active</span>}
                   </div>
-                  <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Current Season</span>
+                  <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Current Season</span>
                   <p className="text-[11px] text-slate-400 leading-snug">
                     Current squads with 2026 ages & ratings, modern breakout stars, plus Leeds, Sunderland & Burnley.
                   </p>
@@ -292,13 +292,13 @@ function SetupWizardContent() {
                   onClick={() => handleDatabaseSeasonChange('2025/26')}
                   className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all ${
                     databaseSeason === '2025/26'
-                      ? 'bg-emerald-500/10 border-emerald-500 text-white shadow-md'
+                      ? 'bg-blue-500/10 border-blue-500 text-foreground font-bold shadow-md'
                       : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-black uppercase text-foreground">2025/26</span>
-                    {databaseSeason === '2025/26' && <span className="text-emerald-400 text-xs font-bold">✓ Active</span>}
+                    {databaseSeason === '2025/26' && <span className="text-blue-600 dark:text-blue-400 text-xs font-bold">✓ Active</span>}
                   </div>
                   <span className="text-[10px] font-bold text-sky-400 uppercase tracking-wider">Previous Season</span>
                   <p className="text-[11px] text-slate-400 leading-snug">
@@ -311,13 +311,13 @@ function SetupWizardContent() {
                   onClick={() => handleDatabaseSeasonChange('2024/25')}
                   className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all ${
                     databaseSeason === '2024/25'
-                      ? 'bg-emerald-500/10 border-emerald-500 text-white shadow-md'
+                      ? 'bg-blue-500/10 border-blue-500 text-foreground font-bold shadow-md'
                       : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-black uppercase text-foreground">2024/25</span>
-                    {databaseSeason === '2024/25' && <span className="text-emerald-400 text-xs font-bold">✓ Active</span>}
+                    {databaseSeason === '2024/25' && <span className="text-blue-600 dark:text-blue-400 text-xs font-bold">✓ Active</span>}
                   </div>
                   <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Classic Season</span>
                   <p className="text-[11px] text-slate-400 leading-snug">
@@ -357,7 +357,7 @@ function SetupWizardContent() {
                     onClick={() => setSelectedClubId(club.id)}
                     className={`office-floating-card rounded-[22px] p-3.5 cursor-pointer transition-all duration-200 relative overflow-hidden flex flex-col justify-between hover:scale-[1.01] ${
                       isSelected
-                        ? 'border-2 border-emerald-400 ring-2 ring-emerald-400/40 shadow-xl'
+                        ? 'border-2 border-blue-500 ring-2 ring-blue-500/40 shadow-xl'
                         : 'hover:border-slate-700/60'
                     }`}
                   >
@@ -376,7 +376,7 @@ function SetupWizardContent() {
                             {club.tier}
                           </span>
                           {isSelected && (
-                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-400 text-slate-950 flex items-center gap-1 shadow-sm font-display">
+                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center gap-1 shadow-sm font-display">
                               ✓ SELECTED
                             </span>
                           )}
@@ -399,7 +399,7 @@ function SetupWizardContent() {
                           className="mt-3 pt-2.5 border-t border-[var(--office-divider)] office-subcard rounded-xl p-2.5 space-y-1.5"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <label className="block text-[9px] font-bold text-emerald-400 uppercase tracking-wider">
+                          <label className="block text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
                             Custom Club Name (Optional)
                           </label>
                           <input
@@ -407,7 +407,7 @@ function SetupWizardContent() {
                             value={customClubNames[club.id] ?? ''}
                             onChange={(e) => handleClubRename(club.id, e.target.value)}
                             placeholder={club.defaultName}
-                            className="w-full bg-slate-950 border border-emerald-500/40 rounded-lg px-2.5 py-1.5 text-xs text-foreground placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-400 font-semibold"
+                            className="w-full bg-slate-950 border border-blue-500/40 rounded-lg px-2.5 py-1.5 text-xs text-foreground placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold"
                           />
                         </div>
                       )}
@@ -416,7 +416,7 @@ function SetupWizardContent() {
                     <div className="mt-3 pt-2.5 border-t border-[var(--office-divider)] flex justify-between items-center text-xs">
                       <div>
                         <div className="text-[8px] uppercase font-bold text-slate-400">Budget</div>
-                        <div className="font-display font-black text-emerald-400">
+                        <div className="font-display font-black text-blue-600 dark:text-blue-400">
                           £{(club.startingBudget / 1_000_000).toFixed(0)}M
                         </div>
                       </div>
@@ -435,14 +435,14 @@ function SetupWizardContent() {
             {/* Selected Club Customization Bar */}
             <div className="office-floating-card max-w-md mx-auto w-full rounded-2xl p-4 space-y-2">
               <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider">
-                Custom Name for <span className="text-emerald-400 font-bold">{selectedClub.defaultName}</span> (Optional)
+                Custom Name for <span className="text-blue-600 dark:text-blue-400 font-bold">{selectedClub.defaultName}</span> (Optional)
               </label>
               <input
                 type="text"
                 value={customClubNames[selectedClub.id] || ''}
                 onChange={(e) => handleClubRename(selectedClub.id, e.target.value)}
                 placeholder={selectedClub.defaultName}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-emerald-500 font-semibold"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-blue-500 font-semibold"
               />
               <p className="text-[9px] text-slate-400">
                 You can change this or any other club&apos;s name at any point during your career.
@@ -505,7 +505,7 @@ function SetupWizardContent() {
                 onClick={() => handlePresetSelect('easy')}
                 className={`office-floating-card rounded-[22px] p-4 text-left transition-all cursor-pointer ${
                   preset === 'easy'
-                    ? 'border-2 border-emerald-400 ring-2 ring-emerald-400/40 shadow-xl'
+                    ? 'border-2 border-blue-500 ring-2 ring-blue-500/40 shadow-xl'
                     : 'hover:scale-[1.01]'
                 }`}
               >
@@ -599,7 +599,7 @@ function SetupWizardContent() {
                     onChange={(e) =>
                       setCustomSettings({ ...customSettings, boardCanSack: e.target.checked })
                     }
-                    className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                    className="w-4 h-4 accent-blue-600 cursor-pointer"
                   />
                 </div>
 
@@ -616,7 +616,7 @@ function SetupWizardContent() {
                     onChange={(e) =>
                       setCustomSettings({ ...customSettings, retryMatch: e.target.checked })
                     }
-                    className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                    className="w-4 h-4 accent-blue-600 cursor-pointer"
                   />
                 </div>
 
@@ -633,7 +633,7 @@ function SetupWizardContent() {
                     onChange={(e) =>
                       setCustomSettings({ ...customSettings, homegrownRule: e.target.checked })
                     }
-                    className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                    className="w-4 h-4 accent-blue-600 cursor-pointer"
                   />
                 </div>
 
@@ -650,7 +650,7 @@ function SetupWizardContent() {
                     onChange={(e) =>
                       setCustomSettings({ ...customSettings, financialPenalties: e.target.checked })
                     }
-                    className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                    className="w-4 h-4 accent-blue-600 cursor-pointer"
                   />
                 </div>
 
@@ -759,7 +759,7 @@ function SetupWizardContent() {
                     Default is United Kingdom format. Can also be adjusted anytime during career.
                   </p>
                 </div>
-                <span className="text-[9px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-900/60 px-2 py-0.5 rounded-full">
+                <span className="text-[9px] font-bold text-blue-400 bg-blue-950/60 border border-blue-900/60 px-2 py-0.5 rounded-full">
                   UK Standard
                 </span>
               </div>

@@ -75,8 +75,8 @@ export function InstantSimLoadingModal({
       >
         {/* Header Tag */}
         <header className="space-y-1 border-b border-slate-800/80 pb-4">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-800/60 text-emerald-400 text-[10px] font-black uppercase tracking-wider font-display">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping motion-reduce:animate-none" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-950/60 border border-blue-800/60 text-blue-400 text-[10px] font-black uppercase tracking-wider font-display">
+            <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping motion-reduce:animate-none" />
             <span>Simulating Matchday</span>
           </div>
           <h2 className="text-xs sm:text-sm font-display font-black text-white uppercase tracking-tight">
@@ -113,7 +113,7 @@ export function InstantSimLoadingModal({
               {currentPhase.minute}
             </span>
             <div className="w-10 h-10 rounded-full bg-slate-900 border border-slate-750 flex items-center justify-center shadow-inner">
-              <span className="text-emerald-400 font-display font-black text-xs tracking-wider">
+              <span className="text-blue-400 font-display font-black text-xs tracking-wider">
                 VS
               </span>
             </div>
@@ -147,14 +147,14 @@ export function InstantSimLoadingModal({
           {/* Progress Bar */}
           <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden shadow-inner">
             <div
-              className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 transition-all duration-300 ease-out motion-reduce:transition-none"
+              className="h-full bg-gradient-to-r from-[#00d2ff] via-[#1d5eff] to-[#7c3aed] transition-all duration-300 ease-out motion-reduce:transition-none"
               style={{ width: `${progress}%` }}
             />
           </div>
 
           {/* Status Message */}
           <div className="flex items-center justify-center gap-2 text-xs text-slate-300 min-h-[24px]">
-            <span className="inline-block animate-spin motion-reduce:animate-none text-emerald-400">⚙️</span>
+            <span className="inline-block animate-spin motion-reduce:animate-none text-blue-400">⚙️</span>
             <span className="font-medium">{currentPhase.text}</span>
           </div>
         </section>

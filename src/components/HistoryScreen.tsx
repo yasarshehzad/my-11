@@ -59,7 +59,7 @@ export function HistoryScreen({
         return { label: '🏆 CHALLENGE', bg: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30' };
       case 'classic':
       default:
-        return { label: '⏱️ CLASSIC', bg: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' };
+        return { label: '⏱️ CLASSIC', bg: 'bg-blue-500/15 text-blue-500 border-blue-500/30' };
     }
   };
 
@@ -94,7 +94,7 @@ export function HistoryScreen({
             {activeEntry.titleHonour || `Finished #${activeEntry.leaguePosition}`}
           </h2>
 
-          <div className="text-3xl font-display font-black text-emerald-400 mt-2">
+          <div className="text-3xl font-display font-black text-blue-500 mt-2">
             {activeEntry.wins}W <span className="text-slate-600">-</span> {activeEntry.draws}D <span className="text-slate-600">-</span> {activeEntry.losses}L
           </div>
           <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">
@@ -110,7 +110,7 @@ export function HistoryScreen({
             <div className="w-[1px] bg-slate-800" />
             <div>
               <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block">Chemistry</span>
-              <span className="text-sm font-display font-black text-emerald-400">{activeEntry.chemistryScore}/100 ({activeEntry.chemistryGrade})</span>
+              <span className="text-sm font-display font-black text-blue-500">{activeEntry.chemistryScore}/100 ({activeEntry.chemistryGrade})</span>
             </div>
             <div className="w-[1px] bg-slate-800" />
             <div>
@@ -123,7 +123,7 @@ export function HistoryScreen({
         {/* Try To Beat This CTA */}
         <button
           onClick={() => onTryToBeat(activeEntry)}
-          className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-zinc-950 font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/10 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-400/20 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer flex items-center justify-center gap-2"
+          className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-blue-500/20 hover:from-blue-500 hover:to-indigo-500 hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer flex items-center justify-center gap-2"
         >
           <span>🎯</span> Try to Beat This ({activeEntry.wins} Wins)
         </button>
@@ -194,7 +194,7 @@ export function HistoryScreen({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
           {/* Overall PB */}
           <div className="office-subcard p-2.5">
-            <span className="text-[7.5px] font-bold text-emerald-500 uppercase tracking-widest block">All-Time</span>
+            <span className="text-[7.5px] font-bold text-blue-500 uppercase tracking-widest block">All-Time</span>
             <div className="text-base font-display font-black text-foreground mt-0.5">
               {personalBests.overall ? `${personalBests.overall.bestWins}W` : '—'}
             </div>
@@ -270,7 +270,7 @@ export function HistoryScreen({
             </p>
             <button
               onClick={onBackToHome}
-              className="mt-2 py-2.5 px-4 rounded-xl bg-emerald-500 text-zinc-950 font-display font-black text-xs uppercase tracking-wider hover:bg-emerald-400 transition-colors cursor-pointer"
+              className="mt-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-display font-black text-xs uppercase tracking-wider hover:from-blue-500 hover:to-indigo-500 transition-all shadow-sm shadow-blue-500/20 cursor-pointer"
             >
               Draft a Squad
             </button>
@@ -284,7 +284,7 @@ export function HistoryScreen({
               <div
                 key={entry.id}
                 onClick={() => setActiveEntry(entry)}
-                className="w-full rounded-2xl border border-slate-850 bg-slate-900/40 hover:bg-slate-900/80 hover:border-emerald-500/30 p-4 transition-all duration-200 cursor-pointer flex flex-col gap-2.5 group active:scale-[0.99]"
+                className="w-full rounded-2xl border border-slate-850 bg-slate-900/40 hover:bg-slate-900/80 hover:border-blue-500/30 p-4 transition-all duration-200 cursor-pointer flex flex-col gap-2.5 group active:scale-[0.99]"
               >
                 {/* Header row */}
                 <div className="flex justify-between items-center text-[10px]">
@@ -304,10 +304,10 @@ export function HistoryScreen({
                 {/* Score & Record row */}
                 <div className="flex justify-between items-baseline">
                   <div>
-                    <span className="text-lg font-display font-black text-foreground group-hover:text-emerald-400 transition-colors">
+                    <span className="text-lg font-display font-black text-foreground group-hover:text-blue-500 transition-colors">
                       {entry.wins}W <span className="text-slate-600">-</span> {entry.draws}D <span className="text-slate-600">-</span> {entry.losses}L
                     </span>
-                    <span className="text-xs font-bold text-emerald-400 ml-2">
+                    <span className="text-xs font-bold text-blue-500 ml-2">
                       {entry.points} pts
                     </span>
                   </div>
@@ -329,7 +329,7 @@ export function HistoryScreen({
                     <span className="text-amber-400/90 font-semibold truncate max-w-[90px]">★ {entry.mvp.name}</span>
                   </div>
 
-                  <span className="text-emerald-400 font-bold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
+                  <span className="text-blue-500 font-bold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
                     View Squad ➔
                   </span>
                 </div>

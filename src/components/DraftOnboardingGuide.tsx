@@ -74,12 +74,12 @@ export function DraftOnboardingGuide({
   return (
     <aside
       aria-label="First-run draft guide"
-      className="w-full rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-emerald-950/90 via-slate-950/95 to-slate-950/90 p-4 shadow-2xl relative z-30 transition-all duration-300 animate-card-deal glass"
+      className="w-full rounded-2xl border border-blue-500/40 bg-gradient-to-r from-blue-500/10 via-indigo-500/5 to-slate-950/90 p-4 shadow-2xl relative z-30 transition-all duration-300 animate-card-deal glass"
     >
       <div className="flex justify-between items-start gap-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/35 text-[8.5px] font-display font-black uppercase tracking-wider">
+            <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/35 text-[8.5px] font-display font-black uppercase tracking-wider">
               {stepsData.badge}
             </span>
             <span className="text-[9px] font-extrabold uppercase text-slate-400 tracking-wider">
@@ -114,9 +114,9 @@ export function DraftOnboardingGuide({
               key={s}
               className={`h-1.5 rounded-full transition-all duration-300 ${
                 s === activeStep
-                  ? 'w-6 bg-emerald-400'
+                  ? 'w-6 bg-blue-500'
                   : s < activeStep
-                  ? 'w-1.5 bg-emerald-500/40'
+                  ? 'w-1.5 bg-blue-500/40'
                   : 'w-1.5 bg-slate-800'
               }`}
             />
@@ -126,7 +126,7 @@ export function DraftOnboardingGuide({
         <button
           onClick={handleNext}
           type="button"
-          className="py-2 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-display font-black text-xs uppercase tracking-wider shadow-md hover:shadow-emerald-500/20 active:scale-95 transition-all cursor-pointer"
+          className="py-2 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider shadow-md shadow-blue-500/20 active:scale-95 transition-all cursor-pointer"
         >
           {stepsData.actionLabel}
         </button>

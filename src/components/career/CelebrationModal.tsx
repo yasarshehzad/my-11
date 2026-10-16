@@ -49,7 +49,7 @@ export function CelebrationModal({
           const duration = `${2.8 + (i % 5) * 0.4}s`;
           const colors = [
             'bg-amber-400',
-            'bg-emerald-400',
+            'bg-blue-400',
             'bg-yellow-300',
             'bg-sky-400',
             'bg-rose-400',
@@ -79,7 +79,7 @@ export function CelebrationModal({
         {/* Glow Header Accent */}
         <div
           className={`absolute -top-12 left-1/2 -translate-x-1/2 w-48 h-24 rounded-full blur-2xl pointer-events-none ${
-            isTitleOrTrophy ? 'bg-amber-500/30' : 'bg-emerald-500/25'
+            isTitleOrTrophy ? 'bg-amber-500/30' : 'bg-blue-500/25'
           }`}
         />
 
@@ -94,7 +94,7 @@ export function CelebrationModal({
               className={`text-[10px] font-mono font-black uppercase tracking-widest px-3 py-1 rounded-full border inline-block ${
                 isTitleOrTrophy
                   ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
-                  : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                  : 'bg-blue-500/15 text-blue-300 border-blue-500/30'
               }`}
             >
               {event.stageName ? `${event.competitionName} • ${event.stageName}` : event.competitionName}
@@ -126,7 +126,7 @@ export function CelebrationModal({
             {event.rewards.prizeMoney && event.rewards.prizeMoney > 0 && (
               <div className="text-center p-2 rounded-xl bg-slate-900/80 border border-slate-800/80">
                 <span className="text-xs block text-slate-400">Prize Fund</span>
-                <span className="font-mono font-bold text-emerald-400 text-xs block">
+                <span className="font-mono font-bold text-blue-400 text-xs block">
                   +{formatCareerCurrency(event.rewards.prizeMoney)}
                 </span>
               </div>
@@ -176,7 +176,7 @@ export function CelebrationModal({
         >
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center font-black text-emerald-300 text-xs font-mono">
+              <div className="w-8 h-8 rounded-full bg-blue-500/20 border border-blue-500/40 flex items-center justify-center font-black text-blue-300 text-xs font-mono">
                 {event.playerReaction.player.rating}
               </div>
               <div>
@@ -193,12 +193,12 @@ export function CelebrationModal({
                 </span>
               </div>
             </div>
-            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
               Reaction
             </span>
           </div>
 
-          <p className="text-xs text-slate-300 leading-relaxed italic border-l-2 border-emerald-400/60 pl-3 pt-1 celebration-quote-text">
+          <p className="text-xs text-slate-300 leading-relaxed italic border-l-2 border-blue-400/60 pl-3 pt-1 celebration-quote-text">
             &ldquo;{event.playerReaction.quote}&rdquo;
           </p>
         </section>

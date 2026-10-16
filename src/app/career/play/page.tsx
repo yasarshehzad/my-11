@@ -635,9 +635,9 @@ function CareerPlayHubContent() {
       const el = document.getElementById(targetId);
       if (el) {
         el.scrollIntoView({ behavior, block });
-        el.classList.add('ring-2', 'ring-emerald-400', 'ring-offset-2', 'ring-offset-slate-950', 'transition-all');
+        el.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'ring-offset-slate-950', 'transition-all');
         setTimeout(() => {
-          el.classList.remove('ring-2', 'ring-emerald-400', 'ring-offset-2', 'ring-offset-slate-950');
+          el.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'ring-offset-slate-950');
         }, 2500);
         return true;
       }
@@ -1538,7 +1538,7 @@ function CareerPlayHubContent() {
             </Link>
             <Link
               href={`/career/setup?slot=${slotId}`}
-              className="flex-1 py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-display font-black uppercase tracking-wider flex items-center justify-center gap-1 shadow-lg shadow-emerald-500/20"
+              className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-display font-black uppercase tracking-wider flex items-center justify-center gap-1 shadow-md shadow-blue-500/20"
             >
               Start New
             </Link>
@@ -1616,7 +1616,7 @@ function CareerPlayHubContent() {
         <aside
           role="status"
           aria-live="polite"
-          className="fixed top-18 left-1/2 -translate-x-1/2 z-50 bg-emerald-500 text-slate-950 px-4 py-2 rounded-xl font-display font-black text-xs uppercase tracking-wider shadow-xl flex items-center gap-2 motion-reduce:animate-none animate-bounce"
+          className="fixed top-18 left-1/2 -translate-x-1/2 z-50 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-xl font-display font-black text-xs uppercase tracking-wider shadow-xl shadow-blue-500/25 flex items-center gap-2 motion-reduce:animate-none animate-bounce"
         >
           <span>✓</span> {toastMessage}
         </aside>
@@ -2840,7 +2840,7 @@ function CareerPlayHubContent() {
                   value={editingClubName}
                   onChange={(e) => setEditingClubName(e.target.value)}
                   placeholder={save.club.defaultName}
-                  className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 font-semibold"
+                  className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 font-semibold"
                 />
                 <button
                   onClick={() => setEditingClubName(save.club.defaultName)}
@@ -2866,7 +2866,7 @@ function CareerPlayHubContent() {
                     Football Manager-style units and formatting. Configurable mid-save on all difficulties.
                   </p>
                 </div>
-                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
                   Always Editable
                 </span>
               </div>
@@ -3027,7 +3027,7 @@ function CareerPlayHubContent() {
                     onChange={(e) =>
                       setEditableSettings({ ...editableSettings, boardCanSack: e.target.checked })
                     }
-                    className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                    className="w-4 h-4 accent-blue-600 cursor-pointer"
                   />
                 </div>
 
@@ -3044,7 +3044,7 @@ function CareerPlayHubContent() {
                     onChange={(e) =>
                       setEditableSettings({ ...editableSettings, retryMatch: e.target.checked })
                     }
-                    className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                    className="w-4 h-4 accent-blue-600 cursor-pointer"
                   />
                 </div>
 
@@ -3061,7 +3061,7 @@ function CareerPlayHubContent() {
                     onChange={(e) =>
                       setEditableSettings({ ...editableSettings, homegrownRule: e.target.checked })
                     }
-                    className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                    className="w-4 h-4 accent-blue-600 cursor-pointer"
                   />
                 </div>
 
@@ -3081,7 +3081,7 @@ function CareerPlayHubContent() {
                         financialPenalties: e.target.checked,
                       })
                     }
-                    className="w-4 h-4 accent-emerald-500 cursor-pointer"
+                    className="w-4 h-4 accent-blue-600 cursor-pointer"
                   />
                 </div>
               </div>
@@ -3089,7 +3089,7 @@ function CareerPlayHubContent() {
               <div className="pt-2">
                 <button
                   onClick={handleSaveSettings}
-                  className="w-full py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
+                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
                 >
                   Save Changes
                 </button>
@@ -3198,7 +3198,7 @@ function CareerPlayHubContent() {
           <div className="bg-slate-900 border border-slate-700/80 rounded-3xl p-6 sm:p-7 max-w-lg w-full space-y-5 shadow-2xl text-left relative">
             <header className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-2.5 py-0.5 rounded-full inline-block font-display">
+                <span className="text-[10px] font-black uppercase tracking-widest text-blue-400 bg-blue-950/80 border border-blue-800/80 px-2.5 py-0.5 rounded-full inline-block font-display">
                   Official Calendar Announcement
                 </span>
                 <span className="text-xs font-mono font-bold text-slate-400">
@@ -3220,7 +3220,7 @@ function CareerPlayHubContent() {
               </div>
               <div className="flex justify-between items-center text-slate-300">
                 <span className="text-slate-400">Match Allocation:</span>
-                <span className="font-mono text-emerald-400 font-bold">19 Home • 19 Away</span>
+                <span className="font-mono text-blue-400 font-bold">19 Home • 19 Away</span>
               </div>
             </div>
 
@@ -3231,7 +3231,7 @@ function CareerPlayHubContent() {
                   setShowFixtureReleasePromptModal(false);
                   setShowFixtureReleaseModal(true);
                 }}
-                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 transition-all cursor-pointer flex items-center justify-center gap-1.5"
               >
                 <span>🎉 Launch Live Reveal Ceremony</span>
               </button>
@@ -3311,7 +3311,7 @@ function CareerPlayHubContent() {
               </div>
               <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-3 space-y-1">
                 <span className="text-[10px] font-bold text-slate-500 uppercase">Prize Money</span>
-                <div className="font-display font-black text-base text-emerald-400">
+                <div className="font-display font-black text-base text-blue-400">
                   +{formatCareerCurrency(seasonSummary.prizeMoney, save.settings.currency)}
                 </div>
               </div>
@@ -3324,8 +3324,8 @@ function CareerPlayHubContent() {
             </div>
 
             {/* Financial War Chest Increase Breakdown */}
-            <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-2xl p-4 space-y-2">
-              <div className="text-[11px] font-display font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+            <div className="bg-blue-950/20 border border-blue-500/30 rounded-2xl p-4 space-y-2">
+              <div className="text-[11px] font-display font-black text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
                 <span>💰</span> End of Season Budget Increase
               </div>
               <p className="text-xs text-slate-300 leading-relaxed">
@@ -3336,20 +3336,20 @@ function CareerPlayHubContent() {
                   <span className="text-[9px] uppercase text-slate-500 block">Current Budget</span>
                   <span className="text-xs font-bold text-slate-300">{formatCareerCurrency(save.finances.transferBudget, save.settings.currency)}</span>
                 </div>
-                <div className="bg-emerald-950/50 border border-emerald-500/40 p-2 rounded-xl">
-                  <span className="text-[9px] uppercase text-emerald-400 block">+ Prize Money</span>
+                <div className="bg-blue-950/50 border border-blue-500/40 p-2 rounded-xl">
+                  <span className="text-[9px] uppercase text-blue-400 block">+ Prize Money</span>
                   <span className="text-xs font-bold text-emerald-300">+{formatCareerCurrency(seasonSummary.prizeMoney, save.settings.currency)}</span>
                 </div>
-                <div className="bg-slate-950/70 border border-emerald-500/50 p-2 rounded-xl">
-                  <span className="text-[9px] uppercase text-emerald-400 block">New Season Budget</span>
-                  <span className="text-xs font-bold text-emerald-400">{formatCareerCurrency(save.finances.transferBudget + seasonSummary.prizeMoney, save.settings.currency)}</span>
+                <div className="bg-slate-950/70 border border-blue-500/50 p-2 rounded-xl">
+                  <span className="text-[9px] uppercase text-blue-400 block">New Season Budget</span>
+                  <span className="text-xs font-bold text-blue-400">{formatCareerCurrency(save.finances.transferBudget + seasonSummary.prizeMoney, save.settings.currency)}</span>
                 </div>
               </div>
             </div>
 
             {/* Squad Progression & Veteran Aging Logs */}
             <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-4 space-y-2">
-              <div className="text-[10px] font-black uppercase text-emerald-400 tracking-wider flex items-center gap-1.5">
+              <div className="text-[10px] font-black uppercase text-blue-400 tracking-wider flex items-center gap-1.5">
                 <span>🌱</span> Squad Development &amp; Wonderkid Growth
               </div>
               <p className="text-[11px] text-slate-400 leading-relaxed">
@@ -3399,10 +3399,10 @@ function CareerPlayHubContent() {
           aria-modal="true"
           className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 motion-reduce:transition-none"
         >
-          <div className="bg-slate-950 border border-emerald-500/40 rounded-3xl p-6 sm:p-7 max-w-md w-full space-y-5 shadow-2xl text-left relative">
+          <div className="bg-slate-950 border border-blue-500/40 rounded-3xl p-6 sm:p-7 max-w-md w-full space-y-5 shadow-2xl text-left relative">
             <div className="flex justify-between items-start">
               <div className="space-y-1">
-                <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider font-display">
+                <span className="text-[10px] font-black uppercase text-blue-400 tracking-wider font-display">
                   Calendar Fast Forward Confirmation
                 </span>
                 <h3 className="text-xl font-display font-black text-white uppercase tracking-tight">
@@ -3421,7 +3421,7 @@ function CareerPlayHubContent() {
             <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 space-y-2 text-xs">
               <div className="flex justify-between items-center text-[11px]">
                 <span className="text-slate-400 uppercase font-bold">Target Stop Date</span>
-                <span className="font-mono font-bold text-emerald-400">
+                <span className="font-mono font-bold text-blue-400">
                   {getFastForwardDetails(pendingFastForward).targetDate}
                 </span>
               </div>
@@ -3430,12 +3430,12 @@ function CareerPlayHubContent() {
               </p>
             </div>
 
-            <label className="flex items-start gap-3 p-3 bg-slate-900/80 border border-slate-800 rounded-xl cursor-pointer hover:border-emerald-500/40 transition-colors">
+            <label className="flex items-start gap-3 p-3 bg-slate-900/80 border border-slate-800 rounded-xl cursor-pointer hover:border-blue-500/40 transition-colors">
               <input
                 type="checkbox"
                 checked={fastForwardUsePreferredEleven}
                 onChange={(e) => setFastForwardUsePreferredEleven(e.target.checked)}
-                className="mt-0.5 w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500 bg-slate-800 border-slate-700 cursor-pointer"
+                className="mt-0.5 w-4 h-4 rounded text-blue-600 focus:ring-blue-500 bg-slate-800 border-slate-700 cursor-pointer"
               />
               <div className="flex flex-col text-left">
                 <span className="text-xs font-bold text-slate-200">Use preferred starting 11</span>
@@ -3460,7 +3460,7 @@ function CareerPlayHubContent() {
                     value="deadline"
                     checked={fastForwardHaltOnTransferMilestone === 'deadline'}
                     onChange={() => setFastForwardHaltOnTransferMilestone('deadline')}
-                    className="text-emerald-500 focus:ring-emerald-500"
+                    className="text-blue-600 focus:ring-blue-500"
                   />
                   <span>Halt on Transfer Deadline Day (23:00 BST)</span>
                 </label>
@@ -3471,7 +3471,7 @@ function CareerPlayHubContent() {
                     value="window_open_or_close"
                     checked={fastForwardHaltOnTransferMilestone === 'window_open_or_close'}
                     onChange={() => setFastForwardHaltOnTransferMilestone('window_open_or_close')}
-                    className="text-emerald-500 focus:ring-emerald-500"
+                    className="text-blue-600 focus:ring-blue-500"
                   />
                   <span>Halt at Window Opening and Deadline Day</span>
                 </label>
@@ -3482,7 +3482,7 @@ function CareerPlayHubContent() {
                     value="none"
                     checked={fastForwardHaltOnTransferMilestone === 'none'}
                     onChange={() => setFastForwardHaltOnTransferMilestone('none')}
-                    className="text-emerald-500 focus:ring-emerald-500"
+                    className="text-blue-600 focus:ring-blue-500"
                   />
                   <span>Simulate continuously (do not halt)</span>
                 </label>
@@ -3512,7 +3512,7 @@ function CareerPlayHubContent() {
                     haltOnTransferMilestone: fastForwardHaltOnTransferMilestone,
                   });
                 }}
-                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
+                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider shadow-xl shadow-blue-500/25 transition-all cursor-pointer"
               >
                 Confirm &amp; Fast Forward
               </button>
@@ -3731,7 +3731,7 @@ function CareerPlayHubContent() {
               </div>
               <div className="text-right">
                 <span className="text-[10px] uppercase font-bold text-slate-400 block">Season Objective</span>
-                <span className="text-xs font-display font-black text-emerald-400">
+                <span className="text-xs font-display font-black text-blue-400">
                   {boardStatus.expectation || (save.club.tier === 'elite' ? 'Win Title' : save.club.tier === 'upper' ? 'European Qualification' : 'Avoid Relegation')}
                 </span>
               </div>
@@ -3810,7 +3810,7 @@ function CareerPlayHubContent() {
               <button
                 type="button"
                 onClick={() => setShowBoardDossierModal(false)}
-                className="py-2 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider cursor-pointer"
+                className="py-2 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider shadow-md shadow-blue-500/20 cursor-pointer"
               >
                 Close
               </button>

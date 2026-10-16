@@ -117,7 +117,7 @@ export function EaFcCard({
             </span>
             {player.naturalPositions && player.naturalPositions.filter((p) => p !== player.position).length > 0 && (
               <span
-                className="text-[10px] font-bold text-emerald-300 bg-emerald-950/70 px-1.5 py-0.5 rounded border border-emerald-500/30"
+                className="text-[10px] font-bold text-blue-300 bg-blue-950/70 px-1.5 py-0.5 rounded border border-blue-500/30"
                 title={`Natural positions: ${player.naturalPositions.join(', ')}`}
               >
                 +{player.naturalPositions.filter((p) => p !== player.position).join('/')}
@@ -186,16 +186,16 @@ export function EaFcCard({
       {showProgressionBar && isYoung && (
         <section aria-label="Natural Development" className="relative my-3 pt-2 border-t border-white/10 space-y-1.5">
           <div className="flex justify-between items-center text-[10px] font-bold">
-            <span className="flex items-center gap-1 text-emerald-300">
+            <span className="flex items-center gap-1 text-blue-300">
               <span>🌱 In-Season Progression</span>
             </span>
-            <span className="font-mono text-emerald-200">
+            <span className="font-mono text-blue-200">
               {canGrow ? `${progressPercent}% to ${player.rating + 1} OVR` : 'Max Potential Reached'}
             </span>
           </div>
-          <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden border border-emerald-500/20">
+          <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden border border-blue-500/20">
             <div
-              className="h-full bg-gradient-to-r from-emerald-500 to-teal-300 rounded-full transition-all duration-500"
+              className="h-full bg-gradient-to-r from-[#00d2ff] via-[#1d5eff] to-[#7c3aed] rounded-full transition-all duration-500"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -219,7 +219,7 @@ export function EaFcCard({
             {recentForm.map((rating, idx) => {
               const ratingColor =
                 rating >= 7.8
-                  ? 'bg-emerald-500/30 text-emerald-300 border-emerald-400/60'
+                  ? 'bg-emerald-500/30 text-blue-300 border-emerald-400/60'
                   : rating >= 7.2
                   ? 'bg-teal-500/20 text-teal-300 border-teal-400/40'
                   : rating >= 6.4

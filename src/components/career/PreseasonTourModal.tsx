@@ -40,10 +40,10 @@ export function PreseasonTourModal({
     >
       <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden my-auto">
         {/* Header Ribbon */}
-        <header className="bg-gradient-to-r from-emerald-950 via-slate-900 to-slate-950 border-b border-slate-800 p-4 sm:p-6">
+        <header className="bg-gradient-to-r from-blue-500/10 via-indigo-500/5 to-transparent dark:from-blue-950 dark:via-slate-900 dark:to-slate-950 border-b border-slate-800 p-4 sm:p-6">
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-1">
-              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-2.5 py-0.5 rounded-full inline-block">
+              <span className="text-[10px] font-black uppercase tracking-widest text-blue-400 bg-blue-950/80 border border-blue-800/80 px-2.5 py-0.5 rounded-full inline-block">
                 Pre-Season Preparations
               </span>
               <h2 id="preseason-modal-title" className="text-lg sm:text-2xl font-display font-black text-white">
@@ -77,7 +77,7 @@ export function PreseasonTourModal({
                   onClick={() => setSelectedTourId(tour.id)}
                   className={`p-4 rounded-2xl border-2 transition-all cursor-pointer relative ${
                     isSelected
-                      ? 'border-emerald-500 bg-emerald-950/30 ring-2 ring-emerald-500/20 shadow-lg'
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30 ring-2 ring-blue-500/20 shadow-lg'
                       : 'border-slate-800 bg-slate-950/60 hover:border-slate-700 hover:bg-slate-800/40'
                   }`}
                 >
@@ -90,7 +90,7 @@ export function PreseasonTourModal({
                             {tour.title}
                           </h3>
                           {isSelected && (
-                            <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded bg-emerald-500 text-slate-950">
+                            <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded bg-blue-600 text-white font-bold">
                               SELECTED
                             </span>
                           )}
@@ -102,7 +102,7 @@ export function PreseasonTourModal({
                     </div>
 
                     <div className="text-right shrink-0">
-                      <span className="text-xs sm:text-sm font-display font-black text-emerald-400 block">
+                      <span className="text-xs sm:text-sm font-display font-black text-blue-400 block">
                         +{formatCurrency(tour.prizeMoney)}
                       </span>
                       <span className="text-[9px] uppercase font-bold text-slate-500">
@@ -130,7 +130,7 @@ export function PreseasonTourModal({
                         </span>
                       ))}
                     </div>
-                    <span className="text-[10px] font-bold text-emerald-400/90 font-mono">
+                    <span className="text-[10px] font-bold text-blue-400/90 font-mono">
                       {tour.fitnessBonusDescription}
                     </span>
                   </div>
@@ -146,7 +146,7 @@ export function PreseasonTourModal({
               type="checkbox"
               checked={delegateToAssistant}
               onChange={(e) => setDelegateToAssistant(e.target.checked)}
-              className="mt-1 h-4 w-4 rounded border-slate-700 text-emerald-500 focus:ring-emerald-500 cursor-pointer"
+              className="mt-1 h-4 w-4 rounded border-slate-700 text-blue-600 focus:ring-blue-500 cursor-pointer"
             />
             <label htmlFor="delegate-assistant-checkbox" className="text-xs cursor-pointer select-none">
               <span className="font-display font-bold text-white block">
@@ -168,7 +168,7 @@ export function PreseasonTourModal({
           <button
             type="button"
             onClick={() => onSelectTour(selectedTourId, delegateToAssistant)}
-            className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider transition-all shadow-lg hover:shadow-emerald-500/20 cursor-pointer"
+            className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider transition-all shadow-xl shadow-blue-500/25 cursor-pointer"
           >
             Confirm Itinerary & Collect {formatCurrency(currentOption.prizeMoney)} ➔
           </button>

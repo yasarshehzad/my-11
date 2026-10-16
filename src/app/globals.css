@@ -1,7 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
-:root {
+:root[data-theme='dark'],
+html.dark {
   --background: #020617; /* Slate-950 base */
   --foreground: #f8fafc;
 
@@ -153,6 +154,7 @@
   --common-card-sub-border: rgba(39, 39, 42, 0.4);
 }
 
+:root,
 :root[data-theme='light'] {
   --background: #ffffff; /* Clean pure white base */
   --foreground: #0f172a; /* Slate-900 base */
@@ -1508,14 +1510,40 @@ body {
   border-color: #e2e8f0 !important;
 }
 
-/* Light mode soft pastel badges for high legibility */
-:root[data-theme="light"] .my11-canvas [class*="bg-emerald-950"] {
-  background-color: #ecfdf5 !important;
-  color: #065f46 !important;
-  border-color: #a7f3d0 !important;
+/* Eradicate legacy emerald accents from canvas: map to MY-11 blue/indigo brand tokens */
+:root[data-theme="light"] .my11-canvas [class*="bg-emerald-950"]:not([data-semantic-win]):not([data-semantic-positive]) {
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border-color: #bfdbfe !important;
 }
-:root[data-theme="light"] .my11-canvas [class*="bg-emerald-950"] * {
-  color: #065f46 !important;
+:root[data-theme="light"] .my11-canvas [class*="bg-emerald-950"]:not([data-semantic-win]):not([data-semantic-positive]) * {
+  color: #1d4ed8 !important;
+}
+
+:root[data-theme="light"] .my11-canvas button.bg-emerald-500,
+:root[data-theme="light"] .my11-canvas button[class*="from-emerald-500"],
+:root[data-theme="light"] .my11-canvas [role="button"].bg-emerald-500 {
+  background: linear-gradient(92deg, #00d2ff 0%, #1d5eff 38%, #7c3aed 74%, #c026d3 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px -2px rgba(29, 94, 255, 0.4) !important;
+}
+:root[data-theme="light"] .my11-canvas button.bg-emerald-500 *,
+:root[data-theme="light"] .my11-canvas button[class*="from-emerald-500"] *,
+:root[data-theme="light"] .my11-canvas [role="button"].bg-emerald-500 * {
+  color: #ffffff !important;
+}
+
+:root[data-theme="dark"] .my11-canvas button.bg-emerald-500,
+:root[data-theme="dark"] .my11-canvas button[class*="from-emerald-500"],
+:root[data-theme="dark"] .my11-canvas [role="button"].bg-emerald-500 {
+  background: linear-gradient(92deg, #00d2ff 0%, #1d5eff 38%, #7c3aed 74%, #c026d3 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px -2px rgba(29, 94, 255, 0.4) !important;
+}
+:root[data-theme="dark"] .my11-canvas button.bg-emerald-500 *,
+:root[data-theme="dark"] .my11-canvas button[class*="from-emerald-500"] *,
+:root[data-theme="dark"] .my11-canvas [role="button"].bg-emerald-500 * {
+  color: #ffffff !important;
 }
 
 :root[data-theme="light"] .my11-canvas [class*="bg-amber-950"] {

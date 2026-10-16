@@ -145,7 +145,7 @@ export function ChampionsLeagueDrawModal({
                   <span
                     className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-lg shrink-0 ${
                       opp.homeAway === 'home'
-                        ? 'bg-emerald-500 text-slate-950'
+                        ? 'bg-blue-600 text-white font-bold'
                         : 'bg-indigo-900 text-indigo-200 border border-indigo-700'
                     }`}
                   >

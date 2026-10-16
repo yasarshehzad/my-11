@@ -80,7 +80,7 @@ export function HowToPlayModal({
               onClick={() => setActiveTab('draft')}
               className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 activeTab === 'draft'
-                  ? 'bg-emerald-500 text-slate-950 shadow-md'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-md'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -104,7 +104,7 @@ export function HowToPlayModal({
         {activeTab === 'draft' && (
           <div className="text-xs text-slate-350 space-y-4 font-semibold leading-relaxed">
             <div className="flex gap-3 items-start">
-              <span className="w-6 h-6 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-display font-black flex-shrink-0 text-xs">
+              <span className="w-6 h-6 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-400 flex items-center justify-center font-display font-black flex-shrink-0 text-xs">
                 1
               </span>
               <div>
@@ -118,7 +118,7 @@ export function HowToPlayModal({
             </div>
 
             <div className="flex gap-3 items-start">
-              <span className="w-6 h-6 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-display font-black flex-shrink-0 text-xs">
+              <span className="w-6 h-6 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-400 flex items-center justify-center font-display font-black flex-shrink-0 text-xs">
                 2
               </span>
               <div>
@@ -132,7 +132,7 @@ export function HowToPlayModal({
             </div>
 
             <div className="flex gap-3 items-start">
-              <span className="w-6 h-6 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-display font-black flex-shrink-0 text-xs">
+              <span className="w-6 h-6 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-400 flex items-center justify-center font-display font-black flex-shrink-0 text-xs">
                 3
               </span>
               <div>
@@ -216,7 +216,7 @@ export function HowToPlayModal({
                 type="checkbox"
                 checked={dontShowAgain}
                 onChange={(e) => setDontShowAgain(e.target.checked)}
-                className="rounded border-slate-800 text-emerald-500 focus:ring-emerald-500/20 w-4 h-4 bg-slate-900 focus:outline-none"
+                className="rounded border-slate-800 text-blue-600 focus:ring-blue-500/20 w-4 h-4 bg-slate-900 focus:outline-none"
               />
               <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                 Don't show this popup again when starting
@@ -230,7 +230,7 @@ export function HowToPlayModal({
               onClick={handleAction}
               className={`w-full py-3.5 px-4 rounded-2xl font-display font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer text-center active:scale-98 ${
                 activeTab === 'draft'
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 hover:from-emerald-400 hover:to-teal-400 shadow-emerald-500/20'
+                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-500/25'
                   : 'bg-gradient-to-r from-indigo-500 via-blue-500 to-cyan-500 text-white hover:from-indigo-400 hover:to-cyan-400 shadow-indigo-500/20'
               }`}
             >
