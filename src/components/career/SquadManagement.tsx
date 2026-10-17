@@ -1651,7 +1651,7 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
                       </div>
 
                       <div className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-2xs">
-                        <div className="overflow-x-auto max-h-48 scrollbar-thin">
+                        <div className="overflow-x-auto">
                           <table className="w-full text-left text-[11px]">
                             <thead className="bg-slate-100 text-[9px] font-bold uppercase text-slate-600 border-b border-slate-200 sticky top-0">
                               <tr>

@@ -1462,6 +1462,7 @@ body {
 
 /* Primary CTA Button — Animated Vibrant Gradient: Cyan -> Blue -> Purple -> Magenta */
 .my11-btn-gradient,
+.office-action-btn-primary,
 .office-play-match-btn {
   background: linear-gradient(90deg, #00d2ff 0%, #1d5eff 34%, #8b2cf5 70%, #d916bb 100%) !important;
   background-size: 180% 180% !important;
@@ -1476,11 +1477,13 @@ body {
 }
 
 .my11-btn-gradient *,
+.office-action-btn-primary *,
 .office-play-match-btn * {
   color: #ffffff !important;
 }
 
 .my11-btn-gradient:hover,
+.office-action-btn-primary:hover,
 .office-play-match-btn:hover {
   transform: translateY(-1px) scale(1.005);
   filter: brightness(1.04);
@@ -1491,11 +1494,7 @@ body {
 }
 
 .my11-btn-gradient:active,
-.office-play-match-btn:active {
-  transform: scale(0.98);
-}
-
-.my11-btn-gradient:active,
+.office-action-btn-primary:active,
 .office-play-match-btn:active {
   transform: scale(0.98);
 }
@@ -1520,12 +1519,14 @@ a.text-white,
 span.text-white,
 [class*="text-white"],
 .office-nav-tab-active,
+.office-action-btn-primary,
 .office-play-match-btn,
 .my11-btn-gradient {
   color: #ffffff !important;
 }
 
 .office-nav-tab-active *,
+.office-action-btn-primary *,
 .office-play-match-btn *,
 .my11-btn-gradient * {
   color: #ffffff !important;

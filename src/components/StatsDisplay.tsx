@@ -160,7 +160,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
           </div>
 
           {showLogs && (
-            <div className="mt-2.5 flex flex-col gap-2 max-h-[160px] overflow-y-auto pr-1 leading-normal text-[11px] animate-card-deal">
+            <div className="mt-2.5 flex flex-col gap-2 max-h-[340px] overflow-y-auto pr-1 leading-normal text-[11px] animate-card-deal">
               {positiveLogs.length > 0 && (
                 <div className="flex flex-col gap-1.5">
                   <span className="text-[8px] font-bold text-emerald-600 uppercase tracking-widest">Synergy Bonuses</span>

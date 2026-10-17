@@ -566,7 +566,11 @@ function CareerPlayHubContent() {
     return null;
   });
   const [theme] = useState<'dark' | 'light'>('light');
-  const [activeTab, setActiveTab] = useState<'overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings'>('overview');
+  const rawTab = searchParams.get('tab');
+  const initialTab = (rawTab && ['overview', 'squad', 'fixtures', 'table', 'cups', 'transfers', 'settings'].includes(rawTab))
+    ? (rawTab as 'overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings')
+    : 'overview';
+  const [activeTab, setActiveTab] = useState<'overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings'>(initialTab);
   const [tabHistory, setTabHistory] = useState<('overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings')[]>([]);
   const [showExitConfirmModal, setShowExitConfirmModal] = useState(false);
   const [showBoardDossierModal, setShowBoardDossierModal] = useState(false);
@@ -2800,7 +2804,7 @@ function CareerPlayHubContent() {
                   </nav>
 
                   {/* Messages Feed */}
-                  <div className="space-y-2.5 overflow-y-auto pr-1 flex-1 max-h-[58vh]">
+                  <div className="space-y-2.5 pr-1 flex-1">
                     {(() => {
                       const filteredMessages = allInbox.filter((m) => {
                         if (inboxFilter === 'all') return true;
@@ -3460,34 +3464,34 @@ function CareerPlayHubContent() {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fade-in"
         >
-          <div className="bg-slate-900 border border-slate-700/80 rounded-3xl p-6 sm:p-7 max-w-lg w-full space-y-5 shadow-2xl text-left relative">
+          <div className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-7 max-w-lg w-full space-y-5 shadow-2xl text-left relative text-[#0b1536]">
             <header className="space-y-1.5">
               <div className="flex items-center justify-between gap-2 flex-wrap">
-                <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full inline-block font-display">
+                <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full inline-block font-display">
                   Official Announcement
                 </span>
                 <span className="text-xs font-mono font-bold text-slate-500">
                   8 July {save.season.yearStart}
                 </span>
               </div>
-              <h3 className="text-xl sm:text-2xl font-display font-black text-white uppercase tracking-tight flex items-center gap-2">
+              <h3 className="text-xl sm:text-2xl font-display font-black text-[#0b1536] uppercase tracking-tight flex items-center gap-2">
                 <span>📅</span> Premier League Fixture Release Day!
               </h3>
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                 The Premier League computer has officially finalized all 38 fixtures for the {save.season.yearStart}/{(save.season.yearStart + 1).toString().slice(-2)} season. Opening day, rival derbies, festive fixtures, and the final day are ready.
               </p>
             </header>
 
-            <div className="bg-slate-950/70 border border-slate-850 rounded-2xl p-4 text-xs space-y-2">
-              <div className="flex justify-between items-center text-slate-300">
-                <span className="text-slate-400">Campaign Length:</span>
-                <span className="font-mono text-white font-bold">38 Matchday Rounds</span>
+            <div className="office-subcard border border-slate-200/80 rounded-2xl p-4 text-xs space-y-2 bg-slate-50/70">
+              <div className="flex justify-between items-center text-slate-700">
+                <span className="text-slate-500 font-medium">Campaign Length:</span>
+                <span className="font-mono text-[#0b1536] font-bold">38 Matchday Rounds</span>
               </div>
-              <div className="flex justify-between items-center text-slate-300">
-                <span className="text-slate-400">Match Allocation:</span>
-                <span className="font-mono text-blue-400 font-bold">19 Home • 19 Away</span>
+              <div className="flex justify-between items-center text-slate-700">
+                <span className="text-slate-500 font-medium">Match Allocation:</span>
+                <span className="font-mono text-blue-700 font-bold">19 Home • 19 Away</span>
               </div>
             </div>
 
@@ -3498,7 +3502,7 @@ function CareerPlayHubContent() {
                   setShowFixtureReleasePromptModal(false);
                   setShowFixtureReleaseModal(true);
                 }}
-                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                className="office-action-btn-primary flex-1 py-3 px-4 rounded-xl text-white font-display font-black text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
               >
                 <span>🎉 Launch Live Reveal Ceremony</span>
               </button>
@@ -3508,7 +3512,7 @@ function CareerPlayHubContent() {
                   setShowFixtureReleasePromptModal(false);
                   handleFinishFixtureRelease();
                 }}
-                className="py-3 px-4 rounded-xl border border-slate-700 hover:border-slate-600 bg-slate-900 text-slate-300 hover:text-white font-display font-bold text-xs uppercase transition-all cursor-pointer text-center"
+                className="office-subcard py-3 px-4 rounded-xl border border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-900 font-display font-bold text-xs uppercase transition-all cursor-pointer text-center shadow-2xs"
               >
                 ⏩ Skip &amp; Unlock Calendar
               </button>
@@ -3541,21 +3545,21 @@ function CareerPlayHubContent() {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 motion-reduce:transition-none"
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 motion-reduce:transition-none animate-fade-in"
         >
-          <div className="bg-slate-950 border border-amber-500/40 rounded-3xl p-6 sm:p-7 max-w-xl w-full space-y-5 shadow-2xl text-left relative max-h-[90vh] overflow-y-auto">
+          <div className="office-floating-card bg-white border border-amber-300/80 rounded-3xl p-6 sm:p-7 max-w-xl w-full space-y-5 shadow-2xl text-left relative max-h-[90vh] overflow-y-auto text-[#0b1536]">
             <div className="flex justify-between items-start">
               <div className="space-y-1">
-                <span className="text-[10px] font-black uppercase text-amber-400 tracking-wider font-display">
+                <span className="text-[10px] font-black uppercase text-amber-700 tracking-wider font-display">
                   Official Season {save.season.seasonNumber} Review &amp; Board Summary
                 </span>
-                <h3 className="text-2xl font-display font-black text-white uppercase tracking-tight">
+                <h3 className="text-2xl font-display font-black text-[#0b1536] uppercase tracking-tight">
                   {seasonSummary.leagueTitle ? '👑 League Champions!' : `Finished Position #${seasonSummary.finalPosition}`}
                 </h3>
               </div>
               <button
                 onClick={() => setShowSeasonReviewModal(false)}
-                className="text-slate-500 hover:text-white p-1 rounded-lg text-sm cursor-pointer"
+                className="w-8 h-8 rounded-full office-subcard border border-slate-200 text-slate-500 hover:text-[#0b1536] flex items-center justify-center text-sm font-bold cursor-pointer transition-colors shadow-2xs"
                 aria-label="Close modal"
               >
                 ✕
@@ -3564,72 +3568,72 @@ function CareerPlayHubContent() {
 
             {/* Campaign Accolades Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-              <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-3 space-y-1">
+              <div className="office-subcard border border-slate-200/80 rounded-2xl p-3 space-y-1 bg-slate-50/70 shadow-2xs">
                 <span className="text-[10px] font-bold text-slate-500 uppercase">League Finish</span>
-                <div className="font-display font-black text-base text-white">
+                <div className="font-display font-black text-base text-[#0b1536]">
                   {seasonSummary.leagueTitle ? '🥇 1st Place' : `#${seasonSummary.finalPosition}`}
                 </div>
               </div>
-              <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-3 space-y-1">
+              <div className="office-subcard border border-slate-200/80 rounded-2xl p-3 space-y-1 bg-slate-50/70 shadow-2xs">
                 <span className="text-[10px] font-bold text-slate-500 uppercase">Silverware</span>
-                <div className="font-display font-black text-base text-amber-400">
+                <div className="font-display font-black text-base text-amber-700">
                   {seasonSummary.trophiesWon.length > 0 ? `${seasonSummary.trophiesWon.length} Trophies` : 'None'}
                 </div>
               </div>
-              <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-3 space-y-1">
+              <div className="office-subcard border border-slate-200/80 rounded-2xl p-3 space-y-1 bg-slate-50/70 shadow-2xs">
                 <span className="text-[10px] font-bold text-slate-500 uppercase">Prize Money</span>
-                <div className="font-display font-black text-base text-blue-400">
+                <div className="font-display font-black text-base text-blue-700">
                   +{formatCareerCurrency(seasonSummary.prizeMoney, save.settings.currency)}
                 </div>
               </div>
-              <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-3 space-y-1">
+              <div className="office-subcard border border-slate-200/80 rounded-2xl p-3 space-y-1 bg-slate-50/70 shadow-2xs">
                 <span className="text-[10px] font-bold text-slate-500 uppercase">Europe</span>
-                <div className="font-display font-bold text-xs text-blue-300 truncate" title={seasonSummary.europeanQualification}>
+                <div className="font-display font-bold text-xs text-blue-700 truncate" title={seasonSummary.europeanQualification}>
                   {seasonSummary.europeanQualification}
                 </div>
               </div>
             </div>
 
             {/* Financial War Chest Increase Breakdown */}
-            <div className="bg-blue-950/20 border border-blue-500/30 rounded-2xl p-4 space-y-2">
-              <div className="text-[11px] font-display font-black text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+            <div className="office-subcard bg-blue-50/60 border border-blue-200 rounded-2xl p-4 space-y-2">
+              <div className="text-[11px] font-display font-black text-blue-700 uppercase tracking-wider flex items-center gap-1.5">
                 <span>💰</span> End of Season Budget Increase
               </div>
-              <p className="text-xs text-slate-300 leading-relaxed">
+              <p className="text-xs text-slate-600 leading-relaxed">
                 The board of directors has credited your competition merit prize money to your war chest. Here is your updated financial war chest for Season {save.season.seasonNumber + 1}:
               </p>
               <div className="grid grid-cols-3 gap-2 pt-1 text-center font-mono">
-                <div className="bg-slate-950/70 border border-slate-850 p-2 rounded-xl">
-                  <span className="text-[9px] uppercase text-slate-500 block">Current Budget</span>
-                  <span className="text-xs font-bold text-slate-300">{formatCareerCurrency(save.finances.transferBudget, save.settings.currency)}</span>
+                <div className="bg-white border border-slate-200 p-2 rounded-xl shadow-2xs">
+                  <span className="text-[9px] uppercase text-slate-500 font-bold block">Current Budget</span>
+                  <span className="text-xs font-bold text-slate-800">{formatCareerCurrency(save.finances.transferBudget, save.settings.currency)}</span>
                 </div>
-                <div className="bg-blue-950/50 border border-blue-500/40 p-2 rounded-xl">
-                  <span className="text-[9px] uppercase text-blue-400 block">+ Prize Money</span>
-                  <span className="text-xs font-bold text-emerald-300">+{formatCareerCurrency(seasonSummary.prizeMoney, save.settings.currency)}</span>
+                <div className="bg-emerald-50 border border-emerald-200 p-2 rounded-xl shadow-2xs">
+                  <span className="text-[9px] uppercase text-emerald-700 font-bold block">+ Prize Money</span>
+                  <span className="text-xs font-bold text-emerald-800">+{formatCareerCurrency(seasonSummary.prizeMoney, save.settings.currency)}</span>
                 </div>
-                <div className="bg-slate-950/70 border border-blue-500/50 p-2 rounded-xl">
-                  <span className="text-[9px] uppercase text-blue-400 block">New Season Budget</span>
-                  <span className="text-xs font-bold text-blue-400">{formatCareerCurrency(save.finances.transferBudget + seasonSummary.prizeMoney, save.settings.currency)}</span>
+                <div className="bg-blue-50 border border-blue-200 p-2 rounded-xl shadow-2xs">
+                  <span className="text-[9px] uppercase text-blue-700 font-bold block">New Budget</span>
+                  <span className="text-xs font-bold text-blue-800">{formatCareerCurrency(save.finances.transferBudget + seasonSummary.prizeMoney, save.settings.currency)}</span>
                 </div>
               </div>
             </div>
 
             {/* Squad Progression & Veteran Aging Logs */}
-            <div className="bg-slate-900/40 border border-slate-850 rounded-2xl p-4 space-y-2">
-              <div className="text-[10px] font-black uppercase text-blue-400 tracking-wider flex items-center gap-1.5">
+            <div className="office-subcard border border-slate-200 rounded-2xl p-4 space-y-2 bg-slate-50/70">
+              <div className="text-[10px] font-black uppercase text-blue-700 tracking-wider flex items-center gap-1.5 font-display">
                 <span>🌱</span> Squad Development &amp; Wonderkid Growth
               </div>
-              <p className="text-[11px] text-slate-400 leading-relaxed">
+              <p className="text-[11px] text-slate-600 leading-relaxed">
                 Players age by 1 year. Under-23 wonderkids experience rapid attribute development, while veterans gradually decline. Summer fitness resets to 100%.
               </p>
-              <div className="max-h-36 overflow-y-auto space-y-1 text-[11px] text-slate-300 divide-y divide-slate-850/60 pt-1">
+              <div className="max-h-36 overflow-y-auto space-y-1 text-[11px] text-slate-700 divide-y divide-slate-200 pt-1">
                 {seasonSummary.progressionReport.logs.slice(0, 8).map((log, idx) => (
                   <div key={idx} className="py-1">
                     {log}
                   </div>
                 ))}
                 {seasonSummary.progressionReport.logs.length > 8 && (
-                  <div className="text-[10px] text-slate-500 pt-1">
+                  <div className="text-[10px] text-slate-500 pt-1 font-bold">
                     + {seasonSummary.progressionReport.logs.length - 8} more player development logs
                   </div>
                 )}
@@ -3640,7 +3644,7 @@ function CareerPlayHubContent() {
             <div className="flex gap-3 pt-2">
               <button
                 onClick={() => setShowSeasonReviewModal(false)}
-                className="py-3 px-4 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-850 text-slate-400 text-xs font-bold transition-all cursor-pointer"
+                className="office-subcard py-3 px-4 rounded-xl border border-slate-200 text-slate-700 hover:text-slate-900 text-xs font-bold transition-all cursor-pointer shadow-2xs"
               >
                 Close
               </button>
@@ -3650,7 +3654,7 @@ function CareerPlayHubContent() {
                   handleAdvanceToNextSeasonAction();
                 }}
                 disabled={simulating}
-                className="flex-1 py-3 px-5 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-xl shadow-amber-500/25 transition-all cursor-pointer flex items-center justify-center gap-2"
+                className="flex-1 py-3 px-5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
               >
                 <span>🚀 Kick Off Season {save.season.seasonNumber + 1} (Collect Prize Money)</span>
               </button>
@@ -3794,34 +3798,34 @@ function CareerPlayHubContent() {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in"
         >
-          <div className="bg-slate-950 border border-rose-500/40 rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-6 shadow-2xl text-center relative">
+          <div className="office-floating-card bg-white border border-rose-300 rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-6 shadow-2xl text-center relative text-[#0b1536]">
             <span className="text-5xl block">⚠️</span>
             <div className="space-y-1">
-              <span className="text-[10px] font-black uppercase text-rose-400 tracking-wider">
+              <span className="text-[10px] font-black uppercase text-rose-700 tracking-wider font-display">
                 Board of Directors Executive Notice
               </span>
-              <h3 className="text-2xl font-display font-black text-white uppercase tracking-tight">
+              <h3 className="text-2xl font-display font-black text-rose-700 uppercase tracking-tight">
                 Contract Terminated
               </h3>
-              <p className="text-xs text-slate-400 leading-relaxed pt-1">
+              <p className="text-xs text-slate-600 leading-relaxed pt-1">
                 The Board of Directors of {effectiveClubName} has officially relieved you of your duties as first-team manager following an unacceptable run of league results and failure to meet seasonal expectations.
               </p>
             </div>
 
-            <div className="bg-rose-950/20 border border-rose-500/30 rounded-2xl p-4 text-xs space-y-1">
+            <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 text-xs space-y-1">
               <div className="text-[10px] uppercase font-bold text-slate-500">Board Confidence</div>
-              <div className="text-xl font-display font-black text-rose-400">0% (Dismissed)</div>
-              <div className="text-[10px] text-slate-400 font-medium">Club Objective Failed</div>
+              <div className="text-xl font-display font-black text-rose-700">0% (Dismissed)</div>
+              <div className="text-[10px] text-slate-600 font-medium">Club Objective Failed</div>
             </div>
 
             <div className="flex flex-col gap-2.5 pt-2">
               <Link
                 href="/career"
-                className="w-full py-3 px-4 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-850 text-slate-300 font-display font-black text-xs uppercase tracking-wider transition-all"
+                className="w-full py-3 px-4 rounded-xl office-subcard border border-slate-200 text-slate-700 hover:text-slate-900 font-display font-black text-xs uppercase tracking-wider transition-all shadow-2xs text-center"
               >
-                Accept Dismissal & Resign
+                Accept Dismissal &amp; Resign
               </Link>
               <button
                 onClick={() => {
@@ -3838,7 +3842,7 @@ function CareerPlayHubContent() {
                   setDismissedSackedModal(true);
                   showToast('Board granted one final probation period. Deliver results immediately.');
                 }}
-                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer"
+                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-rose-600 hover:from-amber-400 hover:to-rose-500 text-white font-display font-black text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer"
               >
                 Appeal to Board (One Final Chance)
               </button>
@@ -3902,20 +3906,20 @@ function CareerPlayHubContent() {
           role="dialog"
           aria-modal="true"
           onClick={() => setShowExitConfirmModal(false)}
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 select-none"
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 select-none animate-fade-in"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-slate-950 border border-slate-800 rounded-3xl p-5 sm:p-6 max-w-sm w-full space-y-4 shadow-2xl relative text-center"
+            className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 max-w-sm w-full space-y-4 shadow-2xl relative text-center text-[#0b1536]"
           >
-            <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 text-2xl flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-2xl office-subcard border border-slate-200 text-2xl flex items-center justify-center mx-auto shadow-2xs">
               🚪
             </div>
             <div>
-              <h3 className="font-display font-black text-white text-base uppercase tracking-tight">
+              <h3 className="font-display font-black text-[#0b1536] text-base uppercase tracking-tight">
                 Exit Career Mode?
               </h3>
-              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+              <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
                 Your season progress is automatically saved. Do you want to return to the career save slots screen?
               </p>
             </div>
@@ -3923,13 +3927,13 @@ function CareerPlayHubContent() {
               <button
                 type="button"
                 onClick={() => setShowExitConfirmModal(false)}
-                className="py-2.5 px-3 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-850 text-slate-300 font-display font-bold text-xs uppercase tracking-wider cursor-pointer transition-colors"
+                className="office-subcard py-2.5 px-3 rounded-xl border border-slate-200 hover:border-slate-300 text-slate-700 font-display font-bold text-xs uppercase tracking-wider cursor-pointer transition-colors shadow-2xs"
               >
                 Keep Playing
               </button>
               <Link
                 href="/career"
-                className="py-2.5 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center cursor-pointer transition-colors shadow-lg shadow-rose-900/30"
+                className="py-2.5 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center cursor-pointer transition-colors shadow-md"
               >
                 Exit to Saves
               </Link>
@@ -3944,20 +3948,20 @@ function CareerPlayHubContent() {
           role="dialog"
           aria-modal="true"
           onClick={() => setShowBoardDossierModal(false)}
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 select-none"
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 select-none animate-fade-in"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-slate-950 border border-slate-800 rounded-3xl p-5 sm:p-6 max-w-lg w-full space-y-4 shadow-2xl relative"
+            className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 max-w-lg w-full space-y-4 shadow-2xl relative text-[#0b1536]"
           >
-            <div className="flex items-center justify-between border-b border-slate-850 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div className="flex items-center gap-2">
                 <span className="text-xl">🏛️</span>
                 <div>
-                  <h3 className="font-display font-black text-sm uppercase tracking-wide text-white">
+                  <h3 className="font-display font-black text-sm uppercase tracking-wide text-[#0b1536]">
                     Boardroom Confidence Dossier
                   </h3>
-                  <span className="text-[10px] text-slate-400">
+                  <span className="text-[10px] text-slate-500">
                     Comprehensive 1% granular club management evaluation
                   </span>
                 </div>
@@ -3965,7 +3969,7 @@ function CareerPlayHubContent() {
               <button
                 type="button"
                 onClick={() => setShowBoardDossierModal(false)}
-                className="w-8 h-8 rounded-full bg-slate-900 border border-slate-700/80 text-slate-300 hover:text-white flex items-center justify-center text-sm font-bold cursor-pointer"
+                className="w-8 h-8 rounded-full office-subcard border border-slate-200 text-slate-500 hover:text-[#0b1536] flex items-center justify-center text-sm font-bold cursor-pointer transition-colors shadow-2xs"
               >
                 ✕
               </button>
@@ -3974,15 +3978,15 @@ function CareerPlayHubContent() {
             {/* Overall Score Banner */}
             <div className={`p-3.5 rounded-2xl border flex items-center justify-between gap-3 ${
               boardConfidence >= 65
-                ? 'bg-emerald-950/40 border-emerald-500/40'
+                ? 'bg-emerald-50/80 border-emerald-300'
                 : boardConfidence >= 45
-                ? 'bg-amber-950/40 border-amber-500/40'
-                : 'bg-rose-950/40 border-rose-500/40'
+                ? 'bg-amber-50/80 border-amber-300'
+                : 'bg-rose-50/80 border-rose-300'
             }`}>
               <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">Current Standing</span>
-                <div className="font-display font-black text-lg text-white uppercase flex items-center gap-2">
-                  <span>
+                <span className="text-[10px] uppercase font-bold text-slate-500 block">Current Standing</span>
+                <div className="font-display font-black text-lg uppercase flex items-center gap-2">
+                  <span className={boardConfidence >= 65 ? 'text-emerald-700' : boardConfidence >= 45 ? 'text-amber-700' : 'text-rose-700'}>
                     {boardConfidence >= 75
                       ? 'Delighted'
                       : boardConfidence >= 60
@@ -3991,14 +3995,20 @@ function CareerPlayHubContent() {
                       ? 'Under Scrutiny'
                       : 'Precarious'}
                   </span>
-                  <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-black/40 border border-white/10">
+                  <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded-full border shadow-2xs ${
+                    boardConfidence >= 65
+                      ? 'bg-white text-emerald-800 border-emerald-200'
+                      : boardConfidence >= 45
+                      ? 'bg-white text-amber-800 border-amber-200'
+                      : 'bg-white text-rose-800 border-rose-200'
+                  }`}>
                     {boardConfidence}%
                   </span>
                 </div>
               </div>
               <div className="text-right">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">Season Objective</span>
-                <span className="text-xs font-display font-black text-blue-400">
+                <span className="text-[10px] uppercase font-bold text-slate-500 block">Season Objective</span>
+                <span className="text-xs font-display font-black text-blue-700">
                   {boardStatus.expectation || (save.club.tier === 'elite' ? 'Win Title' : save.club.tier === 'upper' ? 'European Qualification' : 'Avoid Relegation')}
                 </span>
               </div>
@@ -4006,7 +4016,7 @@ function CareerPlayHubContent() {
 
             {/* 4 Pillars Breakdown */}
             <div className="space-y-2">
-              <span className="text-[10.5px] uppercase font-bold text-slate-400 tracking-wider block">
+              <span className="text-[10.5px] uppercase font-display font-black text-slate-500 tracking-wider block">
                 Evaluation Pillars Breakdown
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
@@ -4036,22 +4046,22 @@ function CareerPlayHubContent() {
                     positive: boardConfidence >= 45
                   }
                 ]).map((pillar, idx) => (
-                  <div key={idx} className="bg-slate-900/60 border border-slate-850 p-2.5 rounded-xl space-y-1.5">
+                  <div key={idx} className="office-subcard border border-slate-200/80 p-3 rounded-2xl space-y-1.5 shadow-2xs bg-slate-50/60">
                     <div className="flex items-center justify-between text-[11px] font-bold">
-                      <span className="text-slate-200">{pillar.title}</span>
-                      <span className={`font-mono ${pillar.positive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      <span className="text-[#0b1536] font-display font-bold">{pillar.title}</span>
+                      <span className={`font-mono font-bold ${pillar.positive ? 'text-emerald-700' : 'text-rose-700'}`}>
                         {pillar.score}%
                       </span>
                     </div>
-                    <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all ${
-                          pillar.score >= 65 ? 'bg-emerald-500' : pillar.score >= 45 ? 'bg-amber-400' : 'bg-rose-500'
+                          pillar.score >= 65 ? 'bg-emerald-600' : pillar.score >= 45 ? 'bg-amber-500' : 'bg-rose-600'
                         }`}
                         style={{ width: `${pillar.score}%` }}
                       />
                     </div>
-                    <p className="text-[10px] text-slate-400 leading-tight">
+                    <p className="text-[11px] text-slate-600 leading-snug font-medium">
                       {pillar.description}
                     </p>
                   </div>
@@ -4069,7 +4079,7 @@ function CareerPlayHubContent() {
                   handleTabChange('transfers');
                   window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                 }}
-                className="py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 text-xs font-display font-bold uppercase tracking-wider text-slate-300 hover:text-white flex items-center gap-1.5 cursor-pointer"
+                className="office-subcard hover:border-[#1d5eff] text-slate-700 hover:text-[#1d5eff] font-display font-bold uppercase tracking-wider text-xs py-2 px-3 rounded-xl border border-slate-200 flex items-center gap-1.5 cursor-pointer shadow-2xs transition-colors"
               >
                 <span>🏛️ Full Boardroom &amp; Petitions</span>
                 <span>➔</span>
@@ -4077,7 +4087,7 @@ function CareerPlayHubContent() {
               <button
                 type="button"
                 onClick={() => setShowBoardDossierModal(false)}
-                className="py-2 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider shadow-md shadow-blue-500/20 cursor-pointer"
+                className="office-action-btn-primary py-2 px-4 rounded-xl text-white font-display font-black text-xs uppercase tracking-wider shadow-md cursor-pointer"
               >
                 Close
               </button>

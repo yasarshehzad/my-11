@@ -128,11 +128,11 @@ export function MatchOverviewModal({
     >
       <div
         data-office-ui="true"
-        className="office-floating-card rounded-3xl p-5 sm:p-7 max-w-xl w-full space-y-5 shadow-2xl relative my-auto max-h-[92vh] overflow-y-auto scrollbar-none border border-indigo-100/80"
+        className="office-floating-card bg-white rounded-3xl p-3.5 sm:p-6 max-w-xl w-full space-y-3 sm:space-y-4 shadow-2xl relative my-auto max-h-[92vh] overflow-y-auto scrollbar-none border border-indigo-100/80 text-[#0b1536]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Bar */}
-        <div className="flex items-center justify-between border-b border-[var(--office-divider)] pb-4">
+        <div className="flex items-center justify-between border-b border-[var(--office-divider)] pb-3">
           <div className="space-y-0.5">
             <span className="text-[10px] font-black uppercase tracking-widest text-[#1d5eff] font-display">
               {type === 'result' ? '📊 Match Result & Statistics' : '📋 Pre-Match Tactical Dossier'}
@@ -145,7 +145,7 @@ export function MatchOverviewModal({
             type="button"
             data-office-ui="true"
             onClick={onClose}
-            className="office-subcard w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] transition-colors cursor-pointer"
+            className="office-subcard w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] transition-colors cursor-pointer border border-slate-200 shadow-2xs"
             title="Close"
           >
             ✕
@@ -153,13 +153,13 @@ export function MatchOverviewModal({
         </div>
 
         {/* Clash & Scoreline Banner */}
-        <div className="office-subcard rounded-2xl p-4 sm:p-5 space-y-3 bg-gradient-to-br from-white via-indigo-50/20 to-purple-50/30 border border-indigo-100/70">
+        <div className="office-subcard rounded-2xl p-3.5 sm:p-4 space-y-2.5 bg-gradient-to-br from-white via-indigo-50/20 to-purple-50/30 border border-indigo-100/70">
           <div className="flex items-center justify-between gap-3 sm:gap-6">
             {/* Home Club */}
             <div className="flex-1 flex flex-col items-center text-center space-y-1.5 min-w-0">
               <div
                 data-force-white="true"
-                className="club-crest w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-white/60 shadow-lg flex items-center justify-center text-xs sm:text-sm font-black text-white shrink-0"
+                className="club-crest w-11 h-11 sm:w-14 sm:h-14 rounded-full border-2 border-white/60 shadow-lg flex items-center justify-center text-xs sm:text-sm font-black text-white shrink-0"
                 style={{
                   background: `linear-gradient(135deg, ${homeClub.primaryColor}, ${homeClub.secondaryColor})`,
                 }}
@@ -167,10 +167,10 @@ export function MatchOverviewModal({
                 {homeClub.shortName}
               </div>
               <div className="min-w-0 w-full">
-                <h4 className="font-display font-extrabold text-xs sm:text-sm text-[var(--office-text-primary)] truncate">
+                <h4 className="font-display font-extrabold text-xs sm:text-sm text-[var(--office-text-primary)] line-clamp-2 leading-tight">
                   {getEffectiveClubName(homeClub, save.club)}
                 </h4>
-                <span className="text-[9px] uppercase font-bold text-[var(--office-text-muted)] block truncate">
+                <span className="text-[9px] uppercase font-bold text-[var(--office-text-muted)] block truncate mt-0.5">
                   {isUserHome ? '★ (YOU • HOME)' : 'Home'}
                 </span>
               </div>
@@ -224,10 +224,10 @@ export function MatchOverviewModal({
                 {awayClub.shortName}
               </div>
               <div className="min-w-0 w-full">
-                <h4 className="font-display font-extrabold text-xs sm:text-sm text-[var(--office-text-primary)] truncate">
+                <h4 className="font-display font-extrabold text-xs sm:text-sm text-[var(--office-text-primary)] line-clamp-2 leading-tight">
                   {getEffectiveClubName(awayClub, save.club)}
                 </h4>
-                <span className="text-[9px] uppercase font-bold text-[var(--office-text-muted)] block truncate">
+                <span className="text-[9px] uppercase font-bold text-[var(--office-text-muted)] block truncate mt-0.5">
                   {isUserAway ? '★ (YOU • AWAY)' : 'Away'}
                 </span>
               </div>
@@ -470,7 +470,7 @@ export function MatchOverviewModal({
 
             {/* Matchday Action Buttons */}
             {onPlayInteractiveMatch && onPlayInstantMatch && (
-              <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
+              <div className="grid grid-cols-2 gap-2 pt-1 pb-0.5">
                 <button
                   type="button"
                   data-office-ui="true"
@@ -478,9 +478,9 @@ export function MatchOverviewModal({
                     onClose();
                     onPlayInteractiveMatch();
                   }}
-                  className="office-action-btn-primary flex-1 py-3 px-5 rounded-xl font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                  className="office-action-btn-primary py-3 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md cursor-pointer text-white active:scale-[0.99] transition-transform truncate"
                 >
-                  <span>▶ Play Match Now</span>
+                  <span>▶ Play Match</span>
                 </button>
                 <button
                   type="button"
@@ -489,7 +489,7 @@ export function MatchOverviewModal({
                     onClose();
                     onPlayInstantMatch();
                   }}
-                  className="office-subcard py-3 px-4 rounded-xl hover:bg-indigo-50/50 text-[var(--office-text-primary)] font-display font-bold text-xs uppercase tracking-wider cursor-pointer"
+                  className="office-subcard py-3 px-3 rounded-xl hover:bg-indigo-50/50 text-[var(--office-text-primary)] font-display font-bold text-xs uppercase tracking-wider cursor-pointer border border-slate-200 shadow-2xs active:scale-[0.99] transition-transform flex items-center justify-center gap-1.5 truncate"
                 >
                   <span>⚡ Instant Result</span>
                 </button>
@@ -498,17 +498,19 @@ export function MatchOverviewModal({
           </div>
         )}
 
-        {/* Modal Footer */}
-        <div className="pt-2 border-t border-[var(--office-divider)] flex justify-end">
-          <button
-            type="button"
-            data-office-ui="true"
-            onClick={onClose}
-            className="office-subcard py-2.5 px-5 rounded-xl hover:bg-indigo-50/50 text-[var(--office-text-primary)] font-display font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
-          >
-            Close
-          </button>
-        </div>
+        {/* Modal Footer (Result Mode only) */}
+        {type === 'result' && (
+          <div className="pt-2 border-t border-[var(--office-divider)] flex justify-end">
+            <button
+              type="button"
+              data-office-ui="true"
+              onClick={onClose}
+              className="office-subcard py-2 px-5 rounded-xl hover:bg-indigo-50/50 text-[var(--office-text-primary)] font-display font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer border border-slate-200 shadow-2xs"
+            >
+              Close
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

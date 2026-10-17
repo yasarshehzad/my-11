@@ -225,7 +225,7 @@ export function InstantMatchSummaryModal({
           ) : (
             <div className="grid grid-cols-2 gap-2 text-xs divide-x divide-[var(--office-divider)] pt-0.5">
               {/* Home Scorers */}
-              <div className="space-y-1 pr-1.5 max-h-20 overflow-y-auto scrollbar-none">
+              <div className="space-y-1 pr-1.5">
                 {homeScorers.length > 0 ? (
                   homeScorers.map((s, idx) => (
                     <div key={idx} className="flex items-center gap-1 text-[11px] text-[var(--office-text-primary)]">
@@ -240,7 +240,7 @@ export function InstantMatchSummaryModal({
               </div>
 
               {/* Away Scorers */}
-              <div className="space-y-1 pl-2 max-h-20 overflow-y-auto scrollbar-none">
+              <div className="space-y-1 pl-2">
                 {awayScorers.length > 0 ? (
                   awayScorers.map((s, idx) => (
                     <div key={idx} className="flex items-center gap-1 text-[11px] text-[var(--office-text-primary)]">

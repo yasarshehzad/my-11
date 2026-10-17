@@ -639,7 +639,7 @@ export function SeasonResults({
         </button>
 
         {showFixturesBreakdown && (
-          <div className="w-full p-4.5 rounded-3xl office-floating-card max-h-[420px] overflow-y-auto flex flex-col gap-2.5 scroll-smooth custom-scrollbar animate-card-deal shadow-md">
+          <div className="w-full p-4.5 rounded-3xl office-floating-card flex flex-col gap-2.5 animate-card-deal shadow-md border border-slate-200">
             {simResult.matches.map((match, idx) => {
               const outcomeColors = {
                 W: 'bg-emerald-50/80 border-emerald-200 text-emerald-900',

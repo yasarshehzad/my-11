@@ -133,7 +133,7 @@ export function LeagueTable({ standings, userClubId, userClub, fixtures = [], us
       {activeSubTab === 'standings' && (
         <>
           <div className="office-floating-card rounded-2xl overflow-hidden shadow-xs border border-slate-200/90">
-            <div className="overflow-x-auto max-h-[75vh]">
+            <div className="overflow-x-auto">
               <table className="w-full text-left text-xs tabular-nums border-collapse">
                 <thead className="sticky top-0 bg-slate-50/95 backdrop-blur-md z-10 text-[10px] font-display font-black uppercase tracking-wider text-slate-500 border-b border-slate-200 select-none shadow-2xs">
                   <tr>

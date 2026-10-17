@@ -103,11 +103,11 @@ export function CelebrationModal({
 
           <h2
             id="celebration-title"
-            className="text-xl sm:text-2xl font-display font-black uppercase tracking-tight text-white celebration-title"
+            className="text-xl sm:text-2xl font-display font-black uppercase tracking-tight text-slate-900 dark:text-white celebration-title"
           >
             {event.title}
           </h2>
-          <p className="text-xs sm:text-sm font-medium text-slate-300 celebration-subhead">
+          <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 celebration-subhead">
             {event.subheadline}
           </p>
         </div>
@@ -151,7 +151,7 @@ export function CelebrationModal({
             <div className="flex items-center gap-2">
               <span className="text-sm">🏛️</span>
               <div>
-                <h3 className="font-display font-black text-xs uppercase tracking-wider text-white celebration-quote-sender">
+                <h3 className="font-display font-black text-xs uppercase tracking-wider text-slate-900 dark:text-white celebration-quote-sender">
                   {event.boardReaction.sender}
                 </h3>
                 <span className="text-[10px] text-slate-400 block font-mono">
@@ -180,7 +180,7 @@ export function CelebrationModal({
                 {event.playerReaction.player.rating}
               </div>
               <div>
-                <h3 className="font-display font-black text-xs uppercase tracking-wider text-white flex items-center gap-1.5 celebration-quote-sender">
+                <h3 className="font-display font-black text-xs uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5 celebration-quote-sender">
                   <span>{event.playerReaction.player.name}</span>
                   {event.playerReaction.player.isCaptain && (
                     <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-amber-400 text-slate-950 font-black">
@@ -212,7 +212,7 @@ export function CelebrationModal({
                 onClose();
                 onNavigateTab(isTitleOrTrophy ? 'cups' : 'cups');
               }}
-              className="py-3 px-4 rounded-xl border border-slate-700 bg-slate-950 hover:bg-slate-800 text-xs font-display font-bold uppercase tracking-wider text-slate-300 transition-colors cursor-pointer flex-1 text-center"
+              className="office-subcard py-3 px-4 rounded-xl border border-slate-200 text-slate-700 hover:text-slate-900 text-xs font-display font-bold uppercase tracking-wider transition-colors cursor-pointer flex-1 text-center shadow-2xs"
             >
               {event.category === 'title_win' ? 'View League Table ➔' : 'View Tournament Desk ➔'}
             </button>
