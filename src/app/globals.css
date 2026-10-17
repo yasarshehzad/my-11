@@ -174,10 +174,10 @@ html.dark {
   --slate-400: #475569; /* muted body text */
   --slate-355: #334155;
   --slate-350: #1e293b; /* body text becomes slate-800 */
-  --slate-300: #334155; /* secondary headings */
-  --slate-200: #1e293b; /* high contrast text */
-  --slate-100: #0f172a; /* primary titles become slate-900 */
-  --slate-50: #020617;
+  --slate-300: #cbd5e1; /* soft light border (NEVER dark) */
+  --slate-200: #e2e8f0; /* light, subtle border (NEVER black) */
+  --slate-100: #f1f5f9; /* light surface / divider (NEVER black) */
+  --slate-50: #f8fafc; /* light background (NEVER black) */
 
   --glass-bg: rgba(255, 255, 255, 0.75);
   --glass-border: rgba(15, 23, 42, 0.08);
@@ -591,8 +591,11 @@ body {
   color-scheme: light;
 }
 
-[data-theme='light'] .text-white {
-  color: var(--slate-100);
+[data-theme='light'] .text-white,
+[data-theme='light'] .text-white *,
+[data-theme='light'] [class*="text-white"],
+[data-theme='light'] [class*="text-white"] * {
+  color: #ffffff !important;
 }
 
 /* Ensure vibrant, WCAG AA accessible contrast for semantic text on light backgrounds */
@@ -891,14 +894,6 @@ body {
   color: #ffffff !important;
 }
 
-[data-theme='light'] button.bg-emerald-500,
-[data-theme='light'] button.bg-emerald-500 *,
-[data-theme='light'] .bg-emerald-500.text-slate-950,
-[data-theme='light'] .bg-emerald-500.text-zinc-950,
-[data-theme='light'] .bg-amber-500.text-slate-950,
-[data-theme='light'] .bg-amber-500.text-zinc-950 {
-  color: #020617 !important;
-}
 
 [data-theme='light'] .text-slate-100 {
   color: var(--slate-100) !important;
@@ -1063,28 +1058,7 @@ body {
   box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04) !important;
 }
 
-/* Button Differentiation in Light Mode */
-[data-theme='light'] button:not([data-office-ui]):not([class*="bg-emerald"]):not([class*="bg-amber"]):not([class*="bg-rose"]):not([class*="bg-blue"]):not([class*="bg-indigo"]) {
-  background-color: #ffffff !important;
-  border-color: #cbd5e1 !important;
-  color: #0f172a !important;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
-}
 
-[data-theme='light'] button:hover:not([data-office-ui]):not([class*="bg-emerald"]):not([class*="bg-amber"]):not([class*="bg-rose"]):not([class*="bg-blue"]):not([class*="bg-indigo"]) {
-  background-color: #f1f5f9 !important;
-  border-color: #94a3b8 !important;
-}
-
-/* Primary Action Buttons */
-[data-theme='light'] .bg-emerald-500,
-[data-theme='light'] button[class*="from-emerald-500"] {
-  background: linear-gradient(135deg, #059669, #10b981) !important;
-  color: #022c22 !important;
-  font-weight: 900 !important;
-  border: none !important;
-  box-shadow: 0 4px 10px -1px rgba(16, 185, 129, 0.35) !important;
-}
 
 /* KPI Stat Cards on Home Screen */
 [data-theme='light'] section[aria-label="Key Performance Indicators"]:not([data-office-ui]) > div {
@@ -1455,9 +1429,9 @@ body {
   color: #ffffff !important;
 }
 
-/* iOS Safari Safe Area Bottom Clearance */
+/* iOS Safari Safe Area Bottom Clearance — Ensures 90px+ clearance above Safari floating toolbar */
 .safe-pb {
-  padding-bottom: max(1.75rem, calc(1rem + env(safe-area-inset-bottom, 24px))) !important;
+  padding-bottom: max(6rem, calc(5rem + env(safe-area-inset-bottom, 32px))) !important;
 }
 
 .safe-bottom {
@@ -1539,9 +1513,22 @@ body {
   color: #0b1536;
 }
 
-:root[data-theme="light"] .my11-canvas .text-white:not(.office-play-match-btn):not(.my11-btn-gradient):not(.office-nav-tab-active):not(.my11-nav-pill-active):not([data-keep-white]),
-:root[data-theme="light"] #career-office-root .text-white:not(.office-play-match-btn):not(.my11-btn-gradient):not(.office-nav-tab-active):not(.my11-nav-pill-active):not([data-keep-white]) {
-  color: #0b1536;
+/* All text-white on buttons, badges, gradients, and icons must remain pure white */
+.text-white,
+button.text-white,
+a.text-white,
+span.text-white,
+[class*="text-white"],
+.office-nav-tab-active,
+.office-play-match-btn,
+.my11-btn-gradient {
+  color: #ffffff !important;
+}
+
+.office-nav-tab-active *,
+.office-play-match-btn *,
+.my11-btn-gradient * {
+  color: #ffffff !important;
 }
 
 :root[data-theme="light"] .my11-canvas .text-slate-300,
@@ -1575,16 +1562,35 @@ body {
   background-color: #f6f8fd !important;
 }
 
-:root[data-theme="light"] .my11-canvas .border-slate-800,
-:root[data-theme="light"] #career-office-root .border-slate-800,
-:root[data-theme="light"] .my11-canvas .border-slate-850,
-:root[data-theme="light"] #career-office-root .border-slate-850,
-:root[data-theme="light"] .my11-canvas [class*="border-slate-800"],
-:root[data-theme="light"] #career-office-root [class*="border-slate-800"],
-:root[data-theme="light"] .my11-canvas [class*="border-slate-850"],
-:root[data-theme="light"] #career-office-root [class*="border-slate-850"],
-:root[data-theme="light"] .my11-canvas [class*="border-slate-900"],
-:root[data-theme="light"] #career-office-root [class*="border-slate-900"] {
+/* Eradicate any black / dark borders in light theme — ensure all outlines are soft & light */
+:root[data-theme="light"] .border-black,
+:root[data-theme="light"] [class*="border-black"],
+:root[data-theme="light"] .border-slate-950,
+:root[data-theme="light"] .border-slate-900,
+:root[data-theme="light"] .border-slate-850,
+:root[data-theme="light"] .border-slate-800,
+:root[data-theme="light"] .border-slate-750,
+:root[data-theme="light"] .border-slate-700,
+:root[data-theme="light"] .border-slate-600,
+:root[data-theme="light"] .border-slate-500,
+:root[data-theme="light"] .border-slate-400,
+:root[data-theme="light"] .border-slate-300,
+:root[data-theme="light"] [class*="border-slate-9"],
+:root[data-theme="light"] [class*="border-slate-8"],
+:root[data-theme="light"] [class*="border-slate-7"],
+:root[data-theme="light"] [class*="border-gray-9"],
+:root[data-theme="light"] [class*="border-gray-8"],
+:root[data-theme="light"] [class*="border-gray-7"],
+:root[data-theme="light"] [class*="border-zinc-9"],
+:root[data-theme="light"] [class*="border-zinc-8"],
+:root[data-theme="light"] [class*="border-zinc-7"],
+:root[data-theme="light"] #career-office-root [class*="border-slate-"],
+:root[data-theme="light"] .my11-canvas [class*="border-slate-"],
+:root[data-theme="light"] [class*="border-slate-300"],
+:root[data-theme="light"] [class*="border-slate-200"],
+:root[data-theme="light"] [class*="border-slate-100"],
+:root[data-theme="light"] .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+:root[data-theme="light"] .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
   border-color: #e2e8f0 !important;
 }
 

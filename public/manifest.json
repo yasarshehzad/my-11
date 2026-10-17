@@ -4,7 +4,7 @@
   "description": "Draft your dream football XI from 3,200+ iconic player seasons or manage your club across multi-season careers.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#080d1e",
+  "background_color": "#ffffff",
   "theme_color": "#f8fafc",
   "icons": [
     {
