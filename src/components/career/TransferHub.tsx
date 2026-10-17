@@ -2561,9 +2561,20 @@ export function TransferHub({
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 bg-[#0b1536]/75 dark:bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+          data-scrim="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-fade-in"
+          style={{
+            backgroundColor: 'rgba(11, 21, 54, 0.82)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+          }}
+          onClick={() => setRenewingPlayer(null)}
         >
-          <div className="office-floating-card rounded-3xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl relative my-auto border border-white/80">
+          <div
+            data-office-ui="true"
+            className="office-floating-card rounded-3xl max-w-sm sm:max-w-md w-full p-4 sm:p-5 space-y-3.5 shadow-2xl relative my-auto border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 max-h-[85vh] overflow-y-auto scrollbar-none"
+            onClick={(e) => e.stopPropagation()}
+          >
             <header className="flex justify-between items-center border-b border-slate-100 pb-3">
               <div>
                 <span className="font-display font-black text-xs uppercase tracking-wider text-blue-600">
@@ -2794,9 +2805,20 @@ export function TransferHub({
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 bg-[#0b1536]/75 dark:bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+          data-scrim="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-fade-in"
+          style={{
+            backgroundColor: 'rgba(11, 21, 54, 0.82)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+          }}
+          onClick={() => setNegotiatingPlayer(null)}
         >
-          <div className="office-floating-card rounded-3xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl relative my-auto border border-white/80">
+          <div
+            data-office-ui="true"
+            className="office-floating-card rounded-3xl max-w-sm sm:max-w-md w-full p-4 sm:p-5 space-y-3.5 shadow-2xl relative my-auto border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 max-h-[85vh] overflow-y-auto scrollbar-none"
+            onClick={(e) => e.stopPropagation()}
+          >
             <header className="flex justify-between items-center border-b border-slate-100 pb-3">
               <div>
                 <span className={`font-display font-black text-xs uppercase tracking-wider ${
@@ -3201,16 +3223,22 @@ export function TransferHub({
             role="dialog"
             aria-modal="true"
             aria-label={`Scouting profile for ${profilePlayer.name}`}
-            className="fixed inset-0 bg-[#0b1536]/75 dark:bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fade-in"
+            data-scrim="true"
+            className="fixed inset-0 z-50 flex items-center justify-center p-5 sm:p-6 overflow-y-auto animate-fade-in"
+            style={{
+              backgroundColor: 'rgba(11, 21, 54, 0.82)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+            }}
             onClick={() => setProfilePlayer(null)}
           >
             <div
               data-office-ui="true"
-              className="office-floating-card rounded-3xl max-w-lg w-full p-4 sm:p-6 space-y-4 shadow-2xl relative my-auto border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 max-h-[92vh] overflow-y-auto scrollbar-none"
+              className="office-floating-card rounded-3xl max-w-sm sm:max-w-md w-full p-4 sm:p-5 space-y-3 shadow-2xl relative my-auto border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 max-h-[84vh] overflow-y-auto scrollbar-none"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <header className="flex justify-between items-start border-b border-slate-200 dark:border-slate-800 pb-3">
+              <header className="flex justify-between items-start border-b border-slate-200 dark:border-slate-800 pb-2.5">
                 <div className="space-y-1 min-w-0 pr-2">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${
@@ -3218,7 +3246,7 @@ export function TransferHub({
                         ? 'bg-amber-100 text-amber-950 border-amber-300 dark:bg-amber-950/60 dark:text-amber-200 dark:border-amber-700'
                         : 'bg-blue-100 text-blue-950 border-blue-300 dark:bg-blue-950/60 dark:text-blue-200 dark:border-blue-700'
                     }`}>
-                      {isLegend ? '👑 Legend Scouting Dossier' : 'Scouting Dossier & Profile'}
+                      {isLegend ? '👑 Legend Dossier' : 'Scouting Dossier'}
                     </span>
                     <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${
                       windowIsOpen
@@ -3228,13 +3256,13 @@ export function TransferHub({
                       {windowIsOpen ? '● Window Open' : '○ Window Closed'}
                     </span>
                   </div>
-                  <h3 className="text-lg sm:text-xl font-display font-black text-slate-900 dark:text-white truncate">
+                  <h3 className="text-base sm:text-lg font-display font-black text-slate-950 dark:text-white truncate">
                     {profilePlayer.name}
                   </h3>
-                  <div className="text-xs text-slate-600 dark:text-slate-400 font-medium flex items-center gap-1.5 flex-wrap">
+                  <div className="text-xs text-slate-600 dark:text-slate-400 font-semibold flex items-center gap-1.5 flex-wrap">
                     <span className="font-extrabold text-blue-600 dark:text-blue-400">{profilePlayer.position}</span>
                     <span>•</span>
-                    <span>{profilePlayer.rating} OVR</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-200">{profilePlayer.rating} OVR</span>
                     <span>•</span>
                     <span>{resolvedClub}</span>
                     <span>•</span>
@@ -3252,50 +3280,40 @@ export function TransferHub({
                 </button>
               </header>
 
-              {/* Player Card & Biometrics Spotlight */}
-              <div className="space-y-3">
-                <EaFcCard
-                  player={profilePlayer as unknown as CareerPlayer}
-                  size="compact"
-                  showFormHistory={false}
-                  showProgressionBar={false}
-                />
-
-                {/* Authentic Biometrics Badge Strip */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                  <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
-                    <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Height / Weight</span>
-                    <span className="font-mono font-bold text-slate-900 dark:text-white">
-                      {bio.heightCm}cm • {bio.weightKg}kg
-                    </span>
-                  </div>
-                  <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
-                    <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Preferred Foot</span>
-                    <span className="font-mono font-bold text-slate-900 dark:text-white">{bio.preferredFoot}</span>
-                  </div>
-                  <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
-                    <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Date of Birth</span>
-                    <span className="font-mono font-bold text-slate-900 dark:text-white">{bio.dateOfBirth || `${bio.birthYear}`}</span>
-                  </div>
-                  <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
-                    <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Peak Age / Stage</span>
-                    <span className="font-mono font-bold text-slate-900 dark:text-white">{bio.peakAge} yrs</span>
-                  </div>
+              {/* Authentic Biometrics Badge Strip */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                  <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Height / Weight</span>
+                  <span className="font-mono font-black text-slate-900 dark:text-white text-xs">
+                    {bio.heightCm}cm • {bio.weightKg}kg
+                  </span>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                  <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Preferred Foot</span>
+                  <span className="font-mono font-black text-slate-900 dark:text-white text-xs">{bio.preferredFoot}</span>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                  <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Date of Birth</span>
+                  <span className="font-mono font-black text-slate-900 dark:text-white text-xs">{bio.dateOfBirth || `${bio.birthYear}`}</span>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                  <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Peak Age / Stage</span>
+                  <span className="font-mono font-black text-slate-900 dark:text-white text-xs">{bio.peakAge} yrs</span>
                 </div>
               </div>
 
               {/* Valuation & Contract Demand Card */}
-              <div className="rounded-2xl p-3.5 space-y-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+              <div className="rounded-2xl p-3 space-y-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
                 <div className="flex justify-between items-center text-xs">
                   <div>
                     <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Estimated Valuation</span>
-                    <span className="font-mono font-black text-base text-slate-950 dark:text-white">
+                    <span className="font-mono font-black text-sm sm:text-base text-slate-950 dark:text-white">
                       {formatCurrency(profilePlayer.value)}
                     </span>
                   </div>
                   <div className="text-right">
                     <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Wage Demand</span>
-                    <span className="font-mono font-black text-base text-blue-600 dark:text-blue-400">
+                    <span className="font-mono font-black text-sm sm:text-base text-blue-600 dark:text-blue-400">
                       {formatWage(profilePlayer.wageDemand)}
                     </span>
                   </div>
@@ -3316,13 +3334,13 @@ export function TransferHub({
                 </div>
               </div>
 
-              {/* EA FC Detailed Face Stats Breakdown */}
-              <div className="rounded-2xl p-3.5 space-y-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+              {/* Detailed Face Stats Breakdown */}
+              <div className="rounded-2xl p-3 space-y-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
                 <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider">
                   <span>📊 Detailed Attribute Ratings</span>
                   <span className="font-mono text-slate-500">{fs.isGoalkeeper ? 'Goalkeeper Matrix' : 'Outfield Matrix'}</span>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {statItems.map((item) => (
                     <div key={item.key} className="space-y-1 bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-200 dark:border-slate-700/80">
                       <div className="flex justify-between items-center text-xs">
@@ -3350,27 +3368,27 @@ export function TransferHub({
 
               {/* Transfer Window Status Notice */}
               {!windowIsOpen && (
-                <div className="p-3.5 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/80 text-xs space-y-1">
-                  <div className="flex items-center gap-1.5 font-black text-amber-950 dark:text-amber-200">
+                <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/80 text-xs space-y-0.5">
+                  <div className="flex items-center gap-1.5 font-black text-amber-950 dark:text-amber-200 text-xs">
                     <span>🔒</span>
                     <span>Transfer Window is Closed</span>
                   </div>
-                  <p className="text-[11px] text-amber-900/90 dark:text-amber-300/90 leading-relaxed font-medium">
-                    Official bidding and contract negotiations are prohibited outside the summer and winter transfer windows. You can scout player stats, compare with your squad, and add them to your shortlist in preparation for the upcoming window.
+                  <p className="text-[11px] text-amber-900 dark:text-amber-300 leading-snug font-medium">
+                    Official bids and negotiations are prohibited outside the transfer window. You can scout player stats and add them to your shortlist.
                   </p>
                 </div>
               )}
 
               {/* Modal Action Bar */}
-              <div className="flex flex-col sm:flex-row gap-2 pt-1">
+              <div className="flex flex-col sm:flex-row gap-2 pt-0.5">
                 {/* Shortlist Toggle */}
                 <button
                   type="button"
                   onClick={() => handleToggleShortlist(profilePlayer.id)}
-                  className={`flex-1 py-2.5 px-3 rounded-xl font-display font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs border ${
+                  className={`flex-1 py-2 px-3 rounded-xl font-display font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs border ${
                     isShortlisted
                       ? 'bg-amber-100 text-amber-950 border-amber-300 hover:bg-amber-200 dark:bg-amber-950/60 dark:text-amber-200 dark:border-amber-700'
-                      : 'bg-white hover:bg-slate-50 text-slate-800 border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-slate-200 dark:border-slate-600'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-slate-200 dark:border-slate-600'
                   }`}
                 >
                   <span>★</span>
@@ -3386,7 +3404,7 @@ export function TransferHub({
                       setProfilePlayer(null);
                       onOpenCompare(p);
                     }}
-                    className="py-2.5 px-3 rounded-xl font-display font-bold text-xs uppercase tracking-wider bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-slate-200 dark:border-slate-600 flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+                    className="py-2 px-3 rounded-xl font-display font-bold text-xs uppercase tracking-wider bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-slate-200 dark:border-slate-600 flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
                   >
                     <span>📊</span>
                     <span>Compare</span>
@@ -3403,7 +3421,7 @@ export function TransferHub({
                       handleStartNegotiation(p);
                     }}
                     disabled={isSquadFull}
-                    className={`flex-1 py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md ${
+                    className={`flex-1 py-2 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md ${
                       isSquadFull
                         ? 'bg-rose-50 text-rose-700 border border-rose-200 cursor-not-allowed'
                         : isLegend
@@ -3418,11 +3436,11 @@ export function TransferHub({
                   <button
                     type="button"
                     disabled
-                    className="flex-1 py-2.5 px-4 rounded-xl font-display font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed select-none"
+                    className="flex-1 py-2 px-4 rounded-xl font-display font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed select-none"
                     title="Transfer window is closed. Official offers and bids are prohibited."
                   >
                     <span>🔒</span>
-                    <span>Window Closed (No Bids)</span>
+                    <span>Window Closed</span>
                   </button>
                 )}
               </div>
@@ -3436,9 +3454,20 @@ export function TransferHub({
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 bg-[#0b1536]/75 dark:bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4"
+          data-scrim="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-fade-in"
+          style={{
+            backgroundColor: 'rgba(11, 21, 54, 0.82)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+          }}
+          onClick={() => setNegotiatingIncomingOffer(null)}
         >
-          <div className="office-floating-card rounded-3xl p-5 sm:p-7 max-w-xl w-full space-y-4 shadow-2xl relative max-h-[92vh] overflow-y-auto border border-white/80">
+          <div
+            data-office-ui="true"
+            className="office-floating-card rounded-3xl p-5 sm:p-6 max-w-lg w-full space-y-4 shadow-2xl relative my-auto max-h-[85vh] overflow-y-auto border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() => setNegotiatingIncomingOffer(null)}
               className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 text-base cursor-pointer z-20"

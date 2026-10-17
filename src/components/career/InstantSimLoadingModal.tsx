@@ -67,8 +67,13 @@ export function InstantSimLoadingModal({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Simulating match in progress"
-      className="fixed inset-0 bg-[#0b1536]/75 dark:bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-hidden animate-fade-in"
+      data-scrim="true"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden animate-fade-in"
+      style={{
+        backgroundColor: 'rgba(11, 21, 54, 0.85)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+      }}
     >
       <div
         data-office-ui="true"

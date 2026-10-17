@@ -1389,8 +1389,14 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
             <div
               role="dialog"
               aria-modal="true"
+              data-scrim="true"
               onClick={() => setSelectedPlayer(null)}
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 overflow-y-auto flex items-start justify-center p-3 sm:p-4 pt-4 sm:pt-6 select-none"
+              className="fixed inset-0 z-50 overflow-y-auto flex items-start justify-center p-4 sm:p-6 pt-6 sm:pt-8 select-none animate-fade-in"
+              style={{
+                backgroundColor: 'rgba(11, 21, 54, 0.82)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+              }}
             >
               <div
                 ref={playerModalCardRef}

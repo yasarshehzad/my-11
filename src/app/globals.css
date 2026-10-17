@@ -592,9 +592,8 @@ body {
 }
 
 [data-theme='light'] .text-white,
-[data-theme='light'] .text-white *,
-[data-theme='light'] [class*="text-white"],
-[data-theme='light'] [class*="text-white"] * {
+[data-theme='light'] [data-force-white="true"],
+[data-theme='light'] [data-force-white="true"] * {
   color: #ffffff !important;
 }
 
@@ -706,8 +705,11 @@ body {
 
 /* Modal dark backdrops in light mode */
 [data-theme='light'] [role="dialog"].fixed,
-[data-theme='light'] .fixed.inset-0.z-50 {
-  background-color: rgba(15, 23, 42, 0.55) !important;
+[data-theme='light'] .fixed.inset-0.z-50,
+[data-theme='light'] [data-scrim="true"] {
+  background-color: rgba(11, 21, 54, 0.82) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
 }
 
 /* Light theme canvas & main containers */
@@ -720,11 +722,13 @@ body {
   background-image: none !important;
 }
 
-/* Light Mode Homepage Sections, Elevation & Shadows */
-[data-theme='light'] header:not([data-office-ui]):not(.office-floating-card) {
-  background-color: rgba(255, 255, 255, 0.95) !important;
-  border-bottom: 1px solid #cbd5e1 !important;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+/* Layout containers (sections, headers, divs without card classes) must remain transparent with no square backgrounds or borders */
+section:not(.office-floating-card):not(.office-subcard):not(.my11-card):not(.my11-subcard):not(.career-hub-card):not([class*="rounded-"]),
+header:not(.office-floating-card):not(.office-subcard):not(.my11-card):not(.my11-subcard):not([class*="rounded-"]) {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 [data-theme='light'] nav[aria-label="Career management sections"]:not([data-office-ui]) {
@@ -733,13 +737,13 @@ body {
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04) !important;
 }
 
-[data-theme='light'] section[aria-label="Next Fixture"]:not([data-office-ui]) {
+[data-theme='light'] section[aria-label="Next Fixture"].career-hub-card {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.03) !important;
 }
 
-[data-theme='light'] section#managerial-alerts {
+[data-theme='light'] section#managerial-alerts.career-hub-card {
   background-color: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   box-shadow: 0 2px 8px -1px rgba(0, 0, 0, 0.05), 0 1px 4px -1px rgba(0, 0, 0, 0.03) !important;
@@ -755,19 +759,13 @@ body {
   border-color: #cbd5e1 !important;
 }
 
-[data-theme='light'] section[aria-label="Previous Match Result"] {
+[data-theme='light'] section[aria-label="Previous Match Result"].career-hub-card {
   background-color: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   box-shadow: 0 2px 6px -1px rgba(0, 0, 0, 0.05) !important;
 }
 
-[data-theme='light'] .grid-cols-3:not([data-office-ui]) > div:not([data-office-ui]) {
-  background-color: #ffffff !important;
-  border: 1px solid #e2e8f0 !important;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04) !important;
-}
-
-[data-theme='light'] #managerial-inbox {
+[data-theme='light'] #managerial-inbox.career-hub-card {
   background-color: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04) !important;
@@ -1043,15 +1041,14 @@ body {
 }
 
 /* Home Screen Card Differentiation */
-[data-theme='light'] section:not([data-office-ui]),
-[data-theme='light'] .career-hub-card:not([data-office-ui]) {
+[data-theme='light'] .career-hub-card {
   background-color: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05) !important;
 }
 
 /* Matchday Hero on Home Screen */
-[data-theme='light'] section[aria-label="Next Fixture"]:not([data-office-ui]) {
+[data-theme='light'] section[aria-label="Next Fixture"].career-hub-card {
   background: #ffffff !important;
   border: 1px solid #cbd5e1 !important;
   box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04) !important;
@@ -1513,7 +1510,8 @@ body {
 button.text-white,
 a.text-white,
 span.text-white,
-[class*="text-white"],
+[data-force-white="true"],
+[data-force-white="true"] *,
 .office-nav-tab-active,
 .office-action-btn-primary,
 .office-play-match-btn,
@@ -1543,20 +1541,27 @@ span.text-white,
   color: #5b6e95;
 }
 
-:root[data-theme="light"] .my11-canvas .bg-slate-950,
-:root[data-theme="light"] #career-office-root .bg-slate-950,
-:root[data-theme="light"] .my11-canvas [class*="bg-slate-950"],
-:root[data-theme="light"] #career-office-root [class*="bg-slate-950"] {
+:root[data-theme="light"] .my11-canvas .bg-slate-950:not(.fixed):not([role="dialog"]):not([data-scrim="true"]),
+:root[data-theme="light"] #career-office-root .bg-slate-950:not(.fixed):not([role="dialog"]):not([data-scrim="true"]) {
   background-color: #ffffff !important;
 }
 
-:root[data-theme="light"] .my11-canvas .bg-slate-900,
-:root[data-theme="light"] #career-office-root .bg-slate-900,
-:root[data-theme="light"] .my11-canvas [class*="bg-slate-900"],
-:root[data-theme="light"] #career-office-root [class*="bg-slate-900"],
-:root[data-theme="light"] .my11-canvas [class*="bg-slate-850"],
-:root[data-theme="light"] #career-office-root [class*="bg-slate-850"] {
+:root[data-theme="light"] .my11-canvas .bg-slate-900:not(.fixed):not([role="dialog"]):not([data-scrim="true"]),
+:root[data-theme="light"] #career-office-root .bg-slate-900:not(.fixed):not([role="dialog"]):not([data-scrim="true"]),
+:root[data-theme="light"] .my11-canvas .bg-slate-850:not(.fixed):not([role="dialog"]):not([data-scrim="true"]),
+:root[data-theme="light"] #career-office-root .bg-slate-850:not(.fixed):not([role="dialog"]):not([data-scrim="true"]) {
   background-color: #f6f8fd !important;
+}
+
+/* Modal and dialog backdrop scrims must ALWAYS remain rich, dark translucent navy with blur */
+.fixed.inset-0[role="dialog"],
+div[role="dialog"].fixed,
+.fixed.inset-0.z-50,
+.modal-backdrop,
+[data-scrim="true"] {
+  background-color: rgba(11, 21, 54, 0.82) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
 }
 
 /* Eradicate any black / dark borders in light theme — ensure all outlines are soft & light */

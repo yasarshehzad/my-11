@@ -101,8 +101,13 @@ export function InstantMatchSummaryModal({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Instant Match Summary"
-      className="fixed inset-0 bg-[#0b1536]/75 dark:bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-hidden animate-fade-in"
+      data-scrim="true"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-hidden animate-fade-in"
+      style={{
+        backgroundColor: 'rgba(11, 21, 54, 0.85)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+      }}
       onClick={onClose}
     >
       <div
@@ -228,9 +233,9 @@ export function InstantMatchSummaryModal({
               <div className="space-y-1 pr-1.5">
                 {homeScorers.length > 0 ? (
                   homeScorers.map((s, idx) => (
-                    <div key={idx} className="flex items-center gap-1 text-[11px] text-slate-900 dark:text-white">
+                    <div key={idx} className="flex items-center gap-1 text-[11px] text-slate-900 dark:text-slate-100">
                       <span className="text-slate-700 dark:text-slate-300">⚽</span>
-                      <span className="font-extrabold truncate">{s.name}</span>
+                      <span className="font-extrabold text-slate-950 dark:text-white truncate">{s.name}</span>
                       <span className="text-slate-600 dark:text-slate-400 text-[10px] shrink-0 font-mono font-bold">({s.minute}&apos;)</span>
                     </div>
                   ))
@@ -243,9 +248,9 @@ export function InstantMatchSummaryModal({
               <div className="space-y-1 pl-2">
                 {awayScorers.length > 0 ? (
                   awayScorers.map((s, idx) => (
-                    <div key={idx} className="flex items-center gap-1 text-[11px] text-slate-900 dark:text-white">
+                    <div key={idx} className="flex items-center gap-1 text-[11px] text-slate-900 dark:text-slate-100">
                       <span className="text-slate-700 dark:text-slate-300">⚽</span>
-                      <span className="font-extrabold truncate">{s.name}</span>
+                      <span className="font-extrabold text-slate-950 dark:text-white truncate">{s.name}</span>
                       <span className="text-slate-600 dark:text-slate-400 text-[10px] shrink-0 font-mono font-bold">({s.minute}&apos;)</span>
                     </div>
                   ))
@@ -279,25 +284,25 @@ export function InstantMatchSummaryModal({
               type="button"
               data-office-ui="true"
               onClick={onViewDetailedDossier}
-              className="flex-1 py-2.5 px-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-900 dark:text-white font-display font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-2xs active:scale-[0.98] cursor-pointer"
+              className="flex-1 py-2.5 px-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-display font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-2xs active:scale-[0.98] cursor-pointer"
             >
-              <span>📊 Full Dossier</span>
+              <span className="text-slate-900 dark:text-white">📊 Full Dossier</span>
             </button>
             <button
               type="button"
               data-office-ui="true"
               onClick={() => handleNavigate('table')}
-              className="flex-1 py-2.5 px-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-900 dark:text-white font-display font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-2xs active:scale-[0.98] cursor-pointer"
+              className="flex-1 py-2.5 px-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-display font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-2xs active:scale-[0.98] cursor-pointer"
             >
-              <span>📈 Table</span>
+              <span className="text-slate-900 dark:text-white">📈 Table</span>
             </button>
             <button
               type="button"
               data-office-ui="true"
               onClick={() => handleNavigate('squad')}
-              className="flex-1 py-2.5 px-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-900 dark:text-white font-display font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-2xs active:scale-[0.98] cursor-pointer"
+              className="flex-1 py-2.5 px-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-display font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-2xs active:scale-[0.98] cursor-pointer"
             >
-              <span>👥 Squad</span>
+              <span className="text-slate-900 dark:text-white">👥 Squad</span>
             </button>
           </div>
 
