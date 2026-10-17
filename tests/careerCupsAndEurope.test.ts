@@ -44,8 +44,8 @@ describe('Career Mode Phase 5: Cups & European Competitions', () => {
   const testClub = clubs[0]; // Man Blue
 
   describe('Continental European Clubs', () => {
-    it('provides 10 copyright-safe European giants', () => {
-      expect(CONTINENTAL_EUROPEAN_CLUBS.length).toBe(10);
+    it('provides 16 copyright-safe European giants', () => {
+      expect(CONTINENTAL_EUROPEAN_CLUBS.length).toBe(16);
       const names = CONTINENTAL_EUROPEAN_CLUBS.map((c) => c.defaultName);
       expect(names).toContain('Madrid Royal');
       expect(names).toContain('Barcelona Blaugrana');

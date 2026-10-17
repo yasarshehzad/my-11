@@ -1,4 +1,5 @@
 import { Club, DatabaseSeason } from './types';
+import { CONTINENTAL_EUROPEAN_CLUBS } from './continentalClubs';
 
 export const SHARED_17_CLUBS: Club[] = [
   {
@@ -455,11 +456,14 @@ export const LOWER_LEAGUE_CLUBS: Club[] = [
 ];
 
 export function getAllKnownClubs(): Club[] {
-  return [...ALL_CAREER_CLUBS, ...LOWER_LEAGUE_CLUBS];
+  return [...ALL_CAREER_CLUBS, ...LOWER_LEAGUE_CLUBS, ...CONTINENTAL_EUROPEAN_CLUBS];
 }
 
 export function getClubById(id: string): Club | undefined {
-  const found = ALL_CAREER_CLUBS.find((c) => c.id === id) || LOWER_LEAGUE_CLUBS.find((c) => c.id === id);
+  const found =
+    ALL_CAREER_CLUBS.find((c) => c.id === id) ||
+    LOWER_LEAGUE_CLUBS.find((c) => c.id === id) ||
+    CONTINENTAL_EUROPEAN_CLUBS.find((c) => c.id === id);
   return found ? { ...found } : undefined;
 }
 
@@ -467,7 +471,7 @@ export function getCleanClubName(clubIdOrName: string): string {
   if (!clubIdOrName) return 'Free Agent';
   if (clubIdOrName.toLowerCase() === 'tbc') return 'TBC / Awaiting Draw';
   
-  const all = [...ALL_CAREER_CLUBS, ...LOWER_LEAGUE_CLUBS];
+  const all = [...ALL_CAREER_CLUBS, ...LOWER_LEAGUE_CLUBS, ...CONTINENTAL_EUROPEAN_CLUBS];
   const found = all.find(
     (c) =>
       c.id.toLowerCase() === clubIdOrName.toLowerCase() ||

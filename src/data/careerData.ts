@@ -1854,4 +1854,174 @@ export const careerRegistry: Record<string, PlayerCareerMeta> = {
     retirementYear: 2013,
     isRetired: true,
   },
+
+  // --- MODERN EUROPEAN STARS ---
+  'Lamine Yamal': {
+    careerStartYear: 2023,
+    isRetired: false,
+  },
+  'Vinicius Junior': {
+    careerStartYear: 2018,
+    isRetired: false,
+  },
+  'Jamal Musiala': {
+    careerStartYear: 2020,
+    isRetired: false,
+  },
+  'Florian Wirtz': {
+    careerStartYear: 2020,
+    isRetired: false,
+  },
+  'Rodrygo': {
+    careerStartYear: 2019,
+    isRetired: false,
+  },
+  'Federico Valverde': {
+    careerStartYear: 2018,
+    isRetired: false,
+  },
+  'Eduardo Camavinga': {
+    careerStartYear: 2019,
+    isRetired: false,
+  },
+  'Aurelien Tchouameni': {
+    careerStartYear: 2018,
+    isRetired: false,
+  },
+  'Antonio Rudiger': {
+    careerStartYear: 2011,
+    isRetired: false,
+  },
+  'Raphinha': {
+    careerStartYear: 2016,
+    isRetired: false,
+  },
+  'Frenkie de Jong': {
+    careerStartYear: 2016,
+    isRetired: false,
+  },
+  'Jules Kounde': {
+    careerStartYear: 2017,
+    isRetired: false,
+  },
+  'Michael Olise': {
+    careerStartYear: 2019,
+    isRetired: false,
+  },
+  'Alphonso Davies': {
+    careerStartYear: 2018,
+    isRetired: false,
+  },
+  'Ousmane Dembele': {
+    careerStartYear: 2015,
+    isRetired: false,
+  },
+  'Bradley Barcola': {
+    careerStartYear: 2021,
+    isRetired: false,
+  },
+  'Warren Zaire-Emery': {
+    careerStartYear: 2022,
+    isRetired: false,
+  },
+  'Vitinha': {
+    careerStartYear: 2019,
+    isRetired: false,
+  },
+  'Achraf Hakimi': {
+    careerStartYear: 2017,
+    isRetired: false,
+  },
+  'Gianluigi Donnarumma': {
+    careerStartYear: 2015,
+    isRetired: false,
+  },
+  'Marcus Thuram': {
+    careerStartYear: 2015,
+    isRetired: false,
+  },
+  'Nicolo Barella': {
+    careerStartYear: 2014,
+    isRetired: false,
+  },
+  'Hakan Calhanoglu': {
+    careerStartYear: 2011,
+    isRetired: false,
+  },
+  'Alessandro Bastoni': {
+    careerStartYear: 2016,
+    isRetired: false,
+  },
+  'Federico Dimarco': {
+    careerStartYear: 2014,
+    isRetired: false,
+  },
+  'Rafael Leao': {
+    careerStartYear: 2017,
+    isRetired: false,
+  },
+  'Theo Hernandez': {
+    careerStartYear: 2016,
+    isRetired: false,
+  },
+  'Christian Pulisic': {
+    careerStartYear: 2016,
+    isRetired: false,
+  },
+  'Mike Maignan': {
+    careerStartYear: 2015,
+    isRetired: false,
+  },
+  'Dusan Vlahovic': {
+    careerStartYear: 2016,
+    isRetired: false,
+  },
+  'Kenan Yildiz': {
+    careerStartYear: 2023,
+    isRetired: false,
+  },
+  'Gregor Kobel': {
+    careerStartYear: 2017,
+    isRetired: false,
+  },
+  'Julian Brandt': {
+    careerStartYear: 2014,
+    isRetired: false,
+  },
+  'Nico Schlotterbeck': {
+    careerStartYear: 2018,
+    isRetired: false,
+  },
+  'Serhou Guirassy': {
+    careerStartYear: 2015,
+    isRetired: false,
+  },
+  'Viktor Gyokeres': {
+    careerStartYear: 2017,
+    isRetired: false,
+  },
+  'Julian Alvarez': {
+    careerStartYear: 2018,
+    isRetired: false,
+  },
+  'Victor Boniface': {
+    careerStartYear: 2019,
+    isRetired: false,
+  },
+  'Jeremie Frimpong': {
+    careerStartYear: 2019,
+    isRetired: false,
+  },
+  'Alex Grimaldo': {
+    careerStartYear: 2015,
+    isRetired: false,
+  },
+  'Ademola Lookman': {
+    careerStartYear: 2015,
+    isRetired: false,
+  },
+  'Khvicha Kvaratskhelia': {
+    careerStartYear: 2019,
+    isRetired: false,
+  },
 };

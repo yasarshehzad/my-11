@@ -90,10 +90,10 @@ export function HomeScreen({
       )}
 
       {/* Hero Header — Smooth, airy, welcoming Title Case */}
-      <header className="space-y-1.5 sm:space-y-2 max-w-lg mx-auto pt-1 sm:pt-2">
-        <h1 className="text-2xl sm:text-3xl font-display font-black tracking-tight text-[var(--office-text-primary)] leading-tight">
-          Build Your Dream XI.{' '}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00d2ff] via-[#1d5eff] to-[#c026d3]">
+      <header className="space-y-1 sm:space-y-2 max-w-lg mx-auto pt-1 sm:pt-2 px-2">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-black tracking-tight text-[var(--office-text-primary)] leading-tight">
+          <span>Build Your Dream XI.</span>{' '}
+          <span className="block sm:inline text-transparent bg-clip-text bg-gradient-to-r from-[#00d2ff] via-[#1d5eff] to-[#c026d3]">
             Lead Your Club to Glory.
           </span>
         </h1>
@@ -108,7 +108,77 @@ export function HomeScreen({
         aria-label="Select Game Mode"
         className="flex flex-col gap-3.5 sm:gap-4.5 w-full text-left"
       >
-        {/* DRAFT MODE CARD */}
+        {/* CAREER MODE CARD (FLAGSHIP MODE #1) */}
+        <article className="office-floating-card rounded-[24px] sm:rounded-[26px] p-4 sm:p-5 flex flex-col justify-between hover:shadow-lg transition-all relative overflow-hidden group border border-slate-200/80">
+          {/* Top accent glow stripe */}
+          <div
+            className="absolute top-0 left-0 right-0 h-1"
+            style={{ background: 'linear-gradient(90deg, #1d5eff 0%, #7c3aed 50%, #c026d3 100%)' }}
+          />
+
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between gap-1 pt-0.5">
+              <span className="text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-wider text-[#7c3aed] flex items-center gap-1">
+                <span>🏆</span> Career Mode
+              </span>
+              <span className="text-[9px] uppercase tracking-wider font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200 shrink-0">
+                Multi-Season
+              </span>
+            </div>
+
+            <h2 className="text-base sm:text-lg font-display font-black text-[var(--office-text-primary)] tracking-tight">
+              Club Management
+            </h2>
+            <p className="text-[11px] sm:text-xs text-[var(--office-text-secondary)] leading-relaxed font-medium">
+              Take charge of 20 English clubs across seasons. Master squad registration, live transfer markets, and cup competitions.
+            </p>
+          </div>
+
+          <div className="mt-3 pt-3 border-t border-[var(--office-divider)] flex flex-col gap-2">
+            {activeCareerSave ? (
+              <Link
+                href={`/career/play?slot=${activeSlotId}`}
+                className="office-play-match-btn w-full py-2.5 sm:py-3 px-4 rounded-xl sm:rounded-2xl text-white font-display font-black text-xs sm:text-sm uppercase tracking-wider cursor-pointer text-center shadow-md flex items-center justify-center gap-2 min-h-[42px] transition-transform active:scale-[0.99] truncate"
+              >
+                <span className="truncate">▶ Continue {activeCareerSave.clubName} — Season {activeCareerSave.seasonNumber}</span>
+                <span>➔</span>
+              </Link>
+            ) : onSelectCareerMode ? (
+              <button
+                onClick={onSelectCareerMode}
+                className="office-play-match-btn w-full py-2.5 sm:py-3 px-4 rounded-xl sm:rounded-2xl text-white font-display font-black text-xs sm:text-sm uppercase tracking-wider cursor-pointer text-center shadow-md flex items-center justify-center gap-2 min-h-[42px] transition-transform active:scale-[0.99]"
+              >
+                <span>Start Career Mode</span>
+                <span>➔</span>
+              </button>
+            ) : (
+              <Link
+                href="/career/setup"
+                className="office-play-match-btn w-full py-2.5 sm:py-3 px-4 rounded-xl sm:rounded-2xl text-white font-display font-black text-xs sm:text-sm uppercase tracking-wider cursor-pointer text-center shadow-md flex items-center justify-center gap-2 min-h-[42px] transition-transform active:scale-[0.99]"
+              >
+                <span>Start Career Mode</span>
+                <span>➔</span>
+              </Link>
+            )}
+
+            <div className="grid grid-cols-2 gap-2 text-[10px]">
+              <Link
+                href="/career/setup"
+                className="py-1.5 px-2 rounded-xl office-subcard hover:border-[#7c3aed] text-[var(--office-text-secondary)] hover:text-[#7c3aed] font-mono uppercase text-[9px] font-bold text-center transition-colors min-h-[34px] flex items-center justify-center gap-1 shadow-2xs"
+              >
+                <span>+</span> New Career
+              </Link>
+              <Link
+                href="/career"
+                className="py-1.5 px-2 rounded-xl office-subcard hover:border-[#7c3aed] text-[var(--office-text-secondary)] hover:text-[#7c3aed] font-mono uppercase text-[9px] font-bold text-center transition-colors min-h-[34px] flex items-center justify-center gap-1 shadow-2xs"
+              >
+                <span>💾</span> Saves ({occupiedSlotsCount}/3)
+              </Link>
+            </div>
+          </div>
+        </article>
+
+        {/* DRAFT MODE CARD (#2) */}
         <article className="office-floating-card rounded-[24px] sm:rounded-[26px] p-4 sm:p-5 flex flex-col justify-between hover:shadow-lg transition-all relative overflow-hidden group border border-slate-200/80">
           {/* Top accent glow stripe */}
           <div
@@ -175,76 +245,6 @@ export function HomeScreen({
                   <span>📜</span> Squad History
                 </button>
               )}
-            </div>
-          </div>
-        </article>
-
-        {/* CAREER MODE CARD */}
-        <article className="office-floating-card rounded-[24px] sm:rounded-[26px] p-4 sm:p-5 flex flex-col justify-between hover:shadow-lg transition-all relative overflow-hidden group border border-slate-200/80">
-          {/* Top accent glow stripe */}
-          <div
-            className="absolute top-0 left-0 right-0 h-1"
-            style={{ background: 'linear-gradient(90deg, #1d5eff 0%, #7c3aed 50%, #c026d3 100%)' }}
-          />
-
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between gap-1 pt-0.5">
-              <span className="text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-wider text-[#7c3aed] flex items-center gap-1">
-                <span>🏆</span> Career Mode
-              </span>
-              <span className="text-[9px] uppercase tracking-wider font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200 shrink-0">
-                Multi-Season
-              </span>
-            </div>
-
-            <h2 className="text-base sm:text-lg font-display font-black text-[var(--office-text-primary)] tracking-tight">
-              Club Management
-            </h2>
-            <p className="text-[11px] sm:text-xs text-[var(--office-text-secondary)] leading-relaxed font-medium">
-              Take charge of 20 English clubs across seasons. Master squad registration, live transfer markets, and cup competitions.
-            </p>
-          </div>
-
-          <div className="mt-3 pt-3 border-t border-[var(--office-divider)] flex flex-col gap-2">
-            {activeCareerSave ? (
-              <Link
-                href={`/career/play?slot=${activeSlotId}`}
-                className="office-play-match-btn w-full py-2.5 sm:py-3 px-4 rounded-xl sm:rounded-2xl text-white font-display font-black text-xs sm:text-sm uppercase tracking-wider cursor-pointer text-center shadow-md flex items-center justify-center gap-2 min-h-[42px] transition-transform active:scale-[0.99] truncate"
-              >
-                <span className="truncate">▶ Continue {activeCareerSave.clubName} — Season {activeCareerSave.seasonNumber}</span>
-                <span>➔</span>
-              </Link>
-            ) : onSelectCareerMode ? (
-              <button
-                onClick={onSelectCareerMode}
-                className="office-play-match-btn w-full py-2.5 sm:py-3 px-4 rounded-xl sm:rounded-2xl text-white font-display font-black text-xs sm:text-sm uppercase tracking-wider cursor-pointer text-center shadow-md flex items-center justify-center gap-2 min-h-[42px] transition-transform active:scale-[0.99]"
-              >
-                <span>Start Career Mode</span>
-                <span>➔</span>
-              </button>
-            ) : (
-              <Link
-                href="/career/setup"
-                className="office-play-match-btn w-full py-2.5 sm:py-3 px-4 rounded-xl sm:rounded-2xl text-white font-display font-black text-xs sm:text-sm uppercase tracking-wider cursor-pointer text-center shadow-md flex items-center justify-center gap-2 min-h-[42px] transition-transform active:scale-[0.99]"
-              >
-                <span>Start Career Mode</span>
-                <span>➔</span>
-              </Link>
-            )}
-
-            <div className="grid grid-cols-2 gap-2 text-[10px]">
-              <Link
-                href="/career/setup"
-                className="py-1.5 px-2 rounded-xl office-subcard hover:border-[#7c3aed] text-[var(--office-text-secondary)] hover:text-[#7c3aed] font-mono uppercase text-[9px] font-bold text-center transition-colors min-h-[34px] flex items-center justify-center gap-1 shadow-2xs"
-              >
-                <span>+</span> New Career
-              </Link>
-              <Link
-                href="/career"
-                className="py-1.5 px-2 rounded-xl office-subcard hover:border-[#7c3aed] text-[var(--office-text-secondary)] hover:text-[#7c3aed] font-mono uppercase text-[9px] font-bold text-center transition-colors min-h-[34px] flex items-center justify-center gap-1 shadow-2xs"
-              >
-                <span>💾</span> Saves ({occupiedSlotsCount}/3)
-              </Link>
             </div>
           </div>
         </article>

@@ -124,7 +124,7 @@ function SetupWizardContent() {
         <div className="flex items-center gap-3 min-w-0">
           <Link
             href="/career"
-            className="office-subcard px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-colors flex items-center gap-1.5"
+            className="office-subcard px-3 py-1.5 rounded-xl text-xs font-bold text-[var(--office-text-secondary)] hover:text-[var(--office-text-primary)] transition-colors flex items-center gap-1.5"
           >
             ← <span>Save Slots</span>
           </Link>
