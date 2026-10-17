@@ -754,17 +754,16 @@ function CareerPlayHubContent() {
     }
   }, [activeTab, TAB_ORDER]);
 
-  const handleHeaderBack = useCallback(() => {
-    if (tabHistory.length > 0) {
-      const prevTab = tabHistory[tabHistory.length - 1];
-      setTabHistory(prev => prev.slice(0, -1));
-      handleTabChange(prevTab, false);
-    } else if (activeTab !== 'overview') {
+  const handleLogoClick = useCallback(() => {
+    if (activeTab !== 'overview') {
+      setTabHistory([]);
       handleTabChange('overview', false);
     } else {
       setShowExitConfirmModal(true);
     }
-  }, [tabHistory, activeTab, handleTabChange]);
+  }, [activeTab, handleTabChange]);
+
+  const handleHeaderBack = handleLogoClick;
 
   const goToNextTab = useCallback(() => {
     const currentIndex = TAB_ORDER.indexOf(activeTab);
@@ -1688,9 +1687,10 @@ function CareerPlayHubContent() {
           <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 overflow-hidden">
             <button
               type="button"
-              onClick={handleHeaderBack}
+              onClick={handleLogoClick}
               data-office-ui="true"
-              title="Exit Career / Save Slots"
+              title={activeTab !== 'overview' ? 'Return to Career Office' : 'Exit Career Mode'}
+              aria-label={activeTab !== 'overview' ? 'Return to Career Office' : 'Exit Career Mode'}
               className="flex flex-col items-center justify-center shrink-0 cursor-pointer group focus:outline-none"
             >
               {/* Crown SVG above MY-11 */}
@@ -3372,6 +3372,38 @@ function CareerPlayHubContent() {
                 )}
               </div>
             </section>
+
+            {/* Exit Game / Return to Menu */}
+            <section
+              data-office-ui="true"
+              className="office-floating-card rounded-3xl p-4 sm:p-5 space-y-3 border border-slate-200/90 shadow-sm"
+            >
+              <div>
+                <h4 className="text-xs font-display font-bold uppercase tracking-wider text-[var(--office-text-primary)] flex items-center gap-1.5">
+                  <span>🚪</span> Exit Career &amp; Leave Game
+                </h4>
+                <p className="text-[10px] text-[var(--office-text-muted)] mt-0.5">
+                  Your season progress is saved automatically. Choose whether to return to your save slots or exit to the main title screen.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                <button
+                  type="button"
+                  data-office-ui="true"
+                  onClick={() => setShowExitConfirmModal(true)}
+                  className="py-2.5 px-4 rounded-xl border border-slate-300 hover:border-slate-400 bg-slate-100 hover:bg-slate-200 text-slate-800 font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all shadow-2xs"
+                >
+                  <span>💾 Exit Career Mode</span>
+                </button>
+                <Link
+                  href="/"
+                  className="py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md"
+                >
+                  <span>🏠 Exit to Main Menu</span>
+                </Link>
+              </div>
+            </section>
           </div>
         )}
         </div>
@@ -3911,10 +3943,17 @@ function CareerPlayHubContent() {
         <div
           role="dialog"
           aria-modal="true"
+          data-scrim="true"
           onClick={() => setShowExitConfirmModal(false)}
-          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 select-none animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none animate-fade-in"
+          style={{
+            backgroundColor: 'rgba(11, 21, 54, 0.82)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+          }}
         >
           <div
+            data-office-ui="true"
             onClick={(e) => e.stopPropagation()}
             className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 max-w-sm w-full space-y-4 shadow-2xl relative text-center text-[#0b1536]"
           >
@@ -3926,23 +3965,29 @@ function CareerPlayHubContent() {
                 Exit Career Mode?
               </h3>
               <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                Your season progress is automatically saved. Do you want to return to the career save slots screen?
+                Your season progress is automatically saved to your device. Where would you like to go?
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-2 pt-2">
+            <div className="space-y-2 pt-1">
+              <Link
+                href="/career"
+                className="w-full py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-md"
+              >
+                <span>💾 Save Slots Screen</span>
+              </Link>
+              <Link
+                href="/"
+                className="w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-sm"
+              >
+                <span>🏠 Main Title Screen</span>
+              </Link>
               <button
                 type="button"
                 onClick={() => setShowExitConfirmModal(false)}
-                className="office-subcard py-2.5 px-3 rounded-xl border border-slate-200 hover:border-slate-300 text-slate-700 font-display font-bold text-xs uppercase tracking-wider cursor-pointer transition-colors shadow-2xs"
+                className="w-full py-2.5 px-3 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 font-display font-bold text-xs uppercase tracking-wider cursor-pointer transition-colors"
               >
                 Keep Playing
               </button>
-              <Link
-                href="/career"
-                className="py-2.5 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center cursor-pointer transition-colors shadow-md"
-              >
-                Exit to Saves
-              </Link>
             </div>
           </div>
         </div>
