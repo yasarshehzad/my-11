@@ -284,6 +284,15 @@ describe('Managerial Inbox Classification & Alert Prioritisation', () => {
     expect(saveWithInbox.inbox[0].resolved).toBe(true);
     expect(saveWithInbox.inbox.length).toBe(1); // not deleted from history
   });
+
+  it('correctly initializes and marks messages read when save.inbox is initially undefined', () => {
+    const rawSave: CareerSaveFile = { ...baseSave, inbox: undefined };
+    const updated = markMessageRead(rawSave, 'msg_welcome_board');
+    expect(updated.inbox).toBeDefined();
+    expect(updated.inbox!.length).toBeGreaterThan(0);
+    const welcome = updated.inbox!.find((m) => m.id === 'msg_welcome_board');
+    expect(welcome?.isRead).toBe(true);
+  });
 });
 
 describe('Player Comparison Engine', () => {

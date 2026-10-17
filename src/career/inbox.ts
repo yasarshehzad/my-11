@@ -455,7 +455,7 @@ export function markMessageRead(
   save: CareerSaveFile,
   messageId: string
 ): CareerSaveFile {
-  const existing = save.inbox || [];
+  const existing = save.inbox && save.inbox.length > 0 ? save.inbox : getInitialInboxMessages(save);
   return {
     ...save,
     inbox: existing.map((m) => (m.id === messageId ? { ...m, isRead: true } : m)),
@@ -467,7 +467,7 @@ export function markMessageResolved(
   messageId: string,
   resolved: boolean = true
 ): CareerSaveFile {
-  const existing = save.inbox || [];
+  const existing = save.inbox && save.inbox.length > 0 ? save.inbox : getInitialInboxMessages(save);
   return {
     ...save,
     inbox: existing.map((m) => (m.id === messageId ? { ...m, resolved } : m)),
@@ -475,7 +475,7 @@ export function markMessageResolved(
 }
 
 export function markAllMessagesRead(save: CareerSaveFile): CareerSaveFile {
-  const existing = save.inbox || [];
+  const existing = save.inbox && save.inbox.length > 0 ? save.inbox : getInitialInboxMessages(save);
   return {
     ...save,
     inbox: existing.map((m) => ({ ...m, isRead: true })),

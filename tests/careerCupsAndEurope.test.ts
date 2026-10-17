@@ -44,14 +44,17 @@ describe('Career Mode Phase 5: Cups & European Competitions', () => {
   const testClub = clubs[0]; // Man Blue
 
   describe('Continental European Clubs', () => {
-    it('provides 16 copyright-safe European giants', () => {
-      expect(CONTINENTAL_EUROPEAN_CLUBS.length).toBe(16);
+    it('provides copyright-safe European and world giants', () => {
+      expect(CONTINENTAL_EUROPEAN_CLUBS.length).toBeGreaterThanOrEqual(16);
       const names = CONTINENTAL_EUROPEAN_CLUBS.map((c) => c.defaultName);
       expect(names).toContain('Madrid Royal');
       expect(names).toContain('Barcelona Blaugrana');
       expect(names).toContain('Bavarian Munich');
       expect(names).toContain('Paris Red & Blue');
       expect(names).toContain('Lisbon Eagles');
+      expect(names).toContain('Riyadh Blue');
+      expect(names).toContain('Miami Pink & Black');
+      expect(names).toContain('Istanbul Red & Yellow');
     });
 
     it('findAnyClub resolves both domestic and continental clubs', () => {

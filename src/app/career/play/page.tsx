@@ -1437,8 +1437,12 @@ function CareerPlayHubContent() {
 
   const handleToggleMessageRead = (msgId: string) => {
     if (!save) return;
-    const updated = markMessageRead(save, msgId);
-    handleUpdateSave(updated);
+    const currentInbox = save.inbox && save.inbox.length > 0 ? save.inbox : getInitialInboxMessages(save);
+    const targetMsg = currentInbox.find((m) => m.id === msgId);
+    if (!targetMsg || !targetMsg.isRead) {
+      const updated = markMessageRead(save, msgId);
+      handleUpdateSave(updated);
+    }
     setExpandedMessageId((prev) => (prev === msgId ? null : msgId));
   };
 
@@ -2726,10 +2730,10 @@ function CareerPlayHubContent() {
                   id="managerial-inbox"
                   data-office-ui="true"
                   onClick={(e) => e.stopPropagation()}
-                  className="office-floating-card rounded-3xl p-4 sm:p-5 w-full max-w-lg max-h-[85vh] flex flex-col space-y-3.5 border border-indigo-100/80 shadow-2xl"
+                  className="office-floating-card rounded-3xl p-4 sm:p-5 w-full max-w-lg max-h-[85vh] flex flex-col space-y-3.5 border border-indigo-100/80 shadow-2xl overflow-hidden"
                 >
                   {/* Header Bar */}
-                  <div className="flex items-center justify-between gap-2 border-b border-[var(--office-divider)] pb-2.5">
+                  <div className="flex items-center justify-between gap-2 border-b border-[var(--office-divider)] pb-2.5 shrink-0">
                     <div className="flex items-center gap-2">
                       <span className="text-lg">📬</span>
                       <div>
@@ -2767,7 +2771,7 @@ function CareerPlayHubContent() {
                   </div>
 
                   {/* Filter Pills */}
-                  <nav aria-label="Inbox Filters" data-no-swipe="true" className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                  <nav aria-label="Inbox Filters" data-no-swipe="true" className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none shrink-0">
                     {[
                       { id: 'all', label: 'All', count: allInbox.length },
                       { id: 'action_required', label: 'Action Required', count: actionableAlerts.length },
@@ -2804,7 +2808,7 @@ function CareerPlayHubContent() {
                   </nav>
 
                   {/* Messages Feed */}
-                  <div className="space-y-2.5 pr-1 flex-1">
+                  <div className="space-y-2.5 pr-1 flex-1 overflow-y-auto min-h-0 overscroll-contain touch-pan-y">
                     {(() => {
                       const filteredMessages = allInbox.filter((m) => {
                         if (inboxFilter === 'all') return true;
@@ -2900,6 +2904,7 @@ function CareerPlayHubContent() {
                                     data-office-ui="true"
                                     onClick={(e) => {
                                       e.stopPropagation();
+                                      handleToggleMessageRead(msg.id);
                                       setShowOfficeInboxModal(false);
                                       handleExecuteAlertAction({
                                         actionTab: effectiveActionTab,

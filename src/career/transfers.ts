@@ -601,7 +601,26 @@ export function getScoutingMarketPool(
             clubLower.includes('leverkusen') ||
             clubLower.includes('bergamo') ||
             clubLower.includes('rome') ||
-            clubLower.includes('naples')
+            clubLower.includes('naples') ||
+            clubLower.includes('riyadh') ||
+            clubLower.includes('jeddah') ||
+            clubLower.includes('miami') ||
+            clubLower.includes('angeles') ||
+            clubLower.includes('istanbul') ||
+            clubLower.includes('marseille') ||
+            clubLower.includes('monaco') ||
+            clubLower.includes('lyon') ||
+            clubLower.includes('florence') ||
+            clubLower.includes('bilbao') ||
+            clubLower.includes('sebastian') ||
+            clubLower.includes('villarreal') ||
+            clubLower.includes('seville') ||
+            clubLower.includes('leipzig') ||
+            clubLower.includes('frankfurt') ||
+            clubLower.includes('stuttgart') ||
+            clubLower.includes('glasgow') ||
+            clubLower.includes('eindhoven') ||
+            clubLower.includes('rotterdam')
           );
         });
       } else if (l === 'legends') {
