@@ -90,284 +90,200 @@ export function HomeScreen({
       )}
 
       {/* Hero Header — Punchy, high-impact gaming hero */}
-      <header className="space-y-2 max-w-2xl mx-auto">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full office-subcard text-[10px] font-bold uppercase tracking-widest text-[#1d5eff] shadow-2xs">
+      <header className="space-y-1.5 max-w-2xl mx-auto">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full office-subcard text-[9.5px] font-bold uppercase tracking-widest text-[#1d5eff] shadow-2xs">
           <span>⚽</span>
           <span>Authentic Football Draft & Management</span>
         </div>
 
-        <h1 className="text-2xl sm:text-4xl font-display font-black tracking-tight text-[var(--office-text-primary)] uppercase leading-[1.1]">
+        <h1 className="text-xl sm:text-3xl font-display font-black tracking-tight text-[var(--office-text-primary)] uppercase leading-[1.1]">
           Build Your All-Time XI.{' '}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00d2ff] via-[#1d5eff] to-[#c026d3]">
             Lead Your Club to Glory.
           </span>
         </h1>
 
-        <p className="text-xs sm:text-sm text-[var(--office-text-secondary)] font-medium max-w-xl mx-auto leading-relaxed">
-          Draft legendary players across four eras in rapid 38-game campaigns, or take full control of an English club in a complete multi-season managerial career.
+        <p className="text-[11px] sm:text-xs text-[var(--office-text-secondary)] font-medium max-w-lg mx-auto leading-tight">
+          Draft legendary players across four eras in 38-game campaigns, or take full managerial control of 20 English clubs.
         </p>
 
         {/* Feature badges strip */}
-        <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
-          <span className="text-[10px] font-bold office-subcard px-2.5 py-1 rounded-full text-[var(--office-text-primary)] flex items-center gap-1 shadow-2xs">
+        <div className="flex flex-wrap items-center justify-center gap-1.5 pt-0.5">
+          <span className="text-[9.5px] font-bold office-subcard px-2 py-0.5 rounded-full text-[var(--office-text-primary)] flex items-center gap-1 shadow-2xs">
             <span className="text-emerald-500">●</span> 38-Game Rapid Sim
           </span>
-          <span className="text-[10px] font-bold office-subcard px-2.5 py-1 rounded-full text-[var(--office-text-primary)] flex items-center gap-1 shadow-2xs">
+          <span className="text-[9.5px] font-bold office-subcard px-2 py-0.5 rounded-full text-[var(--office-text-primary)] flex items-center gap-1 shadow-2xs">
             <span className="text-cyan-500">●</span> 3,200+ Iconic Season Cards
           </span>
-          <span className="text-[10px] font-bold office-subcard px-2.5 py-1 rounded-full text-[var(--office-text-primary)] flex items-center gap-1 shadow-2xs">
-            <span className="text-indigo-500">●</span> 20 English Top-Flight Clubs
+          <span className="text-[9.5px] font-bold office-subcard px-2 py-0.5 rounded-full text-[var(--office-text-primary)] flex items-center gap-1 shadow-2xs">
+            <span className="text-indigo-500">●</span> 20 English Clubs
           </span>
         </div>
       </header>
 
-      {/* Dual Mode Portals — The Two Gateways to Play */}
+      {/* Dual Mode Portals — Both visible on immediate screen */}
       <section
         aria-label="Select Game Mode"
-        className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full text-left"
+        className="grid grid-cols-2 gap-2.5 sm:gap-4 w-full text-left"
       >
         {/* DRAFT MODE PORTAL */}
-        <article className="office-floating-card rounded-[28px] p-5 sm:p-6 flex flex-col justify-between hover:shadow-xl transition-all relative overflow-hidden group">
+        <article className="office-floating-card rounded-2xl sm:rounded-[26px] p-3 sm:p-5 flex flex-col justify-between hover:shadow-xl transition-all relative overflow-hidden group">
           {/* Top accent glow stripe */}
           <div
-            className="absolute top-0 left-0 right-0 h-1.5"
+            className="absolute top-0 left-0 right-0 h-1 sm:h-1.5"
             style={{ background: 'linear-gradient(90deg, #00d2ff 0%, #10b981 50%, #1d5eff 100%)' }}
           />
 
-          <div>
-            <div className="flex items-center justify-between mb-2 pt-1">
-              <span className="text-[10px] sm:text-[11px] font-mono font-black uppercase tracking-wider text-[#1d5eff] flex items-center gap-1">
-                <span>⚡</span> Draft Mode
+          <div className="space-y-1.5 sm:space-y-2">
+            <div className="flex items-center justify-between gap-1 pt-0.5 sm:pt-1">
+              <span className="text-[9.5px] sm:text-[11px] font-mono font-black uppercase tracking-wider text-[#1d5eff] flex items-center gap-1">
+                <span>⚡</span> Draft<span className="hidden sm:inline"> Mode</span>
               </span>
-              <span className="text-[9.5px] uppercase tracking-wider font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+              <span className="text-[8px] sm:text-[9.5px] uppercase tracking-wider font-bold text-emerald-700 bg-emerald-50 px-1.5 sm:px-2 py-0.5 rounded-full border border-emerald-200 shrink-0">
                 38-Game Sim
               </span>
             </div>
 
-            <h2 className="text-xl sm:text-2xl font-display font-black text-[var(--office-text-primary)] uppercase tracking-tight">
+            <h2 className="text-sm sm:text-xl font-display font-black text-[var(--office-text-primary)] uppercase tracking-tight">
               Draft Your XI
             </h2>
-            <p className="text-xs text-[var(--office-text-secondary)] mt-1.5 leading-snug font-medium">
-              Pick 11 iconic cards across football history. Balance positions, build nation & club chemistry links, and simulate a full 38-game league campaign.
+            <p className="text-[10px] sm:text-xs text-[var(--office-text-secondary)] leading-snug font-medium line-clamp-3">
+              Pick 11 iconic cards across football history. Balance positions, build nation & club chemistry, and conquer 38 games.
             </p>
 
-            {/* Visual Gameplay Teaser Box */}
-            <div className="my-3.5 p-3 rounded-2xl bg-gradient-to-br from-blue-50/70 via-indigo-50/40 to-teal-50/30 border border-blue-200/70 space-y-2 shadow-2xs">
-              <div className="flex justify-between items-center text-[10px]">
-                <span className="font-mono font-black text-[#1d5eff] uppercase tracking-wider">
-                  Tactical Synergy Preview
-                </span>
-                <span className="font-display font-black text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-md">
-                  96/100 CHEM
-                </span>
-              </div>
-
-              {/* Mini cards sample */}
-              <div className="grid grid-cols-3 gap-1.5 text-center">
-                <div className="p-2 rounded-xl bg-white border border-indigo-100 shadow-2xs">
-                  <div className="text-[9px] font-mono font-bold text-amber-700">93 ST</div>
-                  <div className="font-display font-extrabold text-[11px] text-[var(--office-text-primary)] truncate">Henry</div>
-                  <div className="text-[8px] text-[var(--office-text-muted)] truncate">Arsenal • 03/04</div>
-                </div>
-                <div className="p-2 rounded-xl bg-white border border-indigo-100 shadow-2xs">
-                  <div className="text-[9px] font-mono font-bold text-purple-700">90 CF</div>
-                  <div className="font-display font-extrabold text-[11px] text-[var(--office-text-primary)] truncate">Bergkamp</div>
-                  <div className="text-[8px] text-[var(--office-text-muted)] truncate">Arsenal • 97/98</div>
-                </div>
-                <div className="p-2 rounded-xl bg-white border border-indigo-100 shadow-2xs">
-                  <div className="text-[9px] font-mono font-bold text-blue-700">89 CDM</div>
-                  <div className="font-display font-extrabold text-[11px] text-[var(--office-text-primary)] truncate">Vieira</div>
-                  <div className="text-[8px] text-[var(--office-text-muted)] truncate">Arsenal • 01/02</div>
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center text-[9px] text-[var(--office-text-muted)] font-medium pt-1 border-t border-indigo-100/80">
-                <span>🔗 Perfect Club Synergy (+24 Chem)</span>
-                <span className="font-mono font-bold text-[#1d5eff]">Attack: 94 OVR</span>
-              </div>
-            </div>
-
-            {/* Feature Pills */}
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full office-subcard text-[var(--office-text-secondary)]">
-                Classic Draft
+            <div className="flex flex-wrap gap-1 pt-0.5">
+              <span className="text-[8.5px] sm:text-[9.5px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full office-subcard text-[var(--office-text-secondary)]">
+                3,200+ Cards
               </span>
-              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full office-subcard text-[var(--office-text-secondary)]">
-                ⚡ Quick 15s Timer
+              <span className="text-[8.5px] sm:text-[9.5px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full office-subcard text-[var(--office-text-secondary)]">
+                Chemistry Links
               </span>
-              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full office-subcard text-[var(--office-text-secondary)]">
-                ❓ Mystery Scout
-              </span>
-              {streakStats.gamesPlayed > 0 && (
-                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-[#1d5eff] border border-blue-200 font-mono">
-                  {personalBests.overall?.bestWins !== undefined
-                    ? `🏆 Record: ${personalBests.overall.bestWins}W`
-                    : `Best: ${streakStats.bestPoints} pts`}
-                </span>
-              )}
             </div>
           </div>
 
-          <div className="mt-5 pt-3.5 border-t border-[var(--office-divider)] flex flex-col gap-2.5">
+          <div className="mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-[var(--office-divider)]">
             <button
               onClick={onStartDraft}
-              className="office-play-match-btn w-full py-3.5 px-5 rounded-2xl text-white font-display font-black text-sm uppercase tracking-wider cursor-pointer text-center shadow-md flex items-center justify-center gap-2 min-h-[46px] transition-transform active:scale-[0.99]"
+              className="office-play-match-btn w-full py-2.5 sm:py-3.5 px-2 sm:px-4 rounded-xl sm:rounded-2xl text-white font-display font-black text-xs sm:text-sm uppercase tracking-wider cursor-pointer text-center shadow-md flex items-center justify-center gap-1 sm:gap-2 min-h-[42px] transition-transform active:scale-[0.98]"
             >
-              <span>Play Draft Mode</span>
+              <span>Play Draft<span className="hidden sm:inline"> Mode</span></span>
               <span>➔</span>
             </button>
-
-            {todayChallenge && (
-              <button
-                onClick={onPlayDailyChallenge}
-                className="w-full py-2.5 px-3.5 rounded-xl office-subcard hover:border-amber-400/50 text-[var(--office-text-primary)] text-xs font-medium flex items-center justify-between transition-colors cursor-pointer min-h-[40px]"
-              >
-                <span className="truncate flex items-center gap-1.5">
-                  <span className="text-amber-500">🏆</span>
-                  <span>Daily Challenge: <strong className="text-amber-800 font-bold">{todayChallenge.title}</strong></span>
-                </span>
-                <span className="text-[9.5px] font-mono font-bold uppercase text-[#1d5eff] shrink-0 ml-2">
-                  {dailyStatus?.completed ? (dailyStatus.beaten ? 'Beaten ✓' : 'Done ✓') : 'Play ➔'}
-                </span>
-              </button>
-            )}
-
-            <div className="grid grid-cols-2 gap-2 text-[10px]">
-              {onRandomDraft && (
-                <button
-                  onClick={onRandomDraft}
-                  className="py-2 px-3 rounded-xl office-subcard hover:border-[#1d5eff] text-[var(--office-text-secondary)] hover:text-[#1d5eff] font-mono uppercase text-[9.5px] font-bold text-center transition-colors cursor-pointer min-h-[38px] flex items-center justify-center gap-1"
-                >
-                  <span>🎲</span> Instant Draft
-                </button>
-              )}
-              {onViewHistory && (
-                <button
-                  onClick={onViewHistory}
-                  className="py-2 px-3 rounded-xl office-subcard hover:border-[#1d5eff] text-[var(--office-text-secondary)] hover:text-[#1d5eff] font-mono uppercase text-[9.5px] font-bold text-center transition-colors cursor-pointer min-h-[38px] flex items-center justify-center gap-1"
-                >
-                  <span>📜</span> Squad History
-                </button>
-              )}
-            </div>
           </div>
         </article>
 
         {/* CAREER MODE PORTAL */}
-        <article className="office-floating-card rounded-[28px] p-5 sm:p-6 flex flex-col justify-between hover:shadow-xl transition-all relative overflow-hidden group">
+        <article className="office-floating-card rounded-2xl sm:rounded-[26px] p-3 sm:p-5 flex flex-col justify-between hover:shadow-xl transition-all relative overflow-hidden group">
           {/* Top accent glow stripe */}
           <div
-            className="absolute top-0 left-0 right-0 h-1.5"
+            className="absolute top-0 left-0 right-0 h-1 sm:h-1.5"
             style={{ background: 'linear-gradient(90deg, #1d5eff 0%, #7c3aed 50%, #c026d3 100%)' }}
           />
 
-          <div>
-            <div className="flex items-center justify-between mb-2 pt-1">
-              <span className="text-[10px] sm:text-[11px] font-mono font-black uppercase tracking-wider text-[#7c3aed] flex items-center gap-1">
-                <span>🏆</span> Career Mode
+          <div className="space-y-1.5 sm:space-y-2">
+            <div className="flex items-center justify-between gap-1 pt-0.5 sm:pt-1">
+              <span className="text-[9.5px] sm:text-[11px] font-mono font-black uppercase tracking-wider text-[#7c3aed] flex items-center gap-1">
+                <span>🏆</span> Career<span className="hidden sm:inline"> Mode</span>
               </span>
-              <span className="text-[9.5px] uppercase tracking-wider font-bold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200">
+              <span className="text-[8px] sm:text-[9.5px] uppercase tracking-wider font-bold text-indigo-700 bg-indigo-50 px-1.5 sm:px-2 py-0.5 rounded-full border border-indigo-200 shrink-0">
                 Multi-Season
               </span>
             </div>
 
-            <h2 className="text-xl sm:text-2xl font-display font-black text-[var(--office-text-primary)] uppercase tracking-tight">
+            <h2 className="text-sm sm:text-xl font-display font-black text-[var(--office-text-primary)] uppercase tracking-tight">
               Club Management
             </h2>
-            <p className="text-xs text-[var(--office-text-secondary)] mt-1.5 leading-snug font-medium">
-              Step into the dugout. Master 25-man senior squad registration, real transfer markets, deadline day drama, cup runs, and board expectations.
+            <p className="text-[10px] sm:text-xs text-[var(--office-text-secondary)] leading-snug font-medium line-clamp-3">
+              Take charge of 20 English clubs. Master 25-man squad caps, real transfer markets, deadline day drama, and trophies.
             </p>
 
-            {/* Visual Gameplay Teaser Box */}
-            <div className="my-3.5 p-3 rounded-2xl bg-gradient-to-br from-indigo-50/70 via-purple-50/40 to-pink-50/30 border border-indigo-200/70 space-y-2 shadow-2xs">
-              <div className="flex justify-between items-center text-[10px]">
-                <span className="font-mono font-black text-[#7c3aed] uppercase tracking-wider">
-                  Managerial Command Center
-                </span>
-                <span className="font-display font-black text-indigo-700 bg-indigo-100/70 px-2 py-0.5 rounded-md">
-                  BOARD: 100%
-                </span>
-              </div>
-
-              {/* Matchday teaser */}
-              <div className="p-2.5 rounded-xl bg-white border border-purple-100 shadow-2xs flex justify-between items-center">
-                <div>
-                  <div className="text-[8.5px] font-mono font-bold text-[var(--office-text-muted)] uppercase">Next Fixture • Matchday 2</div>
-                  <div className="font-display font-black text-xs text-[var(--office-text-primary)] mt-0.5">
-                    Merseyside Red <span className="text-[#1d5eff]">vs</span> Man Blue
-                  </div>
-                </div>
-                <span className="text-[10px] font-display font-black text-white bg-[#1d5eff] px-2.5 py-1 rounded-lg">
-                  PREPARE
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center text-[9px] text-[var(--office-text-muted)] font-medium pt-1 border-t border-purple-100/80">
-                <span>💰 Budget: £55.0M • Wages: £940k/wk</span>
-                <span className="font-bold text-[#7c3aed]">4 Trophies Active</span>
-              </div>
-            </div>
-
-            {/* Feature Pills */}
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full office-subcard text-[var(--office-text-secondary)]">
+            <div className="flex flex-wrap gap-1 pt-0.5">
+              <span className="text-[8.5px] sm:text-[9.5px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full office-subcard text-[var(--office-text-secondary)]">
                 20 PL Clubs
               </span>
-              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full office-subcard text-[var(--office-text-secondary)]">
-                25-Man Senior Cap
-              </span>
-              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full office-subcard text-[var(--office-text-secondary)]">
-                ⏱️ Deadline Day War Room
-              </span>
-              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full office-subcard text-[var(--office-text-secondary)]">
-                European Cups
+              <span className="text-[8.5px] sm:text-[9.5px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full office-subcard text-[var(--office-text-secondary)]">
+                Transfers & Cups
               </span>
             </div>
           </div>
 
-          <div className="mt-5 pt-3.5 border-t border-[var(--office-divider)] flex flex-col gap-2.5">
+          <div className="mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-[var(--office-divider)]">
             {activeCareerSave ? (
               <Link
                 href={`/career/play?slot=${activeSlotId}`}
-                className="office-play-match-btn w-full py-3.5 px-5 rounded-2xl text-white font-display font-black text-sm uppercase tracking-wider cursor-pointer text-center shadow-md flex items-center justify-center gap-2 min-h-[46px] transition-transform active:scale-[0.99]"
+                className="office-play-match-btn w-full py-2.5 sm:py-3.5 px-2 sm:px-4 rounded-xl sm:rounded-2xl text-white font-display font-black text-xs sm:text-sm uppercase tracking-wider cursor-pointer text-center shadow-md flex items-center justify-center gap-1 sm:gap-2 min-h-[42px] transition-transform active:scale-[0.98] truncate"
               >
-                <span>▶ Continue {activeCareerSave.clubName} — Season {activeCareerSave.seasonNumber}</span>
+                <span className="truncate">▶ Continue {activeCareerSave.clubName}</span>
                 <span>➔</span>
               </Link>
             ) : onSelectCareerMode ? (
               <button
                 onClick={onSelectCareerMode}
-                className="office-play-match-btn w-full py-3.5 px-5 rounded-2xl text-white font-display font-black text-sm uppercase tracking-wider cursor-pointer text-center shadow-md flex items-center justify-center gap-2 min-h-[46px] transition-transform active:scale-[0.99]"
+                className="office-play-match-btn w-full py-2.5 sm:py-3.5 px-2 sm:px-4 rounded-xl sm:rounded-2xl text-white font-display font-black text-xs sm:text-sm uppercase tracking-wider cursor-pointer text-center shadow-md flex items-center justify-center gap-1 sm:gap-2 min-h-[42px] transition-transform active:scale-[0.98]"
               >
-                <span>Start Career Mode</span>
+                <span>Play Career<span className="hidden sm:inline"> Mode</span></span>
                 <span>➔</span>
               </button>
             ) : (
               <Link
                 href="/career/setup"
-                className="office-play-match-btn w-full py-3.5 px-5 rounded-2xl text-white font-display font-black text-sm uppercase tracking-wider cursor-pointer text-center shadow-md flex items-center justify-center gap-2 min-h-[46px] transition-transform active:scale-[0.99]"
+                className="office-play-match-btn w-full py-2.5 sm:py-3.5 px-2 sm:px-4 rounded-xl sm:rounded-2xl text-white font-display font-black text-xs sm:text-sm uppercase tracking-wider cursor-pointer text-center shadow-md flex items-center justify-center gap-1 sm:gap-2 min-h-[42px] transition-transform active:scale-[0.98]"
               >
-                <span>Start Career Mode</span>
+                <span>Play Career<span className="hidden sm:inline"> Mode</span></span>
                 <span>➔</span>
               </Link>
             )}
-
-            <div className="grid grid-cols-2 gap-2 text-[10px]">
-              <Link
-                href="/career/setup"
-                className="py-2 px-3 rounded-xl office-subcard hover:border-[#7c3aed] text-[var(--office-text-secondary)] hover:text-[#7c3aed] font-mono uppercase text-[9.5px] font-bold text-center transition-colors min-h-[38px] flex items-center justify-center gap-1"
-              >
-                <span>+</span> New Career
-              </Link>
-              <Link
-                href="/career"
-                className="py-2 px-3 rounded-xl office-subcard hover:border-[#7c3aed] text-[var(--office-text-secondary)] hover:text-[#7c3aed] font-mono uppercase text-[9.5px] font-bold text-center transition-colors min-h-[38px] flex items-center justify-center gap-1"
-              >
-                <span>💾</span> Saves ({occupiedSlotsCount}/3)
-              </Link>
-            </div>
           </div>
         </article>
+      </section>
+
+      {/* Quick Play & Actions Strip */}
+      <section aria-label="Quick Actions" className="w-full space-y-2">
+        {todayChallenge && (
+          <button
+            onClick={onPlayDailyChallenge}
+            className="w-full py-2 px-3 sm:px-4 rounded-xl office-subcard hover:border-amber-400/50 text-[var(--office-text-primary)] text-xs font-medium flex items-center justify-between transition-colors cursor-pointer min-h-[38px] shadow-2xs"
+          >
+            <span className="truncate flex items-center gap-1.5 text-left">
+              <span className="text-amber-500">🏆</span>
+              <span className="truncate">Daily Challenge: <strong className="text-amber-800 font-bold">{todayChallenge.title}</strong></span>
+            </span>
+            <span className="text-[9.5px] font-mono font-bold uppercase text-[#1d5eff] shrink-0 ml-2">
+              {dailyStatus?.completed ? (dailyStatus.beaten ? 'Beaten ✓' : 'Done ✓') : 'Play ➔'}
+            </span>
+          </button>
+        )}
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px]">
+          {onRandomDraft && (
+            <button
+              onClick={onRandomDraft}
+              className="py-2 px-2.5 rounded-xl office-subcard hover:border-[#1d5eff] text-[var(--office-text-secondary)] hover:text-[#1d5eff] font-mono uppercase text-[9.5px] font-bold text-center transition-colors cursor-pointer min-h-[36px] flex items-center justify-center gap-1 shadow-2xs"
+            >
+              <span>🎲</span> Instant Draft
+            </button>
+          )}
+          {onViewHistory && (
+            <button
+              onClick={onViewHistory}
+              className="py-2 px-2.5 rounded-xl office-subcard hover:border-[#1d5eff] text-[var(--office-text-secondary)] hover:text-[#1d5eff] font-mono uppercase text-[9.5px] font-bold text-center transition-colors cursor-pointer min-h-[36px] flex items-center justify-center gap-1 shadow-2xs"
+            >
+              <span>📜</span> Squad History
+            </button>
+          )}
+          <Link
+            href="/career/setup"
+            className="py-2 px-2.5 rounded-xl office-subcard hover:border-[#7c3aed] text-[var(--office-text-secondary)] hover:text-[#7c3aed] font-mono uppercase text-[9.5px] font-bold text-center transition-colors min-h-[36px] flex items-center justify-center gap-1 shadow-2xs"
+          >
+            <span>+</span> New Career
+          </Link>
+          <Link
+            href="/career"
+            className="py-2 px-2.5 rounded-xl office-subcard hover:border-[#7c3aed] text-[var(--office-text-secondary)] hover:text-[#7c3aed] font-mono uppercase text-[9.5px] font-bold text-center transition-colors min-h-[36px] flex items-center justify-center gap-1 shadow-2xs"
+          >
+            <span>💾</span> Saves ({occupiedSlotsCount}/3)
+          </Link>
+        </div>
       </section>
 
       {/* How MY-11 Works — Concise 3-Step Strip */}

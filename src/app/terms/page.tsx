@@ -1,5 +1,11 @@
 import React from 'react';
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Terms of Service',
+  description: 'Terms of Service for MY-11 football draft and career simulation game.',
+};
 
 export default function TermsPage() {
   return (

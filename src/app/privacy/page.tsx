@@ -1,5 +1,11 @@
 import React from 'react';
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy',
+  description: 'Privacy Policy for MY-11. We respect your privacy and do not collect, store, or sell personal data.',
+};
 
 export default function PrivacyPage() {
   return (

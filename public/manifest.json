@@ -1,14 +1,19 @@
 {
-  "name": "MY-11 — Ultimate Football Team Builder",
+  "name": "MY-11 — Football Draft & Career Mode",
   "short_name": "MY-11",
-  "description": "Draft your dream football XI from iconic player seasons and simulate a 38-game league campaign.",
+  "description": "Draft your dream football XI from 3,200+ iconic player seasons or manage your club across multi-season careers.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#020617",
-  "theme_color": "#020617",
+  "background_color": "#080d1e",
+  "theme_color": "#f8fafc",
   "icons": [
     {
       "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon.png",
       "sizes": "180x180",
       "type": "image/png"
     }

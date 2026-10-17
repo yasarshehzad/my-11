@@ -13,9 +13,12 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://my-11.com",
   },
-  title: "MY-11 — Draft Your XI. Survive 38 Games.",
-  description: "Draft your dream football XI from iconic player seasons, make tactical chemistry choices, simulate a 38-game season, and see if your squad can go unbeaten.",
-  keywords: ["MY-11", "football draft", "football game", "squad builder", "football simulation", "tactics", "38-game season", "legends"],
+  title: {
+    default: "MY-11 — Football Draft & Career Mode",
+    template: "%s | MY-11",
+  },
+  description: "Draft legendary football squads from 3,200+ iconic player seasons or take total control in multi-season Career Mode with live transfers and cup glory. Free to play at my-11.com.",
+  keywords: ["MY-11", "football draft", "career mode", "football manager", "squad builder", "football simulation", "tactics", "38-game season", "legends", "Premier League"],
   authors: [{ name: "MY-11" }],
   appleWebApp: {
     capable: true,
@@ -23,8 +26,8 @@ export const metadata: Metadata = {
     title: "MY-11",
   },
   openGraph: {
-    title: "MY-11 — Draft Your XI. Survive 38 Games.",
-    description: "Draft your dream football XI from iconic player seasons, simulate a 38-game season, and see if your squad can go unbeaten.",
+    title: "MY-11 — Football Draft & Career Mode",
+    description: "Draft your dream XI from 3,200+ iconic player seasons or lead your club across multi-season careers. Play free at my-11.com.",
     url: "https://my-11.com",
     siteName: "MY-11",
     type: "website",
@@ -33,18 +36,19 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "MY-11 — Draft Your XI. Survive 38 Games.",
+        alt: "MY-11 — Football Draft & Career Mode",
       }
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "MY-11 — Draft Your XI. Survive 38 Games.",
-    description: "Draft your dream football XI from iconic player seasons, simulate a 38-game season, and see if your squad can go unbeaten.",
+    title: "MY-11 — Football Draft & Career Mode",
+    description: "Draft your dream XI from 3,200+ iconic player seasons or lead your club across multi-season careers. Play free at my-11.com.",
     images: ["/og-image.png"],
   },
   icons: {
-    icon: "/favicon.ico",
+    icon: "/icon.png",
+    shortcut: "/favicon.ico",
     apple: "/apple-touch-icon.png",
   },
   manifest: "/manifest.json",

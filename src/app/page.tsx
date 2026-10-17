@@ -106,11 +106,20 @@ export default function DraftedXIGame() {
   return (
     <div className="min-h-screen my11-canvas text-foreground font-sans flex flex-col w-full overflow-x-hidden p-3 sm:p-5 select-none">
       {/* Floating MY-11 Header Card */}
-      <header className="office-floating-card w-full max-w-4xl mx-auto rounded-[24px] p-3 sm:p-4 mb-4 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-400 via-blue-500 to-fuchsia-500 p-0.5 shadow-sm flex items-center justify-center">
-            <div className="w-full h-full rounded-full bg-white flex items-center justify-center font-display font-black text-xs text-[#1d5eff]">
-              👑
+      <header className="office-floating-card w-full max-w-4xl mx-auto rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 mb-2 sm:mb-3 flex items-center justify-between shadow-xs">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-cyan-400 via-blue-500 to-fuchsia-500 p-0.5 shadow-sm flex items-center justify-center shrink-0">
+            <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
+              <svg viewBox="0 0 28 12" className="w-4 h-2 sm:w-4.5 sm:h-2.5" aria-hidden="true">
+                <defs>
+                  <linearGradient id="my11-crown-home" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#00d2ff" />
+                    <stop offset="50%" stopColor="#2563eb" />
+                    <stop offset="100%" stopColor="#c026d3" />
+                  </linearGradient>
+                </defs>
+                <path d="M2 10 L4 3 L10 7 L14 1 L18 7 L24 3 L26 10 Z" fill="url(#my11-crown-home)" />
+              </svg>
             </div>
           </div>
           <button
