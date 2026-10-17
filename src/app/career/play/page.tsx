@@ -1653,8 +1653,9 @@ function CareerPlayHubContent() {
     <div
       id="career-office-root"
       data-office-theme="light"
-      data-office-active={activeTab === 'overview' ? 'true' : 'false'}
-      className="min-h-screen bg-slate-950 text-foreground font-sans flex flex-col pitch-bg w-full overflow-x-hidden"
+      data-office-active="true"
+      data-office-ui="true"
+      className="min-h-screen my11-canvas text-foreground font-sans flex flex-col w-full overflow-x-hidden select-none"
     >
       {/* Toast Alert */}
       {toastMessage && (

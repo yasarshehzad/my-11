@@ -3,7 +3,7 @@ import Script from "next/script";
 import "./globals.css";
 
 export const viewport: Viewport = {
-  themeColor: "#f8fafc",
+  themeColor: "#e6edf8",
   width: "device-width",
   initialScale: 1,
 };
