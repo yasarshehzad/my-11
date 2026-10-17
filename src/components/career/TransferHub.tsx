@@ -43,6 +43,7 @@ import { getEffectiveClubName, getAllClubs } from '../../career/clubs';
 import { CONTINENTAL_EUROPEAN_CLUBS } from '../../career/continentalClubs';
 import { EaFcCard } from './EaFcCard';
 import { calculateEaFcFaceStats } from '../../career/formAndProgression';
+import { getPlayerBio } from '../../career/playerBioDatabase';
 import {
   getSeniorPlayerCount,
   MAX_SQUAD_SIZE,
@@ -194,6 +195,7 @@ export function TransferHub({
 
   // Transfer Negotiation Modal & Detailed Terms
   const [negotiatingPlayer, setNegotiatingPlayer] = useState<MarketPlayer | null>(null);
+  const [profilePlayer, setProfilePlayer] = useState<MarketPlayer | null>(null);
   const [offeredFee, setOfferedFee] = useState<number>(0);
   const [offeredWage, setOfferedWage] = useState<number>(0);
   const [offeredContractYears, setOfferedContractYears] = useState<number>(3);
@@ -1338,17 +1340,27 @@ export function TransferHub({
                       <div className="flex items-center justify-between gap-2">
                         {/* Rating Badge + Name + Info */}
                         <div className="flex items-center gap-2 min-w-0">
-                          <span
-                            className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-display font-black text-xs shrink-0 shadow-sm ${badgeClass}`}
+                          <button
+                            type="button"
+                            onClick={() => setProfilePlayer(player)}
+                            className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-display font-black text-xs shrink-0 shadow-sm cursor-pointer hover:scale-105 active:scale-95 transition-transform ${badgeClass}`}
+                            title={`View ${player.name} profile`}
                           >
                             {player.rating}
-                          </span>
+                          </button>
 
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
-                              <h3 className="font-display font-black text-xs sm:text-sm text-slate-900 truncate max-w-[120px] sm:max-w-[170px]">
-                                {player.name}
-                              </h3>
+                              <button
+                                type="button"
+                                onClick={() => setProfilePlayer(player)}
+                                className="group text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+                                title={`View ${player.name} full profile, stats & scouting report`}
+                              >
+                                <h3 className="font-display font-black text-xs sm:text-sm text-slate-900 group-hover:text-blue-600 truncate max-w-[120px] sm:max-w-[170px] transition-colors underline-offset-2 group-hover:underline">
+                                  {player.name}
+                                </h3>
+                              </button>
                               {isLegend && (
                                 <span className="text-[7.5px] font-black uppercase text-amber-800 bg-amber-100 border border-amber-300 px-1 rounded font-display shrink-0">
                                   👑 ICON
@@ -1958,13 +1970,25 @@ export function TransferHub({
                   >
                     <div className="flex justify-between items-start gap-2">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className={`w-8 h-8 rounded-xl flex items-center justify-center font-display font-black text-xs shrink-0 shadow-sm ${badgeClass}`}>
+                        <button
+                          type="button"
+                          onClick={() => setProfilePlayer(player)}
+                          className={`w-8 h-8 rounded-xl flex items-center justify-center font-display font-black text-xs shrink-0 shadow-sm cursor-pointer hover:scale-105 active:scale-95 transition-transform ${badgeClass}`}
+                          title={`View ${player.name} profile`}
+                        >
                           {player.rating}
-                        </span>
+                        </button>
                         <div className="min-w-0">
-                          <h4 className="font-display font-black text-xs sm:text-sm text-slate-900 truncate max-w-[130px] sm:max-w-[170px]">
-                            {player.name}
-                          </h4>
+                          <button
+                            type="button"
+                            onClick={() => setProfilePlayer(player)}
+                            className="group text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+                            title={`View ${player.name} full profile, stats & scouting report`}
+                          >
+                            <h4 className="font-display font-black text-xs sm:text-sm text-slate-900 group-hover:text-blue-600 truncate max-w-[130px] sm:max-w-[170px] transition-colors underline-offset-2 group-hover:underline">
+                              {player.name}
+                            </h4>
+                          </button>
                           <div className="text-[9.5px] text-slate-500 truncate mt-0.5">
                             <span className="text-blue-600 font-bold">{player.position}</span>
                             <span> • {player.age}y</span>
@@ -2537,7 +2561,7 @@ export function TransferHub({
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 bg-slate-950/40 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+          className="fixed inset-0 bg-[#0b1536]/75 dark:bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
         >
           <div className="office-floating-card rounded-3xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl relative my-auto border border-white/80">
             <header className="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -2770,7 +2794,7 @@ export function TransferHub({
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 bg-slate-950/40 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+          className="fixed inset-0 bg-[#0b1536]/75 dark:bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
         >
           <div className="office-floating-card rounded-3xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl relative my-auto border border-white/80">
             <header className="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -3122,28 +3146,297 @@ export function TransferHub({
               <button
                 type="button"
                 onClick={handleConfirmBid}
-                disabled={offeredFee + offeredSigningBonus > save.finances.transferBudget}
+                disabled={!windowIsOpen || offeredFee + offeredSigningBonus > save.finances.transferBudget}
                 className={`flex-1 py-3 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer ${
-                  offeredFee + offeredSigningBonus > save.finances.transferBudget
+                  !windowIsOpen
+                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200 select-none'
+                    : offeredFee + offeredSigningBonus > save.finances.transferBudget
                     ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
                     : negotiatingPlayer.isLegend
                     ? 'bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 shadow-lg shadow-amber-500/25'
                     : 'my11-btn-gradient hover:opacity-95 text-white shadow-lg shadow-blue-500/20'
                 }`}
               >
-                {offeredFee + offeredSigningBonus > save.finances.transferBudget ? 'Cannot Afford Bid' : 'Submit Formal Bid'}
+                {!windowIsOpen
+                  ? '🔒 Transfer Window Closed'
+                  : offeredFee + offeredSigningBonus > save.finances.transferBudget
+                  ? 'Cannot Afford Bid'
+                  : 'Submit Formal Bid'}
               </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* PLAYER SCOUTING PROFILE & DOSSIER MODAL */}
+      {profilePlayer && (() => {
+        const isShortlisted = save.shortlistPlayerIds?.includes(profilePlayer.id);
+        const bio = getPlayerBio(profilePlayer.name, profilePlayer.position);
+        const fs = profilePlayer.faceStats || calculateEaFcFaceStats(profilePlayer as unknown as CareerPlayer);
+        const pref = getPlayerPreferredTerms(profilePlayer as unknown as CareerPlayer);
+        const isLegend = profilePlayer.isLegend || profilePlayer.rarity === 'legend';
+        const resolvedClub = getClubDisplayName(profilePlayer.club);
+        const isSquadFull = save.squad.length >= MAX_SQUAD_SIZE;
+
+        const statItems = fs.isGoalkeeper
+          ? [
+              { label: 'Diving', val: fs.pac, key: 'DIV' },
+              { label: 'Handling', val: fs.sho, key: 'HAN' },
+              { label: 'Kicking', val: fs.pas, key: 'KIC' },
+              { label: 'Reflexes', val: fs.dri, key: 'REF' },
+              { label: 'Speed', val: fs.def, key: 'SPD' },
+              { label: 'Positioning', val: fs.phy, key: 'POS' },
+            ]
+          : [
+              { label: 'Pace', val: fs.pac, key: 'PAC' },
+              { label: 'Shooting', val: fs.sho, key: 'SHO' },
+              { label: 'Passing', val: fs.pas, key: 'PAS' },
+              { label: 'Dribbling', val: fs.dri, key: 'DRI' },
+              { label: 'Defending', val: fs.def, key: 'DEF' },
+              { label: 'Physicality', val: fs.phy, key: 'PHY' },
+            ];
+
+        return (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Scouting profile for ${profilePlayer.name}`}
+            className="fixed inset-0 bg-[#0b1536]/75 dark:bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fade-in"
+            onClick={() => setProfilePlayer(null)}
+          >
+            <div
+              data-office-ui="true"
+              className="office-floating-card rounded-3xl max-w-lg w-full p-4 sm:p-6 space-y-4 shadow-2xl relative my-auto border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 max-h-[92vh] overflow-y-auto scrollbar-none"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <header className="flex justify-between items-start border-b border-slate-200 dark:border-slate-800 pb-3">
+                <div className="space-y-1 min-w-0 pr-2">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                      isLegend
+                        ? 'bg-amber-100 text-amber-950 border-amber-300 dark:bg-amber-950/60 dark:text-amber-200 dark:border-amber-700'
+                        : 'bg-blue-100 text-blue-950 border-blue-300 dark:bg-blue-950/60 dark:text-blue-200 dark:border-blue-700'
+                    }`}>
+                      {isLegend ? '👑 Legend Scouting Dossier' : 'Scouting Dossier & Profile'}
+                    </span>
+                    <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${
+                      windowIsOpen
+                        ? 'bg-emerald-100 text-emerald-950 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700'
+                        : 'bg-slate-100 text-slate-800 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600'
+                    }`}>
+                      {windowIsOpen ? '● Window Open' : '○ Window Closed'}
+                    </span>
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-display font-black text-slate-900 dark:text-white truncate">
+                    {profilePlayer.name}
+                  </h3>
+                  <div className="text-xs text-slate-600 dark:text-slate-400 font-medium flex items-center gap-1.5 flex-wrap">
+                    <span className="font-extrabold text-blue-600 dark:text-blue-400">{profilePlayer.position}</span>
+                    <span>•</span>
+                    <span>{profilePlayer.rating} OVR</span>
+                    <span>•</span>
+                    <span>{resolvedClub}</span>
+                    <span>•</span>
+                    <span>{profilePlayer.age} yrs ({profilePlayer.nationality})</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setProfilePlayer(null)}
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 flex items-center justify-center text-xs font-black transition-colors cursor-pointer shrink-0"
+                  title="Close profile"
+                  aria-label="Close modal"
+                >
+                  ✕
+                </button>
+              </header>
+
+              {/* Player Card & Biometrics Spotlight */}
+              <div className="space-y-3">
+                <EaFcCard
+                  player={profilePlayer as unknown as CareerPlayer}
+                  size="compact"
+                  showFormHistory={false}
+                  showProgressionBar={false}
+                />
+
+                {/* Authentic Biometrics Badge Strip */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                  <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                    <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Height / Weight</span>
+                    <span className="font-mono font-bold text-slate-900 dark:text-white">
+                      {bio.heightCm}cm • {bio.weightKg}kg
+                    </span>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                    <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Preferred Foot</span>
+                    <span className="font-mono font-bold text-slate-900 dark:text-white">{bio.preferredFoot}</span>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                    <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Date of Birth</span>
+                    <span className="font-mono font-bold text-slate-900 dark:text-white">{bio.dateOfBirth || `${bio.birthYear}`}</span>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                    <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Peak Age / Stage</span>
+                    <span className="font-mono font-bold text-slate-900 dark:text-white">{bio.peakAge} yrs</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Valuation & Contract Demand Card */}
+              <div className="rounded-2xl p-3.5 space-y-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                <div className="flex justify-between items-center text-xs">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Estimated Valuation</span>
+                    <span className="font-mono font-black text-base text-slate-950 dark:text-white">
+                      {formatCurrency(profilePlayer.value)}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Wage Demand</span>
+                    <span className="font-mono font-black text-base text-blue-600 dark:text-blue-400">
+                      {formatWage(profilePlayer.wageDemand)}
+                    </span>
+                  </div>
+                </div>
+                <div className="pt-2 border-t border-slate-200 dark:border-slate-700 grid grid-cols-3 gap-2 text-center text-xs">
+                  <div>
+                    <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Desired Contract</span>
+                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{pref.preferredContractYears} Years</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Expected Role</span>
+                    <span className="font-mono font-bold text-blue-600 dark:text-blue-400 uppercase">{pref.expectedSquadRole}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Signing Bonus</span>
+                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formatCurrency(pref.expectedSigningBonus)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* EA FC Detailed Face Stats Breakdown */}
+              <div className="rounded-2xl p-3.5 space-y-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider">
+                  <span>📊 Detailed Attribute Ratings</span>
+                  <span className="font-mono text-slate-500">{fs.isGoalkeeper ? 'Goalkeeper Matrix' : 'Outfield Matrix'}</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  {statItems.map((item) => (
+                    <div key={item.key} className="space-y-1 bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-200 dark:border-slate-700/80">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="font-bold text-slate-700 dark:text-slate-300 text-[11px]">{item.label}</span>
+                        <span className="font-mono font-black text-slate-950 dark:text-white text-xs">{item.val}</span>
+                      </div>
+                      <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${
+                            item.val >= 88
+                              ? 'bg-amber-500'
+                              : item.val >= 80
+                              ? 'bg-blue-600'
+                              : item.val >= 70
+                              ? 'bg-emerald-500'
+                              : 'bg-slate-400'
+                          }`}
+                          style={{ width: `${Math.min(100, (item.val / 99) * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Transfer Window Status Notice */}
+              {!windowIsOpen && (
+                <div className="p-3.5 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/80 text-xs space-y-1">
+                  <div className="flex items-center gap-1.5 font-black text-amber-950 dark:text-amber-200">
+                    <span>🔒</span>
+                    <span>Transfer Window is Closed</span>
+                  </div>
+                  <p className="text-[11px] text-amber-900/90 dark:text-amber-300/90 leading-relaxed font-medium">
+                    Official bidding and contract negotiations are prohibited outside the summer and winter transfer windows. You can scout player stats, compare with your squad, and add them to your shortlist in preparation for the upcoming window.
+                  </p>
+                </div>
+              )}
+
+              {/* Modal Action Bar */}
+              <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                {/* Shortlist Toggle */}
+                <button
+                  type="button"
+                  onClick={() => handleToggleShortlist(profilePlayer.id)}
+                  className={`flex-1 py-2.5 px-3 rounded-xl font-display font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs border ${
+                    isShortlisted
+                      ? 'bg-amber-100 text-amber-950 border-amber-300 hover:bg-amber-200 dark:bg-amber-950/60 dark:text-amber-200 dark:border-amber-700'
+                      : 'bg-white hover:bg-slate-50 text-slate-800 border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-slate-200 dark:border-slate-600'
+                  }`}
+                >
+                  <span>★</span>
+                  <span>{isShortlisted ? 'Shortlisted' : 'Add to Shortlist'}</span>
+                </button>
+
+                {/* Compare Button */}
+                {onOpenCompare && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const p = profilePlayer;
+                      setProfilePlayer(null);
+                      onOpenCompare(p);
+                    }}
+                    className="py-2.5 px-3 rounded-xl font-display font-bold text-xs uppercase tracking-wider bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-slate-200 dark:border-slate-600 flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+                  >
+                    <span>📊</span>
+                    <span>Compare</span>
+                  </button>
+                )}
+
+                {/* Offer / Negotiation Button */}
+                {windowIsOpen ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const p = profilePlayer;
+                      setProfilePlayer(null);
+                      handleStartNegotiation(p);
+                    }}
+                    disabled={isSquadFull}
+                    className={`flex-1 py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md ${
+                      isSquadFull
+                        ? 'bg-rose-50 text-rose-700 border border-rose-200 cursor-not-allowed'
+                        : isLegend
+                        ? 'my11-badge-legend shadow-amber-500/20'
+                        : 'my11-btn-gradient text-white shadow-blue-500/20'
+                    }`}
+                  >
+                    <span>💼</span>
+                    <span>{isSquadFull ? 'Squad Full' : isLegend ? '👑 Negotiate Deal' : 'Make Offer'}</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled
+                    className="flex-1 py-2.5 px-4 rounded-xl font-display font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed select-none"
+                    title="Transfer window is closed. Official offers and bids are prohibited."
+                  >
+                    <span>🔒</span>
+                    <span>Window Closed (No Bids)</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* INCOMING OFFER COUNTER-NEGOTIATION MODAL */}
       {negotiatingIncomingOffer && (
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 bg-slate-950/40 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4"
+          className="fixed inset-0 bg-[#0b1536]/75 dark:bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4"
         >
           <div className="office-floating-card rounded-3xl p-5 sm:p-7 max-w-xl w-full space-y-4 shadow-2xl relative max-h-[92vh] overflow-y-auto border border-white/80">
             <button

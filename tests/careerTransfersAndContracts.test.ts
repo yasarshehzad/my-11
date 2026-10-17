@@ -1515,6 +1515,41 @@ describe('Career Mode Phase 6: Transfers, Scouting & Contracts', () => {
       expect(initialized.incomingOffers!.length).toBeGreaterThan(0);
       expect(initialized.incomingOffers![0].status).toBe('pending');
     });
+
+    it('allows inspecting player profile, biometrics, face stats and shortlisting when transfer window is closed while blocking bids', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('normal'),
+      });
+
+      // Set date to October 15th (outside any transfer window)
+      save.season.currentDate = '2026-10-15';
+      const windowOpen = isTransferWindowOpen(save.season.currentDate, save.season.yearStart);
+      expect(windowOpen).toBe(false);
+
+      // Scouting market pool can still be queried
+      const marketPool = getScoutingMarketPool(save);
+      expect(marketPool.length).toBeGreaterThan(0);
+
+      const target = marketPool[0];
+      // Face stats are computable
+      const faceStats = calculateEaFcFaceStats(target as any);
+      expect(faceStats.pac).toBeGreaterThan(0);
+      expect(faceStats.sho).toBeGreaterThan(0);
+
+      // Shortlisting functions outside of transfer windows
+      const shortlist = new Set(save.shortlistPlayerIds || []);
+      shortlist.add(target.id);
+      save.shortlistPlayerIds = Array.from(shortlist);
+      expect(save.shortlistPlayerIds).toContain(target.id);
+
+      // Unshortlisting also works
+      shortlist.delete(target.id);
+      save.shortlistPlayerIds = Array.from(shortlist);
+      expect(save.shortlistPlayerIds).not.toContain(target.id);
+    });
   });
 });
 

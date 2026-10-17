@@ -338,11 +338,11 @@ export function MatchDayModal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fade-in"
+      className="fixed inset-0 bg-[#0b1536]/75 dark:bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fade-in"
     >
       <div
         data-office-ui="true"
-        className="office-floating-card rounded-3xl max-w-2xl w-full p-5 sm:p-7 space-y-5 shadow-2xl relative my-auto border border-indigo-100/80"
+        className="office-floating-card rounded-3xl max-w-2xl w-full p-5 sm:p-7 space-y-5 shadow-2xl relative my-auto border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900"
       >
         {/* Header Bar */}
         <header className="flex justify-between items-center border-b border-[var(--office-divider)] pb-3">

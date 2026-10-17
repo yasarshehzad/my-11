@@ -123,12 +123,12 @@ export function MatchOverviewModal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-fade-in"
+      className="fixed inset-0 bg-[#0b1536]/75 dark:bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-fade-in"
       onClick={onClose}
     >
       <div
         data-office-ui="true"
-        className="office-floating-card bg-white rounded-3xl p-3.5 sm:p-6 max-w-xl w-full space-y-3 sm:space-y-4 shadow-2xl relative my-auto max-h-[92vh] overflow-y-auto scrollbar-none border border-indigo-100/80 text-[#0b1536]"
+        className="office-floating-card bg-white dark:bg-slate-900 rounded-3xl p-3.5 sm:p-6 max-w-xl w-full space-y-3 sm:space-y-4 shadow-2xl relative my-auto max-h-[92vh] overflow-y-auto scrollbar-none border border-slate-200/90 dark:border-slate-700/80 text-[#0b1536] dark:text-white"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Bar */}
