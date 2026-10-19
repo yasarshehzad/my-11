@@ -312,69 +312,65 @@ export function OfficeDeadlineHeroTakeover({
           </nav>
         </div>
 
-        {/* Key Metrics Strip: Budget, Wage Headroom, Pending Offers, Targets */}
+        {/* Compact Divided Recruitment Strip (No nested KPI cards) */}
         <section
           aria-label="Deadline Day Recruitment Metrics"
-          className="grid grid-cols-2 min-[410px]:grid-cols-4 gap-2 pt-1"
+          className="rounded-2xl bg-amber-50/55 border border-amber-200/80 grid grid-cols-2 min-[400px]:grid-cols-4 divide-y min-[400px]:divide-y-0 min-[400px]:divide-x divide-amber-200/75 overflow-hidden"
         >
-          {/* Transfer Budget */}
-          <div className="office-kpi-card office-kpi-blue rounded-2xl p-2.5 sm:p-3 space-y-0.5 border border-blue-200/70 bg-gradient-to-br from-blue-50/90 via-white to-blue-50/30">
-            <span className="text-[9px] uppercase font-bold text-slate-500 block tracking-wider">
-              Transfer Budget
+          {/* Transfer Budget (Teal Financial Semantic) */}
+          <div className="px-2.5 py-2 space-y-0.5">
+            <span className="text-[9px] uppercase font-extrabold text-[#0f766e] block tracking-wider">
+              Budget
             </span>
-            <div className="text-sm sm:text-base font-display font-black text-blue-700 truncate">
+            <div className="text-sm sm:text-[15px] font-display font-black text-[#0b1536] truncate">
               {formatOfficeBudget(transferBudget, save.settings?.currency)}
             </div>
           </div>
 
-          {/* Wage Headroom */}
-          <div className="office-kpi-card office-kpi-mint rounded-2xl p-2.5 sm:p-3 space-y-0.5 border border-emerald-200/70 bg-gradient-to-br from-emerald-50/90 via-white to-emerald-50/30">
-            <span className="text-[9px] uppercase font-bold text-slate-500 block tracking-wider">
-              Wage Headroom
+          {/* Wage Headroom (Teal Financial Semantic) */}
+          <div className="px-2.5 py-2 space-y-0.5">
+            <span className="text-[9px] uppercase font-extrabold text-[#0f766e] block tracking-wider">
+              Wage Room
             </span>
-            <div className="text-sm sm:text-base font-display font-black text-emerald-700 truncate">
+            <div className="text-sm sm:text-[15px] font-display font-black text-[#0d9488] truncate">
               {formatOfficeWageRoom(wageHeadroom, save.settings?.currency)}
             </div>
           </div>
 
-          {/* Pending Offers */}
-          <div
+          {/* Pending Offers (Amber Attention Semantic) */}
+          <button
+            type="button"
             onClick={() => onNavigateToTransfers('incoming')}
-            className={`office-kpi-card rounded-2xl p-2.5 sm:p-3 space-y-0.5 border cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99] ${
-              pendingOffers.length > 0
-                ? 'border-amber-300 bg-gradient-to-br from-amber-50 via-white to-amber-50/50 shadow-xs'
-                : 'border-slate-200/80 bg-white/90'
-            }`}
+            className="px-2.5 py-2 space-y-0.5 text-left hover:bg-amber-100/60 transition-colors cursor-pointer"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-[9px] uppercase font-bold text-slate-500 block tracking-wider">
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-[9px] uppercase font-extrabold text-[#b45309] block tracking-wider">
                 Pending Bids
               </span>
               {pendingOffers.length > 0 && (
-                <span className="w-2 h-2 rounded-full bg-amber-500 motion-safe:animate-ping" />
+                <span className="w-2 h-2 rounded-full bg-amber-500 motion-safe:animate-ping shrink-0" />
               )}
             </div>
-            <div className="text-sm sm:text-base font-display font-black text-amber-700 truncate flex items-center gap-1.5">
+            <div className="text-sm sm:text-[15px] font-display font-black text-[#92400e] truncate flex items-baseline gap-1">
               <span>{pendingOffers.length}</span>
-              <span className="text-[10px] font-semibold text-slate-500">
-                {pendingOffers.length === 1 ? 'incoming' : 'incoming'}
-              </span>
+              <span className="text-[10px] font-semibold text-[#b45309]">incoming</span>
             </div>
-          </div>
+          </button>
 
-          {/* Shortlisted Targets */}
-          <div
+          {/* Shortlisted Targets (Teal Squad/Scouting Semantic) */}
+          <button
+            type="button"
             onClick={() => onNavigateToTransfers('shortlist')}
-            className="office-kpi-card office-kpi-lavender rounded-2xl p-2.5 sm:p-3 space-y-0.5 border border-purple-200/70 bg-gradient-to-br from-purple-50/90 via-white to-purple-50/30 cursor-pointer transition-transform hover:scale-[1.01] active:scale-[0.99]"
+            className="px-2.5 py-2 space-y-0.5 text-left hover:bg-teal-50/60 transition-colors cursor-pointer"
           >
-            <span className="text-[9px] uppercase font-bold text-slate-500 block tracking-wider">
+            <span className="text-[9px] uppercase font-extrabold text-[#0f766e] block tracking-wider">
               Shortlist
             </span>
-            <div className="text-sm sm:text-base font-display font-black text-purple-700 truncate flex items-center gap-1.5">
+            <div className="text-sm sm:text-[15px] font-display font-black text-[#0b1536] truncate flex items-baseline gap-1">
               <span>{shortlistCount}</span>
-              <span className="text-[10px] font-semibold text-slate-500">targets</span>
+              <span className="text-[10px] font-semibold text-[#0f766e]">targets</span>
             </div>
-          </div>
+          </button>
         </section>
 
         {/* Concurrent Matchday / Fixture Context Strip */}
@@ -415,14 +411,14 @@ export function OfficeDeadlineHeroTakeover({
           </aside>
         )}
 
-        {/* Action Controls: Primary CTA & Quick Access Strip */}
+        {/* Action Controls: Primary CTA & Lightweight Secondary Pills */}
         <div className="pt-1 space-y-2">
           {/* Primary CTA: "Continue Deadline Day" */}
           <button
             type="button"
             data-office-ui="true"
             onClick={onAdvanceDeadlinePhase}
-            className="w-full py-3 px-5 rounded-full font-display font-black text-[14.5px] sm:text-[15px] tracking-tight flex items-center justify-center gap-2 cursor-pointer min-h-[46px] shadow-lg shadow-amber-500/20 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-200 text-slate-950 transition-all hover:scale-[1.01] active:scale-[0.98]"
+            className="w-full py-3.5 px-5 rounded-full font-display font-black text-[14.5px] sm:text-[15px] tracking-tight flex items-center justify-center gap-2 cursor-pointer min-h-[48px] shadow-lg shadow-amber-500/20 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-200 text-slate-950 transition-all hover:scale-[1.01] active:scale-[0.98]"
           >
             <svg
               viewBox="0 0 24 24"
@@ -438,19 +434,19 @@ export function OfficeDeadlineHeroTakeover({
             <span className="text-base leading-none font-bold ml-auto">&rsaquo;</span>
           </button>
 
-          {/* Quick Access Secondary Action Buttons */}
+          {/* Secondary Action Pills */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {/* 1. Incoming Offers */}
             <button
               type="button"
               data-office-ui="true"
               onClick={() => onNavigateToTransfers('incoming')}
-              className="office-subcard py-2.5 px-3 rounded-2xl flex items-center justify-center gap-1.5 font-display font-bold text-[11.5px] sm:text-[12px] text-slate-800 cursor-pointer min-h-[38px] shadow-2xs hover:border-amber-400/60 active:scale-[0.98]"
+              className="py-2 px-3 rounded-full bg-white/80 hover:bg-white border border-amber-300/80 flex items-center justify-center gap-1.5 font-display font-bold text-[11.5px] sm:text-[12px] text-slate-900 cursor-pointer min-h-[38px] transition-all active:scale-[0.98]"
             >
-              <span className="text-sm">📥</span>
+              <span className="text-xs" aria-hidden="true">📥</span>
               <span>Incoming Bids</span>
               {pendingOffers.length > 0 && (
-                <span className="ml-1 px-1.5 py-0.2 rounded-full text-[9px] font-black bg-amber-400 text-slate-950">
+                <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[9px] font-black bg-amber-400 text-slate-950">
                   {pendingOffers.length}
                 </span>
               )}
@@ -461,9 +457,9 @@ export function OfficeDeadlineHeroTakeover({
               type="button"
               data-office-ui="true"
               onClick={() => onNavigateToTransfers('market')}
-              className="office-subcard py-2.5 px-3 rounded-2xl flex items-center justify-center gap-1.5 font-display font-bold text-[11.5px] sm:text-[12px] text-slate-800 cursor-pointer min-h-[38px] shadow-2xs hover:border-amber-400/60 active:scale-[0.98]"
+              className="py-2 px-3 rounded-full bg-white/80 hover:bg-white border border-amber-300/80 flex items-center justify-center gap-1.5 font-display font-bold text-[11.5px] sm:text-[12px] text-slate-900 cursor-pointer min-h-[38px] transition-all active:scale-[0.98]"
             >
-              <span className="text-sm">🔍</span>
+              <span className="text-xs" aria-hidden="true">🔍</span>
               <span>Transfer Market</span>
             </button>
 
@@ -472,9 +468,9 @@ export function OfficeDeadlineHeroTakeover({
               type="button"
               data-office-ui="true"
               onClick={handleOpenBoardModal}
-              className="office-subcard py-2.5 px-3 rounded-2xl flex items-center justify-center gap-1.5 font-display font-bold text-[11.5px] sm:text-[12px] text-slate-800 cursor-pointer min-h-[38px] shadow-2xs hover:border-amber-400/60 active:scale-[0.98]"
+              className="py-2 px-3 rounded-full bg-white/80 hover:bg-white border border-amber-300/80 flex items-center justify-center gap-1.5 font-display font-bold text-[11.5px] sm:text-[12px] text-slate-900 cursor-pointer min-h-[38px] transition-all active:scale-[0.98]"
             >
-              <span className="text-sm">🏛️</span>
+              <span className="text-xs" aria-hidden="true">🏛️</span>
               <span>Board Funds</span>
             </button>
 
@@ -483,9 +479,9 @@ export function OfficeDeadlineHeroTakeover({
               type="button"
               data-office-ui="true"
               onClick={() => onNavigateToTransfers('market')}
-              className="office-subcard py-2.5 px-3 rounded-2xl flex items-center justify-center gap-1.5 font-display font-bold text-[11.5px] sm:text-[12px] text-slate-800 cursor-pointer min-h-[38px] shadow-2xs hover:border-amber-400/60 active:scale-[0.98]"
+              className="py-2 px-3 rounded-full bg-white/80 hover:bg-white border border-amber-300/80 flex items-center justify-center gap-1.5 font-display font-bold text-[11.5px] sm:text-[12px] text-slate-900 cursor-pointer min-h-[38px] transition-all active:scale-[0.98]"
             >
-              <span className="text-sm">⏱️</span>
+              <span className="text-xs" aria-hidden="true">⏱️</span>
               <span>Full War Room</span>
             </button>
           </div>
