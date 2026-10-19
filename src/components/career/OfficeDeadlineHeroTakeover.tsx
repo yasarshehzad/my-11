@@ -35,8 +35,14 @@ function formatOfficeBudget(amount: number, currency: CurrencyPreference = 'GBP'
 
 function formatOfficeWageRoom(weeklyAmount: number, currency: CurrencyPreference = 'GBP'): string {
   const sym = currency === 'EUR' ? '€' : currency === 'USD' ? '$' : '£';
-  const k = Math.max(0, Math.round(weeklyAmount / 1_000));
-  return `${sym}${k}k / w`;
+  const safeWeekly = Math.max(0, weeklyAmount);
+  if (safeWeekly >= 1_000_000) {
+    const m = safeWeekly / 1_000_000;
+    const str = Number.isInteger(m) ? m.toFixed(0) : m.toFixed(1).replace(/\.0$/, '');
+    return `${sym}${str}M/wk`;
+  }
+  const k = Math.round(safeWeekly / 1_000);
+  return `${sym}${k}k/wk`;
 }
 
 export interface OfficeDeadlineHeroTakeoverProps {
@@ -210,20 +216,20 @@ export function OfficeDeadlineHeroTakeover({
 
       <div className="relative z-10 p-3.5 sm:p-4 space-y-3">
         {/* Top Header: Broadcast Badge, Time & Countdown */}
-        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200/70 pb-2.5">
+        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200/80 pb-2.5">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 font-display font-black text-[10px] tracking-wider uppercase shadow-xs">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 font-display font-black text-[11px] tracking-wider uppercase shadow-xs">
               <span className="w-1.5 h-1.5 rounded-full bg-slate-950 motion-safe:animate-pulse inline-block" />
               <span>DEADLINE DAY WAR ROOM</span>
             </span>
 
-            <span className="text-[11px] font-mono font-black text-amber-950 bg-amber-100/90 px-2 py-0.5 rounded-md border border-amber-300/80">
+            <span className="text-xs font-mono font-black text-amber-950 bg-amber-100 px-2 py-0.5 rounded-md border border-amber-300">
               {timeString}
             </span>
           </div>
 
           <div className="flex items-center gap-1.5">
-            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-300/80">
+            <span className="inline-flex items-center gap-1 text-xs font-extrabold text-[#78350f] bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300">
               <span>⏳</span>
               <span>{hoursLeft}h Left (23:00 Cutoff)</span>
             </span>
@@ -234,19 +240,19 @@ export function OfficeDeadlineHeroTakeover({
         {urgentDecisionCount > 0 && (
           <aside
             aria-label="Urgent decisions requiring attention"
-            className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-amber-100/80 border border-amber-300 text-xs text-amber-950 shadow-2xs"
+            className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-amber-100/90 border border-amber-300 text-xs sm:text-[13px] text-amber-950 shadow-2xs"
           >
             <div className="flex items-center gap-2 min-w-0">
-              <span className="text-amber-600 text-sm shrink-0">⚠️</span>
+              <span className="text-amber-700 text-sm shrink-0">⚠️</span>
               <span className="font-extrabold truncate">
-                {urgentDecisionCount} urgent {urgentDecisionCount === 1 ? 'matter' : 'matters'} require response before the deadline.
+                {urgentDecisionCount} urgent {urgentDecisionCount === 1 ? 'decision' : 'decisions'} awaiting response
               </span>
             </div>
             {onReviewUrgentDecisions && (
               <button
                 type="button"
                 onClick={onReviewUrgentDecisions}
-                className="shrink-0 px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-display font-black text-[10.5px] uppercase tracking-wide hover:bg-amber-400 active:scale-95 cursor-pointer"
+                className="shrink-0 px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-display font-black text-xs uppercase tracking-wide hover:bg-amber-400 active:scale-95 cursor-pointer"
               >
                 Review &rsaquo;
               </button>
@@ -259,24 +265,24 @@ export function OfficeDeadlineHeroTakeover({
           <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
             <h2 className="text-xl sm:text-2xl font-display font-black text-slate-900 tracking-tight flex items-center gap-2">
               <span>Transfer Deadline Day</span>
-              <span className="text-amber-500 text-base sm:text-lg">•</span>
-              <span className="text-amber-600 font-extrabold text-base sm:text-lg">
+              <span className="text-[#b45309] text-base sm:text-lg">•</span>
+              <span className="text-[#92400e] font-extrabold text-base sm:text-lg">
                 {meta.title}
               </span>
             </h2>
-            <span className="text-[10.5px] font-mono font-bold text-amber-900/80 tracking-wide uppercase">
+            <span className="text-xs font-mono font-extrabold text-[#78350f] tracking-wide uppercase">
               {meta.timeRange}
             </span>
           </div>
 
-          <p className="text-xs text-slate-600 font-medium leading-relaxed">
+          <p className="text-[13px] sm:text-sm text-[#334155] font-semibold leading-snug">
             {meta.summary}
           </p>
 
           {/* 4-Phase Progress Timeline */}
           <nav
             aria-label="Deadline Day Clock Timeline"
-            className="grid grid-cols-4 gap-1 sm:gap-2 pt-0.5"
+            className="grid grid-cols-4 gap-1.5 sm:gap-2 pt-0.5"
           >
             {[
               { id: 'morning', label: 'Morning', time: '09:00' },
@@ -294,16 +300,16 @@ export function OfficeDeadlineHeroTakeover({
                   key={step.id}
                   className={`py-1.5 px-1 sm:px-1.5 rounded-xl text-center border transition-all ${
                     isCurrent
-                      ? 'bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-slate-950 font-black border-amber-400 shadow-xs scale-[1.01]'
+                      ? 'bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-slate-950 font-black border-amber-500 shadow-xs scale-[1.01]'
                       : isPast
-                      ? 'bg-amber-100/70 text-amber-900 font-bold border-amber-200/80'
-                      : 'bg-white/70 text-slate-400 font-semibold border-slate-200/80'
+                      ? 'bg-amber-100/80 text-[#78350f] font-extrabold border-amber-300'
+                      : 'bg-slate-100/90 text-[#475569] font-bold border-slate-300/80'
                   }`}
                 >
-                  <div className="font-mono text-[9px] sm:text-[9.5px] opacity-80 leading-tight">
+                  <div className="font-mono text-[10.5px] sm:text-[11px] leading-tight">
                     {step.time}
                   </div>
-                  <div className="font-display font-extrabold text-[9.5px] min-[390px]:text-[10.5px] sm:text-[11px] tracking-tight truncate leading-tight mt-0.5">
+                  <div className="font-display font-extrabold text-[11px] sm:text-xs tracking-tight truncate leading-tight mt-0.5">
                     {step.label}
                   </div>
                 </div>
@@ -315,24 +321,24 @@ export function OfficeDeadlineHeroTakeover({
         {/* Compact Divided Recruitment Strip (No nested KPI cards) */}
         <section
           aria-label="Deadline Day Recruitment Metrics"
-          className="rounded-2xl bg-amber-50/55 border border-amber-200/80 grid grid-cols-2 min-[400px]:grid-cols-4 divide-y min-[400px]:divide-y-0 min-[400px]:divide-x divide-amber-200/75 overflow-hidden"
+          className="rounded-2xl bg-amber-50/70 border border-amber-200/90 grid grid-cols-2 min-[400px]:grid-cols-4 divide-y min-[400px]:divide-y-0 min-[400px]:divide-x divide-amber-200/85 overflow-hidden"
         >
           {/* Transfer Budget (Teal Financial Semantic) */}
           <div className="px-2.5 py-2 space-y-0.5">
-            <span className="text-[9px] uppercase font-extrabold text-[#0f766e] block tracking-wider">
+            <span className="text-[11px] uppercase font-extrabold text-[#0f534c] block tracking-wider">
               Budget
             </span>
-            <div className="text-sm sm:text-[15px] font-display font-black text-[#0b1536] truncate">
+            <div className="text-base sm:text-[17px] font-display font-black text-[#0b1536] truncate">
               {formatOfficeBudget(transferBudget, save.settings?.currency)}
             </div>
           </div>
 
           {/* Wage Headroom (Teal Financial Semantic) */}
           <div className="px-2.5 py-2 space-y-0.5">
-            <span className="text-[9px] uppercase font-extrabold text-[#0f766e] block tracking-wider">
+            <span className="text-[11px] uppercase font-extrabold text-[#0f534c] block tracking-wider">
               Wage Room
             </span>
-            <div className="text-sm sm:text-[15px] font-display font-black text-[#0d9488] truncate">
+            <div className="text-base sm:text-[17px] font-display font-black text-[#115e59] truncate">
               {formatOfficeWageRoom(wageHeadroom, save.settings?.currency)}
             </div>
           </div>
@@ -341,19 +347,19 @@ export function OfficeDeadlineHeroTakeover({
           <button
             type="button"
             onClick={() => onNavigateToTransfers('incoming')}
-            className="px-2.5 py-2 space-y-0.5 text-left hover:bg-amber-100/60 transition-colors cursor-pointer"
+            className="px-2.5 py-2 space-y-0.5 text-left hover:bg-amber-100/70 transition-colors cursor-pointer"
           >
             <div className="flex items-center justify-between gap-1">
-              <span className="text-[9px] uppercase font-extrabold text-[#b45309] block tracking-wider">
+              <span className="text-[11px] uppercase font-extrabold text-[#92400e] block tracking-wider">
                 Pending Bids
               </span>
               {pendingOffers.length > 0 && (
-                <span className="w-2 h-2 rounded-full bg-amber-500 motion-safe:animate-ping shrink-0" />
+                <span className="w-2 h-2 rounded-full bg-amber-600 motion-safe:animate-ping shrink-0" />
               )}
             </div>
-            <div className="text-sm sm:text-[15px] font-display font-black text-[#92400e] truncate flex items-baseline gap-1">
+            <div className="text-base sm:text-[17px] font-display font-black text-[#78350f] truncate flex items-baseline gap-1">
               <span>{pendingOffers.length}</span>
-              <span className="text-[10px] font-semibold text-[#b45309]">incoming</span>
+              <span className="text-xs font-bold text-[#92400e]">incoming</span>
             </div>
           </button>
 
@@ -361,14 +367,14 @@ export function OfficeDeadlineHeroTakeover({
           <button
             type="button"
             onClick={() => onNavigateToTransfers('shortlist')}
-            className="px-2.5 py-2 space-y-0.5 text-left hover:bg-teal-50/60 transition-colors cursor-pointer"
+            className="px-2.5 py-2 space-y-0.5 text-left hover:bg-teal-50/70 transition-colors cursor-pointer"
           >
-            <span className="text-[9px] uppercase font-extrabold text-[#0f766e] block tracking-wider">
+            <span className="text-[11px] uppercase font-extrabold text-[#0f534c] block tracking-wider">
               Shortlist
             </span>
-            <div className="text-sm sm:text-[15px] font-display font-black text-[#0b1536] truncate flex items-baseline gap-1">
+            <div className="text-base sm:text-[17px] font-display font-black text-[#0b1536] truncate flex items-baseline gap-1">
               <span>{shortlistCount}</span>
-              <span className="text-[10px] font-semibold text-[#0f766e]">targets</span>
+              <span className="text-xs font-bold text-[#115e59]">targets</span>
             </div>
           </button>
         </section>
@@ -377,14 +383,14 @@ export function OfficeDeadlineHeroTakeover({
         {nextScheduled && (
           <aside
             aria-label="Upcoming Matchday Status"
-            className="flex items-center justify-between gap-2 p-2 sm:p-2.5 rounded-xl bg-slate-100/90 border border-slate-200/90 text-xs text-slate-700"
+            className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-100 border border-slate-300/80 text-xs sm:text-[13px] text-[#334155]"
           >
             <div className="flex items-center gap-2 min-w-0">
-              <span className="px-1.5 py-0.5 rounded-md bg-amber-200 text-amber-900 font-display font-black text-[9px] uppercase tracking-wider shrink-0">
+              <span className="px-2 py-0.5 rounded-md bg-amber-200 text-[#78350f] font-display font-black text-[10.5px] uppercase tracking-wider shrink-0">
                 Matchday Paused
               </span>
-              <span className="truncate text-[11px] sm:text-xs">
-                Next fixture vs <strong className="text-slate-900">{nextOpponentClub || 'Opponent'}</strong> ({formatOfficeFixtureDate(nextScheduled.fixture.date)})
+              <span className="truncate font-semibold text-[#0b1536]">
+                {formatOfficeFixtureDate(nextScheduled.fixture.date)}
               </span>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
@@ -392,16 +398,16 @@ export function OfficeDeadlineHeroTakeover({
                 <button
                   type="button"
                   onClick={() => onOpenMatchOverview(nextScheduled.fixture)}
-                  className="text-blue-600 hover:text-blue-700 font-display font-bold text-[11px] hover:underline cursor-pointer"
+                  className="text-[#1e40af] hover:text-[#1d4ed8] font-display font-extrabold text-xs hover:underline cursor-pointer"
                 >
-                  Match Dossier &rsaquo;
+                  Dossier &rsaquo;
                 </button>
               )}
               {onPlayMatch && (
                 <button
                   type="button"
                   onClick={() => onPlayMatch(nextScheduled.fixture)}
-                  className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 font-display font-black text-[10px] uppercase cursor-pointer"
+                  className="px-2 py-0.5 rounded-md bg-blue-100 text-[#1e3a8a] hover:bg-blue-200 border border-blue-300 font-display font-black text-[11px] uppercase cursor-pointer"
                   title="Prepare and play match if scheduled for today"
                 >
                   Play
@@ -418,7 +424,7 @@ export function OfficeDeadlineHeroTakeover({
             type="button"
             data-office-ui="true"
             onClick={onAdvanceDeadlinePhase}
-            className="w-full py-3.5 px-5 rounded-full font-display font-black text-[14.5px] sm:text-[15px] tracking-tight flex items-center justify-center gap-2 cursor-pointer min-h-[48px] shadow-lg shadow-amber-500/20 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-200 text-slate-950 transition-all hover:scale-[1.01] active:scale-[0.98]"
+            className="w-full py-3 px-4 rounded-full font-display font-black text-[15px] sm:text-base tracking-tight flex items-center justify-center gap-2 cursor-pointer min-h-[50px] shadow-lg shadow-amber-500/20 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-200 text-slate-950 transition-all hover:scale-[1.01] active:scale-[0.98]"
           >
             <svg
               viewBox="0 0 24 24"
@@ -427,26 +433,26 @@ export function OfficeDeadlineHeroTakeover({
             >
               <path d="M8 5v14l11-7z" />
             </svg>
-            <span>Continue Deadline Day</span>
-            <span className="text-xs sm:text-sm font-semibold opacity-90">
-              • {meta.ctaSublabel}
+            <span className="whitespace-nowrap">Continue Deadline Day</span>
+            <span className="text-xs font-extrabold text-[#78350f] whitespace-nowrap">
+              ({meta.nextTime} {meta.nextPhaseName})
             </span>
-            <span className="text-base leading-none font-bold ml-auto">&rsaquo;</span>
+            <span className="text-base leading-none font-bold ml-0.5">&rsaquo;</span>
           </button>
 
-          {/* Secondary Action Pills */}
+          {/* Secondary Action Pills (13.5px-14px high contrast, single line) */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {/* 1. Incoming Offers */}
             <button
               type="button"
               data-office-ui="true"
               onClick={() => onNavigateToTransfers('incoming')}
-              className="py-2 px-3 rounded-full bg-white/80 hover:bg-white border border-amber-300/80 flex items-center justify-center gap-1.5 font-display font-bold text-[11.5px] sm:text-[12px] text-slate-900 cursor-pointer min-h-[38px] transition-all active:scale-[0.98]"
+              className="py-2.5 px-2.5 rounded-full bg-white hover:bg-amber-50 border border-amber-300 flex items-center justify-center gap-1.5 font-display font-extrabold text-[13.5px] sm:text-sm text-[#0b1536] cursor-pointer min-h-[42px] whitespace-nowrap transition-all active:scale-[0.98]"
             >
               <span className="text-xs" aria-hidden="true">📥</span>
               <span>Incoming Bids</span>
               {pendingOffers.length > 0 && (
-                <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[9px] font-black bg-amber-400 text-slate-950">
+                <span className="px-1.5 py-0.2 rounded-full text-[10.5px] font-black bg-amber-400 text-slate-950">
                   {pendingOffers.length}
                 </span>
               )}
@@ -457,7 +463,7 @@ export function OfficeDeadlineHeroTakeover({
               type="button"
               data-office-ui="true"
               onClick={() => onNavigateToTransfers('market')}
-              className="py-2 px-3 rounded-full bg-white/80 hover:bg-white border border-amber-300/80 flex items-center justify-center gap-1.5 font-display font-bold text-[11.5px] sm:text-[12px] text-slate-900 cursor-pointer min-h-[38px] transition-all active:scale-[0.98]"
+              className="py-2.5 px-2.5 rounded-full bg-white hover:bg-amber-50 border border-amber-300 flex items-center justify-center gap-1.5 font-display font-extrabold text-[13.5px] sm:text-sm text-[#0b1536] cursor-pointer min-h-[42px] whitespace-nowrap transition-all active:scale-[0.98]"
             >
               <span className="text-xs" aria-hidden="true">🔍</span>
               <span>Transfer Market</span>
@@ -468,7 +474,7 @@ export function OfficeDeadlineHeroTakeover({
               type="button"
               data-office-ui="true"
               onClick={handleOpenBoardModal}
-              className="py-2 px-3 rounded-full bg-white/80 hover:bg-white border border-amber-300/80 flex items-center justify-center gap-1.5 font-display font-bold text-[11.5px] sm:text-[12px] text-slate-900 cursor-pointer min-h-[38px] transition-all active:scale-[0.98]"
+              className="py-2.5 px-2.5 rounded-full bg-white hover:bg-amber-50 border border-amber-300 flex items-center justify-center gap-1.5 font-display font-extrabold text-[13.5px] sm:text-sm text-[#0b1536] cursor-pointer min-h-[42px] whitespace-nowrap transition-all active:scale-[0.98]"
             >
               <span className="text-xs" aria-hidden="true">🏛️</span>
               <span>Board Funds</span>
@@ -479,7 +485,7 @@ export function OfficeDeadlineHeroTakeover({
               type="button"
               data-office-ui="true"
               onClick={() => onNavigateToTransfers('market')}
-              className="py-2 px-3 rounded-full bg-white/80 hover:bg-white border border-amber-300/80 flex items-center justify-center gap-1.5 font-display font-bold text-[11.5px] sm:text-[12px] text-slate-900 cursor-pointer min-h-[38px] transition-all active:scale-[0.98]"
+              className="py-2.5 px-2.5 rounded-full bg-white hover:bg-amber-50 border border-amber-300 flex items-center justify-center gap-1.5 font-display font-extrabold text-[13.5px] sm:text-sm text-[#0b1536] cursor-pointer min-h-[42px] whitespace-nowrap transition-all active:scale-[0.98]"
             >
               <span className="text-xs" aria-hidden="true">⏱️</span>
               <span>Full War Room</span>

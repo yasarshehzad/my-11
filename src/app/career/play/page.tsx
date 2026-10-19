@@ -125,8 +125,14 @@ function formatOfficeBudget(amount: number, currency: CurrencyPreference = 'GBP'
 
 function formatOfficeWageRoom(weeklyAmount: number, currency: CurrencyPreference = 'GBP'): string {
   const sym = currency === 'EUR' ? '€' : currency === 'USD' ? '$' : '£';
-  const k = Math.max(0, Math.round(weeklyAmount / 1_000));
-  return `${sym}${k}k / w`;
+  const safeWeekly = Math.max(0, weeklyAmount);
+  if (safeWeekly >= 1_000_000) {
+    const m = safeWeekly / 1_000_000;
+    const str = Number.isInteger(m) ? m.toFixed(0) : m.toFixed(1).replace(/\.0$/, '');
+    return `${sym}${str}M/wk`;
+  }
+  const k = Math.round(safeWeekly / 1_000);
+  return `${sym}${k}k/wk`;
 }
 
 function isClubStripedKit(club: Club, displayName: string): boolean {
@@ -417,7 +423,7 @@ function OfficeClubJerseySvg({
 function OfficeStadiumSceneSvg() {
   return (
     <div
-      className="absolute inset-x-0 top-0 h-[196px] sm:h-[208px] rounded-2xl pointer-events-none overflow-hidden select-none [mask-image:linear-gradient(to_bottom,#000_62%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,#000_62%,transparent_100%)]"
+      className="absolute inset-x-0 top-0 h-[212px] sm:h-[224px] rounded-2xl pointer-events-none overflow-hidden select-none [mask-image:linear-gradient(to_bottom,#000_68%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,#000_68%,transparent_100%)]"
       aria-hidden="true"
     >
       <svg
@@ -427,20 +433,25 @@ function OfficeStadiumSceneSvg() {
       >
         <defs>
           <linearGradient id="office-sky-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#8ec8f9" stopOpacity="0.92" />
-            <stop offset="42%" stopColor="#cae5ff" stopOpacity="0.85" />
-            <stop offset="78%" stopColor="#dde8f6" stopOpacity="0.9" />
-            <stop offset="100%" stopColor="#dae5f3" stopOpacity="1" />
+            <stop offset="0%" stopColor="#cce4fe" stopOpacity="0.95" />
+            <stop offset="38%" stopColor="#dff0ff" stopOpacity="0.92" />
+            <stop offset="76%" stopColor="#ecf4fe" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="#f1f6fe" stopOpacity="1" />
+          </linearGradient>
+          <linearGradient id="office-top-header-veil" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#f4f8ff" stopOpacity="0.88" />
+            <stop offset="65%" stopColor="#eff6ff" stopOpacity="0.52" />
+            <stop offset="100%" stopColor="#eff6ff" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="office-stand-left" x1="0%" y1="0%" x2="100%" y2="40%">
-            <stop offset="0%" stopColor="#312e81" stopOpacity="0.88" />
-            <stop offset="55%" stopColor="#4338ca" stopOpacity="0.62" />
-            <stop offset="100%" stopColor="#c7d2fe" stopOpacity="0.08" />
+            <stop offset="0%" stopColor="#312e81" stopOpacity="0.76" />
+            <stop offset="55%" stopColor="#4338ca" stopOpacity="0.52" />
+            <stop offset="100%" stopColor="#c7d2fe" stopOpacity="0.06" />
           </linearGradient>
           <linearGradient id="office-stand-right" x1="100%" y1="0%" x2="0%" y2="40%">
-            <stop offset="0%" stopColor="#312e81" stopOpacity="0.88" />
-            <stop offset="55%" stopColor="#4338ca" stopOpacity="0.62" />
-            <stop offset="100%" stopColor="#c7d2fe" stopOpacity="0.08" />
+            <stop offset="0%" stopColor="#312e81" stopOpacity="0.76" />
+            <stop offset="55%" stopColor="#4338ca" stopOpacity="0.52" />
+            <stop offset="100%" stopColor="#c7d2fe" stopOpacity="0.06" />
           </linearGradient>
           <linearGradient id="office-beam-left" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#ffffff" stopOpacity="0.92" />
@@ -453,9 +464,9 @@ function OfficeStadiumSceneSvg() {
             <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="office-bottom-fade" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#dae5f3" stopOpacity="0" />
-            <stop offset="62%" stopColor="#dae5f3" stopOpacity="0.72" />
-            <stop offset="100%" stopColor="#dae5f3" stopOpacity="1" />
+            <stop offset="0%" stopColor="#f1f6fe" stopOpacity="0" />
+            <stop offset="62%" stopColor="#f1f6fe" stopOpacity="0.78" />
+            <stop offset="100%" stopColor="#f1f6fe" stopOpacity="1" />
           </linearGradient>
         </defs>
 
@@ -463,91 +474,97 @@ function OfficeStadiumSceneSvg() {
         <rect x="0" y="0" width="600" height="260" fill="url(#office-sky-grad)" />
 
         {/* Soft Billowy Daytime Clouds */}
-        <g fill="#ffffff" opacity="0.88">
-          <circle cx="210" cy="48" r="36" />
-          <circle cx="255" cy="38" r="46" />
-          <circle cx="305" cy="42" r="50" />
-          <circle cx="355" cy="40" r="44" />
-          <circle cx="398" cy="52" r="34" />
-          <circle cx="150" cy="64" r="28" opacity="0.68" />
-          <circle cx="450" cy="64" r="28" opacity="0.68" />
+        <g fill="#ffffff" opacity="0.92">
+          <circle cx="210" cy="54" r="38" />
+          <circle cx="255" cy="44" r="48" />
+          <circle cx="305" cy="48" r="52" />
+          <circle cx="355" cy="46" r="46" />
+          <circle cx="398" cy="58" r="36" />
+          <circle cx="150" cy="70" r="30" opacity="0.75" />
+          <circle cx="450" cy="70" r="30" opacity="0.75" />
         </g>
 
-        {/* Distant Center Stadium Bowl Tiers */}
-        <path
-          d="M 155 152 Q 300 124 445 152 L 465 196 L 135 196 Z"
-          fill="#94a3b8"
-          opacity="0.32"
-        />
-        <path
-          d="M 170 148 Q 300 120 430 148"
-          fill="none"
-          stroke="#64748b"
-          strokeWidth="2"
-          opacity="0.4"
-        />
-        <path
-          d="M 162 164 Q 300 138 438 164"
-          fill="none"
-          stroke="#cbd5e1"
-          strokeWidth="2"
-          opacity="0.55"
-        />
+        {/* Stadium Bowl, Roof Canopies & Grandstands (Shifted down to keep top metadata crisp) */}
+        <g transform="translate(0, 22)">
+          {/* Distant Center Stadium Bowl Tiers */}
+          <path
+            d="M 155 152 Q 300 124 445 152 L 465 196 L 135 196 Z"
+            fill="#94a3b8"
+            opacity="0.28"
+          />
+          <path
+            d="M 170 148 Q 300 120 430 148"
+            fill="none"
+            stroke="#64748b"
+            strokeWidth="2"
+            opacity="0.35"
+          />
+          <path
+            d="M 162 164 Q 300 138 438 164"
+            fill="none"
+            stroke="#cbd5e1"
+            strokeWidth="2"
+            opacity="0.5"
+          />
 
-        {/* Left Stadium Roof Canopy & Steel Trusses */}
-        <path d="M -10 24 L 185 72 L 162 90 L -10 56 Z" fill="#475569" opacity="0.7" />
-        <path d="M -10 36 L 176 78 L 164 88 L -10 54 Z" fill="#1e293b" opacity="0.82" />
-        <g stroke="#e2e8f0" strokeWidth="1.4" opacity="0.72">
-          <line x1="12" y1="36" x2="20" y2="54" />
-          <line x1="36" y1="42" x2="42" y2="59" />
-          <line x1="62" y1="48" x2="66" y2="64" />
-          <line x1="88" y1="54" x2="90" y2="69" />
-          <line x1="114" y1="60" x2="114" y2="74" />
-          <line x1="140" y1="66" x2="138" y2="79" />
+          {/* Left Stadium Roof Canopy & Steel Trusses */}
+          <path d="M -10 24 L 185 72 L 162 90 L -10 56 Z" fill="#475569" opacity="0.55" />
+          <path d="M -10 36 L 176 78 L 164 88 L -10 54 Z" fill="#1e293b" opacity="0.65" />
+          <g stroke="#e2e8f0" strokeWidth="1.4" opacity="0.68">
+            <line x1="12" y1="36" x2="20" y2="54" />
+            <line x1="36" y1="42" x2="42" y2="59" />
+            <line x1="62" y1="48" x2="66" y2="64" />
+            <line x1="88" y1="54" x2="90" y2="69" />
+            <line x1="114" y1="60" x2="114" y2="74" />
+            <line x1="140" y1="66" x2="138" y2="79" />
+          </g>
+
+          {/* Right Stadium Roof Canopy & Steel Trusses */}
+          <path d="M 610 24 L 415 72 L 438 90 L 610 56 Z" fill="#475569" opacity="0.55" />
+          <path d="M 610 36 L 424 78 L 436 88 L 610 54 Z" fill="#1e293b" opacity="0.65" />
+          <g stroke="#e2e8f0" strokeWidth="1.4" opacity="0.68">
+            <line x1="588" y1="36" x2="580" y2="54" />
+            <line x1="564" y1="42" x2="558" y2="59" />
+            <line x1="538" y1="48" x2="534" y2="64" />
+            <line x1="512" y1="54" x2="510" y2="69" />
+            <line x1="486" y1="60" x2="486" y2="74" />
+            <line x1="460" y1="66" x2="462" y2="79" />
+          </g>
+
+          {/* Left & Right Grandstand Tiers */}
+          <path d="M -10 60 L 200 108 L 200 215 L -10 215 Z" fill="url(#office-stand-left)" />
+          <path d="M 610 60 L 400 108 L 400 215 L 610 215 Z" fill="url(#office-stand-right)" />
+
+          {/* Stadium Tier LED Ribbons (Red/White/Blue Broadcast Accents) */}
+          <path d="M -10 102 L 190 136" stroke="#ef4444" strokeWidth="4" opacity="0.72" />
+          <path d="M -10 106 L 190 139" stroke="#ffffff" strokeWidth="2" opacity="0.82" />
+          <path d="M -10 138 L 195 162" stroke="#ef4444" strokeWidth="3.5" opacity="0.62" />
+          <path d="M -10 142 L 195 165" stroke="#3b82f6" strokeWidth="2.5" opacity="0.62" />
+          <path d="M -10 172 L 195 186" stroke="#ef4444" strokeWidth="3" opacity="0.48" />
+
+          <path d="M 610 102 L 410 136" stroke="#ef4444" strokeWidth="4" opacity="0.72" />
+          <path d="M 610 106 L 410 139" stroke="#ffffff" strokeWidth="2" opacity="0.82" />
+          <path d="M 610 138 L 405 162" stroke="#ef4444" strokeWidth="3.5" opacity="0.62" />
+          <path d="M 610 142 L 405 165" stroke="#3b82f6" strokeWidth="2.5" opacity="0.62" />
+          <path d="M 610 172 L 405 186" stroke="#ef4444" strokeWidth="3" opacity="0.48" />
+
+          {/* Floodlight Beams & Glowing Nodes */}
+          <g className="office-stadium-lights">
+            <polygon points="0,48 255,136 165,205 -10,115" fill="url(#office-beam-left)" />
+            <polygon points="600,48 345,136 435,205 610,115" fill="url(#office-beam-right)" />
+            <circle cx="24" cy="52" r="4.5" fill="#ffffff" />
+            <circle cx="54" cy="58" r="4" fill="#ffffff" />
+            <circle cx="84" cy="64" r="3.5" fill="#ffffff" />
+            <circle cx="114" cy="70" r="3" fill="#ffffff" />
+            <circle cx="576" cy="52" r="4.5" fill="#ffffff" />
+            <circle cx="546" cy="58" r="4" fill="#ffffff" />
+            <circle cx="516" cy="64" r="3.5" fill="#ffffff" />
+            <circle cx="486" cy="70" r="3" fill="#ffffff" />
+          </g>
         </g>
 
-        {/* Right Stadium Roof Canopy & Steel Trusses */}
-        <path d="M 610 24 L 415 72 L 438 90 L 610 56 Z" fill="#475569" opacity="0.7" />
-        <path d="M 610 36 L 424 78 L 436 88 L 610 54 Z" fill="#1e293b" opacity="0.82" />
-        <g stroke="#e2e8f0" strokeWidth="1.4" opacity="0.72">
-          <line x1="588" y1="36" x2="580" y2="54" />
-          <line x1="564" y1="42" x2="558" y2="59" />
-          <line x1="538" y1="48" x2="534" y2="64" />
-          <line x1="512" y1="54" x2="510" y2="69" />
-          <line x1="486" y1="60" x2="486" y2="74" />
-          <line x1="460" y1="66" x2="462" y2="79" />
-        </g>
-
-        {/* Left & Right Grandstand Tiers */}
-        <path d="M -10 60 L 200 108 L 200 215 L -10 215 Z" fill="url(#office-stand-left)" />
-        <path d="M 610 60 L 400 108 L 400 215 L 610 215 Z" fill="url(#office-stand-right)" />
-
-        {/* Stadium Tier LED Ribbons (Red/White/Blue Broadcast Accents) */}
-        <path d="M -10 102 L 190 136" stroke="#ef4444" strokeWidth="4" opacity="0.78" />
-        <path d="M -10 106 L 190 139" stroke="#ffffff" strokeWidth="2" opacity="0.85" />
-        <path d="M -10 138 L 195 162" stroke="#ef4444" strokeWidth="3.5" opacity="0.68" />
-        <path d="M -10 142 L 195 165" stroke="#3b82f6" strokeWidth="2.5" opacity="0.68" />
-        <path d="M -10 172 L 195 186" stroke="#ef4444" strokeWidth="3" opacity="0.55" />
-
-        <path d="M 610 102 L 410 136" stroke="#ef4444" strokeWidth="4" opacity="0.78" />
-        <path d="M 610 106 L 410 139" stroke="#ffffff" strokeWidth="2" opacity="0.85" />
-        <path d="M 610 138 L 405 162" stroke="#ef4444" strokeWidth="3.5" opacity="0.68" />
-        <path d="M 610 142 L 405 165" stroke="#3b82f6" strokeWidth="2.5" opacity="0.68" />
-        <path d="M 610 172 L 405 186" stroke="#ef4444" strokeWidth="3" opacity="0.55" />
-
-        {/* Floodlight Beams & Glowing Nodes */}
-        <g className="office-stadium-lights">
-          <polygon points="0,48 255,136 165,205 -10,115" fill="url(#office-beam-left)" />
-          <polygon points="600,48 345,136 435,205 610,115" fill="url(#office-beam-right)" />
-          <circle cx="24" cy="52" r="4.5" fill="#ffffff" />
-          <circle cx="54" cy="58" r="4" fill="#ffffff" />
-          <circle cx="84" cy="64" r="3.5" fill="#ffffff" />
-          <circle cx="114" cy="70" r="3" fill="#ffffff" />
-          <circle cx="576" cy="52" r="4.5" fill="#ffffff" />
-          <circle cx="546" cy="58" r="4" fill="#ffffff" />
-          <circle cx="516" cy="64" r="3.5" fill="#ffffff" />
-          <circle cx="486" cy="70" r="3" fill="#ffffff" />
-        </g>
+        {/* Top Luminous Sky Veil behind Fixture Date & Venue */}
+        <rect x="0" y="0" width="600" height="76" fill="url(#office-top-header-veil)" />
 
         {/* Feather Fade into Open Canvas */}
         <rect x="0" y="155" width="600" height="105" fill="url(#office-bottom-fade)" />
@@ -1718,31 +1735,31 @@ function CareerPlayHubContent() {
             <div className="w-px h-6 bg-[var(--office-divider)] shrink-0" />
 
             <div className="min-w-0 flex-1 overflow-hidden">
-              <h1 className="font-display font-extrabold text-[11.5px] sm:text-[14px] text-[var(--office-text-primary)] leading-tight truncate">
+              <h1 className="font-display font-black text-[12px] min-[390px]:text-[13.5px] sm:text-[15.5px] text-[var(--office-text-primary)] leading-tight tracking-tight truncate">
                 {effectiveClubName}
               </h1>
-              <p className="text-[9px] sm:text-[10.5px] font-medium text-[#2563eb] leading-tight truncate mt-0.5">
-                Season {save.season.seasonNumber} &bull; {formatOfficeShortDate(save.season.currentDate)}
+              <p className="text-[10.5px] min-[390px]:text-[11px] sm:text-xs font-bold text-[#1d4ed8] leading-tight truncate mt-0.5">
+                S{save.season.seasonNumber} &bull; {formatOfficeShortDate(save.season.currentDate)}
               </p>
             </div>
           </div>
 
           {/* Right: Board Confidence Pill + Inbox + Settings */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <button
               type="button"
               data-office-ui="true"
               onClick={() => setShowBoardDossierModal(true)}
               title="View Boardroom Confidence Dossier"
-              className="office-subcard rounded-full px-2 sm:px-2.5 py-1 flex items-center gap-1.5 cursor-pointer bg-[#e6fcf5] border border-[#a7f3d0] hover:border-[#10b981]/50"
+              className="office-subcard rounded-full px-1.5 min-[390px]:px-2 sm:px-2.5 py-1 flex items-center gap-1 sm:gap-1.5 cursor-pointer bg-[#e6fcf5] border border-[#6ee7b7] hover:border-[#059669]"
             >
               <span
-                className={`w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-full flex items-center justify-center text-white shrink-0 shadow-2xs ${
+                className={`w-4.5 h-4.5 min-[390px]:w-5 min-[390px]:h-5 sm:w-5.5 sm:h-5.5 rounded-full flex items-center justify-center text-white shrink-0 shadow-2xs ${
                   boardConfidence >= 60
-                    ? 'bg-[#10b981]'
+                    ? 'bg-[#047857]'
                     : boardConfidence >= 45
-                    ? 'bg-[#f59e0b]'
-                    : 'bg-[#ef4444]'
+                    ? 'bg-[#b45309]'
+                    : 'bg-[#b91c1c]'
                 }`}
               >
                 <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current" aria-hidden="true">
@@ -1758,16 +1775,16 @@ function CareerPlayHubContent() {
                 </svg>
               </span>
               <div className="text-left leading-none pr-0.5">
-                <div className="text-[9px] sm:text-[9.5px] font-display font-black text-[#0b1536] whitespace-nowrap">
+                <div className="text-[11px] sm:text-[11.5px] font-display font-black text-[#0b1536] whitespace-nowrap">
                   Board {boardConfidence}%
                 </div>
                 <div
-                  className={`text-[8px] sm:text-[8.5px] font-bold mt-0.5 whitespace-nowrap ${
+                  className={`text-[10px] sm:text-[10.5px] font-extrabold mt-0.5 whitespace-nowrap ${
                     boardConfidence >= 60
-                      ? 'text-[#10b981]'
+                      ? 'text-[#065f46]'
                       : boardConfidence >= 45
-                      ? 'text-[#f59e0b]'
-                      : 'text-[#ef4444]'
+                      ? 'text-[#92400e]'
+                      : 'text-[#991b1b]'
                   }`}
                 >
                   {boardSentimentLabel}
@@ -1782,13 +1799,13 @@ function CareerPlayHubContent() {
               onClick={() => setShowOfficeInboxModal(true)}
               title="Open Managerial Inbox"
               aria-label="Open Managerial Inbox"
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl flex items-center justify-center relative cursor-pointer transition-transform active:scale-95 shrink-0 bg-white border border-[#e2e8f0] shadow-2xs hover:border-[#1d5eff]/40"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl flex items-center justify-center relative cursor-pointer transition-transform active:scale-95 shrink-0 bg-white border border-[#cbd5e1] shadow-2xs hover:border-[#1d5eff]/50"
             >
-              <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#2563eb]" fill="currentColor" aria-hidden="true">
+              <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#1d4ed8]" fill="currentColor" aria-hidden="true">
                 <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4.2-8 5-8-5V6l8 5 8-5v2.2z" />
               </svg>
               {headerBadgeCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-[#ef4444] text-white font-display font-black text-[9px] flex items-center justify-center shadow-xs border-2 border-white">
+                <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 rounded-full bg-[#dc2626] text-white font-display font-black text-[10px] flex items-center justify-center shadow-xs border-2 border-white">
                   {headerBadgeCount}
                 </span>
               )}
@@ -1801,9 +1818,9 @@ function CareerPlayHubContent() {
               onClick={() => handleTabChange('settings')}
               title="Career Settings"
               aria-label="Career Settings"
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl flex items-center justify-center cursor-pointer transition-transform active:scale-95 shrink-0 bg-white border border-[#e2e8f0] shadow-2xs hover:border-[#1d5eff]/40"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl flex items-center justify-center cursor-pointer transition-transform active:scale-95 shrink-0 bg-white border border-[#cbd5e1] shadow-2xs hover:border-[#1d5eff]/50"
             >
-              <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#475569]" fill="currentColor" aria-hidden="true">
+              <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#334155]" fill="currentColor" aria-hidden="true">
                 <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
               </svg>
             </button>
@@ -1825,10 +1842,10 @@ function CareerPlayHubContent() {
               onClick={() => handleTabChange('overview')}
               className={`${activeTab === 'overview' ? 'office-nav-tab-active' : 'office-nav-tab-inactive'} rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer relative`}
             >
-              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+              <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
                 <path d="M12 3 3 10h2v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9h2L12 3z" />
               </svg>
-              <span className="text-[11px] font-bold tracking-tight leading-tight">Office</span>
+              <span className="text-xs font-extrabold tracking-tight leading-tight">Office</span>
             </button>
 
             {/* Squad */}
@@ -1838,10 +1855,10 @@ function CareerPlayHubContent() {
               onClick={() => handleTabChange('squad')}
               className={`${activeTab === 'squad' ? 'office-nav-tab-active' : 'office-nav-tab-inactive'} rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer relative`}
             >
-              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+              <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
                 <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
               </svg>
-              <span className="text-[11px] font-bold tracking-tight leading-tight">Squad</span>
+              <span className="text-xs font-extrabold tracking-tight leading-tight">Squad</span>
             </button>
 
             {/* Fixtures */}
@@ -1851,10 +1868,10 @@ function CareerPlayHubContent() {
               onClick={() => handleTabChange('fixtures')}
               className={`${activeTab === 'fixtures' ? 'office-nav-tab-active' : 'office-nav-tab-inactive'} rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer relative`}
             >
-              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+              <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
                 <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5v-5z" />
               </svg>
-              <span className="text-[11px] font-bold tracking-tight leading-tight">Fixtures</span>
+              <span className="text-xs font-extrabold tracking-tight leading-tight">Fixtures</span>
             </button>
 
             {/* Transfers */}
@@ -1864,10 +1881,10 @@ function CareerPlayHubContent() {
               onClick={() => handleTabChange('transfers')}
               className={`${activeTab === 'transfers' ? 'office-nav-tab-active' : 'office-nav-tab-inactive'} rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer relative`}
             >
-              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+              <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
                 <path d="M6.99 11 3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z" />
               </svg>
-              <span className="text-[11px] font-bold tracking-tight leading-tight">Transfers</span>
+              <span className="text-xs font-extrabold tracking-tight leading-tight">Transfers</span>
               {incomingOffersCount > 0 && (
                 <span className="absolute top-1 right-2 w-2 h-2 rounded-full bg-[#f59e0b]" />
               )}
@@ -1882,12 +1899,12 @@ function CareerPlayHubContent() {
               aria-haspopup="true"
               className={`${['table', 'cups', 'settings'].includes(activeTab) ? 'office-nav-tab-active' : 'office-nav-tab-inactive'} rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer relative`}
             >
-              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+              <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
                 <circle cx="6" cy="12" r="2" />
                 <circle cx="12" cy="12" r="2" />
                 <circle cx="18" cy="12" r="2" />
               </svg>
-              <span className="text-[11px] font-bold tracking-tight leading-tight">
+              <span className="text-xs font-extrabold tracking-tight leading-tight">
                 {['table', 'cups', 'settings'].includes(activeTab) ? 'More ▾' : 'More'}
               </span>
             </button>
@@ -2008,7 +2025,7 @@ function CareerPlayHubContent() {
                 <section
                   aria-label="Key Performance Indicators"
                   data-office-ui="true"
-                  className="office-reveal-2 grid grid-cols-3 divide-x divide-slate-300/75 py-1 select-none"
+                  className="office-reveal-2 grid grid-cols-3 divide-x divide-slate-300/80 py-1 select-none"
                 >
                   {/* Metric 1: Transfer Budget (Teal/Mint Financial Semantic) */}
                   <button
@@ -2019,20 +2036,20 @@ function CareerPlayHubContent() {
                       navigateToSection('transfers', 'market');
                       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                     }}
-                    className="px-2 sm:px-3 py-1.5 text-left hover:bg-teal-500/[0.06] transition-colors cursor-pointer flex flex-col justify-between min-h-[56px] group focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#0d9488]"
+                    className="px-2 sm:px-3 py-2 text-left hover:bg-teal-500/[0.06] transition-colors cursor-pointer flex flex-col justify-between min-h-[64px] group focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#0f766e]"
                   >
                     <div className="flex items-center justify-between gap-1 w-full">
-                      <span className="text-[9.5px] font-display font-extrabold uppercase tracking-wider text-[#0f766e] truncate">
+                      <span className="text-xs font-display font-extrabold uppercase tracking-wider text-[#0f534c]">
                         Budget
                       </span>
-                      <span className="text-xs font-bold text-[#0d9488] leading-none group-hover:translate-x-0.5 transition-transform" aria-hidden="true">
+                      <span className="text-sm font-black text-[#0f766e] leading-none group-hover:translate-x-0.5 transition-transform" aria-hidden="true">
                         &rsaquo;
                       </span>
                     </div>
-                    <div className="font-display font-black text-[15px] sm:text-[17px] text-[#0b1536] leading-tight tracking-tight truncate mt-0.5">
+                    <div className="font-display font-black text-lg sm:text-xl text-[#0b1536] leading-tight tracking-tight mt-0.5">
                       {formatOfficeBudget(save.finances.transferBudget, save.settings.currency)}
                     </div>
-                    <div className="text-[9.5px] font-semibold text-[#0f766e] truncate mt-0.5">
+                    <div className="text-xs sm:text-[13px] font-bold text-[#115e59] whitespace-nowrap mt-0.5">
                       {formatOfficeWageRoom(wageHeadroom, save.settings.currency)} room
                     </div>
                   </button>
@@ -2043,37 +2060,37 @@ function CareerPlayHubContent() {
                     data-office-ui="true"
                     aria-label={`League Position ${formatOrdinalRank(userRank)}, ${userStanding?.points || 0} points`}
                     onClick={() => handleTabChange('table')}
-                    className="px-2 sm:px-3 py-1.5 text-left hover:bg-blue-500/[0.06] transition-colors cursor-pointer flex flex-col justify-between min-h-[56px] group focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#1d5eff]"
+                    className="px-2 sm:px-3 py-2 text-left hover:bg-blue-500/[0.06] transition-colors cursor-pointer flex flex-col justify-between min-h-[64px] group focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#1d5eff]"
                   >
                     <div className="flex items-center justify-between gap-1 w-full">
-                      <span className="text-[9.5px] font-display font-extrabold uppercase tracking-wider text-[#1d4ed8] truncate">
+                      <span className="text-xs font-display font-extrabold uppercase tracking-wider text-[#1e3a8a]">
                         League
                       </span>
-                      <span className="text-xs font-bold text-[#1d5eff] leading-none group-hover:translate-x-0.5 transition-transform" aria-hidden="true">
+                      <span className="text-sm font-black text-[#1d4ed8] leading-none group-hover:translate-x-0.5 transition-transform" aria-hidden="true">
                         &rsaquo;
                       </span>
                     </div>
                     <div className="flex items-baseline gap-1.5 mt-0.5">
-                      <span className="font-display font-black text-[15px] sm:text-[17px] text-[#0b1536] leading-tight">
+                      <span className="font-display font-black text-lg sm:text-xl text-[#0b1536] leading-tight">
                         {formatOrdinalRank(userRank)}
                       </span>
-                      <span className="text-[10px] font-bold text-[#1e40af] truncate">
+                      <span className="text-xs sm:text-[13px] font-extrabold text-[#1e40af] whitespace-nowrap">
                         {userStanding?.points || 0} pts
                       </span>
                     </div>
-                    <div className="flex items-center gap-0.5 mt-0.5" aria-label="Recent 5 match form">
+                    <div className="flex items-center gap-1 mt-1" aria-label="Recent 5 match form">
                       {(recentFormResults.length > 0
                         ? recentFormResults.slice(-5)
                         : (['W', 'W', 'D', 'W', 'W'] as const)
                       ).map((res, idx) => (
                         <span
                           key={idx}
-                          className={`w-3.5 h-3.5 rounded-[3px] text-[7.5px] font-display font-black text-white flex items-center justify-center ${
+                          className={`w-4.5 h-4.5 rounded-[4px] text-[10.5px] font-display font-black text-white flex items-center justify-center shadow-2xs ${
                             res === 'W'
-                              ? 'bg-[#0d9488]'
+                              ? 'bg-[#047857]'
                               : res === 'D'
-                              ? 'bg-[#d97706]'
-                              : 'bg-[#dc2626]'
+                              ? 'bg-[#b45309]'
+                              : 'bg-[#b91c1c]'
                           }`}
                         >
                           {res}
@@ -2098,26 +2115,26 @@ function CareerPlayHubContent() {
                         setShowOfficeInboxModal(true);
                       }
                     }}
-                    className={`px-2 sm:px-3 py-1.5 text-left transition-colors cursor-pointer flex flex-col justify-between min-h-[56px] group focus-visible:outline-2 focus-visible:outline-offset-[-2px] ${
+                    className={`px-2 sm:px-3 py-2 text-left transition-colors cursor-pointer flex flex-col justify-between min-h-[64px] group focus-visible:outline-2 focus-visible:outline-offset-[-2px] ${
                       reviewTotal > 0
-                        ? 'hover:bg-amber-500/[0.08] focus-visible:outline-[#d97706]'
-                        : 'hover:bg-teal-500/[0.06] focus-visible:outline-[#0d9488]'
+                        ? 'hover:bg-amber-500/[0.08] focus-visible:outline-[#b45309]'
+                        : 'hover:bg-teal-500/[0.06] focus-visible:outline-[#0f766e]'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-1 w-full">
                       <span
-                        className={`text-[9.5px] font-display font-extrabold uppercase tracking-wider flex items-center gap-1 truncate ${
-                          reviewTotal > 0 ? 'text-[#b45309]' : 'text-[#0f766e]'
+                        className={`text-xs font-display font-extrabold uppercase tracking-wider flex items-center gap-1 ${
+                          reviewTotal > 0 ? 'text-[#92400e]' : 'text-[#0f534c]'
                         }`}
                       >
                         {reviewTotal > 0 && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b] shrink-0" aria-hidden="true" />
+                          <span className="w-2 h-2 rounded-full bg-[#d97706] shrink-0" aria-hidden="true" />
                         )}
                         <span>Review</span>
                       </span>
                       <span
-                        className={`text-xs font-bold leading-none group-hover:translate-x-0.5 transition-transform ${
-                          reviewTotal > 0 ? 'text-[#d97706]' : 'text-[#0d9488]'
+                        className={`text-sm font-black leading-none group-hover:translate-x-0.5 transition-transform ${
+                          reviewTotal > 0 ? 'text-[#b45309]' : 'text-[#0f766e]'
                         }`}
                         aria-hidden="true"
                       >
@@ -2125,15 +2142,15 @@ function CareerPlayHubContent() {
                       </span>
                     </div>
                     <div
-                      className={`font-display font-black text-[15px] sm:text-[17px] leading-tight mt-0.5 ${
-                        reviewTotal > 0 ? 'text-[#92400e]' : 'text-[#0b1536]'
+                      className={`font-display font-black text-lg sm:text-xl leading-tight mt-0.5 ${
+                        reviewTotal > 0 ? 'text-[#78350f]' : 'text-[#0b1536]'
                       }`}
                     >
                       {reviewTotal}
                     </div>
                     <div
-                      className={`text-[9.5px] font-semibold truncate mt-0.5 ${
-                        reviewTotal > 0 ? 'text-[#b45309]' : 'text-[#0f766e]'
+                      className={`text-xs sm:text-[13px] font-bold whitespace-nowrap mt-0.5 ${
+                        reviewTotal > 0 ? 'text-[#92400e]' : 'text-[#115e59]'
                       }`}
                     >
                       {officeReviewCount > 0
@@ -2194,22 +2211,22 @@ function CareerPlayHubContent() {
                   return (
                     <div className="space-y-3">
                       {/* Open Stadium Illustration & Teams Showcase (No outer card container) */}
-                      <div className="relative pt-3 pb-1 px-2.5 sm:px-3.5">
+                      <div className="relative pt-2.5 pb-1 px-2 sm:px-3">
                         <OfficeStadiumSceneSvg />
 
-                        {/* Top Fixture Metadata Header */}
+                        {/* Top Fixture Metadata Header with Restrained Local Contrast over Artwork */}
                         <div className="relative z-10 flex items-start justify-between gap-2">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-xl bg-white/80 backdrop-blur-xs border border-blue-200/80 text-[#1d4ed8] shrink-0 shadow-2xs">
+                          <div className="flex items-center gap-2 min-w-0 bg-white/84 backdrop-blur-xs px-2.5 py-1.5 rounded-xl border border-white/90 shadow-2xs">
+                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-[#eff6ff] border border-blue-200 text-[#1d4ed8] shrink-0">
                               <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
                                 <path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V10h14v10zm-9.5-2.5L7 15l1.4-1.4 1.1 1.1 3.6-3.6L14.5 12.5l-5 5z" />
                               </svg>
                             </span>
                             <div className="min-w-0">
-                              <div className="text-[11px] font-display font-black uppercase tracking-wider text-[#1d4ed8] leading-tight whitespace-nowrap">
+                              <div className="text-xs font-display font-black uppercase tracking-wider text-[#1e40af] leading-tight whitespace-nowrap">
                                 Next Fixture
                               </div>
-                              <div className="text-[12px] sm:text-[13px] font-display font-extrabold text-[#0b1536] leading-tight whitespace-nowrap">
+                              <div className="text-[13px] sm:text-sm font-display font-extrabold text-[#0b1536] leading-tight whitespace-nowrap mt-0.5">
                                 {nextScheduled.cupId === CUP_IDS.PRESEASON
                                   ? `${save.preseasonState?.tournamentName || 'Pre-Season Tour'}`
                                   : nextScheduled.isCup
@@ -2219,11 +2236,11 @@ function CareerPlayHubContent() {
                             </div>
                           </div>
 
-                          <div className="text-right shrink-0">
-                            <div className="font-display font-extrabold text-[12px] sm:text-[13px] text-[#0b1536] leading-tight whitespace-nowrap">
+                          <div className="text-right shrink-0 bg-white/84 backdrop-blur-xs px-2.5 py-1.5 rounded-xl border border-white/90 shadow-2xs">
+                            <div className="font-display font-extrabold text-[13px] sm:text-sm text-[#0b1536] leading-tight whitespace-nowrap">
                               {formatOfficeFixtureDate(nextScheduled.fixture.date)}
                             </div>
-                            <div className="text-[10.5px] sm:text-[11px] font-semibold text-[#1e3a8a] leading-tight flex items-center justify-end gap-1 mt-0.5 whitespace-nowrap">
+                            <div className="text-xs sm:text-[13px] font-bold text-[#1e3a8a] leading-tight flex items-center justify-end gap-1 mt-0.5 whitespace-nowrap">
                               <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current text-[#1d4ed8] shrink-0" aria-hidden="true">
                                 <path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zM2 22h19v-3H2v3zm14-12v7h3v-7h-3zm-4.5-9L2 6v2h19V6l-9.5-5z" />
                               </svg>
@@ -2233,7 +2250,7 @@ function CareerPlayHubContent() {
                         </div>
 
                         {/* 3D Fictional Jerseys & VS Showcase */}
-                        <div className="relative z-10 grid grid-cols-[1fr_auto_1fr] items-center pt-2 pb-1 px-0.5">
+                        <div className="relative z-10 grid grid-cols-[1fr_auto_1fr] items-center pt-2.5 pb-1 px-0.5">
                           {/* Home Club Kit */}
                           <div className="flex flex-col items-center text-center min-w-0 office-kit-enter-left">
                             <OfficeClubJerseySvg
@@ -2241,17 +2258,17 @@ function CareerPlayHubContent() {
                               displayName={homeName}
                               uid="office-hero-home"
                             />
-                            <h3 className="font-display font-black text-[13.5px] sm:text-[15px] text-[#0b1536] tracking-tight whitespace-nowrap mt-1">
+                            <h3 className="font-display font-black text-[15px] sm:text-base text-[#0b1536] tracking-tight whitespace-nowrap mt-1">
                               {homeName}
                             </h3>
-                            <span className="mt-1 inline-block px-2.5 py-0.5 rounded-full bg-[#ccfbf1] text-[#0f766e] border border-[#99f6e4] text-[9px] font-extrabold uppercase tracking-wider">
+                            <span className="mt-1 inline-block px-2.5 py-0.5 rounded-full bg-[#ccfbf1] text-[#065f46] border border-[#5eead4] text-[11px] font-extrabold uppercase tracking-wider">
                               {isNeutralWembley ? 'Neutral' : 'Home'}
                             </span>
                           </div>
 
                           {/* Center VS */}
                           <div className="flex flex-col items-center justify-center px-1.5 -mt-5">
-                            <span className="w-9 h-9 rounded-full bg-white/85 backdrop-blur-xs border border-blue-200/90 shadow-xs flex items-center justify-center font-display font-black text-[13px] text-[#1d4ed8] tracking-wider">
+                            <span className="w-9 h-9 rounded-full bg-white/92 backdrop-blur-xs border border-blue-200 shadow-xs flex items-center justify-center font-display font-black text-sm text-[#1e40af] tracking-wider">
                               vs
                             </span>
                           </div>
@@ -2263,17 +2280,17 @@ function CareerPlayHubContent() {
                               displayName={awayName}
                               uid="office-hero-away"
                             />
-                            <h3 className="font-display font-black text-[13.5px] sm:text-[15px] text-[#0b1536] tracking-tight whitespace-nowrap mt-1">
+                            <h3 className="font-display font-black text-[15px] sm:text-base text-[#0b1536] tracking-tight whitespace-nowrap mt-1">
                               {awayName}
                             </h3>
-                            <span className="mt-1 inline-block px-2.5 py-0.5 rounded-full bg-[#dbeafe] text-[#1d4ed8] border border-[#bfdbfe] text-[9px] font-extrabold uppercase tracking-wider">
+                            <span className="mt-1 inline-block px-2.5 py-0.5 rounded-full bg-[#dbeafe] text-[#1e3a8a] border border-[#93c5fd] text-[11px] font-extrabold uppercase tracking-wider">
                               {isNeutralWembley ? 'Neutral' : 'Away'}
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      {/* Action Hierarchy: Unmistakable Primary CTA + Quiet Secondary Pills */}
+                      {/* Action Hierarchy: Unmistakable Primary CTA + Clear Secondary Pills */}
                       <div className="relative z-10 space-y-2">
                         <button
                           type="button"
@@ -2317,25 +2334,25 @@ function CareerPlayHubContent() {
                             }
                             setActiveMatchFixture(nextScheduled.fixture);
                           }}
-                          className="office-play-match-btn w-full py-3.5 px-6 rounded-full font-display font-black text-[15.5px] tracking-tight flex items-center justify-center gap-2 cursor-pointer min-h-[48px] shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d5eff]"
+                          className="office-play-match-btn w-full py-3.5 px-6 rounded-full font-display font-black text-base sm:text-[17px] tracking-tight flex items-center justify-center gap-2 cursor-pointer min-h-[50px] shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d5eff]"
                         >
-                          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current shrink-0" aria-hidden="true">
+                          <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current shrink-0" aria-hidden="true">
                             <path d="M8 5v14l11-7z" />
                           </svg>
                           <span>Prepare &amp; Play Match</span>
-                          <span className="text-base leading-none font-bold ml-0.5" aria-hidden="true">&rsaquo;</span>
+                          <span className="text-lg leading-none font-bold ml-0.5" aria-hidden="true">&rsaquo;</span>
                         </button>
 
-                        {/* Secondary Match Actions (Clearly subordinate to Play Match) */}
+                        {/* Secondary Match Actions (14px functional text, clearly subordinate to Play Match) */}
                         <div className="grid grid-cols-2 gap-2">
                           <button
                             type="button"
                             data-office-ui="true"
                             disabled={simulating}
                             onClick={handlePlayNextMatchInstant}
-                            className="py-2 px-3 rounded-full bg-white/70 hover:bg-white/95 border border-slate-300/85 flex items-center justify-center gap-1.5 font-display font-bold text-[12px] text-[#1e3a8a] cursor-pointer min-h-[44px] transition-all active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-[#1d5eff]"
+                            className="py-2.5 px-3 rounded-full bg-white/85 hover:bg-white border border-slate-300 flex items-center justify-center gap-1.5 font-display font-extrabold text-sm text-[#0b1536] cursor-pointer min-h-[44px] transition-all active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-[#1d5eff]"
                           >
-                            <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current text-[#1d5eff]" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[#1d4ed8]" aria-hidden="true">
                               <path d="M7 2v11h3v9l7-12h-4l4-8z" />
                             </svg>
                             <span>Instant Sim</span>
@@ -2345,9 +2362,9 @@ function CareerPlayHubContent() {
                             type="button"
                             data-office-ui="true"
                             onClick={() => setMatchOverviewModal({ type: 'preview', fixture: nextScheduled.fixture })}
-                            className="py-2 px-3 rounded-full bg-white/70 hover:bg-white/95 border border-slate-300/85 flex items-center justify-center gap-1.5 font-display font-bold text-[12px] text-[#1e3a8a] cursor-pointer min-h-[44px] transition-all active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-[#1d5eff]"
+                            className="py-2.5 px-3 rounded-full bg-white/85 hover:bg-white border border-slate-300 flex items-center justify-center gap-1.5 font-display font-extrabold text-sm text-[#0b1536] cursor-pointer min-h-[44px] transition-all active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-[#1d5eff]"
                           >
-                            <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current text-[#1d5eff]" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[#1d4ed8]" aria-hidden="true">
                               <path d="M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zm5.6 8H19v6h-2.8v-6z" />
                             </svg>
                             <span>Match Dossier</span>
@@ -2362,11 +2379,11 @@ function CareerPlayHubContent() {
               /* End-of-Season Banner when all 38 fixtures concluded */
               <section
                 data-office-ui="true"
-                className="office-reveal-3 rounded-2xl bg-white/88 backdrop-blur-md border border-slate-200/90 p-4 space-y-3 text-left shadow-xs"
+                className="office-reveal-3 rounded-2xl bg-white/90 backdrop-blur-md border border-slate-200/90 p-4 space-y-3 text-left shadow-xs"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#1d4ed8]">
+                    <span className="text-xs font-extrabold uppercase tracking-wider text-[#1e40af]">
                       Season {save.season.seasonNumber} Complete
                     </span>
                     <h3 className="text-base font-display font-black text-[var(--office-text-primary)]">
@@ -2378,7 +2395,7 @@ function CareerPlayHubContent() {
                     data-office-ui="true"
                     onClick={handleAdvanceToNextSeasonAction}
                     disabled={simulating}
-                    className="office-play-match-btn py-2.5 px-4 rounded-full font-display font-bold text-xs cursor-pointer"
+                    className="office-play-match-btn py-2.5 px-4 rounded-full font-display font-bold text-sm cursor-pointer"
                   >
                     Advance to Season {save.season.seasonNumber + 1} &rsaquo;
                   </button>
@@ -2392,16 +2409,16 @@ function CareerPlayHubContent() {
                 id="managerial-alerts"
                 aria-label="Contracts to Review"
                 data-office-ui="true"
-                className="office-reveal-5 border-y border-slate-300/70 py-2.5 px-1 select-none"
+                className="office-reveal-5 border-y border-slate-300/80 py-2.5 px-1 select-none"
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-100 text-[#d97706] shrink-0">
+                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 border border-amber-300 text-[#b45309] shrink-0">
                       <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current" aria-hidden="true">
                         <path d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 0 0 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
                       </svg>
                     </span>
-                    <h2 className="font-display font-extrabold text-[12.5px] sm:text-[13px] text-[#0b1536] truncate">
+                    <h2 className="font-display font-extrabold text-sm sm:text-[15px] text-[#0b1536] truncate">
                       {officeReviewCount} Contract{officeReviewCount > 1 ? 's' : ''} to Review
                     </h2>
                   </div>
@@ -2410,14 +2427,14 @@ function CareerPlayHubContent() {
                     type="button"
                     data-office-ui="true"
                     onClick={() => navigateToSection('transfers', 'contracts')}
-                    className="text-[11px] sm:text-[11.5px] font-display font-bold text-[#0f766e] hover:text-[#0d9488] hover:underline flex items-center gap-0.5 cursor-pointer shrink-0 min-h-[28px] focus-visible:outline-2 focus-visible:outline-[#0d9488]"
+                    className="text-[13.5px] sm:text-sm font-display font-extrabold text-[#0f534c] hover:text-[#0f766e] hover:underline flex items-center gap-0.5 cursor-pointer shrink-0 min-h-[32px] focus-visible:outline-2 focus-visible:outline-[#0f766e]"
                   >
                     <span>View All ({save.squad.length})</span>
                     <span aria-hidden="true">&rsaquo;</span>
                   </button>
                 </div>
 
-                <div className="divide-y divide-slate-300/65 border-t border-slate-300/65 mt-2">
+                <div className="divide-y divide-slate-300/75 border-t border-slate-300/75 mt-2">
                   {contractReviewPlayers.slice(0, 2).map((player) => {
                     const yearsLeft = Math.max(1, player.contractYears || 1);
                     return (
@@ -2428,26 +2445,26 @@ function CareerPlayHubContent() {
                         onClick={() =>
                           navigateToSection('transfers', 'contracts', `contract-player-${player.id}`)
                         }
-                        className="w-full py-2 flex items-center justify-between gap-2.5 text-left hover:bg-amber-500/[0.06] transition-colors cursor-pointer min-h-[44px] group focus-visible:outline-2 focus-visible:outline-[#d97706]"
+                        className="w-full py-2.5 flex items-center justify-between gap-1.5 sm:gap-2.5 text-left hover:bg-amber-500/[0.06] transition-colors cursor-pointer min-h-[46px] group focus-visible:outline-2 focus-visible:outline-[#b45309]"
                       >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="w-2 h-2 rounded-full bg-[#f59e0b] shrink-0" aria-hidden="true" />
-                          <span className="px-1.5 py-0.5 rounded bg-teal-50 text-[#0f766e] border border-teal-200/80 font-display font-extrabold text-[9.5px] shrink-0">
+                        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                          <span className="w-2 h-2 rounded-full bg-[#d97706] shrink-0" aria-hidden="true" />
+                          <span className="px-1.5 py-0.5 rounded bg-[#ccfbf1] text-[#065f46] border border-[#5eead4] font-display font-black text-xs shrink-0">
                             {player.position}
                           </span>
-                          <span className="font-display font-bold text-[12.5px] text-[#0b1536] truncate">
+                          <span className="font-display font-extrabold text-[13.5px] sm:text-[15px] text-[#0b1536] tracking-tight truncate">
                             {player.name}
                           </span>
-                          <span className="text-[10.5px] font-semibold text-[#475569] shrink-0">
+                          <span className="text-xs font-bold text-[#334155] shrink-0">
                             {player.rating} OVR
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <span className="px-2 py-0.5 rounded-full bg-amber-100/90 text-[#b45309] border border-amber-300/85 font-display font-bold text-[10px] whitespace-nowrap">
+                        <div className="flex items-center gap-1 shrink-0">
+                          <span className="px-2 py-0.5 rounded-full bg-amber-100 text-[#78350f] border border-amber-300 font-display font-extrabold text-xs whitespace-nowrap">
                             {yearsLeft} {yearsLeft === 1 ? 'yr' : 'yrs'} left
                           </span>
-                          <span className="text-[#d97706] font-extrabold text-xs group-hover:translate-x-0.5 transition-transform" aria-hidden="true">
+                          <span className="text-[#b45309] font-black text-sm group-hover:translate-x-0.5 transition-transform" aria-hidden="true">
                             &rsaquo;
                           </span>
                         </div>
@@ -2462,10 +2479,10 @@ function CareerPlayHubContent() {
             <section
               aria-label="Quick Actions"
               data-office-ui="true"
-              className="office-reveal-6 pt-1 space-y-2 select-none"
+              className="office-reveal-6 pt-1 space-y-2.5 select-none"
             >
               <div className="flex items-center justify-between gap-2 px-1">
-                <h2 className="font-display font-extrabold text-[11px] uppercase tracking-wider text-[#334155]">
+                <h2 className="font-display font-extrabold text-xs sm:text-[13px] uppercase tracking-wider text-[#1e293b]">
                   Quick Actions
                 </h2>
                 <button
@@ -2473,10 +2490,10 @@ function CareerPlayHubContent() {
                   data-office-ui="true"
                   aria-expanded={showOfficeSeasonDrawer}
                   onClick={() => setShowOfficeSeasonDrawer((prev) => !prev)}
-                  className="text-[11px] font-display font-bold text-[#1d4ed8] hover:text-[#1d5eff] inline-flex items-center gap-1 cursor-pointer min-h-[32px] px-1.5 py-0.5 rounded-lg hover:bg-blue-500/10 transition-colors focus-visible:outline-2 focus-visible:outline-[#1d5eff]"
+                  className="text-[13.5px] sm:text-sm font-display font-extrabold text-[#1e40af] hover:text-[#1d4ed8] inline-flex items-center gap-1 cursor-pointer min-h-[34px] px-1.5 py-0.5 rounded-lg hover:bg-blue-500/10 transition-colors focus-visible:outline-2 focus-visible:outline-[#1d5eff]"
                 >
                   <span>Manage your season</span>
-                  <span aria-hidden="true" className="text-[10px]">
+                  <span aria-hidden="true" className="text-xs">
                     {showOfficeSeasonDrawer ? '▴' : '▾'}
                   </span>
                 </button>
@@ -2484,11 +2501,11 @@ function CareerPlayHubContent() {
 
               {/* Collapsible Fast-Forward / Calendar Strip */}
               {showOfficeSeasonDrawer && (
-                <div className="border-y border-slate-300/70 py-2.5 px-1 space-y-2">
-                  <div className="flex items-center justify-between text-[10.5px] font-bold text-[#334155]">
+                <div className="border-y border-slate-300/80 py-2.5 px-1 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-extrabold text-[#1e293b]">
                     <span>Fast Forward Calendar</span>
                     {injuredCount > 0 && (
-                      <span className="text-[#dc2626]">🏥 {injuredCount} Injured</span>
+                      <span className="text-[#b91c1c]">🏥 {injuredCount} Injured</span>
                     )}
                   </div>
                   <div className="grid grid-cols-4 gap-1.5">
@@ -2497,7 +2514,7 @@ function CareerPlayHubContent() {
                       data-office-ui="true"
                       onClick={handleContinueCalendar}
                       disabled={simulating}
-                      className="office-subcard py-2 px-2 rounded-xl font-display font-bold text-[11px] text-[#1d4ed8] cursor-pointer min-h-[40px]"
+                      className="office-subcard py-2 px-2 rounded-xl font-display font-extrabold text-xs sm:text-[13px] text-[#1e40af] cursor-pointer min-h-[42px]"
                     >
                       +1 Day
                     </button>
@@ -2506,7 +2523,7 @@ function CareerPlayHubContent() {
                       data-office-ui="true"
                       onClick={() => setPendingFastForward('next_match')}
                       disabled={simulating || !nextScheduled}
-                      className="office-subcard py-2 px-2 rounded-xl font-display font-bold text-[11px] text-[#0b1536] cursor-pointer min-h-[40px]"
+                      className="office-subcard py-2 px-2 rounded-xl font-display font-extrabold text-xs sm:text-[13px] text-[#0b1536] cursor-pointer min-h-[42px]"
                     >
                       Next Match
                     </button>
@@ -2515,7 +2532,7 @@ function CareerPlayHubContent() {
                       data-office-ui="true"
                       onClick={() => setPendingFastForward('next_week')}
                       disabled={simulating}
-                      className="office-subcard py-2 px-2 rounded-xl font-display font-bold text-[11px] text-[#0b1536] cursor-pointer min-h-[40px]"
+                      className="office-subcard py-2 px-2 rounded-xl font-display font-extrabold text-xs sm:text-[13px] text-[#0b1536] cursor-pointer min-h-[42px]"
                     >
                       7 Days
                     </button>
@@ -2524,7 +2541,7 @@ function CareerPlayHubContent() {
                       data-office-ui="true"
                       onClick={() => setPendingFastForward('next_month')}
                       disabled={simulating}
-                      className="office-subcard py-2 px-2 rounded-xl font-display font-bold text-[11px] text-[#0b1536] cursor-pointer min-h-[40px]"
+                      className="office-subcard py-2 px-2 rounded-xl font-display font-extrabold text-xs sm:text-[13px] text-[#0b1536] cursor-pointer min-h-[42px]"
                     >
                       1 Month
                     </button>
@@ -2542,10 +2559,10 @@ function CareerPlayHubContent() {
                     handleTabChange('squad');
                     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                   }}
-                  className="rounded-2xl hover:bg-teal-500/[0.06] py-1.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 min-h-[58px] focus-visible:outline-2 focus-visible:outline-[#0d9488]"
+                  className="rounded-2xl hover:bg-teal-500/[0.06] py-1.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 min-h-[68px] focus-visible:outline-2 focus-visible:outline-[#0f766e]"
                 >
-                  <div className="w-9 h-9 rounded-2xl bg-[#ccfbf1] text-[#0f766e] border border-teal-200/80 flex items-center justify-center shrink-0">
-                    <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-none stroke-current" strokeWidth="2" aria-hidden="true">
+                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#ccfbf1] text-[#065f46] border border-[#5eead4] flex items-center justify-center shrink-0 shadow-2xs">
+                    <svg viewBox="0 0 24 24" className="w-5.5 h-5.5 fill-none stroke-current" strokeWidth="2" aria-hidden="true">
                       <circle cx="6" cy="6" r="2" fill="currentColor" />
                       <circle cx="18" cy="6" r="2" fill="currentColor" />
                       <circle cx="12" cy="12" r="2" fill="currentColor" />
@@ -2554,7 +2571,7 @@ function CareerPlayHubContent() {
                       <path d="M7.5 7.5 10.5 10.5M16.5 7.5 13.5 10.5M10.5 13.5 7.5 16.5M13.5 13.5 16.5 16.5" strokeLinecap="round" />
                     </svg>
                   </div>
-                  <span className="font-display font-bold text-[11px] text-[#0b1536] leading-tight truncate">
+                  <span className="font-display font-extrabold text-[13.5px] sm:text-sm text-[#0b1536] leading-tight whitespace-nowrap">
                     Tactics
                   </span>
                 </button>
@@ -2567,14 +2584,14 @@ function CareerPlayHubContent() {
                     handleTabChange('fixtures');
                     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                   }}
-                  className="rounded-2xl hover:bg-blue-500/[0.06] py-1.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 min-h-[58px] focus-visible:outline-2 focus-visible:outline-[#1d5eff]"
+                  className="rounded-2xl hover:bg-blue-500/[0.06] py-1.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 min-h-[68px] focus-visible:outline-2 focus-visible:outline-[#1d5eff]"
                 >
-                  <div className="w-9 h-9 rounded-2xl bg-[#dbeafe] text-[#1d4ed8] border border-blue-200/80 flex items-center justify-center shrink-0">
-                    <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
+                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#dbeafe] text-[#1e40af] border border-[#93c5fd] flex items-center justify-center shrink-0 shadow-2xs">
+                    <svg viewBox="0 0 24 24" className="w-5.5 h-5.5 fill-current" aria-hidden="true">
                       <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm-12-8h5v5H7v-5z" />
                     </svg>
                   </div>
-                  <span className="font-display font-bold text-[11px] text-[#0b1536] leading-tight truncate">
+                  <span className="font-display font-extrabold text-[13.5px] sm:text-sm text-[#0b1536] leading-tight whitespace-nowrap">
                     Calendar
                   </span>
                 </button>
@@ -2587,14 +2604,14 @@ function CareerPlayHubContent() {
                     handleTabChange('squad');
                     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                   }}
-                  className="rounded-2xl hover:bg-emerald-500/[0.06] py-1.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 min-h-[58px] focus-visible:outline-2 focus-visible:outline-[#0d9488]"
+                  className="rounded-2xl hover:bg-emerald-500/[0.06] py-1.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 min-h-[68px] focus-visible:outline-2 focus-visible:outline-[#047857]"
                 >
-                  <div className="w-9 h-9 rounded-2xl bg-[#d1fae5] text-[#047857] border border-emerald-200/80 flex items-center justify-center shrink-0">
-                    <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
+                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#d1fae5] text-[#065f46] border border-[#6ee7b7] flex items-center justify-center shrink-0 shadow-2xs">
+                    <svg viewBox="0 0 24 24" className="w-5.5 h-5.5 fill-current" aria-hidden="true">
                       <path d="M20.57 14.86 22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z" />
                     </svg>
                   </div>
-                  <span className="font-display font-bold text-[11px] text-[#0b1536] leading-tight truncate">
+                  <span className="font-display font-extrabold text-[13.5px] sm:text-sm text-[#0b1536] leading-tight whitespace-nowrap">
                     Training
                   </span>
                 </button>
@@ -2604,21 +2621,21 @@ function CareerPlayHubContent() {
                   type="button"
                   data-office-ui="true"
                   onClick={() => navigateToSection('transfers', 'board', 'board-room-section')}
-                  className="rounded-2xl hover:bg-teal-500/[0.06] py-1.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 min-h-[58px] focus-visible:outline-2 focus-visible:outline-[#0d9488]"
+                  className="rounded-2xl hover:bg-teal-500/[0.06] py-1.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 min-h-[68px] focus-visible:outline-2 focus-visible:outline-[#0f766e]"
                 >
-                  <div className="w-9 h-9 rounded-2xl bg-[#ccfbf1] text-[#0f766e] border border-teal-200/80 flex items-center justify-center shrink-0">
-                    <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
+                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#ccfbf1] text-[#065f46] border border-[#5eead4] flex items-center justify-center shrink-0 shadow-2xs">
+                    <svg viewBox="0 0 24 24" className="w-5.5 h-5.5 fill-current" aria-hidden="true">
                       <path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zM2 22h19v-3H2v3zm14-12v7h3v-7h-3zm-4.5-9L2 6v2h19V6l-9.5-5z" />
                     </svg>
                   </div>
-                  <span className="font-display font-bold text-[11px] text-[#0b1536] leading-tight truncate">
+                  <span className="font-display font-extrabold text-[13.5px] sm:text-sm text-[#0b1536] leading-tight whitespace-nowrap">
                     Boardroom
                   </span>
                 </button>
               </div>
             </section>
 
-            {/* 5. LATEST RESULT TICKER ROW (Open Horizontal Row — No White Container) */}
+            {/* 5. LATEST RESULT TICKER ROW (Open Horizontal Row — No White Container, Zero Truncation at 360px) */}
             {(() => {
               const targetMatch = prevScheduled || nextScheduled;
               if (!targetMatch) return null;
@@ -2654,49 +2671,55 @@ function CareerPlayHubContent() {
                         fixture: fix,
                       })
                     }
-                    className="w-full border-t border-slate-300/70 pt-2.5 pb-1.5 px-1 hover:bg-slate-900/[0.03] flex items-center justify-between gap-1.5 text-[10.5px] sm:text-[11px] cursor-pointer transition-colors min-h-[44px] focus-visible:outline-2 focus-visible:outline-[#1d5eff]"
+                    className="w-full border-t border-slate-300/80 pt-2.5 pb-1.5 px-1 hover:bg-slate-900/[0.03] flex flex-col gap-1.5 cursor-pointer transition-colors min-h-[54px] group focus-visible:outline-2 focus-visible:outline-[#1d5eff]"
                   >
-                    <div className="flex items-center gap-1 shrink-0 whitespace-nowrap">
-                      <span className="font-display font-extrabold text-[#1d4ed8]">
-                        {prevScheduled ? 'Last Result' : 'Preview'}
-                      </span>
-                      <span className="text-[#475569] font-semibold text-[9.5px]">
-                        ({roundLabel})
+                    {/* Header Line: Label + Round on Left, Stats Action on Right */}
+                    <div className="flex items-center justify-between gap-2 w-full">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-display font-extrabold text-xs uppercase tracking-wider text-[#1e3a8a]">
+                          {prevScheduled ? 'Last Result' : 'Match Preview'}
+                        </span>
+                        <span className="text-[#334155] font-bold text-xs">
+                          &bull; {roundLabel}
+                        </span>
+                      </div>
+                      <span className="font-display font-extrabold text-[13.5px] sm:text-sm text-[#1e40af] group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
+                        <span>Stats</span>
+                        <span aria-hidden="true">&rsaquo;</span>
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-center gap-1.5 min-w-0 px-1">
-                      <OfficeClubJerseySvg
-                        club={homeClub}
-                        displayName={homeName}
-                        size="sm"
-                        uid="office-last-home"
-                        className="!w-4 !h-4"
-                      />
-                      <span className="font-display font-bold text-[#0b1536] truncate tracking-tight">
-                        {homeName}
-                      </span>
+                    {/* Matchup Line: Full Club Names + Score Pill with Zero Truncation at 360px */}
+                    <div className="flex items-center justify-between gap-2 w-full">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <OfficeClubJerseySvg
+                          club={homeClub}
+                          displayName={homeName}
+                          size="sm"
+                          uid="office-last-home"
+                          className="!w-5 !h-5 shrink-0"
+                        />
+                        <span className="font-display font-extrabold text-sm sm:text-[15px] text-[#0b1536] tracking-tight whitespace-nowrap">
+                          {homeName}
+                        </span>
+                      </div>
 
-                      <span className="px-1.5 py-0.5 rounded-md bg-white/80 text-[#0b1536] font-display font-black text-[9.5px] sm:text-[10px] shrink-0 whitespace-nowrap border border-slate-300/80">
+                      <span className="px-2.5 py-0.5 rounded-lg bg-[#0b1536] text-white font-display font-black text-[13.5px] sm:text-sm shrink-0 whitespace-nowrap shadow-2xs">
                         {scoreLabel}
                       </span>
 
-                      <OfficeClubJerseySvg
-                        club={awayClub}
-                        displayName={awayName}
-                        size="sm"
-                        uid="office-last-away"
-                        className="!w-4 !h-4"
-                      />
-                      <span className="font-semibold text-[#334155] truncate tracking-tight">
-                        {awayName}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1 shrink-0 pl-2 border-l border-slate-300/80 whitespace-nowrap">
-                      <span className="font-display font-bold text-[#1d4ed8]">
-                        Stats &rsaquo;
-                      </span>
+                      <div className="flex items-center justify-end gap-1.5 min-w-0">
+                        <span className="font-display font-extrabold text-sm sm:text-[15px] text-[#0b1536] tracking-tight whitespace-nowrap">
+                          {awayName}
+                        </span>
+                        <OfficeClubJerseySvg
+                          club={awayClub}
+                          displayName={awayName}
+                          size="sm"
+                          uid="office-last-away"
+                          className="!w-5 !h-5 shrink-0"
+                        />
+                      </div>
                     </div>
                   </button>
                 </section>
