@@ -2008,7 +2008,7 @@ function CareerPlayHubContent() {
                 <section
                   aria-label="Key Performance Indicators"
                   data-office-ui="true"
-                  className="office-reveal-2 rounded-2xl bg-white/88 backdrop-blur-md border border-slate-200/90 shadow-xs grid grid-cols-3 divide-x divide-slate-200/80 overflow-hidden select-none"
+                  className="office-reveal-2 grid grid-cols-3 divide-x divide-slate-300/75 py-1 select-none"
                 >
                   {/* Metric 1: Transfer Budget (Teal/Mint Financial Semantic) */}
                   <button
@@ -2019,7 +2019,7 @@ function CareerPlayHubContent() {
                       navigateToSection('transfers', 'market');
                       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                     }}
-                    className="px-2.5 sm:px-3 py-2 text-left hover:bg-teal-50/50 transition-colors cursor-pointer flex flex-col justify-between min-h-[58px] group focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#0d9488]"
+                    className="px-2 sm:px-3 py-1.5 text-left hover:bg-teal-500/[0.06] transition-colors cursor-pointer flex flex-col justify-between min-h-[56px] group focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#0d9488]"
                   >
                     <div className="flex items-center justify-between gap-1 w-full">
                       <span className="text-[9.5px] font-display font-extrabold uppercase tracking-wider text-[#0f766e] truncate">
@@ -2043,7 +2043,7 @@ function CareerPlayHubContent() {
                     data-office-ui="true"
                     aria-label={`League Position ${formatOrdinalRank(userRank)}, ${userStanding?.points || 0} points`}
                     onClick={() => handleTabChange('table')}
-                    className="px-2.5 sm:px-3 py-2 text-left hover:bg-blue-50/50 transition-colors cursor-pointer flex flex-col justify-between min-h-[58px] group focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#1d5eff]"
+                    className="px-2 sm:px-3 py-1.5 text-left hover:bg-blue-500/[0.06] transition-colors cursor-pointer flex flex-col justify-between min-h-[56px] group focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#1d5eff]"
                   >
                     <div className="flex items-center justify-between gap-1 w-full">
                       <span className="text-[9.5px] font-display font-extrabold uppercase tracking-wider text-[#1d4ed8] truncate">
@@ -2098,10 +2098,10 @@ function CareerPlayHubContent() {
                         setShowOfficeInboxModal(true);
                       }
                     }}
-                    className={`px-2.5 sm:px-3 py-2 text-left transition-colors cursor-pointer flex flex-col justify-between min-h-[58px] group focus-visible:outline-2 focus-visible:outline-offset-[-2px] ${
+                    className={`px-2 sm:px-3 py-1.5 text-left transition-colors cursor-pointer flex flex-col justify-between min-h-[56px] group focus-visible:outline-2 focus-visible:outline-offset-[-2px] ${
                       reviewTotal > 0
-                        ? 'bg-amber-50/60 hover:bg-amber-50/95 focus-visible:outline-[#d97706]'
-                        : 'hover:bg-teal-50/40 focus-visible:outline-[#0d9488]'
+                        ? 'hover:bg-amber-500/[0.08] focus-visible:outline-[#d97706]'
+                        : 'hover:bg-teal-500/[0.06] focus-visible:outline-[#0d9488]'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-1 w-full">
@@ -2386,52 +2386,38 @@ function CareerPlayHubContent() {
               </section>
             )}
 
-            {/* 3. CONTRACT REMINDERS (Lightly Separated List Rows — No Cards Inside Cards) */}
-            <section
-              id="managerial-alerts"
-              aria-label="Contracts to Review"
-              data-office-ui="true"
-              className={`office-reveal-5 rounded-2xl backdrop-blur-md px-3.5 py-2.5 select-none border shadow-xs ${
-                officeReviewCount > 0
-                  ? 'bg-white/88 border-amber-300/80'
-                  : 'bg-white/75 border-slate-200/90'
-              }`}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  {officeReviewCount > 0 ? (
+            {/* 3. CONTRACT REMINDERS (Only shown when action is required — no outer white card) */}
+            {officeReviewCount > 0 && (
+              <section
+                id="managerial-alerts"
+                aria-label="Contracts to Review"
+                data-office-ui="true"
+                className="office-reveal-5 border-y border-slate-300/70 py-2.5 px-1 select-none"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
                     <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-100 text-[#d97706] shrink-0">
                       <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current" aria-hidden="true">
                         <path d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 0 0 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
                       </svg>
                     </span>
-                  ) : (
-                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-teal-100 text-[#0d9488] shrink-0">
-                      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current" aria-hidden="true">
-                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-                      </svg>
-                    </span>
-                  )}
-                  <h2 className="font-display font-extrabold text-[12.5px] sm:text-[13px] text-[#0b1536] truncate">
-                    {officeReviewCount > 0
-                      ? `${officeReviewCount} Contract${officeReviewCount > 1 ? 's' : ''} to Review`
-                      : 'All Squad Contracts Secure'}
-                  </h2>
+                    <h2 className="font-display font-extrabold text-[12.5px] sm:text-[13px] text-[#0b1536] truncate">
+                      {officeReviewCount} Contract{officeReviewCount > 1 ? 's' : ''} to Review
+                    </h2>
+                  </div>
+
+                  <button
+                    type="button"
+                    data-office-ui="true"
+                    onClick={() => navigateToSection('transfers', 'contracts')}
+                    className="text-[11px] sm:text-[11.5px] font-display font-bold text-[#0f766e] hover:text-[#0d9488] hover:underline flex items-center gap-0.5 cursor-pointer shrink-0 min-h-[28px] focus-visible:outline-2 focus-visible:outline-[#0d9488]"
+                  >
+                    <span>View All ({save.squad.length})</span>
+                    <span aria-hidden="true">&rsaquo;</span>
+                  </button>
                 </div>
 
-                <button
-                  type="button"
-                  data-office-ui="true"
-                  onClick={() => navigateToSection('transfers', 'contracts')}
-                  className="text-[11px] sm:text-[11.5px] font-display font-bold text-[#0f766e] hover:text-[#0d9488] hover:underline flex items-center gap-0.5 cursor-pointer shrink-0 min-h-[28px] focus-visible:outline-2 focus-visible:outline-[#0d9488]"
-                >
-                  <span>View All ({save.squad.length})</span>
-                  <span aria-hidden="true">&rsaquo;</span>
-                </button>
-              </div>
-
-              {officeReviewCount > 0 ? (
-                <div className="divide-y divide-slate-200/80 border-t border-slate-200/80 mt-2">
+                <div className="divide-y divide-slate-300/65 border-t border-slate-300/65 mt-2">
                   {contractReviewPlayers.slice(0, 2).map((player) => {
                     const yearsLeft = Math.max(1, player.contractYears || 1);
                     return (
@@ -2442,7 +2428,7 @@ function CareerPlayHubContent() {
                         onClick={() =>
                           navigateToSection('transfers', 'contracts', `contract-player-${player.id}`)
                         }
-                        className="w-full py-2 flex items-center justify-between gap-2.5 text-left hover:bg-amber-50/45 transition-colors cursor-pointer min-h-[44px] group focus-visible:outline-2 focus-visible:outline-[#d97706]"
+                        className="w-full py-2 flex items-center justify-between gap-2.5 text-left hover:bg-amber-500/[0.06] transition-colors cursor-pointer min-h-[44px] group focus-visible:outline-2 focus-visible:outline-[#d97706]"
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <span className="w-2 h-2 rounded-full bg-[#f59e0b] shrink-0" aria-hidden="true" />
@@ -2458,7 +2444,7 @@ function CareerPlayHubContent() {
                         </div>
 
                         <div className="flex items-center gap-1.5 shrink-0">
-                          <span className="px-2 py-0.5 rounded-full bg-amber-50 text-[#b45309] border border-amber-200/90 font-display font-bold text-[10px] whitespace-nowrap">
+                          <span className="px-2 py-0.5 rounded-full bg-amber-100/90 text-[#b45309] border border-amber-300/85 font-display font-bold text-[10px] whitespace-nowrap">
                             {yearsLeft} {yearsLeft === 1 ? 'yr' : 'yrs'} left
                           </span>
                           <span className="text-[#d97706] font-extrabold text-xs group-hover:translate-x-0.5 transition-transform" aria-hidden="true">
@@ -2469,20 +2455,16 @@ function CareerPlayHubContent() {
                     );
                   })}
                 </div>
-              ) : (
-                <p className="text-[11px] font-medium text-[#334155] mt-1">
-                  No players are in the final year of their deal.
-                </p>
-              )}
-            </section>
+              </section>
+            )}
 
-            {/* 4. COMPACT ICON-BASED QUICK ACTIONS (Outer Card Container Removed) */}
+            {/* 4. COMPACT ICON-BASED QUICK ACTIONS (Open Canvas — No White Card Backgrounds) */}
             <section
               aria-label="Quick Actions"
               data-office-ui="true"
               className="office-reveal-6 pt-1 space-y-2 select-none"
             >
-              <div className="flex items-center justify-between gap-2 px-0.5">
+              <div className="flex items-center justify-between gap-2 px-1">
                 <h2 className="font-display font-extrabold text-[11px] uppercase tracking-wider text-[#334155]">
                   Quick Actions
                 </h2>
@@ -2491,7 +2473,7 @@ function CareerPlayHubContent() {
                   data-office-ui="true"
                   aria-expanded={showOfficeSeasonDrawer}
                   onClick={() => setShowOfficeSeasonDrawer((prev) => !prev)}
-                  className="text-[11px] font-display font-bold text-[#1d4ed8] hover:text-[#1d5eff] inline-flex items-center gap-1 cursor-pointer min-h-[30px] px-2.5 py-0.5 rounded-full bg-white/65 hover:bg-white/95 border border-slate-300/80 transition-colors focus-visible:outline-2 focus-visible:outline-[#1d5eff]"
+                  className="text-[11px] font-display font-bold text-[#1d4ed8] hover:text-[#1d5eff] inline-flex items-center gap-1 cursor-pointer min-h-[32px] px-1.5 py-0.5 rounded-lg hover:bg-blue-500/10 transition-colors focus-visible:outline-2 focus-visible:outline-[#1d5eff]"
                 >
                   <span>Manage your season</span>
                   <span aria-hidden="true" className="text-[10px]">
@@ -2502,7 +2484,7 @@ function CareerPlayHubContent() {
 
               {/* Collapsible Fast-Forward / Calendar Strip */}
               {showOfficeSeasonDrawer && (
-                <div className="rounded-2xl bg-white/85 backdrop-blur-md border border-slate-200/90 p-2.5 space-y-2 shadow-xs">
+                <div className="border-y border-slate-300/70 py-2.5 px-1 space-y-2">
                   <div className="flex items-center justify-between text-[10.5px] font-bold text-[#334155]">
                     <span>Fast Forward Calendar</span>
                     {injuredCount > 0 && (
@@ -2515,7 +2497,7 @@ function CareerPlayHubContent() {
                       data-office-ui="true"
                       onClick={handleContinueCalendar}
                       disabled={simulating}
-                      className="office-subcard py-2 px-2 rounded-xl font-display font-bold text-[11px] text-[#1d4ed8] cursor-pointer min-h-[36px]"
+                      className="office-subcard py-2 px-2 rounded-xl font-display font-bold text-[11px] text-[#1d4ed8] cursor-pointer min-h-[40px]"
                     >
                       +1 Day
                     </button>
@@ -2524,7 +2506,7 @@ function CareerPlayHubContent() {
                       data-office-ui="true"
                       onClick={() => setPendingFastForward('next_match')}
                       disabled={simulating || !nextScheduled}
-                      className="office-subcard py-2 px-2 rounded-xl font-display font-bold text-[11px] text-[#0b1536] cursor-pointer min-h-[36px]"
+                      className="office-subcard py-2 px-2 rounded-xl font-display font-bold text-[11px] text-[#0b1536] cursor-pointer min-h-[40px]"
                     >
                       Next Match
                     </button>
@@ -2533,7 +2515,7 @@ function CareerPlayHubContent() {
                       data-office-ui="true"
                       onClick={() => setPendingFastForward('next_week')}
                       disabled={simulating}
-                      className="office-subcard py-2 px-2 rounded-xl font-display font-bold text-[11px] text-[#0b1536] cursor-pointer min-h-[36px]"
+                      className="office-subcard py-2 px-2 rounded-xl font-display font-bold text-[11px] text-[#0b1536] cursor-pointer min-h-[40px]"
                     >
                       7 Days
                     </button>
@@ -2542,7 +2524,7 @@ function CareerPlayHubContent() {
                       data-office-ui="true"
                       onClick={() => setPendingFastForward('next_month')}
                       disabled={simulating}
-                      className="office-subcard py-2 px-2 rounded-xl font-display font-bold text-[11px] text-[#0b1536] cursor-pointer min-h-[36px]"
+                      className="office-subcard py-2 px-2 rounded-xl font-display font-bold text-[11px] text-[#0b1536] cursor-pointer min-h-[40px]"
                     >
                       1 Month
                     </button>
@@ -2550,7 +2532,7 @@ function CareerPlayHubContent() {
                 </div>
               )}
 
-              {/* 4-Column Compact Icon Shortcut Bar */}
+              {/* 4-Column Colourful Icon Shortcuts Directly on Page Background */}
               <div className="grid grid-cols-4 gap-2">
                 {/* Tactics (Teal Squad Semantic) */}
                 <button
@@ -2560,10 +2542,10 @@ function CareerPlayHubContent() {
                     handleTabChange('squad');
                     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                   }}
-                  className="rounded-2xl bg-white/75 hover:bg-white border border-slate-200/90 py-2 px-1.5 flex flex-col items-center justify-center gap-1 cursor-pointer shadow-2xs transition-all active:scale-95 min-h-[58px] focus-visible:outline-2 focus-visible:outline-[#0d9488]"
+                  className="rounded-2xl hover:bg-teal-500/[0.06] py-1.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 min-h-[58px] focus-visible:outline-2 focus-visible:outline-[#0d9488]"
                 >
-                  <div className="w-7 h-7 rounded-xl bg-[#ccfbf1] text-[#0f766e] flex items-center justify-center shrink-0">
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current" strokeWidth="2" aria-hidden="true">
+                  <div className="w-9 h-9 rounded-2xl bg-[#ccfbf1] text-[#0f766e] border border-teal-200/80 flex items-center justify-center shrink-0">
+                    <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-none stroke-current" strokeWidth="2" aria-hidden="true">
                       <circle cx="6" cy="6" r="2" fill="currentColor" />
                       <circle cx="18" cy="6" r="2" fill="currentColor" />
                       <circle cx="12" cy="12" r="2" fill="currentColor" />
@@ -2585,10 +2567,10 @@ function CareerPlayHubContent() {
                     handleTabChange('fixtures');
                     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                   }}
-                  className="rounded-2xl bg-white/75 hover:bg-white border border-slate-200/90 py-2 px-1.5 flex flex-col items-center justify-center gap-1 cursor-pointer shadow-2xs transition-all active:scale-95 min-h-[58px] focus-visible:outline-2 focus-visible:outline-[#1d5eff]"
+                  className="rounded-2xl hover:bg-blue-500/[0.06] py-1.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 min-h-[58px] focus-visible:outline-2 focus-visible:outline-[#1d5eff]"
                 >
-                  <div className="w-7 h-7 rounded-xl bg-[#dbeafe] text-[#1d4ed8] flex items-center justify-center shrink-0">
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+                  <div className="w-9 h-9 rounded-2xl bg-[#dbeafe] text-[#1d4ed8] border border-blue-200/80 flex items-center justify-center shrink-0">
+                    <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
                       <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm-12-8h5v5H7v-5z" />
                     </svg>
                   </div>
@@ -2605,10 +2587,10 @@ function CareerPlayHubContent() {
                     handleTabChange('squad');
                     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                   }}
-                  className="rounded-2xl bg-white/75 hover:bg-white border border-slate-200/90 py-2 px-1.5 flex flex-col items-center justify-center gap-1 cursor-pointer shadow-2xs transition-all active:scale-95 min-h-[58px] focus-visible:outline-2 focus-visible:outline-[#0d9488]"
+                  className="rounded-2xl hover:bg-emerald-500/[0.06] py-1.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 min-h-[58px] focus-visible:outline-2 focus-visible:outline-[#0d9488]"
                 >
-                  <div className="w-7 h-7 rounded-xl bg-[#d1fae5] text-[#047857] flex items-center justify-center shrink-0">
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+                  <div className="w-9 h-9 rounded-2xl bg-[#d1fae5] text-[#047857] border border-emerald-200/80 flex items-center justify-center shrink-0">
+                    <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
                       <path d="M20.57 14.86 22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z" />
                     </svg>
                   </div>
@@ -2622,10 +2604,10 @@ function CareerPlayHubContent() {
                   type="button"
                   data-office-ui="true"
                   onClick={() => navigateToSection('transfers', 'board', 'board-room-section')}
-                  className="rounded-2xl bg-white/75 hover:bg-white border border-slate-200/90 py-2 px-1.5 flex flex-col items-center justify-center gap-1 cursor-pointer shadow-2xs transition-all active:scale-95 min-h-[58px] focus-visible:outline-2 focus-visible:outline-[#0d9488]"
+                  className="rounded-2xl hover:bg-teal-500/[0.06] py-1.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 min-h-[58px] focus-visible:outline-2 focus-visible:outline-[#0d9488]"
                 >
-                  <div className="w-7 h-7 rounded-xl bg-[#ccfbf1] text-[#0f766e] flex items-center justify-center shrink-0">
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+                  <div className="w-9 h-9 rounded-2xl bg-[#ccfbf1] text-[#0f766e] border border-teal-200/80 flex items-center justify-center shrink-0">
+                    <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
                       <path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zM2 22h19v-3H2v3zm14-12v7h3v-7h-3zm-4.5-9L2 6v2h19V6l-9.5-5z" />
                     </svg>
                   </div>
@@ -2636,7 +2618,7 @@ function CareerPlayHubContent() {
               </div>
             </section>
 
-            {/* 5. LATEST RESULT TICKER ROW (Lightweight Tertiary Access) */}
+            {/* 5. LATEST RESULT TICKER ROW (Open Horizontal Row — No White Container) */}
             {(() => {
               const targetMatch = prevScheduled || nextScheduled;
               if (!targetMatch) return null;
@@ -2672,7 +2654,7 @@ function CareerPlayHubContent() {
                         fixture: fix,
                       })
                     }
-                    className="w-full rounded-2xl bg-white/70 hover:bg-white/95 border border-slate-200/90 px-2.5 sm:px-3 py-2 flex items-center justify-between gap-1 text-[10px] sm:text-[11px] cursor-pointer transition-colors min-h-[44px] focus-visible:outline-2 focus-visible:outline-[#1d5eff]"
+                    className="w-full border-t border-slate-300/70 pt-2.5 pb-1.5 px-1 hover:bg-slate-900/[0.03] flex items-center justify-between gap-1.5 text-[10.5px] sm:text-[11px] cursor-pointer transition-colors min-h-[44px] focus-visible:outline-2 focus-visible:outline-[#1d5eff]"
                   >
                     <div className="flex items-center gap-1 shrink-0 whitespace-nowrap">
                       <span className="font-display font-extrabold text-[#1d4ed8]">
@@ -2695,7 +2677,7 @@ function CareerPlayHubContent() {
                         {homeName}
                       </span>
 
-                      <span className="px-1.5 py-0.5 rounded-md bg-slate-100 text-[#0b1536] font-display font-black text-[9.5px] sm:text-[10px] shrink-0 whitespace-nowrap border border-slate-300/80">
+                      <span className="px-1.5 py-0.5 rounded-md bg-white/80 text-[#0b1536] font-display font-black text-[9.5px] sm:text-[10px] shrink-0 whitespace-nowrap border border-slate-300/80">
                         {scoreLabel}
                       </span>
 
