@@ -8,6 +8,7 @@ import {
   Club,
 } from './types';
 import { getEffectiveClubName, getAllClubs } from './clubs';
+import { getAiClubMatchdaySquad } from './squadGenerator';
 
 /**
  * Deterministic pseudo-random number generator for consistent historical stats.
@@ -154,13 +155,50 @@ export function computeCurrentSeasonStats(
         (s.cardId === player.cardId || s.name.toLowerCase() === player.name.toLowerCase())
     ).length;
 
-    // Check if player participated (either from match events or lineup)
-    const inEvents = (fix.events || []).some((e) => e.playerName === player.name && e.clubId === save.club.id);
-    const inStarterIds = (save.lineup?.starterIds || []).includes(player.id);
-    const isStarter = inStarterIds;
+    // Check assists in fixture (check structured scorers first, then events)
+    let assistsInMatch = 0;
+    const scorerAssists = (fix.scorers || []).filter(
+      (s) =>
+        s.clubId === save.club.id &&
+        ((s.assisterCardId && (s.assisterCardId === player.cardId || s.assisterCardId === player.id)) ||
+          (s.assisterName && s.assisterName.toLowerCase() === player.name.toLowerCase()))
+    ).length;
+    assistsInMatch += scorerAssists;
 
-    // An appearance is counted if in events or starter
-    if (isStarter || inEvents || goalsInMatch > 0) {
+    if (scorerAssists === 0) {
+      for (const ev of fix.events || []) {
+        if (ev.clubId === save.club.id && ev.type === 'goal') {
+          if (ev.assisterName && ev.assisterName.toLowerCase() === player.name.toLowerCase()) {
+            assistsInMatch += 1;
+          } else if (ev.detail?.includes('Assist:')) {
+            const match = ev.detail.match(/Assist:\s*([^\n\r,\)]+)/i);
+            if (match && match[1] && match[1].trim().toLowerCase() === player.name.toLowerCase()) {
+              assistsInMatch += 1;
+            }
+          }
+        }
+      }
+    }
+
+    // Check if player participated (prefer fixture-persisted IDs, fallback to current lineup for legacy saves)
+    const inEvents = (fix.events || []).some(
+      (e) =>
+        e.clubId === save.club.id &&
+        (e.playerName === player.name || e.subPlayerIn === player.name || e.assisterName === player.name)
+    );
+    const hasPersistedStarters = Array.isArray(fix.starterPlayerIds) && fix.starterPlayerIds.length > 0;
+    const hasPersistedParticipants = Array.isArray(fix.participatingPlayerIds) && fix.participatingPlayerIds.length > 0;
+
+    const isStarter = hasPersistedStarters
+      ? fix.starterPlayerIds!.includes(player.id)
+      : (save.lineup?.starterIds || []).includes(player.id);
+
+    const isParticipant = hasPersistedParticipants
+      ? fix.participatingPlayerIds!.includes(player.id)
+      : isStarter || inEvents || goalsInMatch > 0 || assistsInMatch > 0;
+
+    // An appearance is counted if participant, in events, or scored/assisted
+    if (isParticipant || isStarter || inEvents || goalsInMatch > 0 || assistsInMatch > 0) {
       leagueStats.appearances += 1;
       if (isStarter) {
         leagueStats.starts += 1;
@@ -169,6 +207,7 @@ export function computeCurrentSeasonStats(
       }
 
       leagueStats.goals += goalsInMatch;
+      leagueStats.assists += assistsInMatch;
 
       // Clean sheet for GK/DEF if oppGoals === 0
       if (isGkOrDef && oppGoals === 0) {
@@ -180,19 +219,26 @@ export function computeCurrentSeasonStats(
         leagueStats.manOfTheMatch += 1;
       }
 
-      // Events: cards & assists
+      // Events: cards
       for (const ev of fix.events || []) {
         if (ev.playerName === player.name && ev.clubId === save.club.id) {
           if (ev.type === 'yellow_card') leagueStats.yellowCards += 1;
           if (ev.type === 'red_card') leagueStats.redCards += 1;
-          if (ev.type === 'goal' && ev.detail?.includes('Assist:')) {
-            leagueStats.assists += 1;
-          }
         }
       }
 
-      // Rating: derived from form or motm
-      const matchRating = goalsInMatch >= 2 ? 8.8 : goalsInMatch === 1 ? 7.9 : (fix.manOfTheMatch?.name === player.name ? 8.5 : 7.2);
+      // Rating: prefer persisted fixture playerRating, fallback to derived rating
+      const persistedRating = fix.playerRatings?.[player.id];
+      const matchRating =
+        typeof persistedRating === 'number'
+          ? persistedRating
+          : goalsInMatch >= 2
+          ? 8.8
+          : goalsInMatch === 1
+          ? 7.9
+          : fix.manOfTheMatch?.name === player.name
+          ? 8.5
+          : 7.2;
       totalLeagueRatings += matchRating;
     }
   }
@@ -235,16 +281,52 @@ export function computeCurrentSeasonStats(
             (s.cardId === player.cardId || s.name.toLowerCase() === player.name.toLowerCase())
         ).length;
 
-        const inEvents = (fix.events || []).some((e) => e.playerName === player.name && e.clubId === save.club.id);
-        const inStarterIds = (save.lineup?.starterIds || []).includes(player.id);
-        const isStarter = inStarterIds;
+        let assistsInMatch = 0;
+        const scorerAssists = (fix.scorers || []).filter(
+          (s) =>
+            s.clubId === save.club.id &&
+            ((s.assisterCardId && (s.assisterCardId === player.cardId || s.assisterCardId === player.id)) ||
+              (s.assisterName && s.assisterName.toLowerCase() === player.name.toLowerCase()))
+        ).length;
+        assistsInMatch += scorerAssists;
 
-        if (isStarter || inEvents || goalsInMatch > 0) {
+        if (scorerAssists === 0) {
+          for (const ev of fix.events || []) {
+            if (ev.clubId === save.club.id && ev.type === 'goal') {
+              if (ev.assisterName && ev.assisterName.toLowerCase() === player.name.toLowerCase()) {
+                assistsInMatch += 1;
+              } else if (ev.detail?.includes('Assist:')) {
+                const match = ev.detail.match(/Assist:\s*([^\n\r,\)]+)/i);
+                if (match && match[1] && match[1].trim().toLowerCase() === player.name.toLowerCase()) {
+                  assistsInMatch += 1;
+                }
+              }
+            }
+          }
+        }
+
+        const inEvents = (fix.events || []).some(
+          (e) =>
+            e.clubId === save.club.id &&
+            (e.playerName === player.name || e.subPlayerIn === player.name || e.assisterName === player.name)
+        );
+        const hasPersistedStarters = Array.isArray(fix.starterPlayerIds) && fix.starterPlayerIds.length > 0;
+        const hasPersistedParticipants = Array.isArray(fix.participatingPlayerIds) && fix.participatingPlayerIds.length > 0;
+
+        const isStarter = hasPersistedStarters
+          ? fix.starterPlayerIds!.includes(player.id)
+          : (save.lineup?.starterIds || []).includes(player.id);
+        const isParticipant = hasPersistedParticipants
+          ? fix.participatingPlayerIds!.includes(player.id)
+          : isStarter || inEvents || goalsInMatch > 0 || assistsInMatch > 0;
+
+        if (isParticipant || isStarter || inEvents || goalsInMatch > 0 || assistsInMatch > 0) {
           cupStats.appearances += 1;
           if (isStarter) cupStats.starts += 1;
           else cupStats.subAppearances += 1;
 
           cupStats.goals += goalsInMatch;
+          cupStats.assists += assistsInMatch;
 
           if (isGkOrDef && oppGoals === 0) {
             cupStats.cleanSheets += 1;
@@ -258,13 +340,18 @@ export function computeCurrentSeasonStats(
             if (ev.playerName === player.name && ev.clubId === save.club.id) {
               if (ev.type === 'yellow_card') cupStats.yellowCards += 1;
               if (ev.type === 'red_card') cupStats.redCards += 1;
-              if (ev.type === 'goal' && ev.detail?.includes('Assist:')) {
-                cupStats.assists += 1;
-              }
             }
           }
 
-          const matchRating = goalsInMatch >= 2 ? 8.7 : goalsInMatch === 1 ? 8.0 : 7.2;
+          const persistedRating = fix.playerRatings?.[player.id];
+          const matchRating =
+            typeof persistedRating === 'number'
+              ? persistedRating
+              : goalsInMatch >= 2
+              ? 8.7
+              : goalsInMatch === 1
+              ? 8.0
+              : 7.2;
           totalCupRatings += matchRating;
         }
       }
@@ -471,17 +558,23 @@ export function getLeagueLeaderboards(
     // Clean sheets
     if (fix.awayScore === 0) {
       const isHomeUser = fix.homeClubId === userClubId;
+      const aiHomeGk = homeClub
+        ? getAiClubMatchdaySquad(homeClub).starters.find((p) => p.position === 'GK')?.name
+        : undefined;
       const gkName = isHomeUser
-        ? (userGkName || `${homeClub?.shortName || 'Club'} Keeper`)
-        : `${homeClub?.shortName || fix.homeClubId.toUpperCase()} Keeper`;
+        ? (userGkName || aiHomeGk || `${homeClub?.shortName || 'Club'} Keeper`)
+        : (aiHomeGk || `${homeClub?.shortName || fix.homeClubId.toUpperCase()} Keeper`);
       const cur = cleanSheetCounts.get(gkName) || { count: 0, clubId: fix.homeClubId, apps: 0 };
       cleanSheetCounts.set(gkName, { ...cur, count: cur.count + 1 });
     }
     if (fix.homeScore === 0) {
       const isAwayUser = fix.awayClubId === userClubId;
+      const aiAwayGk = awayClub
+        ? getAiClubMatchdaySquad(awayClub).starters.find((p) => p.position === 'GK')?.name
+        : undefined;
       const gkName = isAwayUser
-        ? (userGkName || `${awayClub?.shortName || 'Club'} Keeper`)
-        : `${awayClub?.shortName || fix.awayClubId.toUpperCase()} Keeper`;
+        ? (userGkName || aiAwayGk || `${awayClub?.shortName || 'Club'} Keeper`)
+        : (aiAwayGk || `${awayClub?.shortName || fix.awayClubId.toUpperCase()} Keeper`);
       const cur = cleanSheetCounts.get(gkName) || { count: 0, clubId: fix.awayClubId, apps: 0 };
       cleanSheetCounts.set(gkName, { ...cur, count: cur.count + 1 });
     }

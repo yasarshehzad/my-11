@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   LeagueFixture,
   CupFixture,
@@ -11,6 +11,7 @@ import {
 import { getEffectiveClubName, getClubsWithUserClub } from '../../career/clubs';
 import { findAnyClub, CUP_IDS } from '../../career/cups';
 import { formatCareerDate } from '../../career/formatters';
+import { getAiClubMatchdaySquad } from '../../career/squadGenerator';
 
 export interface MatchOverviewModalProps {
   type: 'result' | 'preview';
@@ -99,25 +100,18 @@ export function MatchOverviewModal({
   };
   const motmClub = clubsMap.get(motm.clubId) || homeClub;
 
-  // Opponent key threat detection for pre-match preview
+  // Opponent squad and key threat detection for pre-match preview
   const opponentClub = isUserHome ? awayClub : homeClub;
-  const DANGER_STRIKERS_BY_CLUB: Record<string, { name: string; position: string; rating: number }> = {
-    merseyside_red: { name: 'Mohamed Salah', position: 'FWD', rating: 89 },
-    manchester_blue: { name: 'Erling Haaland', position: 'FWD', rating: 91 },
-    london_red: { name: 'Bukayo Saka', position: 'FWD', rating: 88 },
-    london_blue: { name: 'Cole Palmer', position: 'MID', rating: 86 },
-    north_london_white: { name: 'Son Heung-min', position: 'FWD', rating: 87 },
-    manchester_red: { name: 'Bruno Fernandes', position: 'MID', rating: 86 },
-    west_midlands_claret: { name: 'Ollie Watkins', position: 'FWD', rating: 85 },
-    tyne_wear_black_white: { name: 'Alexander Isak', position: 'FWD', rating: 86 },
-  };
+  const opponentSquadData = useMemo(() => {
+    return getAiClubMatchdaySquad(opponentClub, save.season);
+  }, [opponentClub, save.season]);
 
-  const dangerPlayer =
-    DANGER_STRIKERS_BY_CLUB[opponentClub.id] || {
-      name: `${opponentClub.shortName} Lead Striker`,
-      position: 'FWD',
-      rating: Math.max(76, Math.min(88, Math.round(opponentClub.reputation * 0.95))),
-    };
+  const dangerPlayer = opponentSquadData.dangerPlayer;
+
+  const [activeTab, setActiveTab] = useState<'stats' | 'ratings'>('stats');
+
+  const hasPlayerRatings = fixture.playerRatings && Object.keys(fixture.playerRatings).length > 0;
+  const playerMap = useMemo(() => new Map(save.squad.map((p) => [p.id, p])), [save.squad]);
 
   return (
     <div
@@ -180,13 +174,34 @@ export function MatchOverviewModal({
             <div className="flex flex-col items-center justify-center shrink-0 px-2 space-y-1">
               {fixture.played ? (
                 <div className="flex flex-col items-center gap-1">
-                  <div className="bg-white border-2 border-indigo-200/80 px-3.5 py-1.5 rounded-xl font-mono font-black text-lg sm:text-2xl text-[var(--office-text-primary)] shadow-sm">
-                    {fixture.homeScore} - {fixture.awayScore}
+                  <div className="flex items-center gap-1.5">
+                    <div className="bg-white border-2 border-indigo-200/80 px-3.5 py-1.5 rounded-xl font-mono font-black text-lg sm:text-2xl text-[var(--office-text-primary)] shadow-sm">
+                      {fixture.homeScore} - {fixture.awayScore}
+                    </div>
+                    {fixture.afterExtraTime && (
+                      <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                        AET
+                      </span>
+                    )}
                   </div>
                   {cupFixture?.penalties && (
-                    <span className="text-[10px] font-mono text-amber-600 font-bold">
-                      ({cupFixture.penalties.homePenalties} - {cupFixture.penalties.awayPenalties} pens)
-                    </span>
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="text-[10px] font-mono text-amber-600 font-bold">
+                        ({cupFixture.penalties.homePenalties} - {cupFixture.penalties.awayPenalties} pens)
+                      </span>
+                      {cupFixture.penalties.kicks && cupFixture.penalties.kicks.length > 0 && (
+                        <div className="flex items-center gap-1 mt-0.5" title="Penalty Shootout kicks">
+                          {cupFixture.penalties.kicks.map((k, i) => (
+                            <span
+                              key={i}
+                              className={`w-2 h-2 rounded-full inline-block ${
+                                k.scored ? 'bg-emerald-500' : 'bg-rose-500'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   )}
                   {isUserMatch && (
                     <span
@@ -261,10 +276,19 @@ export function MatchOverviewModal({
                     </span>
                     {homeScorers.length > 0 ? (
                       homeScorers.map((s, idx) => (
-                        <div key={idx} className="flex items-center gap-1 text-[11px] text-[var(--office-text-primary)]">
-                          <span>⚽</span>
-                          <span className="font-bold">{s.name}</span>
-                          <span className="text-[var(--office-text-muted)] text-[10px]">({s.minute}&apos;)</span>
+                        <div key={idx} className="flex flex-col text-[11px] text-[var(--office-text-primary)]">
+                          <div className="flex items-center gap-1">
+                            <span>⚽</span>
+                            <span className="font-bold">{s.name}</span>
+                            <span className="text-[var(--office-text-muted)] text-[10px]">
+                              ({s.minute}&apos;{s.isPenalty ? ' pen' : ''})
+                            </span>
+                          </div>
+                          {s.assisterName && (
+                            <span className="text-[9px] text-[var(--office-text-muted)] pl-4 italic">
+                              assist: {s.assisterName}
+                            </span>
+                          )}
                         </div>
                       ))
                     ) : (
@@ -279,10 +303,19 @@ export function MatchOverviewModal({
                     </span>
                     {awayScorers.length > 0 ? (
                       awayScorers.map((s, idx) => (
-                        <div key={idx} className="flex items-center gap-1 text-[11px] text-[var(--office-text-primary)]">
-                          <span>⚽</span>
-                          <span className="font-bold">{s.name}</span>
-                          <span className="text-[var(--office-text-muted)] text-[10px]">({s.minute}&apos;)</span>
+                        <div key={idx} className="flex flex-col text-[11px] text-[var(--office-text-primary)]">
+                          <div className="flex items-center gap-1">
+                            <span>⚽</span>
+                            <span className="font-bold">{s.name}</span>
+                            <span className="text-[var(--office-text-muted)] text-[10px]">
+                              ({s.minute}&apos;{s.isPenalty ? ' pen' : ''})
+                            </span>
+                          </div>
+                          {s.assisterName && (
+                            <span className="text-[9px] text-[var(--office-text-muted)] pl-4 italic">
+                              assist: {s.assisterName}
+                            </span>
+                          )}
                         </div>
                       ))
                     ) : (
@@ -314,48 +347,148 @@ export function MatchOverviewModal({
               </div>
             </div>
 
-            {/* Manager Match Statistics */}
-            <div className="office-subcard rounded-2xl p-4 sm:p-5 space-y-4">
-              <div className="text-[10px] font-black uppercase text-[var(--office-text-muted)] tracking-wider flex items-center justify-between">
-                <span>📊 Match Statistics Comparison</span>
-                <span className="text-[9px] text-[var(--office-text-muted)]">Official Match Data</span>
+            {/* Tab switch if player ratings exist */}
+            {hasPlayerRatings && (
+              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl gap-1">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('stats')}
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                    activeTab === 'stats'
+                      ? 'bg-white dark:bg-slate-900 text-[var(--office-text-primary)] shadow-xs'
+                      : 'text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)]'
+                  }`}
+                >
+                  📊 Match Stats
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('ratings')}
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                    activeTab === 'ratings'
+                      ? 'bg-white dark:bg-slate-900 text-[var(--office-text-primary)] shadow-xs'
+                      : 'text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)]'
+                  }`}
+                >
+                  ⭐ Player Ratings
+                </button>
               </div>
+            )}
 
-              {/* Possession Comparison Bar */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-xs font-mono font-bold">
-                  <span className="text-[#1d5eff]">{stats.homePossession}%</span>
-                  <span className="text-[10px] font-sans uppercase font-bold text-[var(--office-text-muted)]">Possession</span>
-                  <span className="text-[#7c3aed]">{stats.awayPossession}%</span>
+            {/* Player Ratings Tab Content */}
+            {activeTab === 'ratings' && hasPlayerRatings && (
+              <div className="office-subcard rounded-2xl p-4 sm:p-5 space-y-3">
+                <div className="text-[10px] font-black uppercase text-[var(--office-text-muted)] tracking-wider flex items-center justify-between">
+                  <span>⭐ Matchday Performance Ratings</span>
+                  <span className="text-[9px] text-[var(--office-text-muted)]">Official 1.0 - 10.0 Scale</span>
                 </div>
-                <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden flex">
-                  <div
-                    className="h-full bg-[#1d5eff] transition-all duration-500"
-                    style={{ width: `${stats.homePossession}%` }}
-                  />
-                  <div
-                    className="h-full bg-[#7c3aed] transition-all duration-500"
-                    style={{ width: `${stats.awayPossession}%` }}
-                  />
+                <div className="divide-y divide-[var(--office-divider)]">
+                  {Object.entries(fixture.playerRatings || {})
+                    .map(([id, rating]) => {
+                      const p = playerMap.get(id);
+                      const isStarter = (fixture.starterPlayerIds || []).includes(id);
+                      return {
+                        id,
+                        rating: Number(rating),
+                        name: p ? p.name : id,
+                        position: p ? p.position : 'SUB',
+                        isStarter,
+                        isMotm: motm.name.toLowerCase() === (p ? p.name.toLowerCase() : id.toLowerCase()),
+                      };
+                    })
+                    .sort((a, b) => b.rating - a.rating)
+                    .map((item) => (
+                      <div key={item.id} className="py-2 flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="w-8 text-[9px] font-bold px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-center text-[var(--office-text-muted)]">
+                            {item.position}
+                          </span>
+                          <span className="font-bold text-[var(--office-text-primary)] truncate">
+                            {item.name}
+                          </span>
+                          {item.isStarter ? (
+                            <span className="text-[8px] uppercase font-bold text-indigo-500">XI</span>
+                          ) : (
+                            <span className="text-[8px] uppercase font-bold text-slate-400">SUB</span>
+                          )}
+                          {item.isMotm && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 font-bold">
+                              ★ MOTM
+                            </span>
+                          )}
+                        </div>
+                        <span
+                          className={`font-mono font-black text-xs px-2 py-0.5 rounded ${
+                            item.rating >= 8.0
+                              ? 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300'
+                              : item.rating >= 7.0
+                              ? 'bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300'
+                              : item.rating >= 6.0
+                              ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                              : 'bg-rose-100 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300'
+                          }`}
+                        >
+                          {item.rating.toFixed(1)}
+                        </span>
+                      </div>
+                    ))}
                 </div>
               </div>
+            )}
 
-              {/* Stat Comparison Rows */}
-              <div className="space-y-2.5 pt-1 text-xs">
-                {[
-                  { label: 'Total Shots', home: stats.homeShots, away: stats.awayShots },
-                  { label: 'Shots on Target', home: stats.homeShotsOnTarget, away: stats.awayShotsOnTarget },
-                  { label: 'Corners', home: stats.homeCorners, away: stats.awayCorners },
-                  { label: 'Fouls Committed', home: stats.homeFouls, away: stats.awayFouls },
-                ].map((row, idx) => (
-                  <div key={idx} className="flex items-center justify-between py-1.5 border-b border-[var(--office-divider)] last:border-b-0">
-                    <span className="font-mono font-bold text-[var(--office-text-primary)] w-12 text-left">{row.home}</span>
-                    <span className="text-[11px] font-bold text-[var(--office-text-muted)] uppercase tracking-wide">{row.label}</span>
-                    <span className="font-mono font-bold text-[var(--office-text-primary)] w-12 text-right">{row.away}</span>
+            {/* Manager Match Statistics (shown if stats active or no ratings) */}
+            {(activeTab === 'stats' || !hasPlayerRatings) && (
+              <div className="office-subcard rounded-2xl p-4 sm:p-5 space-y-4">
+                <div className="text-[10px] font-black uppercase text-[var(--office-text-muted)] tracking-wider flex items-center justify-between">
+                  <span>📊 Match Statistics Comparison</span>
+                  <span className="text-[9px] text-[var(--office-text-muted)]">Official Match Data</span>
+                </div>
+
+                {/* Possession Comparison Bar */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs font-mono font-bold">
+                    <span className="text-[#1d5eff]">{stats.homePossession}%</span>
+                    <span className="text-[10px] font-sans uppercase font-bold text-[var(--office-text-muted)]">Possession</span>
+                    <span className="text-[#7c3aed]">{stats.awayPossession}%</span>
                   </div>
-                ))}
+                  <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden flex">
+                    <div
+                      className="h-full bg-[#1d5eff] transition-all duration-500"
+                      style={{ width: `${stats.homePossession}%` }}
+                    />
+                    <div
+                      className="h-full bg-[#7c3aed] transition-all duration-500"
+                      style={{ width: `${stats.awayPossession}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Stat Comparison Rows */}
+                <div className="space-y-2.5 pt-1 text-xs">
+                  {[
+                    ...(stats.homeXg !== undefined && stats.awayXg !== undefined
+                      ? [{ label: 'Expected Goals (xG)', home: stats.homeXg.toFixed(2), away: stats.awayXg.toFixed(2) }]
+                      : []),
+                    { label: 'Total Shots', home: stats.homeShots, away: stats.awayShots },
+                    { label: 'Shots on Target', home: stats.homeShotsOnTarget, away: stats.awayShotsOnTarget },
+                    ...(stats.homeBigChances !== undefined && stats.awayBigChances !== undefined
+                      ? [{ label: 'Big Chances', home: stats.homeBigChances, away: stats.awayBigChances }]
+                      : []),
+                    ...(stats.homeSaves !== undefined && stats.awaySaves !== undefined
+                      ? [{ label: 'Goalkeeper Saves', home: stats.homeSaves, away: stats.awaySaves }]
+                      : []),
+                    { label: 'Corners', home: stats.homeCorners, away: stats.awayCorners },
+                    { label: 'Fouls Committed', home: stats.homeFouls, away: stats.awayFouls },
+                  ].map((row, idx) => (
+                    <div key={idx} className="flex items-center justify-between py-1.5 border-b border-[var(--office-divider)] last:border-b-0">
+                      <span className="font-mono font-bold text-[var(--office-text-primary)] w-12 text-left">{row.home}</span>
+                      <span className="text-[11px] font-bold text-[var(--office-text-muted)] uppercase tracking-wide">{row.label}</span>
+                      <span className="font-mono font-bold text-[var(--office-text-primary)] w-12 text-right">{row.away}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 

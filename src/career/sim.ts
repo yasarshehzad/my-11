@@ -37,12 +37,15 @@ import {
   updatePlayerForm,
   applyInSeasonMatchProgression,
   applyMonthlySquadTraining,
+  getEffectiveRating,
 } from './formAndProgression';
 import { formatCurrency } from './finance';
 import { calculateStandings } from './table';
+import { getAiClubMatchdaySquad } from './squadGenerator';
+import { applySimulatedMatchSquadImpact } from './matchEngine';
 
 /**
- * Simulates a single league fixture with realistic football scorelines and goalscorers.
+ * Simulates a single league fixture with realistic football scorelines, assists, and authentic club goalscorers.
  */
 export function simulateMatchFixture(
   fixture: LeagueFixture,
@@ -51,49 +54,110 @@ export function simulateMatchFixture(
   homeSquad?: CareerPlayer[],
   awaySquad?: CareerPlayer[]
 ): LeagueFixture {
-  // Determine baseline ratings
-  const homeBaseRating = homeSquad && homeSquad.length >= 11
-    ? homeSquad.slice(0, 11).reduce((s, p) => s + p.rating, 0) / 11
-    : homeClub.reputation * 0.85;
+  const effectiveHomeSquad =
+    homeSquad && homeSquad.length > 0 ? homeSquad : getAiClubMatchdaySquad(homeClub).squad;
+  const effectiveAwaySquad =
+    awaySquad && awaySquad.length > 0 ? awaySquad : getAiClubMatchdaySquad(awayClub).squad;
 
-  const awayBaseRating = awaySquad && awaySquad.length >= 11
-    ? awaySquad.slice(0, 11).reduce((s, p) => s + p.rating, 0) / 11
-    : awayClub.reputation * 0.85;
+  const computeSquadStrength = (sq: CareerPlayer[], fallbackRep: number) => {
+    if (!sq || sq.length === 0) return fallbackRep * 0.85;
+    const starters = sq.slice(0, Math.min(11, sq.length));
+    const avg =
+      starters.reduce((sum, p) => {
+        const eff = getEffectiveRating(p);
+        const fitFactor = (p.fitness ?? 100) < 70 ? 0.94 : 1.0;
+        return sum + eff * fitFactor;
+      }, 0) / starters.length;
+    return sq.length >= 11 ? avg : (avg + fallbackRep * 0.85) / 2;
+  };
 
-  // Home advantage (+2.5 rating boost)
-  const homeEffective = homeBaseRating + 2.5;
+  const homeBaseRating = computeSquadStrength(effectiveHomeSquad, homeClub.reputation);
+  const awayBaseRating = computeSquadStrength(effectiveAwaySquad, awayClub.reputation);
+
+  // Home advantage (+2.3 rating boost unless neutral venue)
+  const isNeutral = Boolean(fixture.venue && fixture.venue.toLowerCase().includes('neutral'));
+  const homeEffective = homeBaseRating + (isNeutral ? 0 : 2.3);
   const awayEffective = awayBaseRating;
 
   const delta = homeEffective - awayEffective;
 
   // Expected goals (xG) based on rating difference
-  const homeXg = Math.max(0.4, Math.min(3.8, 1.45 + delta * 0.08));
-  const awayXg = Math.max(0.3, Math.min(3.2, 1.15 - delta * 0.08));
+  const homeXg = Number(Math.max(0.4, Math.min(3.8, 1.45 + delta * 0.08)).toFixed(2));
+  const awayXg = Number(Math.max(0.3, Math.min(3.2, 1.15 - delta * 0.08)).toFixed(2));
 
   // Generate goals with Poisson approximation
   const homeScore = sampleGoals(homeXg);
   const awayScore = sampleGoals(awayXg);
 
-  // Generate goalscorers
+  // Generate goalscorers & assists
   const scorers: GoalScorer[] = [];
+  const events: MatchEvent[] = [];
 
   for (let i = 0; i < homeScore; i++) {
     const minute = Math.floor(Math.random() * 88) + 2;
-    const scorerName = pickScorerName(homeSquad, homeClub);
+    const scorerPlayer = pickScorerPlayer(effectiveHomeSquad);
+    const scorerName = scorerPlayer ? scorerPlayer.name : pickScorerName(effectiveHomeSquad, homeClub);
+    let assisterPlayer: CareerPlayer | undefined;
+    let detail = `GOAL! ${scorerName} strikes for ${homeClub.defaultName}!`;
+
+    if (Math.random() < 0.74) {
+      assisterPlayer = pickAssisterPlayer(effectiveHomeSquad, scorerName);
+      const assisterName = assisterPlayer ? assisterPlayer.name : pickAssisterName(effectiveHomeSquad, homeClub, scorerName);
+      if (assisterName) {
+        detail = `Goal (Assist: ${assisterName})`;
+      }
+    }
+
     scorers.push({
       name: scorerName,
       minute,
       clubId: homeClub.id,
+      cardId: scorerPlayer?.cardId,
+      assisterName: assisterPlayer?.name,
+      assisterCardId: assisterPlayer?.cardId,
+    });
+
+    events.push({
+      minute,
+      type: 'goal',
+      clubId: homeClub.id,
+      playerName: scorerName,
+      assisterName: assisterPlayer?.name,
+      detail,
     });
   }
 
   for (let i = 0; i < awayScore; i++) {
     const minute = Math.floor(Math.random() * 88) + 2;
-    const scorerName = pickScorerName(awaySquad, awayClub);
+    const scorerPlayer = pickScorerPlayer(effectiveAwaySquad);
+    const scorerName = scorerPlayer ? scorerPlayer.name : pickScorerName(effectiveAwaySquad, awayClub);
+    let assisterPlayer: CareerPlayer | undefined;
+    let detail = `GOAL! ${scorerName} scores for ${awayClub.defaultName}!`;
+
+    if (Math.random() < 0.74) {
+      assisterPlayer = pickAssisterPlayer(effectiveAwaySquad, scorerName);
+      const assisterName = assisterPlayer ? assisterPlayer.name : pickAssisterName(effectiveAwaySquad, awayClub, scorerName);
+      if (assisterName) {
+        detail = `Goal (Assist: ${assisterName})`;
+      }
+    }
+
     scorers.push({
       name: scorerName,
       minute,
       clubId: awayClub.id,
+      cardId: scorerPlayer?.cardId,
+      assisterName: assisterPlayer?.name,
+      assisterCardId: assisterPlayer?.cardId,
+    });
+
+    events.push({
+      minute,
+      type: 'goal',
+      clubId: awayClub.id,
+      playerName: scorerName,
+      assisterName: assisterPlayer?.name,
+      detail,
     });
   }
 
@@ -126,41 +190,24 @@ export function simulateMatchFixture(
     awayFouls,
     homeCorners,
     awayCorners,
+    homeXg,
+    awayXg,
+    homeSaves: Math.max(0, awayShotsOnTarget - awayScore),
+    awaySaves: Math.max(0, homeShotsOnTarget - homeScore),
   };
-
-  // Generate events from scorers (with realistic assists for ~70% of open play goals)
-  const events: MatchEvent[] = scorers.map((s) => {
-    const isHome = s.clubId === homeClub.id;
-    const squad = isHome ? homeSquad : awaySquad;
-    const club = isHome ? homeClub : awayClub;
-    let detail = 'Goal';
-    if (Math.random() < 0.72) {
-      const assister = pickAssisterName(squad, club, s.name);
-      if (assister) {
-        detail = `Goal (Assist: ${assister})`;
-      }
-    }
-    return {
-      minute: s.minute,
-      type: 'goal',
-      clubId: s.clubId,
-      playerName: s.name,
-      detail,
-    };
-  });
 
   // Add random yellow cards
   const numCards = Math.floor(Math.random() * 3) + 1;
   for (let c = 0; c < numCards; c++) {
     const isHomeCard = Math.random() < 0.5;
     const cardClub = isHomeCard ? homeClub : awayClub;
-    const cardSquad = isHomeCard ? homeSquad : awaySquad;
+    const cardSquad = isHomeCard ? effectiveHomeSquad : effectiveAwaySquad;
     events.push({
       minute: Math.floor(Math.random() * 85) + 5,
       type: 'yellow_card',
       clubId: cardClub.id,
       playerName: pickScorerName(cardSquad, cardClub),
-      detail: 'Foul',
+      detail: 'Yellow card shown for a tactical foul',
     });
   }
   events.sort((a, b) => a.minute - b.minute);
@@ -181,7 +228,7 @@ export function simulateMatchFixture(
     motmName = scorers[0].name;
     motmClubId = scorers[0].clubId;
   } else {
-    motmName = pickScorerName(homeSquad, homeClub);
+    motmName = pickScorerName(effectiveHomeSquad, homeClub);
     motmClubId = homeClub.id;
   }
 
@@ -190,6 +237,33 @@ export function simulateMatchFixture(
     clubId: motmClubId,
     rating: Number((7.8 + Math.random() * 1.6).toFixed(1)),
   };
+
+  // Record starterPlayerIds, participatingPlayerIds, and playerRatings for accurate historical tracking
+  const homeStarters = effectiveHomeSquad.slice(0, 11);
+  const awayStarters = effectiveAwaySquad.slice(0, 11);
+  const homeSubs = effectiveHomeSquad.slice(11, 14);
+  const awaySubs = effectiveAwaySquad.slice(11, 14);
+
+  const starterPlayerIds = [...homeStarters, ...awayStarters].map((p) => p.id);
+  const participatingPlayerIds = [...homeStarters, ...homeSubs, ...awayStarters, ...awaySubs].map((p) => p.id);
+  const playerRatings: Record<string, number> = {};
+
+  for (const p of [...homeStarters, ...homeSubs]) {
+    const pGoals = homeScorers.filter((s) => s.name === p.name).length;
+    const pAssists = homeScorers.filter((s) => s.assisterName === p.name).length;
+    const base = homeScore > awayScore ? 7.2 : homeScore === awayScore ? 6.8 : 6.4;
+    const cleanBonus = awayScore === 0 && ['GK', 'DEF'].includes(categorizePosition(p.position)) ? 0.4 : 0;
+    const rat = Math.min(10.0, Math.max(5.5, Number((base + pGoals * 0.8 + pAssists * 0.5 + cleanBonus).toFixed(1))));
+    playerRatings[p.id] = p.name === motmName ? manOfTheMatch.rating : rat;
+  }
+  for (const p of [...awayStarters, ...awaySubs]) {
+    const pGoals = awayScorers.filter((s) => s.name === p.name).length;
+    const pAssists = awayScorers.filter((s) => s.assisterName === p.name).length;
+    const base = awayScore > homeScore ? 7.2 : homeScore === awayScore ? 6.8 : 6.4;
+    const cleanBonus = homeScore === 0 && ['GK', 'DEF'].includes(categorizePosition(p.position)) ? 0.4 : 0;
+    const rat = Math.min(10.0, Math.max(5.5, Number((base + pGoals * 0.8 + pAssists * 0.5 + cleanBonus).toFixed(1))));
+    playerRatings[p.id] = p.name === motmName ? manOfTheMatch.rating : rat;
+  }
 
   return {
     ...fixture,
@@ -200,6 +274,9 @@ export function simulateMatchFixture(
     stats,
     events,
     manOfTheMatch,
+    starterPlayerIds,
+    participatingPlayerIds,
+    playerRatings,
   };
 }
 
@@ -214,41 +291,50 @@ function sampleGoals(expected: number): number {
   return k - 1;
 }
 
-function pickScorerName(squad: CareerPlayer[] | undefined, club: Club): string {
-  if (squad && squad.length > 0) {
-    const onPitch = squad.length >= 11 ? squad.slice(0, 11) : squad;
-    const outfieldStarters = onPitch.filter((p) => categorizePosition(p.position) !== 'GK');
-    const attackers = outfieldStarters.filter((p) => {
-      const g = categorizePosition(p.position);
-      return g === 'FWD' || g === 'MID';
-    });
-    const pool = attackers.length > 0 ? attackers : (outfieldStarters.length > 0 ? outfieldStarters : squad);
-    const picked = pool[Math.floor(Math.random() * pool.length)];
-    return picked.name;
-  }
+function pickScorerPlayer(squad: CareerPlayer[] | undefined): CareerPlayer | undefined {
+  if (!squad || squad.length === 0) return undefined;
+  const onPitch = squad.length >= 11 ? squad.slice(0, 11) : squad;
+  const outfieldStarters = onPitch.filter((p) => categorizePosition(p.position) !== 'GK');
+  const fwds = outfieldStarters.filter((p) => categorizePosition(p.position) === 'FWD');
+  const mids = outfieldStarters.filter((p) => categorizePosition(p.position) === 'MID');
 
-  const PROCEDURAL_STRIKERS = [
-    'Smith', 'Johnson', 'Williams', 'Davies', 'Rodriguez', 'Silva', 'Santos', 'Muller',
-    'Hernandez', 'De Jong', 'Larsson', 'Kovacic', 'Popov', 'Bellingham', 'Palmer',
-  ];
-  return PROCEDURAL_STRIKERS[Math.floor(Math.random() * PROCEDURAL_STRIKERS.length)];
+  if (fwds.length > 0 && Math.random() < 0.62) {
+    return fwds[Math.floor(Math.random() * fwds.length)];
+  }
+  if (mids.length > 0 && Math.random() < 0.82) {
+    return mids[Math.floor(Math.random() * mids.length)];
+  }
+  const pool = outfieldStarters.length > 0 ? outfieldStarters : squad;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function pickAssisterPlayer(squad: CareerPlayer[] | undefined, excludeName: string): CareerPlayer | undefined {
+  if (!squad || squad.length === 0) return undefined;
+  const onPitch = squad.length >= 11 ? squad.slice(0, 11) : squad;
+  const outfield = onPitch.filter((p) => p.name !== excludeName && categorizePosition(p.position) !== 'GK');
+  if (outfield.length === 0) return undefined;
+  const midsAndWings = outfield.filter((p) => {
+    const g = categorizePosition(p.position);
+    return g === 'MID' || g === 'FWD';
+  });
+  const pool = midsAndWings.length > 0 && Math.random() < 0.78 ? midsAndWings : outfield;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function pickScorerName(squad: CareerPlayer[] | undefined, club: Club): string {
+  const picked = pickScorerPlayer(squad);
+  if (picked) return picked.name;
+  const aiSquad = getAiClubMatchdaySquad(club).squad;
+  const aiPicked = pickScorerPlayer(aiSquad);
+  return aiPicked ? aiPicked.name : `${club.shortName} Forward`;
 }
 
 function pickAssisterName(squad: CareerPlayer[] | undefined, club: Club, excludeName: string): string {
-  if (squad && squad.length > 0) {
-    const onPitch = squad.length >= 11 ? squad.slice(0, 11) : squad;
-    const outfield = onPitch.filter((p) => p.name !== excludeName && categorizePosition(p.position) !== 'GK');
-    if (outfield.length > 0) {
-      return outfield[Math.floor(Math.random() * outfield.length)].name;
-    }
-  }
-
-  const PROCEDURAL_PLAYMAKERS = [
-    'De Bruyne', 'Odegaard', 'Alexander-Arnold', 'Bruno Fernandes', 'Maddison',
-    'Foden', 'Saka', 'Szoboszlai', 'Paqueta', 'Tielemans', 'Eze', 'Gibbs-White'
-  ];
-  const candidates = PROCEDURAL_PLAYMAKERS.filter((n) => n !== excludeName);
-  return candidates[Math.floor(Math.random() * candidates.length)];
+  const picked = pickAssisterPlayer(squad, excludeName);
+  if (picked) return picked.name;
+  const aiSquad = getAiClubMatchdaySquad(club).squad;
+  const aiPicked = pickAssisterPlayer(aiSquad, excludeName);
+  return aiPicked ? aiPicked.name : `${club.shortName} Midfielder`;
 }
 
 /**
@@ -523,24 +609,29 @@ export function advanceTimeSkip(
       simmedResult = simmed;
     }
 
-    // If user club was involved in this simulated match, update squad form and in-season progression
+    // If user club was involved in this simulated match, apply full post-match squad impact
+    // (stamina drain for starters, bench recovery, injury healing countdown, morale, form, and U23 progression)
     if (isUserMatch && simmedResult && typeof simmedResult.homeScore === 'number' && typeof simmedResult.awayScore === 'number') {
-      const isHome = item.fixture.homeClubId === userClubId;
-      const userGoals = isHome ? simmedResult.homeScore : simmedResult.awayScore;
-      const oppGoals = isHome ? simmedResult.awayScore : simmedResult.homeScore;
-      const won = userGoals > oppGoals;
-      const drew = userGoals === oppGoals;
+      const daysSinceLast = Math.max(
+        0,
+        Math.round((fixDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24))
+      );
+      if (daysSinceLast >= 3) {
+        // Between-match training ground recovery before kick-off
+        const restBoost = Math.min(12, daysSinceLast * 2);
+        userSquad = userSquad.map((p) => ({
+          ...p,
+          fitness: Math.min(100, (p.fitness ?? 100) + restBoost),
+        }));
+      }
 
-      const starterIds = new Set(activeSquad.slice(0, 11).map((p) => p.id));
-
-      userSquad = userSquad.map((player) => {
-        const isStarter = starterIds.has(player.id);
-        const baseRating = won ? 7.5 : drew ? 6.8 : 6.2;
-        const matchRating = Number((baseRating + (Math.random() * 1.0 - 0.3)).toFixed(1));
-        const withForm = updatePlayerForm(player, matchRating);
-        const prog = applyInSeasonMatchProgression(withForm, isStarter ? 90 : 20, matchRating);
-        return prog.updatedPlayer;
-      });
+      userSquad = applySimulatedMatchSquadImpact(
+        userSquad,
+        activeSquad,
+        simmedResult as LeagueFixture,
+        userClubId,
+        save.settings
+      );
     }
 
     matchesPlayedCount++;

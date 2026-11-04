@@ -267,16 +267,32 @@ export interface GoalScorer {
   minute: number;
   clubId: string;
   cardId?: string;
+  assisterName?: string;
+  assisterCardId?: string;
+  isPenalty?: boolean;
 }
 
 export type TacticalMentality = 'defensive' | 'balanced' | 'attacking';
+export type PressingIntensity = 'low_block' | 'balanced' | 'high_press';
+export type AttackingStyle = 'patient' | 'mixed' | 'direct_counter';
+export type HalfTimeTeamTalkType = 'demand_more' | 'keep_composed' | 'tighten_up' | 'aggressive';
 
 export interface MatchEvent {
   minute: number;
-  type: 'goal' | 'yellow_card' | 'red_card' | 'injury' | 'substitution';
+  type:
+    | 'goal'
+    | 'yellow_card'
+    | 'red_card'
+    | 'injury'
+    | 'substitution'
+    | 'save'
+    | 'woodwork'
+    | 'big_chance'
+    | 'tactical';
   clubId: string;
   playerName: string;
   subPlayerIn?: string;
+  assisterName?: string;
   detail?: string;
 }
 
@@ -291,6 +307,12 @@ export interface MatchStats {
   awayFouls: number;
   homeCorners: number;
   awayCorners: number;
+  homeXg?: number;
+  awayXg?: number;
+  homeSaves?: number;
+  awaySaves?: number;
+  homeBigChances?: number;
+  awayBigChances?: number;
 }
 
 export interface LeagueFixture {
@@ -308,6 +330,15 @@ export interface LeagueFixture {
   stats?: MatchStats;
   manOfTheMatch?: { name: string; clubId: string; rating: number };
   venue?: string;
+  participatingPlayerIds?: string[];
+  starterPlayerIds?: string[];
+  playerRatings?: Record<string, number>;
+  afterExtraTime?: boolean;
+  penalties?: {
+    homePenalties: number;
+    awayPenalties: number;
+    kicks?: PenaltyKickAttempt[];
+  };
 }
 
 export interface ClubStanding {
@@ -346,14 +377,24 @@ export interface CareerLineup {
   benchIds: string[];
 }
 
+export interface PenaltyKickAttempt {
+  round: number;
+  clubId: string;
+  takerName: string;
+  scored: boolean;
+  detail: string;
+}
+
 export interface CupFixture extends LeagueFixture {
   competitionName: string;
   roundName: string;
   isKnockout: boolean;
   isFriendly?: boolean;
+  afterExtraTime?: boolean;
   penalties?: {
     homePenalties: number;
     awayPenalties: number;
+    kicks?: PenaltyKickAttempt[];
   };
 }
 

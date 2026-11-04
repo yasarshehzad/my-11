@@ -6,6 +6,7 @@ import {
   getLeagueLeaderboards,
 } from '../src/career/playerStats';
 import { CareerPlayer, CareerSaveFile, LeagueFixture } from '../src/career/types';
+import { getPresetSettings } from '../src/career/settings';
 
 describe('Player Statistics and Career History Engine', () => {
   const dummyPlayer: CareerPlayer = {
@@ -13,14 +14,12 @@ describe('Player Statistics and Career History Engine', () => {
     cardId: 'c-1',
     name: 'Darwin Nunez',
     position: 'ST',
-    overall: 82,
+    rating: 82,
     potential: 85,
     age: 27,
     nationality: 'Uruguay',
-    preferredFoot: 'right',
-    workRateAttacking: 'high',
-    workRateDefensive: 'medium',
-    stats: {
+    preferredFoot: 'Right',
+    faceStats: {
       pac: 88,
       sho: 82,
       pas: 75,
@@ -30,19 +29,23 @@ describe('Player Statistics and Career History Engine', () => {
     },
     value: 45000000,
     wageWeekly: 140000,
-    contractYearsRemaining: 3,
+    contractYears: 3,
     squadRole: 'crucial',
     form: 7.8,
     morale: 85,
     fitness: 100,
+    injured: false,
+    isHomegrown: false,
+    club: 'liv',
   };
 
   const dummySave: CareerSaveFile = {
     version: 1,
     id: 'save-1',
     createdAt: '2026-07-01',
-    updatedAt: '2026-07-01',
+    lastSavedAt: '2026-07-01',
     manager: { name: 'Manager', nationality: 'England' },
+    settings: getPresetSettings('custom'),
     club: {
       id: 'liv',
       defaultName: 'Liverpool',
@@ -65,9 +68,8 @@ describe('Player Statistics and Career History Engine', () => {
     finances: {
       transferBudget: 50000000,
       weeklyWageBudget: 2500000,
-      currentWeeklyWageSpend: 2100000,
-      clubBalance: 60000000,
-      wageIncreaseHistory: [],
+      currentWeeklyWages: 2100000,
+      balance: 60000000,
     },
     squad: [dummyPlayer],
     lineup: {
@@ -97,36 +99,14 @@ describe('Player Statistics and Career History Engine', () => {
       },
     ],
     standings: [],
-    boardExpectations: {
-      domesticExpectation: 'title_challenge',
-      europeanExpectation: 'semi_final',
-      domesticCupExpectation: 'win',
-      financialDiscipline: 'moderate',
-      youthDevelopment: 'high',
-      boardConfidence: 90,
-      confidenceHistory: [],
-      boardStatus: { status: 'secure', label: 'Secure' },
-    },
-    tactics: {
-      tacticalStyle: 'custom',
-      formation: '4-3-3',
-      mentality: 'balanced',
-      tempo: 'normal',
-      passingDirectness: 'mixed',
-      defensiveLine: 'medium',
-      pressingIntensity: 'medium',
-      width: 'normal',
-      cornerTakerPlayerId: 'p-1',
-      freeKickTakerPlayerId: 'p-1',
-      penaltyTakerPlayerId: 'p-1',
-      captainPlayerId: 'p-1',
-    },
+    phase: 'regular_season',
+    trophies: [],
     youthAcademy: [],
     inbox: [],
-    transferShortlist: [],
-    pendingOffers: [],
-    transferHistory: [],
-    calendarEvents: [],
+    shortlistPlayerIds: [],
+    incomingOffers: [],
+    transfersHistory: [],
+    calendar: [],
   };
 
   it('computes live season stats correctly from played fixtures', () => {
@@ -163,5 +143,58 @@ describe('Player Statistics and Career History Engine', () => {
     expect(leaderboards.topAssists.some((a) => a.playerName === 'Trent Alexander-Arnold')).toBe(true);
 
     expect(leaderboards.topCleanSheets.length).toBeGreaterThan(0);
+  });
+
+  it('computes appearances, assists, and average rating from persisted fixture data even when current lineup changes', () => {
+    const assisterPlayer: CareerPlayer = {
+      ...dummyPlayer,
+      id: 'p-assister',
+      name: 'Dominik Szoboszlai',
+      position: 'CAM',
+    };
+
+    const fixtureWithPersistedData: LeagueFixture = {
+      id: 'fix-persisted-1',
+      competitionId: 'pl',
+      round: 2,
+      date: '2026-08-22',
+      homeClubId: 'liv',
+      awayClubId: 'mci',
+      played: true,
+      homeScore: 1,
+      awayScore: 1,
+      starterPlayerIds: ['p-assister'],
+      participatingPlayerIds: ['p-assister'],
+      playerRatings: {
+        'p-assister': 7.9,
+      },
+      scorers: [
+        {
+          name: 'Mohamed Salah',
+          minute: 34,
+          clubId: 'liv',
+          assisterName: 'Dominik Szoboszlai',
+          assisterCardId: 'p-assister',
+        },
+      ],
+      events: [],
+    };
+
+    const modifiedSave: CareerSaveFile = {
+      ...dummySave,
+      squad: [assisterPlayer],
+      // Current lineup does NOT have p-assister (simulating manager benching him afterwards)
+      lineup: {
+        formation: '4-3-3',
+        starterIds: ['someone-else'],
+        benchIds: [],
+      },
+      fixtures: [fixtureWithPersistedData],
+    };
+
+    const stats = computeCurrentSeasonStats(assisterPlayer, modifiedSave);
+    expect(stats.appearances).toBe(1); // Still counted because of fixture.starterPlayerIds!
+    expect(stats.assists).toBe(1); // Counted via structured assisterName / assisterCardId
+    expect(stats.averageRating).toBe(7.9); // Computed from fixture.playerRatings
   });
 });

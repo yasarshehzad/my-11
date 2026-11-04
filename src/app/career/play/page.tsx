@@ -85,6 +85,7 @@ import {
   getScoutingMarketPool,
 } from '../../../career/transfers';
 import { updatePlayerForm, applyInSeasonMatchProgression } from '../../../career/formAndProgression';
+import { applySimulatedMatchSquadImpact } from '../../../career/matchEngine';
 
 function formatOrdinalRank(n: number): string {
   const s = ['th', 'st', 'nd', 'rd'];
@@ -1310,21 +1311,14 @@ function CareerPlayHubContent() {
         }
       }
 
-      // Update player form and youth development based on cup match result
-      const userGoals = isUserHome ? simmed.homeScore! : simmed.awayScore!;
-      const oppGoals = isUserHome ? simmed.awayScore! : simmed.homeScore!;
-      const won = userGoals > oppGoals;
-      const drew = userGoals === oppGoals;
-      const starterIds = new Set(activeSquad.slice(0, 11).map((p) => p.id));
-
-      const updatedSquad = save.squad.map((player) => {
-        const isStarter = starterIds.has(player.id);
-        const baseRating = won ? 7.5 : drew ? 6.8 : 6.2;
-        const matchRating = Number((baseRating + (Math.random() * 1.0 - 0.3)).toFixed(1));
-        const withForm = updatePlayerForm(player, matchRating);
-        const prog = applyInSeasonMatchProgression(withForm, isStarter ? 90 : 20, matchRating);
-        return prog.updatedPlayer;
-      });
+      // Update player fitness, bench recovery, injury healing, morale, form, and youth development
+      const updatedSquad = applySimulatedMatchSquadImpact(
+        save.squad,
+        activeSquad,
+        simmed,
+        save.club.id,
+        save.settings
+      );
 
       const updatedSave: CareerSaveFile = {
         ...save,
@@ -1375,21 +1369,14 @@ function CareerPlayHubContent() {
 
     const updatedStandings = calculateStandings(updatedFixtures, allClubs);
 
-    // Update player form and youth development based on league result
-    const userGoals = isUserHome ? simmed.homeScore! : simmed.awayScore!;
-    const oppGoals = isUserHome ? simmed.awayScore! : simmed.homeScore!;
-    const won = userGoals > oppGoals;
-    const drew = userGoals === oppGoals;
-    const starterIds = new Set(activeSquad.slice(0, 11).map((p) => p.id));
-
-    const updatedSquad = save.squad.map((player) => {
-      const isStarter = starterIds.has(player.id);
-      const baseRating = won ? 7.5 : drew ? 6.8 : 6.2;
-      const matchRating = Number((baseRating + (Math.random() * 1.0 - 0.3)).toFixed(1));
-      const withForm = updatePlayerForm(player, matchRating);
-      const prog = applyInSeasonMatchProgression(withForm, isStarter ? 90 : 20, matchRating);
-      return prog.updatedPlayer;
-    });
+    // Update player fitness, bench recovery, injury healing, morale, form, and youth development
+    const updatedSquad = applySimulatedMatchSquadImpact(
+      save.squad,
+      activeSquad,
+      simmed,
+      save.club.id,
+      save.settings
+    );
 
     const updatedSave: CareerSaveFile = {
       ...save,
