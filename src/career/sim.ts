@@ -11,7 +11,7 @@ import {
   MatchEvent,
   ManagerMessage,
 } from './types';
-import { getClubById, getAllClubs } from './clubs';
+import { getClubById, getAllClubs, getActiveLeagueClubs } from './clubs';
 import {
   categorizePosition,
   getSquadOrderedByLineup,
@@ -857,7 +857,7 @@ export function advanceTimeSkip(
   }
 
   // Recalculate standings
-  const updatedStandings = calculateStandings(fixtures, getAllClubs());
+  const updatedStandings = calculateStandings(fixtures, getActiveLeagueClubs(save));
 
   const windowOpen = isTransferWindowOpen(curIso, save.season.yearStart);
 

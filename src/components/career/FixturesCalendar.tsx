@@ -63,7 +63,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
   const isReleaseDateReached = save.season.currentDate >= releaseDate;
   const preseasonCup = save.cups?.[CUP_IDS.PRESEASON];
 
-  const allClubs = getClubsWithUserClub(save.club);
+  const allClubs = getClubsWithUserClub(save.club, save.activeLeagueClubIds);
   const clubsMap = new Map<string, Club>(allClubs.map((c) => [c.id, c]));
 
   const nextFixture = getNextClubFixture(fixtures, userClubId);

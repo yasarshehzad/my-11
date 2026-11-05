@@ -14,7 +14,7 @@ import {
   PenaltyKickAttempt,
   Club,
 } from '../../career/types';
-import { getAllClubs, getEffectiveClubName } from '../../career/clubs';
+import { getAllClubs, getEffectiveClubName, getClubsWithUserClub } from '../../career/clubs';
 import {
   CUP_IDS,
   findAnyClub,
@@ -96,7 +96,7 @@ export function MatchDayModal({
   // Full-Time review tab ('stats' vs 'ratings')
   const [fullTimeTab, setFullTimeTab] = useState<'stats' | 'ratings'>('stats');
 
-  const allClubs = getAllClubs();
+  const allClubs = getClubsWithUserClub(save.club, save.activeLeagueClubIds);
   const clubsMap = new Map(allClubs.map((c) => [c.id, c]));
 
   const homeClub = findAnyClub(fixture.homeClubId) || allClubs[0];

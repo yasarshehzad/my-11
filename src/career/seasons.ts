@@ -3,8 +3,15 @@ import {
   LeagueFixture,
   TrophyRecord,
   ManagerMessage,
+  SeasonHistoryRecord,
+  Club,
 } from './types';
-import { getAllClubs } from './clubs';
+import {
+  getAllClubs,
+  getActiveLeagueClubs,
+  PROMOTION_CANDIDATE_POOL,
+  getClubById,
+} from './clubs';
 import { createInitialStandings, calculateStandings } from './table';
 import { generateRoundRobinFixtures } from './calendar';
 import { initializeSeasonCups, autoResolvePendingCupFixtures } from './cups';
@@ -13,6 +20,7 @@ import { applySeasonalPlayerProgression, generateYouthIntake, ProgressionReport 
 import { generateIncomingAiBids } from './transfers';
 import { formatCareerCurrency } from './formatters';
 import { getRegisteredSeniorPlayerIds } from './squad';
+import { getLeagueLeaderboards } from './playerStats';
 
 export interface SeasonReviewSummary {
   seasonNumber: number;
@@ -22,6 +30,8 @@ export interface SeasonReviewSummary {
   trophiesWon: string[];
   europeanQualification: string;
   progressionReport: ProgressionReport;
+  promotedClubNames?: string[];
+  relegatedClubNames?: string[];
 }
 
 /**
@@ -43,30 +53,31 @@ export function isSeasonComplete(fixtures?: LeagueFixture[], userClubId?: string
 }
 
 /**
- * Evaluates the final position, European qualification, and prize money for the user's club.
+ * Evaluates the final position, European qualification, prize money,
+ * and promotion/relegation changes for the season.
  */
 export function getSeasonReviewSummary(save: CareerSaveFile): SeasonReviewSummary {
-  const allClubs = getAllClubs(save.settings?.databaseSeason || '2026/27');
-  const clubsMap = new Map(allClubs.map((c) => [c.id, c]));
+  const currentActiveClubs = getActiveLeagueClubs(save);
+  const clubsMap = new Map(currentActiveClubs.map((c) => [c.id, c]));
 
   let standings = save.standings;
-  if (!standings || standings.length !== allClubs.length) {
+  if (!standings || standings.length !== currentActiveClubs.length) {
     const completeFixtures = (save.fixtures || []).map((f) => {
       if (!f.played) {
-        const h = clubsMap.get(f.homeClubId) || allClubs[0];
-        const a = clubsMap.get(f.awayClubId) || allClubs[1];
+        const h = clubsMap.get(f.homeClubId) || currentActiveClubs[0];
+        const a = clubsMap.get(f.awayClubId) || currentActiveClubs[1];
         return simulateMatchFixture(f, h, a);
       }
       return f;
     });
-    standings = calculateStandings(completeFixtures, allClubs);
+    standings = calculateStandings(completeFixtures, currentActiveClubs);
   }
 
   const userRankIdx = standings.findIndex((s) => s.clubId === save.club.id);
   const finalPosition = userRankIdx >= 0 ? userRankIdx + 1 : 10;
   const leagueTitle = finalPosition === 1;
 
-  // Prize money based on league finish
+  // Prize money and European qualification based on league finish
   let prizeMoney = 10_000_000;
   let europeanQualification = 'None (Domestic Competitions)';
 
@@ -100,6 +111,29 @@ export function getSeasonReviewSummary(save: CareerSaveFile): SeasonReviewSummar
     seasonTrophies.push('English Top Flight');
   }
 
+  // Calculate promotion and relegation changes
+  const bottomStandings = standings.slice(17, 20);
+  let relegatedIds = bottomStandings.map((s) => s.clubId);
+
+  // If user club is in bottom 3 and cannot be sacked, protect career playability
+  if (relegatedIds.includes(save.club.id) && !save.settings?.boardCanSack) {
+    const nonUserStandings = standings.filter((s) => s.clubId !== save.club.id);
+    relegatedIds = nonUserStandings.slice(-3).map((s) => s.clubId);
+  }
+
+  const relegatedClubs = relegatedIds
+    .map((id) => getClubById(id))
+    .filter((c): c is Club => Boolean(c));
+
+  const currentIdsSet = new Set(currentActiveClubs.map((c) => c.id));
+  const availablePromotions = PROMOTION_CANDIDATE_POOL.filter(
+    (c) => !currentIdsSet.has(c.id) && !relegatedIds.includes(c.id)
+  ).sort((a, b) => b.reputation - a.reputation);
+
+  const promotedClubs = availablePromotions.slice(0, 3);
+  const promotedClubNames = promotedClubs.map((c) => c.defaultName);
+  const relegatedClubNames = relegatedClubs.map((c) => c.defaultName);
+
   // Mock preview progression without applying it
   const progressionReport = applySeasonalPlayerProgression(save.squad);
 
@@ -111,12 +145,17 @@ export function getSeasonReviewSummary(save: CareerSaveFile): SeasonReviewSummar
     trophiesWon: seasonTrophies,
     europeanQualification,
     progressionReport,
+    promotedClubNames,
+    relegatedClubNames,
   };
 }
 
 /**
  * Advances the career to the next season:
  * - Awards league prize money and trophies
+ * - Updates multi-season Hall of Fame history
+ * - Executes Promotion & Relegation (swaps bottom 3 with promoted clubs)
+ * - Dynamically seeds European cups based on final standings
  * - Ages players and progresses skills/potentials
  * - Heals injuries and restores summer fitness
  * - Scouts new youth academy intake
@@ -131,6 +170,8 @@ export function advanceToNextSeason(save: CareerSaveFile): {
   const summary = getSeasonReviewSummary(save);
   const nextSeasonNumber = save.season.seasonNumber + 1;
   const nextYearStart = save.season.yearStart + 1;
+  const currentActiveClubs = getActiveLeagueClubs(save);
+  const currentActiveClubIds = currentActiveClubs.map((c) => c.id);
 
   // 1. Apply squad aging, wonderkid progression, and summer recovery
   const { updatedSquad } = applySeasonalPlayerProgression(save.squad);
@@ -186,16 +227,58 @@ export function advanceToNextSeason(save: CareerSaveFile): {
   const newIntake = generateYouthIntake(save.club, nextYearStart);
   const updatedAcademy = [...(save.youthAcademy || []), ...newIntake];
 
-  // 4. Generate new season calendar and 38-game fixtures
-  const dbSeason = save.settings.databaseSeason || '2026/27';
-  const allClubs = getAllClubs(dbSeason);
-  const { fixtures, calendar } = generateRoundRobinFixtures(allClubs, nextYearStart);
-  const standings = createInitialStandings(allClubs);
-  const cups = initializeSeasonCups(save.club, nextYearStart);
+  // 4. Calculate Promotion & Relegation for the active 20 top-flight clubs
+  let standings = save.standings || calculateStandings(save.fixtures || [], currentActiveClubs);
+  const bottomStandings = standings.slice(17, 20);
+  let relegatedIds = bottomStandings.map((s) => s.clubId);
+
+  if (relegatedIds.includes(save.club.id) && !save.settings?.boardCanSack) {
+    const nonUserStandings = standings.filter((s) => s.clubId !== save.club.id);
+    relegatedIds = nonUserStandings.slice(-3).map((s) => s.clubId);
+  }
+
+  const currentIdsSet = new Set(currentActiveClubIds);
+  const availablePromotions = PROMOTION_CANDIDATE_POOL.filter(
+    (c) => !currentIdsSet.has(c.id) && !relegatedIds.includes(c.id)
+  ).sort((a, b) => b.reputation - a.reputation);
+
+  const promotedClubs = availablePromotions.slice(0, 3);
+  const relegatedIdsSet = new Set(relegatedIds);
+
+  const nextActiveClubIds = [
+    ...currentActiveClubIds.filter((id) => !relegatedIdsSet.has(id)),
+    ...promotedClubs.map((c) => c.id),
+  ];
+
+  // Guarantee 20 clubs
+  const nextActiveClubs = nextActiveClubIds
+    .map((id) => getClubById(id))
+    .filter((c): c is Club => Boolean(c));
+
+  // 5. Generate new season calendar and 38-game fixtures with promoted clubs
+  const { fixtures, calendar } = generateRoundRobinFixtures(nextActiveClubs, nextYearStart);
+  const newStandings = createInitialStandings(nextActiveClubs);
+
+  const previousCupWinners: Record<string, string> = {};
+  if (save.cups) {
+    for (const [id, cup] of Object.entries(save.cups)) {
+      if (cup.winnerClubId) {
+        previousCupWinners[id] = cup.winnerClubId;
+      }
+    }
+  }
 
   const newCurrentDate = `${nextYearStart}-07-01`;
+  const cups = initializeSeasonCups(
+    save.club,
+    nextYearStart,
+    newCurrentDate,
+    standings,
+    previousCupWinners,
+    nextActiveClubs
+  );
 
-  // 5. Board confidence fresh start
+  // 6. Board confidence fresh start
   const updatedBoardStatus = {
     confidence: 85,
     expectation: summary.finalPosition <= 4 ? 'Title Challenge & Top 4' : 'European Qualification',
@@ -203,13 +286,49 @@ export function advanceToNextSeason(save: CareerSaveFile): {
     warningsCount: 0,
   };
 
+  // 7. Multi-Season Hall of Fame History entry
+  const userStanding = standings.find((s) => s.clubId === save.club.id);
+  const leaderboards = getLeagueLeaderboards(save.fixtures || [], save.club.id, save.squad);
+  const topScorer = leaderboards.topScorers[0];
+  const topScorerName = topScorer ? `${topScorer.playerName} (${topScorer.clubName})` : undefined;
+
+  const historyRecord: SeasonHistoryRecord = {
+    seasonNumber: save.season.seasonNumber,
+    yearStart: save.season.yearStart,
+    yearLabel: `${save.season.yearStart}/${(save.season.yearStart + 1).toString().slice(-2)}`,
+    clubId: save.club.id,
+    clubName: save.club.customName || save.club.defaultName,
+    finalPosition: summary.finalPosition,
+    points: userStanding?.points || 0,
+    won: userStanding?.won || 0,
+    drawn: userStanding?.drawn || 0,
+    lost: userStanding?.lost || 0,
+    goalsFor: userStanding?.goalsFor || 0,
+    goalsAgainst: userStanding?.goalsAgainst || 0,
+    trophiesWon: summary.trophiesWon,
+    topScorerName,
+    topScorerGoals: topScorer?.statValue,
+    promotedClubNames: summary.promotedClubNames,
+    relegatedClubNames: summary.relegatedClubNames,
+    europeanQualification: summary.europeanQualification,
+  };
+
+  const updatedSeasonHistory = [...(save.seasonHistory || []), historyRecord];
+
+  const promotedStr = summary.promotedClubNames && summary.promotedClubNames.length > 0
+    ? summary.promotedClubNames.join(', ')
+    : 'promoted sides';
+  const relegatedStr = summary.relegatedClubNames && summary.relegatedClubNames.length > 0
+    ? summary.relegatedClubNames.join(', ')
+    : 'relegated sides';
+
   const newInboxMsg: ManagerMessage = {
     id: `msg_season_${nextSeasonNumber}_welcome`,
     date: newCurrentDate,
     sender: 'Board of Directors',
     senderRole: 'Club Executive Committee',
     subject: `Season ${nextSeasonNumber} Campaign Kickoff & Board Review`,
-    body: `Dear ${save.manager.name},\n\nCongratulations on completing Season ${save.season.seasonNumber}! You finished in position #${summary.finalPosition}${summary.leagueTitle ? ' as champions' : ''}. We have credited ${formatCareerCurrency(summary.prizeMoney, save.settings.currency)} in prize money to your transfer war chest. European qualification: ${summary.europeanQualification}. The summer window is officially open!`,
+    body: `Dear ${save.manager.name},\n\nCongratulations on completing Season ${save.season.seasonNumber}! You finished in position #${summary.finalPosition}${summary.leagueTitle ? ' as champions' : ''}. We have credited ${formatCareerCurrency(summary.prizeMoney, save.settings.currency)} in prize money to your transfer war chest. European qualification: ${summary.europeanQualification}.\n\n📢 Division Update: Welcome ${promotedStr} to the top flight! Farewell to ${relegatedStr}.\n\nThe summer window is officially open!`,
     type: 'board',
     isRead: false,
     priority: 'urgent',
@@ -237,7 +356,9 @@ export function advanceToNextSeason(save: CareerSaveFile): {
     youthAcademy: updatedAcademy,
     fixtures,
     calendar,
-    standings,
+    standings: newStandings,
+    activeLeagueClubIds: nextActiveClubIds,
+    seasonHistory: updatedSeasonHistory,
     cups,
     trophies: updatedTrophies,
     finances: updatedFinances,

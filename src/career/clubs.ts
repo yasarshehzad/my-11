@@ -500,12 +500,45 @@ export function getEffectiveClubName(club: Club, userClub?: Club): string {
     : club.defaultName;
 }
 
+export const PROMOTION_CANDIDATE_POOL: Club[] = [
+  ...LOWER_LEAGUE_CLUBS,
+  ...RELEGATED_CLUBS_2024_25,
+  ...PROMOTED_CLUBS_2026_27,
+];
+
+export function getActiveLeagueClubs(save?: {
+  activeLeagueClubIds?: string[];
+  settings?: { databaseSeason?: DatabaseSeason };
+}): Club[] {
+  if (save?.activeLeagueClubIds && save.activeLeagueClubIds.length === 20) {
+    const clubs = save.activeLeagueClubIds
+      .map((id) => getClubById(id))
+      .filter((c): c is Club => Boolean(c));
+    if (clubs.length === 20) return clubs;
+  }
+  return getAllClubs(save?.settings?.databaseSeason);
+}
+
 /**
- * Returns all career clubs, merging the manager's custom club name and details
- * so tables, fixtures, and hubs always reflect the user's custom club identity.
+ * Returns all active top-flight clubs, merging the manager's custom club name and details
+ * so tables, fixtures, and hubs always reflect the user's custom club identity and dynamic promotions.
  */
-export function getClubsWithUserClub(userClub?: Club): Club[] {
-  const clubs = getAllClubs();
+export function getClubsWithUserClub(
+  userClub?: Club,
+  activeClubIds?: string[],
+  season?: DatabaseSeason
+): Club[] {
+  let clubs: Club[];
+  if (activeClubIds && activeClubIds.length === 20) {
+    clubs = activeClubIds
+      .map((id) => getClubById(id))
+      .filter((c): c is Club => Boolean(c));
+    if (clubs.length !== 20) {
+      clubs = getAllClubs(season);
+    }
+  } else {
+    clubs = getAllClubs(season);
+  }
   if (!userClub) return clubs;
   return clubs.map((c) =>
     c.id === userClub.id

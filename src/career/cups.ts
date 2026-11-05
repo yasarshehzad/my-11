@@ -1,5 +1,6 @@
 import {
   Club,
+  ClubStanding,
   CupTournament,
   CupFixture,
   LeagueFixture,
@@ -152,21 +153,40 @@ export function conductCupDraw(
 export function initializeSeasonCups(
   userClub: Club,
   yearStart: number = 2026,
-  currentDate: string = `${yearStart}-07-01`
+  currentDate: string = `${yearStart}-07-01`,
+  previousStandings?: ClubStanding[],
+  previousCupWinners?: Record<string, string>,
+  activeLeagueClubs?: Club[]
 ): Record<string, CupTournament> {
-  const englishClubs = getAllClubs();
+  const englishClubs = activeLeagueClubs && activeLeagueClubs.length > 0 ? activeLeagueClubs : getAllClubs();
 
   // 1. Season Opener Shield (Single Match in early August at Wembley)
-  let shieldHome = englishClubs[0]; // Man Blue (League Champions)
-  let shieldAway = englishClubs[1]; // London Red (Cup Winners)
-  if (userClub.id === englishClubs[0].id) {
-    shieldHome = userClub;
-    shieldAway = englishClubs[1];
-  } else if (userClub.id === englishClubs[1].id) {
-    shieldHome = englishClubs[0];
-    shieldAway = userClub;
-  } else if (userClub.tier === 'elite') {
-    shieldAway = userClub;
+  let shieldHomeClubId: string;
+  let shieldAwayClubId: string;
+
+  if (previousStandings && previousStandings.length >= 2) {
+    const leagueChampionId = previousStandings[0].clubId;
+    const faCupWinnerId = previousCupWinners?.[CUP_IDS.ENGLISH_CUP];
+    shieldHomeClubId = leagueChampionId;
+    if (faCupWinnerId && faCupWinnerId !== leagueChampionId) {
+      shieldAwayClubId = faCupWinnerId;
+    } else {
+      // The Double winner plays against the league runner-up
+      shieldAwayClubId = previousStandings[1].clubId;
+    }
+  } else {
+    // Default Season 1 opening match
+    shieldHomeClubId = englishClubs[0].id; // Man Blue (League Champions)
+    shieldAwayClubId = englishClubs[1].id; // London Red (Cup Winners)
+    if (userClub.id === englishClubs[0].id) {
+      shieldHomeClubId = userClub.id;
+      shieldAwayClubId = englishClubs[1].id;
+    } else if (userClub.id === englishClubs[1].id) {
+      shieldHomeClubId = englishClubs[0].id;
+      shieldAwayClubId = userClub.id;
+    } else if (userClub.tier === 'elite') {
+      shieldAwayClubId = userClub.id;
+    }
   }
 
   const shieldFixture: CupFixture = {
@@ -176,8 +196,8 @@ export function initializeSeasonCups(
     round: 1,
     roundName: 'Final',
     date: `${yearStart}-08-08`,
-    homeClubId: shieldHome.id,
-    awayClubId: shieldAway.id,
+    homeClubId: shieldHomeClubId,
+    awayClubId: shieldAwayClubId,
     played: false,
     isKnockout: true,
     venue: 'Wembley Stadium (Neutral)',
@@ -221,7 +241,6 @@ export function initializeSeasonCups(
     });
   }
 
-
   const leagueCupTournament: CupTournament = {
     id: CUP_IDS.LEAGUE_CUP,
     name: 'League Cup',
@@ -234,8 +253,7 @@ export function initializeSeasonCups(
     qualifyingClubs: lcEntrants,
   };
 
-  // 3. The English Cup (FA Cup equivalent: Top-flight clubs enter at Third Round in January)
-  // Draw date: 14 December. Matches scheduled on dedicated weekend with no league clashing.
+  // 3. The English Cup (FA Cup equivalent: Top-flight clubs enter at Third Round / R16 in January)
   const ecEntrants = [
     ...englishClubs.slice(0, 12).map((c) => c.id),
     ...LOWER_LEAGUE_CLUBS.slice(0, 4).map((c) => c.id),
@@ -275,28 +293,71 @@ export function initializeSeasonCups(
     qualifyingClubs: ecEntrants,
   };
 
-  // 4. European Champions Cup (Authentic 36-team Swiss League Phase with 8 matchdays from September to January)
+  // 4. European Champions Cup (36-team Swiss League Phase with 8 matchdays from September to January)
+  let uclEnglishClubIds: string[];
+  if (previousStandings && previousStandings.length >= 4) {
+    uclEnglishClubIds = [
+      previousStandings[0].clubId,
+      previousStandings[1].clubId,
+      previousStandings[2].clubId,
+      previousStandings[3].clubId,
+    ];
+    const uclDefendingChamp = previousCupWinners?.[CUP_IDS.EURO_CHAMPIONS];
+    if (
+      uclDefendingChamp &&
+      englishClubs.some((c) => c.id === uclDefendingChamp) &&
+      !uclEnglishClubIds.includes(uclDefendingChamp)
+    ) {
+      uclEnglishClubIds[3] = uclDefendingChamp;
+    }
+  } else {
+    uclEnglishClubIds = englishClubs.slice(0, 4).map((c) => c.id);
+  }
+
+  const userInUcl = uclEnglishClubIds.includes(userClub.id);
+  const uclFeaturedClub = userInUcl
+    ? userClub
+    : (englishClubs.find((c) => c.id === uclEnglishClubIds[0]) || englishClubs[0]);
+
   const euroChampionsTournament: CupTournament = initializeChampionsLeagueWithLeaguePhase(
-    userClub,
+    uclFeaturedClub,
     yearStart,
     currentDate
   );
 
   // 5. European Challenge Cup (Europa League equivalent)
+  let challengeEnglishClubIds: string[];
+  if (previousStandings && previousStandings.length >= 6) {
+    challengeEnglishClubIds = [
+      previousStandings[4].clubId,
+      previousStandings[5].clubId,
+    ];
+    const faCupWinner = previousCupWinners?.[CUP_IDS.ENGLISH_CUP];
+    if (
+      faCupWinner &&
+      !uclEnglishClubIds.includes(faCupWinner) &&
+      !challengeEnglishClubIds.includes(faCupWinner)
+    ) {
+      challengeEnglishClubIds[1] = faCupWinner;
+    }
+  } else {
+    challengeEnglishClubIds = [englishClubs[4].id, englishClubs[5].id];
+  }
+
   const challengeEntrants = [
-    englishClubs[4].id, // Man Red
-    englishClubs[5].id, // North London White
+    challengeEnglishClubIds[0] || englishClubs[4].id,
+    challengeEnglishClubIds[1] || englishClubs[5].id,
     CONTINENTAL_EUROPEAN_CLUBS[4].id, // Milan Blue
     CONTINENTAL_EUROPEAN_CLUBS[5].id, // Milan Red
     CONTINENTAL_EUROPEAN_CLUBS[6].id, // Turin Stripes
     CONTINENTAL_EUROPEAN_CLUBS[7].id, // Dortmund Yellow
-    englishClubs[6].id, // Tyneside Stripes
-    englishClubs[7].id, // West Midlands Claret
+    englishClubs[6]?.id || 'brighton_seagulls',
+    englishClubs[7]?.id || 'west_ham_claret',
   ];
 
-  const euroEntrants = euroChampionsTournament.qualifyingClubs || [];
-  if (!euroEntrants.includes(userClub.id) && !challengeEntrants.includes(userClub.id)) {
-    challengeEntrants[challengeEntrants.length - 1] = userClub.id;
+  const userInChallenge = challengeEnglishClubIds.includes(userClub.id);
+  if (userInChallenge && !challengeEntrants.includes(userClub.id)) {
+    challengeEntrants[0] = userClub.id;
   }
 
   const challengeDrawDate = `${yearStart}-12-18`;
@@ -330,24 +391,36 @@ export function initializeSeasonCups(
     qualifyingClubs: challengeEntrants,
   };
 
-  // 6. European Plate (Conference equivalent: starts at Quarter-Final with 8 clubs, not Semi-Final)
+  // 6. European Plate (Conference equivalent: starts at Quarter-Final with 8 clubs)
+  let plateEnglishClubIds: string[];
+  if (previousStandings && previousStandings.length >= 7) {
+    plateEnglishClubIds = [previousStandings[6].clubId];
+    const lcWinner = previousCupWinners?.[CUP_IDS.LEAGUE_CUP];
+    if (
+      lcWinner &&
+      !uclEnglishClubIds.includes(lcWinner) &&
+      !challengeEnglishClubIds.includes(lcWinner)
+    ) {
+      plateEnglishClubIds = [lcWinner];
+    }
+  } else {
+    plateEnglishClubIds = [englishClubs[6]?.id || 'brighton_seagulls'];
+  }
+
   const plateEntrants = [
-    englishClubs[8].id, // Brighton Seagulls
-    englishClubs[9].id, // West Ham Claret
-    englishClubs[10]?.id || 'south_coast_stadium', // Riverside Cottage / Saints
-    englishClubs[11]?.id || 'molineux_ridge', // Selhurst Grounds / Wolves
+    plateEnglishClubIds[0] || englishClubs[8].id,
+    englishClubs[9]?.id || 'west_ham_claret',
+    englishClubs[10]?.id || 'west_london_whites',
+    englishClubs[11]?.id || 'south_london_eagles',
     CONTINENTAL_EUROPEAN_CLUBS[8].id, // Lisbon Eagles
     CONTINENTAL_EUROPEAN_CLUBS[9].id, // Amsterdam Red
     'turin_stripes',
     'dortmund_yellow',
   ];
 
-  if (
-    !euroEntrants.includes(userClub.id) &&
-    !challengeEntrants.includes(userClub.id) &&
-    !plateEntrants.includes(userClub.id)
-  ) {
-    plateEntrants[plateEntrants.length - 1] = userClub.id;
+  const userInPlate = plateEnglishClubIds.includes(userClub.id);
+  if (userInPlate && !plateEntrants.includes(userClub.id)) {
+    plateEntrants[0] = userClub.id;
   }
 
   const plateDrawDate = `${yearStart}-12-18`;

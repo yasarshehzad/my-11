@@ -1120,7 +1120,7 @@ function CareerPlayHubContent() {
     setEditingClubName(updated.club.customName || updated.club.defaultName);
   };
 
-  const allClubs = getClubsWithUserClub(save?.club);
+  const allClubs = getClubsWithUserClub(save?.club, save?.activeLeagueClubIds);
   const clubsMap = new Map<string, Club>(allClubs.map((c) => [c.id, c]));
   const nextScheduled = save ? getNextScheduledMatch(save) : null;
   const nextFixture = nextScheduled ? nextScheduled.fixture : null;
@@ -2972,6 +2972,8 @@ function CareerPlayHubContent() {
             userClub={save.club}
             fixtures={save.fixtures || []}
             userSquad={save.squad}
+            seasonHistory={save.seasonHistory || []}
+            activeLeagueClubIds={save.activeLeagueClubIds}
           />
         )}
 
@@ -3677,6 +3679,40 @@ function CareerPlayHubContent() {
                 )}
               </div>
             </div>
+
+            {/* Division Promotion & Relegation Roster Updates */}
+            {(seasonSummary.promotedClubNames?.length || seasonSummary.relegatedClubNames?.length) ? (
+              <div className="office-subcard border border-slate-200 rounded-2xl p-4 space-y-2.5 bg-slate-50/70">
+                <div className="text-[10px] font-black uppercase text-slate-700 tracking-wider flex items-center justify-between font-display">
+                  <span className="flex items-center gap-1.5">
+                    <span>🔄</span> Top Flight Promotion &amp; Relegation
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-500">Season {save.season.seasonNumber + 1} Roster</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  {seasonSummary.promotedClubNames && seasonSummary.promotedClubNames.length > 0 && (
+                    <div className="bg-emerald-50/90 border border-emerald-200/90 rounded-xl p-2.5 space-y-1">
+                      <span className="text-[10px] font-display font-black uppercase tracking-wider text-emerald-800 flex items-center gap-1">
+                        <span>⬆️</span> Promoted to Top Flight
+                      </span>
+                      <p className="text-xs font-bold text-emerald-900">
+                        {seasonSummary.promotedClubNames.join(', ')}
+                      </p>
+                    </div>
+                  )}
+                  {seasonSummary.relegatedClubNames && seasonSummary.relegatedClubNames.length > 0 && (
+                    <div className="bg-rose-50/90 border border-rose-200/90 rounded-xl p-2.5 space-y-1">
+                      <span className="text-[10px] font-display font-black uppercase tracking-wider text-rose-800 flex items-center gap-1">
+                        <span>⬇️</span> Relegated from Top Flight
+                      </span>
+                      <p className="text-xs font-bold text-rose-900">
+                        {seasonSummary.relegatedClubNames.join(', ')}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : null}
 
             {/* Action Buttons */}
             <div className="flex gap-3 pt-2">

@@ -653,6 +653,27 @@ export interface ManagerMessage {
   targetId?: string;
 }
 
+export interface SeasonHistoryRecord {
+  seasonNumber: number;
+  yearStart: number;
+  yearLabel: string;
+  clubId: string;
+  clubName: string;
+  finalPosition: number;
+  points: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  trophiesWon: string[];
+  topScorerName?: string;
+  topScorerGoals?: number;
+  promotedClubNames?: string[];
+  relegatedClubNames?: string[];
+  europeanQualification?: string;
+}
+
 export interface CareerSaveFile {
   version: number;
   id: string; // 'slot_1' | 'slot_2' | 'slot_3'
@@ -668,6 +689,8 @@ export interface CareerSaveFile {
   lineup?: CareerLineup;
   fixtures?: LeagueFixture[];
   standings?: ClubStanding[];
+  activeLeagueClubIds?: string[]; // The 20 clubs currently competing in the top flight (handles promotion & relegation)
+  seasonHistory?: SeasonHistoryRecord[]; // Multi-season Hall of Fame and campaign history records
   calendar?: CalendarEvent[];
   cups?: Record<string, CupTournament>;
   trophies: TrophyRecord[];
