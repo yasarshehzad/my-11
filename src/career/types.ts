@@ -277,6 +277,26 @@ export type PressingIntensity = 'low_block' | 'balanced' | 'high_press';
 export type AttackingStyle = 'patient' | 'mixed' | 'direct_counter';
 export type HalfTimeTeamTalkType = 'demand_more' | 'keep_composed' | 'tighten_up' | 'aggressive';
 
+export type TeamTrainingFocus =
+  | 'balanced'
+  | 'match_prep'
+  | 'recovery'
+  | 'attacking'
+  | 'defensive';
+
+export type MentorshipDrill =
+  | 'finishing'
+  | 'playmaking'
+  | 'explosiveness'
+  | 'defending'
+  | 'goalkeeping';
+
+export interface TrainingProgramState {
+  teamFocus: TeamTrainingFocus;
+  mentorships: Record<string, MentorshipDrill>; // playerId -> drill
+  lastSessionDate?: string;
+}
+
 export interface MatchEvent {
   minute: number;
   type:
@@ -656,6 +676,7 @@ export interface CareerSaveFile {
   shortlistPlayerIds?: string[];
   youthAcademy?: YouthProspect[];
   boardStatus?: BoardStatus;
+  trainingState?: TrainingProgramState;
   phase: 'preseason' | 'transfer_window' | 'regular_season' | 'season_review';
   inbox?: ManagerMessage[];
   deadlineDayState?: DeadlineDayState;

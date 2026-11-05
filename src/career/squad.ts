@@ -931,3 +931,105 @@ export function isPlayerRegisteredForMatch(
   return registered.includes(player.id);
 }
 
+export interface SquadRotationResult {
+  updatedLineup: CareerLineup;
+  rotatedCount: number;
+  swaps: Array<{
+    slotIndex: number;
+    position: string;
+    fatiguedPlayer: CareerPlayer;
+    freshPlayer: CareerPlayer;
+  }>;
+}
+
+/**
+ * Automatically inspects the starting XI and rotates out any fatigued or injured players (< threshold fitness),
+ * replacing them with the highest-rated fit and eligible bench/reserve player for each slot.
+ */
+export function autoRotateFitLineup(
+  squad: CareerPlayer[],
+  currentLineup: CareerLineup,
+  fitnessThreshold: number = 78,
+  registeredPlayerIds?: string[],
+  seasonYearStart: number = 2026
+): SquadRotationResult {
+  const formation =
+    SUPPORTED_CAREER_FORMATIONS.find((f) => f.name === currentLineup.formation) ||
+    SUPPORTED_CAREER_FORMATIONS[0];
+
+  const playerMap = new Map(squad.map((p) => [p.id, p]));
+  const starterSet = new Set(currentLineup.starterIds);
+  const newStarterIds = [...currentLineup.starterIds];
+  const swaps: SquadRotationResult['swaps'] = [];
+
+  // Candidates who are not already starting, not injured, and meet the fitness threshold
+  const candidates = squad.filter(
+    (p) =>
+      !starterSet.has(p.id) &&
+      !p.injured &&
+      (p.fitness ?? 100) >= fitnessThreshold &&
+      isPlayerRegisteredForMatch(p, squad, registeredPlayerIds, seasonYearStart)
+  );
+
+  const assignedCandidateIds = new Set<string>();
+
+  formation.slots.forEach((slotPos, index) => {
+    const currentStarter = playerMap.get(newStarterIds[index]);
+    if (!currentStarter) return;
+
+    const isFatigued = (currentStarter.fitness ?? 100) < fitnessThreshold;
+    const isUnavailable = currentStarter.injured || isFatigued;
+
+    if (!isUnavailable) return;
+
+    // Determine category
+    const isGk = slotPos === 'GK' || categorizePosition(currentStarter.position) === 'GK';
+
+    // Find the best fit candidate
+    const eligibleCandidates = candidates.filter(
+      (c) =>
+        !assignedCandidateIds.has(c.id) &&
+        (isGk ? categorizePosition(c.position) === 'GK' : categorizePosition(c.position) !== 'GK')
+    );
+
+    if (eligibleCandidates.length === 0) return;
+
+    // Score candidates by position fit and overall rating
+    const scored = eligibleCandidates.map((cand) => {
+      const fit = calculatePositionFit(cand, slotPos);
+      let score = cand.rating;
+      if (fit === 'natural') score += 10;
+      else if (fit === 'competent') score += 5;
+      else score -= 15;
+      // Slight tie-breaker for higher fitness
+      score += (cand.fitness ?? 100) * 0.05;
+      return { cand, score };
+    });
+
+    scored.sort((a, b) => b.score - a.score);
+    const chosen = scored[0].cand;
+
+    // Perform swap
+    newStarterIds[index] = chosen.id;
+    assignedCandidateIds.add(chosen.id);
+    starterSet.delete(currentStarter.id);
+    starterSet.add(chosen.id);
+
+    swaps.push({
+      slotIndex: index,
+      position: slotPos,
+      fatiguedPlayer: currentStarter,
+      freshPlayer: chosen,
+    });
+  });
+
+  return {
+    updatedLineup: {
+      ...currentLineup,
+      starterIds: newStarterIds,
+    },
+    rotatedCount: swaps.length,
+    swaps,
+  };
+}
+

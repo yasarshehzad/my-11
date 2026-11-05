@@ -232,6 +232,8 @@ export function MatchDayModal({
       awayStyle: !isUserHome ? style : 'mixed',
       homeFormation: isUserHome ? formation : '4-3-3',
       awayFormation: !isUserHome ? formation : '4-3-3',
+      homeTrainingFocus: isUserHome ? save.trainingState?.teamFocus : 'balanced',
+      awayTrainingFocus: !isUserHome ? save.trainingState?.teamFocus : 'balanced',
       isNeutralVenue: isNeutralWembley,
       userClubId: save.club.id,
       settings: save.settings,
@@ -442,7 +444,8 @@ export function MatchDayModal({
       userStates,
       Boolean(userWon),
       save.settings,
-      userDrew
+      userDrew,
+      save.trainingState?.teamFocus
     );
 
     const isLeagueMatch = 'round' in fixture && !('isKnockout' in fixture);

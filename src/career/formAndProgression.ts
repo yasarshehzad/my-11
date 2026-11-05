@@ -1,4 +1,11 @@
-import { CareerPlayer, PlayerFaceStats, FormTrend } from './types';
+import {
+  CareerPlayer,
+  PlayerFaceStats,
+  FormTrend,
+  TeamTrainingFocus,
+  MentorshipDrill,
+  TrainingProgramState,
+} from './types';
 import { calculatePlayerValue, calculateWeeklyWage } from './finance';
 import { categorizePosition } from './squad';
 import { players } from '../data/players';
@@ -481,6 +488,168 @@ export function applyMonthlySquadTraining(squad: CareerPlayer[]): {
   });
 
   return { updatedSquad, logs };
+}
+
+export interface WeeklyTrainingResult {
+  updatedSquad: CareerPlayer[];
+  breakthroughs: Array<{
+    player: CareerPlayer;
+    oldRating: number;
+    newRating: number;
+    drill?: MentorshipDrill;
+  }>;
+  staminaRecoveredTotal: number;
+  logs: string[];
+}
+
+/**
+ * Executes a weekly training session for the squad based on the active team training focus
+ * and individual wonderkid mentorship assignments.
+ */
+export function applyWeeklySquadTraining(
+  squad: CareerPlayer[],
+  trainingState?: TrainingProgramState
+): WeeklyTrainingResult {
+  const teamFocus: TeamTrainingFocus = trainingState?.teamFocus || 'balanced';
+  const mentorships = trainingState?.mentorships || {};
+  const breakthroughs: WeeklyTrainingResult['breakthroughs'] = [];
+  const logs: string[] = [];
+  let staminaRecoveredTotal = 0;
+
+  const updatedSquad = squad.map((player) => {
+    let currentFitness = player.fitness ?? 100;
+    let currentMorale = player.morale ?? 75;
+    let currentForm = player.form ?? 7.0;
+
+    // 1. Team Focus recovery and sharpness adjustments
+    if (teamFocus === 'recovery') {
+      const recoveryBonus = 15;
+      const newFitness = Math.min(100, currentFitness + recoveryBonus);
+      staminaRecoveredTotal += newFitness - currentFitness;
+      currentFitness = newFitness;
+      currentMorale = Math.min(100, currentMorale + 2);
+    } else if (teamFocus === 'match_prep') {
+      if (currentForm < 7.5) {
+        currentForm = Math.min(10, Math.round((currentForm + 0.3) * 10) / 10);
+      }
+      currentMorale = Math.min(100, currentMorale + 1);
+    }
+
+    // 2. Progression evaluation
+    // Only U23 players or mentored players up to age 24 develop
+    const isMentored = Boolean(mentorships[player.id]);
+    const maxAge = isMentored ? 24 : 23;
+    if (player.age > maxAge) {
+      return {
+        ...player,
+        fitness: currentFitness,
+        morale: currentMorale,
+        form: currentForm,
+      };
+    }
+
+    const maxPotential = player.potential ?? Math.min(99, player.rating + 4);
+    if (player.rating >= maxPotential) {
+      return {
+        ...player,
+        fitness: currentFitness,
+        morale: currentMorale,
+        form: currentForm,
+      };
+    }
+
+    // Determine weekly XP gain
+    let weeklyXp = 8; // base weekly XP
+    const drill = mentorships[player.id];
+
+    if (isMentored) {
+      // Mentorship drill provides +18 to +28 XP per week
+      weeklyXp += 22;
+    }
+
+    if (
+      teamFocus === 'attacking' &&
+      (categorizePosition(player.position) === 'FWD' || player.position.includes('W'))
+    ) {
+      weeklyXp += 5;
+    } else if (
+      teamFocus === 'defensive' &&
+      (categorizePosition(player.position) === 'DEF' ||
+        player.position === 'CDM' ||
+        player.position === 'GK')
+    ) {
+      weeklyXp += 5;
+    }
+
+    const currentProgress = player.developmentProgress ?? 0;
+    const totalProgress = currentProgress + weeklyXp;
+
+    if (totalProgress >= 100) {
+      const oldRating = player.rating;
+      const newRating = Math.min(maxPotential, oldRating + 1);
+      const leftover = totalProgress - 100;
+      const newValue = calculatePlayerValue(newRating, player.age, player.position);
+      const newWage = calculateWeeklyWage(newRating, newValue);
+      const bonus = calculateFormRatingBonus(player);
+
+      let faceStats = calculateEaFcFaceStats({ ...player, rating: newRating }, bonus);
+      if (drill === 'finishing') {
+        faceStats = { ...faceStats, sho: Math.min(99, faceStats.sho + 2) };
+      } else if (drill === 'playmaking') {
+        faceStats = {
+          ...faceStats,
+          pas: Math.min(99, faceStats.pas + 1),
+          dri: Math.min(99, faceStats.dri + 1),
+        };
+      } else if (drill === 'explosiveness') {
+        faceStats = { ...faceStats, pac: Math.min(99, faceStats.pac + 2) };
+      } else if (drill === 'defending') {
+        faceStats = { ...faceStats, def: Math.min(99, faceStats.def + 2) };
+      } else if (drill === 'goalkeeping') {
+        faceStats = { ...faceStats, dri: Math.min(99, faceStats.dri + 2) };
+      }
+
+      const updatedPlayer: CareerPlayer = {
+        ...player,
+        rating: newRating,
+        value: newValue,
+        wageWeekly: Math.max(player.wageWeekly, newWage),
+        developmentProgress: leftover,
+        faceStats,
+        fitness: currentFitness,
+        morale: currentMorale,
+        form: currentForm,
+      };
+
+      breakthroughs.push({
+        player: updatedPlayer,
+        oldRating,
+        newRating,
+        drill,
+      });
+
+      logs.push(
+        `⭐ Training Breakthrough: ${player.name} (${player.position}) leveled up to ${newRating} OVR!${drill ? ` [Drill: ${drill}]` : ''}`
+      );
+
+      return updatedPlayer;
+    }
+
+    return {
+      ...player,
+      developmentProgress: totalProgress,
+      fitness: currentFitness,
+      morale: currentMorale,
+      form: currentForm,
+    };
+  });
+
+  return {
+    updatedSquad,
+    breakthroughs,
+    staminaRecoveredTotal,
+    logs,
+  };
 }
 
 /**

@@ -630,7 +630,8 @@ export function advanceTimeSkip(
         activeSquad,
         simmedResult as LeagueFixture,
         userClubId,
-        save.settings
+        save.settings,
+        save.trainingState?.teamFocus
       );
     }
 

@@ -592,6 +592,7 @@ function CareerPlayHubContent() {
     ? (rawTab as 'overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings')
     : 'overview';
   const [activeTab, setActiveTab] = useState<'overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings'>(initialTab);
+  const [squadInitialViewMode, setSquadInitialViewMode] = useState<'pitch' | 'list' | 'academy' | 'training'>('pitch');
   const [tabHistory, setTabHistory] = useState<('overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings')[]>([]);
   const [showExitConfirmModal, setShowExitConfirmModal] = useState(false);
   const [showBoardDossierModal, setShowBoardDossierModal] = useState(false);
@@ -1317,7 +1318,8 @@ function CareerPlayHubContent() {
         activeSquad,
         simmed,
         save.club.id,
-        save.settings
+        save.settings,
+        save.trainingState?.teamFocus
       );
 
       const updatedSave: CareerSaveFile = {
@@ -1375,7 +1377,8 @@ function CareerPlayHubContent() {
       activeSquad,
       simmed,
       save.club.id,
-      save.settings
+      save.settings,
+      save.trainingState?.teamFocus
     );
 
     const updatedSave: CareerSaveFile = {
@@ -2588,6 +2591,7 @@ function CareerPlayHubContent() {
                   type="button"
                   data-office-ui="true"
                   onClick={() => {
+                    setSquadInitialViewMode('training');
                     handleTabChange('squad');
                     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                   }}
@@ -2946,6 +2950,7 @@ function CareerPlayHubContent() {
             onUpdateSave={handleUpdateSave}
             onOpenCompare={(pA, pB) => setComparisonState({ isOpen: true, playerA: pA, playerB: pB })}
             onNotification={showToast}
+            initialViewMode={squadInitialViewMode}
           />
         )}
 

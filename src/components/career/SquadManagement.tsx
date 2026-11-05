@@ -2,7 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { CareerPlayer, CareerSaveFile, CareerLineup, YouthProspect } from '../../career/types';
+import {
+  CareerPlayer,
+  CareerSaveFile,
+  CareerLineup,
+  YouthProspect,
+  TeamTrainingFocus,
+  MentorshipDrill,
+  TrainingProgramState,
+} from '../../career/types';
 import {
   validateSquad,
   categorizePosition,
@@ -16,6 +24,8 @@ import {
   isPlayerRegisteredForMatch,
   MAX_SENIOR_SQUAD_SIZE,
   U21_AGE_LIMIT,
+  autoRotateFitLineup,
+  SquadRotationResult,
 } from '../../career/squad';
 import { SquadRegistrationModal } from './SquadRegistrationModal';
 
@@ -31,6 +41,8 @@ import { getPlayerCompleteStats } from '../../career/playerStats';
 import {
   calculateFormRatingBonus,
   getEffectiveRating,
+  applyWeeklySquadTraining,
+  WeeklyTrainingResult,
 } from '../../career/formAndProgression';
 import {
   setPlayerTransferStatus,
@@ -39,15 +51,74 @@ import {
   releasePlayerContract,
 } from '../../career/transfers';
 
+const TRAINING_FOCUS_OPTIONS: Array<{
+  id: TeamTrainingFocus;
+  icon: string;
+  title: string;
+  description: string;
+  buffs: string[];
+}> = [
+  {
+    id: 'match_prep',
+    icon: '🎯',
+    title: 'Match Preparation',
+    description: 'Tactical walkthroughs & opposition analysis. Highest sharpness for upcoming matches.',
+    buffs: ['+1.2 ATT/MID/DEF', '+2 Composure', 'Protected Form'],
+  },
+  {
+    id: 'recovery',
+    icon: '🔋',
+    title: 'Rest & Recovery',
+    description: 'Light hydrotherapy & recovery drills. Essential during mid-week congested schedules.',
+    buffs: ['+15% Stamina Regen', '18% Slower Match Drain', '-40% Injury Chance'],
+  },
+  {
+    id: 'attacking',
+    icon: '⚔️',
+    title: 'Attacking Drills',
+    description: 'Finishing, winger overlaps, and rapid box penetration to maximize goal output.',
+    buffs: ['+2.2 ATT Power', '+10% Conversion', '+Winger/FWD XP'],
+  },
+  {
+    id: 'defensive',
+    icon: '🛡️',
+    title: 'Defensive Shape',
+    description: 'Low block structure, aerial clearing, and coordinated offside traps.',
+    buffs: ['+2.2 DEF Solidity', '-12% Opponent xG', '+Defender/GK XP'],
+  },
+  {
+    id: 'balanced',
+    icon: '⚖️',
+    title: 'Balanced Routine',
+    description: 'Standard holistic football drills maintaining general squad readiness.',
+    buffs: ['Standard Recovery', 'Even Development', 'Balanced Load'],
+  },
+];
+
 interface SquadManagementProps {
   save: CareerSaveFile;
   onUpdateSave: (updated: CareerSaveFile) => void;
   onOpenCompare?: (playerA: CareerPlayer, playerB?: CareerPlayer) => void;
   onNotification?: (msg: string) => void;
+  initialViewMode?: 'pitch' | 'list' | 'academy' | 'training';
 }
 
-export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotification }: SquadManagementProps) {
-  const [viewMode, setViewMode] = useState<'pitch' | 'list' | 'academy'>('pitch');
+export function SquadManagement({
+  save,
+  onUpdateSave,
+  onOpenCompare,
+  onNotification,
+  initialViewMode = 'pitch',
+}: SquadManagementProps) {
+  const [viewMode, setViewMode] = useState<'pitch' | 'list' | 'academy' | 'training'>(initialViewMode);
+  const [rotationFeedback, setRotationFeedback] = useState<SquadRotationResult | null>(null);
+  const [trainingSessionResults, setTrainingSessionResults] = useState<WeeklyTrainingResult | null>(null);
+
+  useEffect(() => {
+    if (initialViewMode) {
+      setViewMode(initialViewMode);
+    }
+  }, [initialViewMode]);
   const [filterGroup, setFilterGroup] = useState<'ALL' | GeneralPositionGroup>('ALL');
   const [selectedPlayer, setSelectedPlayer] = useState<CareerPlayer | null>(null);
   const [swapSourceId, setSwapSourceId] = useState<string | null>(null);
@@ -220,6 +291,126 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
     });
     onNotification?.('Auto-picked best eligible starting lineup and bench.');
   };
+
+  // Training & Development state & handlers
+  const currentTeamFocus: TeamTrainingFocus = save.trainingState?.teamFocus || 'balanced';
+  const currentMentorships: Record<string, MentorshipDrill> = save.trainingState?.mentorships || {};
+
+  const handleSetTeamTrainingFocus = (focus: TeamTrainingFocus) => {
+    const updatedTrainingState: TrainingProgramState = {
+      teamFocus: focus,
+      mentorships: currentMentorships,
+      lastSessionDate: save.season.currentDate,
+    };
+    onUpdateSave({
+      ...save,
+      trainingState: updatedTrainingState,
+    });
+    onNotification?.(`Training focus set to ${focus.replace('_', ' ').toUpperCase()}`);
+  };
+
+  const handleAssignMentorship = (playerId: string, drill: MentorshipDrill | 'none') => {
+    const nextMentorships = { ...currentMentorships };
+    if (drill === 'none') {
+      delete nextMentorships[playerId];
+    } else {
+      const activeIds = Object.keys(nextMentorships).filter((id) => id !== playerId);
+      if (activeIds.length >= 3) {
+        onNotification?.('Maximum 3 wonderkids can receive individual specialist mentorship at once.');
+        return;
+      }
+      nextMentorships[playerId] = drill;
+    }
+
+    const updatedTrainingState: TrainingProgramState = {
+      teamFocus: currentTeamFocus,
+      mentorships: nextMentorships,
+      lastSessionDate: save.season.currentDate,
+    };
+    onUpdateSave({
+      ...save,
+      trainingState: updatedTrainingState,
+    });
+    const player = squad.find((p) => p.id === playerId);
+    if (player) {
+      onNotification?.(
+        drill === 'none'
+          ? `Removed specialist mentorship from ${player.name}.`
+          : `Assigned ${player.name} to ${drill.toUpperCase()} mentorship program!`
+      );
+    }
+  };
+
+  const handleAutoRotateLineup = () => {
+    if (!save.lineup) return;
+    const result = autoRotateFitLineup(
+      squad,
+      save.lineup,
+      78,
+      save.registeredPlayerIds,
+      save.season?.yearStart
+    );
+
+    if (result.rotatedCount === 0) {
+      setRotationFeedback(result);
+      onNotification?.('All starters in your XI are currently fit (78%+ stamina) and ready to play.');
+      return;
+    }
+
+    onUpdateSave({
+      ...save,
+      lineup: result.updatedLineup,
+    });
+    setRotationFeedback(result);
+    onNotification?.(
+      `Smart Rotation: Rotated ${result.rotatedCount} fatigued starter${result.rotatedCount > 1 ? 's' : ''} for fresh options.`
+    );
+  };
+
+  const handleRunTrainingSession = () => {
+    const result = applyWeeklySquadTraining(squad, save.trainingState);
+    const updatedTrainingState: TrainingProgramState = {
+      teamFocus: currentTeamFocus,
+      mentorships: currentMentorships,
+      lastSessionDate: save.season.currentDate,
+    };
+    onUpdateSave({
+      ...save,
+      squad: result.updatedSquad,
+      trainingState: updatedTrainingState,
+    });
+    setTrainingSessionResults(result);
+    if (result.breakthroughs.length > 0) {
+      onNotification?.(
+        `🎉 Training Breakthrough! ${result.breakthroughs.map((b) => `${b.player.name} (+1 OVR)`).join(', ')}`
+      );
+    } else {
+      onNotification?.(
+        `Weekly training completed. ${result.staminaRecoveredTotal > 0 ? `+${result.staminaRecoveredTotal}% squad stamina recovered.` : 'Squad sharpness boosted.'}`
+      );
+    }
+  };
+
+  const fatiguedStartersCount = starters.filter(
+    (p) => (p.fitness ?? 100) < 78 || p.injured
+  ).length;
+
+  const u23Players = squad
+    .filter((p) => p.age <= 23)
+    .sort((a, b) => (b.potential ?? b.rating) - (a.potential ?? a.rating));
+
+  const attackingPlayers = squad.filter(
+    (p) => categorizePosition(p.position) === 'FWD' || p.position.includes('W') || p.position === 'CAM'
+  );
+  const midfieldPlayers = squad.filter(
+    (p) => categorizePosition(p.position) === 'MID' && p.position !== 'CAM'
+  );
+  const defensivePlayers = squad.filter(
+    (p) => categorizePosition(p.position) === 'DEF' || p.position === 'GK'
+  );
+  const recoveringPlayers = squad.filter(
+    (p) => p.injured || (p.fitness ?? 100) < 72
+  );
 
   const handleRoleChange = (player: CareerPlayer, newRole: 'starter' | 'bench' | 'reserve') => {
     if (newRole !== 'reserve') {
@@ -723,6 +914,45 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
             }`}>
               {academy.length}
             </span>
+          </button>
+          <button
+            onClick={() => {
+              if (viewMode === 'training') {
+                window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+              } else {
+                setViewMode('training');
+                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+              }
+            }}
+            className={`py-1 px-2.5 rounded-lg text-xs font-display font-black uppercase transition-all flex items-center gap-1 cursor-pointer ${
+              viewMode === 'training'
+                ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-xs'
+                : 'office-nav-tab-inactive'
+            }`}
+          >
+            <span>Training</span>
+            {fatiguedStartersCount > 0 ? (
+              <span
+                className={`text-[9.5px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                  viewMode === 'training'
+                    ? 'bg-amber-400 text-slate-950'
+                    : 'bg-amber-100 text-amber-800'
+                }`}
+                title={`${fatiguedStartersCount} starter(s) fatigued`}
+              >
+                {fatiguedStartersCount}
+              </span>
+            ) : (
+              <span
+                className={`text-[9.5px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                  viewMode === 'training'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-slate-200 text-slate-700'
+                }`}
+              >
+                {Object.keys(currentMentorships).length}/3
+              </span>
+            )}
           </button>
         </div>
       </section>
@@ -1381,6 +1611,363 @@ export function SquadManagement({ save, onUpdateSave, onOpenCompare, onNotificat
               })}
             </div>
           )}
+        </section>
+      )}
+
+      {/* TRAINING & PERFORMANCE LAB VIEW */}
+      {viewMode === 'training' && (
+        <section id="squad-training-section" className="space-y-4 scroll-mt-20 animate-fade-in" aria-label="Training Ground & Performance Lab">
+          {/* Top Hero Card */}
+          <div className="office-subcard p-4 sm:p-5 rounded-3xl space-y-4 shadow-sm border border-slate-200/90 bg-gradient-to-br from-white via-slate-50/50 to-emerald-50/30">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">🏃</span>
+                  <h3 className="text-lg sm:text-xl font-display font-black text-slate-900 uppercase tracking-tight">
+                    Training Ground & Performance Lab
+                  </h3>
+                </div>
+                <p className="text-xs text-slate-600 font-medium max-w-xl">
+                  Calibrate your weekly squad training focus and assign dedicated specialist mentorship drills to accelerate your U23 prodigies toward their wonderkid potential ceiling.
+                </p>
+              </div>
+
+              {/* Action Buttons: Auto-Pick Fit XI + Run Drills */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={handleAutoRotateLineup}
+                  className="py-2 px-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-sm transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+                  title="Automatically replace fatigued starters with fit bench players"
+                >
+                  <span>⚡</span>
+                  <span>Auto-Pick Fit XI</span>
+                  {fatiguedStartersCount > 0 && (
+                    <span className="bg-slate-950 text-amber-300 text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold">
+                      {fatiguedStartersCount}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleRunTrainingSession}
+                  className="py-2 px-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-display font-black text-xs uppercase tracking-wider shadow-sm transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+                  title="Run weekly training session"
+                >
+                  <span>⚽</span>
+                  <span>Run Weekly Drills</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Rotation Toast Alert */}
+            {rotationFeedback && (
+              <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-2 animate-fade-in">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">⚡</span>
+                  <div>
+                    {rotationFeedback.rotatedCount === 0 ? (
+                      <span className="font-semibold">Starting XI is in peak condition! No fatigued players require rotation.</span>
+                    ) : (
+                      <span>
+                        <strong className="font-bold">Smart Rotation Applied:</strong> {rotationFeedback.swaps.map(s => `${s.freshPlayer.name} on for ${s.fatiguedPlayer.name} (${s.position})`).join(', ')}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setRotationFeedback(null)}
+                  className="text-xs font-bold opacity-60 hover:opacity-100 cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
+            {/* Training Session Breakthrough Toast */}
+            {trainingSessionResults && (
+              <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center justify-between gap-2 animate-fade-in">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🎉</span>
+                  <div>
+                    {trainingSessionResults.breakthroughs.length > 0 ? (
+                      <div>
+                        <strong className="font-bold">Breakthrough!</strong>{' '}
+                        {trainingSessionResults.breakthroughs.map(b => `${b.player.name} +1 OVR (${b.newRating})`).join(' • ')}
+                      </div>
+                    ) : (
+                      <span>
+                        Weekly training complete. All squad members sharpened. {trainingSessionResults.staminaRecoveredTotal > 0 && `(+${trainingSessionResults.staminaRecoveredTotal}% squad stamina recovered)`}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setTrainingSessionResults(null)}
+                  className="text-xs font-bold opacity-60 hover:opacity-100 cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Section 1: Weekly Team Focus */}
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-display font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                <span>📋</span>
+                <span>Team Weekly Focus</span>
+              </h4>
+              <span className="text-[11px] font-mono text-slate-500">
+                Active: <strong className="text-emerald-700 capitalize">{currentTeamFocus.replace('_', ' ')}</strong>
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+              {TRAINING_FOCUS_OPTIONS.map((opt) => {
+                const isActive = currentTeamFocus === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => handleSetTeamTrainingFocus(opt.id)}
+                    className={`text-left p-3.5 rounded-2xl border transition-all cursor-pointer relative flex flex-col justify-between gap-2 ${
+                      isActive
+                        ? 'bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-400 shadow-xs ring-2 ring-emerald-500/20'
+                        : 'bg-white border-slate-200/90 hover:border-slate-300 hover:bg-slate-50/50 shadow-2xs'
+                    }`}
+                  >
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl">{opt.icon}</span>
+                        {isActive && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-display font-black bg-emerald-600 text-white uppercase tracking-wider">
+                            ACTIVE
+                          </span>
+                        )}
+                      </div>
+                      <div className="font-display font-black text-xs text-slate-900 uppercase tracking-tight">
+                        {opt.title}
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-snug">
+                        {opt.description}
+                      </p>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-100 flex flex-wrap gap-1">
+                      {opt.buffs.map((b, idx) => (
+                        <span key={idx} className="text-[9.5px] px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-700 font-mono font-semibold">
+                          {b}
+                        </span>
+                      ))}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Section 2: Individual Wonderkid Mentorship (U23) */}
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <h4 className="text-xs font-display font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <span>⭐</span>
+                  <span>Wonderkid Specialist Mentorship (U23)</span>
+                </h4>
+                <p className="text-[11px] text-slate-500">
+                  Assign up to 3 young talents to 1-on-1 coaching with first-team veterans. Mentored players gain +22 XP weekly toward an in-season +1 OVR leap.
+                </p>
+              </div>
+              <span className="text-[11px] font-mono px-2 py-1 rounded-full bg-slate-100 text-slate-700 font-bold border border-slate-200">
+                {Object.keys(currentMentorships).length} / 3 Slots
+              </span>
+            </div>
+
+            {u23Players.length === 0 ? (
+              <div className="p-8 text-center bg-white border border-slate-200 rounded-2xl text-xs text-slate-500">
+                No Under-23 players currently in the senior squad. Promote youth prospects from the Academy tab to begin specialist development.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {u23Players.map((player) => {
+                  const assignedDrill = currentMentorships[player.id];
+                  const progress = player.developmentProgress ?? 0;
+                  const potential = player.potential ?? (player.rating + 4);
+                  const isMaxed = player.rating >= potential;
+
+                  return (
+                    <article
+                      key={player.id}
+                      className={`p-3.5 rounded-2xl border transition-all space-y-3 ${
+                        assignedDrill
+                          ? 'bg-gradient-to-br from-white via-indigo-50/20 to-teal-50/30 border-teal-300 shadow-xs'
+                          : 'bg-white border-slate-200/90 shadow-2xs'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-8 h-8 rounded-xl bg-slate-900 text-white font-mono font-bold text-xs flex items-center justify-center shadow-xs">
+                            {player.rating}
+                          </span>
+                          <div>
+                            <div className="font-display font-black text-xs text-slate-900">
+                              {player.name}
+                            </div>
+                            <div className="text-[11px] text-slate-500 font-mono">
+                              {player.position} • Age {player.age} • Pot: <span className="font-bold text-emerald-700">{potential}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {assignedDrill ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-mono font-bold bg-teal-100 text-teal-800 border border-teal-200">
+                            MENTORED
+                          </span>
+                        ) : null}
+                      </div>
+
+                      {/* XP Progress Bar */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-[10px] font-mono text-slate-500">
+                          <span>Development XP</span>
+                          <span className="font-bold text-slate-700">{progress}%</span>
+                        </div>
+                        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200">
+                          <div
+                            className={`h-full rounded-full transition-all duration-300 ${
+                              assignedDrill
+                                ? 'bg-gradient-to-r from-teal-500 to-emerald-500'
+                                : 'bg-slate-400'
+                            }`}
+                            style={{ width: `${Math.min(100, Math.max(4, progress))}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Mentorship Drill Dropdown */}
+                      <div className="pt-1">
+                        <label htmlFor={`drill-select-${player.id}`} className="sr-only">Assign Drill</label>
+                        <select
+                          id={`drill-select-${player.id}`}
+                          value={assignedDrill || 'none'}
+                          onChange={(e) => handleAssignMentorship(player.id, e.target.value as MentorshipDrill | 'none')}
+                          disabled={isMaxed}
+                          className="w-full py-1.5 px-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-white text-xs font-semibold text-slate-800 transition-all cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-teal-500"
+                        >
+                          <option value="none">Standard Training (+8 XP/wk)</option>
+                          <option value="finishing">🎯 Finishing Masterclass (+22 XP, SHO)</option>
+                          <option value="playmaking">🪄 Playmaking & Vision (+22 XP, PAS/DRI)</option>
+                          <option value="explosiveness">⚡ Explosiveness & Pace (+22 XP, PAC/PHY)</option>
+                          <option value="defending">🛡️ Defensive Positioning (+22 XP, DEF)</option>
+                          {player.position === 'GK' && (
+                            <option value="goalkeeping">🧤 Goalkeeping Reflexes (+22 XP, GK)</option>
+                          )}
+                        </select>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Section 3: Training Units Overview */}
+          <div className="office-subcard p-4 rounded-3xl border border-slate-200/90 bg-white space-y-3 shadow-xs">
+            <h4 className="text-xs font-display font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+              <span>🏟️</span>
+              <span>Training Ground Units</span>
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {/* Attacking Unit */}
+              <div className="p-3 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-2">
+                <div className="flex items-center justify-between text-xs font-display font-bold text-slate-800">
+                  <span className="flex items-center gap-1"><span>⚡</span> Attacking Unit</span>
+                  <span className="font-mono text-[11px] text-slate-500">{attackingPlayers.length}</span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {attackingPlayers.slice(0, 8).map(p => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => handleSelectPlayerWithActions(p)}
+                      className="text-[10px] px-1.5 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 hover:border-teal-400 font-semibold cursor-pointer"
+                    >
+                      {p.name.split(' ').pop()} ({p.fitness}%)
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Midfield Unit */}
+              <div className="p-3 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-2">
+                <div className="flex items-center justify-between text-xs font-display font-bold text-slate-800">
+                  <span className="flex items-center gap-1"><span>🪄</span> Midfield Unit</span>
+                  <span className="font-mono text-[11px] text-slate-500">{midfieldPlayers.length}</span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {midfieldPlayers.slice(0, 8).map(p => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => handleSelectPlayerWithActions(p)}
+                      className="text-[10px] px-1.5 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 hover:border-teal-400 font-semibold cursor-pointer"
+                    >
+                      {p.name.split(' ').pop()} ({p.fitness}%)
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Defensive Unit */}
+              <div className="p-3 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-2">
+                <div className="flex items-center justify-between text-xs font-display font-bold text-slate-800">
+                  <span className="flex items-center gap-1"><span>🛡️</span> Defensive Unit</span>
+                  <span className="font-mono text-[11px] text-slate-500">{defensivePlayers.length}</span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {defensivePlayers.slice(0, 8).map(p => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => handleSelectPlayerWithActions(p)}
+                      className="text-[10px] px-1.5 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 hover:border-teal-400 font-semibold cursor-pointer"
+                    >
+                      {p.name.split(' ').pop()} ({p.fitness}%)
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Recovery Unit */}
+              <div className="p-3 rounded-2xl bg-amber-50/50 border border-amber-200/60 space-y-2">
+                <div className="flex items-center justify-between text-xs font-display font-bold text-amber-900">
+                  <span className="flex items-center gap-1"><span>🩹</span> Recovery & Physio</span>
+                  <span className="font-mono text-[11px] text-amber-700">{recoveringPlayers.length}</span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {recoveringPlayers.length === 0 ? (
+                    <span className="text-[10px] text-slate-400 italic">No players in recovery</span>
+                  ) : (
+                    recoveringPlayers.map(p => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => handleSelectPlayerWithActions(p)}
+                        className="text-[10px] px-1.5 py-0.5 rounded-md bg-white border border-amber-300 text-amber-800 font-semibold cursor-pointer"
+                      >
+                        {p.name.split(' ').pop()} ({p.injured ? `${p.injuryWeeks}w` : `${p.fitness}%`})
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
       )}
 

@@ -12,6 +12,7 @@ import {
   CareerSettings,
   GoalScorer,
   PenaltyKickAttempt,
+  TeamTrainingFocus,
 } from './types';
 import {
   categorizePosition,
@@ -70,6 +71,8 @@ export interface MatchSimulationConfig {
   awayStyle?: AttackingStyle;
   homeFormation?: string;
   awayFormation?: string;
+  homeTrainingFocus?: TeamTrainingFocus;
+  awayTrainingFocus?: TeamTrainingFocus;
   isNeutralVenue?: boolean;
   userClubId?: string;
   settings: CareerSettings;
@@ -178,6 +181,7 @@ export function calculateTeamDepartmentRatings(
     isHome?: boolean;
     isNeutralVenue?: boolean;
     teamTalkBuff?: TeamTalkBuff;
+    trainingFocus?: TeamTrainingFocus;
   }
 ): DepartmentRatings {
   const normalizedStates: InGamePlayerState[] = states.map((s) => {
@@ -330,6 +334,19 @@ export function calculateTeamDepartmentRatings(
     defense *= options.teamTalkBuff.defenseMod;
   }
 
+  // Team Training Focus modifiers
+  if (options.trainingFocus === 'match_prep') {
+    attack += 1.2;
+    midfield += 1.2;
+    defense += 1.2;
+  } else if (options.trainingFocus === 'attacking') {
+    attack += 2.2;
+    defense -= 0.6;
+  } else if (options.trainingFocus === 'defensive') {
+    defense += 2.2;
+    attack -= 0.6;
+  }
+
   const finalAttack = Math.round(clamp(attack, 45, 99) * 10) / 10;
   const finalMidfield = Math.round(clamp(midfield, 45, 99) * 10) / 10;
   const finalDefense = Math.round(clamp(defense, 45, 99) * 10) / 10;
@@ -421,6 +438,7 @@ export function createLiveMatchSession(
     style: homeStyle,
     isHome: true,
     isNeutralVenue: isNeutral,
+    trainingFocus: config.homeTrainingFocus,
   });
 
   const awayDeptRatings = calculateTeamDepartmentRatings(awayStates, {
@@ -429,6 +447,7 @@ export function createLiveMatchSession(
     style: awayStyle,
     isHome: false,
     isNeutralVenue: isNeutral,
+    trainingFocus: config.awayTrainingFocus,
   });
 
   return {
@@ -543,11 +562,13 @@ export function stepLiveMatchMinute(
   const isHomeAi = userClubId ? session.config.homeClub.id !== userClubId : false;
   const isAwayAi = userClubId ? session.config.awayClub.id !== userClubId : true;
 
-  // 1. Drain stamina for on-pitch players each minute based on pressing intensity
+  // 1. Drain stamina for on-pitch players each minute based on pressing intensity & recovery training focus
+  const homeRecoveryMod = session.config.homeTrainingFocus === 'recovery' ? 0.82 : 1.0;
+  const awayRecoveryMod = session.config.awayTrainingFocus === 'recovery' ? 0.82 : 1.0;
   const homeDrainPerMin =
-    homePressing === 'high_press' ? 0.21 : homePressing === 'low_block' ? 0.13 : 0.165;
+    (homePressing === 'high_press' ? 0.21 : homePressing === 'low_block' ? 0.13 : 0.165) * homeRecoveryMod;
   const awayDrainPerMin =
-    awayPressing === 'high_press' ? 0.21 : awayPressing === 'low_block' ? 0.13 : 0.165;
+    (awayPressing === 'high_press' ? 0.21 : awayPressing === 'low_block' ? 0.13 : 0.165) * awayRecoveryMod;
 
   for (const s of homeStates) {
     if (s.isOnPitch && !s.redCard) {
@@ -604,6 +625,7 @@ export function stepLiveMatchMinute(
     isHome: true,
     isNeutralVenue: session.config.isNeutralVenue,
     teamTalkBuff: session.homeTeamTalkBuff,
+    trainingFocus: session.config.homeTrainingFocus,
   });
 
   const awayDept = calculateTeamDepartmentRatings(awayStates, {
@@ -613,6 +635,7 @@ export function stepLiveMatchMinute(
     isHome: false,
     isNeutralVenue: session.config.isNeutralVenue,
     teamTalkBuff: session.awayTeamTalkBuff,
+    trainingFocus: session.config.awayTrainingFocus,
   });
 
   // 4. Minute possession & momentum calculation
@@ -1618,7 +1641,8 @@ export function applyPostMatchSquadImpact(
   participatingStates: InGamePlayerState[],
   wonMatch: boolean,
   settings: CareerSettings,
-  drewMatch: boolean = false
+  drewMatch: boolean = false,
+  trainingFocus?: TeamTrainingFocus
 ): CareerPlayer[] {
   const stateMap = new Map<string, InGamePlayerState>(
     participatingStates.map((s) => [s.player.id, s])
@@ -1629,7 +1653,9 @@ export function applyPostMatchSquadImpact(
 
     if (playedState && playedState.minutesPlayed > 0) {
       // Played in match
-      const fitnessDrain = Math.round(10 + (playedState.minutesPlayed / 90) * 6);
+      const drainBase = 10 + (playedState.minutesPlayed / 90) * 6;
+      const drainMult = trainingFocus === 'recovery' ? 0.8 : 1.0;
+      const fitnessDrain = Math.round(drainBase * drainMult);
       const newFitness = Math.max(50, (player.fitness ?? 100) - fitnessDrain);
 
       // Morale update
@@ -1663,7 +1689,7 @@ export function applyPostMatchSquadImpact(
       return progression.updatedPlayer;
     } else {
       // Rested player (benched / reserve) -> recovers stamina!
-      const recovery = 12;
+      const recovery = trainingFocus === 'recovery' ? 18 : 12;
       const newFitness = Math.min(100, (player.fitness ?? 100) + recovery);
 
       // Existing injury recovery countdown
@@ -1700,7 +1726,8 @@ export function applySimulatedMatchSquadImpact(
   activeMatchdaySquad: CareerPlayer[],
   simmedFixture: LeagueFixture,
   userClubId: string,
-  settings: CareerSettings
+  settings: CareerSettings,
+  trainingFocus?: TeamTrainingFocus
 ): CareerPlayer[] {
   const isHome = simmedFixture.homeClubId === userClubId;
   const userGoals = isHome ? (simmedFixture.homeScore ?? 0) : (simmedFixture.awayScore ?? 0);
@@ -1766,5 +1793,5 @@ export function applySimulatedMatchSquadImpact(
     }),
   ];
 
-  return applyPostMatchSquadImpact(fullSquad, states, won, settings, drew);
+  return applyPostMatchSquadImpact(fullSquad, states, won, settings, drew, trainingFocus);
 }
