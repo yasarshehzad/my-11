@@ -189,6 +189,14 @@ export interface CareerPlayer {
   redCardsTotal?: number;
   suspendedMatches?: number;
   suspensionReason?: string;
+  // Loan & Pre-Contract Status
+  isOnLoan?: boolean;
+  loanOriginClubId?: string;
+  loanParentClubName?: string;
+  loanWageContribution?: number; // % paid by current club
+  loanBuyOptionFee?: number;
+  isPreContractSigned?: boolean;
+  preContractJoiningClubName?: string;
 }
 
 export type SquadRole = 'crucial' | 'important' | 'squad' | 'sporadic' | 'prospect';
@@ -495,7 +503,7 @@ export interface TransferRecord {
   fee: number;
   wage: number;
   date: string;
-  type: 'signing' | 'sale' | 'ai_transfer';
+  type: 'signing' | 'sale' | 'ai_transfer' | 'loan' | 'free_signing' | 'pre_contract';
   sellOnPercent?: number;
   appearanceMilestoneFee?: number;
   appearanceThreshold?: number;
@@ -503,6 +511,20 @@ export interface TransferRecord {
   goalThreshold?: number;
   buyBackFee?: number;
   buyBackActive?: boolean;
+}
+
+export interface PreContractAgreement {
+  id: string;
+  playerId: string;
+  playerName: string;
+  rating: number;
+  position: string;
+  originClub: string;
+  wageWeekly: number;
+  contractYears: number;
+  signingBonus: number;
+  agreementDate: string;
+  arrivalDate: string;
 }
 
 export interface IncomingTransferOffer {
@@ -596,6 +618,12 @@ export interface MarketPlayer {
   versions?: PlayerVersionVariant[];
   selectedVersionId?: string;
   faceStats?: PlayerFaceStats;
+  contractYears?: number;
+  isFreeAgent?: boolean;
+  loanListed?: boolean;
+  loanFee?: number;
+  loanWageWeekly?: number;
+  loanBuyOptionFee?: number;
 }
 
 export interface ScoutingFilters {
@@ -611,6 +639,7 @@ export interface ScoutingFilters {
   nationality?: string;
   club?: string;
   league?: 'ALL' | 'pl' | 'continental' | 'legends';
+  contractStatus?: 'ALL' | 'free_agents' | 'expiring' | 'loans';
   sortBy?: 'value_desc' | 'value_asc' | 'rating_desc' | 'rating_asc' | 'age_asc' | 'name_asc';
   homegrownOnly?: boolean;
   searchTerm?: string;
@@ -708,6 +737,7 @@ export interface CareerSaveFile {
   aiClubSquads?: Record<string, CareerPlayer[]>;
   incomingOffers?: IncomingTransferOffer[];
   shortlistPlayerIds?: string[];
+  preContracts?: PreContractAgreement[];
   youthAcademy?: YouthProspect[];
   boardStatus?: BoardStatus;
   trainingState?: TrainingProgramState;

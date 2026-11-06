@@ -5,6 +5,9 @@ import {
   ManagerMessage,
   SeasonHistoryRecord,
   Club,
+  CareerPlayer,
+  PreContractAgreement,
+  TransferRecord,
 } from './types';
 import {
   getAllClubs,
@@ -19,6 +22,7 @@ import { simulateMatchFixture } from './sim';
 import { applySeasonalPlayerProgression, generateYouthIntake, ProgressionReport } from './youthAcademy';
 import { generateIncomingAiBids, simulateAiToAiTransfers } from './transfers';
 import { formatCareerCurrency } from './formatters';
+import { calculatePlayerValue } from './finance';
 import { getRegisteredSeniorPlayerIds } from './squad';
 import { getLeagueLeaderboards } from './playerStats';
 
@@ -170,6 +174,7 @@ export function advanceToNextSeason(save: CareerSaveFile): {
   const summary = getSeasonReviewSummary(save);
   const nextSeasonNumber = save.season.seasonNumber + 1;
   const nextYearStart = save.season.yearStart + 1;
+  const newCurrentDate = `${nextYearStart}-07-01`;
   const currentActiveClubs = getActiveLeagueClubs(save);
   const currentActiveClubIds = currentActiveClubs.map((c) => c.id);
 
@@ -183,6 +188,129 @@ export function advanceToNextSeason(save: CareerSaveFile): {
     morale: Math.max(85, player.morale),
     form: 7.0,
   }));
+
+  // 1b. Process Inbound Loans Return, Outbound Loans Return, and Bosman Pre-Contracts Arrival
+  const userClubName = save.club.customName || save.club.defaultName;
+  const returnedLoanOutPlayers: string[] = [];
+  const expiredLoanInPlayers: string[] = [];
+
+  // Filter out inbound loans (they return to parent club) and restore outbound loans
+  const squadAfterLoanResolutions: CareerPlayer[] = [];
+  for (const player of summerRecoveredSquad) {
+    if (player.isOnLoan) {
+      const isOutboundLoan =
+        player.loanOriginClubId === save.club.id ||
+        player.loanParentClubName === userClubName ||
+        player.loanParentClubName === save.club.defaultName;
+
+      if (isOutboundLoan) {
+        // Player returns from loan back into our squad
+        returnedLoanOutPlayers.push(player.name);
+        // Young players (<= 24) gain a +1 OVR development boost from their loan experience
+        const loanBoost = player.age <= 24 ? 1 : 0;
+        const newRating = player.rating + loanBoost;
+        const newVal = calculatePlayerValue(newRating, player.age, player.position);
+        squadAfterLoanResolutions.push({
+          ...player,
+          rating: newRating,
+          value: newVal,
+          isOnLoan: false,
+          loanOriginClubId: undefined,
+          loanParentClubName: undefined,
+          loanWageContribution: undefined,
+          loanBuyOptionFee: undefined,
+        });
+      } else {
+        // Inbound loan has expired, player returns to their parent club
+        expiredLoanInPlayers.push(player.name);
+      }
+    } else {
+      squadAfterLoanResolutions.push(player);
+    }
+  }
+
+  // Process arriving Bosman pre-contract players
+  const newTransferRecords: TransferRecord[] = [];
+  const arrivingPreContractPlayers = save.preContracts || [];
+  const arrivedPlayerNames: string[] = [];
+
+  for (const pc of arrivingPreContractPlayers) {
+    arrivedPlayerNames.push(pc.playerName);
+    const playerVal = calculatePlayerValue(pc.rating, 25, pc.position);
+    const newSquadMember: CareerPlayer = {
+      id: `cp_bosman_${pc.playerId}_${nextYearStart}`,
+      cardId: `${pc.playerId}_career`,
+      name: pc.playerName,
+      rating: pc.rating,
+      position: pc.position,
+      naturalPositions: [pc.position],
+      age: 25,
+      dateOfBirth: `${nextYearStart - 25}-07-01`,
+      value: playerVal,
+      wageWeekly: pc.wageWeekly,
+      contractYears: pc.contractYears || 3,
+      fitness: 100,
+      morale: 90,
+      form: 7.2,
+      injured: false,
+      isHomegrown: false,
+      club: userClubName,
+      nationality: 'International',
+      squadRole: pc.rating >= 82 ? 'important' : 'squad',
+      potential: Math.max(pc.rating, pc.rating + 3),
+    };
+    squadAfterLoanResolutions.push(newSquadMember);
+
+    newTransferRecords.push({
+      id: `tx_bosman_${pc.id}`,
+      playerId: newSquadMember.id,
+      playerName: newSquadMember.name,
+      rating: newSquadMember.rating,
+      position: newSquadMember.position,
+      fromClubName: pc.originClub,
+      toClubName: userClubName,
+      fee: 0,
+      wage: pc.wageWeekly,
+      date: newCurrentDate,
+      type: 'free_signing',
+    });
+  }
+
+  const finalSquad = squadAfterLoanResolutions;
+
+  // Additional Inbox announcements for loan returns and Bosman arrivals
+  const loanAndPreContractMessages: ManagerMessage[] = [];
+  if (arrivedPlayerNames.length > 0) {
+    loanAndPreContractMessages.push({
+      id: `msg_bosman_arrivals_${nextSeasonNumber}`,
+      date: newCurrentDate,
+      sender: 'Director of Football',
+      senderRole: 'Recruitment & Registrations',
+      subject: `Official Arrivals: Bosman Free Transfers Registered (${arrivedPlayerNames.length})`,
+      body: `Manager,\n\nOur pre-contract acquisitions have officially joined the club on free transfers!\n\nNew squad members:\n${arrivedPlayerNames.map((n) => `• ${n}`).join('\n')}\n\nAll players have reported for pre-season training and are registered for the campaign.`,
+      type: 'transfer',
+      isRead: false,
+      priority: 'urgent',
+      actionLabel: 'View Squad',
+      actionTab: 'squad',
+    });
+  }
+
+  if (returnedLoanOutPlayers.length > 0) {
+    loanAndPreContractMessages.push({
+      id: `msg_loan_returns_${nextSeasonNumber}`,
+      date: newCurrentDate,
+      sender: 'Loans Manager',
+      senderRole: 'Development Pathway',
+      subject: `Loan Returns: Players Rejoining Squad (${returnedLoanOutPlayers.length})`,
+      body: `Manager,\n\nThe following players have successfully returned from their season-long loan spells and rejoin the squad:\n${returnedLoanOutPlayers.map((n) => `• ${n}`).join('\n')}\n\nThey have gained valuable competitive experience and are available for selection.`,
+      type: 'transfer',
+      isRead: false,
+      priority: 'normal',
+      actionLabel: 'View Squad',
+      actionTab: 'squad',
+    });
+  }
 
   // 2. Trophies & Finances update
   const { updatedCups, trophiesAwarded } = autoResolvePendingCupFixtures(
@@ -220,7 +348,7 @@ export function advanceToNextSeason(save: CareerSaveFile): {
     ...save.finances,
     transferBudget: save.finances.transferBudget + summary.prizeMoney,
     balance: save.finances.balance + summary.prizeMoney,
-    currentWeeklyWages: summerRecoveredSquad.reduce((sum, p) => sum + (p.wageWeekly || 0), 0),
+    currentWeeklyWages: finalSquad.reduce((sum, p) => sum + (p.wageWeekly || 0), 0),
   };
 
   // 3. Fresh annual youth intake
@@ -268,7 +396,6 @@ export function advanceToNextSeason(save: CareerSaveFile): {
     }
   }
 
-  const newCurrentDate = `${nextYearStart}-07-01`;
   const cups = initializeSeasonCups(
     save.club,
     nextYearStart,
@@ -337,7 +464,7 @@ export function advanceToNextSeason(save: CareerSaveFile): {
   };
 
   const nextRegisteredPlayerIds = getRegisteredSeniorPlayerIds(
-    summerRecoveredSquad,
+    finalSquad,
     save.registeredPlayerIds,
     nextYearStart
   );
@@ -357,7 +484,7 @@ export function advanceToNextSeason(save: CareerSaveFile): {
       transferWindowOpen: true,
     },
     phase: 'transfer_window',
-    squad: summerRecoveredSquad,
+    squad: finalSquad,
     registeredPlayerIds: nextRegisteredPlayerIds,
     youthAcademy: updatedAcademy,
     fixtures,
@@ -369,12 +496,14 @@ export function advanceToNextSeason(save: CareerSaveFile): {
     trophies: updatedTrophies,
     finances: updatedFinances,
     boardStatus: updatedBoardStatus,
-    inbox: [newInboxMsg, ...(summerTransfersRes.updatedSave.inbox || [])],
+    inbox: [newInboxMsg, ...loanAndPreContractMessages, ...(summerTransfersRes.updatedSave.inbox || [])],
     aiClubSquads: summerTransfersRes.updatedSave.aiClubSquads,
     worldTransfersHistory: summerTransfersRes.updatedSave.worldTransfersHistory,
+    transfersHistory: [...newTransferRecords, ...(save.transfersHistory || [])],
+    preContracts: [],
     incomingOffers: generateIncomingAiBids({
       ...save,
-      squad: summerRecoveredSquad,
+      squad: finalSquad,
       season: {
         seasonNumber: nextSeasonNumber,
         yearStart: nextYearStart,

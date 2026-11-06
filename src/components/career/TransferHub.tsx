@@ -31,6 +31,11 @@ import {
   advanceDeadlineDayPhase,
   executeBuyBackReSigning,
   evaluateBoardFinancialPetition,
+  executeFreeAgentSigning,
+  executeBosmanPreContract,
+  executeLoanIn,
+  executeLoanOut,
+  toggleShortlistPlayer,
 } from '../../career/transfers';
 import {
   formatCurrency,
@@ -138,6 +143,7 @@ export function TransferHub({
   const [specificPosition, setSpecificPosition] = useState<string>('ALL');
   const [minRating, setMinRating] = useState<number>(0);
   const [ageCategory, setAgeCategory] = useState<'ALL' | 'U21' | 'PEAK' | 'VET'>('ALL');
+  const [selectedContractStatus, setSelectedContractStatus] = useState<'ALL' | 'free_agents' | 'expiring' | 'loans'>('ALL');
   const [homegrownOnly, setHomegrownOnly] = useState<boolean>(false);
   const [affordableOnly, setAffordableOnly] = useState<boolean>(false);
   const [selectedLeague, setSelectedLeague] = useState<'ALL' | 'pl' | 'continental' | 'legends'>('ALL');
@@ -167,12 +173,13 @@ export function TransferHub({
     if (minRating > 0) count++;
     if (affordableOnly) count++;
     if (homegrownOnly) count++;
+    if (selectedContractStatus !== 'ALL') count++;
     if (selectedLeague !== 'ALL') count++;
     if (selectedClub !== 'ALL') count++;
     if (selectedNationality !== 'ALL') count++;
     if (selectedSortBy !== 'value_desc') count++;
     return count;
-  }, [specificPosition, ageCategory, minRating, affordableOnly, homegrownOnly, selectedLeague, selectedClub, selectedNationality, selectedSortBy]);
+  }, [specificPosition, ageCategory, minRating, affordableOnly, homegrownOnly, selectedContractStatus, selectedLeague, selectedClub, selectedNationality, selectedSortBy]);
 
   const getClubDisplayName = (clubIdOrName: string) => {
     if (!clubIdOrName) return 'Free Agent';
@@ -209,6 +216,16 @@ export function TransferHub({
     status: 'idle' | 'accepted' | 'counter_offer' | 'fee_rejected' | 'wage_rejected' | 'role_rejected' | 'error';
     message: string;
   }>({ status: 'idle', message: '' });
+
+  const [dealType, setDealType] = useState<'buy' | 'free_agent' | 'pre_contract' | 'loan'>('buy');
+  const [loanFeeInput, setLoanFeeInput] = useState<number>(0);
+  const [loanWageContributionPercent, setLoanWageContributionPercent] = useState<number>(70);
+  const [loanBuyOptionInput, setLoanBuyOptionInput] = useState<number>(0);
+
+  // Loan Out Player Modal
+  const [loaningOutPlayer, setLoaningOutPlayer] = useState<CareerPlayer | null>(null);
+  const [loanOutDestinationClub, setLoanOutDestinationClub] = useState<string>('');
+  const [loanOutWagePercent, setLoanOutWagePercent] = useState<number>(100);
 
   // Squad Contract Renewal Modal
   const [renewingPlayer, setRenewingPlayer] = useState<CareerPlayer | null>(null);
@@ -249,6 +266,7 @@ export function TransferHub({
       searchTerm: searchTerm.trim() || undefined,
       club: selectedClub !== 'ALL' ? selectedClub : undefined,
       league: selectedLeague !== 'ALL' ? selectedLeague : undefined,
+      contractStatus: selectedContractStatus !== 'ALL' ? selectedContractStatus : undefined,
       nationality: selectedNationality !== 'ALL' ? selectedNationality : undefined,
       sortBy: selectedSortBy,
     };
@@ -258,6 +276,7 @@ export function TransferHub({
     specificPosition,
     minRating,
     ageCategory,
+    selectedContractStatus,
     affordableOnly,
     homegrownOnly,
     searchTerm,
@@ -318,17 +337,39 @@ export function TransferHub({
     });
   };
 
-  const handleStartNegotiation = (player: MarketPlayer) => {
+  const handleStartNegotiation = (
+    player: MarketPlayer,
+    preferredDealType?: 'buy' | 'free_agent' | 'pre_contract' | 'loan'
+  ) => {
     const preferred = getPlayerPreferredTerms(player as unknown as CareerPlayer);
+    const isFA = Boolean(player.isFreeAgent || player.value === 0);
+    const isExp = player.contractYears === 1;
+    const isLoan = Boolean(player.loanListed);
+
+    let initialDeal: 'buy' | 'free_agent' | 'pre_contract' | 'loan' = 'buy';
+    if (preferredDealType) {
+      initialDeal = preferredDealType;
+    } else if (isFA) {
+      initialDeal = 'free_agent';
+    } else if (isLoan) {
+      initialDeal = 'loan';
+    } else if (isExp) {
+      initialDeal = 'pre_contract';
+    }
+
+    setDealType(initialDeal);
     setNegotiatingPlayer(player);
-    setOfferedFee(player.value);
+    setOfferedFee(isFA ? 0 : player.value);
     setOfferedWage(preferred.preferredWageWeekly);
-    setOfferedContractYears(preferred.preferredContractYears);
+    setOfferedContractYears(isFA ? 2 : isExp ? 3 : preferred.preferredContractYears);
     setOfferedAddOnFee(0);
     setOfferedSellOnClause(10);
     setOfferedSquadRole(preferred.expectedSquadRole);
     setOfferedSigningBonus(preferred.expectedSigningBonus);
     setOfferedReleaseClause(preferred.releaseClausePreference);
+    setLoanFeeInput(player.loanFee || Math.round(player.value * 0.08));
+    setLoanWageContributionPercent(70);
+    setLoanBuyOptionInput(player.loanBuyOptionFee || Math.round(player.value * 1.1));
     setNegotiationFeedback({ status: 'idle', message: '' });
   };
 
@@ -341,6 +382,7 @@ export function TransferHub({
     setAffordableOnly(false);
     setHomegrownOnly(false);
     setSelectedLeague('ALL');
+    setSelectedContractStatus('ALL');
     setSelectedClub('ALL');
     setSelectedNationality('ALL');
     setSelectedSortBy('value_desc');
@@ -349,6 +391,70 @@ export function TransferHub({
 
   const handleConfirmBid = () => {
     if (!negotiatingPlayer) return;
+
+    if (dealType === 'free_agent') {
+      const res = executeFreeAgentSigning(
+        save,
+        negotiatingPlayer,
+        offeredWage,
+        offeredContractYears,
+        offeredSigningBonus,
+        offeredSquadRole
+      );
+      if (!res.success) {
+        setNegotiationFeedback({
+          status: 'error',
+          message: res.error || 'Could not complete free agent signing.',
+        });
+        return;
+      }
+      onUpdateSave(res.updatedSave);
+      onNotification?.(`✍️ Free Agent Signed! ${negotiatingPlayer.name} has joined the squad for £0 fee.`);
+      setNegotiatingPlayer(null);
+      return;
+    }
+
+    if (dealType === 'pre_contract') {
+      const res = executeBosmanPreContract(
+        save,
+        negotiatingPlayer,
+        offeredWage,
+        offeredContractYears,
+        offeredSigningBonus
+      );
+      if (!res.success) {
+        setNegotiationFeedback({
+          status: 'error',
+          message: res.error || 'Could not complete pre-contract agreement.',
+        });
+        return;
+      }
+      onUpdateSave(res.updatedSave);
+      onNotification?.(`✍️ Pre-Contract Secured! ${negotiatingPlayer.name} will join on July 1st (£0 fee).`);
+      setNegotiatingPlayer(null);
+      return;
+    }
+
+    if (dealType === 'loan') {
+      const res = executeLoanIn(
+        save,
+        negotiatingPlayer,
+        loanWageContributionPercent,
+        loanFeeInput,
+        loanBuyOptionInput
+      );
+      if (!res.success) {
+        setNegotiationFeedback({
+          status: 'error',
+          message: res.error || 'Could not complete loan deal.',
+        });
+        return;
+      }
+      onUpdateSave(res.updatedSave);
+      onNotification?.(`✍️ Loan Deal Complete! ${negotiatingPlayer.name} arrives on loan from ${negotiatingPlayer.club}.`);
+      setNegotiatingPlayer(null);
+      return;
+    }
 
     const detailedTerms: DetailedTransferTerms = {
       baseFee: offeredFee,
@@ -398,6 +504,19 @@ export function TransferHub({
     onUpdateSave(signResult.updatedSave);
     onNotification?.(`✍️ Deal Complete! Signed ${negotiatingPlayer.name} for ${formatCurrency(offeredFee)}.`);
     setNegotiatingPlayer(null);
+  };
+
+  const handleConfirmLoanOut = () => {
+    if (!loaningOutPlayer) return;
+    const dest = loanOutDestinationClub || (availableClubs[0] || 'Rival Club');
+    const res = executeLoanOut(save, loaningOutPlayer.id, dest, loanOutWagePercent);
+    if (!res.success) {
+      onNotification?.(`❌ ${res.error}`);
+      return;
+    }
+    onUpdateSave(res.updatedSave);
+    onNotification?.(`🤝 Loan Out Complete! ${loaningOutPlayer.name} has joined ${dest} on loan.`);
+    setLoaningOutPlayer(null);
   };
 
   const handleToggleSportingDirectorRenewals = () => {
@@ -1147,6 +1266,24 @@ export function TransferHub({
                   </select>
                 </div>
 
+                {/* Contract Status Filter */}
+                <div className="space-y-0.5">
+                  <span className="text-[9px] uppercase font-bold text-slate-500 block">Contract Status</span>
+                  <select
+                    value={selectedContractStatus}
+                    onChange={(e) => {
+                      setSelectedContractStatus(e.target.value as any);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-2 py-1.5 text-xs font-display font-bold focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="ALL">All Contracts</option>
+                    <option value="free_agents">🆓 Free Agents (£0 Fee)</option>
+                    <option value="expiring">⏳ Expiring (Bosman)</option>
+                    <option value="loans">🤝 Available for Loan</option>
+                  </select>
+                </div>
+
                 {/* Club Filter */}
                 <div className="space-y-0.5">
                   <span className="text-[9px] uppercase font-bold text-slate-500 block">Club</span>
@@ -1314,8 +1451,11 @@ export function TransferHub({
                   const isSenior = player.age > U21_AGE_LIMIT;
                   const isSquadFull = save.squad.length >= MAX_SQUAD_SIZE;
                   const isSeniorFull = isSenior && seniorCount >= MAX_SENIOR_SQUAD_SIZE;
-                  // Allow bidding even if senior squad is 25 - manager can sell or adjust registration later
-                  const isBlocked = !windowIsOpen || isSquadFull;
+                  const isFA = Boolean(player.isFreeAgent || player.value === 0);
+                  const isExp = player.contractYears === 1;
+                  const isLoan = Boolean(player.loanListed);
+                  // Free agents can be signed anytime; pre-contracts can be agreed anytime in final year
+                  const isBlocked = isFA || isExp ? isSquadFull : (!windowIsOpen || isSquadFull);
                   const fs = player.faceStats || calculateEaFcFaceStats(player as unknown as CareerPlayer);
 
                   const badgeClass = isLegend
@@ -1386,6 +1526,26 @@ export function TransferHub({
                             <div className="text-[8.5px] text-slate-500 truncate mt-0.5 font-medium">
                               {resolvedClub}
                             </div>
+                            <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                              {isFA ? (
+                                <span className="text-[7.5px] font-bold uppercase px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                  🆓 Free Agent
+                                </span>
+                              ) : (
+                                <>
+                                  {isExp && (
+                                    <span className="text-[7.5px] font-bold uppercase px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-300">
+                                      ⏳ Expiring (Bosman)
+                                    </span>
+                                  )}
+                                  {isLoan && (
+                                    <span className="text-[7.5px] font-bold uppercase px-1.5 py-0.2 rounded bg-cyan-100 text-cyan-800 border border-cyan-300">
+                                      🤝 Loan Listed
+                                    </span>
+                                  )}
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
 
@@ -1420,10 +1580,12 @@ export function TransferHub({
                             onClick={() => handleStartNegotiation(player)}
                             disabled={isBlocked}
                             className={`py-1.5 px-2.5 rounded-lg font-display font-black text-[10.5px] uppercase tracking-wider transition-all cursor-pointer ${
-                              !windowIsOpen
-                                ? 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed'
-                                : isSquadFull
+                              isSquadFull
                                 ? 'bg-rose-50 border border-rose-200 text-rose-700 cursor-not-allowed'
+                                : isFA
+                                ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm shadow-emerald-500/20'
+                                : !windowIsOpen && !isExp
+                                ? 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed'
                                 : isLegend
                                 ? 'my11-badge-legend shadow-sm'
                                 : canAfford
@@ -1431,7 +1593,19 @@ export function TransferHub({
                                 : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
                             }`}
                           >
-                            {!windowIsOpen ? 'Closed' : isSquadFull ? 'Squad Full' : isLegend ? '👑 Bid' : 'Bid'}
+                            {isSquadFull
+                              ? 'Squad Full'
+                              : isFA
+                              ? '🆓 Sign'
+                              : !windowIsOpen && !isExp
+                              ? 'Closed'
+                              : isLegend
+                              ? '👑 Bid'
+                              : isLoan
+                              ? '🤝 Loan'
+                              : isExp
+                              ? '⏳ Bosman'
+                              : 'Bid'}
                           </button>
                         </div>
                       </div>
@@ -1909,18 +2083,41 @@ export function TransferHub({
                       </div>
 
                       {/* Action */}
-                      <button
-                        type="button"
-                        onClick={() => handleStartRenewal(player)}
-                        className={`w-full py-2.5 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                          isCritical
-                            ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-500/20'
-                            : 'my11-btn-gradient text-white shadow-md shadow-blue-500/20'
-                        }`}
-                      >
-                        <span>✍️</span>
-                        <span>Negotiate Contract Extension</span>
-                      </button>
+                      {player.isOnLoan ? (
+                        <div className="w-full py-2.5 px-3 rounded-xl bg-cyan-50 border border-cyan-200 text-cyan-800 text-xs font-bold text-center flex items-center justify-center gap-1.5 shadow-2xs">
+                          <span>🤝</span>
+                          <span>Currently on loan ({player.loanParentClubName || 'Senior League'})</span>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleStartRenewal(player)}
+                            className={`flex-1 py-2.5 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                              isCritical
+                                ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-500/20'
+                                : 'my11-btn-gradient text-white shadow-md shadow-blue-500/20'
+                            }`}
+                          >
+                            <span>✍️</span>
+                            <span>Extend</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setLoaningOutPlayer(player);
+                              const defaultDest = availableClubs.find((c) => c !== (save.club.customName || save.club.defaultName)) || 'Rival Club';
+                              setLoanOutDestinationClub(defaultDest);
+                              setLoanOutWagePercent(100);
+                            }}
+                            title="Loan player to another club to gain match experience and save wages"
+                            className="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-display font-bold text-xs uppercase cursor-pointer transition-colors shrink-0 flex items-center gap-1 shadow-2xs"
+                          >
+                            <span>🤝</span>
+                            <span>Loan Out</span>
+                          </button>
+                        </div>
+                      )}
                     </article>
                   );
                 })}
@@ -1952,7 +2149,10 @@ export function TransferHub({
                 const isSenior = player.age > U21_AGE_LIMIT;
                 const isSquadFull = save.squad.length >= MAX_SQUAD_SIZE;
                 const isSeniorFull = isSenior && seniorCount >= MAX_SENIOR_SQUAD_SIZE;
-                const isBlocked = !windowIsOpen || isSquadFull;
+                const isFA = Boolean(player.isFreeAgent || player.value === 0);
+                const isExp = player.contractYears === 1;
+                const isLoan = Boolean(player.loanListed);
+                const isBlocked = isFA || isExp ? isSquadFull : (!windowIsOpen || isSquadFull);
                 const fs = player.faceStats || calculateEaFcFaceStats(player as unknown as CareerPlayer);
                 const canAfford = player.value <= save.finances.transferBudget;
 
@@ -1994,6 +2194,26 @@ export function TransferHub({
                             <span className="text-blue-600 font-bold">{player.position}</span>
                             <span> • {player.age}y</span>
                             <span> • {player.nationality}</span>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                            {isFA ? (
+                              <span className="text-[7.5px] font-bold uppercase px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                🆓 Free Agent
+                              </span>
+                            ) : (
+                              <>
+                                {isExp && (
+                                  <span className="text-[7.5px] font-bold uppercase px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-300">
+                                    ⏳ Expiring (Bosman)
+                                  </span>
+                                )}
+                                {isLoan && (
+                                  <span className="text-[7.5px] font-bold uppercase px-1.5 py-0.2 rounded bg-cyan-100 text-cyan-800 border border-cyan-300">
+                                    🤝 Loan Listed
+                                  </span>
+                                )}
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -2057,19 +2277,27 @@ export function TransferHub({
                         onClick={() => handleStartNegotiation(player)}
                         disabled={isBlocked}
                         className={`flex-1 py-1.5 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer ${
-                          !windowIsOpen
-                            ? 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed'
-                            : isSquadFull
+                          isSquadFull
                             ? 'bg-rose-50 text-rose-700 cursor-not-allowed border border-rose-200'
+                            : isFA
+                            ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm shadow-emerald-500/20'
+                            : !windowIsOpen && !isExp
+                            ? 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed'
                             : canAfford
                             ? 'my11-btn-gradient text-white shadow-sm shadow-blue-500/20'
                             : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
                         }`}
                       >
-                        {!windowIsOpen
-                          ? 'Window Closed'
-                          : isSquadFull
+                        {isSquadFull
                           ? 'Squad Full'
+                          : isFA
+                          ? '🆓 Sign Free'
+                          : !windowIsOpen && !isExp
+                          ? 'Window Closed'
+                          : isLoan
+                          ? '🤝 Enquire Loan'
+                          : isExp
+                          ? '⏳ Bosman Offer'
                           : 'Make Offer'}
                       </button>
                     </div>
@@ -2887,6 +3115,126 @@ export function TransferHub({
         </div>
       )}
 
+      {/* LOAN OUT SQUAD PLAYER MODAL */}
+      {loaningOutPlayer && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          data-scrim="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-fade-in"
+          style={{
+            backgroundColor: 'rgba(11, 21, 54, 0.82)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+          }}
+          onClick={() => setLoaningOutPlayer(null)}
+        >
+          <div
+            data-office-ui="true"
+            className="office-floating-card rounded-3xl max-w-sm sm:max-w-md w-full p-4 sm:p-5 space-y-3.5 shadow-2xl relative my-auto border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <header className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <div>
+                <span className="font-display font-black text-xs uppercase tracking-wider text-cyan-600">
+                  🤝 Loan Departure Arrangement
+                </span>
+                <h3 className="text-lg font-display font-black text-slate-900 uppercase">
+                  {loaningOutPlayer.name}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setLoaningOutPlayer(null)}
+                className="text-slate-400 hover:text-slate-700 text-xs font-bold cursor-pointer"
+              >
+                ✕ Cancel
+              </button>
+            </header>
+
+            <div className="p-3 rounded-2xl bg-cyan-50/80 border border-cyan-200 flex justify-between items-center text-xs">
+              <div>
+                <span className="text-slate-500 text-[10px] uppercase font-bold block">Position & Rating</span>
+                <span className="text-slate-900 font-bold">
+                  {loaningOutPlayer.position} • {loaningOutPlayer.rating} OVR • {loaningOutPlayer.age}y
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="text-slate-500 text-[10px] uppercase font-bold block">Current Wage</span>
+                <span className="font-bold font-mono text-cyan-700 text-sm">
+                  {formatWage(loaningOutPlayer.wageWeekly)}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="space-y-1">
+                <label className="block text-slate-700 font-bold uppercase text-[10px]">
+                  Destination Club:
+                </label>
+                <select
+                  value={loanOutDestinationClub}
+                  onChange={(e) => setLoanOutDestinationClub(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-3 py-2 text-xs font-display font-bold focus:outline-none focus:border-cyan-500"
+                >
+                  {availableClubs
+                    .filter((c) => c !== (save.club.customName || save.club.defaultName))
+                    .map((club) => (
+                      <option key={club} value={club}>
+                        {club}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex justify-between font-bold text-slate-700">
+                  <span>Wage Coverage by Receiving Club:</span>
+                  <span className="font-mono text-cyan-600">{loanOutWagePercent}%</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {[50, 75, 100].map((pct) => (
+                    <button
+                      key={pct}
+                      type="button"
+                      onClick={() => setLoanOutWagePercent(pct)}
+                      className={`py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        loanOutWagePercent === pct
+                          ? 'bg-cyan-600 text-white font-black shadow-xs'
+                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      }`}
+                    >
+                      {pct}%
+                    </button>
+                  ))}
+                </div>
+                <span className="text-[10px] text-slate-500 block">
+                  Saves {formatWage(Math.round((loaningOutPlayer.wageWeekly || 0) * (loanOutWagePercent / 100)))} from your weekly payroll.
+                </span>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setLoaningOutPlayer(null)}
+                className="py-3 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 uppercase tracking-wider cursor-pointer shadow-xs"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmLoanOut}
+                disabled={!windowIsOpen}
+                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:opacity-95 text-white font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-cyan-500/20 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {!windowIsOpen ? 'Transfer Window Closed' : 'Confirm Season Loan'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* TRANSFER TARGET NEGOTIATION MODAL */}
       {negotiatingPlayer && (
         <div
@@ -2925,6 +3273,62 @@ export function TransferHub({
                 ✕ Cancel
               </button>
             </header>
+
+            {/* Deal Type Selector Pill Bar */}
+            {(() => {
+              const isFA = Boolean(negotiatingPlayer.isFreeAgent || negotiatingPlayer.value === 0);
+              const isExp = negotiatingPlayer.contractYears === 1;
+              const isLoan = Boolean(negotiatingPlayer.loanListed);
+
+              return (
+                <div className="flex gap-1 p-1 bg-slate-100 rounded-2xl shadow-inner">
+                  {!isFA && (
+                    <button
+                      type="button"
+                      onClick={() => setDealType('buy')}
+                      className={`flex-1 py-1.5 px-2 rounded-xl font-display font-black text-[10.5px] uppercase tracking-wider transition-all cursor-pointer ${
+                        dealType === 'buy'
+                          ? 'bg-white text-blue-600 shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      Permanent
+                    </button>
+                  )}
+                  {isFA && (
+                    <div className="flex-1 py-1.5 px-2 rounded-xl font-display font-black text-[10.5px] uppercase tracking-wider text-center bg-emerald-500 text-white shadow-xs">
+                      🆓 Free Agent Signing (£0 Fee)
+                    </div>
+                  )}
+                  {isExp && !isFA && (
+                    <button
+                      type="button"
+                      onClick={() => setDealType('pre_contract')}
+                      className={`flex-1 py-1.5 px-2 rounded-xl font-display font-black text-[10.5px] uppercase tracking-wider transition-all cursor-pointer ${
+                        dealType === 'pre_contract'
+                          ? 'bg-white text-amber-600 shadow-xs font-black'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      ⏳ Bosman (£0)
+                    </button>
+                  )}
+                  {isLoan && !isFA && (
+                    <button
+                      type="button"
+                      onClick={() => setDealType('loan')}
+                      className={`flex-1 py-1.5 px-2 rounded-xl font-display font-black text-[10.5px] uppercase tracking-wider transition-all cursor-pointer ${
+                        dealType === 'loan'
+                          ? 'bg-white text-cyan-600 shadow-xs font-black'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      🤝 Season Loan
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Target Profile Summary */}
             <div className="space-y-3">
@@ -2999,176 +3403,277 @@ export function TransferHub({
 
             {/* Detailed Negotiation Inputs */}
             <div className="space-y-4 text-xs">
-              {/* Transfer Base Fee */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-slate-700 font-bold">
-                  <span>Base Transfer Fee Offer:</span>
-                  <span className="font-mono text-blue-600 font-black">{formatCurrency(offeredFee)}</span>
-                </div>
-                <input
-                  type="range"
-                  min={Math.round(negotiatingPlayer.value * 0.5)}
-                  max={Math.round(negotiatingPlayer.value * 2.0)}
-                  step={500_000}
-                  value={offeredFee}
-                  onChange={(e) => setOfferedFee(Number(e.target.value))}
-                  className="w-full accent-blue-600 cursor-pointer"
-                />
-                <div className="flex justify-between text-[10px] text-slate-500">
-                  <span>Min: {formatCurrency(negotiatingPlayer.value * 0.5)}</span>
-                  <span>Demand: {formatCurrency(negotiatingPlayer.value)}</span>
-                  <span>Max: {formatCurrency(negotiatingPlayer.value * 2.0)}</span>
-                </div>
-              </div>
-
-              {/* Structured Add-Ons & Sell-on Clause */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <div className="flex justify-between text-slate-600 text-[11px] font-bold">
-                    <span>Performance Add-ons:</span>
-                    <span className="font-mono text-slate-800">{formatCurrency(offeredAddOnFee)}</span>
+              {dealType === 'free_agent' && (
+                <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs space-y-1">
+                  <div className="font-bold flex items-center gap-1.5">
+                    <span>🆓</span>
+                    <span>Unattached Free Agent</span>
                   </div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={Math.round(negotiatingPlayer.value * 0.4)}
-                    step={250_000}
-                    value={offeredAddOnFee}
-                    onChange={(e) => setOfferedAddOnFee(Number(e.target.value))}
-                    className="w-full accent-blue-600 cursor-pointer"
-                  />
-                  <span className="text-[9px] text-slate-500 block">Sweetens deal without upfront cash</span>
+                  <p className="text-[11px] text-emerald-700">
+                    Out of contract. Zero transfer fee (£0) required. Negotiate personal contract terms, wages, and signing bonus.
+                  </p>
                 </div>
+              )}
 
-                <div className="space-y-1">
-                  <div className="flex justify-between text-slate-600 text-[11px] font-bold">
-                    <span>Sell-on Clause:</span>
-                    <span className="font-mono text-slate-800">{offeredSellOnClause}%</span>
+              {dealType === 'pre_contract' && (
+                <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-1">
+                  <div className="font-bold flex items-center gap-1.5">
+                    <span>⏳</span>
+                    <span>Bosman Free Agency Pre-Contract</span>
                   </div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={30}
-                    step={5}
-                    value={offeredSellOnClause}
-                    onChange={(e) => setOfferedSellOnClause(Number(e.target.value))}
-                    className="w-full accent-blue-600 cursor-pointer"
-                  />
-                  <span className="text-[9px] text-slate-500 block">Percentage of future sale</span>
+                  <p className="text-[11px] text-amber-700">
+                    Player is in final 12 months of contract. Finalizing now locks them in for £0 fee, arriving on July 1st next season.
+                  </p>
                 </div>
-              </div>
+              )}
 
-              {/* Weekly Wage Offer */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-slate-700 font-bold">
-                  <span>Weekly Wage Offer:</span>
-                  <span className="font-mono text-blue-600 font-black">{formatWage(offeredWage)}</span>
-                </div>
-                <input
-                  type="range"
-                  min={Math.round(negotiatingPlayer.wageDemand * 0.6)}
-                  max={Math.round(negotiatingPlayer.wageDemand * 2.2)}
-                  step={5_000}
-                  value={offeredWage}
-                  onChange={(e) => setOfferedWage(Number(e.target.value))}
-                  className="w-full accent-blue-600 cursor-pointer"
-                />
-                <div className="flex justify-between text-[10px] text-slate-500">
-                  <span>Demand: {formatWage(negotiatingPlayer.wageDemand)}</span>
-                  <span>Wage Ceiling: {formatCurrency(save.finances.weeklyWageBudget)}/w</span>
-                </div>
-              </div>
-
-              {/* Contract Length */}
-              <div className="space-y-1.5">
-                <label className="block text-slate-700 font-bold">Contract Duration:</label>
-                <div className="grid grid-cols-5 gap-2">
-                  {[1, 2, 3, 4, 5].map((yrs) => (
-                    <button
-                      key={yrs}
-                      type="button"
-                      onClick={() => setOfferedContractYears(yrs)}
-                      className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        offeredContractYears === yrs
-                          ? 'bg-blue-600 text-white font-black shadow-sm'
-                          : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs'
-                      }`}
-                    >
-                      {yrs} {yrs === 1 ? 'Year' : 'Years'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Promised Squad Role */}
-              <div className="space-y-1.5">
-                <label className="block text-slate-700 font-bold">Squad Role:</label>
-                <div className="grid grid-cols-5 gap-1.5">
-                  {(['crucial', 'important', 'squad', 'sporadic', 'prospect'] as SquadRole[]).map((role) => (
-                    <button
-                      key={role}
-                      type="button"
-                      onClick={() => setOfferedSquadRole(role)}
-                      className={`py-1.5 px-1 rounded-xl text-[10px] font-bold uppercase transition-all cursor-pointer truncate ${
-                        offeredSquadRole === role
-                          ? 'bg-blue-600 text-white font-black shadow-sm'
-                          : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs'
-                      }`}
-                    >
-                      {role}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Signing Bonus & Release Clause */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-600 font-bold">Signing Bonus:</span>
-                    <span className="font-mono text-blue-600 font-bold">{formatCurrency(offeredSigningBonus)}</span>
+              {dealType === 'loan' && (
+                <div className="p-3.5 rounded-2xl bg-cyan-50/90 border border-cyan-200 text-cyan-950 text-xs space-y-3 shadow-2xs">
+                  <div className="font-bold flex items-center gap-1.5 text-cyan-900">
+                    <span>🤝</span>
+                    <span className="font-display uppercase tracking-wide">Season-Long Loan Deal</span>
                   </div>
-                  <input
-                    type="number"
-                    min={0}
-                    step={250_000}
-                    value={offeredSigningBonus}
-                    onChange={(e) => setOfferedSigningBonus(Math.max(0, Number(e.target.value)))}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono text-xs focus:outline-none focus:border-blue-500 shadow-xs"
-                  />
-                  <span className="text-[10px] text-slate-500 block">Upfront loyalty payment</span>
-                </div>
-                <div className="space-y-1">
-                  <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-600 font-bold">Release Clause:</span>
-                    <span className="font-mono text-blue-600 font-bold">{offeredReleaseClause ? formatCurrency(offeredReleaseClause) : 'None'}</span>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[11px] font-bold text-slate-700">
+                      <span>Loan Fee:</span>
+                      <span className="font-mono text-cyan-700 font-bold">{formatCurrency(loanFeeInput)}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={0}
+                      max={Math.max(2_000_000, Math.round(negotiatingPlayer.value * 0.2))}
+                      step={100_000}
+                      value={loanFeeInput}
+                      onChange={(e) => setLoanFeeInput(Number(e.target.value))}
+                      className="w-full accent-cyan-600 cursor-pointer"
+                    />
                   </div>
-                  <input
-                    type="number"
-                    min={0}
-                    step={1_000_000}
-                    value={offeredReleaseClause ?? 0}
-                    onChange={(e) => {
-                      const val = Number(e.target.value);
-                      setOfferedReleaseClause(val > 0 ? val : undefined);
-                    }}
-                    placeholder="None"
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono text-xs focus:outline-none focus:border-blue-500 shadow-xs"
-                  />
-                  <span className="text-[10px] text-slate-500 block">0 = None</span>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[11px] font-bold text-slate-700">
+                      <span>Wage Contribution ({loanWageContributionPercent}%):</span>
+                      <span className="font-mono text-cyan-700 font-bold">
+                        {formatWage(Math.round(negotiatingPlayer.wageDemand * (loanWageContributionPercent / 100)))}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min={50}
+                      max={100}
+                      step={5}
+                      value={loanWageContributionPercent}
+                      onChange={(e) => setLoanWageContributionPercent(Number(e.target.value))}
+                      className="w-full accent-cyan-600 cursor-pointer"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[11px] font-bold text-slate-700">
+                      <span>Future Purchase Option:</span>
+                      <span className="font-mono text-cyan-700 font-bold">{formatCurrency(loanBuyOptionInput)}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={Math.round(negotiatingPlayer.value * 0.8)}
+                      max={Math.round(negotiatingPlayer.value * 1.8)}
+                      step={500_000}
+                      value={loanBuyOptionInput}
+                      onChange={(e) => setLoanBuyOptionInput(Number(e.target.value))}
+                      className="w-full accent-cyan-600 cursor-pointer"
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {dealType === 'buy' && (
+                <>
+                  {/* Transfer Base Fee */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-slate-700 font-bold">
+                      <span>Base Transfer Fee Offer:</span>
+                      <span className="font-mono text-blue-600 font-black">{formatCurrency(offeredFee)}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={Math.round(negotiatingPlayer.value * 0.5)}
+                      max={Math.round(negotiatingPlayer.value * 2.0)}
+                      step={500_000}
+                      value={offeredFee}
+                      onChange={(e) => setOfferedFee(Number(e.target.value))}
+                      className="w-full accent-blue-600 cursor-pointer"
+                    />
+                    <div className="flex justify-between text-[10px] text-slate-500">
+                      <span>Min: {formatCurrency(negotiatingPlayer.value * 0.5)}</span>
+                      <span>Demand: {formatCurrency(negotiatingPlayer.value)}</span>
+                      <span>Max: {formatCurrency(negotiatingPlayer.value * 2.0)}</span>
+                    </div>
+                  </div>
+
+                  {/* Structured Add-Ons & Sell-on Clause */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-slate-600 text-[11px] font-bold">
+                        <span>Performance Add-ons:</span>
+                        <span className="font-mono text-slate-800">{formatCurrency(offeredAddOnFee)}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={0}
+                        max={Math.round(negotiatingPlayer.value * 0.4)}
+                        step={250_000}
+                        value={offeredAddOnFee}
+                        onChange={(e) => setOfferedAddOnFee(Number(e.target.value))}
+                        className="w-full accent-blue-600 cursor-pointer"
+                      />
+                      <span className="text-[9px] text-slate-500 block">Sweetens deal without upfront cash</span>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-slate-600 text-[11px] font-bold">
+                        <span>Sell-on Clause:</span>
+                        <span className="font-mono text-slate-800">{offeredSellOnClause}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={0}
+                        max={30}
+                        step={5}
+                        value={offeredSellOnClause}
+                        onChange={(e) => setOfferedSellOnClause(Number(e.target.value))}
+                        className="w-full accent-blue-600 cursor-pointer"
+                      />
+                      <span className="text-[9px] text-slate-500 block">Percentage of future sale</span>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {dealType !== 'loan' && (
+                <>
+                  {/* Weekly Wage Offer */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-slate-700 font-bold">
+                      <span>Weekly Wage Offer:</span>
+                      <span className="font-mono text-blue-600 font-black">{formatWage(offeredWage)}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={Math.round(negotiatingPlayer.wageDemand * 0.6)}
+                      max={Math.round(negotiatingPlayer.wageDemand * 2.2)}
+                      step={5_000}
+                      value={offeredWage}
+                      onChange={(e) => setOfferedWage(Number(e.target.value))}
+                      className="w-full accent-blue-600 cursor-pointer"
+                    />
+                    <div className="flex justify-between text-[10px] text-slate-500">
+                      <span>Demand: {formatWage(negotiatingPlayer.wageDemand)}</span>
+                      <span>Wage Ceiling: {formatCurrency(save.finances.weeklyWageBudget)}/w</span>
+                    </div>
+                  </div>
+
+                  {/* Contract Length */}
+                  <div className="space-y-1.5">
+                    <label className="block text-slate-700 font-bold">Contract Duration:</label>
+                    <div className="grid grid-cols-5 gap-2">
+                      {[1, 2, 3, 4, 5].map((yrs) => (
+                        <button
+                          key={yrs}
+                          type="button"
+                          onClick={() => setOfferedContractYears(yrs)}
+                          className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            offeredContractYears === yrs
+                              ? 'bg-blue-600 text-white font-black shadow-sm'
+                              : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs'
+                          }`}
+                        >
+                          {yrs} {yrs === 1 ? 'Year' : 'Years'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Promised Squad Role */}
+                  <div className="space-y-1.5">
+                    <label className="block text-slate-700 font-bold">Squad Role:</label>
+                    <div className="grid grid-cols-5 gap-1.5">
+                      {(['crucial', 'important', 'squad', 'sporadic', 'prospect'] as SquadRole[]).map((role) => (
+                        <button
+                          key={role}
+                          type="button"
+                          onClick={() => setOfferedSquadRole(role)}
+                          className={`py-1.5 px-1 rounded-xl text-[10px] font-bold uppercase transition-all cursor-pointer truncate ${
+                            offeredSquadRole === role
+                              ? 'bg-blue-600 text-white font-black shadow-sm'
+                              : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs'
+                          }`}
+                        >
+                          {role}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Signing Bonus & Release Clause */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center text-[11px]">
+                        <span className="text-slate-600 font-bold">Signing Bonus:</span>
+                        <span className="font-mono text-blue-600 font-bold">{formatCurrency(offeredSigningBonus)}</span>
+                      </div>
+                      <input
+                        type="number"
+                        min={0}
+                        step={250_000}
+                        value={offeredSigningBonus}
+                        onChange={(e) => setOfferedSigningBonus(Math.max(0, Number(e.target.value)))}
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono text-xs focus:outline-none focus:border-blue-500 shadow-xs"
+                      />
+                      <span className="text-[10px] text-slate-500 block">Upfront loyalty payment</span>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center text-[11px]">
+                        <span className="text-slate-600 font-bold">Release Clause:</span>
+                        <span className="font-mono text-blue-600 font-bold">{offeredReleaseClause ? formatCurrency(offeredReleaseClause) : 'None'}</span>
+                      </div>
+                      <input
+                        type="number"
+                        min={0}
+                        step={1_000_000}
+                        value={offeredReleaseClause ?? 0}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setOfferedReleaseClause(val > 0 ? val : undefined);
+                        }}
+                        placeholder="None"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono text-xs focus:outline-none focus:border-blue-500 shadow-xs"
+                      />
+                      <span className="text-[10px] text-slate-500 block">0 = None</span>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Financial Impact Analysis */}
             {(() => {
               const currentBudget = save.finances.transferBudget;
-              const totalUpfrontCost = offeredFee + offeredSigningBonus;
+              const totalUpfrontCost =
+                dealType === 'free_agent' || dealType === 'pre_contract'
+                  ? offeredSigningBonus
+                  : dealType === 'loan'
+                  ? loanFeeInput
+                  : offeredFee + offeredSigningBonus;
+
               const remainingBudget = currentBudget - totalUpfrontCost;
               const isOverBudget = remainingBudget < 0;
 
+              const wageToApply =
+                dealType === 'pre_contract'
+                  ? 0
+                  : dealType === 'loan'
+                  ? Math.round(negotiatingPlayer.wageDemand * (loanWageContributionPercent / 100))
+                  : offeredWage;
+
               const currentWageRoom = Math.max(0, save.finances.weeklyWageBudget - save.finances.currentWeeklyWages);
-              const remainingWageRoom = currentWageRoom - offeredWage;
+              const remainingWageRoom = currentWageRoom - wageToApply;
               const isOverWageRoom = remainingWageRoom < 0;
 
               return (
@@ -3207,7 +3712,7 @@ export function TransferHub({
                       </div>
                       <div className="flex justify-between items-center font-mono">
                         <span className="text-slate-500 text-[10px]">Offered Wage:</span>
-                        <span className="font-bold text-rose-600">-{formatWage(offeredWage)}</span>
+                        <span className="font-bold text-rose-600">-{formatWage(wageToApply)}</span>
                       </div>
                       <div className="pt-1 border-t border-slate-200/80 flex justify-between items-center font-mono">
                         <span className="text-[10px] font-bold text-slate-700">Net Room:</span>
@@ -3252,26 +3757,58 @@ export function TransferHub({
               >
                 Withdraw
               </button>
-              <button
-                type="button"
-                onClick={handleConfirmBid}
-                disabled={!windowIsOpen || offeredFee + offeredSigningBonus > save.finances.transferBudget}
-                className={`flex-1 py-3 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer ${
-                  !windowIsOpen
-                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200 select-none'
-                    : offeredFee + offeredSigningBonus > save.finances.transferBudget
-                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
-                    : negotiatingPlayer.isLegend
-                    ? 'bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 shadow-lg shadow-amber-500/25'
-                    : 'my11-btn-gradient hover:opacity-95 text-white shadow-lg shadow-blue-500/20'
-                }`}
-              >
-                {!windowIsOpen
-                  ? '🔒 Transfer Window Closed'
-                  : offeredFee + offeredSigningBonus > save.finances.transferBudget
-                  ? 'Cannot Afford Bid'
-                  : 'Submit Formal Bid'}
-              </button>
+              {(() => {
+                const totalUpfrontCost =
+                  dealType === 'free_agent' || dealType === 'pre_contract'
+                    ? offeredSigningBonus
+                    : dealType === 'loan'
+                    ? loanFeeInput
+                    : offeredFee + offeredSigningBonus;
+
+                const isDealBlocked =
+                  dealType === 'free_agent'
+                    ? offeredSigningBonus > save.finances.transferBudget
+                    : dealType === 'pre_contract'
+                    ? offeredSigningBonus > save.finances.transferBudget
+                    : dealType === 'loan'
+                    ? !windowIsOpen || loanFeeInput > save.finances.transferBudget
+                    : !windowIsOpen || totalUpfrontCost > save.finances.transferBudget;
+
+                return (
+                  <button
+                    type="button"
+                    onClick={handleConfirmBid}
+                    disabled={isDealBlocked}
+                    className={`flex-1 py-3 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer ${
+                      isDealBlocked
+                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+                        : dealType === 'free_agent'
+                        ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white shadow-lg shadow-emerald-500/20'
+                        : dealType === 'pre_contract'
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-95 text-white shadow-lg shadow-amber-500/20'
+                        : dealType === 'loan'
+                        ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:opacity-95 text-white shadow-lg shadow-cyan-500/20'
+                        : negotiatingPlayer.isLegend
+                        ? 'bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 shadow-lg shadow-amber-500/25'
+                        : 'my11-btn-gradient hover:opacity-95 text-white shadow-lg shadow-blue-500/20'
+                    }`}
+                  >
+                    {isDealBlocked && (!windowIsOpen && dealType !== 'free_agent' && dealType !== 'pre_contract')
+                      ? '🔒 Transfer Window Closed'
+                      : isDealBlocked
+                      ? 'Insufficient Budget'
+                      : dealType === 'free_agent'
+                      ? 'Sign Free Agent (£0 Fee)'
+                      : dealType === 'pre_contract'
+                      ? 'Finalize Pre-Contract (£0 Fee)'
+                      : dealType === 'loan'
+                      ? 'Agree Loan Deal'
+                      : negotiatingPlayer.isLegend
+                      ? '👑 Submit Icon Bid'
+                      : 'Submit Formal Bid'}
+                  </button>
+                );
+              })()}
             </div>
           </div>
         </div>

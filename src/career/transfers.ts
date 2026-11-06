@@ -16,6 +16,7 @@ import {
   DeadlineDayState,
   BoardPetitionType,
   BoardFinancialPetitionRecord,
+  PreContractAgreement,
 } from './types';
 import { players } from '../data/players';
 import { calculatePlayerValue, calculateWeeklyWage, formatCurrency, formatWage } from './finance';
@@ -335,6 +336,9 @@ export function getScoutingMarketPool(
 
   if (typeof filters === 'string') {
     effectiveSeason = filters as DatabaseSeason;
+    if (databaseSeason && typeof databaseSeason === 'object') {
+      effectiveFilters = databaseSeason as unknown as ScoutingFilters;
+    }
   } else if (filters && typeof filters === 'object') {
     effectiveFilters = filters;
   }
@@ -451,6 +455,15 @@ export function getScoutingMarketPool(
       ? `${effectiveBirthYear}-${dobMonthDay}`
       : (bio.dateOfBirth || `${effectiveBirthYear}-${dobMonthDay}`);
 
+    const idHash = Math.abs(getDeterministicAge(topVariant.id));
+    const contractYears = isLegend ? 3 : 1 + (idHash % 4);
+    const isFreeAgent = !isLegend && idHash % 19 === 0;
+    const loanListed = !isFreeAgent && !isLegend && (effectiveAge <= 23 || idHash % 7 === 0);
+    const finalValue = isFreeAgent ? 0 : peakValue;
+    const loanFee = loanListed ? Math.round(peakValue * 0.08) : undefined;
+    const loanWageWeekly = loanListed ? Math.round(peakWage * 0.7) : undefined;
+    const loanBuyOptionFee = loanListed ? Math.round(peakValue * 1.1) : undefined;
+
     pool.push({
       id: topVariant.id,
       cardId: `${topVariant.id}_career`,
@@ -464,9 +477,9 @@ export function getScoutingMarketPool(
       preferredFoot: bio.preferredFoot,
       heightCm: bio.heightCm,
       weightKg: bio.weightKg,
-      value: peakValue,
+      value: finalValue,
       wageDemand: peakWage,
-      club: topVariant.club,
+      club: isFreeAgent ? 'Free Agent' : topVariant.club,
       nationality: group.base.nationality,
       isHomegrown: isHomegrownPlayer({ nationality: group.base.nationality }),
       rarity: isLegend ? 'Legend' : (topVariant.rarity === 'legend' ? 'Elite' : topVariant.rarity),
@@ -476,6 +489,12 @@ export function getScoutingMarketPool(
       versions: undefined,
       selectedVersionId: topVariant.id,
       faceStats: calculateEaFcFaceStats(topVariant as unknown as CareerPlayer),
+      contractYears,
+      isFreeAgent,
+      loanListed,
+      loanFee,
+      loanWageWeekly,
+      loanBuyOptionFee,
     });
   }
 
@@ -493,6 +512,15 @@ export function getScoutingMarketPool(
     }
     seenPlayerNames.add(lowerName);
 
+    const idHash = Math.abs(supp.age * 31 + supp.rating);
+    const contractYears = 1 + (idHash % 4);
+    const isFreeAgent = idHash % 23 === 0;
+    const loanListed = !isFreeAgent && (supp.age <= 23 || idHash % 6 === 0);
+    const finalValue = isFreeAgent ? 0 : supp.value;
+    const loanFee = loanListed ? Math.round(supp.value * 0.08) : undefined;
+    const loanWageWeekly = loanListed ? Math.round(supp.wageWeekly * 0.7) : undefined;
+    const loanBuyOptionFee = loanListed ? Math.round(supp.value * 1.1) : undefined;
+
     pool.push({
       id: supp.id,
       cardId: supp.cardId,
@@ -506,15 +534,21 @@ export function getScoutingMarketPool(
       preferredFoot: supp.preferredFoot,
       heightCm: supp.heightCm,
       weightKg: supp.weightKg,
-      value: supp.value,
+      value: finalValue,
       wageDemand: supp.wageWeekly,
-      club: supp.club,
+      club: isFreeAgent ? 'Free Agent' : supp.club,
       nationality: supp.nationality,
       isHomegrown: supp.isHomegrown,
       rarity: supp.potential && supp.potential >= 86 ? 'Wonderkid' : 'Standard',
       isLegend: false,
       era: 'Modern',
       faceStats: calculateEaFcFaceStats(supp as unknown as CareerPlayer),
+      contractYears,
+      isFreeAgent,
+      loanListed,
+      loanFee,
+      loanWageWeekly,
+      loanBuyOptionFee,
     });
   }
 
@@ -541,6 +575,16 @@ export function getScoutingMarketPool(
 
     if (effectiveFilters.minRating !== undefined) {
       pool = pool.filter((p) => p.rating >= effectiveFilters.minRating!);
+    }
+
+    if (effectiveFilters.contractStatus && effectiveFilters.contractStatus !== 'ALL') {
+      if (effectiveFilters.contractStatus === 'free_agents') {
+        pool = pool.filter((p) => p.isFreeAgent || p.value === 0);
+      } else if (effectiveFilters.contractStatus === 'expiring') {
+        pool = pool.filter((p) => p.contractYears === 1);
+      } else if (effectiveFilters.contractStatus === 'loans') {
+        pool = pool.filter((p) => Boolean(p.loanListed));
+      }
     }
 
     if (effectiveFilters.maxRating !== undefined) {
@@ -758,31 +802,33 @@ export function evaluateTransferOffer(
   const addOn = detailedTerms?.addOnFee || 0;
   const effectiveFee = offeredFee + Math.round(addOn * 0.6);
 
-  // 1. Fee evaluation by selling club
-  if (effectiveFee < targetPlayer.value * 0.85) {
-    return {
-      status: 'fee_rejected',
-      message: `The selling club has rejected your offer. An offer of ${formatCurrency(offeredFee)} is insulting for a player valued at ${formatCurrency(targetPlayer.value)}.`,
-      agentFeedback: 'The selling club refuses to negotiate further at this low valuation.',
-      preferredTerms: preferred,
-      isAcceptableFee: false,
-      isAcceptableWage: offeredWage >= preferred.minimumAcceptableWage,
-      isAcceptableRole: true,
-    };
-  }
+  // 1. Fee evaluation by selling club (not applicable for unattached free agents)
+  if (!targetPlayer.isFreeAgent && targetPlayer.value > 0) {
+    if (effectiveFee < targetPlayer.value * 0.85) {
+      return {
+        status: 'fee_rejected',
+        message: `The selling club has rejected your offer. An offer of ${formatCurrency(offeredFee)} is insulting for a player valued at ${formatCurrency(targetPlayer.value)}.`,
+        agentFeedback: 'The selling club refuses to negotiate further at this low valuation.',
+        preferredTerms: preferred,
+        isAcceptableFee: false,
+        isAcceptableWage: offeredWage >= preferred.minimumAcceptableWage,
+        isAcceptableRole: true,
+      };
+    }
 
-  if (effectiveFee < targetPlayer.value * 1.0) {
-    const counterFee = Math.round((targetPlayer.value * 1.08) / 100_000) * 100_000;
-    return {
-      status: 'counter_offer',
-      message: `The club is open to negotiations, but demands ${formatCurrency(counterFee)} to release ${targetPlayer.name}.`,
-      counterFee,
-      agentFeedback: `Selling club demands at least ${formatCurrency(counterFee)} upfront or with structured add-ons.`,
-      preferredTerms: preferred,
-      isAcceptableFee: false,
-      isAcceptableWage: offeredWage >= preferred.minimumAcceptableWage,
-      isAcceptableRole: true,
-    };
+    if (effectiveFee < targetPlayer.value * 1.0) {
+      const counterFee = Math.round((targetPlayer.value * 1.08) / 100_000) * 100_000;
+      return {
+        status: 'counter_offer',
+        message: `The club is open to negotiations, but demands ${formatCurrency(counterFee)} to release ${targetPlayer.name}.`,
+        counterFee,
+        agentFeedback: `Selling club demands at least ${formatCurrency(counterFee)} upfront or with structured add-ons.`,
+        preferredTerms: preferred,
+        isAcceptableFee: false,
+        isAcceptableWage: offeredWage >= preferred.minimumAcceptableWage,
+        isAcceptableRole: true,
+      };
+    }
   }
 
   // 2. Squad Role evaluation
@@ -2735,5 +2781,471 @@ export function simulateAiToAiTransfers(
     updatedSave,
     completedTransfers,
     headlines,
+  };
+}
+
+/**
+ * Executes the signing of an unattached free agent (£0 transfer fee).
+ * Free agents may be signed at any time provided squad space and wage room exist.
+ */
+export function executeFreeAgentSigning(
+  save: CareerSaveFile,
+  targetPlayer: MarketPlayer,
+  wage: number,
+  contractYears: number = 2,
+  signingBonus: number = 0,
+  squadRole?: SquadRole
+): { success: boolean; updatedSave: CareerSaveFile; error?: string } {
+  // Validate overall squad capacity (35 players)
+  if (save.squad.length >= MAX_SQUAD_SIZE) {
+    return {
+      success: false,
+      updatedSave: save,
+      error: `Squad capacity reached! Maximum squad size is ${MAX_SQUAD_SIZE} players. You must sell, loan out, or release a player first.`,
+    };
+  }
+
+  // Validate signing bonus against transfer budget
+  if (signingBonus > save.finances.transferBudget) {
+    return {
+      success: false,
+      updatedSave: save,
+      error: `Insufficient transfer budget for the signing bonus of ${formatCurrency(signingBonus)}. You have ${formatCurrency(save.finances.transferBudget)} available.`,
+    };
+  }
+
+  // Validate weekly wage budget
+  if (save.finances.currentWeeklyWages + wage > save.finances.weeklyWageBudget) {
+    return {
+      success: false,
+      updatedSave: save,
+      error: `Wage budget exceeded! Adding ${formatWage(wage)} would surpass your weekly limit of ${formatWage(save.finances.weeklyWageBudget)}.`,
+    };
+  }
+
+  const bio = getPlayerBio(targetPlayer.name, targetPlayer.position);
+  const preferredFoot = targetPlayer.preferredFoot || bio.preferredFoot;
+  const heightCm = targetPlayer.heightCm || bio.heightCm;
+  const weightKg = targetPlayer.weightKg || bio.weightKg;
+  const effectiveAge = targetPlayer.age;
+
+  const dobMonthDay = (bio.dateOfBirth && /^\d{4}-\d{2}-\d{2}$/.test(bio.dateOfBirth))
+    ? bio.dateOfBirth.slice(5)
+    : '07-01';
+  const effectiveBirthYear = (save.season.yearStart || 2026) - effectiveAge;
+  const dateOfBirth = targetPlayer.dateOfBirth || bio.dateOfBirth || `${effectiveBirthYear}-${dobMonthDay}`;
+
+  const calculatedVal = calculatePlayerValue(targetPlayer.rating, effectiveAge, targetPlayer.position);
+
+  const newPlayer: CareerPlayer = {
+    id: `cp_fa_${targetPlayer.id}_${Date.now()}`,
+    cardId: targetPlayer.cardId,
+    name: targetPlayer.name,
+    rating: targetPlayer.rating,
+    position: targetPlayer.position,
+    naturalPositions: targetPlayer.naturalPositions || [targetPlayer.position],
+    secondaryPositions: targetPlayer.secondaryPositions,
+    age: effectiveAge,
+    dateOfBirth,
+    preferredFoot,
+    heightCm,
+    weightKg,
+    value: calculatedVal,
+    wageWeekly: wage,
+    contractYears,
+    fitness: 100,
+    morale: 90,
+    form: 7.2,
+    injured: false,
+    isHomegrown: targetPlayer.isHomegrown,
+    club: save.club.customName || save.club.defaultName,
+    nationality: targetPlayer.nationality,
+    squadRole: squadRole || (targetPlayer.rating >= 82 ? 'important' : 'squad'),
+    potential:
+      getAllSupplementalPlayers().find((sp) => sp.id === targetPlayer.id)?.potential ||
+      Math.max(targetPlayer.rating, targetPlayer.rating + (effectiveAge <= 21 ? 5 : effectiveAge <= 24 ? 2 : 0)),
+  };
+
+  const updatedSquad = [...save.squad, newPlayer];
+
+  let updatedRegisteredPlayerIds = save.registeredPlayerIds;
+  const isTargetSenior = isSeniorPlayer(newPlayer, save.season?.yearStart);
+  const totalSeniors = updatedSquad.filter((p) => isSeniorPlayer(p, save.season?.yearStart));
+  if (totalSeniors.length <= MAX_SENIOR_SQUAD_SIZE) {
+    updatedRegisteredPlayerIds = totalSeniors.map((p) => p.id);
+  } else if (updatedRegisteredPlayerIds && isTargetSenior && updatedRegisteredPlayerIds.length < MAX_SENIOR_SQUAD_SIZE) {
+    updatedRegisteredPlayerIds = [...updatedRegisteredPlayerIds, newPlayer.id];
+  }
+
+  const transferRecord: TransferRecord = {
+    id: `tx_${Date.now()}`,
+    playerId: newPlayer.id,
+    playerName: newPlayer.name,
+    rating: newPlayer.rating,
+    position: newPlayer.position,
+    fromClubName: 'Free Agent',
+    toClubName: save.club.customName || save.club.defaultName,
+    fee: 0,
+    wage,
+    date: save.season.currentDate,
+    type: 'free_signing',
+  };
+
+  const updatedHistory = [transferRecord, ...(save.transfersHistory || [])];
+
+  let updatedSave: CareerSaveFile = {
+    ...save,
+    squad: updatedSquad,
+    registeredPlayerIds: updatedRegisteredPlayerIds,
+    finances: {
+      ...save.finances,
+      transferBudget: save.finances.transferBudget - signingBonus,
+      balance: save.finances.balance - signingBonus,
+      currentWeeklyWages: save.finances.currentWeeklyWages + wage,
+    },
+    transfersHistory: updatedHistory,
+  };
+
+  updatedSave = addInboxMessage(updatedSave, {
+    date: save.season.currentDate,
+    sender: 'Chief Scout',
+    senderRole: 'Recruitment Directorate',
+    subject: `Free Agent Secured: ${newPlayer.name}`,
+    body: `Manager,\n\nWe have completed negotiations to secure free agent ${newPlayer.name} (${newPlayer.rating} OVR, ${newPlayer.position}) on a ${contractYears}-year contract at ${formatWage(wage)}.\n\nBecause ${newPlayer.name} was out of contract, zero transfer fee was required. Welcome them to the squad!`,
+    type: 'transfer',
+    isRead: false,
+    priority: 'normal',
+    actionLabel: 'View Squad',
+    actionTab: 'squad',
+  });
+
+  return { success: true, updatedSave };
+}
+
+/**
+ * Finalizes a Bosman ruling pre-contract agreement for a player whose contract is expiring.
+ * The player remains at their current club until the end of the season, then joins for free on July 1st.
+ */
+export function executeBosmanPreContract(
+  save: CareerSaveFile,
+  targetPlayer: MarketPlayer,
+  wage: number,
+  contractYears: number = 3,
+  signingBonus: number = 0
+): { success: boolean; updatedSave: CareerSaveFile; error?: string } {
+  // Validate eligibility (contract expiring in 1 year or less)
+  if (targetPlayer.contractYears !== undefined && targetPlayer.contractYears > 1) {
+    return {
+      success: false,
+      updatedSave: save,
+      error: `${targetPlayer.name} has ${targetPlayer.contractYears} years remaining on their contract. Under Bosman rules, pre-contracts are only permitted for players in their final year of contract.`,
+    };
+  }
+
+  // Check if player is already signed to a pre-contract
+  const existingPreContract = (save.preContracts || []).find((pc) => pc.playerId === targetPlayer.id);
+  if (existingPreContract) {
+    return {
+      success: false,
+      updatedSave: save,
+      error: `You have already secured a pre-contract agreement with ${targetPlayer.name}! They will join on July 1st.`,
+    };
+  }
+
+  // Validate signing bonus if applicable
+  if (signingBonus > save.finances.transferBudget) {
+    return {
+      success: false,
+      updatedSave: save,
+      error: `Insufficient transfer budget for the signing bonus. You have ${formatCurrency(save.finances.transferBudget)} available.`,
+    };
+  }
+
+  const arrivalYear = save.season.yearStart + 1;
+  const arrivalDate = `${arrivalYear}-07-01`;
+
+  const preContract: PreContractAgreement = {
+    id: `pre_${targetPlayer.id}_${Date.now()}`,
+    playerId: targetPlayer.id,
+    playerName: targetPlayer.name,
+    rating: targetPlayer.rating,
+    position: targetPlayer.position,
+    originClub: targetPlayer.club,
+    wageWeekly: wage,
+    contractYears,
+    signingBonus,
+    agreementDate: save.season.currentDate,
+    arrivalDate,
+  };
+
+  const updatedPreContracts = [...(save.preContracts || []), preContract];
+
+  let updatedSave: CareerSaveFile = {
+    ...save,
+    preContracts: updatedPreContracts,
+    finances: {
+      ...save.finances,
+      transferBudget: save.finances.transferBudget - signingBonus,
+      balance: save.finances.balance - signingBonus,
+    },
+  };
+
+  updatedSave = addInboxMessage(updatedSave, {
+    date: save.season.currentDate,
+    sender: 'Director of Football',
+    senderRole: 'Legal & Contracts Division',
+    subject: `Bosman Pre-Contract Confirmed: ${targetPlayer.name}`,
+    body: `Manager,\n\nWe have successfully concluded a Bosman pre-contract agreement for ${targetPlayer.name} (${targetPlayer.rating} OVR, ${targetPlayer.position}) from ${targetPlayer.club}!\n\nAgreement Summary:\n- Terms: ${contractYears}-year contract at ${formatWage(wage)}\n- Transfer Fee: £0 (Free Transfer)\n- Arrival Date: July 1st, ${arrivalYear}\n\n${targetPlayer.name} will finish the current season with ${targetPlayer.club} and report for duty at the start of our next pre-season.`,
+    type: 'transfer',
+    isRead: false,
+    priority: 'urgent',
+    actionLabel: 'View Transfer Hub',
+    actionTab: 'transfers',
+  });
+
+  return { success: true, updatedSave };
+}
+
+/**
+ * Agrees and signs a player on loan from another club.
+ */
+export function executeLoanIn(
+  save: CareerSaveFile,
+  targetPlayer: MarketPlayer,
+  wageContributionPercent: number = 70,
+  loanFee: number = 0,
+  buyOptionFee?: number
+): { success: boolean; updatedSave: CareerSaveFile; error?: string } {
+  // Validate transfer window
+  if (!isTransferWindowOpen(save.season.currentDate, save.season.yearStart)) {
+    return {
+      success: false,
+      updatedSave: save,
+      error: 'The transfer window is currently closed. Loan signings can only be registered during transfer windows.',
+    };
+  }
+
+  // Validate squad capacity
+  if (save.squad.length >= MAX_SQUAD_SIZE) {
+    return {
+      success: false,
+      updatedSave: save,
+      error: `Squad capacity reached! Maximum squad size is ${MAX_SQUAD_SIZE} players. You must sell, loan out, or release a player first.`,
+    };
+  }
+
+  const effectiveLoanFee = loanFee || targetPlayer.loanFee || Math.round(targetPlayer.value * 0.08);
+  if (effectiveLoanFee > save.finances.transferBudget) {
+    return {
+      success: false,
+      updatedSave: save,
+      error: `Insufficient transfer budget for the loan fee of ${formatCurrency(effectiveLoanFee)}. Available: ${formatCurrency(save.finances.transferBudget)}.`,
+    };
+  }
+
+  const weeklyWageToPay = Math.round(targetPlayer.wageDemand * (wageContributionPercent / 100));
+  if (save.finances.currentWeeklyWages + weeklyWageToPay > save.finances.weeklyWageBudget) {
+    return {
+      success: false,
+      updatedSave: save,
+      error: `Wage budget exceeded! Adding ${formatWage(weeklyWageToPay)} for this loan surpasses your weekly limit.`,
+    };
+  }
+
+  const effectiveBuyOption = buyOptionFee || targetPlayer.loanBuyOptionFee || Math.round(targetPlayer.value * 1.1);
+
+  const bio = getPlayerBio(targetPlayer.name, targetPlayer.position);
+  const preferredFoot = targetPlayer.preferredFoot || bio.preferredFoot;
+  const heightCm = targetPlayer.heightCm || bio.heightCm;
+  const weightKg = targetPlayer.weightKg || bio.weightKg;
+  const effectiveAge = targetPlayer.age;
+
+  const dobMonthDay = (bio.dateOfBirth && /^\d{4}-\d{2}-\d{2}$/.test(bio.dateOfBirth))
+    ? bio.dateOfBirth.slice(5)
+    : '07-01';
+  const effectiveBirthYear = (save.season.yearStart || 2026) - effectiveAge;
+  const dateOfBirth = targetPlayer.dateOfBirth || bio.dateOfBirth || `${effectiveBirthYear}-${dobMonthDay}`;
+
+  const newLoanPlayer: CareerPlayer = {
+    id: `cp_loan_${targetPlayer.id}_${Date.now()}`,
+    cardId: targetPlayer.cardId,
+    name: targetPlayer.name,
+    rating: targetPlayer.rating,
+    position: targetPlayer.position,
+    naturalPositions: targetPlayer.naturalPositions || [targetPlayer.position],
+    secondaryPositions: targetPlayer.secondaryPositions,
+    age: effectiveAge,
+    dateOfBirth,
+    preferredFoot,
+    heightCm,
+    weightKg,
+    value: targetPlayer.value,
+    wageWeekly: weeklyWageToPay,
+    contractYears: 1,
+    fitness: 100,
+    morale: 88,
+    form: 7.0,
+    injured: false,
+    isHomegrown: targetPlayer.isHomegrown,
+    club: save.club.customName || save.club.defaultName,
+    nationality: targetPlayer.nationality,
+    squadRole: 'squad',
+    isOnLoan: true,
+    loanOriginClubId: targetPlayer.club,
+    loanParentClubName: targetPlayer.club,
+    loanWageContribution: wageContributionPercent,
+    loanBuyOptionFee: effectiveBuyOption,
+  };
+
+  const updatedSquad = [...save.squad, newLoanPlayer];
+
+  const transferRecord: TransferRecord = {
+    id: `tx_loan_${Date.now()}`,
+    playerId: newLoanPlayer.id,
+    playerName: newLoanPlayer.name,
+    rating: newLoanPlayer.rating,
+    position: newLoanPlayer.position,
+    fromClubName: targetPlayer.club,
+    toClubName: save.club.customName || save.club.defaultName,
+    fee: effectiveLoanFee,
+    wage: weeklyWageToPay,
+    date: save.season.currentDate,
+    type: 'loan',
+  };
+
+  let updatedSave: CareerSaveFile = {
+    ...save,
+    squad: updatedSquad,
+    finances: {
+      ...save.finances,
+      transferBudget: save.finances.transferBudget - effectiveLoanFee,
+      balance: save.finances.balance - effectiveLoanFee,
+      currentWeeklyWages: save.finances.currentWeeklyWages + weeklyWageToPay,
+    },
+    transfersHistory: [transferRecord, ...(save.transfersHistory || [])],
+  };
+
+  updatedSave = addInboxMessage(updatedSave, {
+    date: save.season.currentDate,
+    sender: 'Chief Scout',
+    senderRole: 'Recruitment Team',
+    subject: `Loan Signing Confirmed: ${newLoanPlayer.name}`,
+    body: `Manager,\n\nWe have finalized the season-long loan of ${newLoanPlayer.name} (${newLoanPlayer.rating} OVR, ${newLoanPlayer.position}) from ${targetPlayer.club}!\n\nDeal terms:\n- Loan Fee: ${formatCurrency(effectiveLoanFee)}\n- Wage Contribution: ${wageContributionPercent}% (${formatWage(weeklyWageToPay)})\n- Future Buy Option: ${formatCurrency(effectiveBuyOption)}\n\nThey have been registered and are available for immediate selection.`,
+    type: 'transfer',
+    isRead: false,
+    priority: 'normal',
+    actionLabel: 'View Squad',
+    actionTab: 'squad',
+  });
+
+  return { success: true, updatedSave };
+}
+
+/**
+ * Loans out a player from the user's squad to another club to gain playing time and developmental growth.
+ */
+export function executeLoanOut(
+  save: CareerSaveFile,
+  playerId: string,
+  destinationClubName: string,
+  wageContributionPercent: number = 100,
+  loanFee: number = 0
+): { success: boolean; updatedSave: CareerSaveFile; error?: string } {
+  // Validate transfer window
+  if (!isTransferWindowOpen(save.season.currentDate, save.season.yearStart)) {
+    return {
+      success: false,
+      updatedSave: save,
+      error: 'The transfer window is currently closed. Loans out can only be completed during transfer windows.',
+    };
+  }
+
+  const playerIndex = save.squad.findIndex((p) => p.id === playerId);
+  if (playerIndex === -1) {
+    return {
+      success: false,
+      updatedSave: save,
+      error: 'Player not found in your squad.',
+    };
+  }
+
+  const player = save.squad[playerIndex];
+  if (player.isOnLoan) {
+    return {
+      success: false,
+      updatedSave: save,
+      error: `${player.name} is already out on loan or currently borrowed from another club.`,
+    };
+  }
+
+  const relievedWage = Math.round((player.wageWeekly || 0) * (wageContributionPercent / 100));
+  const effectiveLoanFee = loanFee || Math.round((player.value || 1_000_000) * 0.05);
+
+  const updatedPlayer: CareerPlayer = {
+    ...player,
+    isOnLoan: true,
+    loanOriginClubId: save.club.id,
+    loanParentClubName: save.club.customName || save.club.defaultName,
+    loanWageContribution: 100 - wageContributionPercent,
+  };
+
+  const updatedSquad = [...save.squad];
+  updatedSquad[playerIndex] = updatedPlayer;
+
+  const transferRecord: TransferRecord = {
+    id: `tx_loan_out_${Date.now()}`,
+    playerId: player.id,
+    playerName: player.name,
+    rating: player.rating,
+    position: player.position,
+    fromClubName: save.club.customName || save.club.defaultName,
+    toClubName: destinationClubName,
+    fee: effectiveLoanFee,
+    wage: relievedWage,
+    date: save.season.currentDate,
+    type: 'loan',
+  };
+
+  let updatedSave: CareerSaveFile = {
+    ...save,
+    squad: updatedSquad,
+    finances: {
+      ...save.finances,
+      transferBudget: save.finances.transferBudget + effectiveLoanFee,
+      balance: save.finances.balance + effectiveLoanFee,
+      currentWeeklyWages: Math.max(0, save.finances.currentWeeklyWages - relievedWage),
+    },
+    transfersHistory: [transferRecord, ...(save.transfersHistory || [])],
+  };
+
+  updatedSave = addInboxMessage(updatedSave, {
+    date: save.season.currentDate,
+    sender: 'Academy & Loans Manager',
+    senderRole: 'Player Development Pathway',
+    subject: `Loan Departure: ${player.name} joins ${destinationClubName}`,
+    body: `Manager,\n\n${player.name} has finalized a season-long loan move to ${destinationClubName}.\n\nThis will provide crucial competitive match minutes to accelerate their development.\n- Receiving Club: ${destinationClubName}\n- Loan Fee Received: ${formatCurrency(effectiveLoanFee)}\n- Weekly Wages Relieved: ${formatWage(relievedWage)} (${wageContributionPercent}% covered)\n\nWe will track their progression throughout the season.`,
+    type: 'transfer',
+    isRead: false,
+    priority: 'normal',
+    actionLabel: 'View Squad',
+    actionTab: 'squad',
+  });
+
+  return { success: true, updatedSave };
+}
+
+/**
+ * Toggles a player in or out of the manager's saved shortlist.
+ */
+export function toggleShortlistPlayer(save: CareerSaveFile, playerId: string): CareerSaveFile {
+  const current = new Set(save.shortlistPlayerIds || []);
+  if (current.has(playerId)) {
+    current.delete(playerId);
+  } else {
+    current.add(playerId);
+  }
+  return {
+    ...save,
+    shortlistPlayerIds: Array.from(current),
   };
 }
