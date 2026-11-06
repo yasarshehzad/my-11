@@ -620,7 +620,7 @@ function CareerPlayHubContent() {
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
   const touchStartTimeRef = useRef<number>(0);
-  const [inboxFilter, setInboxFilter] = useState<'all' | 'action_required' | 'unread' | 'board' | 'injury' | 'transfer' | 'cup_draw'>('all');
+  const [inboxFilter, setInboxFilter] = useState<'all' | 'action_required' | 'unread' | 'board' | 'injury' | 'transfer' | 'match_report' | 'cup_draw'>('all');
   const [expandedMessageId, setExpandedMessageId] = useState<string | null>(null);
   const [simulating, setSimulating] = useState(false);
   const [pendingFastForward, setPendingFastForward] = useState<TimeSkipTarget | null>(null);
@@ -665,6 +665,60 @@ function CareerPlayHubContent() {
       setSave(initialized);
     }
   }, [save?.season?.currentDate, save?.season?.yearStart, save?.deadlineDayState?.isActive, save?.deadlineDayState?.phase]);
+
+  // Global Escape keyboard shortcut for modal navigation & accessibility
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showOfficeInboxModal) {
+          setShowOfficeInboxModal(false);
+        } else if (matchOverviewModal) {
+          setMatchOverviewModal(null);
+        } else if (pendingFastForward) {
+          setPendingFastForward(null);
+        } else if (instantSimResultModal) {
+          setInstantSimResultModal(null);
+        } else if (showBoardDossierModal) {
+          setShowBoardDossierModal(false);
+        } else if (showExitConfirmModal) {
+          setShowExitConfirmModal(false);
+        } else if (activeCelebration) {
+          setActiveCelebration(null);
+        } else if (showSeasonReviewModal) {
+          setShowSeasonReviewModal(false);
+        } else if (showPreseasonModal) {
+          setShowPreseasonModal(false);
+        } else if (showFixtureReleaseModal) {
+          setShowFixtureReleaseModal(false);
+        } else if (showFixtureReleasePromptModal) {
+          setShowFixtureReleasePromptModal(false);
+        } else if (showUclDrawModal) {
+          setShowUclDrawModal(false);
+        } else if (showOfficeSeasonDrawer) {
+          setShowOfficeSeasonDrawer(false);
+        } else if (showResetConfirm) {
+          setShowResetConfirm(false);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [
+    showOfficeInboxModal,
+    matchOverviewModal,
+    pendingFastForward,
+    instantSimResultModal,
+    showBoardDossierModal,
+    showExitConfirmModal,
+    activeCelebration,
+    showSeasonReviewModal,
+    showPreseasonModal,
+    showFixtureReleaseModal,
+    showFixtureReleasePromptModal,
+    showUclDrawModal,
+    showOfficeSeasonDrawer,
+    showResetConfirm,
+  ]);
 
   const checkAndTriggerCelebration = useCallback((saveCandidate: CareerSaveFile, fixture?: LeagueFixture | CupFixture) => {
     const celebration = detectCelebrationEvent(saveCandidate, fixture);
@@ -1467,6 +1521,27 @@ function CareerPlayHubContent() {
     const updated = markAllMessagesRead(save);
     handleUpdateSave(updated);
     showToast('All inbox messages marked as read.');
+  };
+
+  const handleClearReadMessages = () => {
+    if (!save) return;
+    const currentInbox = save.inbox && save.inbox.length > 0 ? save.inbox : getInitialInboxMessages(save);
+    const retained = currentInbox.filter((m) => {
+      if (!m.isRead) return true;
+      const cl = classifyInboxMessage(m, save);
+      return cl.classification === 'action_required' && !cl.isResolved;
+    });
+    const clearedCount = currentInbox.length - retained.length;
+    if (clearedCount === 0) {
+      showToast('No archived read messages to clear.');
+      return;
+    }
+    const updated = {
+      ...save,
+      inbox: retained,
+    };
+    handleUpdateSave(updated);
+    showToast(`Cleared ${clearedCount} archived message${clearedCount === 1 ? '' : 's'}.`);
   };
 
   const handleTimeSkipAction = (
@@ -2766,6 +2841,17 @@ function CareerPlayHubContent() {
                           ✓ Mark All Read
                         </button>
                       )}
+                      {allInbox.some((m) => m.isRead) && (
+                        <button
+                          type="button"
+                          data-office-ui="true"
+                          onClick={handleClearReadMessages}
+                          className="text-[11px] font-bold text-slate-500 hover:text-rose-600 transition-colors cursor-pointer"
+                          title="Archive read messages that require no further action"
+                        >
+                          🗑️ Clear Read
+                        </button>
+                      )}
                       <button
                         type="button"
                         data-office-ui="true"
@@ -2785,6 +2871,8 @@ function CareerPlayHubContent() {
                       { id: 'unread', label: 'Unread', count: unreadInboxCount },
                       { id: 'board', label: 'Board', count: allInbox.filter((m) => m.type === 'board').length },
                       { id: 'transfer', label: 'Transfers', count: allInbox.filter((m) => m.type === 'transfer').length },
+                      { id: 'injury', label: 'Injuries & Medical', count: allInbox.filter((m) => m.type === 'injury').length },
+                      { id: 'match_report', label: 'Match Reports', count: allInbox.filter((m) => m.type === 'match_report').length },
                     ].map((filter) => {
                       const active = inboxFilter === filter.id;
                       return (

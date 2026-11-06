@@ -1987,6 +1987,30 @@ export function TransferHub({
             ))}
           </div>
 
+          {/* Bulk Renewal Quick-Action Banner */}
+          {criticalExpiringCount >= 2 && (
+            <div className="p-3.5 rounded-2xl border border-rose-200 bg-gradient-to-r from-rose-50/80 via-amber-50/50 to-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+              <div className="flex items-center gap-2.5">
+                <span className="text-xl">⚠️</span>
+                <div>
+                  <h4 className="text-xs font-display font-black text-rose-950 uppercase tracking-tight">
+                    {criticalExpiringCount} Contracts Expiring in Final Year
+                  </h4>
+                  <p className="text-[10px] text-slate-600">
+                    Bosman ruling allows rivals to negotiate free pre-contracts in January. Delegate routine extensions to your Director of Football with one click.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleRunSportingDirectorBatchRenewals}
+                className="py-1.5 px-3.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-xs whitespace-nowrap self-end sm:self-center active:scale-98"
+              >
+                ⚡ Bulk Renew Expiring ({criticalExpiringCount})
+              </button>
+            </div>
+          )}
+
           {/* Contracts Grid */}
           {(() => {
             let filteredSquad = [...save.squad];

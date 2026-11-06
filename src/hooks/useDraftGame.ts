@@ -129,6 +129,8 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
 
   // --- Live Simulation Animation States ---
   const [simIndex, setSimIndex] = useState<number>(0);
+  const [simMode, setSimMode] = useState<'continuous' | 'chapters'>('chapters');
+  const [targetSimIndex, setTargetSimIndex] = useState<number>(38);
   const [liveWins, setLiveWins] = useState(0);
   const [liveDraws, setLiveDraws] = useState(0);
   const [liveLosses, setLiveLosses] = useState(0);
@@ -529,6 +531,7 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
 
     setPhase('simulating');
     setSimIndex(0);
+    setTargetSimIndex(simMode === 'chapters' ? 10 : 38);
     setLiveWins(0);
     setLiveDraws(0);
     setLiveLosses(0);
@@ -536,13 +539,15 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
     setLiveGoalsFor(0);
     setLiveGoalsAgainst(0);
     setLiveMatches([]);
-  }, [simResult, showOnboarding]);
+  }, [simResult, showOnboarding, simMode]);
 
   // --- Simulation ticking loop ---
   useEffect(() => {
     if (phase !== 'simulating' || !simResult) return;
 
-    if (simIndex < 38) {
+    const maxTarget = simMode === 'chapters' ? targetSimIndex : 38;
+
+    if (simIndex < maxTarget && simIndex < 38) {
       const timer = setTimeout(() => {
         const match = simResult.matches[simIndex];
         
@@ -565,11 +570,39 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
 
       return () => clearTimeout(timer);
     }
-  }, [phase, simIndex, simResult]);
+  }, [phase, simIndex, simResult, simMode, targetSimIndex]);
+
+  // --- Advance to next chapter milestone in chapter mode ---
+  const handleAdvanceChapter = useCallback(() => {
+    if (!simResult) return;
+    if (simIndex < 10) {
+      setTargetSimIndex(10);
+    } else if (simIndex < 20) {
+      setTargetSimIndex(20);
+    } else if (simIndex < 30) {
+      setTargetSimIndex(30);
+    } else {
+      setTargetSimIndex(38);
+    }
+  }, [simResult, simIndex]);
+
+  // --- Switch simulation mode between continuous and chapter story mode ---
+  const handleSetSimMode = useCallback((mode: 'continuous' | 'chapters') => {
+    setSimMode(mode);
+    if (mode === 'continuous') {
+      setTargetSimIndex(38);
+    } else {
+      if (simIndex < 10) setTargetSimIndex(10);
+      else if (simIndex < 20) setTargetSimIndex(20);
+      else if (simIndex < 30) setTargetSimIndex(30);
+      else setTargetSimIndex(38);
+    }
+  }, [simIndex]);
 
   // --- Fast-forward simulation directly to completion ---
   const handleSkipSimulation = useCallback(() => {
     if (!simResult) return;
+    setTargetSimIndex(38);
     setSimIndex(38);
     setLiveWins(simResult.wins);
     setLiveDraws(simResult.draws);
@@ -878,6 +911,8 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
     chemistryToast,
     recentlyDraftedIndex,
     simIndex,
+    simMode,
+    targetSimIndex,
     liveWins,
     liveDraws,
     liveLosses,
@@ -905,6 +940,8 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
     handleSelectPlayer,
     startSimulation,
     handleSkipSimulation,
+    advanceChapter: handleAdvanceChapter,
+    setSimMode: handleSetSimMode,
     handleSaveCampaignResults,
     proceedToResults,
     returnHome,

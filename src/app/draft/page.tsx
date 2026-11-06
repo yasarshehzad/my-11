@@ -247,6 +247,9 @@ function DraftPageContent() {
             liveMatches={game.liveMatches}
             onProceedToResults={game.proceedToResults}
             onSkipSimulation={game.handleSkipSimulation}
+            simMode={game.simMode}
+            onSetSimMode={game.setSimMode}
+            onAdvanceChapter={game.advanceChapter}
           />
         )}
 
