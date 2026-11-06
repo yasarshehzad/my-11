@@ -10,6 +10,11 @@ import {
 import { getScoutingMarketPool } from './transfers';
 import { formatCurrency } from './finance';
 import { addInboxMessage } from './inbox';
+import {
+  getMaxScoutingMissions,
+  getScoutingSpeedReductionDays,
+  getScoutingDossierProspectCount,
+} from './infrastructure';
 
 export interface ScoutingRegionConfig {
   id: ScoutingRegion;
@@ -81,11 +86,12 @@ export function launchScoutingMission(
   }
 
   const currentMissions = save.scoutingState?.activeMissions || [];
-  if (currentMissions.length >= 3) {
+  const maxMissions = getMaxScoutingMissions(save);
+  if (currentMissions.length >= maxMissions) {
     return {
       success: false,
       updatedSave: save,
-      error: 'All scouting directors are currently deployed on active assignments (Maximum 3 simultaneous missions).',
+      error: `All scouting directors are currently deployed on active assignments (Maximum ${maxMissions} simultaneous missions).`,
     };
   }
 
@@ -108,9 +114,11 @@ export function launchScoutingMission(
   }
 
   const startDate = save.season.currentDate;
-  // Compute completion date by adding days
+  // Compute completion date with speed reduction from Scouting Hub
+  const speedReduction = getScoutingSpeedReductionDays(save);
+  const durationDays = Math.max(5, config.durationDays - speedReduction);
   const [year, month, day] = startDate.split('-').map(Number);
-  const finishDateObj = new Date(year, month - 1, day + config.durationDays);
+  const finishDateObj = new Date(year, month - 1, day + durationDays);
   const completionDate = finishDateObj.toISOString().split('T')[0];
 
   const newMission: ActiveScoutingMission = {
@@ -238,15 +246,17 @@ export function generateScoutingDossier(
     candidates = candidates.filter((p) => p.rating >= 78 && p.age >= 22 && p.age <= 29);
   }
 
+  const prospectCount = getScoutingDossierProspectCount(save);
+
   // Fallback if filtered candidate pool is too small
-  if (candidates.length < 3) {
+  if (candidates.length < prospectCount) {
     candidates = [...marketPool].sort(() => 0.5 - Math.random());
   }
 
-  // Shuffle and pick 3 prospects
+  // Shuffle and pick prospects according to scouting hub level
   const selectedMarketPlayers = candidates
     .sort(() => 0.5 - Math.random())
-    .slice(0, 3);
+    .slice(0, prospectCount);
 
   const prospects: DiscoveredScoutingProspect[] = selectedMarketPlayers.map((mp, idx) => {
     const estimatedPotential = Math.min(96, mp.rating + (mp.age <= 20 ? 8 : mp.age <= 23 ? 4 : 1));

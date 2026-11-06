@@ -111,6 +111,17 @@ export function classifyInboxMessage(
     };
   }
 
+  // Facility / Capital Infrastructure Updates
+  if (message.type === 'facility') {
+    return {
+      classification: message.priority === 'urgent' ? 'important' : 'info',
+      isResolved: true,
+      effectiveActionLabel: message.actionLabel || 'View Facilities',
+      effectiveActionTab: 'transfers',
+      effectiveActionType: 'open_facilities',
+    };
+  }
+
   // 3. Medical / Injury Reports
   if (message.type === 'injury') {
     // Check if a specific player was targeted

@@ -353,7 +353,8 @@ export interface InSeasonProgressionResult {
 export function applyInSeasonMatchProgression(
   player: CareerPlayer,
   minutesPlayed: number,
-  matchRating: number = 7.0
+  matchRating: number = 7.0,
+  xpModifier: number = 1.0
 ): InSeasonProgressionResult {
   // Only players aged 23 or younger progress naturally during the season
   if (player.age > 23) {
@@ -396,6 +397,10 @@ export function applyInSeasonMatchProgression(
   // Under-20 wonderkids learn even faster
   if (player.age <= 20) {
     points = Math.round(points * 1.25);
+  }
+
+  if (xpModifier !== 1.0) {
+    points = Math.round(points * xpModifier);
   }
 
   const currentProgress = player.developmentProgress ?? 0;
@@ -442,7 +447,10 @@ export function applyInSeasonMatchProgression(
  * Used during calendar time-skips so young players also develop naturally
  * through dedicated training sessions between matches.
  */
-export function applyMonthlySquadTraining(squad: CareerPlayer[]): {
+export function applyMonthlySquadTraining(
+  squad: CareerPlayer[],
+  xpModifier: number = 1.0
+): {
   updatedSquad: CareerPlayer[];
   logs: string[];
 } {
@@ -455,7 +463,8 @@ export function applyMonthlySquadTraining(squad: CareerPlayer[]): {
     if (player.rating >= maxPotential) return player;
 
     // Monthly training provides 15 to 25 development points
-    const trainingGain = Math.floor(Math.random() * 11) + 15;
+    const baseGain = Math.floor(Math.random() * 11) + 15;
+    const trainingGain = Math.round(baseGain * xpModifier);
     const currentProgress = player.developmentProgress ?? 0;
     const totalProgress = currentProgress + trainingGain;
 
@@ -508,7 +517,9 @@ export interface WeeklyTrainingResult {
  */
 export function applyWeeklySquadTraining(
   squad: CareerPlayer[],
-  trainingState?: TrainingProgramState
+  trainingState?: TrainingProgramState,
+  xpModifier: number = 1.0,
+  recoveryModifier: number = 1.0
 ): WeeklyTrainingResult {
   const teamFocus: TeamTrainingFocus = trainingState?.teamFocus || 'balanced';
   const mentorships = trainingState?.mentorships || {};
@@ -523,7 +534,7 @@ export function applyWeeklySquadTraining(
 
     // 1. Team Focus recovery and sharpness adjustments
     if (teamFocus === 'recovery') {
-      const recoveryBonus = 15;
+      const recoveryBonus = Math.round(15 * recoveryModifier);
       const newFitness = Math.min(100, currentFitness + recoveryBonus);
       staminaRecoveredTotal += newFitness - currentFitness;
       currentFitness = newFitness;
@@ -579,6 +590,10 @@ export function applyWeeklySquadTraining(
         player.position === 'GK')
     ) {
       weeklyXp += 5;
+    }
+
+    if (xpModifier !== 1.0) {
+      weeklyXp = Math.round(weeklyXp * xpModifier);
     }
 
     const currentProgress = player.developmentProgress ?? 0;

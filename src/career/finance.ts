@@ -126,6 +126,11 @@ import {
   CupFixture,
 } from './types';
 import { formatCareerCurrency, formatCareerWage } from './formatters';
+import {
+  getEffectiveStadiumCapacity,
+  getGateReceiptMultiplier,
+  getHospitalityCommercialBonus,
+} from './infrastructure';
 
 /**
  * Format currency amounts nicely: e.g. £140.0M, €161.0M, $175.0M, or £850k
@@ -291,9 +296,12 @@ export function calculateMatchdayRevenue(
   club: Club,
   isHome: boolean,
   competition: 'league' | 'cup' | 'europe' = 'league',
-  isCupTie: boolean = false
+  isCupTie: boolean = false,
+  stadiumCapacityOverride?: number,
+  gateMultiplier: number = 1.0,
+  hospitalityBonus: number = 0
 ): MatchdayRevenueBreakdown {
-  const capacity = club.stadiumCapacity || 35_000;
+  const capacity = stadiumCapacityOverride || club.stadiumCapacity || 35_000;
   const tier = club.tier || 'mid';
 
   // Average ticket prices calibrated to modern English top flight
@@ -309,7 +317,7 @@ export function calculateMatchdayRevenue(
     // 93% to 98% realistic attendance fill
     const fillRate = 0.94 + ((capacity % 7) / 100);
     const attendance = Math.round(capacity * Math.min(0.99, fillRate));
-    const grossGate = Math.round(attendance * avgTicket);
+    const grossGate = Math.round(attendance * avgTicket * gateMultiplier);
 
     // Domestic cups split net gate receipts 50/50 between clubs (after 10% levy)
     const gateReceipts = isCupTie ? Math.round(grossGate * 0.45) : grossGate;
@@ -325,7 +333,7 @@ export function calculateMatchdayRevenue(
         tier === 'elite' ? 1_850_000 : tier === 'upper' ? 1_450_000 : tier === 'mid' ? 1_150_000 : 900_000;
     }
 
-    const merchandising = Math.round(attendance * 8.5);
+    const merchandising = Math.round(attendance * 8.5) + (hospitalityBonus > 0 ? hospitalityBonus : 0);
     const stadiumOperations = Math.round(attendance * 6.2);
     const netMatchdayProfit = gateReceipts + tvBroadcast + merchandising - stadiumOperations;
 
@@ -381,7 +389,18 @@ export function applyMatchdayFinancials(
   competitionType: 'league' | 'cup' | 'europe' = 'league'
 ): CareerSaveFile {
   const isCupTie = competitionType !== 'league';
-  const rev = calculateMatchdayRevenue(save.club, isUserHome, competitionType, isCupTie);
+  const capacity = getEffectiveStadiumCapacity(save);
+  const gateMultiplier = isUserHome ? getGateReceiptMultiplier(save) : 1.0;
+  const hospitalityBonus = isUserHome ? getHospitalityCommercialBonus(save) : 0;
+  const rev = calculateMatchdayRevenue(
+    save.club,
+    isUserHome,
+    competitionType,
+    isCupTie,
+    capacity,
+    gateMultiplier,
+    hospitalityBonus
+  );
 
   const existingLedger: SeasonFinancialLedger =
     save.finances.seasonLedger || createInitialSeasonLedger();
@@ -606,7 +625,15 @@ export function calculateClubFinancialHealth(save: CareerSaveFile): ClubFinancia
   const commercialBaseline = tierCommercial[tier] || 52_000_000;
 
   // 19 home league games + ~4 home cup/europe games average
-  const sampleHomeRev = calculateMatchdayRevenue(save.club, true, 'league', false);
+  const sampleHomeRev = calculateMatchdayRevenue(
+    save.club,
+    true,
+    'league',
+    false,
+    getEffectiveStadiumCapacity(save),
+    getGateReceiptMultiplier(save),
+    getHospitalityCommercialBonus(save)
+  );
   const projectedMatchdayTurnover = Math.round(sampleHomeRev.netMatchdayProfit * 23);
 
   const ledger = save.finances.seasonLedger || createInitialSeasonLedger();

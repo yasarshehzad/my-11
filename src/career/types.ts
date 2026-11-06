@@ -274,7 +274,8 @@ export type FinancialCategory =
   | 'signing_bonuses'
   | 'stadium_operations'
   | 'loan_fees'
-  | 'board_investment';
+  | 'board_investment'
+  | 'infrastructure_investment';
 
 export interface FinancialTransaction {
   id: string;
@@ -725,7 +726,8 @@ export type ActionType =
   | 'open_transfers'
   | 'open_cups'
   | 'squad_registration'
-  | 'open_scouting';
+  | 'open_scouting'
+  | 'open_facilities';
 
 export interface ManagerMessage {
   id: string;
@@ -734,7 +736,7 @@ export interface ManagerMessage {
   senderRole?: string;
   subject: string;
   body: string;
-  type: 'match_report' | 'injury' | 'transfer' | 'board' | 'cup_draw' | 'international' | 'system' | 'scouting';
+  type: 'match_report' | 'injury' | 'transfer' | 'board' | 'cup_draw' | 'international' | 'system' | 'scouting' | 'facility';
   isRead: boolean;
   priority?: 'normal' | 'urgent';
   classification?: MessageClassification;
@@ -804,6 +806,51 @@ export interface CareerSaveFile {
   europeanLeaguePhaseState?: EuropeanLeaguePhaseState;
   tactics?: ClubTactics;
   scoutingState?: CareerScoutingState;
+  infrastructure?: ClubInfrastructureState;
+}
+
+export type FacilityType = 'stadium' | 'trainingGround' | 'medicalCenter' | 'scoutingHub';
+
+export interface FacilityTierConfig {
+  level: number;
+  name: string;
+  subtitle: string;
+  description: string;
+  cost: number;
+  constructionDays: number;
+  icon: string;
+  benefits: string[];
+  stadiumCapacity?: number;
+  gateMultiplier?: number;
+  hospitalityBonusPerMatch?: number;
+  trainingXpModifier?: number;
+  fitnessRecoveryModifier?: number;
+  injuryRiskModifier?: number;
+  injuryDurationReductionWeeks?: number;
+  scoutingSpeedReductionDays?: number;
+  maxScoutingMissions?: number;
+  prospectsPerDossier?: number;
+}
+
+export interface ActiveConstructionProject {
+  id: string;
+  facilityType: FacilityType;
+  targetLevel: number;
+  facilityName: string;
+  startDate: string;
+  completionDate: string;
+  cost: number;
+  completed: boolean;
+}
+
+export interface ClubInfrastructureState {
+  stadiumLevel: number; // 1 to 5
+  stadiumCapacity: number; // e.g. 35,000 to 88,000
+  trainingGroundLevel: number; // 1 to 5
+  medicalCenterLevel: number; // 1 to 5
+  scoutingHubLevel: number; // 1 to 5
+  activeProjects: ActiveConstructionProject[];
+  completedProjectsHistory?: string[];
 }
 
 export type TacticalPhilosophyType =

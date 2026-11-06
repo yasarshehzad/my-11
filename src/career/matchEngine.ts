@@ -85,6 +85,7 @@ export interface MatchSimulationConfig {
   settings: CareerSettings;
   homeTactics?: ClubTactics;
   awayTactics?: ClubTactics;
+  userInjuryRiskModifier?: number;
 }
 
 export interface MatchSimulationResult {
@@ -1003,10 +1004,20 @@ export function stepLiveMatchMinute(
         : 0.015;
     const perMinuteInjuryProb = matchInjuryProb / 70;
 
-    if (Math.random() < perMinuteInjuryProb) {
-      const isHomeInjured = Math.random() < 0.5;
-      const targetStates = isHomeInjured ? homeStates : awayStates;
-      const targetClub = isHomeInjured ? session.config.homeClub : session.config.awayClub;
+    const isHomeInjured = Math.random() < 0.5;
+    const targetStates = isHomeInjured ? homeStates : awayStates;
+    const targetClub = isHomeInjured ? session.config.homeClub : session.config.awayClub;
+
+    // Apply medical center injury risk reduction for user club
+    let effectiveInjuryProb = perMinuteInjuryProb;
+    if (
+      session.config.userClubId === targetClub.id &&
+      typeof session.config.userInjuryRiskModifier === 'number'
+    ) {
+      effectiveInjuryProb *= Math.max(0.2, session.config.userInjuryRiskModifier);
+    }
+
+    if (Math.random() < effectiveInjuryProb) {
       const outfieldOnPitch = targetStates.filter(
         (p) => p.isOnPitch && !p.redCard && categorizePosition(p.player.position) !== 'GK'
       );
@@ -1753,7 +1764,10 @@ export function applyPostMatchSquadImpact(
   wonMatch: boolean,
   settings: CareerSettings,
   drewMatch: boolean = false,
-  trainingFocus?: TeamTrainingFocus
+  trainingFocus?: TeamTrainingFocus,
+  injuryDurationReductionWeeks: number = 0,
+  fitnessRecoveryModifier: number = 1.0,
+  xpModifier: number = 1.0
 ): CareerPlayer[] {
   const stateMap = new Map<string, InGamePlayerState>(
     participatingStates.map((s) => [s.player.id, s])
@@ -1775,7 +1789,10 @@ export function applyPostMatchSquadImpact(
 
       // Injury state
       const isInjured = playedState.injured;
-      const injuryWeeks = isInjured ? Math.floor(Math.random() * 3) + 1 : player.injuryWeeks;
+      const baseInjuryWeeks = isInjured ? Math.floor(Math.random() * 3) + 1 : player.injuryWeeks;
+      const injuryWeeks = isInjured && typeof baseInjuryWeeks === 'number'
+        ? Math.max(1, baseInjuryWeeks - injuryDurationReductionWeeks)
+        : player.injuryWeeks;
 
       // Discipline & Suspensions tracking
       let yellowCardsTotal = player.yellowCardsTotal ?? 0;
@@ -1820,13 +1837,15 @@ export function applyPostMatchSquadImpact(
       const progression = applyInSeasonMatchProgression(
         playerWithUpdatedForm,
         playedState.minutesPlayed,
-        matchRating
+        matchRating,
+        xpModifier
       );
 
       return progression.updatedPlayer;
     } else {
       // Rested player (benched / reserve) -> recovers stamina!
-      const recovery = trainingFocus === 'recovery' ? 18 : 12;
+      const baseRecovery = trainingFocus === 'recovery' ? 18 : 12;
+      const recovery = Math.round(baseRecovery * fitnessRecoveryModifier);
       const newFitness = Math.min(100, (player.fitness ?? 100) + recovery);
 
       // Existing injury recovery countdown
@@ -1860,7 +1879,7 @@ export function applyPostMatchSquadImpact(
       };
 
       // Unused young squad members still gain training experience from matchday prep
-      const progression = applyInSeasonMatchProgression(restedBase, 0, 7.0);
+      const progression = applyInSeasonMatchProgression(restedBase, 0, 7.0, xpModifier);
       return progression.updatedPlayer;
     }
   });
@@ -1876,7 +1895,10 @@ export function applySimulatedMatchSquadImpact(
   simmedFixture: LeagueFixture,
   userClubId: string,
   settings: CareerSettings,
-  trainingFocus?: TeamTrainingFocus
+  trainingFocus?: TeamTrainingFocus,
+  injuryDurationReductionWeeks: number = 0,
+  fitnessRecoveryModifier: number = 1.0,
+  xpModifier: number = 1.0
 ): CareerPlayer[] {
   const isHome = simmedFixture.homeClubId === userClubId;
   const userGoals = isHome ? (simmedFixture.homeScore ?? 0) : (simmedFixture.awayScore ?? 0);
@@ -1960,5 +1982,15 @@ export function applySimulatedMatchSquadImpact(
     }),
   ];
 
-  return applyPostMatchSquadImpact(fullSquad, states, won, settings, drew, trainingFocus);
+  return applyPostMatchSquadImpact(
+    fullSquad,
+    states,
+    won,
+    settings,
+    drew,
+    trainingFocus,
+    injuryDurationReductionWeeks,
+    fitnessRecoveryModifier,
+    xpModifier
+  );
 }

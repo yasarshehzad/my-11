@@ -628,7 +628,7 @@ function CareerPlayHubContent() {
   const [fastForwardUsePreferredEleven, setFastForwardUsePreferredEleven] = useState(true);
   const [fastForwardHaltOnTransferMilestone, setFastForwardHaltOnTransferMilestone] = useState<'deadline' | 'window_open_or_close' | 'none'>('deadline');
   const [showSeasonReviewModal, setShowSeasonReviewModal] = useState(false);
-  const [transferHubSubTab, setTransferHubSubTab] = useState<'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board' | 'scouting'>('market');
+  const [transferHubSubTab, setTransferHubSubTab] = useState<'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board' | 'scouting' | 'infrastructure'>('market');
   const [focusedOfferId, setFocusedOfferId] = useState<string | undefined>(undefined);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [activeCelebration, setActiveCelebration] = useState<CelebrationEvent | null>(null);
@@ -1005,6 +1005,8 @@ function CareerPlayHubContent() {
       navigateToSection('transfers', 'board', 'board-room-section');
     } else if (alert.actionType === 'open_scouting') {
       navigateToSection('transfers', 'scouting', 'transfer-scouting-section');
+    } else if (alert.actionType === 'open_facilities') {
+      navigateToSection('transfers', 'infrastructure', 'transfer-infrastructure-section');
     } else if (alert.actionTab) {
       const targetSub = alert.actionTab === 'transfers' ? 'market' : undefined;
       navigateToSection(alert.actionTab as typeof activeTab, targetSub);
@@ -2721,6 +2723,63 @@ function CareerPlayHubContent() {
                 </button>
               </div>
             </section>
+
+            {/* Club Infrastructure & Stadium Campus Card */}
+            {(() => {
+              const infra = save.infrastructure;
+              const cap = infra?.stadiumCapacity || save.club.stadiumCapacity || 35000;
+              const stadLvl = infra?.stadiumLevel || 1;
+              const activeCount = (infra?.activeProjects || []).filter((p) => !p.completed).length;
+
+              return (
+                <section
+                  aria-label="Club Infrastructure & Stadium"
+                  data-office-ui="true"
+                  className="office-reveal-6"
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigateToSection('transfers', 'infrastructure', 'transfer-infrastructure-section');
+                    }}
+                    className="w-full text-left rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-3.5 sm:p-4 flex items-center justify-between gap-3 shadow-sm hover:brightness-110 active:scale-[0.99] transition-all cursor-pointer group border border-indigo-900/50"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-xl shrink-0 group-hover:scale-105 transition-transform">
+                        🏟️
+                      </div>
+                      <div className="min-w-0 space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-display font-black uppercase tracking-wider text-indigo-400">
+                            Facilities &amp; Stadium Empire
+                          </span>
+                          {activeCount > 0 && (
+                            <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-amber-400 text-amber-950 animate-pulse">
+                              🏗️ {activeCount} Upgrading
+                            </span>
+                          )}
+                        </div>
+                        <h4 className="font-display font-black text-sm sm:text-base text-white truncate">
+                          {save.club.stadiumName || 'Club Stadium'} • {cap.toLocaleString()} seats
+                        </h4>
+                        <div className="flex items-center gap-3 text-xs text-indigo-200/90 font-medium">
+                          <span>Stadium: Tier {stadLvl}</span>
+                          <span>•</span>
+                          <span>Training: Tier {infra?.trainingGroundLevel || 1}</span>
+                          <span>•</span>
+                          <span>Medical: Tier {infra?.medicalCenterLevel || 1}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 text-xs font-display font-bold text-indigo-300 group-hover:text-white transition-colors shrink-0">
+                      <span className="hidden sm:inline">Manage Facilities</span>
+                      <span className="text-base font-black leading-none group-hover:translate-x-0.5 transition-transform">›</span>
+                    </div>
+                  </button>
+                </section>
+              );
+            })()}
 
             {/* 5. LATEST RESULT TICKER ROW (Open Horizontal Row — No White Container, Zero Truncation at 360px) */}
             {(() => {

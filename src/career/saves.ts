@@ -10,6 +10,7 @@ import { generateYouthIntake } from './youthAcademy';
 import { getInitialInboxMessages } from './inbox';
 import { calculatePlayerValue, calculateWeeklyWage, createInitialSeasonLedger } from './finance';
 import { getInitialClubTactics } from './tactics';
+import { getInitialClubInfrastructure } from './infrastructure';
 import { Player, FormationType } from '../types/game';
 
 export const VALID_SLOT_IDS = ['slot_1', 'slot_2', 'slot_3'] as const;
@@ -104,6 +105,9 @@ export function loadCareerSave(slotId: string): CareerSaveFile | null {
     }
     if (!parsed.scoutingState) {
       parsed.scoutingState = { activeMissions: [], scoutingDossiers: [] };
+    }
+    if (!parsed.infrastructure && parsed.club) {
+      parsed.infrastructure = getInitialClubInfrastructure(parsed.club);
     }
 
     return parsed as CareerSaveFile;
@@ -333,6 +337,7 @@ export function createNewCareerSave(params: {
     youthAcademy: generateYouthIntake(params.club, yearStart),
     tactics: getInitialClubTactics(squad),
     scoutingState: { activeMissions: [], scoutingDossiers: [] },
+    infrastructure: getInitialClubInfrastructure(params.club),
     phase: 'preseason',
     inbox: getInitialInboxMessages({
       id: params.slotId,

@@ -48,6 +48,12 @@ import {
   applyTournamentPrizeBonus,
 } from './finance';
 import { processDailyScoutingProgress } from './scouting';
+import {
+  processDailyConstructionProgress,
+  getTrainingXpModifier,
+  getFitnessRecoveryModifier,
+  getInjuryDurationReductionWeeks,
+} from './infrastructure';
 import { calculateStandings } from './table';
 import { getAiClubMatchdaySquad } from './squadGenerator';
 import { applySimulatedMatchSquadImpact } from './matchEngine';
@@ -670,7 +676,10 @@ export function advanceTimeSkip(
         simmedResult as LeagueFixture,
         userClubId,
         save.settings,
-        save.trainingState?.teamFocus
+        save.trainingState?.teamFocus,
+        getInjuryDurationReductionWeeks(save),
+        getFitnessRecoveryModifier(save),
+        getTrainingXpModifier(save)
       );
 
       // Settle matchday revenues and payroll for this played fixture
@@ -974,7 +983,8 @@ export function advanceTimeSkip(
   const initialDate = new Date(save.season.currentDate);
   const daysElapsed = Math.round((currentDate.getTime() - initialDate.getTime()) / (1000 * 60 * 60 * 24));
   if (daysElapsed >= 25) {
-    const trainingResult = applyMonthlySquadTraining(userSquad);
+    const xpMod = getTrainingXpModifier(save);
+    const trainingResult = applyMonthlySquadTraining(userSquad, xpMod);
     userSquad = trainingResult.updatedSquad;
   }
 
@@ -1031,6 +1041,7 @@ export function advanceTimeSkip(
   };
 
   updatedSave = processDailyScoutingProgress(updatedSave, curIso);
+  updatedSave = processDailyConstructionProgress(updatedSave, curIso);
 
   if (matchesPlayedCount > 0 && updatedSave.tactics) {
     updatedSave = {

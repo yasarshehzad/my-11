@@ -63,17 +63,32 @@ import {
   launchScoutingMission,
 } from '../../career/scouting';
 import {
+  commissionFacilityUpgrade,
+  FACILITY_TIERS_BY_TYPE,
+  FACILITY_METADATA,
+  getCurrentFacilityLevel,
+  getEffectiveStadiumCapacity,
+  getGateReceiptMultiplier,
+  getHospitalityCommercialBonus,
+  getTrainingXpModifier,
+  getFitnessRecoveryModifier,
+  getInjuryRiskModifier,
+  getInjuryDurationReductionWeeks,
+  getMaxScoutingMissions,
+} from '../../career/infrastructure';
+import {
   ScoutingRegion,
   ScoutingTargetProfile,
   DiscoveredScoutingProspect,
   ScoutingDossierReport,
+  FacilityType,
 } from '../../career/types';
 
 interface TransferHubProps {
   save: CareerSaveFile;
   onUpdateSave: (updatedSave: CareerSaveFile) => void;
   onNotification?: (msg: string) => void;
-  initialSubTab?: 'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board' | 'scouting';
+  initialSubTab?: 'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board' | 'scouting' | 'infrastructure';
   focusedOfferId?: string;
   onOpenCompare?: (playerA: MarketPlayer, playerB?: CareerPlayer | MarketPlayer) => void;
 }
@@ -88,7 +103,7 @@ export function TransferHub({
   focusedOfferId,
   onOpenCompare,
 }: TransferHubProps) {
-  const [subTab, setSubTab] = useState<'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board' | 'scouting'>(
+  const [subTab, setSubTab] = useState<'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board' | 'scouting' | 'infrastructure'>(
     initialSubTab || 'market'
   );
   const [historyView, setHistoryView] = useState<'my_club' | 'world'>('my_club');
@@ -1095,6 +1110,14 @@ export function TransferHub({
                 : (save.scoutingState?.scoutingDossiers || []).length > 0
                 ? `${(save.scoutingState?.scoutingDossiers || []).length} Reports`
                 : 'Network',
+            },
+            {
+              id: 'infrastructure',
+              label: 'Facilities',
+              icon: '🏟️',
+              badge: (save.infrastructure?.activeProjects || []).filter((p) => !p.completed).length > 0
+                ? `${(save.infrastructure?.activeProjects || []).filter((p) => !p.completed).length} Work`
+                : `Lv.${save.infrastructure?.stadiumLevel || 1}`,
             },
             { id: 'history', label: 'History', icon: '📜', badge: save.transfersHistory?.length || 0 },
             { id: 'board', label: 'Board', icon: '🏛️', badge: `${boardStatus.confidence}%` },
@@ -3559,6 +3582,401 @@ export function TransferHub({
               </div>
             )}
           </div>
+        </section>
+      )}
+
+      {/* SUB-VIEW 8: STADIUM & CLUB INFRASTRUCTURE EMPIRE */}
+      {subTab === 'infrastructure' && (
+        <section
+          id="transfer-infrastructure-section"
+          className="space-y-6 scroll-mt-20 animate-fade-in"
+          aria-label="Club Stadium & Infrastructure Empire"
+        >
+          {/* Header & Strategic Overview */}
+          <div className="office-floating-card rounded-3xl p-5 sm:p-6 border border-slate-200/90 bg-gradient-to-br from-white via-slate-50/50 to-indigo-50/40 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl" aria-hidden="true">🏟️</span>
+                  <h3 className="text-lg sm:text-xl font-display font-black text-[#0b1536] uppercase tracking-tight">
+                    Club Infrastructure &amp; Stadium Empire
+                  </h3>
+                </div>
+                <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
+                  Transform <strong className="text-slate-900">{save.club.defaultName}</strong> into an enduring continental superpower. Invest transfer budget surpluses into capital construction projects to expand matchday gate receipts, accelerate wonderkid training progression, eradicate injury plagues, and conquer international scouting networks.
+                </p>
+              </div>
+
+              <div className="shrink-0 flex items-center gap-2 bg-white/90 border border-slate-200/80 rounded-2xl px-4 py-2.5 shadow-2xs">
+                <div className="text-right">
+                  <span className="text-[10px] font-display font-black text-slate-400 uppercase tracking-widest block">
+                    Capital Budget
+                  </span>
+                  <span className="text-base font-display font-black text-emerald-700 font-mono">
+                    {formatCurrency(save.finances.transferBudget)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Strategic KPI Badges */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-slate-200/80">
+              <div className="bg-white/80 border border-slate-200/80 rounded-xl p-2.5">
+                <div className="flex items-center gap-1.5 text-xs font-display font-bold text-slate-500 uppercase">
+                  <span>🏟️</span>
+                  <span>Matchday Capacity</span>
+                </div>
+                <div className="font-display font-black text-sm text-[#0b1536] mt-0.5">
+                  {getEffectiveStadiumCapacity(save).toLocaleString()} seats
+                </div>
+                <div className="text-[10px] text-emerald-700 font-bold mt-0.5">
+                  {getGateReceiptMultiplier(save)}x Gate Receipts
+                </div>
+              </div>
+
+              <div className="bg-white/80 border border-slate-200/80 rounded-xl p-2.5">
+                <div className="flex items-center gap-1.5 text-xs font-display font-bold text-slate-500 uppercase">
+                  <span>🏋️</span>
+                  <span>Training Ground</span>
+                </div>
+                <div className="font-display font-black text-sm text-[#0b1536] mt-0.5">
+                  Tier {save.infrastructure?.trainingGroundLevel || 1} / 5
+                </div>
+                <div className="text-[10px] text-emerald-700 font-bold mt-0.5">
+                  +{Math.round((getTrainingXpModifier(save) - 1) * 100)}% Wonderkid XP
+                </div>
+              </div>
+
+              <div className="bg-white/80 border border-slate-200/80 rounded-xl p-2.5">
+                <div className="flex items-center gap-1.5 text-xs font-display font-bold text-slate-500 uppercase">
+                  <span>🩺</span>
+                  <span>Medical Center</span>
+                </div>
+                <div className="font-display font-black text-sm text-[#0b1536] mt-0.5">
+                  Tier {save.infrastructure?.medicalCenterLevel || 1} / 5
+                </div>
+                <div className="text-[10px] text-rose-600 font-bold mt-0.5">
+                  -{Math.round((1 - getInjuryRiskModifier(save)) * 100)}% Injury Risk
+                </div>
+              </div>
+
+              <div className="bg-white/80 border border-slate-200/80 rounded-xl p-2.5">
+                <div className="flex items-center gap-1.5 text-xs font-display font-bold text-slate-500 uppercase">
+                  <span>🔭</span>
+                  <span>Scouting Desks</span>
+                </div>
+                <div className="font-display font-black text-sm text-[#0b1536] mt-0.5">
+                  Tier {save.infrastructure?.scoutingHubLevel || 1} / 5
+                </div>
+                <div className="text-[10px] text-indigo-600 font-bold mt-0.5">
+                  {getMaxScoutingMissions(save)} Active Expeditions
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Active Capital Construction Tracker */}
+          {(() => {
+            const activeProjects = (save.infrastructure?.activeProjects || []).filter((p) => !p.completed);
+            if (activeProjects.length === 0) {
+              return (
+                <div className="rounded-2xl border border-dashed border-slate-300 p-4 bg-slate-50/50 flex items-center justify-between gap-3 text-xs text-slate-600">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" aria-hidden="true" />
+                    <span>
+                      <strong className="text-slate-800">Operational Excellence:</strong> Zero construction disruptions active. All 4 facility departments are operating at peak efficiency.
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-mono text-slate-500 shrink-0">Ready for Expansion</span>
+                </div>
+              );
+            }
+
+            return (
+              <div className="office-floating-card rounded-3xl p-5 border-2 border-amber-300 bg-gradient-to-r from-amber-50/80 via-orange-50/40 to-amber-50/70 shadow-sm space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl animate-bounce" aria-hidden="true">🏗️</span>
+                    <div>
+                      <h4 className="font-display font-black text-sm text-amber-950 uppercase tracking-tight">
+                        Active Capital Construction Projects ({activeProjects.length})
+                      </h4>
+                      <p className="text-[11px] text-amber-800 font-medium">
+                        Civil engineering and architectural upgrades underway across the campus.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 border border-amber-300">
+                    In Progress
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                  {activeProjects.map((project) => {
+                    const startMs = new Date(project.startDate).getTime();
+                    const endMs = new Date(project.completionDate).getTime();
+                    const curMs = new Date(save.season.currentDate).getTime();
+                    const totalDuration = Math.max(1, endMs - startMs);
+                    const elapsed = Math.max(0, curMs - startMs);
+                    const progressPct = Math.max(8, Math.min(100, Math.round((elapsed / totalDuration) * 100)));
+
+                    const msLeft = Math.max(0, endMs - curMs);
+                    const daysLeft = Math.max(1, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
+                    const nextTier = FACILITY_TIERS_BY_TYPE[project.facilityType][project.targetLevel];
+
+                    return (
+                      <div
+                        key={project.id}
+                        className="bg-white/95 rounded-2xl p-4 border border-amber-200/80 shadow-xs space-y-2.5"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <span className="text-[10px] font-display font-extrabold uppercase tracking-wider text-amber-800 block">
+                              {FACILITY_METADATA[project.facilityType].name}
+                            </span>
+                            <h5 className="font-display font-black text-sm text-slate-900 leading-tight">
+                              {project.facilityName} (Tier {project.targetLevel})
+                            </h5>
+                          </div>
+                          <span className="text-xs font-mono font-black text-amber-900 bg-amber-100 px-2 py-0.5 rounded-md border border-amber-300 shrink-0">
+                            {daysLeft} days remaining
+                          </span>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-[10px] font-mono text-slate-500">
+                            <span>Started: {project.startDate}</span>
+                            <span>Target: {project.completionDate} ({progressPct}%)</span>
+                          </div>
+                          <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-slate-200">
+                            <div
+                              className="bg-gradient-to-r from-amber-500 to-orange-500 h-2.5 rounded-full transition-all duration-500"
+                              style={{ width: `${progressPct}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Cost & Benefits Snippet */}
+                        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                          <span className="text-slate-500 font-mono">
+                            Committed: {formatCurrency(project.cost)}
+                          </span>
+                          <span className="text-emerald-700 font-medium truncate max-w-[200px]">
+                            {nextTier?.benefits[0] || 'Enhanced Operational Capabilities'}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* 4 Infrastructure Branches Dashboard */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {(['stadium', 'trainingGround', 'medicalCenter', 'scoutingHub'] as FacilityType[]).map((type) => {
+              const meta = FACILITY_METADATA[type];
+              const currentLvl = getCurrentFacilityLevel(save.infrastructure, type);
+              const tiers = FACILITY_TIERS_BY_TYPE[type];
+              const currentTierConfig = tiers[currentLvl];
+              const nextLvl = currentLvl + 1;
+              const nextTierConfig = currentLvl < 5 ? tiers[nextLvl] : null;
+
+              const activeProject = (save.infrastructure?.activeProjects || []).find(
+                (p) => p.facilityType === type && !p.completed
+              );
+
+              const canAfford = nextTierConfig ? save.finances.transferBudget >= nextTierConfig.cost : false;
+
+              return (
+                <article
+                  key={type}
+                  className="office-floating-card rounded-3xl p-5 border border-slate-200/90 bg-white shadow-xs flex flex-col justify-between space-y-4 hover:border-slate-300 transition-all"
+                >
+                  <div className="space-y-3">
+                    {/* Facility Header */}
+                    <header className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-10 h-10 rounded-2xl bg-slate-100 border border-slate-200 text-xl flex items-center justify-center shrink-0">
+                          {meta.icon}
+                        </span>
+                        <div>
+                          <span className="text-[10px] font-display font-extrabold text-indigo-700 uppercase tracking-wider block">
+                            {meta.category}
+                          </span>
+                          <h4 className="font-display font-black text-base text-slate-900 leading-tight">
+                            {meta.name}
+                          </h4>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col items-end shrink-0">
+                        <span className="px-2 py-0.5 rounded-full font-display font-black text-xs bg-slate-900 text-white shadow-2xs">
+                          Tier {currentLvl} / 5
+                        </span>
+                      </div>
+                    </header>
+
+                    {/* Level 5-pip Progress Meter */}
+                    <div className="flex items-center gap-1.5 w-full">
+                      {[1, 2, 3, 4, 5].map((lvl) => {
+                        const isCompleted = lvl <= currentLvl;
+                        const isUnderConstruction = activeProject && lvl === activeProject.targetLevel;
+                        return (
+                          <div
+                            key={lvl}
+                            className={`h-2 flex-1 rounded-full transition-all ${
+                              isUnderConstruction
+                                ? 'bg-amber-400 animate-pulse border border-amber-500'
+                                : isCompleted
+                                ? 'bg-emerald-600'
+                                : 'bg-slate-200'
+                            }`}
+                            title={`Tier ${lvl}`}
+                          />
+                        );
+                      })}
+                    </div>
+
+                    {/* Current Operational Tier Details */}
+                    <div className="bg-slate-50/80 rounded-2xl p-3.5 border border-slate-200/70 space-y-2">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <h5 className="font-display font-extrabold text-sm text-slate-900">
+                          {currentTierConfig?.name}
+                        </h5>
+                        <span className="text-[10px] font-mono font-bold text-slate-500">
+                          Current Active Tier
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        {currentTierConfig?.description}
+                      </p>
+
+                      {/* Active Live Perks */}
+                      <div className="pt-1.5 space-y-1">
+                        <span className="text-[10px] font-display font-bold text-slate-400 uppercase tracking-wider block">
+                          Operational Advantages Live:
+                        </span>
+                        {(currentTierConfig?.benefits || []).map((benefit, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center gap-1.5 text-xs text-emerald-800 font-medium"
+                          >
+                            <span className="text-emerald-600 font-bold">✓</span>
+                            <span>{benefit}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Next Expansion Preview */}
+                    {nextTierConfig ? (
+                      <div className="bg-indigo-50/50 rounded-2xl p-3.5 border border-indigo-100 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <span className="text-[10px] font-display font-extrabold uppercase tracking-wider text-indigo-700 block">
+                              Next Expansion Target • Tier {nextLvl}
+                            </span>
+                            <h5 className="font-display font-black text-sm text-indigo-950">
+                              {nextTierConfig.name}
+                            </h5>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className="text-sm font-display font-black text-indigo-900 block font-mono">
+                              {formatCurrency(nextTierConfig.cost)}
+                            </span>
+                            <span className="text-[10px] text-indigo-600 font-mono block">
+                              {nextTierConfig.constructionDays} days construction
+                            </span>
+                          </div>
+                        </div>
+
+                        <p className="text-xs text-indigo-900/80 leading-snug">
+                          {nextTierConfig.description}
+                        </p>
+
+                        <div className="space-y-1 pt-1">
+                          <span className="text-[10px] font-display font-bold text-indigo-500 uppercase tracking-wider block">
+                            Unlocked Advantages:
+                          </span>
+                          {nextTierConfig.benefits.map((b, idx) => (
+                            <div key={idx} className="flex items-center gap-1.5 text-xs text-indigo-900 font-medium">
+                              <span className="text-indigo-600">✦</span>
+                              <span>{b}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="rounded-2xl p-3 bg-gradient-to-r from-amber-50 to-emerald-50 border border-emerald-200 text-center">
+                        <span className="text-xs font-display font-black text-emerald-800 uppercase tracking-wide">
+                          🏆 Maximum Tier 5 World Standard Achieved
+                        </span>
+                        <p className="text-[11px] text-emerald-700 mt-0.5">
+                          This department stands as the undisputed benchmark of world football excellence.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Expansion Action CTA */}
+                  <div className="pt-2">
+                    {activeProject ? (
+                      <div className="w-full py-2.5 px-3 rounded-2xl bg-amber-50 border border-amber-200 text-center text-xs font-display font-extrabold text-amber-800 flex items-center justify-center gap-2">
+                        <span className="animate-spin text-sm">⚙️</span>
+                        <span>Under Construction (Target: {activeProject.completionDate})</span>
+                      </div>
+                    ) : nextTierConfig ? (
+                      <button
+                        type="button"
+                        disabled={!canAfford}
+                        onClick={() => {
+                          const res = commissionFacilityUpgrade(save, type);
+                          if (res.success) {
+                            onUpdateSave(res.updatedSave);
+                            if (onNotification) {
+                              onNotification(`🏗️ Commissioned expansion of ${meta.name} (Tier ${nextLvl})!`);
+                            }
+                          } else if (res.error && onNotification) {
+                            onNotification(`⚠️ ${res.error}`);
+                          }
+                        }}
+                        className={`w-full py-2.5 px-4 rounded-2xl font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm ${
+                          canAfford
+                            ? 'bg-gradient-to-r from-indigo-700 to-blue-700 hover:from-indigo-600 hover:to-blue-600 text-white active:scale-98'
+                            : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                        }`}
+                      >
+                        <span>🏗️ Commission Tier {nextLvl} Expansion</span>
+                        <span>•</span>
+                        <span className="font-mono">{formatCurrency(nextTierConfig.cost)}</span>
+                      </button>
+                    ) : null}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          {/* Completed Construction History Ledger */}
+          {(save.infrastructure?.completedProjectsHistory || []).length > 0 && (
+            <div className="office-floating-card rounded-3xl p-5 border border-slate-200/90 bg-white space-y-3">
+              <h4 className="font-display font-black text-sm text-slate-900 uppercase tracking-tight flex items-center gap-2">
+                <span>📜</span>
+                <span>Historical Infrastructure Projects &amp; Ribbon-Cuttings</span>
+              </h4>
+              <div className="divide-y divide-slate-100 border border-slate-100 rounded-2xl overflow-hidden">
+                {save.infrastructure?.completedProjectsHistory?.map((entry, idx) => (
+                  <div key={idx} className="p-3 text-xs text-slate-700 flex items-center gap-2 bg-slate-50/40">
+                    <span className="text-emerald-600 font-bold">✓</span>
+                    <span>{entry}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
       )}
 
