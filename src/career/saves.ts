@@ -1,14 +1,15 @@
-import { CareerSaveFile, CareerSettings, Club, ManagerProfile, SaveSlotMeta } from './types';
+import { CareerSaveFile, CareerSettings, Club, ManagerProfile, SaveSlotMeta, CareerPlayer, CareerLineup, DatabaseSeason } from './types';
 import { getEffectiveClubName, getAllClubs, getClubsForSeason } from './clubs';
 import { validateSettings } from './settings';
 import { generateClubSquad } from './squadGenerator';
-import { getBestStartingLineup } from './squad';
+import { getBestStartingLineup, SUPPORTED_CAREER_FORMATIONS } from './squad';
 import { generateRoundRobinFixtures } from './calendar';
 import { createInitialStandings } from './table';
 import { initializeSeasonCups } from './cups';
 import { generateYouthIntake } from './youthAcademy';
 import { getInitialInboxMessages } from './inbox';
 import { calculatePlayerValue, calculateWeeklyWage } from './finance';
+import { Player, FormationType } from '../types/game';
 
 export const VALID_SLOT_IDS = ['slot_1', 'slot_2', 'slot_3'] as const;
 export type ValidSlotId = (typeof VALID_SLOT_IDS)[number];
@@ -161,11 +162,63 @@ export function listSaveSlots(): SaveSlotMeta[] {
   });
 }
 
+export function convertDraftPlayerToCareerPlayer(
+  player: Player,
+  club: Club,
+  index: number = 0,
+  dbSeason: DatabaseSeason = '2026/27'
+): CareerPlayer {
+  const eraAgeMap: Record<string, number> = { Modern: 25, '10s': 28, '00s': 30, '90s': 31 };
+  const age = eraAgeMap[player.era] || 26;
+  const value = calculatePlayerValue(player.rating, age, player.primaryPosition);
+  const wageWeekly = calculateWeeklyWage(player.rating, value);
+
+  const isHomegrown =
+    (player.league && player.league.toLowerCase().includes('premier')) ||
+    player.nationality === 'England';
+
+  return {
+    id: `cp_draft_${player.id}_${index + 1}`,
+    cardId: player.id,
+    name: player.displayName || player.playerName,
+    rating: player.rating,
+    position: player.primaryPosition,
+    naturalPositions:
+      player.naturalPositions && player.naturalPositions.length > 0
+        ? player.naturalPositions
+        : [player.primaryPosition],
+    secondaryPositions: player.secondaryPositions || [],
+    age,
+    value,
+    wageWeekly,
+    contractYears: 3,
+    fitness: 100,
+    morale: 95,
+    form: 7.5,
+    injured: false,
+    club: club.id,
+    nationality: player.nationality || 'England',
+    isHomegrown,
+    potential: Math.min(99, Math.max(player.rating, player.rating + (age <= 23 ? 5 : 2))),
+    faceStats: {
+      pac: player.pace,
+      sho: player.primaryPosition === 'GK' ? Math.round((player.defence + player.physical) / 2) : (player.finishing || player.attack),
+      pas: player.passing || player.technique,
+      dri: player.dribbling || player.technique,
+      def: player.defending || player.defence,
+      phy: player.physical,
+      isGoalkeeper: player.primaryPosition === 'GK',
+    },
+  };
+}
+
 export function createNewCareerSave(params: {
   slotId: ValidSlotId;
   manager: ManagerProfile;
   club: Club;
   settings: CareerSettings;
+  customDraftedPlayers?: Player[];
+  initialFormation?: FormationType;
 }): CareerSaveFile {
   const validatedSettings = validateSettings(params.settings);
   const now = new Date().toISOString();
@@ -178,13 +231,49 @@ export function createNewCareerSave(params: {
     params.club.startingBudget * (validatedSettings.startingBudgetMultiplier || 1.0)
   );
 
-  const squad = generateClubSquad(params.club, dbSeason);
+  const isDraftImport = Boolean(params.customDraftedPlayers && params.customDraftedPlayers.length > 0);
+  let squad: CareerPlayer[];
+  let lineup: CareerLineup;
+
+  if (isDraftImport && params.customDraftedPlayers) {
+    const draftedCareerPlayers = params.customDraftedPlayers.map((p, idx) =>
+      convertDraftPlayerToCareerPlayer(p, params.club, idx, dbSeason)
+    );
+
+    const baseSquad = generateClubSquad(params.club, dbSeason);
+    const draftedNames = new Set(draftedCareerPlayers.map((p) => p.name.toLowerCase()));
+    const draftedCards = new Set(draftedCareerPlayers.map((p) => p.cardId));
+
+    // Keep non-duplicate depth players from the base squad (up to 14 players)
+    const depthSquad = baseSquad.filter(
+      (p) => !draftedNames.has(p.name.toLowerCase()) && !draftedCards.has(p.cardId)
+    );
+
+    squad = [...draftedCareerPlayers, ...depthSquad];
+
+    const formationName =
+      params.initialFormation && SUPPORTED_CAREER_FORMATIONS.some((f) => f.name === params.initialFormation)
+        ? params.initialFormation
+        : '4-3-3';
+
+    const starterIds = draftedCareerPlayers.slice(0, 11).map((p) => p.id);
+    const benchIds = depthSquad.slice(0, 7).map((p) => p.id);
+
+    lineup = {
+      formation: formationName,
+      starterIds,
+      benchIds,
+    };
+  } else {
+    squad = generateClubSquad(params.club, dbSeason);
+    lineup = getBestStartingLineup(squad);
+  }
+
   const currentWeeklyWages = squad.reduce((sum, p) => sum + (p.wageWeekly || 0), 0);
   const weeklyWageBudget = Math.max(
     params.club.wageBudgetWeekly || 0,
     Math.round((currentWeeklyWages * 1.30) / 50_000) * 50_000
   );
-  const lineup = getBestStartingLineup(squad);
 
   const { fixtures, calendar } = generateRoundRobinFixtures(seasonClubs, yearStart);
   const standings = createInitialStandings(seasonClubs);
@@ -252,6 +341,28 @@ export function createNewCareerSave(params: {
       phase: 'preseason',
     } as unknown as CareerSaveFile),
   };
+
+  if (isDraftImport) {
+    initialSave.inbox = [
+      {
+        id: 'msg_draft_welcome',
+        date: currentDate,
+        sender: 'Board of Directors',
+        senderRole: 'Club Executive Committee',
+        subject: '🚀 Welcome Boss: Your Drafted All-Star Foundation is Assembled!',
+        body: `Welcome to ${getEffectiveClubName(params.club)}, ${params.manager.name}!\n\nThe board and supporters are ecstatic with the arrival of your handpicked 11 drafted superstars. They have completed medicals, registered with the league, and reported to the training complex in peak condition.\n\nYour chosen tactical formation (${lineup.formation}) is set, and the squad is ready for our season opener. Lead us to silverware!`,
+        type: 'board',
+        isRead: false,
+        priority: 'urgent',
+        classification: 'important',
+        resolved: false,
+        actionLabel: 'Inspect Starting XI',
+        actionTab: 'squad',
+        actionType: 'open_squad',
+      },
+      ...(initialSave.inbox || []),
+    ];
+  }
 
   saveCareerSave(initialSave);
   return initialSave;

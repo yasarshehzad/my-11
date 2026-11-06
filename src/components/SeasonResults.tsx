@@ -1,9 +1,14 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Player, FormationType, SimulationResult, ChallengeTemplate, StreakStats, MatchSimResult } from '../types/game';
 import { FORMATION_SLOTS, getDetailedChemistryLogs } from '../utils/gameLogic';
 import { PitchLayout } from './PitchLayout';
 import { StatsDisplay } from './StatsDisplay';
 import { SharePreview } from './SharePreview';
+import { getAllClubs, getEffectiveClubName } from '../career/clubs';
+import { createNewCareerSave, listSaveSlots, ValidSlotId } from '../career/saves';
+import { validateSettings } from '../career/settings';
+import { formatCareerCurrency } from '../career/formatters';
 
 interface SeasonResultsProps {
   formation: FormationType;
@@ -38,6 +43,63 @@ export function SeasonResults({
 }: SeasonResultsProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const confettiAnimRef = useRef<number | null>(null);
+
+  const router = useRouter();
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<ValidSlotId>('slot_1');
+  const [selectedClubId, setSelectedClubId] = useState<string>('man_blue');
+  const [managerName, setManagerName] = useState<string>('Manager');
+  const [managerNationality, setManagerNationality] = useState<string>('England');
+  const [budgetMultiplier, setBudgetMultiplier] = useState<number>(1.0);
+  const [isExporting, setIsExporting] = useState(false);
+  const [saveSlots, setSaveSlots] = useState(() => (typeof window !== 'undefined' ? listSaveSlots() : []));
+
+  useEffect(() => {
+    if (showExportModal && typeof window !== 'undefined') {
+      const slots = listSaveSlots();
+      setSaveSlots(slots);
+      const firstEmpty = slots.find((s) => s.isEmpty);
+      if (firstEmpty) {
+        setSelectedSlot(firstEmpty.slotId);
+      }
+    }
+  }, [showExportModal]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showExportModal) {
+        setShowExportModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showExportModal]);
+
+  const handleConfirmExport = () => {
+    setIsExporting(true);
+    const clubs = getAllClubs();
+    const targetClub = clubs.find((c) => c.id === selectedClubId) || clubs[0];
+    const validDrafted = selectedPlayers.filter((p): p is Player => Boolean(p));
+
+    const finalSettings = validateSettings({
+      preset: 'hard',
+      startingBudgetMultiplier: budgetMultiplier,
+    });
+
+    createNewCareerSave({
+      slotId: selectedSlot,
+      manager: {
+        name: managerName.trim() || 'Manager',
+        nationality: managerNationality.trim() || 'England',
+      },
+      club: targetClub,
+      settings: finalSettings,
+      customDraftedPlayers: validDrafted,
+      initialFormation: formation,
+    });
+
+    router.push(`/career/play?slot=${selectedSlot}`);
+  };
 
   // Confetti Animation for 35+ wins
   useEffect(() => {
@@ -705,21 +767,237 @@ export function SeasonResults({
         )}
       </div>
 
-      {/* Play Again and Randomize Buttons */}
-      <div className="mt-4 mb-6 relative z-10 flex flex-col sm:flex-row gap-3 w-full">
+      {/* Action Buttons: Export to Career, Build Another Team, Randomize */}
+      <div className="mt-4 mb-6 relative z-10 flex flex-col gap-3 w-full">
         <button
-          onClick={onStartDraft}
-          className="flex-1 py-4 px-6 rounded-2xl office-subcard text-[#0b1536] hover:bg-slate-100 font-display font-black text-sm uppercase tracking-wider transition-all duration-300 transform active:scale-98 cursor-pointer text-center shadow-sm"
+          type="button"
+          onClick={() => setShowExportModal(true)}
+          className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 text-white font-display font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 transform active:scale-98 cursor-pointer text-center flex items-center justify-center gap-2"
         >
-          🎮 Build Another Team
+          <span className="text-lg">🚀</span>
+          <span>Take This Squad into Career Mode</span>
         </button>
-        <button
-          onClick={onRandomDraft}
-          className="flex-grow py-4 px-6 rounded-2xl office-play-match-btn text-white font-display font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 transform active:scale-98 cursor-pointer text-center"
-        >
-          🎲 Randomize Again
-        </button>
+
+        <div className="flex flex-col sm:flex-row gap-3 w-full">
+          <button
+            type="button"
+            onClick={onStartDraft}
+            className="flex-1 py-4 px-6 rounded-2xl office-subcard text-[#0b1536] hover:bg-slate-100 font-display font-black text-sm uppercase tracking-wider transition-all duration-300 transform active:scale-98 cursor-pointer text-center shadow-sm"
+          >
+            🎮 Build Another Team
+          </button>
+          <button
+            type="button"
+            onClick={onRandomDraft}
+            className="flex-grow py-4 px-6 rounded-2xl office-play-match-btn text-white font-display font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 transform active:scale-98 cursor-pointer text-center"
+          >
+            🎲 Randomize Again
+          </button>
+        </div>
       </div>
+
+      {/* Export to Career Mode Modal */}
+      {showExportModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto bg-slate-950/80 backdrop-blur-sm animate-fade-in"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="export-draft-modal-title"
+        >
+          <div className="office-floating-card w-full max-w-xl bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-2xl relative my-auto max-h-[90vh] overflow-y-auto space-y-5 text-left">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-xl shadow-xs border border-emerald-100">
+                  🚀
+                </div>
+                <div>
+                  <h3 id="export-draft-modal-title" className="text-base font-display font-black text-[#0b1536] uppercase tracking-wide">
+                    Take Drafted XI to Career Mode
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">
+                    Launch a persistent Career save with your drafted 11 stars as the starting squad.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowExportModal(false)}
+                className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 text-sm font-bold flex items-center justify-center transition-colors cursor-pointer"
+                aria-label="Close modal"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Squad Snapshot */}
+            <div className="p-3.5 rounded-2xl bg-slate-50/90 border border-slate-200/80 space-y-2.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-display font-black text-[#0b1536] uppercase tracking-wider flex items-center gap-1.5">
+                  <span>⚽</span> Drafted Foundation ({formation})
+                </span>
+                <span className="font-mono text-[11px] font-bold text-emerald-700">
+                  {stats.overall} OVR • {stats.chemistry}% Chem
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
+                {selectedPlayers.filter((p): p is Player => Boolean(p)).map((p, idx) => (
+                  <span
+                    key={p.id || idx}
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white border border-slate-200 text-[10.5px] font-bold text-[#0b1536] shadow-2xs"
+                  >
+                    <span className="text-[9px] font-display font-black text-blue-700 px-1 py-0.2 bg-blue-50 rounded">
+                      {p.primaryPosition}
+                    </span>
+                    <span className="truncate max-w-[90px]">{p.displayName}</span>
+                    <span className="font-mono font-black text-[9.5px] text-slate-600">{p.rating}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Save Slot Selector */}
+            <div className="space-y-2">
+              <label className="text-xs font-display font-black text-[#0b1536] uppercase tracking-wider block">
+                1. Select Destination Save Slot
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                {saveSlots.map((slot) => {
+                  const isSelected = selectedSlot === slot.slotId;
+                  const slotLabel = slot.slotId === 'slot_1' ? 'Slot 1' : slot.slotId === 'slot_2' ? 'Slot 2' : 'Slot 3';
+                  return (
+                    <button
+                      key={slot.slotId}
+                      type="button"
+                      onClick={() => setSelectedSlot(slot.slotId)}
+                      className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between min-h-[78px] ${
+                        isSelected
+                          ? 'border-emerald-600 bg-emerald-50/70 ring-2 ring-emerald-500 shadow-xs'
+                          : 'border-slate-200/90 bg-slate-50/50 hover:bg-slate-100 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span className="text-xs font-display font-black text-[#0b1536] uppercase">
+                          {slotLabel}
+                        </span>
+                        {isSelected && <span className="text-emerald-700 font-bold text-xs">✓</span>}
+                      </div>
+                      {slot.isEmpty ? (
+                        <div className="text-[10.5px] font-bold text-emerald-700 flex items-center gap-1 mt-1">
+                          <span>🟢</span> Empty Slot
+                        </div>
+                      ) : (
+                        <div className="text-[10px] text-slate-600 mt-1 line-clamp-2">
+                          <span className="text-amber-700 font-bold">⚠️ Overwrites:</span>{' '}
+                          <span className="font-semibold">{slot.save?.clubName || 'Club'}</span> (S{slot.save?.seasonNumber || 1})
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Club Identity Selection */}
+            <div className="space-y-2">
+              <label htmlFor="target-club-select" className="text-xs font-display font-black text-[#0b1536] uppercase tracking-wider block">
+                2. Choose Club Identity
+              </label>
+              <select
+                id="target-club-select"
+                value={selectedClubId}
+                onChange={(e) => setSelectedClubId(e.target.value)}
+                className="w-full p-3 rounded-xl border border-slate-300 bg-white text-xs font-display font-bold text-[#0b1536] focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer shadow-2xs"
+              >
+                {getAllClubs().map((club) => (
+                  <option key={club.id} value={club.id}>
+                    {getEffectiveClubName(club)} • {club.stadiumName} (Budget: {formatCareerCurrency(club.startingBudget)})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Manager Credentials */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label htmlFor="export-manager-name" className="text-xs font-display font-black text-[#0b1536] uppercase tracking-wider block">
+                  3. Manager Name
+                </label>
+                <input
+                  id="export-manager-name"
+                  type="text"
+                  value={managerName}
+                  onChange={(e) => setManagerName(e.target.value)}
+                  placeholder="Manager"
+                  maxLength={30}
+                  className="w-full p-2.5 rounded-xl border border-slate-300 bg-white text-xs font-bold text-[#0b1536] focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="export-manager-nat" className="text-xs font-display font-black text-[#0b1536] uppercase tracking-wider block">
+                  Nationality
+                </label>
+                <input
+                  id="export-manager-nat"
+                  type="text"
+                  value={managerNationality}
+                  onChange={(e) => setManagerNationality(e.target.value)}
+                  placeholder="England"
+                  maxLength={30}
+                  className="w-full p-2.5 rounded-xl border border-slate-300 bg-white text-xs font-bold text-[#0b1536] focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs"
+                />
+              </div>
+            </div>
+
+            {/* Starting Budget Boost Selection */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-display font-black text-[#0b1536] uppercase tracking-wider block">
+                4. Starting Financial Backing
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { value: 1.0, label: 'Standard (1.0x)' },
+                  { value: 1.5, label: 'Well-Funded (1.5x)' },
+                  { value: 2.0, label: 'Tycoon (2.0x)' },
+                ].map((b) => (
+                  <button
+                    key={b.value}
+                    type="button"
+                    onClick={() => setBudgetMultiplier(b.value)}
+                    className={`py-2 px-2.5 rounded-xl border text-[11px] font-display font-black uppercase text-center transition-all cursor-pointer ${
+                      budgetMultiplier === b.value
+                        ? 'border-emerald-600 bg-emerald-50 text-emerald-800 ring-1 ring-emerald-500'
+                        : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    {b.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setShowExportModal(false)}
+                className="py-3 px-4.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-xs font-display font-black text-slate-700 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmExport}
+                disabled={isExporting}
+                className="py-3 px-6 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-display font-black text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all transform active:scale-98 cursor-pointer disabled:opacity-50 flex items-center gap-2"
+              >
+                <span>{isExporting ? '⏳ Initializing Career...' : '🚀 Launch Career Mode'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

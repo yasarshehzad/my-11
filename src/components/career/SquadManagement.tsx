@@ -1030,6 +1030,11 @@ export function SquadManagement({
               {bench.map((player) => {
                 const isSwapping = swapSourceId === player.id;
                 const isDragTarget = dragOverPlayerId === player.id;
+                const selectedStarterSlot =
+                  swapSourceId && starterIdsSet.has(swapSourceId)
+                    ? activeFormationConfig.slots[lineup.starterIds.indexOf(swapSourceId)]
+                    : null;
+                const benchFit = selectedStarterSlot ? calculatePositionFit(player, selectedStarterSlot) : null;
                 return (
                   <div
                     key={player.id}
@@ -1049,13 +1054,33 @@ export function SquadManagement({
                         ? 'border-blue-500 ring-3 ring-blue-500/40 scale-105 z-10 shadow-lg'
                         : isSwapping
                         ? 'border-amber-400 ring-2 ring-amber-400 scale-105 shadow-md'
+                        : benchFit === 'natural'
+                        ? 'border-emerald-400 ring-2 ring-emerald-400/80 bg-emerald-50/50 shadow-xs'
+                        : benchFit === 'competent'
+                        ? 'border-amber-300 ring-1.5 ring-amber-300/80 bg-amber-50/50 shadow-xs'
                         : 'border-slate-200/90 hover:border-blue-400/80 shadow-xs'
                     }`}
                   >
                     <div className="flex justify-between items-center text-[10px] font-bold mb-1">
-                      <span className="text-blue-700 font-display font-black text-[9.5px] px-1 py-0.2 bg-blue-50 rounded border border-blue-100">
-                        {player.position}
-                      </span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-blue-700 font-display font-black text-[9.5px] px-1 py-0.2 bg-blue-50 rounded border border-blue-100">
+                          {player.position}
+                        </span>
+                        {benchFit && (
+                          <span
+                            className={`text-[7.5px] font-black uppercase px-1 py-0.2 rounded border shadow-2xs font-display ${
+                              benchFit === 'natural'
+                                ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                : benchFit === 'competent'
+                                ? 'bg-amber-100 text-amber-800 border-amber-300'
+                                : 'bg-rose-100 text-rose-800 border-rose-300'
+                            }`}
+                            title={`Fit for selected ${selectedStarterSlot} position: ${benchFit}`}
+                          >
+                            {benchFit === 'natural' ? '✓ NAT' : benchFit === 'competent' ? '~ SEC' : '✕ OOP'}
+                          </span>
+                        )}
+                      </div>
                       <span className="text-[#0b1536] font-display font-black text-xs">{player.rating}</span>
                     </div>
                     <div className="text-xs font-display font-black text-[#0b1536] truncate leading-tight" title={player.name}>
@@ -2783,6 +2808,14 @@ export function SquadManagement({
   );
 
   function renderPitchSlot(slotPos: string, player: CareerPlayer | undefined, playerId: string | undefined) {
+    const activeMovingPlayer = swapSourceId
+      ? squad.find((p) => p.id === swapSourceId)
+      : draggedPlayer;
+    const prospectiveFit =
+      activeMovingPlayer && activeMovingPlayer.id !== player?.id
+        ? calculatePositionFit(activeMovingPlayer, slotPos)
+        : null;
+
     if (!player) {
       return (
         <div
@@ -2797,13 +2830,34 @@ export function SquadManagement({
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
           }}
-          className={`my11-pitch-empty-slot w-[72px] min-w-0 sm:w-22 md:w-24 p-2 text-center cursor-pointer flex flex-col items-center justify-center min-h-[66px] select-none ${
-            swapSourceId ? 'border-amber-400 bg-amber-500/20 text-amber-200 animate-pulse' : ''
+          className={`my11-pitch-empty-slot w-[74px] min-w-0 sm:w-22 md:w-24 p-2 text-center cursor-pointer flex flex-col items-center justify-center min-h-[66px] select-none transition-all ${
+            prospectiveFit === 'natural'
+              ? 'border-emerald-400 ring-2 ring-emerald-400 bg-emerald-500/25 text-emerald-100 animate-pulse'
+              : prospectiveFit === 'competent'
+              ? 'border-amber-400 ring-2 ring-amber-400 bg-amber-500/25 text-amber-100 animate-pulse'
+              : prospectiveFit === 'out_of_position'
+              ? 'border-rose-400 ring-2 ring-rose-400 bg-rose-500/20 text-rose-200'
+              : swapSourceId
+              ? 'border-amber-400 bg-amber-500/20 text-amber-200 animate-pulse'
+              : ''
           }`}
           title={`${slotPos} (Empty) - Click or drop to assign`}
         >
           <span className="text-xs leading-none mb-0.5">➕</span>
           <span className="text-[10px] font-display font-black uppercase tracking-wider">{slotPos}</span>
+          {prospectiveFit && (
+            <span
+              className={`text-[7.5px] font-black uppercase px-1 py-0.2 rounded mt-0.5 border shadow-2xs font-display ${
+                prospectiveFit === 'natural'
+                  ? 'bg-emerald-600 text-white border-emerald-400'
+                  : prospectiveFit === 'competent'
+                  ? 'bg-amber-600 text-white border-amber-400'
+                  : 'bg-rose-600 text-white border-rose-400'
+              }`}
+            >
+              {prospectiveFit === 'natural' ? '✓ NAT' : prospectiveFit === 'competent' ? '~ SEC' : '✕ OOP'}
+            </span>
+          )}
         </div>
       );
     }
@@ -2844,30 +2898,73 @@ export function SquadManagement({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onClick={() => handlePlayerClick(player)}
-        title={`${player.name} (${player.position}) • ${effectiveRating} OVR • Drag or click to swap`}
+        title={`${player.name} (${player.position}) • Role: ${slotPos} (${
+          fit === 'natural' ? 'Natural 100%' : fit === 'competent' ? 'Secondary 98%' : 'Out of Position 86%'
+        }) • ${effectiveRating} OVR • Drag or click to swap`}
         aria-label={`${player.name}, position ${player.position}, rating ${effectiveRating}`}
-        className={`my11-pitch-player-card w-[74px] min-w-0 sm:w-22 md:w-24 p-1.5 sm:p-2 cursor-grab active:cursor-grabbing text-center scroll-mt-20 ${
+        className={`my11-pitch-player-card w-[74px] min-w-0 sm:w-22 md:w-24 p-1.5 sm:p-2 cursor-grab active:cursor-grabbing text-center scroll-mt-20 transition-all ${
           isDragTarget
             ? 'my11-pitch-player-card-target'
             : isSwapping
             ? 'my11-pitch-player-card-swapping'
+            : prospectiveFit === 'natural'
+            ? 'ring-2 ring-emerald-500 bg-emerald-50/70 shadow-md scale-102'
+            : prospectiveFit === 'competent'
+            ? 'ring-2 ring-amber-400 bg-amber-50/70 shadow-md scale-102'
+            : prospectiveFit === 'out_of_position'
+            ? 'ring-2 ring-rose-500 bg-rose-50/70 shadow-md'
             : fit === 'out_of_position'
-            ? 'ring-2 ring-rose-400/80'
+            ? 'ring-2 ring-rose-500/90'
             : fit === 'competent'
-            ? 'ring-1.5 ring-amber-400/80'
-            : ''
+            ? 'ring-1.5 ring-amber-400/90'
+            : 'ring-1 ring-emerald-500/40'
         }`}
       >
         <div className="flex justify-between items-center text-[9px] font-black leading-none mb-1">
-          <span className={`px-1 py-0.5 rounded font-display uppercase tracking-wider text-[8.5px] border ${fitBadgeClass}`}>
-            {slotPos}
-          </span>
+          <div className="flex items-center gap-0.5">
+            <span className={`px-1 py-0.5 rounded font-display uppercase tracking-wider text-[8.5px] border ${fitBadgeClass}`}>
+              {slotPos}
+            </span>
+            <span
+              className={`px-1 py-0.5 rounded text-[7.5px] font-black uppercase font-display border shadow-2xs ${
+                fit === 'natural'
+                  ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                  : fit === 'competent'
+                  ? 'bg-amber-100 text-amber-900 border-amber-300'
+                  : 'bg-rose-100 text-rose-900 border-rose-300'
+              }`}
+              title={
+                fit === 'natural'
+                  ? 'Natural Role (100% Efficiency)'
+                  : fit === 'competent'
+                  ? 'Secondary Role (98% Efficiency)'
+                  : 'Out of Position (86% Match Penalty)'
+              }
+            >
+              {fit === 'natural' ? 'NAT' : fit === 'competent' ? 'SEC' : 'OOP'}
+            </span>
+          </div>
           <div className="flex items-center gap-0.5">
             <span className={`px-1.5 py-0.5 rounded-md font-display font-black text-[10.5px] ${ratingBadgeClass}`}>
               {effectiveRating}
             </span>
           </div>
         </div>
+
+        {prospectiveFit && (
+          <div
+            className={`text-[7.5px] font-black font-display uppercase px-1 py-0.2 rounded border mb-0.5 ${
+              prospectiveFit === 'natural'
+                ? 'bg-emerald-600 text-white border-emerald-400 shadow-2xs'
+                : prospectiveFit === 'competent'
+                ? 'bg-amber-500 text-white border-amber-400 shadow-2xs'
+                : 'bg-rose-600 text-white border-rose-400 shadow-2xs'
+            }`}
+          >
+            Swap: {prospectiveFit === 'natural' ? '✓ NAT' : prospectiveFit === 'competent' ? '~ SEC' : '✕ OOP'}
+          </div>
+        )}
+
         <div
           className="text-[9.5px] sm:text-[10.5px] font-display font-black text-[#0b1536] leading-[1.12] mt-0.5 line-clamp-2 break-words min-h-[22px] flex items-center justify-center text-center px-0.5"
           title={player.name}
@@ -2889,16 +2986,6 @@ export function SquadManagement({
           {Boolean(player.suspendedMatches && player.suspendedMatches > 0) && (
             <span className="text-[7px] font-black px-1 rounded bg-red-700 text-white" title={player.suspensionReason || `Suspended (${player.suspendedMatches} match ban)`}>
               SUSP
-            </span>
-          )}
-          {fit === 'out_of_position' && (
-            <span className="text-[7px] font-black px-1 rounded bg-rose-100 text-rose-700 border border-rose-300">
-              OOP
-            </span>
-          )}
-          {fit === 'competent' && (
-            <span className="text-[7px] font-black px-1 rounded bg-amber-100 text-amber-800 border border-amber-300">
-              ALT
             </span>
           )}
         </div>
