@@ -466,6 +466,7 @@ export function initializeSeasonCups(
 
 /**
  * Simulates a knockout fixture. If regulation ends in a draw, simulates penalties!
+ * In two-legged ties: Leg 1 can end in a draw; Leg 2 simulates penalties only if aggregate is level.
  */
 export function simulateKnockoutCupFixture(
   fixture: CupFixture,
@@ -478,7 +479,36 @@ export function simulateKnockoutCupFixture(
 
   let penalties: { homePenalties: number; awayPenalties: number } | undefined = undefined;
 
-  // If score is level in knockout match -> penalty shootout!
+  // In Leg 1 of a two-legged tie, matches can conclude as a draw without penalties
+  if (fixture.leg === 1) {
+    return {
+      ...fixture,
+      ...baseSim,
+      penalties: undefined,
+    };
+  }
+
+  // In Leg 2 of a two-legged tie, penalties occur only if AGGREGATE is level
+  if (fixture.leg === 2) {
+    const homeAgg = (fixture.aggregateHomeScore ?? 0) + (baseSim.homeScore ?? 0);
+    const awayAgg = (fixture.aggregateAwayScore ?? 0) + (baseSim.awayScore ?? 0);
+    if (homeAgg === awayAgg) {
+      let hp = Math.floor(Math.random() * 2) + 4;
+      let ap = Math.floor(Math.random() * 2) + 3;
+      if (hp === ap) {
+        if (Math.random() < 0.5) hp += 1;
+        else ap += 1;
+      }
+      penalties = { homePenalties: hp, awayPenalties: ap };
+    }
+    return {
+      ...fixture,
+      ...baseSim,
+      penalties,
+    };
+  }
+
+  // Single-match knockout
   if (baseSim.homeScore === baseSim.awayScore) {
     let hp = Math.floor(Math.random() * 2) + 4; // 4-5
     let ap = Math.floor(Math.random() * 2) + 3; // 3-4
@@ -502,6 +532,20 @@ export function simulateKnockoutCupFixture(
 }
 
 export function getCupWinner(fixture: CupFixture): string {
+  // If Leg 2 of a two-legged tie, winner is decided on aggregate score (and penalties if aggregate is level)
+  if (fixture.leg === 2) {
+    const homeAgg = (fixture.aggregateHomeScore ?? 0) + (fixture.homeScore ?? 0);
+    const awayAgg = (fixture.aggregateAwayScore ?? 0) + (fixture.awayScore ?? 0);
+    if (homeAgg > awayAgg) return fixture.homeClubId;
+    if (awayAgg > homeAgg) return fixture.awayClubId;
+    if (fixture.penalties) {
+      return fixture.penalties.homePenalties > fixture.penalties.awayPenalties
+        ? fixture.homeClubId
+        : fixture.awayClubId;
+    }
+    return fixture.homeClubId;
+  }
+
   if (fixture.homeScore! > fixture.awayScore!) return fixture.homeClubId;
   if (fixture.awayScore! > fixture.homeScore!) return fixture.awayClubId;
 
@@ -516,7 +560,7 @@ export function getCupWinner(fixture: CupFixture): string {
 
 /**
  * Advances a cup tournament to the next bracket round if all current matches are played.
- * Strictly pairs the actual winners from the previous round; future rounds are never predetermined.
+ * Handles two-legged ties in European competitions and single-match domestic knockout brackets.
  */
 export function advanceCupTournament(
   tournament: CupTournament,
@@ -535,6 +579,60 @@ export function advanceCupTournament(
     };
   }
 
+  // 1. If League Phase in Champions League
+  if (tournament.stage === 'league_phase') {
+    const currentFixtures = tournament.fixtures.filter(
+      (f) => f.roundName === tournament.currentRound
+    );
+    const allPlayed = currentFixtures.length > 0 && currentFixtures.every((f) => f.played && f.homeClubId !== 'tbc');
+    if (!allPlayed) {
+      return { updatedTournament: tournament, isNewRound: false };
+    }
+
+    const nextUnplayed = tournament.fixtures.find((f) => !f.played);
+    if (nextUnplayed) {
+      return {
+        updatedTournament: {
+          ...tournament,
+          currentRound: nextUnplayed.roundName,
+        },
+        isNewRound: true,
+      };
+    }
+
+    // All 8 league phase matchdays complete -> Advance top 8 to Two-Legged Quarter-Finals!
+    const standings = tournament.leaguePhaseStandings || [];
+    const sorted = [...standings].sort((a, b) => b.points - a.points || b.goalDifference - a.goalDifference);
+    const qfQualifiers = sorted.slice(0, 8).map((s) => s.clubId);
+
+    const qfFixtures: CupFixture[] = [];
+    for (let i = 0; i < 4; i++) {
+      qfFixtures.push({
+        id: `fix_${tournament.id}_qf_leg1_${i + 1}`,
+        competitionId: tournament.id,
+        competitionName: tournament.name,
+        round: 9,
+        roundName: 'Quarter-Final (Leg 1)',
+        date: `${yearStart + 1}-03-10`,
+        homeClubId: qfQualifiers[i * 2] || 'man_blue',
+        awayClubId: qfQualifiers[i * 2 + 1] || 'madrid_royal',
+        played: false,
+        isKnockout: true,
+        leg: 1,
+      });
+    }
+
+    return {
+      updatedTournament: {
+        ...tournament,
+        stage: 'knockout',
+        currentRound: 'Quarter-Final (Leg 1)',
+        fixtures: [...tournament.fixtures, ...qfFixtures],
+      },
+      isNewRound: true,
+    };
+  }
+
   const currentFixtures = tournament.fixtures.filter(
     (f) => f.roundName === tournament.currentRound
   );
@@ -544,6 +642,47 @@ export function advanceCupTournament(
     return { updatedTournament: tournament, isNewRound: false };
   }
 
+  const isEuropean = tournament.id === CUP_IDS.EURO_CHAMPIONS || tournament.id === CUP_IDS.EURO_CHALLENGE;
+
+  // 2. If Leg 1 of a Two-Legged Round in Europe
+  if (isEuropean && currentFixtures[0]?.leg === 1) {
+    const leg1RoundName = currentFixtures[0].roundName;
+    const leg2RoundName = leg1RoundName.replace('(Leg 1)', '(Leg 2)').replace('Leg 1', 'Leg 2');
+
+    const leg2Fixtures: CupFixture[] = currentFixtures.map((leg1Fix, i) => {
+      const d = new Date(leg1Fix.date);
+      d.setDate(d.getDate() + 7);
+      const leg2Date = d.toISOString().split('T')[0];
+
+      return {
+        id: `fix_${tournament.id}_${leg2RoundName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${i + 1}`,
+        competitionId: tournament.id,
+        competitionName: tournament.name,
+        round: leg1Fix.round,
+        roundName: leg2RoundName,
+        date: leg2Date,
+        homeClubId: leg1Fix.awayClubId, // Reversed home/away for Leg 2
+        awayClubId: leg1Fix.homeClubId,
+        played: false,
+        isKnockout: true,
+        leg: 2,
+        firstLegFixtureId: leg1Fix.id,
+        aggregateHomeScore: leg1Fix.awayScore ?? 0,
+        aggregateAwayScore: leg1Fix.homeScore ?? 0,
+      };
+    });
+
+    return {
+      updatedTournament: {
+        ...tournament,
+        currentRound: leg2RoundName,
+        fixtures: [...tournament.fixtures, ...leg2Fixtures],
+      },
+      isNewRound: true,
+    };
+  }
+
+  // 3. Round is decided (either Leg 2 completed or single-match round completed)
   const winners = currentFixtures.map((f) => getCupWinner(f));
 
   // If Final was completed
@@ -568,26 +707,31 @@ export function advanceCupTournament(
   // Draw next round with appropriate realistic calendar dates
   let nextRoundName = 'Final';
   let nextDate = `${yearStart + 1}-05-20`;
+  let isNextRoundTwoLegged = false;
 
   const isDomesticLeagueCup = tournament.id === CUP_IDS.LEAGUE_CUP;
   const isTheEnglishCup = tournament.id === CUP_IDS.ENGLISH_CUP;
+  const cleanCurrentRound = tournament.currentRound.replace(/\s*\(Leg\s*\d\)/i, '').trim();
 
-  if (tournament.currentRound === 'Round of 16' || tournament.currentRound === 'Third Round') {
-    nextRoundName = 'Quarter-Final';
+  if (cleanCurrentRound === 'Round of 16' || cleanCurrentRound === 'Third Round') {
+    nextRoundName = isEuropean ? 'Quarter-Final (Leg 1)' : 'Quarter-Final';
+    isNextRoundTwoLegged = isEuropean;
     nextDate = isDomesticLeagueCup
       ? `${yearStart}-12-15`
       : isTheEnglishCup
       ? `${yearStart + 1}-03-20`
       : `${yearStart + 1}-03-10`;
-  } else if (tournament.currentRound === 'Quarter-Final') {
-    nextRoundName = 'Semi-Final';
+  } else if (cleanCurrentRound === 'Quarter-Final') {
+    nextRoundName = isEuropean ? 'Semi-Final (Leg 1)' : 'Semi-Final';
+    isNextRoundTwoLegged = isEuropean;
     nextDate = isDomesticLeagueCup
       ? `${yearStart + 1}-01-26`
       : isTheEnglishCup
       ? `${yearStart + 1}-04-17`
       : `${yearStart + 1}-04-14`;
-  } else if (tournament.currentRound === 'Semi-Final') {
+  } else if (cleanCurrentRound === 'Semi-Final') {
     nextRoundName = 'Final';
+    isNextRoundTwoLegged = false;
     nextDate = isDomesticLeagueCup
       ? `${yearStart + 1}-02-28`
       : isTheEnglishCup
@@ -610,6 +754,7 @@ export function advanceCupTournament(
       awayClubId: winners[i * 2 + 1],
       played: false,
       isKnockout: true,
+      leg: isNextRoundTwoLegged ? 1 : undefined,
     });
   }
 

@@ -616,9 +616,12 @@ export function getBestStartingLineup(
     SUPPORTED_CAREER_FORMATIONS.find((f) => f.name === formationName) ||
     SUPPORTED_CAREER_FORMATIONS[0];
 
-  // Enforce league registration: Only correctly registered seniors and U21 exempt players can be auto-picked
-  const eligible = squad.filter((p) =>
-    isPlayerRegisteredForMatch(p, squad, registeredPlayerIds, seasonYearStart)
+  // Enforce league registration & discipline: Only correctly registered, uninjured, and non-suspended players are auto-picked
+  const eligible = squad.filter(
+    (p) =>
+      !p.injured &&
+      (!p.suspendedMatches || p.suspendedMatches <= 0) &&
+      isPlayerRegisteredForMatch(p, squad, registeredPlayerIds, seasonYearStart)
   );
   const pool = eligible.length >= 11 ? eligible : squad;
   const available = [...pool].sort((a, b) => b.rating - a.rating);
@@ -931,6 +934,30 @@ export function isPlayerRegisteredForMatch(
   return registered.includes(player.id);
 }
 
+/**
+ * Evaluates whether a player is available to play in an upcoming fixture (not injured, not serving suspension, and registered).
+ */
+export function isPlayerAvailableForMatch(
+  player: CareerPlayer,
+  squad: CareerPlayer[],
+  registeredPlayerIds?: string[],
+  seasonYearStart: number = 2026
+): { available: boolean; reason?: string } {
+  if (player.injured) {
+    return { available: false, reason: player.injuryDescription || 'Injured' };
+  }
+  if (player.suspendedMatches && player.suspendedMatches > 0) {
+    return {
+      available: false,
+      reason: player.suspensionReason || `Suspended (${player.suspendedMatches} match ban)`,
+    };
+  }
+  if (!isPlayerRegisteredForMatch(player, squad, registeredPlayerIds, seasonYearStart)) {
+    return { available: false, reason: 'Unregistered for Senior League' };
+  }
+  return { available: true };
+}
+
 export interface SquadRotationResult {
   updatedLineup: CareerLineup;
   rotatedCount: number;
@@ -943,8 +970,8 @@ export interface SquadRotationResult {
 }
 
 /**
- * Automatically inspects the starting XI and rotates out any fatigued or injured players (< threshold fitness),
- * replacing them with the highest-rated fit and eligible bench/reserve player for each slot.
+ * Automatically inspects the starting XI and rotates out any fatigued, injured, or suspended players (< threshold fitness),
+ * replacing them with the highest-rated fit, non-suspended, and eligible bench/reserve player for each slot.
  */
 export function autoRotateFitLineup(
   squad: CareerPlayer[],
@@ -962,11 +989,12 @@ export function autoRotateFitLineup(
   const newStarterIds = [...currentLineup.starterIds];
   const swaps: SquadRotationResult['swaps'] = [];
 
-  // Candidates who are not already starting, not injured, and meet the fitness threshold
+  // Candidates who are not already starting, not injured, not suspended, and meet the fitness threshold
   const candidates = squad.filter(
     (p) =>
       !starterSet.has(p.id) &&
       !p.injured &&
+      (!p.suspendedMatches || p.suspendedMatches <= 0) &&
       (p.fitness ?? 100) >= fitnessThreshold &&
       isPlayerRegisteredForMatch(p, squad, registeredPlayerIds, seasonYearStart)
   );
@@ -977,8 +1005,9 @@ export function autoRotateFitLineup(
     const currentStarter = playerMap.get(newStarterIds[index]);
     if (!currentStarter) return;
 
+    const isSuspended = Boolean(currentStarter.suspendedMatches && currentStarter.suspendedMatches > 0);
     const isFatigued = (currentStarter.fitness ?? 100) < fitnessThreshold;
-    const isUnavailable = currentStarter.injured || isFatigued;
+    const isUnavailable = currentStarter.injured || isSuspended || isFatigued;
 
     if (!isUnavailable) return;
 

@@ -184,6 +184,11 @@ export interface CareerPlayer {
     goalPayout: number;
     goalPaid: boolean;
   };
+  // Discipline & Suspensions
+  yellowCardsTotal?: number;
+  redCardsTotal?: number;
+  suspendedMatches?: number;
+  suspensionReason?: string;
 }
 
 export type SquadRole = 'crucial' | 'important' | 'squad' | 'sporadic' | 'prospect';
@@ -416,6 +421,10 @@ export interface CupFixture extends LeagueFixture {
     awayPenalties: number;
     kicks?: PenaltyKickAttempt[];
   };
+  leg?: 1 | 2;
+  aggregateHomeScore?: number;
+  aggregateAwayScore?: number;
+  firstLegFixtureId?: string;
 }
 
 export interface CupTournament {

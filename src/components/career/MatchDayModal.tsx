@@ -133,14 +133,17 @@ export function MatchDayModal({
   const starters = squad.filter((p) => starterIdsSet.has(p.id));
   const bench = squad.filter((p) => benchIdsSet.has(p.id));
 
-  // Premier League registration check
+  // Premier League registration & disciplinary suspension check
   const ineligibleStarters = !isCup
     ? starters.filter((p) => !isPlayerRegisteredForMatch(p, squad, save.registeredPlayerIds, save.season?.yearStart))
     : [];
   const ineligibleBench = !isCup
     ? bench.filter((p) => !isPlayerRegisteredForMatch(p, squad, save.registeredPlayerIds, save.season?.yearStart))
     : [];
-  const hasIneligiblePlayers = ineligibleStarters.length > 0 || ineligibleBench.length > 0;
+  const suspendedStarters = starters.filter((p) => Boolean(p.suspendedMatches && p.suspendedMatches > 0));
+  const suspendedBench = bench.filter((p) => Boolean(p.suspendedMatches && p.suspendedMatches > 0));
+  const hasSuspendedPlayers = suspendedStarters.length > 0 || suspendedBench.length > 0;
+  const hasIneligiblePlayers = ineligibleStarters.length > 0 || ineligibleBench.length > 0 || hasSuspendedPlayers;
 
   const handleAutoPickEligible = () => {
     const freshLineup = getBestStartingLineup(
@@ -286,9 +289,18 @@ export function MatchDayModal({
 
         // 3. Reached 90 minutes
         if (next.minute >= 90 && !next.isExtraTime) {
-          const isTiedKnockout =
-            isCup && cupFix?.isKnockout && !isFriendlyTournament(cupFix.competitionId, cupFix as any) &&
-            next.homeScore === next.awayScore;
+          let isTiedKnockout = false;
+          if (isCup && cupFix?.isKnockout && !isFriendlyTournament(cupFix.competitionId, cupFix as any)) {
+            if (cupFix.leg === 1) {
+              isTiedKnockout = false; // Two-legged tie: Leg 1 concludes at 90m without extra time
+            } else if (cupFix.leg === 2) {
+              const aggHome = (cupFix.aggregateHomeScore ?? 0) + next.homeScore;
+              const aggAway = (cupFix.aggregateAwayScore ?? 0) + next.awayScore;
+              isTiedKnockout = aggHome === aggAway;
+            } else {
+              isTiedKnockout = next.homeScore === next.awayScore;
+            }
+          }
 
           if (isTiedKnockout) {
             setMatchState('extratime_prompt');
@@ -303,7 +315,11 @@ export function MatchDayModal({
 
         // 4. Reached 120 minutes in Extra Time
         if (next.minute >= 120 && next.isExtraTime) {
-          if (next.homeScore === next.awayScore) {
+          const isShootoutNeeded = cupFix?.leg === 2
+            ? ((cupFix.aggregateHomeScore ?? 0) + next.homeScore) === ((cupFix.aggregateAwayScore ?? 0) + next.awayScore)
+            : next.homeScore === next.awayScore;
+
+          if (isShootoutNeeded) {
             const shootout = simulatePenaltyShootoutDetailed(
               homeClub,
               awayClub,
@@ -374,7 +390,11 @@ export function MatchDayModal({
     setSession(s);
 
     if (s.isExtraTime) {
-      if (s.homeScore === s.awayScore) {
+      const isShootoutNeeded = cupFix?.leg === 2
+        ? ((cupFix.aggregateHomeScore ?? 0) + s.homeScore) === ((cupFix.aggregateAwayScore ?? 0) + s.awayScore)
+        : s.homeScore === s.awayScore;
+
+      if (isShootoutNeeded) {
         const shootout = simulatePenaltyShootoutDetailed(homeClub, awayClub, s.homePlayerStates, s.awayPlayerStates);
         setShootoutData(shootout);
         setShootoutKickIndex(shootout.kicks.length);
@@ -387,9 +407,18 @@ export function MatchDayModal({
       return;
     }
 
-    const isTiedKnockout =
-      isCup && cupFix?.isKnockout && !isFriendlyTournament(cupFix.competitionId, cupFix as any) &&
-      s.homeScore === s.awayScore;
+    let isTiedKnockout = false;
+    if (isCup && cupFix?.isKnockout && !isFriendlyTournament(cupFix.competitionId, cupFix as any)) {
+      if (cupFix.leg === 1) {
+        isTiedKnockout = false; // Two-legged tie: Leg 1 can end in a draw
+      } else if (cupFix.leg === 2) {
+        const aggHome = (cupFix.aggregateHomeScore ?? 0) + s.homeScore;
+        const aggAway = (cupFix.aggregateAwayScore ?? 0) + s.awayScore;
+        isTiedKnockout = aggHome === aggAway;
+      } else {
+        isTiedKnockout = s.homeScore === s.awayScore;
+      }
+    }
 
     if (isTiedKnockout) {
       setMatchState('extratime_prompt');
@@ -431,10 +460,20 @@ export function MatchDayModal({
   const handleFinalizeMatch = () => {
     if (!simResult) return;
 
-    const userWon = isUserHome
-      ? (simResult.homeScore > simResult.awayScore || (simResult.penalties && simResult.penalties.homePenalties > simResult.penalties.awayPenalties))
-      : (simResult.awayScore > simResult.homeScore || (simResult.penalties && simResult.penalties.awayPenalties > simResult.penalties.homePenalties));
-    const userDrew = simResult.homeScore === simResult.awayScore && !simResult.penalties;
+    const isLeg2 = cupFix?.leg === 2;
+    const aggHome = isLeg2 ? (cupFix.aggregateHomeScore ?? 0) + simResult.homeScore : simResult.homeScore;
+    const aggAway = isLeg2 ? (cupFix.aggregateAwayScore ?? 0) + simResult.awayScore : simResult.awayScore;
+
+    const userWon = isLeg2
+      ? isUserHome
+        ? (aggHome > aggAway || (simResult.penalties ? simResult.penalties.homePenalties > simResult.penalties.awayPenalties : false))
+        : (aggAway > aggHome || (simResult.penalties ? simResult.penalties.awayPenalties > simResult.penalties.homePenalties : false))
+      : isUserHome
+      ? (simResult.homeScore > simResult.awayScore || (simResult.penalties ? simResult.penalties.homePenalties > simResult.penalties.awayPenalties : false))
+      : (simResult.awayScore > simResult.homeScore || (simResult.penalties ? simResult.penalties.awayPenalties > simResult.penalties.homePenalties : false));
+    const userDrew = isLeg2
+      ? aggHome === aggAway && !simResult.penalties
+      : simResult.homeScore === simResult.awayScore && !simResult.penalties;
 
     const userStates = isUserHome ? simResult.homePlayerStates : simResult.awayPlayerStates;
 
@@ -614,6 +653,16 @@ export function MatchDayModal({
               {/* VS & Venue */}
               <div className="space-y-1">
                 <div className="text-xl font-display font-black text-[#1d5eff]">VS</div>
+                {cupFix?.leg === 2 && (
+                  <div className="inline-block text-[10px] font-mono font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                    Agg: {cupFix.aggregateHomeScore ?? 0} - {cupFix.aggregateAwayScore ?? 0} (Leg 2)
+                  </div>
+                )}
+                {cupFix?.leg === 1 && (
+                  <div className="inline-block text-[9.5px] font-mono font-semibold text-slate-500">
+                    Leg 1 of 2
+                  </div>
+                )}
                 <div className="text-[10px] text-[var(--office-text-muted)] truncate max-w-[140px] mx-auto">
                   🏟️ {venueDisplay}
                 </div>
@@ -778,34 +827,66 @@ export function MatchDayModal({
                 <span className="text-[var(--office-text-muted)] text-[10px] font-medium">Bench: {bench.length} subs</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                {starters.slice(0, 11).map((p) => (
-                  <div
-                    key={p.id}
-                    className="p-2 rounded-xl border border-indigo-50/80 bg-white shadow-2xs flex justify-between items-center"
-                  >
-                    <div className="truncate">
-                      <div className="font-bold text-[var(--office-text-primary)] truncate text-[11px]">{p.name}</div>
-                      <div className="text-[9px] text-[var(--office-text-muted)]">{p.position}</div>
+                {starters.slice(0, 11).map((p) => {
+                  const isSuspended = Boolean(p.suspendedMatches && p.suspendedMatches > 0);
+                  return (
+                    <div
+                      key={p.id}
+                      className={`p-2 rounded-xl border shadow-2xs flex justify-between items-center ${
+                        isSuspended
+                          ? 'border-red-300 bg-red-50/80'
+                          : p.injured
+                          ? 'border-rose-300 bg-rose-50/80'
+                          : 'border-indigo-50/80 bg-white'
+                      }`}
+                    >
+                      <div className="truncate">
+                        <div className="font-bold text-[var(--office-text-primary)] truncate text-[11px] flex items-center gap-1">
+                          <span>{p.name}</span>
+                          {isSuspended && (
+                            <span className="text-[7.5px] px-1 py-0.2 rounded bg-red-600 text-white font-mono font-bold">
+                              SUSP
+                            </span>
+                          )}
+                          {p.injured && (
+                            <span className="text-[7.5px] px-1 py-0.2 rounded bg-rose-600 text-white font-mono font-bold">
+                              INJ
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[9px] text-[var(--office-text-muted)]">{p.position}</div>
+                      </div>
+                      <div className="text-right shrink-0 ml-1">
+                        <div className="font-display font-black text-[#1d5eff] text-xs">{p.rating}</div>
+                        <div className="text-[8px] font-bold text-emerald-600">{p.fitness}%</div>
+                      </div>
                     </div>
-                    <div className="text-right shrink-0 ml-1">
-                      <div className="font-display font-black text-[#1d5eff] text-xs">{p.rating}</div>
-                      <div className="text-[8px] font-bold text-emerald-600">{p.fitness}%</div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
-            {/* Ineligible warning banner */}
+            {/* Ineligible or Suspended warning banner */}
             {hasIneligiblePlayers && (
               <div className="bg-rose-50 border border-rose-200 p-3.5 rounded-2xl space-y-2 text-xs">
                 <div className="flex items-center gap-2 text-rose-800 font-bold">
                   <span>⚠️</span>
-                  <span>Unregistered Senior Player(s) in Matchday Squad</span>
+                  <span>
+                    {hasSuspendedPlayers
+                      ? 'Disciplinary Suspension(s) in Matchday Squad'
+                      : 'Unregistered Senior Player(s) in Matchday Squad'}
+                  </span>
                 </div>
-                <p className="text-[11px] text-rose-700 leading-relaxed">
-                  The following player(s) are not registered: <strong className="text-rose-950 font-bold">{[...ineligibleStarters, ...ineligibleBench].map((p) => p.name).join(', ')}</strong>.
-                </p>
+                {hasSuspendedPlayers && (
+                  <p className="text-[11px] text-rose-700 leading-relaxed">
+                    Suspended player(s) cannot feature: <strong className="text-rose-950 font-bold">{[...suspendedStarters, ...suspendedBench].map((p) => `${p.name} (${p.suspendedMatches} match ban)`).join(', ')}</strong>.
+                  </p>
+                )}
+                {(ineligibleStarters.length > 0 || ineligibleBench.length > 0) && (
+                  <p className="text-[11px] text-rose-700 leading-relaxed">
+                    The following player(s) are not registered: <strong className="text-rose-950 font-bold">{[...ineligibleStarters, ...ineligibleBench].map((p) => p.name).join(', ')}</strong>.
+                  </p>
+                )}
                 <button
                   type="button"
                   data-office-ui="true"
@@ -874,6 +955,21 @@ export function MatchDayModal({
                 <div className="font-display font-extrabold text-xs sm:text-base text-[var(--office-text-primary)] truncate">
                   {getEffectiveClubName(awayClub)}
                 </div>
+
+                {cupFix?.leg === 2 && (
+                  <div className="col-span-3 text-center">
+                    <span className="inline-block text-[10.5px] font-mono font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-300 shadow-2xs">
+                      Aggregate: {(cupFix.aggregateHomeScore ?? 0) + session.homeScore} - {(cupFix.aggregateAwayScore ?? 0) + session.awayScore} (Leg 2 of 2)
+                    </span>
+                  </div>
+                )}
+                {cupFix?.leg === 1 && (
+                  <div className="col-span-3 text-center">
+                    <span className="inline-block text-[10px] font-sans font-semibold text-slate-500">
+                      Two-Legged Tie: Leg 1 of 2
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Live xG & Department Breakdown */}
@@ -1291,6 +1387,32 @@ export function MatchDayModal({
         {/* ======================================================== */}
         {matchState === 'fulltime' && simResult && (
           <div className="space-y-4">
+            {cupFix?.leg === 2 && (
+              <div className="p-3 rounded-2xl bg-amber-50/90 border border-amber-200 text-center shadow-2xs">
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 block">
+                  Two-Legged European Knockout Concluded
+                </span>
+                <span className="text-sm font-display font-black text-amber-950">
+                  Aggregate: {(cupFix.aggregateHomeScore ?? 0) + simResult.homeScore} - {(cupFix.aggregateAwayScore ?? 0) + simResult.awayScore}
+                </span>
+                {simResult.penalties && (
+                  <span className="text-[10px] font-mono text-amber-700 font-bold block mt-0.5">
+                    ({simResult.penalties.homePenalties} - {simResult.penalties.awayPenalties} on penalties)
+                  </span>
+                )}
+              </div>
+            )}
+            {cupFix?.leg === 1 && (
+              <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                <span className="text-[10px] font-display font-bold uppercase tracking-wider text-slate-600 block">
+                  Leg 1 of 2 Complete
+                </span>
+                <span className="text-xs text-slate-500 font-semibold">
+                  Ties will be decided in the return leg fixture.
+                </span>
+              </div>
+            )}
+
             {/* MOTM */}
             <div className="bg-gradient-to-r from-amber-50 via-amber-100/40 to-orange-50 border border-amber-200/80 p-3.5 rounded-2xl flex justify-between items-center text-xs">
               <div>

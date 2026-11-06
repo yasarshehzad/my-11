@@ -1666,6 +1666,28 @@ export function applyPostMatchSquadImpact(
       const isInjured = playedState.injured;
       const injuryWeeks = isInjured ? Math.floor(Math.random() * 3) + 1 : player.injuryWeeks;
 
+      // Discipline & Suspensions tracking
+      let yellowCardsTotal = player.yellowCardsTotal ?? 0;
+      let redCardsTotal = player.redCardsTotal ?? 0;
+      let suspendedMatches = player.suspendedMatches ?? 0;
+      let suspensionReason = player.suspensionReason;
+
+      if (playedState.redCard) {
+        redCardsTotal += 1;
+        suspendedMatches = 1;
+        suspensionReason = 'Suspended (Red card in previous match)';
+      } else if (playedState.yellowCard) {
+        yellowCardsTotal += 1;
+        if (yellowCardsTotal % 5 === 0) {
+          suspendedMatches = 1;
+          suspensionReason = `Suspended (${yellowCardsTotal} Yellow cards accumulated)`;
+        }
+      } else if (suspendedMatches > 0) {
+        // Player served suspension if they didn't receive another ban
+        suspendedMatches = Math.max(0, suspendedMatches - 1);
+        if (suspendedMatches === 0) suspensionReason = undefined;
+      }
+
       // 1. Update form history and dynamic ratings
       const matchRating = playedState.matchRating || (wonMatch ? 7.6 : drewMatch ? 6.9 : 6.5);
       const playerWithUpdatedForm = updatePlayerForm(
@@ -1675,6 +1697,10 @@ export function applyPostMatchSquadImpact(
           morale: newMorale,
           injured: isInjured || player.injured,
           injuryWeeks,
+          yellowCardsTotal,
+          redCardsTotal,
+          suspendedMatches,
+          suspensionReason,
         },
         matchRating
       );
@@ -1703,11 +1729,23 @@ export function applyPostMatchSquadImpact(
         }
       }
 
+      // Disciplinary suspension countdown for players serving a ban
+      let suspendedMatches = player.suspendedMatches;
+      let suspensionReason = player.suspensionReason;
+      if (typeof suspendedMatches === 'number' && suspendedMatches > 0) {
+        suspendedMatches = Math.max(0, suspendedMatches - 1);
+        if (suspendedMatches === 0) {
+          suspensionReason = undefined;
+        }
+      }
+
       const restedBase: CareerPlayer = {
         ...player,
         fitness: newFitness,
         injured,
         injuryWeeks,
+        suspendedMatches,
+        suspensionReason,
       };
 
       // Unused young squad members still gain training experience from matchday prep
@@ -1738,6 +1776,7 @@ export function applySimulatedMatchSquadImpact(
   const starters = activeMatchdaySquad.slice(0, 11);
   const bench = activeMatchdaySquad.slice(11, 20);
   const participatingIds = new Set(simmedFixture.participatingPlayerIds || starters.map((p) => p.id));
+  const cardEvents = simmedFixture.events || [];
 
   const states: InGamePlayerState[] = [
     ...starters.map((p) => {
@@ -1747,6 +1786,12 @@ export function applySimulatedMatchSquadImpact(
       const assists = (simmedFixture.events || []).filter(
         (ev) => ev.clubId === userClubId && ev.type === 'goal' && ev.detail?.includes(`Assist: ${p.name}`)
       ).length;
+      const hadYellow = cardEvents.some(
+        (ev) => ev.clubId === userClubId && ev.type === 'yellow_card' && ev.detail?.includes(p.name)
+      );
+      const hadRed = cardEvents.some(
+        (ev) => ev.clubId === userClubId && ev.type === 'red_card' && ev.detail?.includes(p.name)
+      );
       const savedRating = simmedFixture.playerRatings?.[p.id];
       const baseRating = won ? 7.4 : drew ? 6.8 : 6.3;
       const matchRating =
@@ -1761,8 +1806,8 @@ export function applySimulatedMatchSquadImpact(
         currentFitness: p.fitness ?? 100,
         goals,
         assists,
-        yellowCard: false,
-        redCard: false,
+        yellowCard: hadYellow,
+        redCard: hadRed,
         injured: false,
         matchRating,
       };
@@ -1772,6 +1817,17 @@ export function applySimulatedMatchSquadImpact(
       const goals = (simmedFixture.scorers || []).filter(
         (sc) => sc.clubId === userClubId && sc.name === p.name
       ).length;
+      const assists = subPlayed
+        ? (simmedFixture.events || []).filter(
+            (ev) => ev.clubId === userClubId && ev.type === 'goal' && ev.detail?.includes(`Assist: ${p.name}`)
+          ).length
+        : 0;
+      const hadYellow = subPlayed && cardEvents.some(
+        (ev) => ev.clubId === userClubId && ev.type === 'yellow_card' && ev.detail?.includes(p.name)
+      );
+      const hadRed = subPlayed && cardEvents.some(
+        (ev) => ev.clubId === userClubId && ev.type === 'red_card' && ev.detail?.includes(p.name)
+      );
       const savedRating = simmedFixture.playerRatings?.[p.id];
       const baseRating = won ? 7.2 : drew ? 6.7 : 6.3;
       const matchRating =
@@ -1784,9 +1840,9 @@ export function applySimulatedMatchSquadImpact(
         minutesPlayed: subPlayed ? 22 : 0,
         currentFitness: p.fitness ?? 100,
         goals,
-        assists: 0,
-        yellowCard: false,
-        redCard: false,
+        assists,
+        yellowCard: hadYellow,
+        redCard: hadRed,
         injured: false,
         matchRating,
       };

@@ -396,6 +396,11 @@ export function TournamentsHub({
                                     <span className="font-display font-black text-xs sm:text-sm text-[#0b1536]">
                                       {userTie.homeScore} - {userTie.awayScore}
                                     </span>
+                                    {userTie.leg === 2 && (
+                                      <span className="block text-[8px] font-mono text-amber-700 font-bold leading-none mt-0.5">
+                                        (Agg: {(userTie.aggregateHomeScore ?? 0) + (userTie.homeScore ?? 0)}-{(userTie.aggregateAwayScore ?? 0) + (userTie.awayScore ?? 0)})
+                                      </span>
+                                    )}
                                     {userTie.penalties && (
                                       <span className="block text-[8px] font-mono text-amber-700 font-bold leading-none mt-0.5">
                                         (Pens: {userTie.penalties.homePenalties}-{userTie.penalties.awayPenalties})
@@ -403,9 +408,21 @@ export function TournamentsHub({
                                     )}
                                   </div>
                                 ) : (
-                                  <span className="text-[10px] font-display font-black text-slate-500 uppercase">
-                                    VS
-                                  </span>
+                                  <div>
+                                    <span className="text-[10px] font-display font-black text-slate-500 uppercase">
+                                      VS
+                                    </span>
+                                    {userTie.leg === 2 && (
+                                      <span className="block text-[7.5px] font-mono text-amber-700 font-bold leading-none mt-0.5">
+                                        Agg: {userTie.aggregateHomeScore ?? 0}-{userTie.aggregateAwayScore ?? 0}
+                                      </span>
+                                    )}
+                                    {userTie.leg === 1 && (
+                                      <span className="block text-[7.5px] font-mono text-slate-400 font-semibold leading-none mt-0.5">
+                                        Leg 1
+                                      </span>
+                                    )}
+                                  </div>
                                 )}
                               </div>
 
@@ -487,6 +504,11 @@ export function TournamentsHub({
                                     {fixture.played ? (
                                       <span className="font-bold text-[#0b1536] bg-slate-100 px-1.5 py-0.2 rounded border border-slate-200 inline-block">
                                         {fixture.homeScore} - {fixture.awayScore}
+                                        {fixture.leg === 2 && (
+                                          <span className="text-[7.5px] text-amber-700 font-bold block leading-none">
+                                            Agg: {(fixture.aggregateHomeScore ?? 0) + (fixture.homeScore ?? 0)}-{(fixture.aggregateAwayScore ?? 0) + (fixture.awayScore ?? 0)}
+                                          </span>
+                                        )}
                                         {fixture.penalties && (
                                           <span className="text-[8px] text-amber-700 font-bold block leading-none">
                                             ({fixture.penalties.homePenalties}-{fixture.penalties.awayPenalties}p)
@@ -498,7 +520,14 @@ export function TournamentsHub({
                                         Awaiting Draw
                                       </span>
                                     ) : (
-                                      <span className="text-slate-500 text-[10px] font-bold">VS</span>
+                                      <div>
+                                        <span className="text-slate-500 text-[10px] font-bold">VS</span>
+                                        {fixture.leg === 2 && (
+                                          <span className="text-[7.5px] text-amber-700 font-bold block leading-none">
+                                            Agg: {fixture.aggregateHomeScore ?? 0}-{fixture.aggregateAwayScore ?? 0}
+                                          </span>
+                                        )}
+                                      </div>
                                     )}
                                   </div>
 

@@ -1302,6 +1302,16 @@ export function SquadManagement({
                                 Unregistered
                               </span>
                             )}
+                            {player.injured && (
+                              <span className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded bg-rose-950 text-rose-300 border border-rose-800" title={player.injuryDescription || 'Injured'}>
+                                🚑 Injured ({player.injuryWeeks ?? 1}w)
+                              </span>
+                            )}
+                            {Boolean(player.suspendedMatches && player.suspendedMatches > 0) && (
+                              <span className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded bg-red-950 text-red-300 border border-red-800" title={player.suspensionReason || `Suspended (${player.suspendedMatches} match ban)`}>
+                                🟥 Suspended ({player.suspendedMatches}m)
+                              </span>
+                            )}
                           </div>
                         </td>
 
@@ -2047,6 +2057,26 @@ export function SquadManagement({
                       showFormHistory={false}
                       showProgressionBar={false}
                     />
+
+                {/* Disciplinary & Availability Status */}
+                {Boolean(selectedPlayer.suspendedMatches && selectedPlayer.suspendedMatches > 0) ? (
+                  <div className="bg-red-50 border border-red-200 text-red-900 p-2.5 rounded-2xl text-xs font-semibold flex items-center justify-between shadow-2xs">
+                    <div className="flex items-center gap-1.5">
+                      <span>🟥</span>
+                      <span><strong>Suspended:</strong> {selectedPlayer.suspensionReason || `${selectedPlayer.suspendedMatches} match ban remaining`}</span>
+                    </div>
+                    <span className="font-mono text-[10px] text-red-700 font-bold">
+                      {selectedPlayer.yellowCardsTotal ?? 0} 🟨 / {selectedPlayer.redCardsTotal ?? 0} 🟥
+                    </span>
+                  </div>
+                ) : (selectedPlayer.yellowCardsTotal && selectedPlayer.yellowCardsTotal > 0) ? (
+                  <div className="bg-amber-50/80 border border-amber-200 text-amber-900 p-2 rounded-2xl text-[11px] font-medium flex items-center justify-between shadow-2xs">
+                    <span>🟨 Discipline: <strong>{selectedPlayer.yellowCardsTotal}</strong> yellow cards</span>
+                    <span className="text-[10px] font-mono text-amber-700 font-bold">
+                      {5 - (selectedPlayer.yellowCardsTotal % 5)} bookings until ban
+                    </span>
+                  </div>
+                ) : null}
 
                 {/* Financial and Contract details */}
                 <div className="grid grid-cols-2 gap-2 text-xs">
@@ -2850,6 +2880,16 @@ export function SquadManagement({
           {bonus < 0 && <span title={`Slump (${bonus})`}>❄️</span>}
           {player.age <= 23 && typeof player.developmentProgress === 'number' && player.developmentProgress >= 40 && (
             <span title={`In-Season Growth: ${player.developmentProgress}%`}>🌱</span>
+          )}
+          {player.injured && (
+            <span className="text-[7px] font-black px-1 rounded bg-rose-600 text-white" title={player.injuryDescription || 'Injured'}>
+              INJ
+            </span>
+          )}
+          {Boolean(player.suspendedMatches && player.suspendedMatches > 0) && (
+            <span className="text-[7px] font-black px-1 rounded bg-red-700 text-white" title={player.suspensionReason || `Suspended (${player.suspendedMatches} match ban)`}>
+              SUSP
+            </span>
           )}
           {fit === 'out_of_position' && (
             <span className="text-[7px] font-black px-1 rounded bg-rose-100 text-rose-700 border border-rose-300">
