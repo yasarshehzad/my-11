@@ -24,6 +24,7 @@ import {
   advanceCupTournament,
   conductCupDraw,
   autoResolvePendingCupFixtures,
+  CUP_IDS,
 } from './cups';
 import {
   isTransferWindowOpen,
@@ -39,7 +40,12 @@ import {
   applyMonthlySquadTraining,
   getEffectiveRating,
 } from './formAndProgression';
-import { formatCurrency } from './finance';
+import {
+  formatCurrency,
+  applyMatchdayFinancials,
+  processPayrollSettlement,
+  applyTournamentPrizeBonus,
+} from './finance';
 import { calculateStandings } from './table';
 import { getAiClubMatchdaySquad } from './squadGenerator';
 import { applySimulatedMatchSquadImpact } from './matchEngine';
@@ -633,6 +639,30 @@ export function advanceTimeSkip(
         save.settings,
         save.trainingState?.teamFocus
       );
+
+      // Settle matchday revenues and payroll for this played fixture
+      const isUserHome = item.fixture.homeClubId === userClubId;
+      const compType: 'league' | 'cup' | 'europe' =
+        item.type === 'league'
+          ? 'league'
+          : item.tournamentId === CUP_IDS.EURO_CHAMPIONS ||
+            item.tournamentId === CUP_IDS.EURO_CHALLENGE ||
+            item.tournamentId === CUP_IDS.EURO_PLATE
+          ? 'europe'
+          : 'cup';
+
+      const interimSave: CareerSaveFile = {
+        ...save,
+        squad: userSquad,
+        finances,
+        season: { ...save.season, currentDate: fixIso },
+      };
+      const afterMatch = applyMatchdayFinancials(interimSave, item.fixture, isUserHome, compType);
+      const afterPayroll = processPayrollSettlement(afterMatch, fixIso);
+      finances.balance = afterPayroll.finances.balance;
+      finances.seasonLedger = afterPayroll.finances.seasonLedger;
+      finances.transactions = afterPayroll.finances.transactions;
+      finances.lastPayrollDate = afterPayroll.finances.lastPayrollDate;
     }
 
     matchesPlayedCount++;
@@ -726,8 +756,22 @@ export function advanceTimeSkip(
           competitionName: tourney.name,
           year: trophyYear,
         });
-        finances.transferBudget += tourney.prizeMoney;
-        finances.balance += tourney.prizeMoney;
+        const interimPrize: CareerSaveFile = {
+          ...save,
+          finances,
+          season: { ...save.season, currentDate: curIso },
+        };
+        const afterPrize = applyTournamentPrizeBonus(
+          interimPrize,
+          tourney.name,
+          'Final Winners',
+          tourney.prizeMoney,
+          true
+        );
+        finances.balance = afterPrize.finances.balance;
+        finances.transferBudget = afterPrize.finances.transferBudget;
+        finances.seasonLedger = afterPrize.finances.seasonLedger;
+        finances.transactions = afterPrize.finances.transactions;
       }
     }
   }
@@ -923,6 +967,16 @@ export function advanceTimeSkip(
       currentInbox = renewalsRes.updatedSave.inbox || [];
     }
   }
+
+  // Settle any elapsed weekly payroll up to currentDate
+  const interimPayroll = processPayrollSettlement(
+    { ...save, finances, season: { ...save.season, currentDate: curIso } },
+    curIso
+  );
+  finances.balance = interimPayroll.finances.balance;
+  finances.seasonLedger = interimPayroll.finances.seasonLedger;
+  finances.transactions = interimPayroll.finances.transactions;
+  finances.lastPayrollDate = interimPayroll.finances.lastPayrollDate;
 
   let updatedSave: CareerSaveFile = {
     ...save,

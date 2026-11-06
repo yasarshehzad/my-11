@@ -48,6 +48,11 @@ import {
 } from '../../career/squad';
 import { getAiClubMatchdaySquad } from '../../career/squadGenerator';
 import { calculateEaFcFaceStats } from '../../career/formAndProgression';
+import {
+  applyMatchdayFinancials,
+  processPayrollSettlement,
+  applyTournamentPrizeBonus,
+} from '../../career/finance';
 
 interface MatchDayModalProps {
   fixture: LeagueFixture | CupFixture;
@@ -548,7 +553,7 @@ export function MatchDayModal({
 
     const updatedStandings = calculateStandings(updatedFixtures, allClubs);
 
-    const updatedSave: CareerSaveFile = {
+    let updatedSave: CareerSaveFile = {
       ...save,
       squad: updatedSquad,
       fixtures: updatedFixtures,
@@ -561,6 +566,18 @@ export function MatchDayModal({
         currentDate: fixture.date,
       },
     };
+
+    // Apply matchday cashflow (Gate receipts, TV broadcast, stewarding operations)
+    const isEurope = Boolean(
+      cupFix &&
+      (cupFix.competitionId === CUP_IDS.EURO_CHAMPIONS ||
+       cupFix.competitionId === CUP_IDS.EURO_CHALLENGE ||
+       cupFix.competitionId === CUP_IDS.EURO_PLATE)
+    );
+    const compType: 'league' | 'cup' | 'europe' = isEurope ? 'europe' : isCup ? 'cup' : 'league';
+
+    updatedSave = applyMatchdayFinancials(updatedSave, fixture, isUserHome, compType);
+    updatedSave = processPayrollSettlement(updatedSave, fixture.date);
 
     onSaveMatchResult(updatedSave);
     onClose();

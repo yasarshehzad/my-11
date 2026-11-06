@@ -42,6 +42,8 @@ import {
   formatWage,
   calculateBudgetAdjustmentBounds,
   reallocateBudgetDistribution,
+  calculateClubFinancialHealth,
+  createInitialSeasonLedger,
 } from '../../career/finance';
 import { formatCareerDate } from '../../career/formatters';
 import { getEffectiveClubName, getAllClubs } from '../../career/clubs';
@@ -320,6 +322,10 @@ export function TransferHub({
     () => save.boardStatus || evaluateBoardConfidence(save),
     [save]
   );
+
+  const financialHealth = useMemo(() => calculateClubFinancialHealth(save), [save]);
+  const ledger = useMemo(() => save.finances.seasonLedger || createInitialSeasonLedger(), [save.finances.seasonLedger]);
+  const transactions = useMemo(() => save.finances.transactions || [], [save.finances.transactions]);
 
   const handleToggleShortlist = (playerId: string) => {
     const nextIds = new Set(save.shortlistPlayerIds || []);
@@ -2866,6 +2872,237 @@ export function TransferHub({
                   <span>💼 Request Wage Increase</span>
                 </button>
               </div>
+            </div>
+          </section>
+
+          {/* FINANCIAL STATEMENT & CASHFLOW LEDGER */}
+          <section className="office-floating-card p-3.5 sm:p-5 space-y-4">
+            <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+              <div>
+                <h4 className="text-xs sm:text-sm font-display font-black text-slate-900 uppercase tracking-tight flex items-center gap-1.5">
+                  <span>📊</span> Financial Statement &amp; Cashflow Ledger
+                </h4>
+                <p className="text-[10px] text-slate-500">
+                  Dynamic revenue streams, matchday gate receipts, broadcast rights, weekly payroll and Premier League PSR compliance.
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 self-start sm:self-center">
+                <span className="text-[9.5px] uppercase font-bold text-slate-400">PSR Health:</span>
+                <span
+                  className={`text-[9.5px] font-black uppercase px-2 py-0.5 rounded-full font-mono border ${
+                    financialHealth.psrStatus === 'exceptional' || financialHealth.psrStatus === 'healthy'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : financialHealth.psrStatus === 'warning'
+                      ? 'bg-amber-50 text-amber-800 border-amber-200'
+                      : 'bg-rose-50 text-rose-800 border-rose-200'
+                  }`}
+                >
+                  {financialHealth.psrLabel}
+                </span>
+              </div>
+            </header>
+
+            {/* 4 Core Financial KPIs */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+              <div className="office-subcard p-2.5 space-y-1">
+                <span className="text-[9px] uppercase font-bold text-slate-500 block">Bank Balance</span>
+                <div className={`text-base sm:text-lg font-display font-black ${save.finances.balance >= 0 ? 'text-slate-900' : 'text-rose-600'}`}>
+                  {formatCurrency(save.finances.balance)}
+                </div>
+                <span className="text-[9px] text-slate-400 block truncate">Total Club Liquidity</span>
+              </div>
+
+              <div className="office-subcard p-2.5 space-y-1">
+                <span className="text-[9px] uppercase font-bold text-slate-500 block">Season Turnover</span>
+                <div className="text-base sm:text-lg font-display font-black text-emerald-600">
+                  +{formatCurrency(ledger.totalIncome)}
+                </div>
+                <span className="text-[9px] text-slate-400 block truncate">Gross Revenues</span>
+              </div>
+
+              <div className="office-subcard p-2.5 space-y-1">
+                <span className="text-[9px] uppercase font-bold text-slate-500 block">Operating Costs</span>
+                <div className="text-base sm:text-lg font-display font-black text-rose-600">
+                  -{formatCurrency(ledger.totalExpenses)}
+                </div>
+                <span className="text-[9px] text-slate-400 block truncate">Wages &amp; Operations</span>
+              </div>
+
+              <div className="office-subcard p-2.5 space-y-1">
+                <span className="text-[9px] uppercase font-bold text-slate-500 block">Net Operating Profit</span>
+                <div className={`text-base sm:text-lg font-display font-black ${ledger.netProfit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                  {ledger.netProfit >= 0 ? '+' : ''}{formatCurrency(ledger.netProfit)}
+                </div>
+                <span className="text-[9px] text-slate-400 block truncate">Cashflow Balance</span>
+              </div>
+            </div>
+
+            {/* Premier League PSR Compliance Meter */}
+            <div className="bg-slate-50/90 border border-slate-200/80 p-3 sm:p-3.5 rounded-2xl space-y-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px]">
+                <div className="flex items-center gap-1.5 font-display font-bold text-slate-800">
+                  <span>⚖️</span>
+                  <span>Wage-to-Turnover Ratio:</span>
+                  <span className="font-mono font-black text-blue-600">{financialHealth.wageToTurnoverRatio}%</span>
+                </div>
+                <div className="text-[10px] text-slate-500 flex items-center gap-2">
+                  <span>Annual Payroll: <strong className="font-mono text-slate-700">{formatCurrency(financialHealth.annualWageBill)}</strong></span>
+                  <span>•</span>
+                  <span>Projected Turnover: <strong className="font-mono text-slate-700">{formatCurrency(financialHealth.projectedAnnualTurnover)}</strong></span>
+                </div>
+              </div>
+
+              {/* Progress Track with 70% threshold indicator */}
+              <div className="space-y-1">
+                <div className="relative w-full h-3 bg-slate-200 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-500 ${
+                      financialHealth.wageToTurnoverRatio <= 60
+                        ? 'bg-emerald-500'
+                        : financialHealth.wageToTurnoverRatio <= 75
+                        ? 'bg-emerald-400'
+                        : financialHealth.wageToTurnoverRatio <= 85
+                        ? 'bg-amber-500'
+                        : 'bg-rose-500'
+                    }`}
+                    style={{ width: `${Math.min(100, financialHealth.wageToTurnoverRatio)}%` }}
+                  />
+                  {/* 70% Threshold Marker */}
+                  <div
+                    className="absolute top-0 bottom-0 w-0.5 bg-slate-900 z-10"
+                    style={{ left: '70%' }}
+                    title="70% PSR Healthy Ceiling"
+                  />
+                </div>
+                <div className="flex justify-between text-[9px] font-mono text-slate-400">
+                  <span>0%</span>
+                  <span className="text-slate-600 font-bold">70% PSR Target</span>
+                  <span>100%+</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Income & Expense Category Breakdown */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              {/* Income Streams */}
+              <div className="office-subcard p-3 space-y-2">
+                <h5 className="font-display font-black text-xs text-emerald-800 uppercase flex items-center gap-1.5">
+                  <span>📈</span> Revenue Streams
+                </h5>
+                <div className="space-y-1.5 font-mono text-[11px]">
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-100">
+                    <span className="text-slate-600 font-sans flex items-center gap-1">🎟️ Matchday Gate Receipts</span>
+                    <span className="font-bold text-slate-900">{formatCurrency(ledger.gateReceipts)}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-100">
+                    <span className="text-slate-600 font-sans flex items-center gap-1">📺 TV &amp; Broadcast Rights</span>
+                    <span className="font-bold text-slate-900">{formatCurrency(ledger.tvBroadcast)}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-100">
+                    <span className="text-slate-600 font-sans flex items-center gap-1">👕 Stadium Concessions &amp; Merch</span>
+                    <span className="font-bold text-slate-900">{formatCurrency(ledger.merchandising)}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-100">
+                    <span className="text-slate-600 font-sans flex items-center gap-1">🏆 Tournament Merit &amp; Prizes</span>
+                    <span className="font-bold text-slate-900">{formatCurrency(ledger.prizeMoney)}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-100">
+                    <span className="text-slate-600 font-sans flex items-center gap-1">🤝 Player Sales &amp; Loans</span>
+                    <span className="font-bold text-slate-900">{formatCurrency(ledger.playerSales + ledger.loanIncome)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Operating Expenses */}
+              <div className="office-subcard p-3 space-y-2">
+                <h5 className="font-display font-black text-xs text-rose-800 uppercase flex items-center gap-1.5">
+                  <span>📉</span> Operating Expenses
+                </h5>
+                <div className="space-y-1.5 font-mono text-[11px]">
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-100">
+                    <span className="text-slate-600 font-sans flex items-center gap-1">👥 Squad Weekly Payroll</span>
+                    <span className="font-bold text-rose-700">-{formatCurrency(ledger.playerWages)}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-100">
+                    <span className="text-slate-600 font-sans flex items-center gap-1">🏟️ Stadium Operations &amp; Stewards</span>
+                    <span className="font-bold text-rose-700">-{formatCurrency(ledger.stadiumOperations)}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-100">
+                    <span className="text-slate-600 font-sans flex items-center gap-1">💸 Transfer Fees &amp; Loan Outflows</span>
+                    <span className="font-bold text-rose-700">-{formatCurrency(ledger.transferFees + ledger.loanExpenses)}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-100">
+                    <span className="text-slate-600 font-sans flex items-center gap-1">📝 Contract Signing Bonuses</span>
+                    <span className="font-bold text-rose-700">-{formatCurrency(ledger.signingBonuses)}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 border-b border-slate-100">
+                    <span className="text-slate-600 font-sans flex items-center gap-1">🔮 Projected Season End Balance</span>
+                    <span className={`font-bold ${financialHealth.projectedEndBalance >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                      {formatCurrency(financialHealth.projectedEndBalance)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Cashflow Transactions Feed */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h5 className="font-display font-black text-xs text-slate-900 uppercase flex items-center gap-1.5">
+                  <span>🧾</span> Recent Cashflow Transactions ({transactions.length})
+                </h5>
+                <span className="text-[10px] text-slate-400 font-mono">Real-time ledger updates</span>
+              </div>
+
+              {transactions.length === 0 ? (
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center text-xs text-slate-500">
+                  No matchday transactions recorded yet this season. Play or simulate matches to generate gate receipts and broadcast revenue.
+                </div>
+              ) : (
+                <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                  {transactions.slice(0, 15).map((tx) => {
+                    const isIncome = tx.type === 'income';
+                    const categoryIcon: Record<string, string> = {
+                      gate_receipts: '🎟️',
+                      tv_broadcast: '📺',
+                      commercial_sponsors: '🤝',
+                      merchandising: '👕',
+                      prize_money: '🏆',
+                      player_sales: '📈',
+                      player_wages: '👥',
+                      transfer_fees: '💸',
+                      signing_bonuses: '📝',
+                      stadium_operations: '🏟️',
+                      loan_fees: '🤝',
+                      board_investment: '🏛️',
+                    };
+
+                    return (
+                      <div
+                        key={tx.id}
+                        className="p-2 sm:p-2.5 rounded-xl border border-slate-200/80 bg-white hover:bg-slate-50 transition-colors flex items-center justify-between gap-2 shadow-2xs"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-base shrink-0">{categoryIcon[tx.category] || (isIncome ? '💰' : '💸')}</span>
+                          <div className="min-w-0">
+                            <div className="text-xs font-display font-bold text-slate-900 truncate">
+                              {tx.description}
+                            </div>
+                            <div className="text-[9.5px] text-slate-500 font-mono">
+                              {formatCareerDate(tx.date, save.settings.dateFormat)} • <span className="uppercase text-[8.5px] font-bold text-slate-400">{tx.category.replace('_', ' ')}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className={`text-xs font-mono font-bold ${isIncome ? 'text-emerald-700' : 'text-rose-700'}`}>
+                            {isIncome ? '+' : '-'}{formatCurrency(tx.amount)}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </section>
         </section>

@@ -260,6 +260,56 @@ export interface BoardFinancialPetitionRecord {
   reason: string;
 }
 
+export type FinancialTransactionType = 'income' | 'expense';
+
+export type FinancialCategory =
+  | 'gate_receipts'
+  | 'tv_broadcast'
+  | 'commercial_sponsors'
+  | 'merchandising'
+  | 'prize_money'
+  | 'player_sales'
+  | 'player_wages'
+  | 'transfer_fees'
+  | 'signing_bonuses'
+  | 'stadium_operations'
+  | 'loan_fees'
+  | 'board_investment';
+
+export interface FinancialTransaction {
+  id: string;
+  date: string;
+  type: FinancialTransactionType;
+  category: FinancialCategory;
+  amount: number;
+  description: string;
+  fixtureId?: string;
+}
+
+export interface SeasonFinancialLedger {
+  // Income streams
+  gateReceipts: number;
+  tvBroadcast: number;
+  commercialSponsors: number;
+  merchandising: number;
+  prizeMoney: number;
+  playerSales: number;
+  loanIncome: number;
+  boardInvestments: number;
+  totalIncome: number;
+
+  // Expenses
+  playerWages: number;
+  transferFees: number;
+  signingBonuses: number;
+  stadiumOperations: number;
+  loanExpenses: number;
+  totalExpenses: number;
+
+  // Net Cashflow
+  netProfit: number;
+}
+
 export interface CareerFinances {
   transferBudget: number;
   weeklyWageBudget: number;
@@ -267,6 +317,9 @@ export interface CareerFinances {
   balance: number;
   lastBudgetAdjustmentDate?: string;
   boardPetitionsHistory?: BoardFinancialPetitionRecord[];
+  transactions?: FinancialTransaction[];
+  seasonLedger?: SeasonFinancialLedger;
+  lastPayrollDate?: string;
 }
 
 export interface TrophyRecord {

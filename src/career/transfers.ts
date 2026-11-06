@@ -17,9 +17,17 @@ import {
   BoardPetitionType,
   BoardFinancialPetitionRecord,
   PreContractAgreement,
+  FinancialTransaction,
+  SeasonFinancialLedger,
 } from './types';
 import { players } from '../data/players';
-import { calculatePlayerValue, calculateWeeklyWage, formatCurrency, formatWage } from './finance';
+import {
+  calculatePlayerValue,
+  calculateWeeklyWage,
+  formatCurrency,
+  formatWage,
+  createInitialSeasonLedger,
+} from './finance';
 import { addInboxMessage } from './inbox';
 import {
   categorizePosition,
@@ -1014,6 +1022,42 @@ export function executePlayerSigning(
 
   const updatedHistory = [transferRecord, ...(save.transfersHistory || [])];
 
+  const existingLedger: SeasonFinancialLedger =
+    save.finances.seasonLedger || createInitialSeasonLedger();
+
+  const signingTransactions: FinancialTransaction[] = [];
+  if (fee > 0) {
+    signingTransactions.push({
+      id: `tx_tf_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      date: save.season.currentDate,
+      type: 'expense',
+      category: 'transfer_fees',
+      amount: fee,
+      description: `Transfer fee paid to ${targetPlayer.club} for ${newPlayer.name}`,
+    });
+  }
+  if (signingBonus > 0) {
+    signingTransactions.push({
+      id: `tx_sb_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      date: save.season.currentDate,
+      type: 'expense',
+      category: 'signing_bonuses',
+      amount: signingBonus,
+      description: `Signing bonus paid to ${newPlayer.name}`,
+    });
+  }
+
+  const updatedExpenses = existingLedger.totalExpenses + fee + signingBonus;
+  const updatedLedger: SeasonFinancialLedger = {
+    ...existingLedger,
+    transferFees: existingLedger.transferFees + fee,
+    signingBonuses: existingLedger.signingBonuses + signingBonus,
+    totalExpenses: updatedExpenses,
+    netProfit: existingLedger.totalIncome - updatedExpenses,
+  };
+
+  const updatedTx = [...signingTransactions, ...(save.finances.transactions || [])].slice(0, 60);
+
   const updatedSave: CareerSaveFile = {
     ...save,
     squad: updatedSquad,
@@ -1023,6 +1067,8 @@ export function executePlayerSigning(
       transferBudget: save.finances.transferBudget - totalUpfrontCost,
       balance: save.finances.balance - totalUpfrontCost,
       currentWeeklyWages: save.finances.currentWeeklyWages + wage,
+      seasonLedger: updatedLedger,
+      transactions: updatedTx,
     },
     transfersHistory: updatedHistory,
   };
@@ -1130,6 +1176,31 @@ export function executePlayerSale(
     (o) => o.playerId !== playerId
   );
 
+  const existingLedger: SeasonFinancialLedger =
+    save.finances.seasonLedger || createInitialSeasonLedger();
+
+  const saleTransactions: FinancialTransaction[] = [];
+  if (fee > 0) {
+    saleTransactions.push({
+      id: `tx_sale_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      date: save.season.currentDate,
+      type: 'income',
+      category: 'player_sales',
+      amount: fee,
+      description: `Transfer fee received from ${buyingClubName} for ${playerToSell.name}`,
+    });
+  }
+
+  const updatedIncome = existingLedger.totalIncome + fee;
+  const updatedLedger: SeasonFinancialLedger = {
+    ...existingLedger,
+    playerSales: existingLedger.playerSales + fee,
+    totalIncome: updatedIncome,
+    netProfit: updatedIncome - existingLedger.totalExpenses,
+  };
+
+  const updatedTx = [...saleTransactions, ...(save.finances.transactions || [])].slice(0, 60);
+
   const updatedSave: CareerSaveFile = {
     ...save,
     squad: updatedSquad,
@@ -1140,6 +1211,8 @@ export function executePlayerSale(
       transferBudget: save.finances.transferBudget + fee,
       balance: save.finances.balance + fee,
       currentWeeklyWages: Math.max(0, save.finances.currentWeeklyWages - playerToSell.wageWeekly),
+      seasonLedger: updatedLedger,
+      transactions: updatedTx,
     },
     transfersHistory: updatedHistory,
     incomingOffers: updatedOffers,
@@ -1224,6 +1297,29 @@ export function executeBuyBackReSigning(
     updatedRegisteredPlayerIds = [...updatedRegisteredPlayerIds, reSignedPlayer.id];
   }
 
+  const existingLedger: SeasonFinancialLedger =
+    save.finances.seasonLedger || createInitialSeasonLedger();
+
+  const buyBackFee = saleRecord.buyBackFee;
+  const buyBackTx: FinancialTransaction = {
+    id: `tx_buyback_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    date: save.season.currentDate,
+    type: 'expense',
+    category: 'transfer_fees',
+    amount: buyBackFee,
+    description: `Buy-Back Clause fee paid to ${saleRecord.toClubName} for ${reSignedPlayer.name}`,
+  };
+
+  const updatedExpenses = existingLedger.totalExpenses + buyBackFee;
+  const updatedLedger: SeasonFinancialLedger = {
+    ...existingLedger,
+    transferFees: existingLedger.transferFees + buyBackFee,
+    totalExpenses: updatedExpenses,
+    netProfit: existingLedger.totalIncome - updatedExpenses,
+  };
+
+  const updatedTx = [buyBackTx, ...(save.finances.transactions || [])].slice(0, 60);
+
   const updatedSave: CareerSaveFile = {
     ...save,
     squad: updatedSquad,
@@ -1233,6 +1329,8 @@ export function executeBuyBackReSigning(
       transferBudget: save.finances.transferBudget - saleRecord.buyBackFee,
       balance: save.finances.balance - saleRecord.buyBackFee,
       currentWeeklyWages: save.finances.currentWeeklyWages + wage,
+      seasonLedger: updatedLedger,
+      transactions: updatedTx,
     },
     transfersHistory: [newSigningTx, ...updatedHistory],
   };
@@ -1968,6 +2066,31 @@ export function releasePlayerContract(
   // Remove any active incoming offers
   const updatedOffers = (save.incomingOffers || []).filter((o) => o.playerId !== playerId);
 
+  const existingLedger: SeasonFinancialLedger =
+    save.finances.seasonLedger || createInitialSeasonLedger();
+
+  const releaseTx: FinancialTransaction[] = [];
+  if (payout > 0) {
+    releaseTx.push({
+      id: `tx_rel_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      date: save.season.currentDate,
+      type: 'expense',
+      category: 'stadium_operations',
+      amount: payout,
+      description: `Contract termination payout for ${player.name} (${releaseType === 'mutual' ? 'Mutual Settlement' : 'Buyout'})`,
+    });
+  }
+
+  const updatedExpenses = existingLedger.totalExpenses + payout;
+  const updatedLedger: SeasonFinancialLedger = {
+    ...existingLedger,
+    stadiumOperations: existingLedger.stadiumOperations + payout,
+    totalExpenses: updatedExpenses,
+    netProfit: existingLedger.totalIncome - updatedExpenses,
+  };
+
+  const updatedTx = [...releaseTx, ...(save.finances.transactions || [])].slice(0, 60);
+
   let updatedSave: CareerSaveFile = {
     ...save,
     squad: updatedSquad,
@@ -1979,6 +2102,8 @@ export function releasePlayerContract(
       balance: save.finances.balance - payout,
       transferBudget: Math.max(0, save.finances.transferBudget - payout),
       currentWeeklyWages: Math.max(0, save.finances.currentWeeklyWages - player.wageWeekly),
+      seasonLedger: updatedLedger,
+      transactions: updatedTx,
     },
   };
 
@@ -2064,6 +2189,31 @@ export function renewPlayerContract(
     };
   });
 
+  const existingLedger: SeasonFinancialLedger =
+    save.finances.seasonLedger || createInitialSeasonLedger();
+
+  const renewalTx: FinancialTransaction[] = [];
+  if (bonus > 0) {
+    renewalTx.push({
+      id: `tx_ren_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      date: save.season.currentDate,
+      type: 'expense',
+      category: 'signing_bonuses',
+      amount: bonus,
+      description: `Contract renewal bonus paid to ${player.name}`,
+    });
+  }
+
+  const updatedExpenses = existingLedger.totalExpenses + bonus;
+  const updatedLedger: SeasonFinancialLedger = {
+    ...existingLedger,
+    signingBonuses: existingLedger.signingBonuses + bonus,
+    totalExpenses: updatedExpenses,
+    netProfit: existingLedger.totalIncome - updatedExpenses,
+  };
+
+  const updatedTx = [...renewalTx, ...(save.finances.transactions || [])].slice(0, 60);
+
   const updatedSave: CareerSaveFile = {
     ...save,
     squad: updatedSquad,
@@ -2072,6 +2222,8 @@ export function renewPlayerContract(
       currentWeeklyWages: save.finances.currentWeeklyWages + wageDifference,
       transferBudget: Math.max(0, save.finances.transferBudget - bonus),
       balance: save.finances.balance - bonus,
+      seasonLedger: updatedLedger,
+      transactions: updatedTx,
     },
   };
 
@@ -2529,6 +2681,12 @@ export function evaluateBoardFinancialPetition(
     reason: feedback,
   };
 
+  const existingLedger: SeasonFinancialLedger =
+    save.finances.seasonLedger || createInitialSeasonLedger();
+
+  let updatedLedger = existingLedger;
+  let updatedTx = save.finances.transactions || [];
+
   let updatedFinances = {
     ...save.finances,
     boardPetitionsHistory: [petitionRecord, ...(save.finances.boardPetitionsHistory || [])],
@@ -2540,10 +2698,33 @@ export function evaluateBoardFinancialPetition(
     } else {
       updatedFinances.transferBudget += amountGranted;
       // 50% funded by owner equity injection, 50% from club reserves if positive
+      const equityInjection = Math.round(amountGranted * 0.5);
       const balanceDeduction = Math.round(amountGranted * 0.5);
       updatedFinances.balance = Math.max(-10_000_000, updatedFinances.balance - balanceDeduction);
+
+      if (equityInjection > 0) {
+        const boardTx: FinancialTransaction = {
+          id: `tx_board_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+          date: save.season.currentDate,
+          type: 'income',
+          category: 'board_investment',
+          amount: equityInjection,
+          description: `Board Equity Injection (${type.replace(/_/g, ' ')})`,
+        };
+        const updatedIncome = existingLedger.totalIncome + equityInjection;
+        updatedLedger = {
+          ...existingLedger,
+          boardInvestments: existingLedger.boardInvestments + equityInjection,
+          totalIncome: updatedIncome,
+          netProfit: updatedIncome - existingLedger.totalExpenses,
+        };
+        updatedTx = [boardTx, ...updatedTx].slice(0, 60);
+      }
     }
   }
+
+  updatedFinances.seasonLedger = updatedLedger;
+  updatedFinances.transactions = updatedTx;
 
   let updatedSave: CareerSaveFile = {
     ...save,
@@ -2893,6 +3074,31 @@ export function executeFreeAgentSigning(
 
   const updatedHistory = [transferRecord, ...(save.transfersHistory || [])];
 
+  const existingLedger: SeasonFinancialLedger =
+    save.finances.seasonLedger || createInitialSeasonLedger();
+
+  const freeAgentTx: FinancialTransaction[] = [];
+  if (signingBonus > 0) {
+    freeAgentTx.push({
+      id: `tx_fa_bonus_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      date: save.season.currentDate,
+      type: 'expense',
+      category: 'signing_bonuses',
+      amount: signingBonus,
+      description: `Signing bonus paid to free agent ${newPlayer.name}`,
+    });
+  }
+
+  const updatedExpenses = existingLedger.totalExpenses + signingBonus;
+  const updatedLedger: SeasonFinancialLedger = {
+    ...existingLedger,
+    signingBonuses: existingLedger.signingBonuses + signingBonus,
+    totalExpenses: updatedExpenses,
+    netProfit: existingLedger.totalIncome - updatedExpenses,
+  };
+
+  const updatedTx = [...freeAgentTx, ...(save.finances.transactions || [])].slice(0, 60);
+
   let updatedSave: CareerSaveFile = {
     ...save,
     squad: updatedSquad,
@@ -2902,6 +3108,8 @@ export function executeFreeAgentSigning(
       transferBudget: save.finances.transferBudget - signingBonus,
       balance: save.finances.balance - signingBonus,
       currentWeeklyWages: save.finances.currentWeeklyWages + wage,
+      seasonLedger: updatedLedger,
+      transactions: updatedTx,
     },
     transfersHistory: updatedHistory,
   };
@@ -2980,6 +3188,31 @@ export function executeBosmanPreContract(
 
   const updatedPreContracts = [...(save.preContracts || []), preContract];
 
+  const existingLedger: SeasonFinancialLedger =
+    save.finances.seasonLedger || createInitialSeasonLedger();
+
+  const bosmanTx: FinancialTransaction[] = [];
+  if (signingBonus > 0) {
+    bosmanTx.push({
+      id: `tx_bosman_bonus_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      date: save.season.currentDate,
+      type: 'expense',
+      category: 'signing_bonuses',
+      amount: signingBonus,
+      description: `Pre-contract signing bonus for ${targetPlayer.name}`,
+    });
+  }
+
+  const updatedExpenses = existingLedger.totalExpenses + signingBonus;
+  const updatedLedger: SeasonFinancialLedger = {
+    ...existingLedger,
+    signingBonuses: existingLedger.signingBonuses + signingBonus,
+    totalExpenses: updatedExpenses,
+    netProfit: existingLedger.totalIncome - updatedExpenses,
+  };
+
+  const updatedTx = [...bosmanTx, ...(save.finances.transactions || [])].slice(0, 60);
+
   let updatedSave: CareerSaveFile = {
     ...save,
     preContracts: updatedPreContracts,
@@ -2987,6 +3220,8 @@ export function executeBosmanPreContract(
       ...save.finances,
       transferBudget: save.finances.transferBudget - signingBonus,
       balance: save.finances.balance - signingBonus,
+      seasonLedger: updatedLedger,
+      transactions: updatedTx,
     },
   };
 
@@ -3113,6 +3348,31 @@ export function executeLoanIn(
     type: 'loan',
   };
 
+  const existingLedger: SeasonFinancialLedger =
+    save.finances.seasonLedger || createInitialSeasonLedger();
+
+  const loanInTx: FinancialTransaction[] = [];
+  if (effectiveLoanFee > 0) {
+    loanInTx.push({
+      id: `tx_loan_in_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      date: save.season.currentDate,
+      type: 'expense',
+      category: 'loan_fees',
+      amount: effectiveLoanFee,
+      description: `Loan fee paid to ${targetPlayer.club} for ${newLoanPlayer.name}`,
+    });
+  }
+
+  const updatedExpenses = existingLedger.totalExpenses + effectiveLoanFee;
+  const updatedLedger: SeasonFinancialLedger = {
+    ...existingLedger,
+    loanExpenses: existingLedger.loanExpenses + effectiveLoanFee,
+    totalExpenses: updatedExpenses,
+    netProfit: existingLedger.totalIncome - updatedExpenses,
+  };
+
+  const updatedTx = [...loanInTx, ...(save.finances.transactions || [])].slice(0, 60);
+
   let updatedSave: CareerSaveFile = {
     ...save,
     squad: updatedSquad,
@@ -3121,6 +3381,8 @@ export function executeLoanIn(
       transferBudget: save.finances.transferBudget - effectiveLoanFee,
       balance: save.finances.balance - effectiveLoanFee,
       currentWeeklyWages: save.finances.currentWeeklyWages + weeklyWageToPay,
+      seasonLedger: updatedLedger,
+      transactions: updatedTx,
     },
     transfersHistory: [transferRecord, ...(save.transfersHistory || [])],
   };
@@ -3206,6 +3468,31 @@ export function executeLoanOut(
     type: 'loan',
   };
 
+  const existingLedger: SeasonFinancialLedger =
+    save.finances.seasonLedger || createInitialSeasonLedger();
+
+  const loanOutTx: FinancialTransaction[] = [];
+  if (effectiveLoanFee > 0) {
+    loanOutTx.push({
+      id: `tx_loan_out_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      date: save.season.currentDate,
+      type: 'income',
+      category: 'loan_fees',
+      amount: effectiveLoanFee,
+      description: `Loan fee received from ${destinationClubName} for ${player.name}`,
+    });
+  }
+
+  const updatedIncome = existingLedger.totalIncome + effectiveLoanFee;
+  const updatedLedger: SeasonFinancialLedger = {
+    ...existingLedger,
+    loanIncome: existingLedger.loanIncome + effectiveLoanFee,
+    totalIncome: updatedIncome,
+    netProfit: updatedIncome - existingLedger.totalExpenses,
+  };
+
+  const updatedTx = [...loanOutTx, ...(save.finances.transactions || [])].slice(0, 60);
+
   let updatedSave: CareerSaveFile = {
     ...save,
     squad: updatedSquad,
@@ -3214,6 +3501,8 @@ export function executeLoanOut(
       transferBudget: save.finances.transferBudget + effectiveLoanFee,
       balance: save.finances.balance + effectiveLoanFee,
       currentWeeklyWages: Math.max(0, save.finances.currentWeeklyWages - relievedWage),
+      seasonLedger: updatedLedger,
+      transactions: updatedTx,
     },
     transfersHistory: [transferRecord, ...(save.transfersHistory || [])],
   };

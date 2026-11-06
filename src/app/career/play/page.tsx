@@ -53,6 +53,10 @@ import {
   simulateAssistantPreseasonMatch,
 } from '../../../career/preseason';
 import { applyChampionsLeagueDraw } from '../../../career/championsLeague';
+import {
+  applyMatchdayFinancials,
+  processPayrollSettlement,
+} from '../../../career/finance';
 import { PreseasonTourId } from '../../../career/types';
 import { getNextClubFixture, getNextScheduledMatch, getPreviousPlayedMatch, isDateInInternationalBreak, ScheduledMatch } from '../../../career/calendar';
 import { simulateMatchFixture, advanceTimeSkip, TimeSkipTarget } from '../../../career/sim';
@@ -1381,7 +1385,7 @@ function CareerPlayHubContent() {
       save.trainingState?.teamFocus
     );
 
-    const updatedSave: CareerSaveFile = {
+    let updatedSave: CareerSaveFile = {
       ...save,
       season: {
         ...save.season,
@@ -1391,6 +1395,9 @@ function CareerPlayHubContent() {
       standings: updatedStandings,
       squad: updatedSquad,
     };
+
+    updatedSave = applyMatchdayFinancials(updatedSave, leagueFix, isUserHome, 'league');
+    updatedSave = processPayrollSettlement(updatedSave, leagueFix.date);
 
     setInstantSimLoadingData({
       simmedFixture: simmed,

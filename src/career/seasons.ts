@@ -22,7 +22,7 @@ import { simulateMatchFixture } from './sim';
 import { applySeasonalPlayerProgression, generateYouthIntake, ProgressionReport } from './youthAcademy';
 import { generateIncomingAiBids, simulateAiToAiTransfers } from './transfers';
 import { formatCareerCurrency } from './formatters';
-import { calculatePlayerValue } from './finance';
+import { calculatePlayerValue, createInitialSeasonLedger } from './finance';
 import { getRegisteredSeniorPlayerIds } from './squad';
 import { getLeagueLeaderboards } from './playerStats';
 
@@ -344,11 +344,25 @@ export function advanceToNextSeason(save: CareerSaveFile): {
     }
   }
 
+  const prizeTx = summary.prizeMoney > 0
+    ? [{
+        id: `tx_prize_${newCurrentDate}_${Math.random().toString(36).slice(2, 6)}`,
+        date: newCurrentDate,
+        type: 'income' as const,
+        category: 'prize_money' as const,
+        amount: summary.prizeMoney,
+        description: `Season ${save.season.seasonNumber} League Finish (#${summary.finalPosition}) Merit Prize`,
+      }]
+    : [];
+
   const updatedFinances = {
     ...save.finances,
     transferBudget: save.finances.transferBudget + summary.prizeMoney,
     balance: save.finances.balance + summary.prizeMoney,
     currentWeeklyWages: finalSquad.reduce((sum, p) => sum + (p.wageWeekly || 0), 0),
+    seasonLedger: createInitialSeasonLedger(),
+    transactions: [...prizeTx, ...(save.finances.transactions || [])].slice(0, 60),
+    lastPayrollDate: newCurrentDate,
   };
 
   // 3. Fresh annual youth intake

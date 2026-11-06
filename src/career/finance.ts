@@ -119,6 +119,11 @@ import {
   NumberFormatPreference,
   CareerFinances,
   CareerSaveFile,
+  Club,
+  FinancialTransaction,
+  SeasonFinancialLedger,
+  LeagueFixture,
+  CupFixture,
 } from './types';
 import { formatCareerCurrency, formatCareerWage } from './formatters';
 
@@ -227,5 +232,422 @@ export function reallocateBudgetDistribution(
     success: true,
     updatedSave,
     message: `Budget successfully reallocated! Transfer funds set to ${formatCurrency(cleanTransfer)}, wage budget set to ${formatWage(newWeeklyWageBudget)}.`,
+  };
+}
+
+function addDaysToIsoDate(isoDate: string, days: number): string {
+  const parts = isoDate.split('-').map(Number);
+  const y = parts[0];
+  const m = parts[1] || 1;
+  const d = parts[2] || 1;
+  const date = new Date(Date.UTC(y, m - 1, d));
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+function daysBetweenIsoDates(iso1: string, iso2: string): number {
+  const p1 = iso1.split('-').map(Number);
+  const p2 = iso2.split('-').map(Number);
+  const t1 = Date.UTC(p1[0], (p1[1] || 1) - 1, p1[2] || 1);
+  const t2 = Date.UTC(p2[0], (p2[1] || 1) - 1, p2[2] || 1);
+  return Math.floor((t2 - t1) / (1000 * 60 * 60 * 24));
+}
+
+export function createInitialSeasonLedger(): SeasonFinancialLedger {
+  return {
+    gateReceipts: 0,
+    tvBroadcast: 0,
+    commercialSponsors: 0,
+    merchandising: 0,
+    prizeMoney: 0,
+    playerSales: 0,
+    loanIncome: 0,
+    boardInvestments: 0,
+    totalIncome: 0,
+    playerWages: 0,
+    transferFees: 0,
+    signingBonuses: 0,
+    stadiumOperations: 0,
+    loanExpenses: 0,
+    totalExpenses: 0,
+    netProfit: 0,
+  };
+}
+
+export interface MatchdayRevenueBreakdown {
+  attendance: number;
+  gateReceipts: number;
+  tvBroadcast: number;
+  merchandising: number;
+  stadiumOperations: number;
+  netMatchdayProfit: number;
+}
+
+/**
+ * Calculates realistic matchday gate receipts, broadcast rights, merchandising and stewarding
+ * based on venue, capacity, tier, and tournament competition.
+ */
+export function calculateMatchdayRevenue(
+  club: Club,
+  isHome: boolean,
+  competition: 'league' | 'cup' | 'europe' = 'league',
+  isCupTie: boolean = false
+): MatchdayRevenueBreakdown {
+  const capacity = club.stadiumCapacity || 35_000;
+  const tier = club.tier || 'mid';
+
+  // Average ticket prices calibrated to modern English top flight
+  const ticketPrices: Record<string, number> = {
+    elite: 58,
+    upper: 48,
+    mid: 42,
+    lower: 36,
+  };
+  const avgTicket = ticketPrices[tier] || 42;
+
+  if (isHome) {
+    // 93% to 98% realistic attendance fill
+    const fillRate = 0.94 + ((capacity % 7) / 100);
+    const attendance = Math.round(capacity * Math.min(0.99, fillRate));
+    const grossGate = Math.round(attendance * avgTicket);
+
+    // Domestic cups split net gate receipts 50/50 between clubs (after 10% levy)
+    const gateReceipts = isCupTie ? Math.round(grossGate * 0.45) : grossGate;
+
+    // TV Broadcast distribution per home fixture
+    let tvBroadcast = 1_150_000;
+    if (competition === 'europe') {
+      tvBroadcast = 1_650_000;
+    } else if (competition === 'cup') {
+      tvBroadcast = tier === 'elite' ? 850_000 : 550_000;
+    } else {
+      tvBroadcast =
+        tier === 'elite' ? 1_850_000 : tier === 'upper' ? 1_450_000 : tier === 'mid' ? 1_150_000 : 900_000;
+    }
+
+    const merchandising = Math.round(attendance * 8.5);
+    const stadiumOperations = Math.round(attendance * 6.2);
+    const netMatchdayProfit = gateReceipts + tvBroadcast + merchandising - stadiumOperations;
+
+    return {
+      attendance,
+      gateReceipts,
+      tvBroadcast,
+      merchandising,
+      stadiumOperations,
+      netMatchdayProfit,
+    };
+  }
+
+  // Away fixture
+  if (isCupTie) {
+    // Away club receives 45% net gate receipts share from host stadium
+    const hostFill = 0.95;
+    const estHostCap = Math.max(25_000, capacity);
+    const attendance = Math.round(estHostCap * hostFill);
+    const gateReceipts = Math.round(attendance * avgTicket * 0.45);
+    const tvBroadcast = competition === 'europe' ? 950_000 : 350_000;
+
+    return {
+      attendance,
+      gateReceipts,
+      tvBroadcast,
+      merchandising: 0,
+      stadiumOperations: 0,
+      netMatchdayProfit: gateReceipts + tvBroadcast,
+    };
+  }
+
+  // Away league match: travel expenses & modest broadcast rights share
+  const tvBroadcast = competition === 'europe' ? 850_000 : 250_000;
+  return {
+    attendance: 0,
+    gateReceipts: 0,
+    tvBroadcast,
+    merchandising: 0,
+    stadiumOperations: 0,
+    netMatchdayProfit: tvBroadcast,
+  };
+}
+
+/**
+ * Applies matchday financials (gate receipts, TV, merchandising, operational costs)
+ * to save balance and season financial ledger.
+ */
+export function applyMatchdayFinancials(
+  save: CareerSaveFile,
+  fixture: LeagueFixture | CupFixture,
+  isUserHome: boolean,
+  competitionType: 'league' | 'cup' | 'europe' = 'league'
+): CareerSaveFile {
+  const isCupTie = competitionType !== 'league';
+  const rev = calculateMatchdayRevenue(save.club, isUserHome, competitionType, isCupTie);
+
+  const existingLedger: SeasonFinancialLedger =
+    save.finances.seasonLedger || createInitialSeasonLedger();
+
+  const oppName = isUserHome ? (fixture as any).awayClubId || 'Opponent' : (fixture as any).homeClubId || 'Opponent';
+  const date = fixture.date || save.season.currentDate;
+
+  const newTransactions: FinancialTransaction[] = [];
+
+  if (rev.gateReceipts > 0) {
+    newTransactions.push({
+      id: `tx_gate_${date}_${Math.random().toString(36).slice(2, 6)}`,
+      date,
+      type: 'income',
+      category: 'gate_receipts',
+      amount: rev.gateReceipts,
+      description: `Matchday Gate Receipts vs ${oppName} (${isUserHome ? 'Home' : 'Cup Away Share'})`,
+      fixtureId: fixture.id,
+    });
+  }
+
+  if (rev.tvBroadcast > 0) {
+    newTransactions.push({
+      id: `tx_tv_${date}_${Math.random().toString(36).slice(2, 6)}`,
+      date,
+      type: 'income',
+      category: 'tv_broadcast',
+      amount: rev.tvBroadcast,
+      description: `Broadcast & Streaming Revenue vs ${oppName}`,
+      fixtureId: fixture.id,
+    });
+  }
+
+  if (rev.merchandising > 0) {
+    newTransactions.push({
+      id: `tx_merch_${date}_${Math.random().toString(36).slice(2, 6)}`,
+      date,
+      type: 'income',
+      category: 'merchandising',
+      amount: rev.merchandising,
+      description: `Stadium Concessions & Matchday Merchandising`,
+      fixtureId: fixture.id,
+    });
+  }
+
+  if (rev.stadiumOperations > 0) {
+    newTransactions.push({
+      id: `tx_ops_${date}_${Math.random().toString(36).slice(2, 6)}`,
+      date,
+      type: 'expense',
+      category: 'stadium_operations',
+      amount: rev.stadiumOperations,
+      description: `Stadium Operations, Stewarding & Facilities`,
+      fixtureId: fixture.id,
+    });
+  }
+
+  const updatedIncome =
+    existingLedger.totalIncome + rev.gateReceipts + rev.tvBroadcast + rev.merchandising;
+  const updatedExpenses = existingLedger.totalExpenses + rev.stadiumOperations;
+
+  const updatedLedger: SeasonFinancialLedger = {
+    ...existingLedger,
+    gateReceipts: existingLedger.gateReceipts + rev.gateReceipts,
+    tvBroadcast: existingLedger.tvBroadcast + rev.tvBroadcast,
+    merchandising: existingLedger.merchandising + rev.merchandising,
+    stadiumOperations: existingLedger.stadiumOperations + rev.stadiumOperations,
+    totalIncome: updatedIncome,
+    totalExpenses: updatedExpenses,
+    netProfit: updatedIncome - updatedExpenses,
+  };
+
+  const existingTx = save.finances.transactions || [];
+  const combinedTx = [...newTransactions, ...existingTx].slice(0, 60);
+
+  return {
+    ...save,
+    finances: {
+      ...save.finances,
+      balance: save.finances.balance + rev.netMatchdayProfit,
+      seasonLedger: updatedLedger,
+      transactions: combinedTx,
+    },
+  };
+}
+
+/**
+ * Awards tournament round progression bonuses or winner prize money.
+ */
+export function applyTournamentPrizeBonus(
+  save: CareerSaveFile,
+  competitionName: string,
+  roundName: string,
+  prizeAmount: number,
+  isWinner: boolean = false
+): CareerSaveFile {
+  if (prizeAmount <= 0) return save;
+
+  const date = save.season.currentDate;
+  const existingLedger: SeasonFinancialLedger =
+    save.finances.seasonLedger || createInitialSeasonLedger();
+
+  const tx: FinancialTransaction = {
+    id: `tx_prize_${date}_${Math.random().toString(36).slice(2, 6)}`,
+    date,
+    type: 'income',
+    category: 'prize_money',
+    amount: prizeAmount,
+    description: isWinner
+      ? `🏆 Champions Prize: ${competitionName} Winners Award!`
+      : `Tournament Merit Bonus: ${competitionName} (${roundName})`,
+  };
+
+  // Ownership transfers 40% of prize money directly to manager transfer budget
+  const transferWarchestBonus = Math.round(prizeAmount * 0.40);
+  const updatedIncome = existingLedger.totalIncome + prizeAmount;
+
+  const updatedLedger: SeasonFinancialLedger = {
+    ...existingLedger,
+    prizeMoney: existingLedger.prizeMoney + prizeAmount,
+    totalIncome: updatedIncome,
+    netProfit: updatedIncome - existingLedger.totalExpenses,
+  };
+
+  const existingTx = save.finances.transactions || [];
+  const combinedTx = [tx, ...existingTx].slice(0, 60);
+
+  return {
+    ...save,
+    finances: {
+      ...save.finances,
+      balance: save.finances.balance + prizeAmount,
+      transferBudget: save.finances.transferBudget + transferWarchestBonus,
+      seasonLedger: updatedLedger,
+      transactions: combinedTx,
+    },
+  };
+}
+
+/**
+ * Processes weekly squad payroll based on elapsed time between dates.
+ * Deducts first-team contracted wages and updates cashflow ledger.
+ */
+export function processPayrollSettlement(
+  save: CareerSaveFile,
+  targetDate: string
+): CareerSaveFile {
+  const currentPayrollDate = save.finances.lastPayrollDate || `${save.season.yearStart}-07-01`;
+  if (targetDate <= currentPayrollDate) return save;
+
+  const diffDays = daysBetweenIsoDates(currentPayrollDate, targetDate);
+  const weeks = Math.floor(diffDays / 7);
+  if (weeks < 1) return save;
+
+  const weeklyWages = save.finances.currentWeeklyWages || 0;
+  const totalPayroll = weeklyWages * weeks;
+
+  const newPayrollDate = addDaysToIsoDate(currentPayrollDate, weeks * 7);
+  const existingLedger: SeasonFinancialLedger =
+    save.finances.seasonLedger || createInitialSeasonLedger();
+
+  const tx: FinancialTransaction = {
+    id: `tx_wage_${targetDate}_${Math.random().toString(36).slice(2, 6)}`,
+    date: targetDate,
+    type: 'expense',
+    category: 'player_wages',
+    amount: totalPayroll,
+    description: `Squad Weekly Payroll (${weeks} ${weeks === 1 ? 'week' : 'weeks'} @ ${formatWage(weeklyWages)})`,
+  };
+
+  const updatedExpenses = existingLedger.totalExpenses + totalPayroll;
+  const updatedLedger: SeasonFinancialLedger = {
+    ...existingLedger,
+    playerWages: existingLedger.playerWages + totalPayroll,
+    totalExpenses: updatedExpenses,
+    netProfit: existingLedger.totalIncome - updatedExpenses,
+  };
+
+  const existingTx = save.finances.transactions || [];
+  const combinedTx = [tx, ...existingTx].slice(0, 60);
+
+  return {
+    ...save,
+    finances: {
+      ...save.finances,
+      balance: save.finances.balance - totalPayroll,
+      lastPayrollDate: newPayrollDate,
+      seasonLedger: updatedLedger,
+      transactions: combinedTx,
+    },
+  };
+}
+
+export type PsrHealthRating = 'exceptional' | 'healthy' | 'warning' | 'critical';
+
+export interface ClubFinancialHealthReport {
+  annualWageBill: number;
+  projectedAnnualTurnover: number;
+  wageToTurnoverRatio: number;
+  psrStatus: PsrHealthRating;
+  psrLabel: string;
+  projectedEndBalance: number;
+  commercialBaseline: number;
+}
+
+/**
+ * Evaluates club financial sustainability and PSR compliance
+ * (Premier League Profit and Sustainability Rules guideline: <70% wage-to-turnover ratio).
+ */
+export function calculateClubFinancialHealth(save: CareerSaveFile): ClubFinancialHealthReport {
+  const weeklyWages = save.finances.currentWeeklyWages || 0;
+  const annualWageBill = weeklyWages * 52;
+  const tier = save.club.tier || 'mid';
+
+  // Baseline commercial sponsors calibrated to Premier League tiers
+  const tierCommercial: Record<string, number> = {
+    elite: 145_000_000,
+    upper: 88_000_000,
+    mid: 52_000_000,
+    lower: 36_000_000,
+  };
+  const commercialBaseline = tierCommercial[tier] || 52_000_000;
+
+  // 19 home league games + ~4 home cup/europe games average
+  const sampleHomeRev = calculateMatchdayRevenue(save.club, true, 'league', false);
+  const projectedMatchdayTurnover = Math.round(sampleHomeRev.netMatchdayProfit * 23);
+
+  const ledger = save.finances.seasonLedger || createInitialSeasonLedger();
+  const currentActualIncome = ledger.totalIncome;
+
+  const projectedAnnualTurnover = Math.max(
+    annualWageBill * 1.1,
+    commercialBaseline + projectedMatchdayTurnover + Math.max(0, currentActualIncome)
+  );
+
+  const ratio = Math.round((annualWageBill / (projectedAnnualTurnover || 1)) * 100);
+
+  let psrStatus: PsrHealthRating = 'healthy';
+  let psrLabel = 'Healthy (PSR Compliant)';
+
+  if (ratio <= 60) {
+    psrStatus = 'exceptional';
+    psrLabel = 'Exceptional Discipline (<60% PSR)';
+  } else if (ratio <= 75) {
+    psrStatus = 'healthy';
+    psrLabel = 'Healthy & Compliant (60-75% PSR)';
+  } else if (ratio <= 85) {
+    psrStatus = 'warning';
+    psrLabel = 'High Wage Pressure (75-85% PSR)';
+  } else {
+    psrStatus = 'critical';
+    psrLabel = 'PSR Danger (>85% Wage-to-Turnover)';
+  }
+
+  // Projected end-of-season balance
+  const remainingWeeks = Math.max(0, 52 - Math.floor(ledger.playerWages / (weeklyWages || 1)));
+  const remainingWageLiability = remainingWeeks * weeklyWages;
+  const projectedEndBalance = save.finances.balance + Math.round(projectedMatchdayTurnover * 0.4) - remainingWageLiability;
+
+  return {
+    annualWageBill,
+    projectedAnnualTurnover,
+    wageToTurnoverRatio: ratio,
+    psrStatus,
+    psrLabel,
+    projectedEndBalance,
+    commercialBaseline,
   };
 }

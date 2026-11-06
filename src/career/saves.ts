@@ -8,7 +8,7 @@ import { createInitialStandings } from './table';
 import { initializeSeasonCups } from './cups';
 import { generateYouthIntake } from './youthAcademy';
 import { getInitialInboxMessages } from './inbox';
-import { calculatePlayerValue, calculateWeeklyWage } from './finance';
+import { calculatePlayerValue, calculateWeeklyWage, createInitialSeasonLedger } from './finance';
 import { Player, FormationType } from '../types/game';
 
 export const VALID_SLOT_IDS = ['slot_1', 'slot_2', 'slot_3'] as const;
@@ -88,6 +88,12 @@ export function loadCareerSave(slotId: string): CareerSaveFile | null {
         parsed.finances.currentWeeklyWages = actualWeeklyWages;
         if (!parsed.finances.weeklyWageBudget || parsed.finances.weeklyWageBudget < actualWeeklyWages * 1.15) {
           parsed.finances.weeklyWageBudget = Math.round((actualWeeklyWages * 1.30) / 50_000) * 50_000;
+        }
+        if (!parsed.finances.seasonLedger) {
+          parsed.finances.seasonLedger = createInitialSeasonLedger();
+        }
+        if (!parsed.finances.transactions) {
+          parsed.finances.transactions = [];
         }
       }
     }
@@ -305,6 +311,9 @@ export function createNewCareerSave(params: {
       weeklyWageBudget,
       currentWeeklyWages,
       balance: Math.round(adjustedBudget * 0.35),
+      seasonLedger: createInitialSeasonLedger(),
+      transactions: [],
+      lastPayrollDate: `${yearStart}-07-01`,
     },
     squad,
     lineup,
