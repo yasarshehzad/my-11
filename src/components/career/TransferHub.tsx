@@ -74,6 +74,7 @@ export function TransferHub({
   const [subTab, setSubTab] = useState<'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board'>(
     initialSubTab || 'market'
   );
+  const [historyView, setHistoryView] = useState<'my_club' | 'world'>('my_club');
 
   useEffect(() => {
     if (initialSubTab) {
@@ -2083,107 +2084,193 @@ export function TransferHub({
       {/* SUB-VIEW 4: TRANSFER HISTORY */}
       {subTab === 'history' && (
         <section id="history-section" className="space-y-4 scroll-mt-20">
-          <header className="office-floating-card p-4 space-y-1">
-            <h3 className="text-base font-display font-black uppercase text-slate-900 tracking-tight">
-              Career Transfer Ledger
-            </h3>
-            <p className="text-xs text-slate-500">
-              Verified record of all signings and sales completed under your regime.
-            </p>
+          <header className="office-floating-card p-4 space-y-2.5">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <div>
+                <h3 className="text-base font-display font-black uppercase text-slate-900 tracking-tight">
+                  Transfer Ledger &amp; World Market Feed
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Verified record of club signings, sales, and confirmed rival transfers across world football.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1 border-t border-slate-200/80">
+              <button
+                type="button"
+                onClick={() => setHistoryView('my_club')}
+                className={`py-1 px-3 rounded-lg text-xs font-display font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                  historyView === 'my_club'
+                    ? 'office-action-btn-primary'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                }`}
+              >
+                🛡️ My Club Deals ({save.transfersHistory?.length || 0})
+              </button>
+              <button
+                type="button"
+                onClick={() => setHistoryView('world')}
+                className={`py-1 px-3 rounded-lg text-xs font-display font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                  historyView === 'world'
+                    ? 'office-action-btn-primary'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                }`}
+              >
+                🌍 World Transfer Feed ({save.worldTransfersHistory?.length || 0})
+              </button>
+            </div>
           </header>
 
-          {(!save.transfersHistory || save.transfersHistory.length === 0) ? (
-            <div className="office-subcard p-12 text-center text-slate-500 text-xs">
-              No transfers completed yet. Make a signing or cash in on a player to record history.
-            </div>
+          {historyView === 'my_club' ? (
+            (!save.transfersHistory || save.transfersHistory.length === 0) ? (
+              <div className="office-subcard p-12 text-center text-slate-500 text-xs">
+                No transfers completed yet. Make a signing or cash in on a player to record history.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {save.transfersHistory.map((tx) => (
+                  <div
+                    key={tx.id}
+                    className="office-subcard p-3.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs"
+                  >
+                    <div className="flex items-start sm:items-center gap-3">
+                      <span
+                        className={`px-2 py-0.5 rounded text-[10px] font-display font-black uppercase tracking-wider ${
+                          tx.type === 'signing'
+                            ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                            : 'bg-amber-100 text-amber-800 border border-amber-200'
+                        }`}
+                      >
+                        {tx.type}
+                      </span>
+                      <div className="space-y-1">
+                        <div className="font-display font-black text-slate-900 text-sm">
+                          {tx.playerName} <span className="text-xs font-normal text-slate-500">({tx.position} • {tx.rating})</span>
+                        </div>
+                        <div className="text-[10px] text-slate-500 font-medium">
+                          {tx.fromClubName} → {tx.toClubName}
+                        </div>
+                        {/* Active Clauses / Add-Ons */}
+                        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                          {tx.sellOnPercent ? (
+                            <span className="bg-slate-100 text-slate-700 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-slate-200">
+                              {tx.sellOnPercent}% Sell-On
+                            </span>
+                          ) : null}
+                          {tx.appearanceMilestoneFee ? (
+                            <span className="bg-blue-50 text-blue-700 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-blue-200">
+                              +{formatCurrency(tx.appearanceMilestoneFee)} @ {tx.appearanceThreshold} Apps
+                            </span>
+                          ) : null}
+                          {tx.goalMilestoneFee ? (
+                            <span className="bg-blue-50 text-blue-700 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-blue-200">
+                              +{formatCurrency(tx.goalMilestoneFee)} @ {tx.goalThreshold} Goals/CS
+                            </span>
+                          ) : null}
+                          {tx.buyBackFee ? (
+                            <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border ${
+                              tx.buyBackActive
+                                ? 'bg-amber-50 text-amber-800 border-amber-200'
+                                : 'bg-slate-100 text-slate-400 border-slate-200 line-through'
+                            }`}>
+                              🔁 Buy-Back: {formatCurrency(tx.buyBackFee)} {tx.buyBackActive ? '(Active)' : '(Exercised/Expired)'}
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex sm:flex-col items-start sm:items-end justify-between w-full sm:w-auto gap-2">
+                      <div className="flex sm:flex-col items-center sm:items-end gap-0.5">
+                        <span className="font-display font-black text-blue-600 text-sm">
+                          {formatCurrency(tx.fee)}
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-500">
+                          {formatCareerDate(tx.date, save.settings?.dateFormat)}
+                        </span>
+                      </div>
+
+                      {tx.type === 'sale' && tx.buyBackActive && tx.buyBackFee && (
+                        <button
+                          type="button"
+                          onClick={() => handleTriggerBuyBack(tx.playerId)}
+                          disabled={!windowIsOpen || save.finances.transferBudget < tx.buyBackFee || save.squad.length >= MAX_SQUAD_SIZE}
+                          title={
+                            !windowIsOpen
+                              ? 'Transfer window is closed'
+                              : save.finances.transferBudget < tx.buyBackFee
+                              ? 'Insufficient transfer budget'
+                              : save.squad.length >= MAX_SQUAD_SIZE
+                              ? 'Squad is at maximum size'
+                              : undefined
+                          }
+                          className="py-1.5 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-display font-black text-[10px] uppercase tracking-wider shadow-md shadow-amber-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-1.5 whitespace-nowrap"
+                        >
+                          <span>🔁</span>
+                          <span>Trigger Buy-Back ({formatCurrency(tx.buyBackFee)})</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
           ) : (
-            <div className="space-y-2">
-              {save.transfersHistory.map((tx) => (
-                <div
-                  key={tx.id}
-                  className="office-subcard p-3.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs"
-                >
-                  <div className="flex items-start sm:items-center gap-3">
-                    <span
-                      className={`px-2 py-0.5 rounded text-[10px] font-display font-black uppercase tracking-wider ${
-                        tx.type === 'signing'
-                          ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                          : 'bg-amber-100 text-amber-800 border border-amber-200'
+            (!save.worldTransfersHistory || save.worldTransfersHistory.length === 0) ? (
+              <div className="office-subcard p-12 text-center text-slate-500 text-xs">
+                No rival AI transfers reported yet. World transfers will appear as the transfer window progresses and on Deadline Day!
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {save.worldTransfersHistory.map((tx) => {
+                  const isBlockbuster = tx.fee >= 35_000_000 || tx.rating >= 85;
+                  return (
+                    <div
+                      key={tx.id}
+                      className={`office-subcard p-3.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs border ${
+                        isBlockbuster
+                          ? 'border-amber-300/80 bg-gradient-to-r from-amber-50/40 via-white to-transparent shadow-xs'
+                          : 'border-slate-200/90'
                       }`}
                     >
-                      {tx.type}
-                    </span>
-                    <div className="space-y-1">
-                      <div className="font-display font-black text-slate-900 text-sm">
-                        {tx.playerName} <span className="text-xs font-normal text-slate-500">({tx.position} • {tx.rating})</span>
+                      <div className="flex items-start sm:items-center gap-3">
+                        <span
+                          className={`px-2 py-0.5 rounded text-[9.5px] font-display font-black uppercase tracking-wider ${
+                            isBlockbuster
+                              ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                              : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                          }`}
+                        >
+                          {isBlockbuster ? '⭐ Blockbuster' : '🌍 World Deal'}
+                        </span>
+                        <div className="space-y-1">
+                          <div className="font-display font-black text-slate-900 text-sm">
+                            {tx.playerName}{' '}
+                            <span className="text-xs font-normal text-slate-500">
+                              ({tx.position} • {tx.rating} OVR)
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-slate-600 font-medium">
+                            <span className="font-bold text-slate-800">{tx.fromClubName}</span> ➔{' '}
+                            <span className="font-bold text-blue-700">{tx.toClubName}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-[10px] text-slate-500 font-medium">
-                        {tx.fromClubName} → {tx.toClubName}
-                      </div>
-                      {/* Active Clauses / Add-Ons */}
-                      <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                        {tx.sellOnPercent ? (
-                          <span className="bg-slate-100 text-slate-700 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-slate-200">
-                            {tx.sellOnPercent}% Sell-On
-                          </span>
-                        ) : null}
-                        {tx.appearanceMilestoneFee ? (
-                          <span className="bg-blue-50 text-blue-700 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-blue-200">
-                            +{formatCurrency(tx.appearanceMilestoneFee)} @ {tx.appearanceThreshold} Apps
-                          </span>
-                        ) : null}
-                        {tx.goalMilestoneFee ? (
-                          <span className="bg-blue-50 text-blue-700 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-blue-200">
-                            +{formatCurrency(tx.goalMilestoneFee)} @ {tx.goalThreshold} Goals/CS
-                          </span>
-                        ) : null}
-                        {tx.buyBackFee ? (
-                          <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border ${
-                            tx.buyBackActive
-                              ? 'bg-amber-50 text-amber-800 border-amber-200'
-                              : 'bg-slate-100 text-slate-400 border-slate-200 line-through'
-                          }`}>
-                            🔁 Buy-Back: {formatCurrency(tx.buyBackFee)} {tx.buyBackActive ? '(Active)' : '(Exercised/Expired)'}
-                          </span>
-                        ) : null}
+
+                      <div className="flex sm:flex-col items-start sm:items-end justify-between w-full sm:w-auto gap-1">
+                        <span className="font-display font-black text-[#1d5eff] text-sm">
+                          {formatCurrency(tx.fee)}
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-500">
+                          📅 {formatCareerDate(tx.date, save.settings?.dateFormat)}
+                        </span>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="flex sm:flex-col items-start sm:items-end justify-between w-full sm:w-auto gap-2">
-                    <div className="flex sm:flex-col items-center sm:items-end gap-0.5">
-                      <span className="font-display font-black text-blue-600 text-sm">
-                        {formatCurrency(tx.fee)}
-                      </span>
-                      <span className="text-[10px] font-mono text-slate-500">
-                        {formatCareerDate(tx.date, save.settings?.dateFormat)}
-                      </span>
-                    </div>
-
-                    {tx.type === 'sale' && tx.buyBackActive && tx.buyBackFee && (
-                      <button
-                        type="button"
-                        onClick={() => handleTriggerBuyBack(tx.playerId)}
-                        disabled={!windowIsOpen || save.finances.transferBudget < tx.buyBackFee || save.squad.length >= MAX_SQUAD_SIZE}
-                        title={
-                          !windowIsOpen
-                            ? 'Transfer window is closed'
-                            : save.finances.transferBudget < tx.buyBackFee
-                            ? 'Insufficient transfer budget'
-                            : save.squad.length >= MAX_SQUAD_SIZE
-                            ? 'Squad is at maximum size'
-                            : undefined
-                        }
-                        className="py-1.5 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-display font-black text-[10px] uppercase tracking-wider shadow-md shadow-amber-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-1.5 whitespace-nowrap"
-                      >
-                        <span>🔁</span>
-                        <span>Trigger Buy-Back ({formatCurrency(tx.buyBackFee)})</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+                  );
+                })}
+              </div>
+            )
           )}
         </section>
       )}

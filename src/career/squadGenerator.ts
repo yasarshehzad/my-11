@@ -424,10 +424,12 @@ const aiClubSquadCache = new Map<string, CareerPlayer[]>();
 /**
  * Retrieves or generates the authentic matchday squad (starters, bench, full squad, and key danger man)
  * for any AI opponent club across Premier League, Continental European, and Domestic Cup competitions.
+ * If livingAiSquads is provided and has this club's updated squad, uses it directly.
  */
 export function getAiClubMatchdaySquad(
   club: Club,
-  seasonInput: DatabaseSeason | SeasonSummary = '2026/27'
+  seasonInput: DatabaseSeason | SeasonSummary = '2026/27',
+  livingAiSquads?: Record<string, CareerPlayer[]>
 ): {
   starters: CareerPlayer[];
   bench: CareerPlayer[];
@@ -438,11 +440,15 @@ export function getAiClubMatchdaySquad(
     typeof seasonInput === 'object' && seasonInput !== null
       ? (seasonInput.databaseSeason || '2026/27')
       : seasonInput || '2026/27';
-  const cacheKey = `${club.id}_${season}`;
-  let squad = aiClubSquadCache.get(cacheKey);
+
+  let squad = livingAiSquads?.[club.id];
   if (!squad || squad.length < 11) {
-    squad = generateClubSquad(club, season);
-    aiClubSquadCache.set(cacheKey, squad);
+    const cacheKey = `${club.id}_${season}`;
+    squad = aiClubSquadCache.get(cacheKey);
+    if (!squad || squad.length < 11) {
+      squad = generateClubSquad(club, season);
+      aiClubSquadCache.set(cacheKey, squad);
+    }
   }
 
   const bestLineup = getBestStartingLineup(squad, '4-3-3');
@@ -476,6 +482,60 @@ export function getAiClubMatchdaySquad(
       ...finalBench.map((p) => ({ ...p })),
     ],
     dangerPlayer: { ...dangerPlayer },
+  };
+}
+
+/**
+ * Ensures an AI club has an active living squad initialized in memory/save.
+ */
+export function getOrInitializeAiClubSquad(
+  club: Club,
+  season: DatabaseSeason = '2026/27',
+  livingAiSquads?: Record<string, CareerPlayer[]>
+): CareerPlayer[] {
+  if (livingAiSquads?.[club.id] && livingAiSquads[club.id].length >= 11) {
+    return livingAiSquads[club.id];
+  }
+  return getAiClubMatchdaySquad(club, season, livingAiSquads).squad;
+}
+
+/**
+ * Computes organic department ratings (attack, midfield, defense, overall) for an AI club based on its current active squad.
+ */
+export function calculateClubDepartmentRatings(
+  squad: CareerPlayer[],
+  fallbackReputation: number = 75
+): { attack: number; midfield: number; defense: number; overall: number } {
+  if (!squad || squad.length === 0) {
+    return {
+      attack: fallbackReputation,
+      midfield: fallbackReputation,
+      defense: fallbackReputation,
+      overall: fallbackReputation,
+    };
+  }
+
+  const fwd = squad.filter((p) => categorizePosition(p.position) === 'FWD').slice(0, 4);
+  const mid = squad.filter((p) => categorizePosition(p.position) === 'MID').slice(0, 5);
+  const def = squad.filter((p) => {
+    const cat = categorizePosition(p.position);
+    return cat === 'DEF' || cat === 'GK';
+  }).slice(0, 5);
+
+  const avgRating = (arr: CareerPlayer[], fallback: number) => {
+    if (arr.length === 0) return fallback;
+    return Math.round(arr.reduce((sum, p) => sum + p.rating, 0) / arr.length);
+  };
+
+  const overallAvg = Math.round(
+    squad.slice(0, 11).reduce((sum, p) => sum + p.rating, 0) / Math.min(11, squad.length)
+  );
+
+  return {
+    attack: avgRating(fwd, overallAvg),
+    midfield: avgRating(mid, overallAvg),
+    defense: avgRating(def, overallAvg),
+    overall: overallAvg,
   };
 }
 

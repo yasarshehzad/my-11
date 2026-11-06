@@ -587,8 +587,8 @@ export function advanceTimeSkip(
         item.fixture,
         homeClub,
         awayClub,
-        item.fixture.homeClubId === userClubId ? activeSquad : undefined,
-        item.fixture.awayClubId === userClubId ? activeSquad : undefined
+        item.fixture.homeClubId === userClubId ? activeSquad : save.aiClubSquads?.[item.fixture.homeClubId],
+        item.fixture.awayClubId === userClubId ? activeSquad : save.aiClubSquads?.[item.fixture.awayClubId]
       );
 
       fixtures[item.index] = simmed;
@@ -601,8 +601,8 @@ export function advanceTimeSkip(
         item.fixture,
         homeClub,
         awayClub,
-        item.fixture.homeClubId === userClubId ? activeSquad : undefined,
-        item.fixture.awayClubId === userClubId ? activeSquad : undefined
+        item.fixture.homeClubId === userClubId ? activeSquad : save.aiClubSquads?.[item.fixture.homeClubId],
+        item.fixture.awayClubId === userClubId ? activeSquad : save.aiClubSquads?.[item.fixture.awayClubId]
       );
 
       cups[item.tournamentId].fixtures[item.index] = simmed;

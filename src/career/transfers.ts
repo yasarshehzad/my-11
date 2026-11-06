@@ -36,6 +36,7 @@ import { getAllSupplementalPlayers } from './databaseExpansion';
 import { getPlayerBio, isCurrentPlayer, isIconPlayer } from './playerBioDatabase';
 import { getPlayerPhysicals } from './formatters';
 import { calculateEaFcFaceStats } from './formAndProgression';
+import { getOrInitializeAiClubSquad, calculateClubDepartmentRatings } from './squadGenerator';
 
 
 /**
@@ -182,16 +183,23 @@ export function advanceDeadlineDayPhase(save: CareerSaveFile): {
       ? `${save.season.yearStart}-09-02`
       : `${save.season.yearStart + 1}-02-02`;
 
+    const aiSimClosed = simulateAiToAiTransfers(save, {
+      dealCount: 3,
+      isDeadlineDay: true,
+      date: closedDate,
+    });
+
     const closedNews = [
       `23:00 BST • 🚨 WINDOW CLOSED! The transfer deadline buzzer has sounded. No further registrations permitted!`,
+      ...aiSimClosed.headlines.map((h) => `23:00 BST • ${h}`),
       `23:05 BST • Premier League & UEFA confirm all submitted deal sheets are now under formal ratification.`,
       ...currentState.breakingNews,
-    ].slice(0, 10);
+    ].slice(0, 12);
 
     let updatedSave: CareerSaveFile = {
-      ...save,
+      ...aiSimClosed.updatedSave,
       season: {
-        ...save.season,
+        ...aiSimClosed.updatedSave.season,
         currentDate: closedDate,
         transferWindowOpen: false,
       },
@@ -200,7 +208,7 @@ export function advanceDeadlineDayPhase(save: CareerSaveFile): {
         phase: 'closed',
         hoursRemaining: 0,
         timeString: '23:00 BST (Closed)',
-        dealsCompletedCount: currentState.dealsCompletedCount + 7,
+        dealsCompletedCount: currentState.dealsCompletedCount + aiSimClosed.completedTransfers.length + 2,
         breakingNews: closedNews,
       },
     };
@@ -230,36 +238,42 @@ export function advanceDeadlineDayPhase(save: CareerSaveFile): {
   const phaseNewsEntries: Record<DeadlineDayPhase, string[]> = {
     afternoon: [
       `13:00 BST • Afternoon Phase: Urgency builds as continental clubs submit improved bids.`,
-      `13:30 BST • BREAKING: Chelsea and PSG locked in tense fee standoff with 9.5 hours to go!`,
-      `14:15 BST • DONE DEAL: Arsenal announce £48M capture of international midfielder.`,
     ],
     evening: [
       `18:00 BST • Evening Phase: 5 HOURS REMAINING! Panic buying escalates across European football.`,
-      `18:45 BST • BREAKING: Manchester City lodge £85M late offer as player travels for medical!`,
-      `19:30 BST • RUMOUR: Suitors willing to pay up to 40% above valuation to push late deals over the line.`,
     ],
     deadline: [
       `22:00 BST • FINAL HOUR! 60 MINUTES REMAINING! Absolute frenzy in the transfer market!`,
-      `22:15 BST • BREAKING: Private jets touching down as deal sheets are frantically lodged with the FA.`,
-      `22:40 BST • TICKING CLOCK: Final 20 minutes! Last-gasp desperation bids being submitted right now!`,
     ],
     morning: [],
     closed: [],
   };
 
+  // Simulate active AI-to-AI deadline day deals with authentic clubs & players
+  const aiSim = simulateAiToAiTransfers(save, {
+    dealCount: next.nextPhase === 'deadline' ? 4 : 3,
+    isDeadlineDay: true,
+    date: save.season.currentDate,
+  });
+
+  const formattedHeadlines = aiSim.headlines.map(
+    (h) => `${next.timeString} • 🚨 ${h}`
+  );
+
   const newBreakingNews = [
+    ...formattedHeadlines,
     ...(phaseNewsEntries[next.nextPhase] || []),
     ...currentState.breakingNews,
-  ].slice(0, 10);
+  ].slice(0, 12);
 
   let updatedSave: CareerSaveFile = {
-    ...save,
+    ...aiSim.updatedSave,
     deadlineDayState: {
       isActive: true,
       phase: next.nextPhase,
       hoursRemaining: next.hoursRemaining,
       timeString: next.timeString,
-      dealsCompletedCount: currentState.dealsCompletedCount + Math.floor(2 + Math.random() * 3),
+      dealsCompletedCount: currentState.dealsCompletedCount + aiSim.completedTransfers.length,
       breakingNews: newBreakingNews,
     },
   };
@@ -2544,5 +2558,182 @@ export function evaluateBoardFinancialPetition(
     reason,
     feedback,
     updatedSave,
+  };
+}
+
+/**
+ * Simulates a batch of realistic AI-to-AI transfers between rival clubs.
+ * Transfers players from their current club to their new club, updates living squads,
+ * records the deals in worldTransfersHistory, and posts breaking news for marquee deals.
+ */
+export function simulateAiToAiTransfers(
+  save: CareerSaveFile,
+  options?: {
+    dealCount?: number;
+    isDeadlineDay?: boolean;
+    date?: string;
+  }
+): {
+  updatedSave: CareerSaveFile;
+  completedTransfers: TransferRecord[];
+  headlines: string[];
+} {
+  const count = options?.dealCount ?? 3;
+  const isDeadline = Boolean(options?.isDeadlineDay);
+  const txDate = options?.date || save.season.currentDate;
+  const season = save.settings?.databaseSeason || '2026/27';
+
+  const userClubId = save.club?.id || '';
+  const userPlayerIdSet = new Set((save.squad || []).map((p) => p.id));
+
+  // Combine active Premier League clubs and major Continental European clubs
+  const activeClubs = getAllClubs();
+  const buyerCandidates = [...activeClubs, ...CONTINENTAL_EUROPEAN_CLUBS].filter(
+    (c) => c.id !== userClubId
+  );
+
+  const livingSquads: Record<string, CareerPlayer[]> = {
+    ...(save.aiClubSquads || {}),
+  };
+
+  const completedTransfers: TransferRecord[] = [];
+  const headlines: string[] = [];
+
+  // Weights for selecting buying clubs by tier: Elite (45%), Upper/Mid (35%), Lower (20%)
+  const pickBuyer = (): Club => {
+    const r = Math.random();
+    let tierPool: Club[];
+    if (r < 0.45) {
+      tierPool = buyerCandidates.filter((c) => c.tier === 'elite');
+    } else if (r < 0.8) {
+      tierPool = buyerCandidates.filter((c) => c.tier === 'upper' || c.tier === 'mid');
+    } else {
+      tierPool = buyerCandidates.filter((c) => c.tier === 'lower');
+    }
+    const pool = tierPool.length > 0 ? tierPool : buyerCandidates;
+    return pool[Math.floor(Math.random() * pool.length)];
+  };
+
+  for (let step = 0; step < count; step++) {
+    const buyer = pickBuyer();
+    const sellerCandidates = buyerCandidates.filter((c) => c.id !== buyer.id);
+    if (sellerCandidates.length === 0) continue;
+
+    const seller = sellerCandidates[Math.floor(Math.random() * sellerCandidates.length)];
+
+    // Ensure living squads exist for buyer and seller
+    if (!livingSquads[buyer.id] || livingSquads[buyer.id].length < 11) {
+      livingSquads[buyer.id] = getOrInitializeAiClubSquad(buyer, season, livingSquads);
+    }
+    if (!livingSquads[seller.id] || livingSquads[seller.id].length < 11) {
+      livingSquads[seller.id] = getOrInitializeAiClubSquad(seller, season, livingSquads);
+    }
+
+    const sellerSquad = livingSquads[seller.id];
+    // Pick eligible players from seller: not user's player, not already transferred in this batch
+    const alreadyTransferredIds = new Set(completedTransfers.map((t) => t.playerId));
+    const eligiblePlayers = sellerSquad.filter(
+      (p) => !userPlayerIdSet.has(p.id) && !alreadyTransferredIds.has(p.id)
+    );
+
+    if (eligiblePlayers.length === 0) continue;
+
+    // Filter by buyer tier ambitions:
+    // Tier 1 buyers: 82 - 92 rating
+    // Tier 2 buyers: 78 - 85 rating
+    // Tier 3 buyers: 74 - 81 rating
+    let targeted = eligiblePlayers.filter((p) => {
+      if (buyer.tier === 'elite') return p.rating >= 81;
+      if (buyer.tier === 'upper' || buyer.tier === 'mid') return p.rating >= 77 && p.rating <= 86;
+      return p.rating <= 82;
+    });
+
+    if (targeted.length === 0) {
+      targeted = eligiblePlayers;
+    }
+
+    const pickedPlayer = targeted[Math.floor(Math.random() * targeted.length)];
+
+    // Compute realistic transfer fee
+    const feeMultiplier = isDeadline ? 1.15 + Math.random() * 0.35 : 0.95 + Math.random() * 0.3;
+    const transferFee = Math.round(pickedPlayer.value * feeMultiplier);
+
+    // Remove player from seller squad
+    livingSquads[seller.id] = sellerSquad.filter((p) => p.id !== pickedPlayer.id);
+
+    // Transferred player data
+    const wageMultiplier = 1.1 + Math.random() * 0.25;
+    const newWage = Math.round((pickedPlayer.wageWeekly || 35000) * wageMultiplier);
+    const transferredPlayer: CareerPlayer = {
+      ...pickedPlayer,
+      club: buyer.id,
+      wageWeekly: newWage,
+      contractYears: 3 + Math.floor(Math.random() * 2),
+      morale: 90,
+      fitness: 100,
+    };
+
+    // Add to buyer squad
+    livingSquads[buyer.id] = [...livingSquads[buyer.id], transferredPlayer];
+
+    const record: TransferRecord = {
+      id: `tx_${Date.now()}_${Math.random().toString(36).substring(2, 7)}_${step}`,
+      playerId: transferredPlayer.id,
+      playerName: transferredPlayer.name,
+      rating: transferredPlayer.rating,
+      position: transferredPlayer.position,
+      fromClubName: seller.defaultName,
+      toClubName: buyer.defaultName,
+      fee: transferFee,
+      wage: newWage,
+      date: txDate,
+      type: 'ai_transfer',
+    };
+
+    completedTransfers.push(record);
+
+    const feeFormatted = `£${(transferFee / 1_000_000).toFixed(1)}M`;
+    const headline = `${buyer.shortName} complete ${feeFormatted} capture of ${transferredPlayer.name} (${transferredPlayer.position} • ${transferredPlayer.rating} OVR) from ${seller.shortName}!`;
+    headlines.push(headline);
+  }
+
+  // Update save file with living squads and world transfers
+  const updatedWorldTransfers = [
+    ...completedTransfers,
+    ...(save.worldTransfersHistory || []),
+  ].slice(0, 200);
+
+  let updatedSave: CareerSaveFile = {
+    ...save,
+    aiClubSquads: livingSquads,
+    worldTransfersHistory: updatedWorldTransfers,
+  };
+
+  // If there are blockbuster transfers (fee >= £40M or rating >= 85), generate an Inbox announcement
+  const marqueeDeals = completedTransfers.filter(
+    (t) => t.fee >= 40_000_000 || t.rating >= 85
+  );
+
+  if (marqueeDeals.length > 0) {
+    const topDeal = marqueeDeals.sort((a, b) => b.fee - a.fee)[0];
+    const topFeeFormatted = `£${(topDeal.fee / 1_000_000).toFixed(1)}M`;
+    updatedSave = addInboxMessage(updatedSave, {
+      date: txDate,
+      sender: 'Transfer Market Intelligence',
+      senderRole: 'Chief Scout Dossier',
+      subject: `🚨 Blockbuster Deal: ${topDeal.playerName} signs for ${topDeal.toClubName} (${topFeeFormatted})`,
+      body: `Manager,\n\nOur European scouting network reports a major confirmed transfer in the market.\n\n${topDeal.toClubName} have finalized the marquee signing of ${topDeal.playerName} (${topDeal.position} • ${topDeal.rating} OVR) from ${topDeal.fromClubName} for a verified package of ${topFeeFormatted}.\n\nThis move reshapes the competitive balance in the league. Inspect the updated World Transfer Feed to monitor rivals' squad developments.`,
+      type: 'transfer',
+      isRead: false,
+      priority: 'normal',
+      actionLabel: 'View Transfer Hub',
+      actionTab: 'transfers',
+    });
+  }
+
+  return {
+    updatedSave,
+    completedTransfers,
+    headlines,
   };
 }

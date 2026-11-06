@@ -495,7 +495,7 @@ export interface TransferRecord {
   fee: number;
   wage: number;
   date: string;
-  type: 'signing' | 'sale';
+  type: 'signing' | 'sale' | 'ai_transfer';
   sellOnPercent?: number;
   appearanceMilestoneFee?: number;
   appearanceThreshold?: number;
@@ -704,6 +704,8 @@ export interface CareerSaveFile {
   cups?: Record<string, CupTournament>;
   trophies: TrophyRecord[];
   transfersHistory?: TransferRecord[];
+  worldTransfersHistory?: TransferRecord[];
+  aiClubSquads?: Record<string, CareerPlayer[]>;
   incomingOffers?: IncomingTransferOffer[];
   shortlistPlayerIds?: string[];
   youthAcademy?: YouthProspect[];

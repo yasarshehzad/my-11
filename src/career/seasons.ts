@@ -17,7 +17,7 @@ import { generateRoundRobinFixtures } from './calendar';
 import { initializeSeasonCups, autoResolvePendingCupFixtures } from './cups';
 import { simulateMatchFixture } from './sim';
 import { applySeasonalPlayerProgression, generateYouthIntake, ProgressionReport } from './youthAcademy';
-import { generateIncomingAiBids } from './transfers';
+import { generateIncomingAiBids, simulateAiToAiTransfers } from './transfers';
 import { formatCareerCurrency } from './formatters';
 import { getRegisteredSeniorPlayerIds } from './squad';
 import { getLeagueLeaderboards } from './playerStats';
@@ -342,6 +342,12 @@ export function advanceToNextSeason(save: CareerSaveFile): {
     nextYearStart
   );
 
+  // 8. Simulate active summer transfers between rival AI clubs for the upcoming season
+  const summerTransfersRes = simulateAiToAiTransfers(save, {
+    dealCount: 6,
+    date: `${nextYearStart}-07-15`,
+  });
+
   const updatedSave: CareerSaveFile = {
     ...save,
     season: {
@@ -363,7 +369,9 @@ export function advanceToNextSeason(save: CareerSaveFile): {
     trophies: updatedTrophies,
     finances: updatedFinances,
     boardStatus: updatedBoardStatus,
-    inbox: [newInboxMsg, ...(save.inbox || [])],
+    inbox: [newInboxMsg, ...(summerTransfersRes.updatedSave.inbox || [])],
+    aiClubSquads: summerTransfersRes.updatedSave.aiClubSquads,
+    worldTransfersHistory: summerTransfersRes.updatedSave.worldTransfersHistory,
     incomingOffers: generateIncomingAiBids({
       ...save,
       squad: summerRecoveredSquad,
