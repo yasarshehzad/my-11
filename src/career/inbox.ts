@@ -100,6 +100,17 @@ export function classifyInboxMessage(
     };
   }
 
+  // Scouting Reports
+  if (message.type === 'scouting') {
+    return {
+      classification: message.priority === 'urgent' ? 'important' : 'info',
+      isResolved: true,
+      effectiveActionLabel: message.actionLabel || 'View Scouting Hub',
+      effectiveActionTab: 'transfers',
+      effectiveActionType: 'open_scouting',
+    };
+  }
+
   // 3. Medical / Injury Reports
   if (message.type === 'injury') {
     // Check if a specific player was targeted

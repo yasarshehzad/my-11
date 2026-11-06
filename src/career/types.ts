@@ -724,7 +724,8 @@ export type ActionType =
   | 'deadline_clock'
   | 'open_transfers'
   | 'open_cups'
-  | 'squad_registration';
+  | 'squad_registration'
+  | 'open_scouting';
 
 export interface ManagerMessage {
   id: string;
@@ -733,7 +734,7 @@ export interface ManagerMessage {
   senderRole?: string;
   subject: string;
   body: string;
-  type: 'match_report' | 'injury' | 'transfer' | 'board' | 'cup_draw' | 'international' | 'system';
+  type: 'match_report' | 'injury' | 'transfer' | 'board' | 'cup_draw' | 'international' | 'system' | 'scouting';
   isRead: boolean;
   priority?: 'normal' | 'urgent';
   classification?: MessageClassification;
@@ -801,6 +802,96 @@ export interface CareerSaveFile {
   preseasonState?: PreseasonState;
   fixtureReleaseState?: FixtureReleaseState;
   europeanLeaguePhaseState?: EuropeanLeaguePhaseState;
+  tactics?: ClubTactics;
+  scoutingState?: CareerScoutingState;
+}
+
+export type TacticalPhilosophyType =
+  | 'balanced'
+  | 'gegenpress'
+  | 'tiki_taka'
+  | 'counter_attack'
+  | 'wing_play'
+  | 'catenaccio';
+
+export interface TacticalPhilosophyConfig {
+  type: TacticalPhilosophyType;
+  name: string;
+  tagline: string;
+  description: string;
+  icon: string;
+  primaryAttributes: string[];
+  strengths: string[];
+  vulnerabilities: string[];
+  staminaDrainMultiplier: number;
+  possessionBias: number;
+  chanceCreationModifier: number;
+  counteredBy: TacticalPhilosophyType;
+  effectiveAgainst: TacticalPhilosophyType;
+}
+
+export interface ClubTactics {
+  philosophy: TacticalPhilosophyType;
+  familiarity: number; // 0 to 100
+  captainId?: string;
+  viceCaptainId?: string;
+  pressingIntensity?: 'low' | 'balanced' | 'high';
+  passingStyle?: 'short' | 'mixed' | 'direct';
+  tempo?: 'slow' | 'standard' | 'high';
+}
+
+export type ScoutingRegion =
+  | 'south_america'
+  | 'central_europe'
+  | 'uk_domestic'
+  | 'scandinavia_east';
+
+export type ScoutingTargetProfile =
+  | 'wonderkid'
+  | 'starter'
+  | 'bargain_expiring'
+  | 'physical_power';
+
+export interface DiscoveredScoutingProspect {
+  playerId: string;
+  name: string;
+  position: string;
+  age: number;
+  rating: number;
+  potential: number;
+  club: string;
+  estimatedValue: number;
+  wageWeekly: number;
+  scoutNotes: string;
+  pros: string[];
+  cons: string[];
+  recommendedAction: 'sign_immediately' | 'monitor_closely' | 'loan_target' | 'pass';
+}
+
+export interface ScoutingDossierReport {
+  id: string;
+  missionId: string;
+  date: string;
+  region: ScoutingRegion;
+  targetProfile: ScoutingTargetProfile;
+  scoutName: string;
+  prospects: DiscoveredScoutingProspect[];
+}
+
+export interface ActiveScoutingMission {
+  id: string;
+  scoutName: string;
+  region: ScoutingRegion;
+  targetProfile: ScoutingTargetProfile;
+  startDate: string;
+  completionDate: string;
+  cost: number;
+  completed: boolean;
+}
+
+export interface CareerScoutingState {
+  activeMissions: ActiveScoutingMission[];
+  scoutingDossiers?: ScoutingDossierReport[];
 }
 
 export type DeadlineDayPhase = 'morning' | 'afternoon' | 'evening' | 'deadline' | 'closed';

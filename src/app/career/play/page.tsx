@@ -90,6 +90,7 @@ import {
 } from '../../../career/transfers';
 import { updatePlayerForm, applyInSeasonMatchProgression } from '../../../career/formAndProgression';
 import { applySimulatedMatchSquadImpact } from '../../../career/matchEngine';
+import { updateTacticalFamiliarity, getInitialClubTactics } from '../../../career/tactics';
 
 function formatOrdinalRank(n: number): string {
   const s = ['th', 'st', 'nd', 'rd'];
@@ -596,7 +597,7 @@ function CareerPlayHubContent() {
     ? (rawTab as 'overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings')
     : 'overview';
   const [activeTab, setActiveTab] = useState<'overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings'>(initialTab);
-  const [squadInitialViewMode, setSquadInitialViewMode] = useState<'pitch' | 'list' | 'academy' | 'training'>('pitch');
+  const [squadInitialViewMode, setSquadInitialViewMode] = useState<'pitch' | 'list' | 'academy' | 'training' | 'tactics'>('pitch');
   const [tabHistory, setTabHistory] = useState<('overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings')[]>([]);
   const [showExitConfirmModal, setShowExitConfirmModal] = useState(false);
   const [showBoardDossierModal, setShowBoardDossierModal] = useState(false);
@@ -627,7 +628,7 @@ function CareerPlayHubContent() {
   const [fastForwardUsePreferredEleven, setFastForwardUsePreferredEleven] = useState(true);
   const [fastForwardHaltOnTransferMilestone, setFastForwardHaltOnTransferMilestone] = useState<'deadline' | 'window_open_or_close' | 'none'>('deadline');
   const [showSeasonReviewModal, setShowSeasonReviewModal] = useState(false);
-  const [transferHubSubTab, setTransferHubSubTab] = useState<'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board'>('market');
+  const [transferHubSubTab, setTransferHubSubTab] = useState<'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board' | 'scouting'>('market');
   const [focusedOfferId, setFocusedOfferId] = useState<string | undefined>(undefined);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [activeCelebration, setActiveCelebration] = useState<CelebrationEvent | null>(null);
@@ -1002,8 +1003,11 @@ function CareerPlayHubContent() {
       navigateToSection('cups', undefined, alert.targetId ? `cup-tournament-${alert.targetId}` : 'tournament-desk-section');
     } else if (alert.actionType === 'respond_board') {
       navigateToSection('transfers', 'board', 'board-room-section');
+    } else if (alert.actionType === 'open_scouting') {
+      navigateToSection('transfers', 'scouting', 'transfer-scouting-section');
     } else if (alert.actionTab) {
-      navigateToSection(alert.actionTab as typeof activeTab, alert.actionTab === 'transfers' ? 'market' : undefined);
+      const targetSub = alert.actionTab === 'transfers' ? 'market' : undefined;
+      navigateToSection(alert.actionTab as typeof activeTab, targetSub);
     }
   };
 
@@ -1390,6 +1394,11 @@ function CareerPlayHubContent() {
         trophies,
         finances,
         squad: updatedSquad,
+        tactics: updateTacticalFamiliarity(
+          save.tactics || getInitialClubTactics(save.squad),
+          true,
+          save.trainingState?.teamFocus
+        ),
       };
 
       setInstantSimLoadingData({
@@ -1448,6 +1457,11 @@ function CareerPlayHubContent() {
       fixtures: updatedFixtures,
       standings: updatedStandings,
       squad: updatedSquad,
+      tactics: updateTacticalFamiliarity(
+        save.tactics || getInitialClubTactics(save.squad),
+        true,
+        save.trainingState?.teamFocus
+      ),
     };
 
     updatedSave = applyMatchdayFinancials(updatedSave, leagueFix, isUserHome, 'league');

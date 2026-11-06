@@ -10,7 +10,17 @@ import {
   TeamTrainingFocus,
   MentorshipDrill,
   TrainingProgramState,
+  TacticalPhilosophyType,
+  ClubTactics,
 } from '../../career/types';
+import {
+  TACTICAL_PHILOSOPHIES,
+  getTacticalPhilosophy,
+  getPhilosophyDepartmentBonus,
+  calculateCaptaincyEffects,
+  calculateDressingRoomHarmony,
+  getInitialClubTactics,
+} from '../../career/tactics';
 import {
   validateSquad,
   categorizePosition,
@@ -100,7 +110,7 @@ interface SquadManagementProps {
   onUpdateSave: (updated: CareerSaveFile) => void;
   onOpenCompare?: (playerA: CareerPlayer, playerB?: CareerPlayer) => void;
   onNotification?: (msg: string) => void;
-  initialViewMode?: 'pitch' | 'list' | 'academy' | 'training';
+  initialViewMode?: 'pitch' | 'list' | 'academy' | 'training' | 'tactics';
 }
 
 export function SquadManagement({
@@ -110,7 +120,7 @@ export function SquadManagement({
   onNotification,
   initialViewMode = 'pitch',
 }: SquadManagementProps) {
-  const [viewMode, setViewMode] = useState<'pitch' | 'list' | 'academy' | 'training'>(initialViewMode);
+  const [viewMode, setViewMode] = useState<'pitch' | 'list' | 'academy' | 'training' | 'tactics'>(initialViewMode);
   const [rotationFeedback, setRotationFeedback] = useState<SquadRotationResult | null>(null);
   const [trainingSessionResults, setTrainingSessionResults] = useState<WeeklyTrainingResult | null>(null);
 
@@ -268,6 +278,62 @@ export function SquadManagement({
   const startingXiAvg = starters.length > 0
     ? Math.round((startingXiRatingSum / starters.length) * 10) / 10
     : 0;
+
+  // Tactical Philosophy & Captaincy Leadership state
+  const currentTactics: ClubTactics = save.tactics || getInitialClubTactics(squad);
+  const captainPlayer = squad.find((p) => p.id === currentTactics.captainId) || null;
+  const viceCaptainPlayer = squad.find((p) => p.id === currentTactics.viceCaptainId) || null;
+  const captaincyEffects = calculateCaptaincyEffects(squad, currentTactics.captainId, currentTactics.viceCaptainId);
+  const dressingRoomHarmony = calculateDressingRoomHarmony(squad, currentTactics.captainId);
+  const philosophyBonus = getPhilosophyDepartmentBonus(currentTactics, starters);
+
+  const handleSelectPhilosophy = (philosophy: TacticalPhilosophyType) => {
+    const isNew = philosophy !== currentTactics.philosophy;
+    const updatedTactics: ClubTactics = {
+      ...currentTactics,
+      philosophy,
+      familiarity: isNew ? Math.max(50, Math.round(currentTactics.familiarity * 0.85)) : currentTactics.familiarity,
+    };
+    onUpdateSave({
+      ...save,
+      tactics: updatedTactics,
+    });
+    if (onNotification) {
+      onNotification(`Tactical Philosophy shifted to ${TACTICAL_PHILOSOPHIES[philosophy].name}.`);
+    }
+  };
+
+  const handleSetCaptain = (captainId: string) => {
+    const updatedTactics: ClubTactics = {
+      ...currentTactics,
+      captainId,
+      viceCaptainId: currentTactics.viceCaptainId === captainId ? undefined : currentTactics.viceCaptainId,
+    };
+    onUpdateSave({
+      ...save,
+      tactics: updatedTactics,
+    });
+    const cap = squad.find((p) => p.id === captainId);
+    if (onNotification && cap) {
+      onNotification(`${cap.name} appointed as Club Captain.`);
+    }
+  };
+
+  const handleSetViceCaptain = (viceCaptainId: string) => {
+    const updatedTactics: ClubTactics = {
+      ...currentTactics,
+      viceCaptainId,
+      captainId: currentTactics.captainId === viceCaptainId ? undefined : currentTactics.captainId,
+    };
+    onUpdateSave({
+      ...save,
+      tactics: updatedTactics,
+    });
+    const vc = squad.find((p) => p.id === viceCaptainId);
+    if (onNotification && vc) {
+      onNotification(`${vc.name} appointed as Vice-Captain.`);
+    }
+  };
 
   // Formation config
   const activeFormationConfig =
@@ -895,6 +961,30 @@ export function SquadManagement({
           </button>
           <button
             onClick={() => {
+              if (viewMode === 'tactics') {
+                window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+              } else {
+                setViewMode('tactics');
+                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+              }
+            }}
+            className={`py-1 px-2.5 rounded-lg text-xs font-display font-black uppercase transition-all flex items-center gap-1 cursor-pointer ${
+              viewMode === 'tactics'
+                ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-xs'
+                : 'office-nav-tab-inactive'
+            }`}
+          >
+            <span>Tactics &amp; DNA</span>
+            <span
+              className={`text-[9.5px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                viewMode === 'tactics' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+              }`}
+            >
+              {currentTactics.familiarity}%
+            </span>
+          </button>
+          <button
+            onClick={() => {
               if (viewMode === 'academy') {
                 window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
               } else {
@@ -1283,6 +1373,22 @@ export function SquadManagement({
                             className="hover:text-blue-500 text-left font-display font-black text-sm flex items-center gap-1.5 flex-wrap cursor-pointer"
                           >
                             <span>{player.name}</span>
+                            {player.id === currentTactics.captainId && (
+                              <span
+                                className="text-[9px] px-1.5 py-0.2 rounded bg-amber-400 text-slate-950 border border-amber-500 font-bold font-display"
+                                title="Club Captain (C)"
+                              >
+                                (C)
+                              </span>
+                            )}
+                            {player.id === currentTactics.viceCaptainId && (
+                              <span
+                                className="text-[9px] px-1.5 py-0.2 rounded bg-slate-300 text-slate-900 border border-slate-400 font-bold font-display"
+                                title="Vice-Captain (VC)"
+                              >
+                                (VC)
+                              </span>
+                            )}
                             {player.age <= 23 && (
                               <span className="text-[9px] px-1 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800/60 font-mono">
                                 U23
@@ -1485,7 +1591,410 @@ export function SquadManagement({
         </section>
       )}
 
-      {/* YOUTH ACADEMY VIEW */}
+      {/* TACTICAL PHILOSOPHIES & MANAGERIAL DNA VIEW */}
+      {viewMode === 'tactics' && (
+        <section id="squad-tactics-section" className="space-y-6 scroll-mt-20 animate-fade-in" aria-label="Tactical DNA & Managerial Identity">
+          {/* Hero Banner: Identity & Familiarity */}
+          <div className="office-subcard p-5 sm:p-6 rounded-3xl space-y-4 shadow-sm border border-slate-200/90 bg-gradient-to-br from-white via-slate-50/50 to-blue-50/30">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{getTacticalPhilosophy(currentTactics.philosophy).icon}</span>
+                  <h3 className="text-lg sm:text-xl font-display font-black text-[#0b1536] uppercase tracking-tight">
+                    {getTacticalPhilosophy(currentTactics.philosophy).name}
+                  </h3>
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200">
+                    Active Philosophy
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 font-medium max-w-2xl leading-relaxed">
+                  {getTacticalPhilosophy(currentTactics.philosophy).description}
+                </p>
+              </div>
+
+              {/* Tactical Familiarity Gauge */}
+              <div className="bg-white/90 backdrop-blur-xs p-3.5 rounded-2xl border border-slate-200 shadow-2xs min-w-[220px] space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-display font-black uppercase text-slate-600 tracking-wider">Tactical Familiarity</span>
+                  <span className="font-mono font-black text-sm text-blue-700">{currentTactics.familiarity}%</span>
+                </div>
+                <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-slate-200">
+                  <div
+                    className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-teal-500 via-blue-600 to-indigo-600"
+                    style={{ width: `${currentTactics.familiarity}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-[10px] text-slate-500 font-medium">
+                  <span>60% Synergy Threshold</span>
+                  <span>{currentTactics.familiarity >= 80 ? '⭐ Fluent' : currentTactics.familiarity >= 60 ? '✓ Acclimated' : '⚠️ Adapting'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Live Starting XI Synergy Status */}
+            <div className={`p-4 rounded-2xl border transition-all ${
+              philosophyBonus.synergyActive
+                ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
+                : 'bg-amber-50/70 border-amber-200 text-amber-950'
+            }`}>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{philosophyBonus.synergyActive ? '🔥' : '⏳'}</span>
+                  <div>
+                    <h4 className="font-display font-black text-xs sm:text-sm uppercase tracking-wider">
+                      Starting XI Tactical Synergy: {philosophyBonus.synergyActive ? 'Activated' : 'Building Requirements'}
+                    </h4>
+                    <p className="text-xs opacity-90 mt-0.5">
+                      {philosophyBonus.description}
+                    </p>
+                  </div>
+                </div>
+
+                {philosophyBonus.synergyActive && (
+                  <div className="flex items-center gap-2 shrink-0">
+                    {philosophyBonus.attackBonus > 0 && (
+                      <span className="px-2 py-1 rounded-lg bg-emerald-600 text-white font-mono font-bold text-xs shadow-2xs">
+                        +{philosophyBonus.attackBonus} ATT
+                      </span>
+                    )}
+                    {philosophyBonus.midfieldBonus > 0 && (
+                      <span className="px-2 py-1 rounded-lg bg-blue-600 text-white font-mono font-bold text-xs shadow-2xs">
+                        +{philosophyBonus.midfieldBonus} MID
+                      </span>
+                    )}
+                    {philosophyBonus.defenceBonus > 0 && (
+                      <span className="px-2 py-1 rounded-lg bg-indigo-600 text-white font-mono font-bold text-xs shadow-2xs">
+                        +{philosophyBonus.defenceBonus} DEF
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Tactical Philosophies Grid */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <h4 className="text-sm font-display font-black uppercase tracking-wider text-[#0b1536] flex items-center gap-1.5">
+                <span>🧠</span>
+                <span>Managerial Philosophies &amp; DNA Archetypes</span>
+              </h4>
+              <span className="text-xs text-slate-500 font-medium hidden sm:inline">
+                Click an archetype to establish club tactical identity
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+              {(Object.keys(TACTICAL_PHILOSOPHIES) as TacticalPhilosophyType[]).map((type) => {
+                const config = TACTICAL_PHILOSOPHIES[type];
+                const isSelected = currentTactics.philosophy === type;
+
+                return (
+                  <article
+                    key={type}
+                    onClick={() => handleSelectPhilosophy(type)}
+                    className={`office-subcard p-4 sm:p-5 rounded-3xl transition-all cursor-pointer relative flex flex-col justify-between min-h-[260px] ${
+                      isSelected
+                        ? 'border-2 border-blue-600 bg-gradient-to-br from-blue-50/60 via-white to-indigo-50/40 shadow-md ring-2 ring-blue-500/20'
+                        : 'border border-slate-200/90 bg-white hover:border-blue-300 hover:shadow-xs'
+                    }`}
+                  >
+                    <div className="space-y-2.5">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">{config.icon}</span>
+                          <div>
+                            <h5 className="font-display font-black text-sm sm:text-base text-[#0b1536] leading-tight">
+                              {config.name}
+                            </h5>
+                            <span className="text-[10px] text-slate-500 font-medium line-clamp-1">
+                              {config.tagline}
+                            </span>
+                          </div>
+                        </div>
+
+                        {isSelected ? (
+                          <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white font-display font-black text-[10px] uppercase tracking-wider shadow-2xs">
+                            Active
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            className="px-2 py-0.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-display font-black text-[10px] uppercase tracking-wider transition-colors"
+                          >
+                            Adopt
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Required Attributes */}
+                      <div className="bg-slate-50 p-2 rounded-xl border border-slate-150">
+                        <span className="text-[9px] uppercase font-bold text-slate-500 block mb-1">Squad Attributes Demanded:</span>
+                        <div className="flex flex-wrap gap-1">
+                          {config.primaryAttributes.map((attr, idx) => (
+                            <span key={idx} className="text-[10px] px-1.5 py-0.2 rounded bg-white text-slate-700 border border-slate-200 font-bold">
+                              {attr}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Matchup Traits */}
+                      <div className="space-y-1 text-xs">
+                        <div className="flex justify-between text-slate-600 text-[11px]">
+                          <span>Stamina Expenditure:</span>
+                          <span className={`font-mono font-bold ${
+                            config.staminaDrainMultiplier > 1.15
+                              ? 'text-rose-600'
+                              : config.staminaDrainMultiplier < 0.95
+                              ? 'text-emerald-600'
+                              : 'text-slate-700'
+                          }`}>
+                            {config.staminaDrainMultiplier}x {config.staminaDrainMultiplier > 1.15 ? '(Heavy drain)' : config.staminaDrainMultiplier < 0.95 ? '(Conserves)' : '(Standard)'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-slate-600 text-[11px]">
+                          <span>Territorial Possession:</span>
+                          <span className="font-mono font-bold text-slate-700">
+                            {config.possessionBias > 0 ? `+${config.possessionBias}%` : config.possessionBias < 0 ? `${config.possessionBias}%` : 'Even'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Counter Dynamics Footer */}
+                    <div className="pt-3 border-t border-slate-100 mt-2 flex justify-between items-center text-[10px] text-slate-500">
+                      <span>🎯 Counters: <strong className="text-slate-700 capitalize">{config.effectiveAgainst.replace(/_/g, ' ')}</strong></span>
+                      <span>⚠️ Weak to: <strong className="text-slate-700 capitalize">{config.counteredBy.replace(/_/g, ' ')}</strong></span>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Captaincy & Leadership Desk */}
+          <div className="office-subcard p-5 sm:p-6 rounded-3xl space-y-4 shadow-sm border border-slate-200/90 bg-white">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🏆</span>
+                <h4 className="text-base font-display font-black uppercase tracking-wider text-[#0b1536]">
+                  Club Captaincy &amp; Leadership Composure
+                </h4>
+              </div>
+              <span className="text-xs text-slate-500 font-medium hidden sm:inline">
+                Designated armband wearers inspire squad composure in late stages &amp; shootouts
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Captain Selection */}
+              <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-3">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-1.5">
+                    <span className="px-2 py-0.5 rounded bg-amber-400 text-slate-950 font-display font-black text-xs border border-amber-500 shadow-2xs">
+                      C
+                    </span>
+                    <span className="font-display font-black text-xs uppercase tracking-wider text-slate-700">
+                      Club Captain
+                    </span>
+                  </div>
+                  {captainPlayer && (
+                    <span className="text-xs font-bold text-slate-500">
+                      {captainPlayer.position} • {captainPlayer.rating} OVR • Age {captainPlayer.age}
+                    </span>
+                  )}
+                </div>
+
+                <select
+                  aria-label="Appoint Club Captain"
+                  value={currentTactics.captainId || ''}
+                  onChange={(e) => handleSetCaptain(e.target.value)}
+                  className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-xs font-display font-bold text-[#0b1536] cursor-pointer focus:border-blue-500 focus:outline-hidden shadow-2xs"
+                >
+                  {squad.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({p.position}, {p.rating} OVR, Age {p.age})
+                    </option>
+                  ))}
+                </select>
+
+                {/* Captaincy Composure Aura */}
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200 space-y-1.5">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-500 font-medium">Leadership Authority:</span>
+                    <span className="font-mono font-black text-blue-700">{captaincyEffects.leadershipScore} / 99</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-500 font-medium">Late-Match Composure Aura:</span>
+                    <span className={`font-mono font-black ${
+                      captaincyEffects.composureBonus > 0
+                        ? 'text-emerald-600'
+                        : captaincyEffects.composureBonus < 0
+                        ? 'text-rose-600'
+                        : 'text-slate-600'
+                    }`}>
+                      {captaincyEffects.composureBonus > 0 ? `+${captaincyEffects.composureBonus}%` : `${captaincyEffects.composureBonus}%`}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 leading-snug pt-1 border-t border-slate-100">
+                    {captaincyEffects.rallyEffect}
+                  </p>
+                </div>
+              </div>
+
+              {/* Vice-Captain Selection */}
+              <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-3">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-1.5">
+                    <span className="px-2 py-0.5 rounded bg-slate-300 text-slate-900 font-display font-black text-xs border border-slate-400 shadow-2xs">
+                      VC
+                    </span>
+                    <span className="font-display font-black text-xs uppercase tracking-wider text-slate-700">
+                      Vice-Captain
+                    </span>
+                  </div>
+                  {viceCaptainPlayer && (
+                    <span className="text-xs font-bold text-slate-500">
+                      {viceCaptainPlayer.position} • {viceCaptainPlayer.rating} OVR • Age {viceCaptainPlayer.age}
+                    </span>
+                  )}
+                </div>
+
+                <select
+                  aria-label="Appoint Vice-Captain"
+                  value={currentTactics.viceCaptainId || ''}
+                  onChange={(e) => handleSetViceCaptain(e.target.value)}
+                  className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-xs font-display font-bold text-[#0b1536] cursor-pointer focus:border-blue-500 focus:outline-hidden shadow-2xs"
+                >
+                  <option value="">None Designated</option>
+                  {squad
+                    .filter((p) => p.id !== currentTactics.captainId)
+                    .map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({p.position}, {p.rating} OVR, Age {p.age})
+                      </option>
+                    ))}
+                </select>
+
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200 text-[11px] text-slate-600 leading-relaxed">
+                  The vice-captain assumes leadership composure duties if the captain is substituted, injured, or sent off mid-match. Appoint a respected midfield or defensive anchor.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Dressing Room Dynamics & Harmony */}
+          <div className="office-subcard p-5 sm:p-6 rounded-3xl space-y-4 shadow-sm border border-slate-200/90 bg-white">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🤝</span>
+                <div>
+                  <h4 className="text-base font-display font-black uppercase tracking-wider text-[#0b1536]">
+                    Dressing Room Harmony &amp; Social Hierarchy
+                  </h4>
+                  <span className="text-xs text-slate-500 font-medium">
+                    Player satisfaction, morale cohesion, and squad influence tiers
+                  </span>
+                </div>
+              </div>
+
+              {/* Harmony Status Pill */}
+              <div className="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
+                <span className="text-xs font-bold text-slate-600">Harmony Index:</span>
+                <span className="font-mono font-black text-sm text-blue-700">{dressingRoomHarmony.harmonyIndex}%</span>
+                <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase font-display ${
+                  dressingRoomHarmony.status === 'ecstatic'
+                    ? 'bg-emerald-600 text-white'
+                    : dressingRoomHarmony.status === 'united'
+                    ? 'bg-blue-600 text-white'
+                    : dressingRoomHarmony.status === 'content'
+                    ? 'bg-slate-700 text-white'
+                    : 'bg-rose-600 text-white'
+                }`}>
+                  {dressingRoomHarmony.statusLabel}
+                </span>
+              </div>
+            </div>
+
+            {/* Hierarchy Columns */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {/* Leaders */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-display font-black uppercase text-slate-700 flex items-center gap-1">
+                    <span>👑</span>
+                    <span>Team Leaders ({dressingRoomHarmony.leaders.length})</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400">Primary Voice</span>
+                </div>
+                <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                  {dressingRoomHarmony.leaders.map((p) => (
+                    <div key={p.id} className="p-2 rounded-xl bg-white border border-slate-200/90 flex justify-between items-center text-xs">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        {p.id === currentTactics.captainId && (
+                          <span className="px-1 py-0.2 rounded bg-amber-400 text-slate-950 font-black text-[8px]">C</span>
+                        )}
+                        <span className="font-bold text-[#0b1536] truncate">{p.name}</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-slate-500 shrink-0">{p.rating} OVR • {p.morale ?? 85}% Morale</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Influential Core */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-display font-black uppercase text-slate-700 flex items-center gap-1">
+                    <span>⭐</span>
+                    <span>Influential Core ({dressingRoomHarmony.influential.length})</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400">First-Team Regulars</span>
+                </div>
+                <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                  {dressingRoomHarmony.influential.slice(0, 7).map((p) => (
+                    <div key={p.id} className="p-2 rounded-xl bg-white border border-slate-200/90 flex justify-between items-center text-xs">
+                      <span className="font-bold text-[#0b1536] truncate">{p.name}</span>
+                      <span className="text-[10px] font-mono text-slate-500 shrink-0">{p.position} • {p.morale ?? 85}%</span>
+                    </div>
+                  ))}
+                  {dressingRoomHarmony.influential.length > 7 && (
+                    <div className="text-[10px] text-center text-slate-500 font-medium pt-1">
+                      +{dressingRoomHarmony.influential.length - 7} other core players
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Fringe Players */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-display font-black uppercase text-slate-700 flex items-center gap-1">
+                    <span>👥</span>
+                    <span>Fringe &amp; Youth ({dressingRoomHarmony.fringe.length})</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400">Rotation &amp; Development</span>
+                </div>
+                <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                  {dressingRoomHarmony.fringe.slice(0, 7).map((p) => (
+                    <div key={p.id} className="p-2 rounded-xl bg-white border border-slate-200/90 flex justify-between items-center text-xs">
+                      <span className="font-medium text-[#0b1536] truncate">{p.name}</span>
+                      <span className="text-[10px] font-mono text-slate-500 shrink-0">{p.age}y • {p.morale ?? 85}%</span>
+                    </div>
+                  ))}
+                  {dressingRoomHarmony.fringe.length > 7 && (
+                    <div className="text-[10px] text-center text-slate-500 font-medium pt-1">
+                      +{dressingRoomHarmony.fringe.length - 7} other squad players
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
       {viewMode === 'academy' && (
         <section className="space-y-6" aria-label="Youth Academy">
           {/* Academy Status & Scout Action Banner */}
@@ -2945,6 +3454,22 @@ export function SquadManagement({
             </span>
           </div>
           <div className="flex items-center gap-0.5">
+            {player.id === currentTactics.captainId && (
+              <span
+                className="px-1 py-0.2 rounded font-display font-black text-[8px] bg-amber-400 text-slate-950 border border-amber-500 shadow-2xs"
+                title="Club Captain (C)"
+              >
+                C
+              </span>
+            )}
+            {player.id === currentTactics.viceCaptainId && (
+              <span
+                className="px-1 py-0.2 rounded font-display font-black text-[8px] bg-slate-300 text-slate-900 border border-slate-400 shadow-2xs"
+                title="Vice-Captain (VC)"
+              >
+                VC
+              </span>
+            )}
             <span className={`px-1.5 py-0.5 rounded-md font-display font-black text-[10.5px] ${ratingBadgeClass}`}>
               {effectiveRating}
             </span>

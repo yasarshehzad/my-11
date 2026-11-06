@@ -13,7 +13,14 @@ import {
   GoalScorer,
   PenaltyKickAttempt,
   TeamTrainingFocus,
+  ClubTactics,
 } from './types';
+import {
+  getTacticalPhilosophy,
+  getPhilosophyDepartmentBonus,
+  calculateTacticalMatchupMultiplier,
+  calculateCaptaincyEffects,
+} from './tactics';
 import {
   categorizePosition,
   calculatePositionFit,
@@ -76,6 +83,8 @@ export interface MatchSimulationConfig {
   isNeutralVenue?: boolean;
   userClubId?: string;
   settings: CareerSettings;
+  homeTactics?: ClubTactics;
+  awayTactics?: ClubTactics;
 }
 
 export interface MatchSimulationResult {
@@ -182,6 +191,8 @@ export function calculateTeamDepartmentRatings(
     isNeutralVenue?: boolean;
     teamTalkBuff?: TeamTalkBuff;
     trainingFocus?: TeamTrainingFocus;
+    tactics?: ClubTactics;
+    opponentTactics?: ClubTactics;
   }
 ): DepartmentRatings {
   const normalizedStates: InGamePlayerState[] = states.map((s) => {
@@ -347,6 +358,26 @@ export function calculateTeamDepartmentRatings(
     attack -= 0.6;
   }
 
+  // Tactical Philosophy synergy & matchup multipliers
+  if (options.tactics) {
+    const activeStarters = active.map((s) => s.player);
+    const synergy = getPhilosophyDepartmentBonus(options.tactics, activeStarters);
+    if (synergy.synergyActive) {
+      attack += synergy.attackBonus;
+      midfield += synergy.midfieldBonus;
+      defense += synergy.defenceBonus;
+    }
+
+    if (options.opponentTactics) {
+      const matchup = calculateTacticalMatchupMultiplier(
+        options.tactics.philosophy,
+        options.opponentTactics.philosophy
+      );
+      attack *= matchup.userAttackMod;
+      defense *= matchup.userDefenceMod;
+    }
+  }
+
   const finalAttack = Math.round(clamp(attack, 45, 99) * 10) / 10;
   const finalMidfield = Math.round(clamp(midfield, 45, 99) * 10) / 10;
   const finalDefense = Math.round(clamp(defense, 45, 99) * 10) / 10;
@@ -439,6 +470,8 @@ export function createLiveMatchSession(
     isHome: true,
     isNeutralVenue: isNeutral,
     trainingFocus: config.homeTrainingFocus,
+    tactics: config.homeTactics,
+    opponentTactics: config.awayTactics,
   });
 
   const awayDeptRatings = calculateTeamDepartmentRatings(awayStates, {
@@ -448,6 +481,8 @@ export function createLiveMatchSession(
     isHome: false,
     isNeutralVenue: isNeutral,
     trainingFocus: config.awayTrainingFocus,
+    tactics: config.awayTactics,
+    opponentTactics: config.homeTactics,
   });
 
   return {
@@ -565,10 +600,16 @@ export function stepLiveMatchMinute(
   // 1. Drain stamina for on-pitch players each minute based on pressing intensity & recovery training focus
   const homeRecoveryMod = session.config.homeTrainingFocus === 'recovery' ? 0.82 : 1.0;
   const awayRecoveryMod = session.config.awayTrainingFocus === 'recovery' ? 0.82 : 1.0;
+  const homePhilosophyDrain = session.config.homeTactics?.philosophy
+    ? getTacticalPhilosophy(session.config.homeTactics.philosophy).staminaDrainMultiplier
+    : 1.0;
+  const awayPhilosophyDrain = session.config.awayTactics?.philosophy
+    ? getTacticalPhilosophy(session.config.awayTactics.philosophy).staminaDrainMultiplier
+    : 1.0;
   const homeDrainPerMin =
-    (homePressing === 'high_press' ? 0.21 : homePressing === 'low_block' ? 0.13 : 0.165) * homeRecoveryMod;
+    (homePressing === 'high_press' ? 0.21 : homePressing === 'low_block' ? 0.13 : 0.165) * homeRecoveryMod * homePhilosophyDrain;
   const awayDrainPerMin =
-    (awayPressing === 'high_press' ? 0.21 : awayPressing === 'low_block' ? 0.13 : 0.165) * awayRecoveryMod;
+    (awayPressing === 'high_press' ? 0.21 : awayPressing === 'low_block' ? 0.13 : 0.165) * awayRecoveryMod * awayPhilosophyDrain;
 
   for (const s of homeStates) {
     if (s.isOnPitch && !s.redCard) {
@@ -626,6 +667,8 @@ export function stepLiveMatchMinute(
     isNeutralVenue: session.config.isNeutralVenue,
     teamTalkBuff: session.homeTeamTalkBuff,
     trainingFocus: session.config.homeTrainingFocus,
+    tactics: session.config.homeTactics,
+    opponentTactics: session.config.awayTactics,
   });
 
   const awayDept = calculateTeamDepartmentRatings(awayStates, {
@@ -636,6 +679,8 @@ export function stepLiveMatchMinute(
     isNeutralVenue: session.config.isNeutralVenue,
     teamTalkBuff: session.awayTeamTalkBuff,
     trainingFocus: session.config.awayTrainingFocus,
+    tactics: session.config.awayTactics,
+    opponentTactics: session.config.homeTactics,
   });
 
   // 4. Minute possession & momentum calculation
@@ -692,7 +737,15 @@ export function stepLiveMatchMinute(
     const gkFace = awayGk.player.faceStats || calculateEaFcFaceStats(awayGk.player);
     const finishAdvantage = (shooterFace.sho - (gkFace.dri * 0.55 + gkFace.pac * 0.45)) * 0.003;
     const talkComposure = session.homeTeamTalkBuff ? (session.homeTeamTalkBuff.composureMod - 1) * 0.04 : 0;
-    const goalProb = clamp(shotXg * (0.94 + finishAdvantage + talkComposure), 0.025, 0.62);
+    const homeCapComposure =
+      nextMinute >= 85 && session.config.homeTactics?.captainId
+        ? calculateCaptaincyEffects(
+            homeStates.filter((s) => s.isOnPitch).map((s) => s.player),
+            session.config.homeTactics.captainId,
+            session.config.homeTactics.viceCaptainId
+          ).composureBonus * 0.004
+        : 0;
+    const goalProb = clamp(shotXg * (0.94 + finishAdvantage + talkComposure + homeCapComposure), 0.025, 0.62);
 
     const roll = Math.random();
     if (roll < goalProb) {
@@ -785,7 +838,15 @@ export function stepLiveMatchMinute(
     const gkFace = homeGk.player.faceStats || calculateEaFcFaceStats(homeGk.player);
     const finishAdvantage = (shooterFace.sho - (gkFace.dri * 0.55 + gkFace.pac * 0.45)) * 0.003;
     const talkComposure = session.awayTeamTalkBuff ? (session.awayTeamTalkBuff.composureMod - 1) * 0.04 : 0;
-    const goalProb = clamp(shotXg * (0.94 + finishAdvantage + talkComposure), 0.025, 0.62);
+    const awayCapComposure =
+      nextMinute >= 85 && session.config.awayTactics?.captainId
+        ? calculateCaptaincyEffects(
+            awayStates.filter((s) => s.isOnPitch).map((s) => s.player),
+            session.config.awayTactics.captainId,
+            session.config.awayTactics.viceCaptainId
+          ).composureBonus * 0.004
+        : 0;
+    const goalProb = clamp(shotXg * (0.94 + finishAdvantage + talkComposure + awayCapComposure), 0.025, 0.62);
 
     const roll = Math.random();
     if (roll < goalProb) {
@@ -1245,7 +1306,9 @@ export function simulatePenaltyShootoutDetailed(
   homeClub: Club,
   awayClub: Club,
   homeStates: InGamePlayerState[],
-  awayStates: InGamePlayerState[]
+  awayStates: InGamePlayerState[],
+  homeTactics?: ClubTactics,
+  awayTactics?: ClubTactics
 ): {
   homePenalties: number;
   awayPenalties: number;
@@ -1253,6 +1316,21 @@ export function simulatePenaltyShootoutDetailed(
 } {
   const homeOnPitch = homeStates.filter((s) => s.isOnPitch && !s.redCard);
   const awayOnPitch = awayStates.filter((s) => s.isOnPitch && !s.redCard);
+
+  const homeCapEffects = homeTactics?.captainId
+    ? calculateCaptaincyEffects(
+        homeStates.map((s) => s.player),
+        homeTactics.captainId,
+        homeTactics.viceCaptainId
+      )
+    : null;
+  const awayCapEffects = awayTactics?.captainId
+    ? calculateCaptaincyEffects(
+        awayStates.map((s) => s.player),
+        awayTactics.captainId,
+        awayTactics.viceCaptainId
+      )
+    : null;
 
   const homeGk =
     homeOnPitch.find((s) => categorizePosition(s.player.position) === 'GK')?.player ||
@@ -1286,10 +1364,15 @@ export function simulatePenaltyShootoutDetailed(
     club: Club,
     taker: CareerPlayer,
     oppGkName: string,
-    oppGkReflex: number
+    oppGkReflex: number,
+    composureBonus: number = 0
   ): PenaltyKickAttempt => {
     const face = taker.faceStats || calculateEaFcFaceStats(taker);
-    const convProb = clamp(0.76 + (face.sho - oppGkReflex) * 0.004, 0.62, 0.90);
+    const convProb = clamp(
+      0.76 + (face.sho - oppGkReflex) * 0.004 + (composureBonus / 100) * 0.4,
+      0.62,
+      0.92
+    );
     const scored = Math.random() < convProb;
     const detail = scored
       ? `🟢 GOAL! ${taker.name} sends ${oppGkName} the wrong way!`
@@ -1309,7 +1392,14 @@ export function simulatePenaltyShootoutDetailed(
   for (let round = 1; round <= 5; round++) {
     const hTaker = homeTakers[(round - 1) % Math.max(1, homeTakers.length)]?.player;
     if (hTaker) {
-      const hk = takeKick(round, homeClub, hTaker, awayGk?.name || 'Keeper', awayGkFace.dri);
+      const hk = takeKick(
+        round,
+        homeClub,
+        hTaker,
+        awayGk?.name || 'Keeper',
+        awayGkFace.dri,
+        homeCapEffects?.composureBonus || 0
+      );
       if (hk.scored) homePenalties++;
       kicks.push(hk);
     }
@@ -1325,7 +1415,14 @@ export function simulatePenaltyShootoutDetailed(
 
     const aTaker = awayTakers[(round - 1) % Math.max(1, awayTakers.length)]?.player;
     if (aTaker) {
-      const ak = takeKick(round, awayClub, aTaker, homeGk?.name || 'Keeper', homeGkFace.dri);
+      const ak = takeKick(
+        round,
+        awayClub,
+        aTaker,
+        homeGk?.name || 'Keeper',
+        homeGkFace.dri,
+        awayCapEffects?.composureBonus || 0
+      );
       if (ak.scored) awayPenalties++;
       kicks.push(ak);
     }
@@ -1348,11 +1445,25 @@ export function simulatePenaltyShootoutDetailed(
       homePenalties += 1;
       break;
     }
-    const hk = takeKick(sdRound, homeClub, hTaker, awayGk?.name || 'Keeper', awayGkFace.dri);
+    const hk = takeKick(
+      sdRound,
+      homeClub,
+      hTaker,
+      awayGk?.name || 'Keeper',
+      awayGkFace.dri,
+      homeCapEffects?.composureBonus || 0
+    );
     if (hk.scored) homePenalties++;
     kicks.push(hk);
 
-    const ak = takeKick(sdRound, awayClub, aTaker, homeGk?.name || 'Keeper', homeGkFace.dri);
+    const ak = takeKick(
+      sdRound,
+      awayClub,
+      aTaker,
+      homeGk?.name || 'Keeper',
+      homeGkFace.dri,
+      awayCapEffects?.composureBonus || 0
+    );
     if (ak.scored) awayPenalties++;
     kicks.push(ak);
 

@@ -53,6 +53,10 @@ import {
   processPayrollSettlement,
   applyTournamentPrizeBonus,
 } from '../../career/finance';
+import {
+  updateTacticalFamiliarity,
+  getInitialClubTactics,
+} from '../../career/tactics';
 
 interface MatchDayModalProps {
   fixture: LeagueFixture | CupFixture;
@@ -245,6 +249,8 @@ export function MatchDayModal({
       isNeutralVenue: isNeutralWembley,
       userClubId: save.club.id,
       settings: save.settings,
+      homeTactics: isUserHome ? save.tactics : undefined,
+      awayTactics: !isUserHome ? save.tactics : undefined,
     });
 
     setSession(newSession);
@@ -400,7 +406,14 @@ export function MatchDayModal({
         : s.homeScore === s.awayScore;
 
       if (isShootoutNeeded) {
-        const shootout = simulatePenaltyShootoutDetailed(homeClub, awayClub, s.homePlayerStates, s.awayPlayerStates);
+        const shootout = simulatePenaltyShootoutDetailed(
+          homeClub,
+          awayClub,
+          s.homePlayerStates,
+          s.awayPlayerStates,
+          isUserHome ? save.tactics : undefined,
+          !isUserHome ? save.tactics : undefined
+        );
         setShootoutData(shootout);
         setShootoutKickIndex(shootout.kicks.length);
         setMatchState('shootout');
@@ -565,6 +578,11 @@ export function MatchDayModal({
         ...save.season,
         currentDate: fixture.date,
       },
+      tactics: updateTacticalFamiliarity(
+        save.tactics || getInitialClubTactics(save.squad),
+        true,
+        save.trainingState?.teamFocus
+      ),
     };
 
     // Apply matchday cashflow (Gate receipts, TV broadcast, stewarding operations)

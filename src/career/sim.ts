@@ -10,6 +10,7 @@ import {
   MatchStats,
   MatchEvent,
   ManagerMessage,
+  ClubTactics,
 } from './types';
 import { getClubById, getAllClubs, getActiveLeagueClubs } from './clubs';
 import {
@@ -46,9 +47,15 @@ import {
   processPayrollSettlement,
   applyTournamentPrizeBonus,
 } from './finance';
+import { processDailyScoutingProgress } from './scouting';
 import { calculateStandings } from './table';
 import { getAiClubMatchdaySquad } from './squadGenerator';
 import { applySimulatedMatchSquadImpact } from './matchEngine';
+import {
+  getPhilosophyDepartmentBonus,
+  calculateTacticalMatchupMultiplier,
+  updateTacticalFamiliarity,
+} from './tactics';
 
 /**
  * Simulates a single league fixture with realistic football scorelines, assists, and authentic club goalscorers.
@@ -58,7 +65,9 @@ export function simulateMatchFixture(
   homeClub: Club,
   awayClub: Club,
   homeSquad?: CareerPlayer[],
-  awaySquad?: CareerPlayer[]
+  awaySquad?: CareerPlayer[],
+  homeTactics?: ClubTactics,
+  awayTactics?: ClubTactics
 ): LeagueFixture {
   const effectiveHomeSquad =
     homeSquad && homeSquad.length > 0 ? homeSquad : getAiClubMatchdaySquad(homeClub).squad;
@@ -77,8 +86,32 @@ export function simulateMatchFixture(
     return sq.length >= 11 ? avg : (avg + fallbackRep * 0.85) / 2;
   };
 
-  const homeBaseRating = computeSquadStrength(effectiveHomeSquad, homeClub.reputation);
-  const awayBaseRating = computeSquadStrength(effectiveAwaySquad, awayClub.reputation);
+  let homeTacticalBonus = 0;
+  if (homeTactics) {
+    const synergy = getPhilosophyDepartmentBonus(homeTactics, effectiveHomeSquad.slice(0, 11));
+    if (synergy.synergyActive) {
+      homeTacticalBonus += (synergy.attackBonus + synergy.midfieldBonus + synergy.defenceBonus) / 3;
+    }
+    if (awayTactics) {
+      const matchup = calculateTacticalMatchupMultiplier(homeTactics.philosophy, awayTactics.philosophy);
+      homeTacticalBonus += (matchup.userAttackMod - 1.0) * 5;
+    }
+  }
+
+  let awayTacticalBonus = 0;
+  if (awayTactics) {
+    const synergy = getPhilosophyDepartmentBonus(awayTactics, effectiveAwaySquad.slice(0, 11));
+    if (synergy.synergyActive) {
+      awayTacticalBonus += (synergy.attackBonus + synergy.midfieldBonus + synergy.defenceBonus) / 3;
+    }
+    if (homeTactics) {
+      const matchup = calculateTacticalMatchupMultiplier(awayTactics.philosophy, homeTactics.philosophy);
+      awayTacticalBonus += (matchup.userAttackMod - 1.0) * 5;
+    }
+  }
+
+  const homeBaseRating = computeSquadStrength(effectiveHomeSquad, homeClub.reputation) + homeTacticalBonus;
+  const awayBaseRating = computeSquadStrength(effectiveAwaySquad, awayClub.reputation) + awayTacticalBonus;
 
   // Home advantage (+2.3 rating boost unless neutral venue)
   const isNeutral = Boolean(fixture.venue && fixture.venue.toLowerCase().includes('neutral'));
@@ -996,6 +1029,19 @@ export function advanceTimeSkip(
     squad: userSquad,
     inbox: currentInbox,
   };
+
+  updatedSave = processDailyScoutingProgress(updatedSave, curIso);
+
+  if (matchesPlayedCount > 0 && updatedSave.tactics) {
+    updatedSave = {
+      ...updatedSave,
+      tactics: updateTacticalFamiliarity(
+        updatedSave.tactics,
+        true,
+        save.trainingState?.teamFocus
+      ),
+    };
+  }
 
   // If date reached deadline day or fast forward targeted deadline day, initialize clock
   if (isTransferDeadlineDay(curIso, save.season.yearStart) || target === 'transfer_deadline') {

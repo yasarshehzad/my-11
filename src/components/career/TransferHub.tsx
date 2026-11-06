@@ -58,12 +58,22 @@ import {
   U21_AGE_LIMIT,
 } from '../../career/squad';
 import { players } from '../../data/players';
+import {
+  SCOUTING_REGIONS,
+  launchScoutingMission,
+} from '../../career/scouting';
+import {
+  ScoutingRegion,
+  ScoutingTargetProfile,
+  DiscoveredScoutingProspect,
+  ScoutingDossierReport,
+} from '../../career/types';
 
 interface TransferHubProps {
   save: CareerSaveFile;
   onUpdateSave: (updatedSave: CareerSaveFile) => void;
   onNotification?: (msg: string) => void;
-  initialSubTab?: 'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board';
+  initialSubTab?: 'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board' | 'scouting';
   focusedOfferId?: string;
   onOpenCompare?: (playerA: MarketPlayer, playerB?: CareerPlayer | MarketPlayer) => void;
 }
@@ -78,7 +88,7 @@ export function TransferHub({
   focusedOfferId,
   onOpenCompare,
 }: TransferHubProps) {
-  const [subTab, setSubTab] = useState<'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board'>(
+  const [subTab, setSubTab] = useState<'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board' | 'scouting'>(
     initialSubTab || 'market'
   );
   const [historyView, setHistoryView] = useState<'my_club' | 'world'>('my_club');
@@ -138,6 +148,27 @@ export function TransferHub({
   const [playerPoolType, setPlayerPoolType] = useState<'modern' | 'legends' | 'all'>(
     save.settings?.playerPool || 'modern'
   );
+
+  // Global Scouting Network state
+  const [selectedScoutingRegion, setSelectedScoutingRegion] = useState<ScoutingRegion>('south_america');
+  const [selectedScoutingProfile, setSelectedScoutingProfile] = useState<ScoutingTargetProfile>('wonderkid');
+  const [scoutingFeedback, setScoutingFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const handleAuthorizeScoutingMission = () => {
+    const res = launchScoutingMission(save, selectedScoutingRegion, selectedScoutingProfile);
+    if (!res.success) {
+      setScoutingFeedback({ message: res.error || 'Failed to authorize scouting mission.', type: 'error' });
+      setTimeout(() => setScoutingFeedback(null), 4000);
+      return;
+    }
+    onUpdateSave(res.updatedSave);
+    const regionName = SCOUTING_REGIONS[selectedScoutingRegion].name;
+    setScoutingFeedback({
+      message: `Scouting team successfully deployed to ${regionName}! Initial dossier expected in ${SCOUTING_REGIONS[selectedScoutingRegion].durationDays} days.`,
+      type: 'success',
+    });
+    setTimeout(() => setScoutingFeedback(null), 4000);
+  };
 
   // Rich Scouting search & filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -1055,6 +1086,16 @@ export function TransferHub({
               badgeAlert: criticalExpiringCount > 0,
             },
             { id: 'shortlist', label: 'Shortlist', icon: '⭐', badge: shortlistedPlayers.length },
+            {
+              id: 'scouting',
+              label: 'Scouting',
+              icon: '🕵️',
+              badge: (save.scoutingState?.activeMissions || []).filter((m) => !m.completed).length > 0
+                ? `${(save.scoutingState?.activeMissions || []).filter((m) => !m.completed).length} Live`
+                : (save.scoutingState?.scoutingDossiers || []).length > 0
+                ? `${(save.scoutingState?.scoutingDossiers || []).length} Reports`
+                : 'Network',
+            },
             { id: 'history', label: 'History', icon: '📜', badge: save.transfersHistory?.length || 0 },
             { id: 'board', label: 'Board', icon: '🏛️', badge: `${boardStatus.confidence}%` },
           ].map((tab) => {
@@ -3129,6 +3170,395 @@ export function TransferHub({
               )}
             </div>
           </section>
+        </section>
+      )}
+
+      {/* SUB-VIEW 7: GLOBAL SCOUTING NETWORK */}
+      {subTab === 'scouting' && (
+        <section id="transfer-scouting-section" className="space-y-6 scroll-mt-20 animate-fade-in" aria-label="Global Scouting Network">
+          {/* Header & Network KPIs */}
+          <div className="office-floating-card rounded-3xl p-5 sm:p-6 border border-slate-200/90 bg-gradient-to-br from-white via-slate-50/50 to-blue-50/40 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">🕵️</span>
+                  <h3 className="text-lg sm:text-xl font-display font-black text-[#0b1536] uppercase tracking-tight">
+                    Global Talent Identification &amp; Scouting Network
+                  </h3>
+                </div>
+                <p className="text-xs text-slate-600 font-medium max-w-2xl leading-relaxed">
+                  Commission international talent expeditions across 4 continents. Chief scouts deliver verified potentials, personality assessments, and market valuations directly to your Transfer Hub.
+                </p>
+              </div>
+
+              {/* Scouting Network Capacity Meter */}
+              <div className="flex items-center gap-3 bg-white/90 backdrop-blur-xs p-3 rounded-2xl border border-slate-200 shadow-2xs self-start sm:self-center">
+                <div className="text-right">
+                  <span className="text-[9px] uppercase font-bold text-slate-400 block">Scout Capacity</span>
+                  <span className="text-sm font-display font-black text-blue-700">
+                    {(save.scoutingState?.activeMissions || []).filter((m) => !m.completed).length} / 3 Active
+                  </span>
+                </div>
+                <div className="h-8 w-px bg-slate-200" />
+                <div>
+                  <span className="text-[9px] uppercase font-bold text-slate-400 block">Transfer Budget</span>
+                  <span className="text-sm font-display font-black text-emerald-600">
+                    {formatCurrency(save.finances.transferBudget)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Scouting Feedback Alert */}
+            {scoutingFeedback && (
+              <div className={`p-3.5 rounded-2xl text-xs font-display font-bold flex items-center justify-between gap-2 transition-all ${
+                scoutingFeedback.type === 'success'
+                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs'
+                  : 'bg-rose-50 text-rose-800 border border-rose-200 shadow-2xs'
+              }`}>
+                <div className="flex items-center gap-2">
+                  <span>{scoutingFeedback.type === 'success' ? '🚀' : '⚠️'}</span>
+                  <span>{scoutingFeedback.message}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setScoutingFeedback(null)}
+                  className="text-slate-400 hover:text-slate-600 text-sm font-black cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Active Missions Tracking */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-display font-black uppercase tracking-wider text-[#0b1536] flex items-center gap-1.5">
+              <span>📡</span>
+              <span>Active Scouting Expeditions ({(save.scoutingState?.activeMissions || []).filter((m) => !m.completed).length})</span>
+            </h4>
+
+            {(save.scoutingState?.activeMissions || []).filter((m) => !m.completed).length === 0 ? (
+              <div className="office-subcard p-6 rounded-3xl text-center space-y-2 border-2 border-dashed border-slate-200 bg-slate-50/50">
+                <span className="text-2xl block">🌐</span>
+                <p className="text-xs font-display font-bold text-slate-700">No Scouting Expeditions Currently Active</p>
+                <p className="text-[11px] text-slate-500 max-w-md mx-auto">
+                  Deploy our recruitment personnel to South America, Central Europe, the UK Domestic Pathway, or Scandinavia below to track targets.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {(save.scoutingState?.activeMissions || []).filter((m) => !m.completed).map((mission) => {
+                  const regionConfig = SCOUTING_REGIONS[mission.region];
+                  return (
+                    <article
+                      key={mission.id}
+                      className="office-subcard p-4 rounded-2xl border border-blue-200/90 bg-gradient-to-br from-blue-50/50 via-white to-indigo-50/30 space-y-2.5 shadow-xs"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">{regionConfig?.flag || '🌍'}</span>
+                          <div>
+                            <h5 className="font-display font-black text-sm text-[#0b1536]">
+                              {regionConfig?.name || mission.region}
+                            </h5>
+                            <span className="text-[10px] text-slate-500">
+                              Lead Scout: {mission.scoutName}
+                            </span>
+                          </div>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase font-display bg-blue-100 text-blue-800 border border-blue-200 animate-pulse">
+                          In Field
+                        </span>
+                      </div>
+
+                      <div className="bg-white/80 p-2 rounded-xl border border-slate-200/80 text-xs space-y-1">
+                        <div className="flex justify-between text-[11px] text-slate-600">
+                          <span>Target Profile:</span>
+                          <span className="font-bold text-slate-800 uppercase font-display text-[10px]">
+                            {mission.targetProfile.replace(/_/g, ' ')}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-[11px] text-slate-600">
+                          <span>Estimated Return:</span>
+                          <span className="font-mono font-bold text-blue-700">
+                            {formatCareerDate(mission.completionDate, save.settings.dateFormat)}
+                          </span>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Mission Dispatch Terminal */}
+          <div className="office-subcard p-5 sm:p-6 rounded-3xl space-y-4 shadow-sm border border-slate-200/90 bg-white">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🗺️</span>
+                <h4 className="text-sm sm:text-base font-display font-black uppercase tracking-wider text-[#0b1536]">
+                  Commission Scouting Expedition
+                </h4>
+              </div>
+              <span className="text-xs text-slate-500 font-medium hidden sm:inline">
+                Select target territory &amp; recruitment directive
+              </span>
+            </div>
+
+            {/* Region Selector */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {(Object.keys(SCOUTING_REGIONS) as ScoutingRegion[]).map((regId) => {
+                const config = SCOUTING_REGIONS[regId];
+                const isSelected = selectedScoutingRegion === regId;
+                const isUnderway = (save.scoutingState?.activeMissions || []).some(
+                  (m) => m.region === regId && !m.completed
+                );
+
+                return (
+                  <button
+                    type="button"
+                    key={regId}
+                    disabled={isUnderway}
+                    onClick={() => setSelectedScoutingRegion(regId)}
+                    className={`p-3.5 rounded-2xl text-left transition-all border flex flex-col justify-between min-h-[160px] cursor-pointer ${
+                      isUnderway
+                        ? 'opacity-60 bg-slate-100 border-slate-200 cursor-not-allowed'
+                        : isSelected
+                        ? 'border-2 border-blue-600 bg-blue-50/60 shadow-xs ring-2 ring-blue-500/20'
+                        : 'border-slate-200/90 bg-white hover:border-blue-300'
+                    }`}
+                  >
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-center">
+                        <span className="text-2xl">{config.flag}</span>
+                        {isUnderway ? (
+                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 font-display font-bold uppercase">
+                            Deployed
+                          </span>
+                        ) : isSelected ? (
+                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-blue-600 text-white font-display font-bold uppercase">
+                            Selected
+                          </span>
+                        ) : null}
+                      </div>
+                      <h5 className="font-display font-black text-xs sm:text-sm text-[#0b1536] leading-tight">
+                        {config.name}
+                      </h5>
+                      <p className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed">
+                        {config.description}
+                      </p>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-150 flex justify-between items-center text-[11px] font-mono font-bold mt-2">
+                      <span className="text-emerald-700">{formatCurrency(config.cost)}</span>
+                      <span className="text-slate-500 text-[10px]">{config.durationDays} Days</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Target Profile Chips & Action */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100">
+              <div className="space-y-1">
+                <span className="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">
+                  Target Directive
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { id: 'wonderkid', label: 'Wonderkid Prodigies (U21)', icon: '🌟' },
+                    { id: 'starter', label: 'Prime First-Team Starters', icon: '⭐' },
+                    { id: 'bargain_expiring', label: 'Expiring Contracts & Bargains', icon: '🏷️' },
+                    { id: 'physical_power', label: 'Pace & Physicality Dynamos', icon: '⚡' },
+                  ].map((p) => {
+                    const isSelected = selectedScoutingProfile === p.id;
+                    return (
+                      <button
+                        type="button"
+                        key={p.id}
+                        onClick={() => setSelectedScoutingProfile(p.id as ScoutingTargetProfile)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-display font-black uppercase transition-all cursor-pointer flex items-center gap-1.5 ${
+                          isSelected
+                            ? 'bg-blue-600 text-white shadow-2xs'
+                            : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                        }`}
+                      >
+                        <span>{p.icon}</span>
+                        <span>{p.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Commission Button */}
+              <button
+                type="button"
+                onClick={handleAuthorizeScoutingMission}
+                className="py-3 px-5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer self-start sm:self-end active:scale-95 shrink-0"
+              >
+                <span>🚀</span>
+                <span>Deploy Scout ({formatCurrency(SCOUTING_REGIONS[selectedScoutingRegion]?.cost || 300_000)})</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Completed Intelligence Dossiers */}
+          <div className="space-y-4">
+            <h4 className="text-xs font-display font-black uppercase tracking-wider text-[#0b1536] flex items-center gap-1.5">
+              <span>📋</span>
+              <span>Scouting Intelligence Dossiers ({(save.scoutingState?.scoutingDossiers || []).length})</span>
+            </h4>
+
+            {(save.scoutingState?.scoutingDossiers || []).length === 0 ? (
+              <div className="office-subcard p-6 rounded-3xl text-center space-y-2 border border-slate-200 bg-white">
+                <span className="text-2xl block">📂</span>
+                <p className="text-xs font-display font-bold text-slate-700">No Intelligence Dossiers Filed Yet</p>
+                <p className="text-[11px] text-slate-500 max-w-md mx-auto">
+                  Completed scouting reports will compile discovered prospects with verified potentials, wage demands, and scout notes here.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {(save.scoutingState?.scoutingDossiers || []).map((dossier) => {
+                  const regConfig = SCOUTING_REGIONS[dossier.region];
+                  return (
+                    <div
+                      key={dossier.id}
+                      className="office-floating-card rounded-3xl p-5 border border-slate-200/90 bg-white shadow-sm space-y-4"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">{regConfig?.flag || '🌍'}</span>
+                          <div>
+                            <h5 className="font-display font-black text-sm text-[#0b1536]">
+                              {regConfig?.name || dossier.region} Intelligence Dossier
+                            </h5>
+                            <span className="text-[10px] text-slate-500 font-medium">
+                              Filed by {dossier.scoutName} • Directive: {dossier.targetProfile.replace(/_/g, ' ').toUpperCase()} • {formatCareerDate(dossier.date, save.settings.dateFormat)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold self-start sm:self-center">
+                          {dossier.prospects.length} Targets Verified
+                        </span>
+                      </div>
+
+                      {/* Prospects Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                        {dossier.prospects.map((prospect) => {
+                          const isShortlisted = shortlistIdsSet.has(prospect.playerId);
+
+                          return (
+                            <div
+                              key={prospect.playerId}
+                              className="p-3.5 rounded-2xl border border-slate-200/90 bg-slate-50/70 hover:bg-slate-50 transition-colors flex flex-col justify-between space-y-3"
+                            >
+                              <div className="space-y-2">
+                                <div className="flex justify-between items-start gap-1">
+                                  <div>
+                                    <h6 className="font-display font-black text-sm text-[#0b1536] leading-tight">
+                                      {prospect.name}
+                                    </h6>
+                                    <span className="text-[10px] text-slate-500 font-medium">
+                                      {prospect.position} • Age {prospect.age} • {prospect.club}
+                                    </span>
+                                  </div>
+                                  <div className="text-right shrink-0">
+                                    <span className="px-1.5 py-0.5 rounded font-display font-black text-xs bg-blue-100 text-blue-900 border border-blue-200">
+                                      {prospect.rating} OVR
+                                    </span>
+                                    <span className="text-[9px] text-slate-500 block font-mono mt-0.5">
+                                      Pot: {prospect.potential}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <p className="text-[11px] text-slate-600 leading-snug line-clamp-2">
+                                  {prospect.scoutNotes}
+                                </p>
+
+                                {/* Pros & Cons Tags */}
+                                <div className="space-y-1">
+                                  {prospect.pros.slice(0, 1).map((pro, idx) => (
+                                    <div key={idx} className="text-[10px] text-emerald-700 font-semibold flex items-center gap-1">
+                                      <span>✓</span>
+                                      <span className="truncate">{pro}</span>
+                                    </div>
+                                  ))}
+                                  {prospect.cons.slice(0, 1).map((con, idx) => (
+                                    <div key={idx} className="text-[10px] text-rose-600 font-medium flex items-center gap-1">
+                                      <span>✕</span>
+                                      <span className="truncate">{con}</span>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                <div className="pt-2 border-t border-slate-200/80 flex justify-between items-center text-xs font-mono">
+                                  <span className="text-slate-500">Val: <strong className="text-slate-800">{formatCurrency(prospect.estimatedValue)}</strong></span>
+                                  <span className="text-slate-500">Wage: <strong className="text-slate-800">{formatWage(prospect.wageWeekly)}</strong></span>
+                                </div>
+                              </div>
+
+                              {/* Actions */}
+                              <div className="grid grid-cols-2 gap-1.5 pt-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleShortlist(prospect.playerId)}
+                                  className={`py-1.5 px-2 rounded-xl text-[10px] font-display font-black uppercase tracking-wider transition-colors cursor-pointer border ${
+                                    isShortlisted
+                                      ? 'bg-amber-100 text-amber-900 border-amber-300'
+                                      : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
+                                  }`}
+                                >
+                                  {isShortlisted ? '⭐ Shortlisted' : '+ Shortlist'}
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const marketMatch = marketPlayers.find(
+                                      (m) => m.id === prospect.playerId || m.name === prospect.name
+                                    );
+                                    if (marketMatch) {
+                                      setNegotiatingPlayer(marketMatch);
+                                    } else {
+                                      const customMarketPlayer: MarketPlayer = {
+                                        id: prospect.playerId,
+                                        cardId: prospect.playerId,
+                                        name: prospect.name,
+                                        position: prospect.position,
+                                        age: prospect.age,
+                                        rating: prospect.rating,
+                                        nationality: 'International',
+                                        isHomegrown: false,
+                                        rarity: 'solid',
+                                        club: prospect.club,
+                                        value: prospect.estimatedValue,
+                                        wageDemand: prospect.wageWeekly,
+                                        contractYears: 3,
+                                      };
+                                      setNegotiatingPlayer(customMarketPlayer);
+                                    }
+                                  }}
+                                  className="py-1.5 px-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-[10px] font-display font-black uppercase tracking-wider transition-all cursor-pointer shadow-2xs"
+                                >
+                                  💼 Bid
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </section>
       )}
 
