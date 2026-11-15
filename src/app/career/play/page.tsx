@@ -91,6 +91,12 @@ import {
 import { updatePlayerForm, applyInSeasonMatchProgression } from '../../../career/formAndProgression';
 import { applySimulatedMatchSquadImpact } from '../../../career/matchEngine';
 import { updateTacticalFamiliarity, getInitialClubTactics } from '../../../career/tactics';
+import { generatePostMatchPressConference } from '../../../career/pressConferences';
+import {
+  acceptManagerJobOffer,
+  evaluateBoardUltimatumAndCarousel,
+  generateEmergencyReboundOffers,
+} from '../../../career/managerCareer';
 
 function formatOrdinalRank(n: number): string {
   const s = ['th', 'st', 'nd', 'rd'];
@@ -628,7 +634,7 @@ function CareerPlayHubContent() {
   const [fastForwardUsePreferredEleven, setFastForwardUsePreferredEleven] = useState(true);
   const [fastForwardHaltOnTransferMilestone, setFastForwardHaltOnTransferMilestone] = useState<'deadline' | 'window_open_or_close' | 'none'>('deadline');
   const [showSeasonReviewModal, setShowSeasonReviewModal] = useState(false);
-  const [transferHubSubTab, setTransferHubSubTab] = useState<'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board' | 'scouting' | 'infrastructure'>('market');
+  const [transferHubSubTab, setTransferHubSubTab] = useState<'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board' | 'scouting' | 'infrastructure' | 'feeder' | 'media'>('market');
   const [focusedOfferId, setFocusedOfferId] = useState<string | undefined>(undefined);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [activeCelebration, setActiveCelebration] = useState<CelebrationEvent | null>(null);
@@ -1007,6 +1013,14 @@ function CareerPlayHubContent() {
       navigateToSection('transfers', 'scouting', 'transfer-scouting-section');
     } else if (alert.actionType === 'open_facilities') {
       navigateToSection('transfers', 'infrastructure', 'transfer-infrastructure-section');
+    } else if (alert.actionType === 'open_press_conference') {
+      navigateToSection('transfers', 'media', 'transfer-media-section');
+    } else if (alert.actionType === 'open_feeder_network') {
+      navigateToSection('transfers', 'feeder', 'transfer-feeder-section');
+    } else if (alert.actionType === 'open_job_offers') {
+      navigateToSection('transfers', 'board', 'job-offers-section');
+    } else if (alert.actionType === 'respond_ultimatum') {
+      navigateToSection('transfers', 'board', 'board-room-section');
     } else if (alert.actionTab) {
       const targetSub = alert.actionTab === 'transfers' ? 'market' : undefined;
       navigateToSection(alert.actionTab as typeof activeTab, targetSub);
@@ -1386,7 +1400,7 @@ function CareerPlayHubContent() {
         save.trainingState?.teamFocus
       );
 
-      const updatedSave: CareerSaveFile = {
+      let updatedSave: CareerSaveFile = {
         ...save,
         season: {
           ...save.season,
@@ -1402,6 +1416,9 @@ function CareerPlayHubContent() {
           save.trainingState?.teamFocus
         ),
       };
+
+      updatedSave = evaluateBoardUltimatumAndCarousel(updatedSave, simmed);
+      updatedSave = generatePostMatchPressConference(updatedSave, simmed);
 
       setInstantSimLoadingData({
         simmedFixture: simmed,
@@ -1468,6 +1485,8 @@ function CareerPlayHubContent() {
 
     updatedSave = applyMatchdayFinancials(updatedSave, leagueFix, isUserHome, 'league');
     updatedSave = processPayrollSettlement(updatedSave, leagueFix.date);
+    updatedSave = evaluateBoardUltimatumAndCarousel(updatedSave, simmed);
+    updatedSave = generatePostMatchPressConference(updatedSave, simmed);
 
     setInstantSimLoadingData({
       simmedFixture: simmed,
@@ -1589,11 +1608,22 @@ function CareerPlayHubContent() {
   };
 
   const handleMatchResultSaved = (updatedSave: CareerSaveFile) => {
-    const finalSave = checkAndTriggerCelebration(updatedSave, activeMatchFixture || undefined);
+    let enrichedSave = updatedSave;
+    if (activeMatchFixture) {
+      const resolvedFixture =
+        (updatedSave.fixtures || []).find((f) => f.id === activeMatchFixture.id) ||
+        Object.values(updatedSave.cups || {})
+          .flatMap((c) => c.fixtures || [])
+          .find((f) => f.id === activeMatchFixture.id) ||
+        activeMatchFixture;
+      enrichedSave = evaluateBoardUltimatumAndCarousel(enrichedSave, resolvedFixture);
+      enrichedSave = generatePostMatchPressConference(enrichedSave, resolvedFixture);
+    }
+    const finalSave = checkAndTriggerCelebration(enrichedSave, activeMatchFixture || undefined);
     saveCareerSave(finalSave);
     setSave(finalSave);
     setActiveMatchFixture(null);
-    showToast('Match completed and results saved!');
+    showToast('Match completed and results saved! Press Conference open in Media desk.');
   };
 
   const handleChoosePreseasonTour = (tourId: PreseasonTourId, delegateToAssistant: boolean) => {
@@ -3639,6 +3669,10 @@ function CareerPlayHubContent() {
             setInstantSimResultModal(null);
             setMatchOverviewModal({ type: 'result', fixture: fix });
           }}
+          onAttendPressConference={() => {
+            setInstantSimResultModal(null);
+            navigateToSection('transfers', 'media', 'transfer-media-section');
+          }}
           onNavigateTab={(tab) => {
             setInstantSimResultModal(null);
             handleTabChange(tab);
@@ -4061,6 +4095,74 @@ function CareerPlayHubContent() {
               <div className="text-xl font-display font-black text-rose-700">0% (Dismissed)</div>
               <div className="text-[10px] text-slate-600 font-medium">Club Objective Failed</div>
             </div>
+
+            {/* Option C: Sacking Carousel Rebound Job Offers */}
+            {(() => {
+              const savedRebounds = (save.managerCareer?.jobOffers || []).filter(
+                (o) => o.status === 'pending' && o.isEmergencyRebound
+              );
+              const carouselOffers = savedRebounds.length > 0 ? savedRebounds : generateEmergencyReboundOffers(save);
+              if (carouselOffers.length === 0) return null;
+
+              return (
+                <section aria-label="Sacking Carousel Offers" className="text-left space-y-2 border-t border-slate-200 pt-3">
+                  <div className="text-[10px] font-display font-black uppercase tracking-wider text-blue-700">
+                    💼 Sacking Carousel — Emergency Rebound Offers ({carouselOffers.length})
+                  </div>
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    {carouselOffers.map((offer) => (
+                      <div
+                        key={offer.id}
+                        className="office-subcard p-2.5 flex items-center justify-between gap-2 border border-slate-200 bg-slate-50/70"
+                      >
+                        <div className="min-w-0">
+                          <div className="font-display font-black text-xs text-slate-900 truncate">
+                            {offer.clubName}
+                          </div>
+                          <div className="text-[10px] font-mono text-slate-500">
+                            {offer.clubTier.toUpperCase()} • Budget {formatOfficeBudget(offer.transferBudget, save.settings.currency)}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const seededSave: CareerSaveFile =
+                              savedRebounds.length > 0
+                                ? save
+                                : {
+                                    ...save,
+                                    managerCareer: {
+                                      ...(save.managerCareer || {
+                                        reputation: 55,
+                                        weeklySalary: 40_000,
+                                        accolades: [],
+                                        tenures: [],
+                                        jobOffers: [],
+                                      }),
+                                      jobOffers: [
+                                        ...carouselOffers,
+                                        ...(save.managerCareer?.jobOffers || []),
+                                      ],
+                                    },
+                                  };
+                            const res = acceptManagerJobOffer(seededSave, offer.id);
+                            if (res.success) {
+                              handleUpdateSave(res.updatedSave);
+                              setDismissedSackedModal(false);
+                              setActiveTab('overview');
+                              showToast(`Rebound accepted! Welcome to ${offer.clubName}.`);
+                            }
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-display font-black text-[10px] uppercase tracking-wider shrink-0 cursor-pointer"
+                        >
+                          Take Job
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              );
+            })()}
 
             <div className="flex flex-col gap-2.5 pt-2">
               <Link

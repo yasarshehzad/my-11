@@ -275,7 +275,8 @@ export type FinancialCategory =
   | 'stadium_operations'
   | 'loan_fees'
   | 'board_investment'
-  | 'infrastructure_investment';
+  | 'infrastructure_investment'
+  | 'feeder_partnership';
 
 export interface FinancialTransaction {
   id: string;
@@ -727,7 +728,11 @@ export type ActionType =
   | 'open_cups'
   | 'squad_registration'
   | 'open_scouting'
-  | 'open_facilities';
+  | 'open_facilities'
+  | 'open_press_conference'
+  | 'open_feeder_network'
+  | 'open_job_offers'
+  | 'respond_ultimatum';
 
 export interface ManagerMessage {
   id: string;
@@ -736,7 +741,7 @@ export interface ManagerMessage {
   senderRole?: string;
   subject: string;
   body: string;
-  type: 'match_report' | 'injury' | 'transfer' | 'board' | 'cup_draw' | 'international' | 'system' | 'scouting' | 'facility';
+  type: 'match_report' | 'injury' | 'transfer' | 'board' | 'cup_draw' | 'international' | 'system' | 'scouting' | 'facility' | 'media' | 'accolade' | 'job_offer';
   isRead: boolean;
   priority?: 'normal' | 'urgent';
   classification?: MessageClassification;
@@ -807,6 +812,214 @@ export interface CareerSaveFile {
   tactics?: ClubTactics;
   scoutingState?: CareerScoutingState;
   infrastructure?: ClubInfrastructureState;
+  pressState?: PressMediaState;
+  feederNetwork?: FeederNetworkState;
+  managerCareer?: ManagerCareerState;
+}
+
+// ============================================================
+// OPTION A: PRESS CONFERENCES & MEDIA MIND GAMES
+// ============================================================
+
+export type PressTone = 'confident' | 'humble' | 'deflect_pressure' | 'mind_games';
+
+export type PressContext = 'post_match' | 'pre_match_mind_games' | 'title_race' | 'crisis';
+
+export interface PressResponseOption {
+  id: string;
+  tone: PressTone;
+  label: string;
+  quote: string;
+  moraleDelta: number;
+  boardConfidenceDelta: number;
+  mediaRelationDelta: number;
+  mindGamesEffect?: {
+    attackBonus: number;
+    opponentMoralePenalty: number;
+    opponentClubId?: string;
+  };
+  headlinePreview: string;
+}
+
+export interface PressConferenceEvent {
+  id: string;
+  date: string;
+  context: PressContext;
+  journalistName: string;
+  outlet: string;
+  question: string;
+  fixtureId?: string;
+  opponentClubId?: string;
+  opponentClubName?: string;
+  matchOutcome?: 'W' | 'D' | 'L';
+  scoreline?: string;
+  options: PressResponseOption[];
+  answered: boolean;
+  chosenOptionId?: string;
+}
+
+export interface MediaHeadlineEntry {
+  id: string;
+  date: string;
+  outlet: string;
+  headline: string;
+  quote: string;
+  tone: PressTone;
+  impactSummary: string;
+}
+
+export interface PressMediaState {
+  mediaRelationshipScore: number;
+  activeConference?: PressConferenceEvent;
+  mindGamesBuffNextMatch?: {
+    attackBonus: number;
+    opponentClubId: string;
+    opponentClubName: string;
+    expiresAfterFixtureId?: string;
+    description: string;
+  };
+  mediaHistory: MediaHeadlineEntry[];
+}
+
+// ============================================================
+// OPTION B: MULTI-CLUB FEEDER & LOAN NETWORK
+// ============================================================
+
+export type FeederRegion =
+  | 'Portugal'
+  | 'Netherlands'
+  | 'Belgium'
+  | 'Austria'
+  | 'Brazil'
+  | 'Argentina'
+  | 'Japan'
+  | 'England Championship';
+
+export interface FeederClubProfile {
+  id: string;
+  name: string;
+  country: string;
+  region: FeederRegion;
+  leagueName: string;
+  tierStrength: number;
+  annualPartnershipFee: number;
+  developmentMultiplier: number;
+  specialties: string[];
+  primaryColor: string;
+  secondaryColor: string;
+  crestEmoji: string;
+  description: string;
+}
+
+export interface ActiveFeederPartnership {
+  feederClubId: string;
+  establishedDate: string;
+  annualFeePaid: number;
+  totalPlayersDeveloped: number;
+}
+
+export interface FeederLoanAssignment {
+  id: string;
+  playerId: string;
+  playerName: string;
+  position: string;
+  ratingAtDeparture: number;
+  currentRating: number;
+  potential: number;
+  feederClubId: string;
+  feederClubName: string;
+  startDate: string;
+  lastProgressDate: string;
+  appearances: number;
+  goals: number;
+  assists: number;
+  xpAccumulated: number;
+  ovrGained: number;
+  weeklyWageRelieved: number;
+}
+
+export interface FeederNetworkState {
+  partnerships: ActiveFeederPartnership[];
+  activeLoans: FeederLoanAssignment[];
+  completedLoansCount: number;
+}
+
+// ============================================================
+// OPTION C: MANAGERIAL ACCOLADES, JOB OFFERS & SACKING CAROUSEL
+// ============================================================
+
+export type ManagerAccoladeType =
+  | 'manager_of_the_month'
+  | 'manager_of_the_season'
+  | 'league_title'
+  | 'domestic_cup'
+  | 'continental_cup'
+  | 'promotion'
+  | 'great_escape';
+
+export interface ManagerAccolade {
+  id: string;
+  type: ManagerAccoladeType;
+  title: string;
+  date: string;
+  seasonLabel: string;
+  clubId: string;
+  clubName: string;
+  monthLabel?: string;
+  summary: string;
+}
+
+export interface ManagerClubTenure {
+  clubId: string;
+  clubName: string;
+  startDate: string;
+  endDate?: string;
+  matchesManaged: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  trophiesWon: number;
+  departureReason?: 'active' | 'resigned_for_new_job' | 'sacked';
+}
+
+export interface BoardUltimatum {
+  id: string;
+  issuedDate: string;
+  reason: string;
+  matchesRemaining: number;
+  pointsRequired: number;
+  pointsEarned: number;
+  status: 'active' | 'survived' | 'failed';
+  evaluatedFixtureIds?: string[];
+}
+
+export interface ClubJobOffer {
+  id: string;
+  clubId: string;
+  clubName: string;
+  clubTier: ClubTier;
+  clubReputation: number;
+  primaryColor: string;
+  secondaryColor: string;
+  offeredDate: string;
+  expiresDate: string;
+  transferBudget: number;
+  wageBudgetWeekly: number;
+  managerWeeklySalary: number;
+  boardExpectation: string;
+  pitchMessage: string;
+  isEmergencyRebound: boolean;
+  status: 'pending' | 'accepted' | 'declined' | 'expired';
+}
+
+export interface ManagerCareerState {
+  reputation: number;
+  weeklySalary: number;
+  accolades: ManagerAccolade[];
+  tenures: ManagerClubTenure[];
+  activeUltimatum?: BoardUltimatum;
+  jobOffers: ClubJobOffer[];
+  lastEvaluatedMonth?: string;
 }
 
 export type FacilityType = 'stadium' | 'trainingGround' | 'medicalCenter' | 'scoutingHub';

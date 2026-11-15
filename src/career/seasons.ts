@@ -8,7 +8,10 @@ import {
   CareerPlayer,
   PreContractAgreement,
   TransferRecord,
+  ManagerAccolade,
 } from './types';
+import { getInitialManagerCareer } from './managerCareer';
+import { getInitialFeederNetwork } from './feederClubs';
 import {
   getAllClubs,
   getActiveLeagueClubs,
@@ -489,6 +492,47 @@ export function advanceToNextSeason(save: CareerSaveFile): {
     date: `${nextYearStart}-07-15`,
   });
 
+  const prevFeeder = save.feederNetwork || getInitialFeederNetwork();
+  const nextFeederNetwork = {
+    partnerships: prevFeeder.partnerships,
+    activeLoans: [],
+    completedLoansCount:
+      (prevFeeder.completedLoansCount || 0) + (prevFeeder.activeLoans?.length || 0),
+  };
+
+  const prevMc = save.managerCareer || getInitialManagerCareer(save.club, save.season.currentDate);
+  const seasonLabel = `${save.season.yearStart}/${(save.season.yearStart + 1).toString().slice(-2)}`;
+  const earnedMots =
+    summary.leagueTitle || summary.finalPosition <= 2 || summary.trophiesWon.length > 0;
+  const newAccolades: ManagerAccolade[] = [...(prevMc.accolades || [])];
+
+  if (earnedMots) {
+    newAccolades.unshift({
+      id: `accolade_mots_${save.season.seasonNumber}_${Date.now()}`,
+      type: 'manager_of_the_season',
+      title: `Manager of the Season (${seasonLabel})`,
+      date: newCurrentDate,
+      seasonLabel,
+      clubId: save.club.id,
+      clubName: save.club.customName || save.club.defaultName,
+      summary: `Finished #${summary.finalPosition}${summary.leagueTitle ? ' (Champions)' : ''} with ${summary.trophiesWon.length} silverwares won.`,
+    });
+  }
+
+  const updatedTenures = (prevMc.tenures || []).map((t) =>
+    t.clubId === save.club.id && (!t.departureReason || t.departureReason === 'active')
+      ? { ...t, trophiesWon: t.trophiesWon + summary.trophiesWon.length }
+      : t
+  );
+
+  const nextManagerCareer = {
+    ...prevMc,
+    reputation: Math.min(100, prevMc.reputation + (earnedMots ? 5 : 1)),
+    accolades: newAccolades,
+    tenures: updatedTenures,
+    activeUltimatum: undefined,
+  };
+
   const updatedSave: CareerSaveFile = {
     ...save,
     season: {
@@ -510,6 +554,8 @@ export function advanceToNextSeason(save: CareerSaveFile): {
     trophies: updatedTrophies,
     finances: updatedFinances,
     boardStatus: updatedBoardStatus,
+    feederNetwork: nextFeederNetwork,
+    managerCareer: nextManagerCareer,
     inbox: [newInboxMsg, ...loanAndPreContractMessages, ...(summerTransfersRes.updatedSave.inbox || [])],
     aiClubSquads: summerTransfersRes.updatedSave.aiClubSquads,
     worldTransfersHistory: summerTransfersRes.updatedSave.worldTransfersHistory,

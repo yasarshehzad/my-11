@@ -122,6 +122,44 @@ export function classifyInboxMessage(
     };
   }
 
+  // Media & Press Conferences (Option A)
+  if (message.type === 'media') {
+    const unresolvedConference = !message.resolved && message.actionType === 'open_press_conference';
+    return {
+      classification: unresolvedConference ? 'important' : 'info',
+      isResolved: Boolean(message.resolved),
+      effectiveActionLabel: message.actionLabel || 'Enter Press Room',
+      effectiveActionTab: 'transfers',
+      effectiveActionType: message.actionType || 'open_press_conference',
+      targetId: message.targetId,
+    };
+  }
+
+  // Managerial Accolades (Option C)
+  if (message.type === 'accolade') {
+    return {
+      classification: 'important',
+      isResolved: true,
+      effectiveActionLabel: message.actionLabel || 'View Career Honors',
+      effectiveActionTab: 'transfers',
+      effectiveActionType: message.actionType || 'open_job_offers',
+      targetId: message.targetId,
+    };
+  }
+
+  // Unsolicited Rival Managerial Job Offers (Option C)
+  if (message.type === 'job_offer') {
+    const stillPending = !message.resolved;
+    return {
+      classification: stillPending ? 'action_required' : 'info',
+      isResolved: Boolean(message.resolved),
+      effectiveActionLabel: message.actionLabel || 'Review Job Offer',
+      effectiveActionTab: 'transfers',
+      effectiveActionType: message.actionType || 'open_job_offers',
+      targetId: message.targetId,
+    };
+  }
+
   // 3. Medical / Injury Reports
   if (message.type === 'injury') {
     // Check if a specific player was targeted
@@ -188,7 +226,7 @@ export function classifyInboxMessage(
       isResolved: !isCritical,
       effectiveActionLabel: message.actionLabel || 'Respond to Board',
       effectiveActionTab: message.actionTab || 'overview',
-      effectiveActionType: 'respond_board',
+      effectiveActionType: message.actionType || 'respond_board',
     };
   }
 

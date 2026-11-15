@@ -62,6 +62,12 @@ import {
   calculateTacticalMatchupMultiplier,
   updateTacticalFamiliarity,
 } from './tactics';
+import { generatePostMatchPressConference } from './pressConferences';
+import { processFeederLoanDevelopment } from './feederClubs';
+import {
+  evaluateBoardUltimatumAndCarousel,
+  evaluateMonthlyManagerAwardsAndOffers,
+} from './managerCareer';
 
 /**
  * Simulates a single league fixture with realistic football scorelines, assists, and authentic club goalscorers.
@@ -467,6 +473,7 @@ export function advanceTimeSkip(
   let currentDate = new Date(save.season.currentDate);
   let matchesPlayedCount = 0;
   let pausedReason: string | undefined = undefined;
+  const simulatedUserFixtures: Array<LeagueFixture | CupFixture> = [];
 
   // 1. Calculate stopping condition date / milestone
   let targetDate = new Date(currentDate);
@@ -514,27 +521,30 @@ export function advanceTimeSkip(
   // Helper to get active lineup-ordered squad for user match simulation
   // Helper to get active lineup-ordered squad for user match simulation
   const getActiveUserSquad = (isLeagueMatch: boolean) => {
+    const activePool = userSquad.filter(
+      (p) => !(p.isOnLoan && p.loanOriginClubId === save.club.id)
+    );
     if (isLeagueMatch) {
       // In league matches, unregistered seniors cannot participate in match simulation
-      const eligibleSquad = userSquad.filter((p) =>
-        isPlayerRegisteredForMatch(p, userSquad, save.registeredPlayerIds, save.season?.yearStart)
+      const eligibleSquad = activePool.filter((p) =>
+        isPlayerRegisteredForMatch(p, activePool, save.registeredPlayerIds, save.season?.yearStart)
       );
       if (usePreferred && save.lineup && save.lineup.starterIds && save.lineup.starterIds.length > 0) {
         const sanitizedLineup = getBestStartingLineup(
-          userSquad,
+          activePool,
           save.lineup.formation || '4-3-3',
           save.registeredPlayerIds,
           save.season?.yearStart
         );
-        return getSquadOrderedByLineup(userSquad, sanitizedLineup);
+        return getSquadOrderedByLineup(activePool, sanitizedLineup);
       }
-      return eligibleSquad.length >= 11 ? eligibleSquad : userSquad;
+      return eligibleSquad.length >= 11 ? eligibleSquad : activePool;
     }
 
     if (usePreferred && save.lineup && save.lineup.starterIds && save.lineup.starterIds.length > 0) {
-      return getSquadOrderedByLineup(userSquad, save.lineup);
+      return getSquadOrderedByLineup(activePool, save.lineup);
     }
-    return userSquad;
+    return activePool;
   };
 
   const summerDeadlineDay = `${save.season.yearStart}-09-01`;
@@ -705,6 +715,14 @@ export function advanceTimeSkip(
       finances.seasonLedger = afterPayroll.finances.seasonLedger;
       finances.transactions = afterPayroll.finances.transactions;
       finances.lastPayrollDate = afterPayroll.finances.lastPayrollDate;
+
+      const playedFix =
+        item.type === 'league'
+          ? fixtures[item.index]
+          : cups[item.tournamentId].fixtures[item.index];
+      if (playedFix) {
+        simulatedUserFixtures.push(playedFix);
+      }
     }
 
     matchesPlayedCount++;
@@ -1042,6 +1060,25 @@ export function advanceTimeSkip(
 
   updatedSave = processDailyScoutingProgress(updatedSave, curIso);
   updatedSave = processDailyConstructionProgress(updatedSave, curIso);
+  updatedSave = processFeederLoanDevelopment(updatedSave, curIso);
+
+  if (simulatedUserFixtures.length > 0) {
+    for (const uFix of simulatedUserFixtures) {
+      updatedSave = evaluateBoardUltimatumAndCarousel(updatedSave, uFix);
+    }
+    updatedSave = generatePostMatchPressConference(
+      updatedSave,
+      simulatedUserFixtures[simulatedUserFixtures.length - 1]
+    );
+  } else {
+    updatedSave = evaluateBoardUltimatumAndCarousel(updatedSave);
+  }
+
+  updatedSave = evaluateMonthlyManagerAwardsAndOffers(updatedSave, curIso);
+
+  if (updatedSave.boardStatus?.status === 'sacked' && save.settings.boardCanSack && !pausedReason) {
+    pausedReason = 'Emergency Board Meeting: Sacked due to poor league results';
+  }
 
   if (matchesPlayedCount > 0 && updatedSave.tactics) {
     updatedSave = {

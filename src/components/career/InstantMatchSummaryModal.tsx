@@ -16,6 +16,7 @@ export interface InstantMatchSummaryModalProps {
   save: CareerSaveFile;
   onClose: () => void;
   onViewDetailedDossier: () => void;
+  onAttendPressConference?: () => void;
   onNavigateTab?: (tab: 'table' | 'squad' | 'transfers' | 'fixtures' | 'cups' | 'overview') => void;
 }
 
@@ -24,6 +25,7 @@ export function InstantMatchSummaryModal({
   save,
   onClose,
   onViewDetailedDossier,
+  onAttendPressConference,
   onNavigateTab,
 }: InstantMatchSummaryModalProps) {
   // Close on Escape key press
@@ -300,11 +302,23 @@ export function InstantMatchSummaryModal({
               type="button"
               data-office-ui="true"
               onClick={() => handleNavigate('squad')}
-              className="flex-1 py-2.5 px-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-display font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-2xs active:scale-[0.98] cursor-pointer"
+              className="flex-1 py-2.5 px-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-display font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-2xs active:scale-[0.98] cursor-pointer motion-reduce:transition-none"
             >
               <span className="text-slate-900 dark:text-white">👥 Squad</span>
             </button>
           </div>
+
+          {onAttendPressConference && (
+            <button
+              type="button"
+              data-office-ui="true"
+              onClick={onAttendPressConference}
+              className="w-full py-2.5 px-4 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-800 font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-2xs cursor-pointer motion-reduce:transition-none"
+            >
+              <span>🎙️</span>
+              <span>Attend Post-Match Press Conference</span>
+            </button>
+          )}
 
           {/* Primary Action Button: "Continue" */}
           <button

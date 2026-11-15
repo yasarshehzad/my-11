@@ -11,6 +11,9 @@ import { getInitialInboxMessages } from './inbox';
 import { calculatePlayerValue, calculateWeeklyWage, createInitialSeasonLedger } from './finance';
 import { getInitialClubTactics } from './tactics';
 import { getInitialClubInfrastructure } from './infrastructure';
+import { getInitialPressState } from './pressConferences';
+import { getInitialFeederNetwork } from './feederClubs';
+import { getInitialManagerCareer } from './managerCareer';
 import { Player, FormationType } from '../types/game';
 
 export const VALID_SLOT_IDS = ['slot_1', 'slot_2', 'slot_3'] as const;
@@ -108,6 +111,18 @@ export function loadCareerSave(slotId: string): CareerSaveFile | null {
     }
     if (!parsed.infrastructure && parsed.club) {
       parsed.infrastructure = getInitialClubInfrastructure(parsed.club);
+    }
+    if (!parsed.pressState) {
+      parsed.pressState = getInitialPressState();
+    }
+    if (!parsed.feederNetwork) {
+      parsed.feederNetwork = getInitialFeederNetwork();
+    }
+    if (!parsed.managerCareer && parsed.club) {
+      parsed.managerCareer = getInitialManagerCareer(
+        parsed.club,
+        parsed.season?.currentDate || `${new Date().getFullYear()}-07-01`
+      );
     }
 
     return parsed as CareerSaveFile;
@@ -338,6 +353,9 @@ export function createNewCareerSave(params: {
     tactics: getInitialClubTactics(squad),
     scoutingState: { activeMissions: [], scoutingDossiers: [] },
     infrastructure: getInitialClubInfrastructure(params.club),
+    pressState: getInitialPressState(),
+    feederNetwork: getInitialFeederNetwork(),
+    managerCareer: getInitialManagerCareer(params.club, currentDate),
     phase: 'preseason',
     inbox: getInitialInboxMessages({
       id: params.slotId,

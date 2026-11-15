@@ -83,12 +83,31 @@ import {
   ScoutingDossierReport,
   FacilityType,
 } from '../../career/types';
+import {
+  answerPressConference,
+  generatePreMatchMindGamesPressConference,
+  getInitialPressState,
+} from '../../career/pressConferences';
+import {
+  AVAILABLE_FEEDER_CLUBS,
+  establishFeederPartnership,
+  terminateFeederPartnership,
+  sendPlayerToFeederClub,
+  recallPlayerFromFeederClub,
+  getInitialFeederNetwork,
+  getMaxAffiliatesAllowed,
+} from '../../career/feederClubs';
+import {
+  acceptManagerJobOffer,
+  declineManagerJobOffer,
+  getInitialManagerCareer,
+} from '../../career/managerCareer';
 
 interface TransferHubProps {
   save: CareerSaveFile;
   onUpdateSave: (updatedSave: CareerSaveFile) => void;
   onNotification?: (msg: string) => void;
-  initialSubTab?: 'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board' | 'scouting' | 'infrastructure';
+  initialSubTab?: 'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board' | 'scouting' | 'infrastructure' | 'feeder' | 'media';
   focusedOfferId?: string;
   onOpenCompare?: (playerA: MarketPlayer, playerB?: CareerPlayer | MarketPlayer) => void;
 }
@@ -103,10 +122,12 @@ export function TransferHub({
   focusedOfferId,
   onOpenCompare,
 }: TransferHubProps) {
-  const [subTab, setSubTab] = useState<'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board' | 'scouting' | 'infrastructure'>(
+  const [subTab, setSubTab] = useState<'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board' | 'scouting' | 'infrastructure' | 'feeder' | 'media'>(
     initialSubTab || 'market'
   );
   const [historyView, setHistoryView] = useState<'my_club' | 'world'>('my_club');
+  const [selectedFeederClubId, setSelectedFeederClubId] = useState<string>(AVAILABLE_FEEDER_CLUBS[0].id);
+  const [selectedLoaneePlayerId, setSelectedLoaneePlayerId] = useState<string>('');
 
   useEffect(() => {
     if (initialSubTab) {
@@ -1118,6 +1139,24 @@ export function TransferHub({
               badge: (save.infrastructure?.activeProjects || []).filter((p) => !p.completed).length > 0
                 ? `${(save.infrastructure?.activeProjects || []).filter((p) => !p.completed).length} Work`
                 : `Lv.${save.infrastructure?.stadiumLevel || 1}`,
+            },
+            {
+              id: 'feeder',
+              label: 'Affiliates',
+              icon: '🤝',
+              badge: `${(save.feederNetwork?.partnerships || []).length}/${getMaxAffiliatesAllowed(save)}`,
+            },
+            {
+              id: 'media',
+              label: 'Press',
+              icon: '🎙️',
+              badge:
+                save.pressState?.activeConference && !save.pressState.activeConference.answered
+                  ? 'Live'
+                  : `${save.pressState?.mediaRelationshipScore ?? 62}%`,
+              badgeAlert: Boolean(
+                save.pressState?.activeConference && !save.pressState.activeConference.answered
+              ),
             },
             { id: 'history', label: 'History', icon: '📜', badge: save.transfersHistory?.length || 0 },
             { id: 'board', label: 'Board', icon: '🏛️', badge: `${boardStatus.confidence}%` },
@@ -2696,6 +2735,227 @@ export function TransferHub({
             </div>
           </div>
 
+          {/* OPTION C: ACTIVE 3-MATCH BOARD ULTIMATUM BANNER */}
+          {save.managerCareer?.activeUltimatum?.status === 'active' && (
+            <section
+              aria-label="Board Ultimatum"
+              className="office-floating-card p-4 border-2 border-rose-400 bg-rose-50/70 space-y-2"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🚨</span>
+                  <div>
+                    <h4 className="font-display font-black text-xs sm:text-sm uppercase tracking-tight text-rose-800">
+                      Active 3-Match Board Ultimatum
+                    </h4>
+                    <p className="text-[11px] text-rose-700">
+                      {save.managerCareer.activeUltimatum.reason}
+                    </p>
+                  </div>
+                </div>
+                <span className="px-2.5 py-1 rounded-xl bg-rose-600 text-white font-mono text-xs font-black">
+                  {save.managerCareer.activeUltimatum.pointsEarned} / {save.managerCareer.activeUltimatum.pointsRequired} PTS ({save.managerCareer.activeUltimatum.matchesRemaining} Left)
+                </span>
+              </div>
+            </section>
+          )}
+
+          {/* OPTION C: MANAGERIAL CAREER REPUTATION, ACCOLADES & TENURES */}
+          {(() => {
+            const mc = save.managerCareer || getInitialManagerCareer(save.club, save.season.currentDate);
+            const pendingJobOffers = (mc.jobOffers || []).filter((o) => o.status === 'pending');
+
+            return (
+              <div className="space-y-4">
+                <section id="manager-career-section" className="office-floating-card p-4 space-y-3">
+                  <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-display font-black text-slate-900 uppercase tracking-tight flex items-center gap-1.5">
+                        <span>🏆</span> Managerial Standing &amp; Career Record
+                      </h4>
+                      <p className="text-[10px] text-slate-500">
+                        Reputation, monthly/seasonal accolades, and multi-club tenure ledger.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="office-subcard px-2.5 py-1 text-[11px] font-mono font-bold text-blue-700">
+                        Rep {mc.reputation}/100
+                      </span>
+                      <span className="office-subcard px-2.5 py-1 text-[11px] font-mono font-bold text-emerald-700">
+                        {formatCurrency(mc.weeklySalary)}/wk
+                      </span>
+                    </div>
+                  </header>
+
+                  {/* Accolades List */}
+                  <div className="space-y-2">
+                    <div className="text-[10px] uppercase font-bold text-slate-500">
+                      Personal Accolades ({mc.accolades.length})
+                    </div>
+                    {mc.accolades.length === 0 ? (
+                      <div className="office-subcard p-3 text-xs text-slate-500">
+                        Maintain ≥ 2.10 points-per-game over a calendar month or finish in title contention to win Manager of the Month &amp; Season awards.
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {mc.accolades.map((acc) => (
+                          <article key={acc.id} className="office-subcard p-3 space-y-1 border border-amber-200 bg-amber-50/40">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-display font-black text-xs text-amber-900 truncate">
+                                🏅 {acc.title}
+                              </span>
+                              <span className="text-[10px] font-mono text-amber-700 shrink-0">
+                                {acc.seasonLabel}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-600">{acc.summary}</p>
+                          </article>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Club Tenures */}
+                  <div className="space-y-2">
+                    <div className="text-[10px] uppercase font-bold text-slate-500">
+                      Club Tenures History ({mc.tenures.length})
+                    </div>
+                    <div className="space-y-1.5">
+                      {mc.tenures.map((tenure, i) => (
+                        <div
+                          key={`${tenure.clubId}_${i}`}
+                          className="office-subcard p-2.5 flex flex-wrap items-center justify-between gap-2 text-xs"
+                        >
+                          <div className="min-w-0">
+                            <div className="font-display font-black text-slate-900 truncate">
+                              {tenure.clubName}
+                              {(!tenure.departureReason || tenure.departureReason === 'active') && (
+                                <span className="ml-2 text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700">
+                                  Current
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[10px] font-mono text-slate-500">
+                              Started {formatCareerDate(tenure.startDate, save.settings.dateFormat)}
+                              {tenure.endDate ? ` • Ended ${formatCareerDate(tenure.endDate, save.settings.dateFormat)}` : ''}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3 font-mono text-[11px] text-slate-700">
+                            <span>{tenure.matchesManaged}P</span>
+                            <span className="text-emerald-700 font-bold">{tenure.wins}W</span>
+                            <span>{tenure.draws}D</span>
+                            <span className="text-rose-700">{tenure.losses}L</span>
+                            <span className="text-amber-700 font-bold">🏆 {tenure.trophiesWon}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+
+                {/* Job Offers Desk */}
+                <section id="job-offers-section" className="office-floating-card p-4 space-y-3">
+                  <header className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-display font-black text-slate-900 uppercase tracking-tight flex items-center gap-1.5">
+                        <span>💼</span> Rival Club Job Offers &amp; Carousel
+                      </h4>
+                      <p className="text-[10px] text-slate-500">
+                        Accept an approach to take over a rival club mid-career, or decline to build loyalty with your current board.
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                      {pendingJobOffers.length} Open
+                    </span>
+                  </header>
+
+                  {pendingJobOffers.length === 0 ? (
+                    <div className="office-subcard p-3 text-xs text-slate-500">
+                      No rival club approaches right now. Winning matches and lifting reputation to ≥ 66 attracts unsolicited offers.
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {pendingJobOffers.map((offer) => (
+                        <article
+                          key={offer.id}
+                          className="office-subcard p-4 space-y-3 border border-slate-200 bg-white"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span
+                                className="w-3 h-8 rounded-full shrink-0"
+                                style={{ backgroundColor: offer.primaryColor }}
+                              />
+                              <div className="min-w-0">
+                                <h5 className="font-display font-black text-sm text-slate-900 truncate">
+                                  {offer.clubName}
+                                </h5>
+                                <div className="text-[10px] font-mono text-slate-500 uppercase">
+                                  {offer.clubTier} Tier • Rep {offer.clubReputation}
+                                </div>
+                              </div>
+                            </div>
+                            {offer.isEmergencyRebound && (
+                              <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-800">
+                                Rebound
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-xs text-slate-600 leading-relaxed">{offer.pitchMessage}</p>
+
+                          <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
+                            <div className="bg-slate-50 p-2 rounded-lg">
+                              <span className="text-slate-400 block text-[9px] uppercase">Warchest</span>
+                              <span className="font-bold text-blue-700">{formatCurrency(offer.transferBudget)}</span>
+                            </div>
+                            <div className="bg-slate-50 p-2 rounded-lg">
+                              <span className="text-slate-400 block text-[9px] uppercase">Salary</span>
+                              <span className="font-bold text-emerald-700">{formatCurrency(offer.managerWeeklySalary)}/wk</span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const res = acceptManagerJobOffer(save, offer.id);
+                                if (res.success) {
+                                  onUpdateSave(res.updatedSave);
+                                  onNotification?.(`Joined ${offer.clubName}! Welcome to your new club.`);
+                                } else if (res.error) {
+                                  onNotification?.(res.error);
+                                }
+                              }}
+                              className="flex-1 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-display font-black text-[11px] uppercase tracking-wider cursor-pointer transition-colors motion-reduce:transition-none"
+                            >
+                              Accept &amp; Join Club
+                            </button>
+                            {!offer.isEmergencyRebound && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const res = declineManagerJobOffer(save, offer.id);
+                                  if (res.success) {
+                                    onUpdateSave(res.updatedSave);
+                                    onNotification?.(`Declined ${offer.clubName} (+4% Board Trust for Loyalty).`);
+                                  }
+                                }}
+                                className="py-2 px-3 rounded-xl border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 font-display font-bold text-[11px] uppercase tracking-wider cursor-pointer transition-colors motion-reduce:transition-none"
+                              >
+                                Decline (+4% Trust)
+                              </button>
+                            )}
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              </div>
+            );
+          })()}
+
           {/* FM-STYLE TRANSFER & WAGE BUDGET REALLOCATION (COMPACT) */}
           <section className="office-floating-card p-3.5 sm:p-4 space-y-3">
             <div className="flex items-center justify-between gap-2">
@@ -3163,6 +3423,7 @@ export function TransferHub({
                       stadium_operations: '🏟️',
                       loan_fees: '🤝',
                       board_investment: '🏛️',
+                      feeder_partnership: '🤝',
                     };
 
                     return (
@@ -3979,6 +4240,436 @@ export function TransferHub({
           )}
         </section>
       )}
+
+      {/* SUB-VIEW 8: MULTI-CLUB FEEDER & LOAN NETWORK (OPTION B) */}
+      {subTab === 'feeder' && (() => {
+        const network = save.feederNetwork || getInitialFeederNetwork();
+        const maxSlots = getMaxAffiliatesAllowed(save);
+        const scoutingLevel = save.infrastructure?.scoutingHubLevel ?? 1;
+        const partneredIds = new Set(network.partnerships.map((p) => p.feederClubId));
+        const eligibleLoanees = save.squad.filter((p) => !p.isOnLoan && !p.injured);
+        const activePartnerClubId =
+          network.partnerships.some((p) => p.feederClubId === selectedFeederClubId)
+            ? selectedFeederClubId
+            : network.partnerships[0]?.feederClubId || '';
+        const activePlayerId =
+          eligibleLoanees.some((p) => p.id === selectedLoaneePlayerId)
+            ? selectedLoaneePlayerId
+            : eligibleLoanees[0]?.id || '';
+        const weeklySaved = network.activeLoans.reduce((s, l) => s + (l.weeklyWageRelieved || 0), 0);
+
+        return (
+          <section id="transfer-feeder-section" className="space-y-6 scroll-mt-20" aria-label="Continental Feeder Club Network">
+            <header className="office-floating-card rounded-3xl p-4 sm:p-6 border border-slate-200/90 space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">🤝</span>
+                    <h3 className="text-lg sm:text-xl font-display font-black text-slate-900 uppercase tracking-tight">
+                      Continental Feeder &amp; Loan Network
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
+                    Sign strategic affiliate clubs across Europe, South America, Asia, and the EFL Championship. Dispatch prospects for guaranteed starts, accelerated OVR progression, and 100% wage relief.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="office-subcard p-3 text-center">
+                    <span className="text-[9px] uppercase font-bold text-slate-400 block">Affiliate Slots</span>
+                    <span className="text-sm font-mono font-black text-blue-700">
+                      {network.partnerships.length} / {maxSlots} (Hub Lv.{scoutingLevel})
+                    </span>
+                  </div>
+                  <div className="office-subcard p-3 text-center">
+                    <span className="text-[9px] uppercase font-bold text-slate-400 block">Active Loanees</span>
+                    <span className="text-sm font-mono font-black text-emerald-700">
+                      {network.activeLoans.length} Away
+                    </span>
+                  </div>
+                  <div className="office-subcard p-3 text-center">
+                    <span className="text-[9px] uppercase font-bold text-slate-400 block">Wages Saved</span>
+                    <span className="text-sm font-mono font-black text-indigo-700">
+                      {formatWage(weeklySaved)}/wk
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </header>
+
+            {/* Quick Loan Dispatch Console */}
+            <section className="office-floating-card rounded-3xl p-4 sm:p-6 space-y-4 border border-slate-200/90">
+              <h4 className="font-display font-black text-sm uppercase tracking-tight text-slate-900 flex items-center gap-2">
+                <span>✈️</span> Dispatch Prospect on Guaranteed Feeder Loan
+              </h4>
+              {network.partnerships.length === 0 ? (
+                <p className="text-xs text-slate-500">
+                  Establish at least one affiliate club partnership below before sending squad players on guaranteed feeder loans.
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                  <div className="space-y-1">
+                    <label htmlFor="feeder-club-select" className="text-[10px] font-bold uppercase text-slate-500 block">
+                      Affiliate Partner Club
+                    </label>
+                    <select
+                      id="feeder-club-select"
+                      value={activePartnerClubId}
+                      onChange={(e) => setSelectedFeederClubId(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800"
+                    >
+                      {network.partnerships.map((p) => {
+                        const prof = AVAILABLE_FEEDER_CLUBS.find((c) => c.id === p.feederClubId);
+                        return (
+                          <option key={p.feederClubId} value={p.feederClubId}>
+                            {prof?.crestEmoji} {prof?.name} ({prof?.developmentMultiplier.toFixed(2)}x XP)
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label htmlFor="feeder-player-select" className="text-[10px] font-bold uppercase text-slate-500 block">
+                      Eligible Squad Player ({eligibleLoanees.length})
+                    </label>
+                    <select
+                      id="feeder-player-select"
+                      value={activePlayerId}
+                      onChange={(e) => setSelectedLoaneePlayerId(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800"
+                    >
+                      {eligibleLoanees.map((pl) => (
+                        <option key={pl.id} value={pl.id}>
+                          {pl.name} ({pl.position} • {pl.rating} OVR • Age {pl.age})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={!activePartnerClubId || !activePlayerId}
+                    onClick={() => {
+                      const res = sendPlayerToFeederClub(save, activePlayerId, activePartnerClubId);
+                      if (res.success) {
+                        onUpdateSave(res.updatedSave);
+                        onNotification?.('Player dispatched on guaranteed feeder loan (100% wage relief).');
+                      } else if (res.error) {
+                        onNotification?.(res.error);
+                      }
+                    }}
+                    className="py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-display font-black text-xs uppercase tracking-wider cursor-pointer transition-colors motion-reduce:transition-none"
+                  >
+                    Dispatch Prospect (100% Wage Relief)
+                  </button>
+                </div>
+              )}
+            </section>
+
+            {/* Active Feeder Loans Progression Tracker */}
+            {network.activeLoans.length > 0 && (
+              <section className="office-floating-card rounded-3xl p-4 sm:p-6 space-y-3 border border-slate-200/90">
+                <h4 className="font-display font-black text-sm uppercase tracking-tight text-slate-900 flex items-center gap-2">
+                  <span>📈</span> Active Feeder Loanees Development ({network.activeLoans.length})
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {network.activeLoans.map((loan) => (
+                    <article key={loan.id} className="office-subcard p-4 space-y-2.5 border border-slate-200 bg-white">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h5 className="font-display font-black text-sm text-slate-900">
+                            {loan.playerName}{' '}
+                            <span className="text-[11px] font-mono text-blue-600">({loan.position})</span>
+                          </h5>
+                          <p className="text-[11px] text-slate-500">
+                            On loan at <strong className="text-slate-700">{loan.feederClubName}</strong>
+                          </p>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 font-mono text-xs font-black">
+                          {loan.ratingAtDeparture} → {loan.currentRating} OVR
+                          {loan.ovrGained > 0 ? ` (+${loan.ovrGained})` : ''}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-[10px] font-mono text-slate-500">
+                          <span>Next +1 OVR Breakthrough XP</span>
+                          <span>{loan.xpAccumulated}%</span>
+                        </div>
+                        <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                          <div
+                            className="h-full bg-blue-600 transition-all motion-reduce:transition-none"
+                            style={{ width: `${Math.min(100, loan.xpAccumulated)}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between text-[11px] font-mono text-slate-600 pt-1">
+                        <span>{loan.appearances} Apps • {loan.goals}G • {loan.assists}A</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const res = recallPlayerFromFeederClub(save, loan.playerId);
+                            if (res.success) {
+                              onUpdateSave(res.updatedSave);
+                              onNotification?.(`${loan.playerName} recalled to first-team squad.`);
+                            } else if (res.error) {
+                              onNotification?.(res.error);
+                            }
+                          }}
+                          className="px-3 py-1.5 rounded-xl border border-slate-300 bg-slate-50 hover:bg-slate-100 font-display font-bold text-[10px] uppercase tracking-wider text-slate-800 cursor-pointer"
+                        >
+                          Recall to Squad
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Global Partner Club Catalog */}
+            <section className="space-y-3">
+              <h4 className="font-display font-black text-sm uppercase tracking-tight text-slate-900">
+                Global Partner Catalog ({AVAILABLE_FEEDER_CLUBS.length} Curated Clubs)
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {AVAILABLE_FEEDER_CLUBS.map((club) => {
+                  const isPartnered = partneredIds.has(club.id);
+                  return (
+                    <article
+                      key={club.id}
+                      className={`office-floating-card rounded-3xl p-4 space-y-3 border ${
+                        isPartnered ? 'border-emerald-300 bg-emerald-50/20' : 'border-slate-200/90 bg-white'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span className="text-2xl">{club.crestEmoji}</span>
+                          <div className="min-w-0">
+                            <h5 className="font-display font-black text-sm text-slate-900 truncate">
+                              {club.name}
+                            </h5>
+                            <div className="text-[10px] font-mono text-slate-500">
+                              {club.leagueName} • Tier {club.tierStrength}
+                            </div>
+                          </div>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 font-mono text-[11px] font-black shrink-0">
+                          {club.developmentMultiplier.toFixed(2)}x XP
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-slate-600 leading-relaxed">{club.description}</p>
+
+                      <div className="flex flex-wrap gap-1.5">
+                        {club.specialties.map((sp) => (
+                          <span
+                            key={sp}
+                            className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-slate-100 text-slate-700"
+                          >
+                            {sp}
+                          </span>
+                        ))}
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
+                        <span className="text-xs font-mono font-bold text-slate-700">
+                          Fee: {formatCurrency(club.annualPartnershipFee)}/yr
+                        </span>
+                        {isPartnered ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const res = terminateFeederPartnership(save, club.id);
+                              if (res.success) {
+                                onUpdateSave(res.updatedSave);
+                                onNotification?.(`Partnership with ${club.name} terminated.`);
+                              }
+                            }}
+                            className="px-3 py-1.5 rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-700 font-display font-bold text-[11px] uppercase tracking-wider cursor-pointer"
+                          >
+                            Terminate Link
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const res = establishFeederPartnership(save, club.id);
+                              if (res.success) {
+                                onUpdateSave(res.updatedSave);
+                                onNotification?.(`Signed affiliate deal with ${club.name}!`);
+                              } else if (res.error) {
+                                onNotification?.(res.error);
+                              }
+                            }}
+                            className="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-blue-700 text-white font-display font-black text-[11px] uppercase tracking-wider cursor-pointer transition-colors motion-reduce:transition-none"
+                          >
+                            Sign Partnership
+                          </button>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          </section>
+        );
+      })()}
+
+      {/* SUB-VIEW 9: PRESS ROOM & MEDIA MIND GAMES (OPTION A) */}
+      {subTab === 'media' && (() => {
+        const press = save.pressState || getInitialPressState();
+        const activeConf = press.activeConference;
+
+        return (
+          <section id="transfer-media-section" className="space-y-6 scroll-mt-20" aria-label="Press Room and Media Mind Games">
+            <header className="office-floating-card rounded-3xl p-4 sm:p-6 border border-slate-200/90 space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">🎙️</span>
+                    <h3 className="text-lg sm:text-xl font-display font-black text-slate-900 uppercase tracking-tight">
+                      Press Room &amp; Media Mind Games
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
+                    Handle post-match media duties or initiate pre-match psychological mind games to fire up dressing room morale, steer board perception, and unsettle upcoming rivals.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="office-subcard p-3 text-center">
+                    <span className="text-[9px] uppercase font-bold text-slate-400 block">Media Standing</span>
+                    <span className="text-sm font-mono font-black text-blue-700">
+                      {press.mediaRelationshipScore} / 100
+                    </span>
+                  </div>
+                  {press.mindGamesBuffNextMatch && (
+                    <div className="office-subcard p-3 border border-indigo-200 bg-indigo-50 text-indigo-800">
+                      <span className="text-[9px] uppercase font-bold block">Active Mind Games Edge</span>
+                      <span className="text-xs font-mono font-black">
+                        {press.mindGamesBuffNextMatch.description}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {(!activeConf || activeConf.answered) && (
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated = generatePreMatchMindGamesPressConference(save);
+                      onUpdateSave(updated);
+                      onNotification?.('Journalists assembled for Pre-Match Mind-Games briefing!');
+                    }}
+                    className="py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-blue-700 text-white font-display font-black text-xs uppercase tracking-wider cursor-pointer transition-colors motion-reduce:transition-none"
+                  >
+                    Hold Pre-Match Mind-Games Briefing
+                  </button>
+                </div>
+              )}
+            </header>
+
+            {/* Active Conference Prompt */}
+            {activeConf && !activeConf.answered && (
+              <section className="office-floating-card rounded-3xl p-4 sm:p-6 border-2 border-indigo-300 bg-indigo-50/30 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-100 pb-3">
+                  <div>
+                    <span className="text-[10px] font-mono font-bold uppercase text-indigo-700">
+                      {activeConf.outlet} • {activeConf.journalistName}
+                    </span>
+                    <h4 className="font-display font-black text-base text-slate-900 mt-1">
+                      &ldquo;{activeConf.question}&rdquo;
+                    </h4>
+                  </div>
+                  {activeConf.scoreline && (
+                    <span className="px-2.5 py-1 rounded-xl bg-slate-900 text-white font-mono text-xs font-black">
+                      {activeConf.matchOutcome} {activeConf.scoreline} vs {activeConf.opponentClubName}
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {activeConf.options.map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => {
+                        const res = answerPressConference(save, opt.id);
+                        if (res.success) {
+                          onUpdateSave(res.updatedSave);
+                          onNotification?.(
+                            res.headline
+                              ? `${res.headline.impactSummary}`
+                              : 'Press briefing delivered.'
+                          );
+                        } else if (res.error) {
+                          onNotification?.(res.error);
+                        }
+                      }}
+                      className="text-left office-subcard p-4 rounded-2xl border border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50/30 space-y-2 cursor-pointer transition-all motion-reduce:transition-none"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-display font-black text-xs uppercase text-blue-700">
+                          {opt.label}
+                        </span>
+                        <span className="text-[9px] font-mono uppercase px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+                          {opt.tone.replace('_', ' ')}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-700 italic leading-relaxed">{opt.quote}</p>
+                      <div className="flex flex-wrap gap-2 text-[10px] font-mono text-slate-500 pt-1">
+                        <span>Morale {opt.moraleDelta >= 0 ? `+${opt.moraleDelta}` : opt.moraleDelta}</span>
+                        <span>• Board {opt.boardConfidenceDelta >= 0 ? `+${opt.boardConfidenceDelta}` : opt.boardConfidenceDelta}%</span>
+                        <span>• Media {opt.mediaRelationDelta >= 0 ? `+${opt.mediaRelationDelta}` : opt.mediaRelationDelta}</span>
+                        {opt.mindGamesEffect && (
+                          <span className="text-indigo-700 font-bold">
+                            • +{opt.mindGamesEffect.attackBonus}% Mind Games
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Back-Page Headlines Archive */}
+            <section className="office-floating-card rounded-3xl p-4 sm:p-6 space-y-3 border border-slate-200/90">
+              <h4 className="font-display font-black text-sm uppercase tracking-tight text-slate-900 flex items-center gap-2">
+                <span>📰</span> Back-Page Headlines Feed ({press.mediaHistory.length})
+              </h4>
+              {press.mediaHistory.length === 0 ? (
+                <p className="text-xs text-slate-500">
+                  No quotes published yet. Answer a post-match or pre-match briefing to populate the back pages.
+                </p>
+              ) : (
+                <div className="space-y-2.5">
+                  {press.mediaHistory.map((item) => (
+                    <article key={item.id} className="office-subcard p-3.5 space-y-1.5 border border-slate-200 bg-white">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-[10px] font-mono font-bold uppercase text-blue-700">
+                          {item.outlet} • {formatCareerDate(item.date, save.settings.dateFormat)}
+                        </span>
+                        <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                          {item.impactSummary}
+                        </span>
+                      </div>
+                      <h5 className="font-display font-black text-sm text-slate-900">{item.headline}</h5>
+                      <p className="text-xs text-slate-600 italic">{item.quote}</p>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+          </section>
+        );
+      })()}
 
       {/* SQUAD CONTRACT RENEWAL MODAL */}
       {renewingPlayer && (
