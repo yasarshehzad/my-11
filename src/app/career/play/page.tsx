@@ -1700,25 +1700,27 @@ function CareerPlayHubContent() {
 
   if (!save) {
     return (
-      <div className="min-h-screen bg-slate-950 text-foreground font-sans flex flex-col pitch-bg p-6 justify-center items-center">
-        <main className="w-full max-w-md bg-slate-900/80 backdrop-blur-md rounded-3xl p-8 border border-slate-800 shadow-2xl text-center space-y-6">
-          <span className="text-4xl">📁</span>
-          <h1 className="text-xl font-display font-black text-white uppercase tracking-tight">
+      <div className="min-h-screen my11-canvas text-slate-900 font-sans flex flex-col p-6 justify-center items-center">
+        <main className="w-full max-w-md office-floating-card rounded-3xl p-8 border border-slate-200 shadow-2xl text-center space-y-6">
+          <div className="w-12 h-12 mx-auto rounded-2xl bg-slate-900 text-white flex items-center justify-center font-mono font-bold text-xs shadow-sm">
+            SAVE
+          </div>
+          <h1 className="text-xl font-display font-black text-slate-900 uppercase tracking-tight">
             No Save Found in {slotId.replace('_', ' ').toUpperCase()}
           </h1>
-          <p className="text-xs text-slate-400 font-medium leading-relaxed">
+          <p className="text-xs text-slate-600 font-medium leading-relaxed">
             There is currently no career save loaded in this slot. You can start a new career or import a backup file.
           </p>
           <div className="pt-2 flex gap-3">
             <Link
               href="/career"
-              className="flex-1 py-3 px-4 rounded-xl border border-slate-800 bg-slate-950 hover:bg-slate-900 text-xs font-bold text-slate-300 font-display uppercase tracking-wider"
+              className="flex-1 py-3 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-xs font-bold text-slate-800 font-display uppercase tracking-wider"
             >
               Save Slots
             </Link>
             <Link
               href={`/career/setup?slot=${slotId}`}
-              className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-display font-black uppercase tracking-wider flex items-center justify-center gap-1 shadow-md shadow-blue-500/20"
+              className="flex-1 py-3 px-4 rounded-xl office-play-match-btn text-white text-xs font-display font-black uppercase tracking-wider flex items-center justify-center gap-1"
             >
               Start New
             </Link>
@@ -3946,61 +3948,60 @@ function CareerPlayHubContent() {
           aria-modal="true"
           className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 motion-reduce:transition-none"
         >
-          <div className="bg-slate-950 border border-blue-500/40 rounded-3xl p-6 sm:p-7 max-w-md w-full space-y-5 shadow-2xl text-left relative">
+          <div className="office-floating-card bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 max-w-md w-full space-y-5 shadow-2xl text-left relative text-slate-900">
             <div className="flex justify-between items-start">
               <div className="space-y-1">
-                <span className="text-[10px] font-black uppercase text-blue-400 tracking-wider font-display">
+                <span className="text-[10px] font-black uppercase text-blue-700 tracking-wider font-display">
                   Calendar Fast Forward Confirmation
                 </span>
-                <h3 className="text-xl font-display font-black text-white uppercase tracking-tight">
+                <h3 className="text-xl font-display font-black text-slate-900 uppercase tracking-tight">
                   {getFastForwardDetails(pendingFastForward).title}
                 </h3>
               </div>
               <button
                 onClick={() => setPendingFastForward(null)}
-                className="text-slate-500 hover:text-white p-1 rounded-lg text-sm"
+                className="text-slate-500 hover:text-slate-900 p-1 rounded-lg text-sm cursor-pointer"
                 aria-label="Close modal"
               >
                 ✕
               </button>
             </div>
 
-            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 space-y-2 text-xs">
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 text-xs">
               <div className="flex justify-between items-center text-[11px]">
-                <span className="text-slate-400 uppercase font-bold">Target Stop Date</span>
-                <span className="font-mono font-bold text-blue-400">
+                <span className="text-slate-600 uppercase font-bold">Target Stop Date</span>
+                <span className="font-mono font-bold text-blue-700">
                   {getFastForwardDetails(pendingFastForward).targetDate}
                 </span>
               </div>
-              <p className="text-slate-300 leading-relaxed pt-1">
+              <p className="text-slate-700 leading-relaxed pt-1">
                 {getFastForwardDetails(pendingFastForward).description}
               </p>
             </div>
 
-            <label className="flex items-start gap-3 p-3 bg-slate-900/80 border border-slate-800 rounded-xl cursor-pointer hover:border-blue-500/40 transition-colors">
+            <label className="flex items-start gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:border-blue-400 transition-colors">
               <input
                 type="checkbox"
                 checked={fastForwardUsePreferredEleven}
                 onChange={(e) => setFastForwardUsePreferredEleven(e.target.checked)}
-                className="mt-0.5 w-4 h-4 rounded text-blue-600 focus:ring-blue-500 bg-slate-800 border-slate-700 cursor-pointer"
+                className="mt-0.5 w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
               />
               <div className="flex flex-col text-left">
-                <span className="text-xs font-bold text-slate-200">Use preferred starting 11</span>
-                <span className="text-[10px] text-slate-400">Deploy your chosen starting eleven lineup for all fixtures simulated while away</span>
+                <span className="text-xs font-bold text-slate-900">Use preferred starting 11</span>
+                <span className="text-[10px] text-slate-600">Deploy your chosen starting eleven lineup for all fixtures simulated while away</span>
               </div>
             </label>
 
             {/* Transfer Window Milestone Halting Option */}
-            <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-xl space-y-2 text-left">
-              <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-                <span>🛑</span>
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-left">
+              <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                 <span>Transfer Milestone Halting</span>
               </span>
-              <p className="text-[10px] text-slate-400">
+              <p className="text-[10px] text-slate-600">
                 Choose when calendar fast-forward should automatically pause for transfer opportunities:
               </p>
               <div className="space-y-1.5 pt-0.5 text-xs">
-                <label className="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white">
+                <label className="flex items-center gap-2 cursor-pointer text-slate-700 hover:text-slate-900">
                   <input
                     type="radio"
                     name="ffTransferHalt"
@@ -4011,7 +4012,7 @@ function CareerPlayHubContent() {
                   />
                   <span>Halt on Transfer Deadline Day (23:00 BST)</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white">
+                <label className="flex items-center gap-2 cursor-pointer text-slate-700 hover:text-slate-900">
                   <input
                     type="radio"
                     name="ffTransferHalt"
@@ -4022,7 +4023,7 @@ function CareerPlayHubContent() {
                   />
                   <span>Halt at Window Opening and Deadline Day</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white">
+                <label className="flex items-center gap-2 cursor-pointer text-slate-700 hover:text-slate-900">
                   <input
                     type="radio"
                     name="ffTransferHalt"
@@ -4036,8 +4037,8 @@ function CareerPlayHubContent() {
               </div>
             </div>
 
-            <aside aria-label="Caution note" className="p-3 bg-amber-950/20 border border-amber-500/30 rounded-xl text-[11px] text-amber-300/90 flex items-center gap-2">
-              <span>⚠️</span>
+            <aside aria-label="Caution note" className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900 flex items-center gap-2">
+              <span className="font-mono font-bold text-xs uppercase text-amber-800 shrink-0">Note:</span>
               <span>
                 Simulated matches are permanent unless &quot;Allow Match Retry&quot; is active in your career settings.
               </span>
@@ -4046,7 +4047,7 @@ function CareerPlayHubContent() {
             <div className="flex gap-3 pt-1">
               <button
                 onClick={() => setPendingFastForward(null)}
-                className="flex-1 py-3 px-4 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-850 text-slate-300 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer"
+                className="flex-1 py-3 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer"
               >
                 Cancel
               </button>
@@ -4059,7 +4060,7 @@ function CareerPlayHubContent() {
                     haltOnTransferMilestone: fastForwardHaltOnTransferMilestone,
                   });
                 }}
-                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider shadow-xl shadow-blue-500/25 transition-all cursor-pointer"
+                className="flex-1 py-3 px-4 rounded-xl office-play-match-btn text-white font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer"
               >
                 Confirm &amp; Fast Forward
               </button>
@@ -4460,7 +4461,7 @@ export default function CareerPlayPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center font-display font-black uppercase text-sm">
+        <div className="min-h-screen my11-canvas text-slate-900 flex items-center justify-center font-display font-black uppercase text-sm">
           Loading Manager Office...
         </div>
       }

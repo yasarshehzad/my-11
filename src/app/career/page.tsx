@@ -2,10 +2,21 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { listSaveSlots, deleteCareerSave, exportCareerSaveAsJson, importCareerSaveFromJson, ValidSlotId } from '../../career/saves';
+import {
+  listSaveSlots,
+  deleteCareerSave,
+  exportCareerSaveAsJson,
+  importCareerSaveFromJson,
+  ValidSlotId,
+} from '../../career/saves';
 import { SaveSlotMeta } from '../../career/types';
-import { getSavedTheme, saveTheme, getHideCareerTutorial, saveHideCareerTutorial } from '../../utils/storage';
+import { saveTheme, saveHideCareerTutorial } from '../../utils/storage';
 import { HowToPlayModal } from '../../components/HowToPlayModal';
+
+function formatBudgetShort(amount: number): string {
+  if (!Number.isFinite(amount)) return '£0M';
+  return `£${Math.round(amount / 1_000_000)}M`;
+}
 
 export default function CareerEntryPage() {
   const [slots, setSlots] = useState<SaveSlotMeta[]>(() => {
@@ -98,266 +109,287 @@ export default function CareerEntryPage() {
     e.target.value = '';
   };
 
+  const occupiedCount = slots.filter((s) => !s.isEmpty).length;
+
   return (
     <div
       data-theme={theme}
-      className="min-h-screen my11-canvas text-foreground font-sans flex flex-col w-full overflow-x-hidden safe-pb pb-28 sm:pb-16"
+      className="min-h-screen my11-canvas text-foreground font-sans flex flex-col w-full overflow-x-hidden safe-pb pb-24 sm:pb-16"
     >
       {/* Toast Notification */}
       {toastMessage && (
         <aside
           role="status"
           aria-live="polite"
-          className="fixed top-18 left-1/2 -translate-x-1/2 z-50 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-xl font-display font-black text-xs uppercase tracking-wider shadow-xl shadow-blue-500/25 flex items-center gap-2 motion-reduce:animate-none animate-bounce"
+          data-force-white="true"
+          className="fixed top-18 left-1/2 -translate-x-1/2 z-50 bg-[#047857] text-white px-4 py-2 rounded-xl font-display font-black text-xs uppercase tracking-wider shadow-xl flex items-center gap-2 motion-reduce:animate-none"
         >
-          <span>✓</span> {toastMessage}
+          <span>{toastMessage}</span>
         </aside>
       )}
 
-      {/* Floating MY-11 Header */}
-      <header className="w-full max-w-4xl mx-auto px-3 sm:px-4 pt-3 sm:pt-4 sticky top-0 z-40 select-none">
-        <div className="office-floating-card rounded-[22px] px-3 sm:px-4 py-2 sm:py-2.5 flex justify-between items-center shadow-xs border border-slate-200/80 gap-2 bg-white">
-          <div className="flex items-center gap-2 sm:gap-3">
+      {/* Top Navigation Bar */}
+      <header className="w-full max-w-5xl mx-auto px-3 sm:px-4 pt-3 sm:pt-4 sticky top-0 z-40 select-none">
+        <div className="office-floating-card rounded-2xl px-4 py-2.5 flex justify-between items-center shadow-xs border border-slate-200 gap-2 bg-white">
+          <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="office-subcard text-xs font-bold px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 text-slate-700 hover:text-slate-900"
-              title="Return to Home"
+              className="px-3 py-1.5 rounded-xl office-subcard text-xs font-bold text-slate-700 hover:text-slate-900 flex items-center gap-1.5 transition-colors shadow-2xs"
             >
-              ← <span>Home</span>
+              <span>&larr;</span>
+              <span>Home</span>
             </Link>
-            <Link
-              href="/draft"
-              className="office-subcard text-xs font-bold px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 text-slate-700 hover:text-slate-900"
-              title="Play Draft Mode"
-            >
-              <span>Draft</span>
-            </Link>
-            <div className="h-4 w-px bg-[var(--office-divider)]" />
-            
-            {/* Brand Logo with Crown */}
-            <div className="flex items-center gap-1.5">
-              <div className="flex flex-col items-center justify-center shrink-0">
-                <svg viewBox="0 0 28 12" className="w-3.5 h-2.5 -mb-0.5" aria-hidden="true">
-                  <defs>
-                    <linearGradient id="my11-crown-grad-career" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#00d2ff" />
-                      <stop offset="50%" stopColor="#2563eb" />
-                      <stop offset="100%" stopColor="#c026d3" />
-                    </linearGradient>
-                  </defs>
-                  <path
-                    d="M2 10 L4 3 L10 7 L14 1 L18 7 L24 3 L26 10 Z"
-                    fill="url(#my11-crown-grad-career)"
-                  />
-                </svg>
-                <span className="font-display font-black text-sm tracking-tighter leading-none text-slate-900">
-                  MY-11
-                </span>
-              </div>
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#1d5eff] bg-blue-50 border border-blue-200/80 px-2 py-0.5 rounded-full">
-                CAREER
+            <div className="h-4 w-px bg-slate-200" />
+            <div className="flex items-center gap-2">
+              <span className="text-sm sm:text-base font-display font-black uppercase tracking-tight text-slate-900">
+                MY-11 <span className="text-[#047857]">Career Hub</span>
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => setShowGuide(true)}
-              title="Career Mode Guide & Rules"
-              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold office-subcard cursor-pointer"
+          <div className="flex items-center gap-2">
+            <Link
+              href="/draft"
+              className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 text-[10.5px] font-display font-black uppercase tracking-wider transition-colors"
             >
-              ❓
+              Draft Mode
+            </Link>
+            <button
+              type="button"
+              onClick={() => setShowGuide(true)}
+              aria-label="Career Mode Guide"
+              title="Career Mode Guide"
+              className="w-8 h-8 rounded-xl office-subcard text-slate-700 hover:text-slate-900 flex items-center justify-center transition-colors shadow-2xs cursor-pointer"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
             </button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 w-full max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8 flex flex-col items-center">
-        {/* Title & Introduction */}
-        <section className="text-center mb-6 max-w-lg space-y-2">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-[#1d5eff] bg-blue-50 border border-blue-200/80 px-3 py-1 rounded-full font-mono">
-            Multi-Season Football Management
-          </span>
-          <h2 className="text-2xl sm:text-3xl font-display font-black tracking-tight uppercase text-slate-900">
-            Select Save Slot
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-500 font-medium">
-            Take charge of an English Top Flight club. Manage budgets, negotiate transfers, and lead your squad across 38 league matches and cup glory.
-          </p>
+      <main className="flex-1 w-full max-w-5xl mx-auto px-3 sm:px-4 pt-4 sm:pt-6 space-y-6">
+        {/* Canopy Intro Header */}
+        <section aria-label="Career Save Slots Overview" className="my11-canopy-card">
+          <div className="my11-canopy-head p-6 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1 text-left">
+              <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-emerald-300">
+                Manager Save Vault // Local &amp; Portable
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-display font-black uppercase tracking-tight text-white">
+                Select Manager Save Slot
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-200 max-w-2xl">
+                Run up to 3 independent multi-season managerial careers side-by-side, switch season databases (2026/27, 2025/26, 2024/25), and back up any save as JSON.
+              </p>
+            </div>
+            <div className="rounded-2xl bg-white/10 border border-white/15 px-4 py-3 text-left shrink-0">
+              <div className="text-[10px] font-mono uppercase tracking-wider text-slate-300">Active Slots</div>
+              <div className="text-xl font-display font-black text-white mt-0.5">
+                {occupiedCount} / {slots.length || 3}
+              </div>
+            </div>
+          </div>
         </section>
 
-        {/* Slot Grid */}
-        <section className="w-full grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 mb-8" aria-label="Career Save Slots">
+        {/* 3 Save Slots Tactile Cards */}
+        <section aria-label="Save Slots" className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {slots.map((slot, index) => {
-            const slotNum = index + 1;
-            const slotTitle = `Slot ${slotNum}`;
+            const slotNumber = index + 1;
+            const slotLabel = `Slot 0${slotNumber}`;
 
             if (slot.isEmpty || !slot.save) {
               return (
-                <div
-                  key={slot.slotId}
-                  className="office-floating-card rounded-[24px] border-2 border-dashed border-slate-200 hover:border-blue-300 p-5 sm:p-6 flex flex-col justify-between items-center text-center transition-all bg-white shadow-xs hover:shadow-md"
-                >
-                  <div className="space-y-1.5 w-full">
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
-                      {slotTitle}
+                <article key={slot.slotId} className="my11-canopy-card flex flex-col">
+                  <div className="my11-canopy-head p-5 flex items-center justify-between">
+                    <div>
+                      <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-300">
+                        {slotLabel}
+                      </div>
+                      <h2 className="text-lg font-display font-black uppercase text-white mt-0.5">
+                        Open Dugout
+                      </h2>
+                    </div>
+                    <span className="w-9 h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center font-mono text-xs font-bold text-emerald-300">
+                      0{slotNumber}
                     </span>
-                    <h3 className="text-lg font-display font-black text-slate-900">
-                      Empty Slot
-                    </h3>
-                    <p className="text-xs text-slate-500 max-w-xs mx-auto">
-                      No active manager career. Start a fresh club project here.
-                    </p>
                   </div>
 
-                  <div className="w-full space-y-2.5 pt-5">
+                  <div className="p-5 flex-1 flex flex-col justify-between gap-4 bg-white">
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      Empty career slot ready for a new 2026/27 campaign or a restored JSON backup.
+                    </p>
+
+                    <div className="space-y-2.5">
+                      <Link
+                        href={`/career/setup?slot=${slot.slotId}`}
+                        data-force-white="true"
+                        className="office-play-match-btn w-full py-3 px-4 rounded-xl text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <span>Start New Career</span>
+                        <span aria-hidden="true">-&gt;</span>
+                      </Link>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <label className="office-subcard py-2 px-2 rounded-xl text-[11px] font-bold text-slate-700 hover:text-slate-900 flex items-center justify-center gap-1.5 cursor-pointer transition-colors">
+                          <span>Upload File</span>
+                          <input
+                            type="file"
+                            accept=".json,application/json"
+                            className="hidden"
+                            onChange={(e) => handleFileUpload(e, slot.slotId)}
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setImportingSlot(slot.slotId);
+                            setImportError(null);
+                            setImportJsonText('');
+                          }}
+                          className="office-subcard py-2 px-2 rounded-xl text-[11px] font-bold text-slate-700 hover:text-slate-900 flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                        >
+                          <span>Paste JSON</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              );
+            }
+
+            const { save } = slot;
+            return (
+              <article key={slot.slotId} className="my11-canopy-card flex flex-col">
+                {/* Club-Branded Two-Tone Canopy */}
+                <div
+                  data-force-white="true"
+                  className="p-5 relative overflow-hidden text-white"
+                  style={{
+                    background: `linear-gradient(135deg, ${save.clubPrimaryColor} 0%, #09152b 88%)`,
+                  }}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-white/80">
+                        {slotLabel} • Season {save.seasonNumber}
+                      </div>
+                      <h2 className="text-lg font-display font-black uppercase text-white truncate mt-0.5">
+                        {save.clubName}
+                      </h2>
+                      <p className="text-xs text-white/90 font-semibold truncate">
+                        Manager: {save.managerName}
+                      </p>
+                    </div>
+                    <span className="px-2 py-0.5 rounded bg-black/35 border border-white/25 text-[10px] font-mono font-bold uppercase shrink-0">
+                      {save.preset}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Telemetry & Controls Body */}
+                <div className="p-5 flex-1 flex flex-col justify-between gap-4 bg-white">
+                  <div className="grid grid-cols-2 gap-2.5 text-left">
+                    <div className="rounded-xl bg-slate-50 border border-slate-200 p-2.5">
+                      <div className="text-[9.5px] font-mono uppercase text-slate-500 font-bold">Date</div>
+                      <div className="text-xs font-mono font-bold text-slate-900 mt-0.5">
+                        {save.currentDate}
+                      </div>
+                    </div>
+                    <div className="rounded-xl bg-slate-50 border border-slate-200 p-2.5">
+                      <div className="text-[9.5px] font-mono uppercase text-slate-500 font-bold">Budget</div>
+                      <div className="text-xs font-mono font-bold text-emerald-700 mt-0.5">
+                        {formatBudgetShort(save.budget)}
+                      </div>
+                    </div>
+                    <div className="rounded-xl bg-slate-50 border border-slate-200 p-2.5">
+                      <div className="text-[9.5px] font-mono uppercase text-slate-500 font-bold">Squad</div>
+                      <div className="text-xs font-mono font-bold text-slate-900 mt-0.5">
+                        {save.squadSize} Players
+                      </div>
+                    </div>
+                    <div className="rounded-xl bg-slate-50 border border-slate-200 p-2.5">
+                      <div className="text-[9.5px] font-mono uppercase text-slate-500 font-bold">Rules</div>
+                      <div className="text-xs font-mono font-bold text-slate-900 mt-0.5">
+                        {save.isLocked ? 'Locked' : 'Editable'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
                     <Link
-                      href={`/career/setup?slot=${slot.slotId}`}
-                      className="office-play-match-btn w-full py-3 px-4 rounded-xl text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 min-h-[44px]"
+                      href={`/career/play?slot=${slot.slotId}`}
+                      data-force-white="true"
+                      className="office-play-match-btn w-full py-3 px-4 rounded-xl text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
                     >
-                      <span>+</span> Start New Career
+                      <span>Continue Career</span>
+                      <span aria-hidden="true">-&gt;</span>
                     </Link>
 
                     <div className="flex gap-2">
-                      <label className="office-subcard flex-1 py-2 px-2 rounded-xl text-[10.5px] font-bold text-slate-600 hover:text-slate-900 cursor-pointer text-center min-h-[36px] flex items-center justify-center gap-1">
-                        <span>📁</span> Import JSON
-                        <input
-                          type="file"
-                          accept=".json"
-                          className="hidden"
-                          onChange={(e) => handleFileUpload(e, slot.slotId)}
-                        />
-                      </label>
                       <button
-                        onClick={() => {
-                          setImportingSlot(slot.slotId);
-                          setImportJsonText('');
-                          setImportError(null);
-                        }}
-                        className="office-subcard py-2 px-3 rounded-xl text-[10.5px] font-bold text-slate-600 hover:text-slate-900 min-h-[36px] flex items-center justify-center gap-1"
-                        title="Paste JSON text directly"
+                        type="button"
+                        onClick={() => handleExport(slot.slotId)}
+                        className="office-subcard flex-1 py-2 px-3 rounded-xl text-[11px] font-bold text-slate-700 hover:text-slate-900 flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                        title="Download JSON backup"
                       >
-                        <span>📋</span> Paste
+                        Export JSON
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeleteConfirmSlot(slot.slotId)}
+                        aria-label={`Delete ${slotLabel}`}
+                        title="Delete save file"
+                        className="office-subcard py-2 px-3 rounded-xl text-[11px] font-bold text-rose-600 hover:text-rose-800 flex items-center justify-center cursor-pointer transition-colors"
+                      >
+                        Delete
                       </button>
                     </div>
                   </div>
                 </div>
-              );
-            }
-
-            const s = slot.save;
-            return (
-              <div
-                key={slot.slotId}
-                className="office-floating-card rounded-[24px] p-5 sm:p-6 flex flex-col justify-between transition-all relative overflow-hidden shadow-xs hover:shadow-md border border-slate-200/80 bg-white"
-              >
-                {/* Subtle Primary Color Accent Bar */}
-                <div
-                  className="absolute top-0 left-0 right-0 h-1"
-                  style={{
-                    backgroundColor: s.clubPrimaryColor || '#1d5eff',
-                  }}
-                />
-
-                <div className="space-y-3.5">
-                  <div className="flex justify-between items-start gap-2">
-                    <div>
-                      <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
-                        {slotTitle}
-                      </span>
-                      <h3 className="text-xl font-display font-black text-slate-900 tracking-tight leading-tight mt-0.5">
-                        {s.clubName}
-                      </h3>
-                      <p className="text-xs text-slate-500 font-medium">
-                        Mgr: <span className="text-slate-800 font-semibold">{s.managerName}</span>
-                      </p>
-                    </div>
-
-                    <span
-                      className={`text-[9.5px] font-mono font-bold uppercase px-2 py-0.5 rounded-full border shrink-0 ${
-                        s.preset === 'hard'
-                          ? 'bg-rose-50 border-rose-200 text-rose-700'
-                          : s.preset === 'easy'
-                          ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                          : 'bg-blue-50 border-blue-200 text-blue-700'
-                      }`}
-                    >
-                      {s.preset} {s.isLocked && '🔒'}
-                    </span>
-                  </div>
-
-                  {/* Vitals */}
-                  <div className="grid grid-cols-2 gap-2 bg-slate-50/80 border border-slate-200/70 rounded-xl p-3 text-xs">
-                    <div>
-                      <div className="text-[9.5px] font-bold uppercase text-slate-400">Season</div>
-                      <div className="font-display font-black text-slate-800 text-sm">Season {s.seasonNumber}</div>
-                    </div>
-                    <div>
-                      <div className="text-[9.5px] font-bold uppercase text-slate-400">Transfer Budget</div>
-                      <div className="font-display font-black text-[#1d5eff] text-sm">
-                        £{(s.budget / 1_000_000).toFixed(1)}M
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-4 space-y-2">
-                  <Link
-                    href={`/career/play?slot=${slot.slotId}`}
-                    className="office-play-match-btn w-full py-3 px-4 rounded-xl text-white font-display font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 min-h-[44px]"
-                  >
-                    <span>▶ Continue Career</span>
-                    <span>➔</span>
-                  </Link>
-
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleExport(slot.slotId)}
-                      className="office-subcard flex-1 py-2 px-2.5 rounded-xl text-[10.5px] font-bold text-slate-600 hover:text-slate-900 min-h-[36px] flex items-center justify-center gap-1.5 transition-colors"
-                      title="Download JSON backup"
-                    >
-                      <span>💾</span> Export JSON
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirmSlot(slot.slotId)}
-                      className="office-subcard py-2 px-3 rounded-xl text-[10.5px] font-bold text-rose-500 hover:text-rose-700 min-h-[36px] flex items-center justify-center transition-colors"
-                      title="Delete save file"
-                    >
-                      <span>🗑️</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
+              </article>
             );
           })}
         </section>
 
-        {/* Info Highlights */}
-        <section className="w-full max-w-2xl office-floating-card rounded-2xl p-5 sm:p-6 text-center space-y-3.5 border border-slate-200/80 bg-white shadow-xs">
-          <h4 className="text-xs font-display font-black uppercase tracking-wider text-slate-500">
-            Career Mode Features
-          </h4>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left">
-            <div className="office-subcard rounded-xl p-3 space-y-1">
-              <span className="text-base">🏟️</span>
-              <h5 className="text-[11px] font-bold text-slate-900 uppercase tracking-tight">20 English Clubs</h5>
-              <p className="text-[10px] text-slate-500 leading-relaxed">
-                Realistic budgets, reputation tiers, stadiums, and complete customization.
+        {/* Core Pillars Highlights (Zero Emojis) */}
+        <section aria-label="Career Mode Capabilities" className="office-floating-card rounded-2xl p-5 sm:p-6 border border-slate-200 bg-white shadow-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
+            <div className="office-subcard rounded-xl p-4 space-y-1.5">
+              <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-700">
+                Authentic Rosters
+              </div>
+              <h3 className="text-xs font-display font-black text-slate-900 uppercase">
+                3 Era Databases (26/27 – 24/25)
+              </h3>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                Accurate promotion &amp; relegation clubs, stadium capacities, budgets, and custom club renaming.
               </p>
             </div>
-            <div className="office-subcard rounded-xl p-3 space-y-1">
-              <span className="text-base">⚙️</span>
-              <h5 className="text-[11px] font-bold text-slate-900 uppercase tracking-tight">Custom Difficulty</h5>
-              <p className="text-[10px] text-slate-500 leading-relaxed">
-                Easy, Hard, or Custom presets with lock protection against mid-game rule changes.
+            <div className="office-subcard rounded-xl p-4 space-y-1.5">
+              <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-blue-700">
+                Governance &amp; Difficulty
+              </div>
+              <h3 className="text-xs font-display font-black text-slate-900 uppercase">
+                Custom Rule Presets
+              </h3>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                Choose Easy, Normal, Realistic, Hard, or Custom simulation sliders with optional rule locking.
               </p>
             </div>
-            <div className="office-subcard rounded-xl p-3 space-y-1">
-              <span className="text-base">🔒</span>
-              <h5 className="text-[11px] font-bold text-slate-900 uppercase tracking-tight">Local & Portable</h5>
-              <p className="text-[10px] text-slate-500 leading-relaxed">
-                Stored safely in your browser with full JSON export and import backups.
+            <div className="office-subcard rounded-xl p-4 space-y-1.5">
+              <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-700">
+                Zero Account Lock-In
+              </div>
+              <h3 className="text-xs font-display font-black text-slate-900 uppercase">
+                Local Storage &amp; JSON Backups
+              </h3>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                Saves live securely on your device and can be exported or restored cleanly via JSON anytime.
               </p>
             </div>
           </div>
@@ -369,26 +401,31 @@ export default function CareerEntryPage() {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4"
         >
-          <div className="bg-white border border-slate-200/90 rounded-3xl p-6 max-w-sm w-full space-y-4 text-center shadow-xl">
-            <span className="text-3xl">⚠️</span>
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 max-w-sm w-full space-y-4 text-center shadow-2xl">
+            <div className="w-11 h-11 mx-auto rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center justify-center font-mono font-bold text-xs">
+              DEL
+            </div>
             <h3 className="text-lg font-display font-black uppercase text-slate-900">
               Delete {deleteConfirmSlot.replace('_', ' ').toUpperCase()}?
             </h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <p className="text-xs text-slate-600 leading-relaxed">
               This will permanently delete this career save file. Export a JSON backup first if you want to keep your progress.
             </p>
             <div className="flex gap-2.5 pt-2">
               <button
+                type="button"
                 onClick={() => setDeleteConfirmSlot(null)}
-                className="flex-1 py-2.5 rounded-xl office-subcard text-xs font-bold text-slate-600 hover:text-slate-900 cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl office-subcard text-xs font-bold text-slate-700 hover:text-slate-900 cursor-pointer"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={() => handleDelete(deleteConfirmSlot)}
-                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-display font-black uppercase tracking-wider cursor-pointer shadow-sm"
+                data-force-white="true"
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-display font-black uppercase tracking-wider cursor-pointer shadow-sm"
               >
                 Delete Save
               </button>
@@ -402,21 +439,22 @@ export default function CareerEntryPage() {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4"
         >
-          <div className="bg-white border border-slate-200/90 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-xl">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl text-slate-900">
             <div className="flex justify-between items-center">
               <h3 className="text-base font-display font-black uppercase text-slate-900">
                 Import Save into {importingSlot.replace('_', ' ').toUpperCase()}
               </h3>
               <button
+                type="button"
                 onClick={() => setImportingSlot(null)}
-                className="text-slate-400 hover:text-slate-700 text-sm cursor-pointer p-1"
+                className="text-slate-500 hover:text-slate-900 text-sm cursor-pointer p-1"
               >
                 ✕
               </button>
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-600">
               Paste the exported JSON text from another device or backup below:
             </p>
             <textarea
@@ -424,20 +462,23 @@ export default function CareerEntryPage() {
               onChange={(e) => setImportJsonText(e.target.value)}
               placeholder="Paste JSON content here..."
               rows={8}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-mono text-slate-800 focus:outline-none focus:border-blue-500"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs font-mono text-slate-900 focus:outline-none focus:border-blue-600"
             />
             {importError && (
-              <p className="text-xs text-rose-500 font-medium">{importError}</p>
+              <p className="text-xs text-rose-700 font-semibold">{importError}</p>
             )}
             <div className="flex gap-2.5 pt-2">
               <button
+                type="button"
                 onClick={() => setImportingSlot(null)}
-                className="flex-1 py-2.5 rounded-xl office-subcard text-xs font-bold text-slate-600 hover:text-slate-900 cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl office-subcard text-xs font-bold text-slate-700 hover:text-slate-900 cursor-pointer"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleImportSubmit}
+                data-force-white="true"
                 className="flex-1 py-2.5 rounded-xl office-play-match-btn text-white text-xs font-display font-black uppercase tracking-wider cursor-pointer shadow-sm"
               >
                 Import Save

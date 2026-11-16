@@ -383,9 +383,9 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
         {/* Primary Action: Copy Challenge Link */}
         <button
           onClick={handleCopyChallengeLink}
-          className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white font-display font-black text-sm uppercase tracking-wider shadow-lg shadow-blue-500/20 hover:from-blue-500 hover:to-indigo-500 hover:-translate-y-0.5 transition-all duration-300 transform active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+          className="office-play-match-btn w-full py-3.5 px-5 rounded-2xl text-white font-display font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
         >
-          <span>🎯</span> Copy Challenge Link ({simResult.wins} Wins)
+          Copy Challenge Link ({simResult.wins} Wins)
         </button>
 
         {/* Secondary Actions */}
@@ -393,27 +393,24 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
           <button
             onClick={handleShareResult}
             title="Share via native share menu or apps"
-            className="py-3 px-2 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white font-display font-bold text-[11px] uppercase tracking-wider hover:bg-slate-800 transition-all duration-300 transform active:scale-95 cursor-pointer flex flex-col items-center justify-center gap-1"
+            className="py-3 px-2 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 font-display font-bold text-[11px] uppercase tracking-wider transition-all duration-300 transform active:scale-95 cursor-pointer flex flex-col items-center justify-center gap-1"
           >
-            <span className="text-sm">📱</span>
             <span>Share App</span>
           </button>
 
           <button
             onClick={handleCopyText}
             title="Copy full campaign report with link"
-            className="py-3 px-2 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white font-display font-bold text-[11px] uppercase tracking-wider hover:bg-slate-800 transition-all duration-300 transform active:scale-95 cursor-pointer flex flex-col items-center justify-center gap-1"
+            className="py-3 px-2 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 font-display font-bold text-[11px] uppercase tracking-wider transition-all duration-300 transform active:scale-95 cursor-pointer flex flex-col items-center justify-center gap-1"
           >
-            <span className="text-sm">📋</span>
             <span>Copy Text</span>
           </button>
 
           <button
             onClick={handleDownloadImage}
             title="Download high-resolution 1080x1920 graphic"
-            className="py-3 px-2 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white font-display font-bold text-[11px] uppercase tracking-wider hover:bg-slate-800 transition-all duration-300 transform active:scale-95 cursor-pointer flex flex-col items-center justify-center gap-1"
+            className="py-3 px-2 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 font-display font-bold text-[11px] uppercase tracking-wider transition-all duration-300 transform active:scale-95 cursor-pointer flex flex-col items-center justify-center gap-1"
           >
-            <span className="text-sm">📥</span>
             <span>Graphic</span>
           </button>
         </div>

@@ -390,8 +390,16 @@ export function advanceToNextSeason(save: CareerSaveFile): {
   const promotedClubs = availablePromotions.slice(0, 3);
   const relegatedIdsSet = new Set(relegatedIds);
 
+  const rawSurvivingIds = currentActiveClubIds.filter((id) => !relegatedIdsSet.has(id));
+  const survivingClubIds = rawSurvivingIds.length <= 17
+    ? rawSurvivingIds
+    : [
+        ...rawSurvivingIds.filter((id) => id === save.club.id),
+        ...rawSurvivingIds.filter((id) => id !== save.club.id),
+      ].slice(0, 17);
+
   const nextActiveClubIds = [
-    ...currentActiveClubIds.filter((id) => !relegatedIdsSet.has(id)),
+    ...survivingClubIds,
     ...promotedClubs.map((c) => c.id),
   ];
 

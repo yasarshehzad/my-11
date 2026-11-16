@@ -37,8 +37,24 @@ describe('Phase 7: Career Database Expansion & Supplemental Players', () => {
       expect(clubPlayers.length).toBeGreaterThanOrEqual(22);
     }
 
-    // Verify Leeds, Sunderland, Burnley have full squads
-    ['yorkshire_whites', 'wearside_red_white', 'east_lancs_claret'].forEach((clubId) => {
+    const ids26 = new Set(ENGLISH_TOP_FLIGHT_CLUBS_2026_27.map((c) => c.id));
+    expect(ids26.has('coventry_sky_blues')).toBe(true);
+    expect(ids26.has('suffolk_tractors')).toBe(true);
+    expect(ids26.has('humberside_tigers')).toBe(true);
+    expect(ids26.has('yorkshire_whites')).toBe(true);
+    expect(ids26.has('wearside_red_white')).toBe(true);
+    expect(ids26.has('west_ham_claret')).toBe(false);
+    expect(ids26.has('east_lancs_claret')).toBe(false);
+    expect(ids26.has('black_country_gold')).toBe(false);
+
+    // Verify Leeds, Sunderland, Burnley and promoted 2026/27 sides (Coventry, Ipswich, Hull) have full squads
+    [
+      'coventry_sky_blues',
+      'suffolk_tractors',
+      'humberside_tigers',
+      'yorkshire_whites',
+      'wearside_red_white',
+    ].forEach((clubId) => {
       const players = getSupplementalPlayersForClub(clubId, '2026/27');
       expect(players.length).toBeGreaterThanOrEqual(22);
     });

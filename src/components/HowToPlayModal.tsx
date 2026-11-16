@@ -80,7 +80,7 @@ export function HowToPlayModal({
               onClick={() => setActiveTab('draft')}
               className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 activeTab === 'draft'
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-md'
+                  ? 'bg-[#09152b] text-white font-bold shadow-sm'
                   : 'text-slate-600 hover:text-[#0b1536]'
               }`}
             >
@@ -91,7 +91,7 @@ export function HowToPlayModal({
               onClick={() => setActiveTab('career')}
               className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 activeTab === 'career'
-                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold shadow-md'
+                  ? 'bg-[#047857] text-white font-bold shadow-sm'
                   : 'text-slate-600 hover:text-[#0b1536]'
               }`}
             >
@@ -198,10 +198,10 @@ export function HowToPlayModal({
               </span>
               <div>
                 <h4 className="text-[#0b1536] uppercase font-display font-black text-xs mb-0.5">
-                  Fight for 4 Major Trophies
+                  Fight for Domestic &amp; European Silverware
                 </h4>
                 <p className="text-[11.5px] text-slate-600 font-medium">
-                  Simulate week-by-week fixtures across the Premier League, FA Cup, Carabao Cup, and UEFA Champions League across multi-season careers.
+                  Simulate week-by-week fixtures across the English Top Flight, FA Cup, League Cup, and European Champions Cup across multi-season careers.
                 </p>
               </div>
             </div>
@@ -228,17 +228,13 @@ export function HowToPlayModal({
             <button
               type="button"
               onClick={handleAction}
-              className={`w-full py-3.5 px-4 rounded-2xl font-display font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer text-center active:scale-98 ${
-                activeTab === 'draft'
-                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white hover:from-blue-500 hover:to-indigo-500 shadow-blue-500/25'
-                  : 'bg-gradient-to-r from-indigo-500 via-blue-500 to-cyan-500 text-white hover:from-indigo-400 hover:to-cyan-400 shadow-indigo-500/20'
-              }`}
+              className="office-play-match-btn w-full py-3.5 px-4 rounded-2xl font-display font-black text-xs uppercase tracking-wider text-white cursor-pointer text-center"
             >
               {mode === 'all'
-                ? 'Got it ➔'
+                ? 'Got it'
                 : activeTab === 'draft'
-                ? 'Start Draft ➔'
-                : 'Enter Career Mode ➔'}
+                ? 'Start Draft'
+                : 'Enter Career Mode'}
             </button>
           </div>
         </div>

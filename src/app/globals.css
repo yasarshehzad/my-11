@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Hanken+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap');
 @import "tailwindcss";
 
 :root[data-theme='dark'],
@@ -156,8 +156,11 @@ html.dark {
 
 :root,
 :root[data-theme='light'] {
-  --background: #e6edf8; /* Refined atmospheric cool stadium canvas base */
-  --foreground: #0f172a; /* Slate-900 base */
+  --background: #F2F1EE; /* Calm Unbleached Linen Daylight Ground */
+  --foreground: #18181B; /* Charcoal Ink */
+  --font-display: 'Hanken Grotesk', system-ui, sans-serif;
+  --font-sans: 'Golos Text', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
   /* Slate mappings reversed for light theme */
   --slate-950: #ffffff; /* primary cards / panels become crisp clean white */
@@ -722,15 +725,6 @@ body {
   background-image: none !important;
 }
 
-/* Layout containers (sections, headers, divs without card classes) must remain transparent with no square backgrounds or borders */
-section:not(.office-floating-card):not(.office-subcard):not(.my11-card):not(.my11-subcard):not(.career-hub-card):not([class*="rounded-"]),
-header:not(.office-floating-card):not(.office-subcard):not(.my11-card):not(.my11-subcard):not([class*="rounded-"]) {
-  background: transparent !important;
-  background-color: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
 [data-theme='light'] nav[aria-label="Career management sections"]:not([data-office-ui]) {
   background-color: #f8fafc !important;
   border: 1px solid #e2e8f0 !important;
@@ -896,19 +890,19 @@ header:not(.office-floating-card):not(.office-subcard):not(.my11-card):not(.my11
 
 
 [data-theme='light'] .text-slate-100 {
-  color: var(--slate-100) !important;
+  color: #0f172a !important;
 }
 [data-theme='light'] .text-slate-200 {
-  color: var(--slate-200) !important;
+  color: #1e293b !important;
 }
 [data-theme='light'] .text-slate-300 {
-  color: var(--slate-300) !important;
+  color: #334155 !important;
 }
 [data-theme='light'] .text-slate-400 {
-  color: var(--slate-400) !important;
+  color: #475569 !important;
 }
 [data-theme='light'] .text-slate-500 {
-  color: var(--slate-500) !important;
+  color: #64748b !important;
 }
 
 [data-theme='light'] ::-webkit-scrollbar-thumb {
@@ -1190,30 +1184,44 @@ header:not(.office-floating-card):not(.office-subcard):not(.my11-card):not(.my11
 :root,
 #career-office-root,
 .my11-root {
-  --office-bg-1: #e6edf8;
-  --office-bg-2: #dae5f3;
-  --office-bg-3: #e5def5;
-  --office-bg-4: #d0deee;
+  --surface-ground: #F2F1EE;
+  --surface-card: #ffffff;
+  --surface-subcard: #F7F6F3;
+  --surface-elevated: #E8E6E1;
+  --ink-primary: #18181B;
+  --ink-secondary: #52525B;
+  --ink-muted: #71717A;
+  --accent-primary: #D97706;
+  --accent-primary-hover: #B45309;
+  --accent-matchday: #15803D;
+  --accent-gold: #D97706;
+  --border-crisp: #CCC8C0;
+  --border-subtle: #E2DFD9;
+
+  --office-bg-1: #EAE8E3;
+  --office-bg-2: #F2F1EE;
+  --office-bg-3: #E8E6E1;
+  --office-bg-4: #F7F6F3;
   --office-card-bg: #ffffff;
   --office-card-solid: #ffffff;
-  --office-card-border: rgba(180, 200, 225, 0.85);
-  --office-card-shadow: 0 12px 32px -4px rgba(30, 58, 138, 0.14), 0 4px 12px -2px rgba(15, 23, 42, 0.06);
-  --office-subcard-bg: #ffffff;
-  --office-subcard-hover: #f1f6fd;
-  --office-subcard-border: #cbd5e1;
-  --office-text-primary: #0b1536;
-  --office-text-secondary: #273656;
-  --office-text-muted: #526588;
-  --office-accent-blue: #1d5eff;
-  --office-accent-cyan: #00d2ff;
-  --office-accent-purple: #8b2cf5;
-  --office-accent-magenta: #d916bb;
-  --office-accent-green: #10b981;
-  --office-accent-teal: #0d9488;
-  --office-accent-amber: #f59e0b;
-  --office-accent-red: #ef4444;
-  --office-divider: #cbd5e1;
-  --office-icon-pill-bg: #ffffff;
+  --office-card-border: #DDDAD3;
+  --office-card-shadow: 0 1px 3px rgba(24, 24, 27, 0.05), 0 6px 16px rgba(24, 24, 27, 0.04);
+  --office-subcard-bg: #F7F6F3;
+  --office-subcard-hover: #EFECE6;
+  --office-subcard-border: #E2DFD9;
+  --office-text-primary: #18181B;
+  --office-text-secondary: #52525B;
+  --office-text-muted: #71717A;
+  --office-accent-blue: #1d4ed8;
+  --office-accent-cyan: #0369a1;
+  --office-accent-purple: #1e3a8a;
+  --office-accent-magenta: #be123c;
+  --office-accent-green: #047857;
+  --office-accent-teal: #0f766e;
+  --office-accent-amber: #b45309;
+  --office-accent-red: #b91c1c;
+  --office-divider: #e2e8f0;
+  --office-icon-pill-bg: #f8fafc;
   --office-icon-pill-border: #cbd5e1;
 }
 
@@ -1248,16 +1256,11 @@ header:not(.office-floating-card):not(.office-subcard):not(.my11-card):not(.my11
   --office-icon-pill-border: rgba(148, 163, 184, 0.22);
 }
 
-/* Universal Bright Atmospheric Stadium Broadcast Canvas with Balanced Colourful Blooms */
+/* Editorial Stadium Broadcast Ground — Clean Stone Surface Without Rainbow Blobs */
 .my11-canvas,
 #career-office-root {
   background:
-    radial-gradient(1100px circle at 6% 4%, rgba(14, 165, 233, 0.19) 0%, rgba(37, 99, 235, 0.08) 36%, transparent 64%),
-    radial-gradient(950px circle at 94% 8%, rgba(168, 85, 247, 0.16) 0%, rgba(217, 70, 239, 0.07) 36%, transparent 64%),
-    radial-gradient(900px circle at 50% 42%, rgba(255, 255, 255, 0.72) 0%, transparent 68%),
-    radial-gradient(850px circle at 92% 68%, rgba(20, 184, 166, 0.08) 0%, transparent 58%),
-    radial-gradient(950px circle at 12% 88%, rgba(59, 130, 246, 0.09) 0%, transparent 62%),
-    linear-gradient(180deg, #e7effd 0%, #f1f6fe 44%, #f7faff 100%) !important;
+    linear-gradient(180deg, #eef2f7 0%, #f4f6fa 45%, #f8fafc 100%) !important;
   color: var(--office-text-primary) !important;
   position: relative;
 }
@@ -1297,17 +1300,12 @@ header:not(.office-floating-card):not(.office-subcard):not(.my11-card):not(.my11
   display: none;
 }
 
-/* Floating White Cards with Refined Depth & Light Source Simulation */
+/* Crisp Editorial Surfaces & Flat Architectural Elevation */
 .my11-card,
 .office-floating-card {
-  background: #ffffff !important;
+  background: var(--surface-card, #ffffff) !important;
   border: 1px solid var(--office-card-border) !important;
-  box-shadow:
-    inset 0 1px 1px 0 rgba(255, 255, 255, 1),
-    0 10px 28px -4px rgba(30, 58, 138, 0.13),
-    0 3px 8px -1px rgba(15, 23, 42, 0.05) !important;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--office-card-shadow) !important;
 }
 
 [data-theme="dark"] .my11-card,
@@ -1320,12 +1318,10 @@ header:not(.office-floating-card):not(.office-subcard):not(.my11-card):not(.my11
 
 .my11-subcard,
 .office-subcard {
-  background: #ffffff !important;
-  border: 1px solid var(--office-subcard-border) !important;
-  box-shadow:
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.9),
-    0 2px 6px -1px rgba(35, 65, 140, 0.06) !important;
-  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  background: var(--surface-subcard, #f8fafc) !important;
+  border: 1px solid var(--border-subtle, #e2e8f0) !important;
+  box-shadow: none !important;
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), background-color 160ms ease, border-color 160ms ease;
 }
 
 [data-theme="dark"] .my11-subcard,
@@ -1406,14 +1402,14 @@ header:not(.office-floating-card):not(.office-subcard):not(.my11-card):not(.my11
   transform: scale(0.98);
 }
 
-/* Active Navigation Tab — High-Contrast Azure -> Royal Blue -> Purple -> Magenta Gradient */
+/* Active Navigation Tab — Solid Broadcast Navy */
 .my11-nav-pill-active,
 .office-nav-tab-active {
-  background-color: #1d4ed8 !important;
-  background-image: linear-gradient(135deg, #0284c7 0%, #1d4ed8 42%, #7e22ce 82%, #c026d3 100%) !important;
+  background-color: #1E2024 !important;
+  background-image: linear-gradient(135deg, #1E2024 0%, #2B2E34 100%) !important;
   color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.40) !important;
-  box-shadow: 0 8px 18px -4px rgba(29, 94, 255, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.5) !important;
+  border: 1px solid #1E2024 !important;
+  box-shadow: 0 2px 6px -1px rgba(24, 24, 27, 0.22) !important;
 }
 
 .my11-nav-pill-active > span,
@@ -1454,38 +1450,31 @@ header:not(.office-floating-card):not(.office-subcard):not(.my11-card):not(.my11
   transform: scale(0.96);
 }
 
-/* Primary CTA Button — Animated High-Contrast Vibrant Gradient: Azure -> Blue -> Purple -> Magenta */
+/* Primary CTA Button — Tactile Floodlight Amber */
 .my11-btn-gradient,
 .office-action-btn-primary,
 .office-play-match-btn {
-  background-color: #1d4ed8 !important;
-  background-image: linear-gradient(90deg, #0284c7 0%, #1d4ed8 34%, #7e22ce 70%, #c026d3 100%) !important;
-  background-size: 180% 180% !important;
-  animation: officeGradientFlow 6s ease infinite;
-  color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.45) !important;
-  box-shadow:
-    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.55),
-    0 10px 24px -4px rgba(126, 34, 206, 0.42),
-    0 4px 12px -2px rgba(2, 132, 199, 0.32) !important;
-  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms ease, filter 160ms ease;
+  background-color: #F59E0B !important;
+  background-image: linear-gradient(180deg, #FBBF24 0%, #D97706 100%) !important;
+  animation: none !important;
+  color: #18181B !important;
+  border: 1px solid #B45309 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 4px 12px -2px rgba(217, 119, 6, 0.28) !important;
+  transition: transform 150ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 180ms ease, filter 150ms ease;
 }
 
 .my11-btn-gradient *,
 .office-action-btn-primary *,
 .office-play-match-btn * {
-  color: #ffffff !important;
+  color: #18181B !important;
 }
 
 .my11-btn-gradient:hover,
 .office-action-btn-primary:hover,
 .office-play-match-btn:hover {
-  transform: translateY(-1px) scale(1.005);
-  filter: brightness(1.04);
-  box-shadow:
-    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.65),
-    0 14px 28px -4px rgba(139, 44, 245, 0.52),
-    0 6px 14px -2px rgba(0, 210, 255, 0.38) !important;
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 8px 18px -3px rgba(217, 119, 6, 0.36) !important;
 }
 
 .my11-btn-gradient:active,
@@ -1514,18 +1503,24 @@ a.text-white,
 span.text-white,
 [data-force-white="true"],
 [data-force-white="true"] *,
-.office-nav-tab-active,
-.office-action-btn-primary,
-.office-play-match-btn,
-.my11-btn-gradient {
+.office-nav-tab-active {
   color: #ffffff !important;
 }
 
-.office-nav-tab-active *,
+.office-nav-tab-active * {
+  color: #ffffff !important;
+}
+
+.office-action-btn-primary,
+.office-play-match-btn,
+.my11-btn-gradient,
+.office-action-btn-primary.text-white,
+.office-play-match-btn.text-white,
+.my11-btn-gradient.text-white,
 .office-action-btn-primary *,
 .office-play-match-btn *,
 .my11-btn-gradient * {
-  color: #ffffff !important;
+  color: #18181B !important;
 }
 
 :root[data-theme="light"] .my11-canvas .text-slate-300,
@@ -1543,16 +1538,37 @@ span.text-white,
   color: #5b6e95;
 }
 
-:root[data-theme="light"] .my11-canvas .bg-slate-950:not(.fixed):not([role="dialog"]):not([data-scrim="true"]),
-:root[data-theme="light"] #career-office-root .bg-slate-950:not(.fixed):not([role="dialog"]):not([data-scrim="true"]) {
+:root[data-theme="light"] .my11-canvas .bg-slate-950:not(.fixed):not([role="dialog"]):not([data-scrim="true"]):not(.text-white),
+:root[data-theme="light"] #career-office-root .bg-slate-950:not(.fixed):not([role="dialog"]):not([data-scrim="true"]):not(.text-white) {
   background-color: #ffffff !important;
 }
 
-:root[data-theme="light"] .my11-canvas .bg-slate-900:not(.fixed):not([role="dialog"]):not([data-scrim="true"]),
-:root[data-theme="light"] #career-office-root .bg-slate-900:not(.fixed):not([role="dialog"]):not([data-scrim="true"]),
-:root[data-theme="light"] .my11-canvas .bg-slate-850:not(.fixed):not([role="dialog"]):not([data-scrim="true"]),
-:root[data-theme="light"] #career-office-root .bg-slate-850:not(.fixed):not([role="dialog"]):not([data-scrim="true"]) {
+:root[data-theme="light"] .my11-canvas .bg-slate-900:not(.fixed):not([role="dialog"]):not([data-scrim="true"]):not(.text-white),
+:root[data-theme="light"] #career-office-root .bg-slate-900:not(.fixed):not([role="dialog"]):not([data-scrim="true"]):not(.text-white),
+:root[data-theme="light"] .my11-canvas .bg-slate-850:not(.fixed):not([role="dialog"]):not([data-scrim="true"]):not(.text-white),
+:root[data-theme="light"] #career-office-root .bg-slate-850:not(.fixed):not([role="dialog"]):not([data-scrim="true"]):not(.text-white) {
   background-color: #f6f8fd !important;
+}
+
+/* Protect dark slate interactive controls, pills, and badges that explicitly pair .text-white */
+:root[data-theme="light"] .bg-slate-950.text-white,
+:root[data-theme="light"] .bg-slate-900.text-white,
+:root[data-theme="light"] .bg-slate-800.text-white,
+:root[data-theme="light"] .bg-slate-700.text-white {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+  border-color: #1e293b !important;
+}
+:root[data-theme="light"] .bg-slate-950.text-white *,
+:root[data-theme="light"] .bg-slate-900.text-white *,
+:root[data-theme="light"] .bg-slate-800.text-white *,
+:root[data-theme="light"] .bg-slate-700.text-white * {
+  color: #ffffff !important;
+}
+:root[data-theme="light"] .bg-slate-900.text-white:hover,
+:root[data-theme="light"] .bg-slate-800.text-white:hover,
+:root[data-theme="light"] .bg-slate-700.text-white:hover {
+  background-color: #1e293b !important;
 }
 
 /* Modal and dialog backdrop scrims must ALWAYS remain rich, dark translucent navy with blur */
@@ -1619,9 +1635,10 @@ div[role="dialog"].fixed,
 :root[data-theme="light"] .my11-canvas button.bg-emerald-500,
 :root[data-theme="light"] .my11-canvas button[class*="from-emerald-500"],
 :root[data-theme="light"] .my11-canvas [role="button"].bg-emerald-500 {
-  background: linear-gradient(92deg, #00d2ff 0%, #1d5eff 38%, #7c3aed 74%, #c026d3 100%) !important;
+  background: #047857 !important;
   color: #ffffff !important;
-  box-shadow: 0 4px 14px -2px rgba(29, 94, 255, 0.4) !important;
+  border-color: #065f46 !important;
+  box-shadow: 0 3px 10px -2px rgba(4, 120, 87, 0.25) !important;
 }
 :root[data-theme="light"] .my11-canvas button.bg-emerald-500 *,
 :root[data-theme="light"] .my11-canvas button[class*="from-emerald-500"] *,
@@ -1632,9 +1649,10 @@ div[role="dialog"].fixed,
 :root[data-theme="dark"] .my11-canvas button.bg-emerald-500,
 :root[data-theme="dark"] .my11-canvas button[class*="from-emerald-500"],
 :root[data-theme="dark"] .my11-canvas [role="button"].bg-emerald-500 {
-  background: linear-gradient(92deg, #00d2ff 0%, #1d5eff 38%, #7c3aed 74%, #c026d3 100%) !important;
+  background: #047857 !important;
   color: #ffffff !important;
-  box-shadow: 0 4px 14px -2px rgba(29, 94, 255, 0.4) !important;
+  border-color: #065f46 !important;
+  box-shadow: 0 3px 10px -2px rgba(4, 120, 87, 0.25) !important;
 }
 :root[data-theme="dark"] .my11-canvas button.bg-emerald-500 *,
 :root[data-theme="dark"] .my11-canvas button[class*="from-emerald-500"] *,
@@ -1797,25 +1815,20 @@ div[role="dialog"].fixed,
    MY-11 PHASE 2: SQUAD & TRANSFERS PREMIUM DESIGN SYSTEM
    ========================================================================== */
 
-/* 1. Broadcast-Quality Football Pitch Canvas */
+/* 1. Broadcast-Quality Football Pitch Canvas (True-Ratio Mowed Turf) */
 .my11-broadcast-pitch {
   position: relative;
-  background-color: #1b5e20;
-  background-image: 
-    repeating-linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.038) 0px,
-      rgba(255, 255, 255, 0.038) 46px,
-      transparent 46px,
-      transparent 92px
-    ),
-    radial-gradient(ellipse 90% 60% at 50% 30%, #228b3a 0%, #156929 55%, #0d461b 100%);
-  border-radius: 28px;
-  border: 2px solid rgba(34, 139, 58, 0.35);
-  box-shadow: 
-    inset 0 0 60px rgba(0, 0, 0, 0.45),
-    0 16px 36px -6px rgba(13, 70, 27, 0.28),
-    0 4px 12px 0 rgba(0, 0, 0, 0.08);
+  background-color: #1F9D55;
+  background-image: repeating-linear-gradient(
+    180deg,
+    #1F9D55 0%,
+    #1F9D55 9.09%,
+    #25AD60 9.09%,
+    #25AD60 18.18%
+  );
+  border-radius: 16px;
+  border: 2px solid #1A8748;
+  box-shadow: inset 0 0 24px rgba(15, 83, 45, 0.16);
   overflow: hidden;
 }
 
@@ -1988,10 +2001,10 @@ div[role="dialog"].fixed,
 }
 
 .my11-badge-superstar {
-  background: linear-gradient(135deg, #00d2ff 0%, #1d5eff 50%, #7c3aed 100%) !important;
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%) !important;
   color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  box-shadow: 0 2px 8px -1px rgba(29, 94, 255, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 2px 6px -1px rgba(29, 78, 216, 0.35) !important;
 }
 
 .my11-badge-elite {
@@ -2103,4 +2116,91 @@ div[role="dialog"].fixed,
 :root[data-theme="light"] .office-subcard [class*="hover:bg-slate-50"]:hover,
 :root[data-theme="light"] .my11-scouting-card [class*="hover:bg-slate-50"]:hover {
   background-color: #f1f5f9 !important;
+}
+
+/* ==========================================================================
+   MY-11 TACTILE GAME-HUB SYSTEM — TWO-TONE CANOPY & MODULE TILES
+   ========================================================================== */
+
+.my11-canopy-card {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 12px 28px -8px rgba(11, 21, 54, 0.12), 0 2px 6px rgba(11, 21, 54, 0.05);
+}
+
+.my11-canopy-head {
+  position: relative;
+  background: linear-gradient(180deg, #09152b 0%, #0f2142 100%);
+  color: #ffffff;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.my11-canopy-head * {
+  color: inherit;
+}
+
+.my11-canopy-curve {
+  position: relative;
+  height: 16px;
+  margin-top: -1px;
+  background: #ffffff;
+  border-top-left-radius: 50% 16px;
+  border-top-right-radius: 50% 16px;
+}
+
+.my11-module-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px -2px rgba(11, 21, 54, 0.07), 0 1px 3px rgba(11, 21, 54, 0.04);
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.my11-module-tile:hover {
+  transform: translateY(-2px);
+  border-color: #94a3b8;
+  box-shadow: 0 10px 22px -4px rgba(11, 21, 54, 0.12), 0 4px 8px -2px rgba(11, 21, 54, 0.05);
+}
+
+.my11-module-crest {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+  box-shadow: 0 4px 10px -2px rgba(11, 21, 54, 0.18);
+  flex-shrink: 0;
+}
+
+.my11-module-banner {
+  padding: 10px 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #ffffff !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.my11-module-banner * {
+  color: #ffffff !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .my11-module-tile {
+    transition: none !important;
+  }
+  .my11-module-tile:hover {
+    transform: none !important;
+  }
 }

@@ -352,7 +352,7 @@ export function initializeSeasonCups(
     CONTINENTAL_EUROPEAN_CLUBS[6].id, // Turin Stripes
     CONTINENTAL_EUROPEAN_CLUBS[7].id, // Dortmund Yellow
     englishClubs[6]?.id || 'brighton_seagulls',
-    englishClubs[7]?.id || 'west_ham_claret',
+    englishClubs[7]?.id || 'tyneside_stripes',
   ];
 
   const userInChallenge = challengeEnglishClubIds.includes(userClub.id);
@@ -409,7 +409,7 @@ export function initializeSeasonCups(
 
   const plateEntrants = [
     plateEnglishClubIds[0] || englishClubs[8].id,
-    englishClubs[9]?.id || 'west_ham_claret',
+    englishClubs[9]?.id || 'west_midlands_claret',
     englishClubs[10]?.id || 'west_london_whites',
     englishClubs[11]?.id || 'south_london_eagles',
     CONTINENTAL_EUROPEAN_CLUBS[8].id, // Lisbon Eagles

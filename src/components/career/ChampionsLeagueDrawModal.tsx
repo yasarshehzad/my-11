@@ -59,16 +59,20 @@ export function ChampionsLeagueDrawModal({
     >
       <div className="relative w-full max-w-2xl office-floating-card bg-white border border-slate-200/90 rounded-3xl shadow-2xl overflow-hidden my-auto text-[#0b1536]">
         {/* UEFA Champions League Header */}
-        <header className="bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 border-b border-slate-800 p-4 sm:p-6 text-white">
+        <header
+          data-force-white="true"
+          style={{ background: 'linear-gradient(135deg, #09152b 0%, #0f172a 55%, #1e1b4b 100%)' }}
+          className="rounded-t-3xl border-b border-slate-800 p-4 sm:p-6 text-white"
+        >
           <div className="flex items-start justify-between gap-3">
             <div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-blue-300 bg-blue-900/60 border border-blue-700/80 px-2.5 py-0.5 rounded-full inline-block">
-                UEFA Official Ceremony • Monaco
+              <span className="text-[10px] font-black uppercase tracking-widest text-blue-200 bg-blue-900/60 border border-blue-700/80 px-2.5 py-0.5 rounded-full inline-block">
+                European Official Ceremony • Monaco
               </span>
               <h2 id="ucl-draw-title" className="text-lg sm:text-2xl font-display font-black text-white mt-1">
-                ⭐ European Champions Cup • League Phase Draw
+                European Champions Cup • League Phase Draw
               </h2>
-              <p className="text-xs text-slate-300 mt-0.5">
+              <p className="text-xs text-slate-200 mt-0.5">
                 Each club plays 8 league phase matches (4 Home, 4 Away) against 2 opponents from each of the 4 seeded pots.
               </p>
             </div>
@@ -76,9 +80,9 @@ export function ChampionsLeagueDrawModal({
               <button
                 type="button"
                 onClick={handleQuickDraw}
-                className="text-xs text-blue-300 hover:text-white underline shrink-0 cursor-pointer"
+                className="text-xs text-blue-200 hover:text-white underline shrink-0 cursor-pointer font-semibold"
               >
-                ⚡ Quick Draw
+                Quick Draw
               </button>
             )}
           </div>

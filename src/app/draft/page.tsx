@@ -80,20 +80,22 @@ function DraftPageContent() {
   // Safe fallback if database failed to bundle
   if (!players || players.length === 0) {
     return (
-      <div className="min-h-screen text-white font-sans flex flex-col pitch-bg p-6 justify-center items-center">
-        <main className="w-full max-w-md bg-slate-950/80 backdrop-blur-md rounded-3xl p-8 border border-red-500/25 shadow-2xl text-center space-y-6">
-          <span className="text-4xl">⚠️</span>
-          <h1 className="text-2xl font-display font-black text-white uppercase tracking-tight">
+      <div className="min-h-screen my11-canvas text-slate-900 font-sans flex flex-col p-6 justify-center items-center">
+        <main className="w-full max-w-md office-floating-card rounded-3xl p-8 border border-rose-200 shadow-2xl text-center space-y-6">
+          <div className="w-12 h-12 mx-auto rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center justify-center font-mono font-bold text-xs">
+            ERR
+          </div>
+          <h1 className="text-2xl font-display font-black text-slate-900 uppercase tracking-tight">
             Database Loading Error
           </h1>
-          <p className="text-sm text-slate-350 leading-relaxed font-semibold">
+          <p className="text-sm text-slate-600 leading-relaxed font-semibold">
             We couldn't load the MY-11 player database. This might be due to a corrupt build or missing database assets.
           </p>
           <Link
             href="/"
-            className="inline-block py-2 px-4 rounded-xl bg-slate-900 border border-slate-800 text-xs font-bold text-slate-300 hover:text-white"
+            className="inline-block py-2 px-4 rounded-xl bg-white border border-slate-300 text-xs font-bold text-slate-800 hover:bg-slate-50"
           >
-            ← Return to Home
+            &larr; Return to Home
           </Link>
         </main>
       </div>
@@ -103,22 +105,29 @@ function DraftPageContent() {
   return (
     <div className="min-h-screen my11-canvas text-foreground font-sans flex flex-col w-full overflow-x-hidden p-3 sm:p-5 select-none">
       {/* Draft Mode Floating MY-11 Header */}
-      <header className="office-floating-card w-full max-w-4xl mx-auto rounded-[24px] p-3 sm:p-4 mb-4 flex items-center justify-between shadow-sm">
+      <header className="office-floating-card w-full max-w-5xl mx-auto rounded-2xl p-3 sm:p-4 mb-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-2.5">
           <button
             onClick={handleReturnHome}
             title="Return to Home"
-            className="office-subcard px-3 py-1.5 rounded-xl text-xs font-bold text-[var(--office-text-secondary)] hover:text-[var(--office-text-primary)] transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+            className="office-subcard px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-900 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
           >
-            ← <span>Home</span>
+            <span>&larr;</span> <span>Home</span>
           </button>
           <div className="h-4 w-px bg-[var(--office-divider)]" />
           <button
             onClick={handleReturnHome}
-            className="text-base sm:text-lg font-display font-black tracking-tight text-[var(--office-text-primary)] uppercase hover:text-[#1d5eff] transition-colors cursor-pointer flex items-center gap-1.5"
+            className="text-base sm:text-lg font-display font-black tracking-tight text-slate-900 uppercase hover:text-blue-700 transition-colors cursor-pointer flex items-center gap-2"
           >
+            <div className="w-7 h-7 rounded-lg bg-[#09152b] text-white flex items-center justify-center shadow-xs shrink-0" data-force-white="true">
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <rect x="3" y="4" width="18" height="16" rx="2" />
+                <line x1="12" y1="4" x2="12" y2="20" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </div>
             <span>MY-11</span>
-            <span className="text-[10px] font-mono font-bold tracking-wider text-[#1d5eff] bg-blue-50/80 border border-blue-200 px-2 py-0.5 rounded-full uppercase">
+            <span className="text-[10px] font-mono font-bold tracking-wider text-blue-800 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded uppercase">
               Draft
             </span>
           </button>
@@ -126,8 +135,8 @@ function DraftPageContent() {
 
         <div className="flex items-center gap-2">
           {game.streakStats.currentDailyStreak > 0 && (
-            <span className="office-subcard text-[10px] font-mono font-bold text-amber-700 bg-amber-50/80 px-2.5 py-1 rounded-full uppercase tracking-wider leading-none border border-amber-200">
-              🔥 {game.streakStats.currentDailyStreak}d
+            <span className="office-subcard text-[10px] font-mono font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-full uppercase tracking-wider leading-none border border-amber-200">
+              Streak {game.streakStats.currentDailyStreak}d
             </span>
           )}
 
@@ -135,9 +144,10 @@ function DraftPageContent() {
           <Link
             href="/career"
             title="Career Mode"
-            className="office-subcard text-[10px] font-mono font-bold tracking-wider uppercase px-2.5 py-1.5 rounded-xl text-[var(--office-text-secondary)] hover:text-[var(--office-text-primary)] transition-colors flex items-center gap-1 leading-none shadow-2xs"
+            className="bg-[#09152b] hover:bg-[#0f2142] text-white text-[10px] font-mono font-bold tracking-wider uppercase px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1 leading-none shadow-xs"
+            data-force-white="true"
           >
-            Career
+            Career Hub
           </Link>
 
           {/* History Screen Trigger Button */}
@@ -149,19 +159,28 @@ function DraftPageContent() {
                 game.handleViewHistory();
               }
             }}
+            aria-label="View Squad History & Personal Bests"
             title="View Squad History & Personal Bests"
-            className="w-8 h-8 rounded-full flex items-center justify-center office-subcard text-xs text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] cursor-pointer active:scale-95 transition-transform shadow-2xs"
+            className="w-8 h-8 rounded-xl flex items-center justify-center office-subcard text-slate-700 hover:text-slate-900 cursor-pointer active:scale-95 transition-transform shadow-2xs"
           >
-            📜
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 8v4l3 3" />
+              <circle cx="12" cy="12" r="9" />
+            </svg>
           </button>
 
           {/* Help Tutorial Trigger Button */}
           <button
             onClick={() => setShowTutorial(true)}
+            aria-label="How to Play & Game Guides"
             title="How to Play & Game Guides"
-            className="w-8 h-8 rounded-full flex items-center justify-center office-subcard text-xs text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] cursor-pointer active:scale-95 transition-transform shadow-2xs"
+            className="w-8 h-8 rounded-xl flex items-center justify-center office-subcard text-slate-700 hover:text-slate-900 cursor-pointer active:scale-95 transition-transform shadow-2xs"
           >
-            ❓
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
           </button>
         </div>
       </header>

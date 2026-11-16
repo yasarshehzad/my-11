@@ -225,7 +225,7 @@ export const SHARED_17_CLUBS: Club[] = [
   },
 ];
 
-export const PROMOTED_CLUBS_2026_27: Club[] = [
+export const PROMOTED_CLUBS_2025_26: Club[] = [
   {
     id: 'yorkshire_whites',
     defaultName: 'Yorkshire Whites',
@@ -299,21 +299,56 @@ export const RELEGATED_CLUBS_2024_25: Club[] = [
     defaultName: 'Suffolk Blue',
     shortName: 'IPS',
     tier: 'lower',
-    startingBudget: 25_000_000,
-    wageBudgetWeekly: 850_000,
+    startingBudget: 28_000_000,
+    wageBudgetWeekly: 950_000,
     primaryColor: '#003399',
     secondaryColor: '#FFFFFF',
     stadiumName: 'Portman Field',
     stadiumCapacity: 29670,
-    reputation: 72,
+    reputation: 74,
   },
 ];
 
-export const PROMOTED_CLUBS_2025_26: Club[] = PROMOTED_CLUBS_2026_27;
+export const PROMOTED_CLUBS_2026_27: Club[] = [
+  {
+    id: 'coventry_sky_blues',
+    defaultName: 'Coventry Sky Blues',
+    shortName: 'COV',
+    tier: 'lower',
+    startingBudget: 32_000_000,
+    wageBudgetWeekly: 1_050_000,
+    primaryColor: '#59CBE8',
+    secondaryColor: '#1B365D',
+    stadiumName: 'Coventry Arena',
+    stadiumCapacity: 32609,
+    reputation: 75,
+  },
+  {
+    ...RELEGATED_CLUBS_2024_25[2], // Suffolk Blue (Ipswich Town)
+  },
+  {
+    id: 'humberside_tigers',
+    defaultName: 'Humberside Tigers',
+    shortName: 'HUL',
+    tier: 'lower',
+    startingBudget: 28_000_000,
+    wageBudgetWeekly: 920_000,
+    primaryColor: '#F5A122',
+    secondaryColor: '#000000',
+    stadiumName: 'Humberside Ground',
+    stadiumCapacity: 25586,
+    reputation: 73,
+  },
+];
+
+// 2025/26 relegated clubs: West Ham (west_ham_claret), Burnley (east_lancs_claret), Wolves (black_country_gold)
+const RELEGATED_2025_26_IDS = new Set(['west_ham_claret', 'black_country_gold']);
 
 export const ENGLISH_TOP_FLIGHT_CLUBS_2026_27: Club[] = [
-  ...SHARED_17_CLUBS,
-  ...PROMOTED_CLUBS_2026_27,
+  ...SHARED_17_CLUBS.filter((c) => !RELEGATED_2025_26_IDS.has(c.id)),
+  PROMOTED_CLUBS_2025_26[0], // Leeds (stayed up)
+  PROMOTED_CLUBS_2025_26[1], // Sunderland (stayed up)
+  ...PROMOTED_CLUBS_2026_27, // Coventry, Ipswich, Hull promoted for 26/27
 ];
 
 export const ENGLISH_TOP_FLIGHT_CLUBS_2025_26: Club[] = [
@@ -326,11 +361,24 @@ export const ENGLISH_TOP_FLIGHT_CLUBS_2024_25: Club[] = [
   ...RELEGATED_CLUBS_2024_25,
 ];
 
-export const ALL_CAREER_CLUBS: Club[] = [
+function deduplicateClubsById(clubs: Club[]): Club[] {
+  const seen = new Set<string>();
+  const result: Club[] = [];
+  for (const club of clubs) {
+    if (!seen.has(club.id)) {
+      seen.add(club.id);
+      result.push(club);
+    }
+  }
+  return result;
+}
+
+export const ALL_CAREER_CLUBS: Club[] = deduplicateClubsById([
   ...SHARED_17_CLUBS,
-  ...PROMOTED_CLUBS_2026_27,
+  ...PROMOTED_CLUBS_2025_26,
   ...RELEGATED_CLUBS_2024_25,
-];
+  ...PROMOTED_CLUBS_2026_27,
+]);
 
 export const ENGLISH_TOP_FLIGHT_CLUBS: Club[] = ENGLISH_TOP_FLIGHT_CLUBS_2026_27;
 
@@ -500,11 +548,13 @@ export function getEffectiveClubName(club: Club, userClub?: Club): string {
     : club.defaultName;
 }
 
-export const PROMOTION_CANDIDATE_POOL: Club[] = [
+export const PROMOTION_CANDIDATE_POOL: Club[] = deduplicateClubsById([
   ...LOWER_LEAGUE_CLUBS,
   ...RELEGATED_CLUBS_2024_25,
+  ...PROMOTED_CLUBS_2025_26,
   ...PROMOTED_CLUBS_2026_27,
-];
+  ...SHARED_17_CLUBS.filter((c) => RELEGATED_2025_26_IDS.has(c.id)),
+]);
 
 export function getActiveLeagueClubs(save?: {
   activeLeagueClubIds?: string[];

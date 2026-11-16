@@ -1053,42 +1053,74 @@ export function SquadManagement({
           {/* Virtual Pitch Status Strip (Compact) */}
           <div className="office-subcard flex items-center justify-between px-3 py-1.5 rounded-xl text-xs shadow-xs">
             <div className="flex items-center gap-2">
-              <span className="font-display font-black text-[11px] uppercase tracking-wider px-2.5 py-0.5 rounded-lg bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-bold shadow-xs">
-                ⚽ {currentFormation}
+              <span className="font-display font-black text-[11px] uppercase tracking-wider px-2.5 py-0.5 rounded-lg bg-[#1E2024] text-amber-300 border border-amber-500/30 shadow-xs">
+                {currentFormation}
               </span>
-              <span className="text-[10.5px] font-bold text-slate-600 uppercase tracking-wider">
-                Starting XI • Matchday Canvas
+              <span className="text-[11px] font-bold text-zinc-700">
+                Starting XI
               </span>
             </div>
-            <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
-              Tap player to swap or inspect
+            <span className="text-[10px] text-zinc-500 font-mono">
+              Tap or drag to swap
             </span>
           </div>
 
-          {/* Virtual Pitch Canvas with Broadcast Turf & Markings */}
-          <div className="my11-broadcast-pitch p-3 sm:p-6 min-h-[520px] flex flex-col justify-between relative select-none">
-            {/* Pitch Markings */}
-            <div className="my11-pitch-lines" />
-            <div className="my11-pitch-halfway" />
-            <div className="my11-pitch-center-circle" />
-            <div className="my11-pitch-penalty-box-top" />
-            <div className="my11-pitch-penalty-box-bottom" />
+          {/* Double-Bezel Tactile Pitch Frame */}
+          <div className="rounded-2xl bg-[#E8E6E1] border border-zinc-300/70 p-2 sm:p-3 shadow-xs">
+            {/* Virtual Pitch Canvas with True-Circle SVG Markings */}
+            <div className="my11-broadcast-pitch p-2 sm:p-4 w-full aspect-[440/520] max-h-[680px] mx-auto flex flex-col justify-between relative select-none">
+              <svg
+                className="absolute inset-0 w-full h-full pointer-events-none"
+                viewBox="0 0 440 520"
+                preserveAspectRatio="xMidYMid meet"
+                aria-hidden="true"
+              >
+                <defs>
+                  <clipPath id="live-top-d-clip"><rect x="0" y="102" width="440" height="418" /></clipPath>
+                  <clipPath id="live-bot-d-clip"><rect x="0" y="0" width="440" height="418" /></clipPath>
+                </defs>
+                {/* Goal Nets */}
+                <rect x="188" y="8" width="64" height="10" rx="1.5" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.42)" strokeWidth="1.3" />
+                <rect x="188" y="502" width="64" height="10" rx="1.5" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.42)" strokeWidth="1.3" />
+                {/* Touchline Boundary */}
+                <rect x="20" y="18" width="400" height="484" rx="3" fill="none" stroke="rgba(255,255,255,0.44)" strokeWidth="1.6" />
+                {/* Corner Arcs */}
+                <path d="M 20 28 A 10 10 0 0 0 30 18" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.4" />
+                <path d="M 410 18 A 10 10 0 0 0 420 28" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.4" />
+                <path d="M 20 492 A 10 10 0 0 1 30 502" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.4" />
+                <path d="M 410 502 A 10 10 0 0 1 420 492" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.4" />
+                {/* Halfway Line & True Center Circle */}
+                <line x1="20" y1="260" x2="420" y2="260" stroke="rgba(255,255,255,0.42)" strokeWidth="1.5" />
+                <circle cx="220" cy="260" r="50" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.5" />
+                <circle cx="220" cy="260" r="3" fill="rgba(255,255,255,0.68)" />
+                {/* Top Penalty Box & True Circular D */}
+                <rect x="110" y="18" width="220" height="84" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.5" />
+                <rect x="166" y="18" width="108" height="28" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.4" />
+                <circle cx="220" cy="76" r="2.5" fill="rgba(255,255,255,0.68)" />
+                <circle cx="220" cy="76" r="42" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.5" clipPath="url(#live-top-d-clip)" />
+                {/* Bottom Penalty Box & True Circular D */}
+                <rect x="110" y="418" width="220" height="84" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.5" />
+                <rect x="166" y="474" width="108" height="28" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.4" />
+                <circle cx="220" cy="444" r="2.5" fill="rgba(255,255,255,0.68)" />
+                <circle cx="220" cy="444" r="42" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.5" clipPath="url(#live-bot-d-clip)" />
+              </svg>
 
-            {/* Starting XI Placed in Dedicated Tactical Lines */}
-            <div className="relative z-10 w-full flex flex-col justify-between h-full min-h-[460px] pt-6 pb-5 gap-3">
-              {activeFormationConfig.lines.map((lineIndices, rowIndex) => (
-                <div
-                  key={rowIndex}
-                  className="flex justify-around items-center w-full px-0.5 sm:px-2 gap-1 sm:gap-2"
-                >
-                  {lineIndices.map((slotIndex) => {
-                    const slotPos = activeFormationConfig.slots[slotIndex];
-                    const playerId = lineup.starterIds[slotIndex];
-                    const player = squad.find((p) => p.id === playerId);
-                    return renderPitchSlot(slotPos, player, playerId);
-                  })}
-                </div>
-              ))}
+              {/* Starting XI Placed in Dedicated Tactical Lines */}
+              <div className="relative z-10 w-full flex flex-col justify-between h-full py-3 sm:py-5 gap-1.5 sm:gap-3">
+                {activeFormationConfig.lines.map((lineIndices, rowIndex) => (
+                  <div
+                    key={rowIndex}
+                    className="flex justify-around items-center w-full px-0.5 sm:px-2 gap-1 sm:gap-2"
+                  >
+                    {lineIndices.map((slotIndex) => {
+                      const slotPos = activeFormationConfig.slots[slotIndex];
+                      const playerId = lineup.starterIds[slotIndex];
+                      const player = squad.find((p) => p.id === playerId);
+                      return renderPitchSlot(slotPos, player, playerId);
+                    })}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -1325,7 +1357,7 @@ export function SquadManagement({
                 className={`py-1.5 px-3 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all ${
                   filterGroup === group
                     ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20'
-                    : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+                    : 'bg-white border border-slate-300 text-slate-700 hover:text-slate-900 hover:bg-slate-50'
                 }`}
               >
                 {group}
@@ -1367,7 +1399,7 @@ export function SquadManagement({
                         id={`squad-player-${player.id}`}
                         className="hover:bg-slate-850/40 transition-colors scroll-mt-20"
                       >
-                        <td className="py-3 px-4 font-semibold text-white">
+                        <td className="py-3 px-4 font-bold text-slate-900">
                           <button
                             onClick={() => handleSelectPlayerWithActions(player)}
                             className="hover:text-blue-500 text-left font-display font-black text-sm flex items-center gap-1.5 flex-wrap cursor-pointer"
@@ -1574,10 +1606,10 @@ export function SquadManagement({
                             <button
                               type="button"
                               onClick={() => handleSelectPlayerWithActions(player)}
-                              className="px-2 py-1 rounded text-[10px] font-bold bg-slate-900/80 hover:bg-slate-800 border border-slate-750 text-slate-300 hover:text-white cursor-pointer"
+                              className="px-2 py-1 rounded text-[10px] font-bold bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 hover:text-slate-900 cursor-pointer"
                               title="Transfer status & contract management"
                             >
-                              ⚙️
+                              Manage
                             </button>
                           </div>
                         </td>
@@ -2894,17 +2926,17 @@ export function SquadManagement({
                 )}
 
                 {/* Player Status Summary */}
-                <div className="bg-slate-900/60 border border-slate-850 rounded-xl p-3 flex items-center justify-between">
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between">
                   <div>
-                    <h4 className="font-display font-black text-white text-sm uppercase">{selectedPlayer.name}</h4>
-                    <span className="text-[10px] text-slate-400 font-mono">
+                    <h4 className="font-display font-black text-slate-900 text-sm uppercase">{selectedPlayer.name}</h4>
+                    <span className="text-[10px] text-slate-600 font-mono">
                       Valuation: {formatCurrency(selectedPlayer.value)} • {selectedPlayer.position}
                     </span>
                   </div>
                   <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${
                     selectedPlayer.transferListed
-                      ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                      : 'bg-slate-800 text-slate-400 border-slate-700'
+                      ? 'bg-amber-50 text-amber-800 border-amber-300'
+                      : 'bg-slate-100 text-slate-700 border-slate-300'
                   }`}>
                     {selectedPlayer.transferListed ? 'Transfer Listed' : 'Squad Asset'}
                   </span>
@@ -2912,24 +2944,24 @@ export function SquadManagement({
 
                 {/* Status Toggles */}
                 <div className="grid grid-cols-2 gap-2">
-                  <label className="flex items-center gap-2 p-2 rounded-xl bg-slate-950 border border-slate-800 cursor-pointer select-none">
+                  <label className="flex items-center gap-2 p-2 rounded-xl bg-white border border-slate-300 cursor-pointer select-none">
                     <input
                       type="checkbox"
                       checked={transferListedInput}
                       onChange={(e) => setTransferListedInput(e.target.checked)}
                       className="accent-blue-600 rounded"
                     />
-                    <span className="text-[11px] font-bold text-slate-200">Transfer Listed</span>
+                    <span className="text-[11px] font-bold text-slate-800">Transfer Listed</span>
                   </label>
 
-                  <label className="flex items-center gap-2 p-2 rounded-xl bg-slate-950 border border-slate-800 cursor-pointer select-none">
+                  <label className="flex items-center gap-2 p-2 rounded-xl bg-white border border-slate-300 cursor-pointer select-none">
                     <input
                       type="checkbox"
                       checked={loanListedInput}
                       onChange={(e) => setLoanListedInput(e.target.checked)}
                       className="accent-blue-500 rounded"
                     />
-                    <span className="text-[11px] font-bold text-slate-200">Available for Loan</span>
+                    <span className="text-[11px] font-bold text-slate-800">Available for Loan</span>
                   </label>
                 </div>
 
@@ -3057,12 +3089,12 @@ export function SquadManagement({
                               onClick={() => setReleaseActionType('mutual')}
                               className={`p-2 rounded-xl border cursor-pointer transition-all ${
                                 releaseActionType === 'mutual'
-                                  ? 'bg-amber-950/60 border-amber-500 text-amber-200'
-                                  : 'bg-slate-950 border-slate-800 text-slate-400'
+                                  ? 'bg-amber-50 border-amber-400 text-amber-900'
+                                  : 'bg-white border-slate-300 text-slate-700'
                               }`}
                             >
                               <span className="text-[9.5px] font-black uppercase block">Mutual Settlement</span>
-                              <span className="font-display font-black text-xs text-white block mt-0.5">
+                              <span className="font-display font-black text-xs text-slate-900 block mt-0.5">
                                 {formatCurrency(mutualPayout)}
                               </span>
                             </label>
@@ -3071,12 +3103,12 @@ export function SquadManagement({
                               onClick={() => setReleaseActionType('unilateral')}
                               className={`p-2 rounded-xl border cursor-pointer transition-all ${
                                 releaseActionType === 'unilateral'
-                                  ? 'bg-rose-950/60 border-rose-500 text-rose-200'
-                                  : 'bg-slate-950 border-slate-800 text-slate-400'
+                                  ? 'bg-rose-50 border-rose-400 text-rose-900'
+                                  : 'bg-white border-slate-300 text-slate-700'
                               }`}
                             >
                               <span className="text-[9.5px] font-black uppercase block">Unilateral Buyout</span>
-                              <span className="font-display font-black text-xs text-white block mt-0.5">
+                              <span className="font-display font-black text-xs text-slate-900 block mt-0.5">
                                 {formatCurrency(fullLiability)}
                               </span>
                             </label>
@@ -3086,7 +3118,7 @@ export function SquadManagement({
                             <button
                               type="button"
                               onClick={() => setShowReleaseModal(false)}
-                              className="py-1.5 px-3 rounded-lg border border-slate-800 bg-slate-950 text-slate-400 font-bold text-xs uppercase cursor-pointer"
+                              className="py-1.5 px-3 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 font-bold text-xs uppercase cursor-pointer"
                             >
                               Cancel
                             </button>

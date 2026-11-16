@@ -86,13 +86,15 @@ export default function DraftedXIGame() {
   // Safe fallback if database failed to bundle
   if (!players || players.length === 0) {
     return (
-      <div className="min-h-screen text-white font-sans flex flex-col pitch-bg p-6 justify-center items-center">
-        <main className="w-full max-w-md bg-slate-950/80 backdrop-blur-md rounded-3xl p-8 border border-red-500/25 shadow-2xl text-center space-y-6">
-          <span className="text-4xl">⚠️</span>
-          <h1 className="text-2xl font-display font-black text-white uppercase tracking-tight">
+      <div className="min-h-screen my11-canvas text-slate-900 font-sans flex flex-col p-6 justify-center items-center">
+        <main className="w-full max-w-md office-floating-card rounded-3xl p-8 border border-rose-200 shadow-2xl text-center space-y-6">
+          <div className="w-12 h-12 mx-auto rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center justify-center font-mono font-bold text-xs">
+            ERR
+          </div>
+          <h1 className="text-2xl font-display font-black text-slate-900 uppercase tracking-tight">
             Database Loading Error
           </h1>
-          <p className="text-sm text-slate-350 leading-relaxed font-semibold">
+          <p className="text-sm text-slate-600 leading-relaxed font-semibold">
             We couldn't load the MY-11 player database. This might be due to a corrupt build or missing database assets.
           </p>
           <p className="text-xs text-slate-500 font-medium">
@@ -106,21 +108,16 @@ export default function DraftedXIGame() {
   return (
     <div className="min-h-screen my11-canvas text-foreground font-sans flex flex-col w-full overflow-x-hidden p-3 sm:p-5 select-none">
       {/* Floating MY-11 Header Card */}
-      <header className="office-floating-card w-full max-w-4xl mx-auto rounded-[20px] sm:rounded-[24px] p-2.5 sm:p-3.5 mb-2 sm:mb-3 flex items-center justify-between shadow-xs">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-cyan-400 via-blue-500 to-fuchsia-500 p-0.5 shadow-sm flex items-center justify-center shrink-0">
-            <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
-              <svg viewBox="0 0 28 12" className="w-4 h-2 sm:w-4.5 sm:h-2.5" aria-hidden="true">
-                <defs>
-                  <linearGradient id="my11-crown-home" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#00d2ff" />
-                    <stop offset="50%" stopColor="#2563eb" />
-                    <stop offset="100%" stopColor="#c026d3" />
-                  </linearGradient>
-                </defs>
-                <path d="M2 10 L4 3 L10 7 L14 1 L18 7 L24 3 L26 10 Z" fill="url(#my11-crown-home)" />
-              </svg>
-            </div>
+      <header className="office-floating-card w-full max-w-5xl mx-auto rounded-2xl p-3 sm:p-4 mb-3 sm:mb-4 flex items-center justify-between shadow-xs">
+        <div className="flex items-center gap-3">
+          <div
+            data-force-white="true"
+            className="w-9 h-9 rounded-xl bg-[#09152b] text-white border border-slate-700 shadow-sm flex items-center justify-center shrink-0"
+          >
+            <svg viewBox="0 0 24 24" className="w-4.5 h-4.5" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+              <path d="M12 2L4 6v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V6l-8-4z" />
+              <path d="M9 12l2 2 4-4" stroke="#34d399" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </div>
           <button
             onClick={() => {
@@ -129,29 +126,32 @@ export default function DraftedXIGame() {
                 game.returnHome();
               }
             }}
-            className="text-base sm:text-lg font-display font-black tracking-tight text-[var(--office-text-primary)] uppercase hover:text-[#1d5eff] transition-colors cursor-pointer"
+            className="text-left cursor-pointer group"
           >
-            MY-<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600">11</span>
+            <div className="text-base sm:text-lg font-display font-black tracking-tight text-slate-900 uppercase group-hover:text-blue-700 transition-colors leading-none">
+              MY-<span className="text-[#047857]">11</span>
+            </div>
+            <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500 mt-0.5">
+              Football Management &amp; Draft
+            </div>
           </button>
         </div>
 
-        <div className="flex items-center gap-2">
+        <nav aria-label="Primary navigation" className="flex items-center gap-2">
           {game.streakStats.currentDailyStreak > 0 && (
-            <span className="office-subcard text-[10px] font-mono font-bold text-amber-700 bg-amber-50/80 px-2.5 py-1 rounded-full uppercase tracking-wider leading-none border border-amber-200">
-              🔥 {game.streakStats.currentDailyStreak}d
+            <span className="office-subcard text-[10px] font-mono font-bold text-amber-800 bg-amber-50 px-2.5 py-1.5 rounded-xl uppercase tracking-wider leading-none border border-amber-200 hidden sm:inline-flex items-center gap-1">
+              Streak {game.streakStats.currentDailyStreak}d
             </span>
           )}
 
-          {/* Career Mode Quick Link when inside Draft or other phases */}
-          {game.phase !== 'home' && (
-            <Link
-              href="/career"
-              title="Career Mode"
-              className="office-subcard text-[10px] font-mono font-bold tracking-wider uppercase px-2.5 py-1.5 rounded-xl text-[var(--office-text-secondary)] hover:text-[var(--office-text-primary)] transition-colors flex items-center gap-1 leading-none shadow-2xs"
-            >
-              Career Mode
-            </Link>
-          )}
+          {/* Direct Career Hub Action Pill */}
+          <Link
+            href="/career"
+            data-force-white="true"
+            className="bg-[#09152b] hover:bg-[#0f2142] text-white text-[10.5px] font-display font-black tracking-wider uppercase px-3 py-2 rounded-xl transition-colors flex items-center gap-1.5 leading-none shadow-xs"
+          >
+            <span>Career Hub</span>
+          </Link>
 
           {/* History Screen Trigger Button */}
           <button
@@ -162,25 +162,34 @@ export default function DraftedXIGame() {
                 game.handleViewHistory();
               }
             }}
+            aria-label="View Squad History & Personal Bests"
             title="View Squad History & Personal Bests"
-            className="w-8 h-8 rounded-full flex items-center justify-center office-subcard text-xs text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] cursor-pointer active:scale-95 transition-transform shadow-2xs"
+            className="w-8 h-8 rounded-xl flex items-center justify-center office-subcard text-slate-700 hover:text-slate-900 cursor-pointer active:scale-95 transition-transform shadow-2xs"
           >
-            📜
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 8v4l3 3" />
+              <circle cx="12" cy="12" r="9" />
+            </svg>
           </button>
 
           {/* Help Tutorial Trigger Button */}
           <button
             onClick={handleOpenHelpModal}
+            aria-label="How to Play & Game Guides"
             title="How to Play & Game Guides"
-            className="w-8 h-8 rounded-full flex items-center justify-center office-subcard text-xs text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] cursor-pointer active:scale-95 transition-transform shadow-2xs"
+            className="w-8 h-8 rounded-xl flex items-center justify-center office-subcard text-slate-700 hover:text-slate-900 cursor-pointer active:scale-95 transition-transform shadow-2xs"
           >
-            ❓
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
           </button>
-        </div>
+        </nav>
       </header>
 
       {/* Screen Coordinator */}
-      <main className={`flex-1 w-full mx-auto flex flex-col justify-center ${game.phase === 'home' ? 'max-w-4xl' : 'max-w-lg'}`}>
+      <main className={`flex-1 w-full mx-auto flex flex-col justify-center ${game.phase === 'home' ? 'max-w-5xl' : 'max-w-lg'}`}>
         {game.phase === 'home' && (
           <HomeScreen
             streakStats={game.streakStats}

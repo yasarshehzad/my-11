@@ -87,6 +87,8 @@ const CLUB_KEYWORD_MAP: Record<string, string[]> = {
   yorkshire_whites: ['Leeds', 'Leeds United'],
   wearside_red_white: ['Sunderland'],
   east_lancs_claret: ['Burnley'],
+  coventry_sky_blues: ['Coventry', 'Coventry City'],
+  humberside_tigers: ['Hull', 'Hull City'],
 };
 
 export function generateClubSquad(club: Club, season: DatabaseSeason = '2026/27'): CareerPlayer[] {
