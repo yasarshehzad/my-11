@@ -1023,7 +1023,7 @@ export function SquadManagement({
             <span>Training</span>
             {fatiguedStartersCount > 0 ? (
               <span
-                className={`text-[9.5px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                className={`hidden sm:inline-flex text-[9.5px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
                   viewMode === 'training'
                     ? 'bg-amber-400 text-slate-950'
                     : 'bg-amber-100 text-amber-800'
@@ -1034,7 +1034,7 @@ export function SquadManagement({
               </span>
             ) : (
               <span
-                className={`text-[9.5px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                className={`hidden sm:inline-flex text-[9.5px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
                   viewMode === 'training'
                     ? 'bg-white/20 text-white'
                     : 'bg-slate-200 text-slate-700'
@@ -1369,23 +1369,23 @@ export function SquadManagement({
           </div>
 
           {/* Player Table / Cards */}
-          <div className="rounded-2xl border border-slate-850 overflow-hidden bg-slate-900/30">
+          <div className="rounded-2xl border border-[#D4D2CD] overflow-hidden bg-white shadow-xs">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-950/80 text-[10px] font-bold uppercase text-slate-400 border-b border-slate-850 select-none">
+                <thead className="bg-[#1E2024] text-[10px] font-bold uppercase text-zinc-300 border-b-2 border-[#D97706] select-none">
                   <tr>
-                    <th className="py-3 px-4">Player</th>
-                    <th className="py-3 px-3">Role</th>
-                    <th className="py-3 px-3 text-center">Pos</th>
-                    <th className="py-3 px-3 text-center">OVR</th>
-                    <th className="py-3 px-3 text-center">Form</th>
-                    <th className="py-3 px-3 text-center">POT</th>
-                    <th className="py-3 px-3 text-center">Age</th>
-                    <th className="py-3 px-3">Value</th>
-                    <th className="py-3 px-3">Wage</th>
-                    <th className="py-3 px-3 text-center">Contract</th>
-                    <th className="py-3 px-3 text-center">HG</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
+                    <th className="py-3 px-3 sm:px-4">Player</th>
+                    <th className="hidden md:table-cell py-3 px-3">Role</th>
+                    <th className="py-3 px-2 sm:px-3 text-center">Pos</th>
+                    <th className="py-3 px-2 sm:px-3 text-center">OVR</th>
+                    <th className="hidden md:table-cell py-3 px-3 text-center">Form</th>
+                    <th className="hidden sm:table-cell py-3 px-3 text-center">POT</th>
+                    <th className="hidden lg:table-cell py-3 px-3 text-center">Age</th>
+                    <th className="hidden lg:table-cell py-3 px-3">Value</th>
+                    <th className="hidden lg:table-cell py-3 px-3">Wage</th>
+                    <th className="hidden lg:table-cell py-3 px-3 text-center">Contract</th>
+                    <th className="hidden lg:table-cell py-3 px-3 text-center">HG</th>
+                    <th className="py-3 px-3 sm:px-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-850/60">
@@ -1402,10 +1402,10 @@ export function SquadManagement({
                         id={`squad-player-${player.id}`}
                         className="hover:bg-slate-850/40 transition-colors scroll-mt-20"
                       >
-                        <td className="py-3 px-4 font-bold text-slate-900">
+                        <td className="py-2.5 px-3 sm:px-4 font-bold text-slate-900">
                           <button
                             onClick={() => handleSelectPlayerWithActions(player)}
-                            className="hover:text-blue-500 text-left font-display font-black text-sm flex items-center gap-1.5 flex-wrap cursor-pointer"
+                            className="hover:text-amber-700 text-left font-display font-black text-xs sm:text-sm flex items-center gap-1.5 flex-wrap cursor-pointer"
                           >
                             <span>{player.name}</span>
                             {player.id === currentTactics.captainId && (
@@ -1445,12 +1445,24 @@ export function SquadManagement({
                               </span>
                             )}
                           </button>
-                          <div className="text-[10px] text-slate-400 font-normal">
-                            {player.nationality}
+                          <div className="text-[10px] text-slate-500 font-normal flex items-center gap-1.5 mt-0.5">
+                            <span>{player.nationality}</span>
+                            <span className="md:hidden font-mono font-bold text-zinc-600">• {roleLabel}</span>
+                            <span
+                              className={`md:hidden font-mono font-bold ${
+                                (player.fitness ?? 100) >= 80
+                                  ? 'text-emerald-700'
+                                  : (player.fitness ?? 100) >= 65
+                                  ? 'text-amber-700'
+                                  : 'text-rose-700'
+                              }`}
+                            >
+                              {Math.round(player.fitness ?? 100)}%
+                            </span>
                           </div>
                         </td>
 
-                        <td className="py-3 px-3">
+                        <td className="hidden md:table-cell py-3 px-3">
                           <div className="flex items-center gap-1 flex-wrap">
                             <span
                               className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${
@@ -1481,24 +1493,24 @@ export function SquadManagement({
                           </div>
                         </td>
 
-                        <td className="py-3 px-3 text-center font-bold text-slate-300">
+                        <td className="py-2.5 px-2 sm:px-3 text-center font-bold text-slate-700">
                           <div>{player.position}</div>
                           {player.naturalPositions && player.naturalPositions.filter((p) => p !== player.position).length > 0 && (
-                            <div className="text-[9px] font-semibold text-blue-600 dark:text-blue-400" title={`Natural in: ${player.naturalPositions.join(', ')}`}>
+                            <div className="text-[9px] font-semibold text-amber-700" title={`Natural in: ${player.naturalPositions.join(', ')}`}>
                               +{player.naturalPositions.filter((p) => p !== player.position).join('/')}
                             </div>
                           )}
                         </td>
 
-                        <td className="py-3 px-3 text-center">
+                        <td className="py-2.5 px-2 sm:px-3 text-center">
                           <div className="flex items-center justify-center gap-1">
-                            <span className="font-display font-black text-sm text-blue-600 dark:text-blue-400">
+                            <span className="font-display font-black text-sm text-zinc-900">
                               {effectiveRating}
                             </span>
                             {bonus !== 0 && (
                               <span
                                 className={`text-[9px] font-bold px-1 rounded ${
-                                  bonus > 0 ? 'bg-amber-950 text-amber-300' : 'bg-blue-950 text-blue-300'
+                                  bonus > 0 ? 'bg-amber-100 text-amber-900' : 'bg-rose-100 text-rose-900'
                                 }`}
                                 title={`Base: ${player.rating} (${bonus > 0 ? `+${bonus}` : bonus} OVR)`}
                               >
@@ -1506,9 +1518,14 @@ export function SquadManagement({
                               </span>
                             )}
                           </div>
+                          {player.potential && (
+                            <div className="sm:hidden text-[9px] font-mono font-bold text-amber-700 mt-0.5">
+                              POT {player.potential}
+                            </div>
+                          )}
                         </td>
 
-                        <td className="py-3 px-3 text-center">
+                        <td className="hidden md:table-cell py-3 px-3 text-center">
                           <div className="flex items-center justify-center gap-1">
                             {player.recentForm && player.recentForm.length > 0 ? (
                               <div className="flex gap-0.5 items-center justify-center">
@@ -1537,32 +1554,32 @@ export function SquadManagement({
                           </div>
                         </td>
 
-                        <td className="py-3 px-3 text-center font-display font-bold text-xs text-amber-400">
+                        <td className="hidden sm:table-cell py-3 px-3 text-center font-display font-bold text-xs text-amber-700">
                           {player.potential ? `⭐ ${player.potential}` : '-'}
                           {player.age <= 23 && typeof player.developmentProgress === 'number' && player.developmentProgress > 0 && (
-                            <div className="text-[9px] font-mono text-blue-600 dark:text-blue-400 font-semibold mt-0.5" title="In-season XP progress">
+                            <div className="text-[9px] font-mono text-emerald-700 font-semibold mt-0.5" title="In-season XP progress">
                               🌱 {player.developmentProgress}%
                             </div>
                           )}
                         </td>
 
-                        <td className="py-3 px-3 text-center text-slate-400">
+                        <td className="hidden lg:table-cell py-3 px-3 text-center text-slate-400">
                           {player.age}
                         </td>
 
-                        <td className="py-3 px-3 font-semibold text-slate-200">
+                        <td className="hidden lg:table-cell py-3 px-3 font-semibold text-slate-700">
                           {formatCurrency(player.value)}
                         </td>
 
-                        <td className="py-3 px-3 text-slate-400">
+                        <td className="hidden lg:table-cell py-3 px-3 text-slate-500">
                           {formatWage(player.wageWeekly)}
                         </td>
 
-                        <td className="py-3 px-3 text-center text-slate-400">
+                        <td className="hidden lg:table-cell py-3 px-3 text-center text-slate-500">
                           {player.contractYears}y
                         </td>
 
-                        <td className="py-3 px-3 text-center">
+                        <td className="hidden lg:table-cell py-3 px-3 text-center">
                           {player.isHomegrown ? (
                             <span className="text-blue-600 dark:text-blue-400 font-bold" title="Homegrown">✓</span>
                           ) : (
@@ -1571,15 +1588,15 @@ export function SquadManagement({
                         </td>
 
 
-                        <td className="py-3 px-4 text-right">
-                          <div className="flex justify-end gap-1.5">
+                        <td className="py-2.5 px-2.5 sm:px-4 text-right">
+                          <div className="flex justify-end gap-1 sm:gap-1.5">
                             <button
                               onClick={() => handleRoleChange(player, 'starter')}
                               disabled={isStarter}
-                              className={`px-2 py-1 rounded text-[10px] font-bold ${
+                              className={`hidden sm:inline-flex px-2 py-1 rounded text-[10px] font-bold ${
                                 isStarter
-                                  ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                                  : 'bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 dark:bg-blue-950/80 dark:hover:bg-blue-900 dark:border-blue-800/60 dark:text-blue-300'
+                                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                                  : 'bg-[#1E2024] hover:bg-zinc-800 text-white cursor-pointer'
                               }`}
                             >
                               XI
@@ -1587,10 +1604,10 @@ export function SquadManagement({
                             <button
                               onClick={() => handleRoleChange(player, 'bench')}
                               disabled={isBench}
-                              className={`px-2 py-1 rounded text-[10px] font-bold ${
+                              className={`hidden sm:inline-flex px-2 py-1 rounded text-[10px] font-bold ${
                                 isBench
-                                  ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                                  : 'bg-blue-950/80 hover:bg-blue-900 border border-blue-800/60 text-blue-300'
+                                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                                  : 'bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 text-zinc-800 cursor-pointer'
                               }`}
                             >
                               Sub
@@ -1598,10 +1615,10 @@ export function SquadManagement({
                             <button
                               onClick={() => handleRoleChange(player, 'reserve')}
                               disabled={!isStarter && !isBench}
-                              className={`px-2 py-1 rounded text-[10px] font-bold ${
+                              className={`hidden sm:inline-flex px-2 py-1 rounded text-[10px] font-bold ${
                                 !isStarter && !isBench
-                                  ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                                  : 'bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-400'
+                                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                                  : 'bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 text-zinc-700 cursor-pointer'
                               }`}
                             >
                               Res

@@ -1106,10 +1106,14 @@ export function TransferHub({
 
       {/* Sub-Navigation Tabs with Scroll Affordance */}
       <div className="relative">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute right-0 top-0 bottom-1.5 w-8 bg-gradient-to-l from-[#F2F1EE] to-transparent z-10 sm:hidden"
+        />
         <nav
           aria-label="Transfer Sections"
           data-no-swipe="true"
-          className="flex gap-1.5 overflow-x-auto pb-1.5 scrollbar-none border-b border-slate-200/80 overscroll-x-contain touch-pan-x px-0.5"
+          className="flex gap-1.5 overflow-x-auto pb-1.5 pr-6 scrollbar-none border-b border-slate-200/80 overscroll-x-contain touch-pan-x px-0.5"
         >
           {[
             { id: 'market', label: 'Market', icon: '🔍', badge: marketPlayers.length },

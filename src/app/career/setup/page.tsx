@@ -245,7 +245,7 @@ function SetupWizardContent() {
         {step === 1 && (
           <section className="office-floating-card max-w-md mx-auto w-full space-y-5 rounded-2xl p-6 sm:p-8">
             <header className="space-y-1 border-b border-slate-200 pb-4">
-              <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-blue-700">
+              <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-700">
                 Step 01 // Technical Director
               </div>
               <h2 className="text-xl font-display font-black uppercase text-slate-900">
@@ -305,7 +305,7 @@ function SetupWizardContent() {
         {step === 2 && (
           <section className={`w-full space-y-5 pb-28 ${stepDir === 'forward' ? 'my11-step-forward' : 'my11-step-back'}`}>
             <header className="text-center space-y-1.5">
-              <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-blue-700">
+              <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-700">
                 Step 02 // League &amp; Club Selection
               </div>
               <h2 className="text-2xl font-display font-black uppercase text-slate-900 tracking-tight">
@@ -428,7 +428,7 @@ function SetupWizardContent() {
                     setClubSearch('');
                     setTierFilter('all');
                   }}
-                  className="text-xs font-bold text-blue-700 hover:underline cursor-pointer"
+                  className="text-xs font-bold text-amber-700 hover:underline cursor-pointer"
                 >
                   Reset Filters
                 </button>
@@ -548,7 +548,7 @@ function SetupWizardContent() {
         {step === 3 && (
           <section className={`max-w-3xl mx-auto w-full space-y-6 pb-8 ${stepDir === 'forward' ? 'my11-step-forward' : 'my11-step-back'}`}>
             <header className="text-center space-y-1.5">
-              <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-blue-700">
+              <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-700">
                 Step 03 // Club Governance &amp; Simulation Rules
               </div>
               <h2 className="text-2xl font-display font-black uppercase text-slate-900">
@@ -571,7 +571,7 @@ function SetupWizardContent() {
                 <div className="flex items-center gap-4 text-xs tabular-nums">
                   <div>
                     <span className="text-slate-500 font-medium">Adjusted Budget: </span>
-                    <strong className="text-blue-700 font-display font-black">£{effectiveBudgetMillions}M</strong>
+                    <strong className="text-amber-700 font-display font-black">£{effectiveBudgetMillions}M</strong>
                   </div>
                   <div>
                     <span className="text-slate-500 font-medium">Multiplier: </span>
@@ -662,7 +662,7 @@ function SetupWizardContent() {
                 }`}
               >
                 <div className="flex justify-between items-center mb-1">
-                  <h3 className="font-display font-black uppercase text-sm text-blue-700">Custom</h3>
+                  <h3 className="font-display font-black uppercase text-sm text-amber-700">Custom</h3>
                   <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200">
                     Bespoke
                   </span>

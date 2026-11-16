@@ -1801,9 +1801,11 @@ function CareerPlayHubContent() {
         <aside
           role="status"
           aria-live="polite"
-          className="fixed top-18 left-1/2 -translate-x-1/2 z-50 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-xl font-display font-black text-xs uppercase tracking-wider shadow-xl shadow-blue-500/25 flex items-center gap-2 motion-reduce:animate-none animate-bounce"
+          data-force-white="true"
+          className="fixed top-18 left-1/2 -translate-x-1/2 z-50 bg-[#1E2024] border border-amber-500/60 text-white px-4 py-2 rounded-xl font-display font-bold text-xs tracking-wide shadow-xl flex items-center gap-2 max-w-[92vw]"
         >
-          <span>✓</span> {toastMessage}
+          <span className="text-amber-300 shrink-0">✓</span>
+          <span className="truncate">{toastMessage}</span>
         </aside>
       )}
 
@@ -3715,7 +3717,7 @@ function CareerPlayHubContent() {
           <div className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-7 max-w-lg w-full space-y-5 shadow-2xl text-left relative text-[#0b1536]">
             <header className="space-y-1.5">
               <div className="flex items-center justify-between gap-2 flex-wrap">
-                <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full inline-block font-display">
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 bg-amber-50 border border-amber-300 px-2.5 py-0.5 rounded-full inline-block font-display">
                   Official Announcement
                 </span>
                 <span className="text-xs font-mono font-bold text-slate-500">
@@ -3737,7 +3739,7 @@ function CareerPlayHubContent() {
               </div>
               <div className="flex justify-between items-center text-slate-700">
                 <span className="text-slate-500 font-medium">Match Allocation:</span>
-                <span className="font-mono text-blue-700 font-bold">19 Home • 19 Away</span>
+                <span className="font-mono text-amber-800 font-bold">19 Home • 19 Away</span>
               </div>
             </div>
 
