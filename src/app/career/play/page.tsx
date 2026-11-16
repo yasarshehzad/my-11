@@ -4416,9 +4416,15 @@ function CareerPlayHubContent() {
                     <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all ${
-                          pillar.score >= 65 ? 'bg-emerald-600' : pillar.score >= 45 ? 'bg-amber-500' : 'bg-rose-600'
+                          pillar.positive ? 'bg-emerald-600' : pillar.score >= 45 ? 'bg-amber-500' : 'bg-rose-600'
                         }`}
-                        style={{ width: `${pillar.score}%` }}
+                        style={{
+                          width: `${
+                            pillar.positive && pillar.score <= 25
+                              ? Math.min(100, Math.max(35, pillar.score * 8))
+                              : Math.min(100, Math.max(10, pillar.score))
+                          }%`,
+                        }}
                       />
                     </div>
                     <p className="text-[11px] text-slate-600 leading-snug font-medium">

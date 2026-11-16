@@ -924,7 +924,7 @@ export function SquadManagement({
           </button>
         </div>
 
-        <div className="flex w-full sm:w-auto items-center gap-0.5 bg-[#F7F6F3] border border-[#E2DFD9] rounded-xl p-0.5 overflow-x-auto scrollbar-none">
+        <div className="grid grid-cols-5 sm:flex w-full sm:w-auto items-center gap-0.5 bg-[#F7F6F3] border border-[#E2DFD9] rounded-xl p-0.5">
           <button
             onClick={() => {
               if (viewMode === 'pitch') {
@@ -934,7 +934,7 @@ export function SquadManagement({
                 window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
               }
             }}
-            className={`py-1 px-2.5 rounded-lg text-xs font-display font-black uppercase transition-all cursor-pointer ${
+            className={`py-1.5 px-1 sm:px-2.5 rounded-lg text-[10.5px] sm:text-xs font-display font-black uppercase transition-all cursor-pointer text-center ${
               viewMode === 'pitch'
                 ? 'office-nav-tab-active shadow-xs'
                 : 'office-nav-tab-inactive'
@@ -951,7 +951,7 @@ export function SquadManagement({
                 window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
               }
             }}
-            className={`py-1 px-2.5 rounded-lg text-xs font-display font-black uppercase transition-all cursor-pointer ${
+            className={`py-1.5 px-1 sm:px-2.5 rounded-lg text-[10.5px] sm:text-xs font-display font-black uppercase transition-all cursor-pointer text-center ${
               viewMode === 'list'
                 ? 'office-nav-tab-active shadow-xs'
                 : 'office-nav-tab-inactive'
@@ -968,7 +968,7 @@ export function SquadManagement({
                 window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
               }
             }}
-            className={`py-1 px-2 sm:px-2.5 rounded-lg text-[11px] sm:text-xs font-display font-black uppercase transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0 ${
+            className={`py-1.5 px-1 sm:px-2.5 rounded-lg text-[10.5px] sm:text-xs font-display font-black uppercase transition-all flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap ${
               viewMode === 'tactics'
                 ? 'office-nav-tab-active shadow-xs'
                 : 'office-nav-tab-inactive'
@@ -976,7 +976,7 @@ export function SquadManagement({
           >
             <span>Tactics</span>
             <span
-              className={`text-[9.5px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+              className={`hidden sm:inline-flex text-[9.5px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
                 viewMode === 'tactics' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
               }`}
             >
@@ -992,14 +992,14 @@ export function SquadManagement({
                 window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
               }
             }}
-            className={`py-1 px-2 sm:px-2.5 rounded-lg text-[11px] sm:text-xs font-display font-black uppercase transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0 ${
+            className={`py-1.5 px-1 sm:px-2.5 rounded-lg text-[10.5px] sm:text-xs font-display font-black uppercase transition-all flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap ${
               viewMode === 'academy'
                 ? 'office-nav-tab-active shadow-xs'
                 : 'office-nav-tab-inactive'
             }`}
           >
             <span>Academy</span>
-            <span className={`text-[9.5px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+            <span className={`hidden sm:inline-flex text-[9.5px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
               viewMode === 'academy' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
             }`}>
               {academy.length}
@@ -1014,7 +1014,7 @@ export function SquadManagement({
                 window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
               }
             }}
-            className={`py-1 px-2 sm:px-2.5 rounded-lg text-[11px] sm:text-xs font-display font-black uppercase transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0 ${
+            className={`py-1.5 px-1 sm:px-2.5 rounded-lg text-[10.5px] sm:text-xs font-display font-black uppercase transition-all flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap ${
               viewMode === 'training'
                 ? 'office-nav-tab-active shadow-xs'
                 : 'office-nav-tab-inactive'
@@ -1357,10 +1357,10 @@ export function SquadManagement({
               <button
                 key={group}
                 onClick={() => setFilterGroup(group)}
-                className={`py-1.5 px-3 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all ${
+                className={`py-1.5 px-3 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
                   filterGroup === group
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20'
-                    : 'bg-white border border-slate-300 text-slate-700 hover:text-slate-900 hover:bg-slate-50'
+                    ? 'office-nav-tab-active shadow-xs'
+                    : 'bg-white border border-zinc-300 text-zinc-700 hover:text-zinc-900 hover:bg-[#F7F6F3]'
                 }`}
               >
                 {group}

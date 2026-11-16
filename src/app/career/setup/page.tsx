@@ -997,10 +997,10 @@ function SetupWizardContent() {
               <button
                 type="button"
                 onClick={handleStartCareer}
-                className="office-play-match-btn flex-1 py-4 px-6 rounded-xl text-white font-display font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
+                className="office-play-match-btn flex-1 py-3.5 px-4 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
               >
-                <span>Start Career at {effectiveSelectedName}</span>
-                <span aria-hidden="true">-&gt;</span>
+                <span className="truncate">Start Career at {effectiveSelectedName}</span>
+                <span aria-hidden="true" className="shrink-0">-&gt;</span>
               </button>
             </div>
           </section>
