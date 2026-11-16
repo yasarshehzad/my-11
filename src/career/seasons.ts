@@ -11,6 +11,7 @@ import {
   ManagerAccolade,
 } from './types';
 import { getInitialManagerCareer } from './managerCareer';
+import { computeCurrentSeasonStats } from './playerStats';
 import { getInitialFeederNetwork } from './feederClubs';
 import {
   getAllClubs,
@@ -181,8 +182,17 @@ export function advanceToNextSeason(save: CareerSaveFile): {
   const currentActiveClubs = getActiveLeagueClubs(save);
   const currentActiveClubIds = currentActiveClubs.map((c) => c.id);
 
-  // 1. Apply squad aging, wonderkid progression, and summer recovery
-  const { updatedSquad } = applySeasonalPlayerProgression(save.squad);
+  // 1. Archive completed season stats, then apply squad aging, progression & summer recovery
+  const squadWithArchivedStats = save.squad.map((player) => {
+    const completedStats = computeCurrentSeasonStats(player, save);
+    const prevHistory = player.historyStats || [];
+    const alreadyRecorded = prevHistory.some((h) => h.seasonLabel === completedStats.seasonLabel);
+    return {
+      ...player,
+      historyStats: alreadyRecorded ? prevHistory : [completedStats, ...prevHistory],
+    };
+  });
+  const { updatedSquad } = applySeasonalPlayerProgression(squadWithArchivedStats);
   const summerRecoveredSquad = updatedSquad.map((player) => ({
     ...player,
     fitness: 100,

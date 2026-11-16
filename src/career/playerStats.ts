@@ -23,91 +23,17 @@ function pseudoHash(str: string): number {
 }
 
 /**
- * Generates realistic historical previous season stats for a player
- * based on their position, age, and overall rating.
+ * Returns only real recorded previous seasons from the player's career save.
+ * No synthetic pre-career history is fabricated.
  */
 export function generateHistoricalSeasons(
   player: CareerPlayer,
-  currentYearStart: number = 2026
+  _currentYearStart: number = 2026
 ): PlayerSeasonStats[] {
-  // If player already has explicit history saved in career save, preserve it
   if (player.historyStats && player.historyStats.length > 0) {
-    return player.historyStats;
+    return [...player.historyStats];
   }
-
-  const history: PlayerSeasonStats[] = [];
-  const pos = player.position?.toUpperCase() || 'MID';
-  const isGk = pos === 'GK';
-  const isDef = ['CB', 'LB', 'RB', 'LWB', 'RWB', 'DEF'].includes(pos);
-  const isMid = ['CM', 'CDM', 'CAM', 'LM', 'RM', 'MID'].includes(pos);
-  const isFwd = ['ST', 'CF', 'LW', 'RW', 'FWD'].includes(pos);
-
-  // Determine how many prior seasons to display based on age (min 1, max 4)
-  const priorYears = Math.min(4, Math.max(1, player.age - 19));
-
-  for (let i = 1; i <= priorYears; i++) {
-    const year = currentYearStart - i;
-    const seasonLabel = `${year}/${String(year + 1).slice(2)}`;
-    const seed = pseudoHash(`${player.id}_${year}`);
-
-    // Apps: typically 25 to 38 matches
-    const apps = 28 + (seed % 10);
-    const starts = Math.max(18, apps - (seed % 4));
-    const subApps = apps - starts;
-
-    let goals = 0;
-    let assists = 0;
-    let cleanSheets = 0;
-
-    const playerRating = (player as any).overall ?? (player as any).rating ?? 75;
-
-    if (isFwd) {
-      // 12 to 28 goals depending on rating
-      const baseGoals = Math.max(8, Math.round((playerRating - 70) * 0.8));
-      goals = baseGoals + (seed % 9);
-      assists = 4 + (seed % 7);
-      cleanSheets = 0;
-    } else if (isMid) {
-      const baseGoals = Math.max(3, Math.round((playerRating - 72) * 0.4));
-      goals = baseGoals + (seed % 6);
-      assists = 6 + (seed % 10);
-      cleanSheets = 0;
-    } else if (isDef) {
-      goals = seed % 4; // 0 to 3 header goals
-      assists = 1 + (seed % 4);
-      cleanSheets = 10 + (seed % 8);
-    } else if (isGk) {
-      goals = 0;
-      assists = seed % 2 === 0 ? 1 : 0;
-      cleanSheets = 11 + (seed % 9);
-    }
-
-    const yellows = 1 + (seed % 6);
-    const reds = (seed % 15 === 0) ? 1 : 0;
-    const motm = isFwd || isMid ? 2 + (seed % 6) : 1 + (seed % 4);
-
-    const baseRat = 6.8 + ((playerRating - 75) * 0.035);
-    const avgRating = Number((baseRat + ((seed % 10) * 0.04)).toFixed(2));
-
-    history.push({
-      seasonLabel,
-      yearStart: year,
-      clubName: player.club || 'First Team',
-      competition: 'Top Flight',
-      appearances: apps,
-      starts,
-      subAppearances: subApps,
-      goals,
-      assists,
-      cleanSheets,
-      yellowCards: yellows,
-      redCards: reds,
-      averageRating: Math.min(8.6, Math.max(6.5, avgRating)),
-      manOfTheMatch: motm,
-    });
-  }
-
-  return history;
+  return [];
 }
 
 /**
@@ -444,7 +370,7 @@ export function getPlayerCompleteStats(
   const ratedSeasons = allSeasons.filter((s) => s.appearances > 0);
   const averageRating = ratedSeasons.length > 0
     ? Number((ratedSeasons.reduce((sum, s) => sum + s.averageRating, 0) / ratedSeasons.length).toFixed(2))
-    : 7.2;
+    : 0;
 
   return {
     currentSeason,

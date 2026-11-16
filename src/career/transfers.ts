@@ -333,6 +333,55 @@ function getDeterministicAge(id: string): number {
 /**
  * Returns scouting market players available for transfer, excluding players in the user's squad.
  */
+/**
+ * Under FIFA/Bosman rules, players in the final year of their contract (expiring June 30)
+ * can only be approached for a free pre-contract within 6 months of expiry (Jan 1 – Jun 30).
+ */
+export function isBosmanWindowOpen(currentDate: string): boolean {
+  const parts = currentDate.split('-');
+  const month = parseInt(parts[1] || '7', 10);
+  return month >= 1 && month <= 6;
+}
+
+function computeMarketContractAndStatus(
+  id: string,
+  rating: number,
+  age: number,
+  isLegend: boolean,
+  clubName?: string
+): {
+  contractYears: number;
+  isFreeAgent: boolean;
+  loanListed: boolean;
+} {
+  if (isLegend) {
+    return { contractYears: 3, isFreeAgent: false, loanListed: false };
+  }
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = ((hash << 5) - hash + id.charCodeAt(i)) | 0;
+  }
+  const idHash = Math.abs(hash + age * 31 + rating * 17);
+
+  // Only lower-rated/unattached players appear as free agents; never top-flight stars
+  const isFreeAgent = rating <= 77 && (!clubName || clubName === 'Free Agent' || idHash % 19 === 0);
+
+  // Realistic contract lengths: stars & young gems hold 3-5y deals; expiring contracts are rare & realistic
+  let contractYears: number;
+  if (rating >= 85 || (age <= 22 && rating >= 80)) {
+    contractYears = 3 + (idHash % 3); // 3-5 years
+  } else if (rating >= 79) {
+    contractYears = age >= 29 && idHash % 5 === 0 ? 1 : 2 + (idHash % 3); // 2-4 years (rare 1y for vets)
+  } else {
+    contractYears = 1 + (idHash % 4); // 1-4 years
+  }
+
+  // Only fringe/young rotational players (<=79 OVR) are loan listed; never stars
+  const loanListed = !isFreeAgent && rating <= 79 && (age <= 22 || idHash % 7 === 0);
+
+  return { contractYears, isFreeAgent, loanListed };
+}
+
 export function getScoutingMarketPool(
   userSquad: CareerPlayer[] = [],
   filters?: ScoutingFilters | DatabaseSeason,
@@ -463,10 +512,28 @@ export function getScoutingMarketPool(
       ? `${effectiveBirthYear}-${dobMonthDay}`
       : (bio.dateOfBirth || `${effectiveBirthYear}-${dobMonthDay}`);
 
-    const idHash = Math.abs(getDeterministicAge(topVariant.id));
-    const contractYears = isLegend ? 3 : 1 + (idHash % 4);
-    const isFreeAgent = !isLegend && idHash % 19 === 0;
-    const loanListed = !isFreeAgent && !isLegend && (effectiveAge <= 23 || idHash % 7 === 0);
+    const baseClub = topVariant.club || 'International';
+    const clubOverrideMap: Record<string, string> = {
+      'rodri hernandez': 'Barcelona',
+      'kylian mbappe': 'Real Madrid',
+      'trent alexander-arnold': 'Real Madrid',
+      'ibrahima konate': 'Real Madrid',
+      'bernardo silva': 'Real Madrid',
+      'marc cucurella': 'Real Madrid',
+      'luis diaz': 'Bayern Munich',
+      'mohamed salah': 'Trabzonspor',
+      'andy robertson': 'Tottenham Hotspur',
+      'cristian romero': 'Atletico Madrid',
+    };
+    const resolvedBaseClub = isLegend ? baseClub : (clubOverrideMap[cleanPlayerName.toLowerCase()] || baseClub);
+
+    const { contractYears, isFreeAgent, loanListed } = computeMarketContractAndStatus(
+      topVariant.id,
+      topVariant.rating,
+      effectiveAge,
+      isLegend,
+      resolvedBaseClub
+    );
     const finalValue = isFreeAgent ? 0 : peakValue;
     const loanFee = loanListed ? Math.round(peakValue * 0.08) : undefined;
     const loanWageWeekly = loanListed ? Math.round(peakWage * 0.7) : undefined;
@@ -487,7 +554,7 @@ export function getScoutingMarketPool(
       weightKg: bio.weightKg,
       value: finalValue,
       wageDemand: peakWage,
-      club: isFreeAgent ? 'Free Agent' : topVariant.club,
+      club: isFreeAgent ? 'Free Agent' : resolvedBaseClub,
       nationality: group.base.nationality,
       isHomegrown: isHomegrownPlayer({ nationality: group.base.nationality }),
       rarity: isLegend ? 'Legend' : (topVariant.rarity === 'legend' ? 'Elite' : topVariant.rarity),
@@ -520,10 +587,13 @@ export function getScoutingMarketPool(
     }
     seenPlayerNames.add(lowerName);
 
-    const idHash = Math.abs(supp.age * 31 + supp.rating);
-    const contractYears = 1 + (idHash % 4);
-    const isFreeAgent = idHash % 23 === 0;
-    const loanListed = !isFreeAgent && (supp.age <= 23 || idHash % 6 === 0);
+    const { contractYears, isFreeAgent, loanListed } = computeMarketContractAndStatus(
+      supp.id,
+      supp.rating,
+      supp.age,
+      false,
+      supp.club
+    );
     const finalValue = isFreeAgent ? 0 : supp.value;
     const loanFee = loanListed ? Math.round(supp.value * 0.08) : undefined;
     const loanWageWeekly = loanListed ? Math.round(supp.wageWeekly * 0.7) : undefined;
@@ -1818,6 +1888,26 @@ export function setPlayerTransferStatus(
 /**
  * Circulates a player to clubs across the league and Europe with a designated asking price.
  */
+function pickRealisticBuyersForPlayer(
+  save: CareerSaveFile,
+  player: CareerPlayer,
+  count: number
+): Array<{ id: string; defaultName: string }> {
+  const allClubs = [
+    ...getAllClubs().filter((c) => c.id !== save.club.id),
+    ...CONTINENTAL_EUROPEAN_CLUBS,
+  ];
+  const tiered = allClubs.filter((c) => {
+    const tier = (c as { tier?: string }).tier;
+    if (player.rating >= 85) return tier === 'elite' || tier === 'upper' || !tier;
+    if (player.rating >= 79) return tier !== 'lower';
+    return true;
+  });
+  const pool = tiered.length >= count ? tiered : allClubs;
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
+
 export function offerPlayerToClubs(
   save: CareerSaveFile,
   playerId: string,
@@ -1828,7 +1918,7 @@ export function offerPlayerToClubs(
     return { success: false, updatedSave: save, message: 'Player not found in squad.' };
   }
 
-  const effectiveAskingPrice = askingPrice ?? player.value;
+  const effectiveAskingPrice = askingPrice ?? player.askingPrice ?? player.value;
 
   const updatedSquad = save.squad.map((p) => {
     if (p.id !== playerId) return p;
@@ -1845,46 +1935,53 @@ export function offerPlayerToClubs(
     squad: updatedSquad,
   };
 
-  // Generate 1 immediate suitor if window is open
-  let newOffers = interimSave.incomingOffers || [];
+  const generatedBids: IncomingTransferOffer[] = [];
   if (isTransferWindowOpen(save.season.currentDate, save.season.yearStart)) {
-    const allPotentialBuyers = [
-      ...getAllClubs().filter((c) => c.id !== save.club.id),
-      ...CONTINENTAL_EUROPEAN_CLUBS,
-    ];
-    const buyer = allPotentialBuyers[Math.floor(Math.random() * allPotentialBuyers.length)];
-    const multiplier = 0.90 + Math.random() * 0.20;
-    const bidFee = Math.round((effectiveAskingPrice * multiplier) / 100_000) * 100_000;
-    const buyerCeilingFee = Math.round((player.value * 1.25) / 100_000) * 100_000;
+    const suitors = pickRealisticBuyersForPlayer(save, player, player.rating >= 80 ? 2 : 1);
+    suitors.forEach((buyer, idx) => {
+      const multiplier = 0.90 + Math.random() * 0.18;
+      const bidFee = Math.round((effectiveAskingPrice * multiplier) / 100_000) * 100_000;
+      const buyerCeilingFee = Math.round((Math.max(player.value, effectiveAskingPrice) * 1.25) / 100_000) * 100_000;
+      generatedBids.push({
+        id: `offer_${Date.now()}_${idx}_${player.id}`,
+        playerId: player.id,
+        playerName: player.name,
+        rating: player.rating,
+        position: player.position,
+        buyingClubId: buyer.id,
+        buyingClubName: buyer.defaultName,
+        offeredFee: bidFee,
+        date: save.season.currentDate,
+        status: 'pending',
+        originalOfferedFee: bidFee,
+        fairValue: player.value,
+        buyerCeilingFee,
+        patienceRemaining: 3,
+        history: [
+          {
+            date: save.season.currentDate,
+            proposedBy: 'buyer',
+            fee: bidFee,
+            message: `${buyer.defaultName} responded to your transfer circular with an official offer.`,
+          },
+        ],
+      });
+    });
 
-    const offer: IncomingTransferOffer = {
-      id: `offer_${Date.now()}_${player.id}`,
-      playerId: player.id,
-      playerName: player.name,
-      rating: player.rating,
-      position: player.position,
-      buyingClubId: buyer.id,
-      buyingClubName: buyer.defaultName,
-      offeredFee: bidFee,
-      date: save.season.currentDate,
-      status: 'pending',
-      originalOfferedFee: bidFee,
-      fairValue: player.value,
-      buyerCeilingFee,
-      patienceRemaining: 3,
-      history: [
-        {
-          date: save.season.currentDate,
-          proposedBy: 'buyer',
-          fee: bidFee,
-          message: `${buyer.defaultName} responded to your transfer circular with an official offer.`,
-        },
-      ],
-    };
-
-    newOffers = [offer, ...newOffers.filter((o) => o.playerId !== player.id)];
-    interimSave.incomingOffers = newOffers;
+    if (generatedBids.length > 0) {
+      interimSave.incomingOffers = [
+        ...generatedBids,
+        ...(interimSave.incomingOffers || []).filter((o) => o.playerId !== player.id),
+      ];
+    }
   }
+
+  const bidSummary =
+    generatedBids.length > 0
+      ? ` Received ${generatedBids.length} bid${generatedBids.length > 1 ? 's' : ''}: ${generatedBids
+          .map((b) => `${b.buyingClubName} (${formatCurrency(b.offeredFee)})`)
+          .join(', ')}.`
+      : ' Transfer window is closed — clubs have been alerted for the next window.';
 
   // Add inbox notification
   interimSave = addInboxMessage(interimSave, {
@@ -1892,7 +1989,7 @@ export function offerPlayerToClubs(
     sender: 'Director of Football',
     senderRole: 'Recruitment Committee',
     subject: `Player Offered to Clubs: ${player.name}`,
-    body: `Boss,\n\nWe have officially circulated ${player.name} (${player.position}, ${player.rating} OVR) to clubs across the league and Europe with an asking price of ${formatCurrency(effectiveAskingPrice)}.\n\nClubs have been alerted to his availability and initial bids have begun arriving in your Incoming Offers portal.`,
+    body: `Boss,\n\nWe have officially circulated ${player.name} (${player.position}, ${player.rating} OVR) to clubs across the league and Europe with an asking price of ${formatCurrency(effectiveAskingPrice)}.${bidSummary}`,
     type: 'transfer',
     isRead: false,
     priority: 'normal',
@@ -1903,7 +2000,7 @@ export function offerPlayerToClubs(
   return {
     success: true,
     updatedSave: interimSave,
-    message: `${player.name} has been offered to clubs worldwide at asking price ${formatCurrency(effectiveAskingPrice)}.`,
+    message: `Offered ${player.name} at ${formatCurrency(effectiveAskingPrice)}.${bidSummary}`,
   };
 }
 
@@ -1912,12 +2009,15 @@ export function offerPlayerToClubs(
  */
 export function hireIntermediaryForPlayer(
   save: CareerSaveFile,
-  playerId: string
+  playerId: string,
+  askingPrice?: number
 ): { success: boolean; updatedSave: CareerSaveFile; message: string } {
   const player = save.squad.find((p) => p.id === playerId);
   if (!player) {
     return { success: false, updatedSave: save, message: 'Player not found in squad.' };
   }
+
+  const targetPrice = askingPrice ?? player.askingPrice ?? player.value;
 
   const updatedSquad = save.squad.map((p) => {
     if (p.id !== playerId) return p;
@@ -1925,7 +2025,7 @@ export function hireIntermediaryForPlayer(
       ...p,
       agentBrokeringActive: true,
       transferListed: true,
-      askingPrice: player.value,
+      askingPrice: targetPrice,
     };
   });
 
@@ -1934,59 +2034,63 @@ export function hireIntermediaryForPlayer(
     squad: updatedSquad,
   };
 
-  // Intermediary secures a suitor (95% - 105% of market value)
-  const allPotentialBuyers = [
-    ...getAllClubs().filter((c) => c.id !== save.club.id),
-    ...CONTINENTAL_EUROPEAN_CLUBS,
+  // Intermediary secures 1-2 firm suitors (98% - 112% of target price)
+  const suitors = pickRealisticBuyersForPlayer(save, player, 2);
+  const brokeredOffers: IncomingTransferOffer[] = suitors.map((buyer, idx) => {
+    const fee = Math.round((targetPrice * (0.98 + Math.random() * 0.14)) / 100_000) * 100_000;
+    const buyerCeilingFee = Math.round((Math.max(player.value, targetPrice) * 1.32) / 100_000) * 100_000;
+    return {
+      id: `offer_intermediary_${Date.now()}_${idx}_${player.id}`,
+      playerId: player.id,
+      playerName: player.name,
+      rating: player.rating,
+      position: player.position,
+      buyingClubId: buyer.id,
+      buyingClubName: buyer.defaultName,
+      offeredFee: fee,
+      date: save.season.currentDate,
+      status: 'pending',
+      originalOfferedFee: fee,
+      fairValue: player.value,
+      buyerCeilingFee,
+      patienceRemaining: 3,
+      history: [
+        {
+          date: save.season.currentDate,
+          proposedBy: 'buyer',
+          fee,
+          message: `Intermediary broker arranged firm purchase interest from ${buyer.defaultName}. (5% broker commission applies upon sale completion).`,
+        },
+      ],
+    };
+  });
+
+  interimSave.incomingOffers = [
+    ...brokeredOffers,
+    ...(interimSave.incomingOffers || []).filter((o) => o.playerId !== player.id),
   ];
-  const buyer = allPotentialBuyers[Math.floor(Math.random() * allPotentialBuyers.length)];
-  const fee = Math.round((player.value * (0.95 + Math.random() * 0.10)) / 100_000) * 100_000;
-  const buyerCeilingFee = Math.round((player.value * 1.30) / 100_000) * 100_000;
 
-  const offer: IncomingTransferOffer = {
-    id: `offer_intermediary_${Date.now()}_${player.id}`,
-    playerId: player.id,
-    playerName: player.name,
-    rating: player.rating,
-    position: player.position,
-    buyingClubId: buyer.id,
-    buyingClubName: buyer.defaultName,
-    offeredFee: fee,
-    date: save.season.currentDate,
-    status: 'pending',
-    originalOfferedFee: fee,
-    fairValue: player.value,
-    buyerCeilingFee,
-    patienceRemaining: 3,
-    history: [
-      {
-        date: save.season.currentDate,
-        proposedBy: 'buyer',
-        fee,
-        message: `Intermediary broker arranged firm purchase interest from ${buyer.defaultName}. (5% broker commission applies upon sale completion).`,
-      },
-    ],
-  };
-
-  interimSave.incomingOffers = [offer, ...(interimSave.incomingOffers || []).filter((o) => o.playerId !== player.id)];
+  const topBid = brokeredOffers.reduce((best, o) => (o.offeredFee > best.offeredFee ? o : best), brokeredOffers[0]);
 
   interimSave = addInboxMessage(interimSave, {
     date: save.season.currentDate,
     sender: 'Licensed Intermediary Agency',
     senderRole: 'Player Broker Services',
-    subject: `Buyer Secured: ${buyer.defaultName} for ${player.name}`,
-    body: `Boss,\n\nOur brokerage agency has discreetly sounded out the market on your behalf. We have secured a firm bid of ${formatCurrency(fee)} from ${buyer.defaultName} for ${player.name}.\n\nYou can review the deal or negotiate improved terms in your Incoming Offers portal.`,
+    subject: `Buyers Secured: ${brokeredOffers.map((b) => b.buyingClubName).join(' & ')} for ${player.name}`,
+    body: `Boss,\n\nOur brokerage agency has sounded out the market on your behalf and secured ${brokeredOffers.length} firm bids for ${player.name}:\n${brokeredOffers
+      .map((b) => `• ${b.buyingClubName}: ${formatCurrency(b.offeredFee)}`)
+      .join('\n')}\n\nNote: A 5% intermediary commission applies upon sale completion.`,
     type: 'transfer',
     isRead: false,
     priority: 'urgent',
-    actionLabel: 'Inspect Intermediary Bid',
+    actionLabel: 'Inspect Intermediary Bids',
     actionTab: 'transfers',
   });
 
   return {
     success: true,
     updatedSave: interimSave,
-    message: `Intermediary appointed. Firm bid from ${buyer.defaultName} of ${formatCurrency(fee)} secured!`,
+    message: `Intermediary secured ${brokeredOffers.length} bids (top: ${topBid.buyingClubName} ${formatCurrency(topBid.offeredFee)}, 5% broker fee).`,
   };
 }
 
@@ -3141,6 +3245,15 @@ export function executeBosmanPreContract(
   contractYears: number = 3,
   signingBonus: number = 0
 ): { success: boolean; updatedSave: CareerSaveFile; error?: string } {
+  // Validate 6-month Bosman approach window (January 1 – June 30)
+  if (!isBosmanWindowOpen(save.season.currentDate)) {
+    return {
+      success: false,
+      updatedSave: save,
+      error: `Under FIFA/Bosman rules, you can only approach ${targetPlayer.name} for a free pre-contract within the final 6 months of their contract (from January 1st). Submit a transfer bid to sign them now.`,
+    };
+  }
+
   // Validate eligibility (contract expiring in 1 year or less)
   if (targetPlayer.contractYears !== undefined && targetPlayer.contractYears > 1) {
     return {

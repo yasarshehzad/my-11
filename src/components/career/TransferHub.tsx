@@ -15,6 +15,7 @@ import {
 import {
   getScoutingMarketPool,
   isTransferWindowOpen,
+  isBosmanWindowOpen,
   evaluateTransferOffer,
   executePlayerSigning,
   executePlayerSale,
@@ -439,6 +440,7 @@ export function TransferHub({
     const preferred = getPlayerPreferredTerms(player as unknown as CareerPlayer);
     const isFA = Boolean(player.isFreeAgent || player.value === 0);
     const isExp = player.contractYears === 1;
+    const canBosmanNow = isExp && isBosmanWindowOpen(save.season.currentDate);
     const isLoan = Boolean(player.loanListed);
 
     let initialDeal: 'buy' | 'free_agent' | 'pre_contract' | 'loan' = 'buy';
@@ -448,7 +450,7 @@ export function TransferHub({
       initialDeal = 'free_agent';
     } else if (isLoan) {
       initialDeal = 'loan';
-    } else if (isExp) {
+    } else if (canBosmanNow) {
       initialDeal = 'pre_contract';
     }
 
@@ -1596,9 +1598,10 @@ export function TransferHub({
                   const isSeniorFull = isSenior && seniorCount >= MAX_SENIOR_SQUAD_SIZE;
                   const isFA = Boolean(player.isFreeAgent || player.value === 0);
                   const isExp = player.contractYears === 1;
+                  const canBosmanNow = isExp && isBosmanWindowOpen(save.season.currentDate);
                   const isLoan = Boolean(player.loanListed);
-                  // Free agents can be signed anytime; pre-contracts can be agreed anytime in final year
-                  const isBlocked = isFA || isExp ? isSquadFull : (!windowIsOpen || isSquadFull);
+                  // Free agents can be signed anytime; Bosman pre-contracts only within final 6 months (Jan-Jun)
+                  const isBlocked = isFA || canBosmanNow ? isSquadFull : (!windowIsOpen || isSquadFull);
                   const fs = player.faceStats || calculateEaFcFaceStats(player as unknown as CareerPlayer);
 
                   const badgeClass = isLegend
@@ -1621,27 +1624,27 @@ export function TransferHub({
                       }`}
                     >
                       {/* Primary Header Row */}
-                      <div className="flex items-center justify-between gap-2">
-                        {/* Rating Badge + Name + Info */}
-                        <div className="flex items-center gap-2 flex-1 min-w-0 overflow-hidden">
+                      <div className="flex items-start justify-between gap-2">
+                        {/* Rating Badge + Name + Club */}
+                        <div className="flex items-start gap-2 flex-1 min-w-0">
                           <button
                             type="button"
                             onClick={() => setProfilePlayer(player)}
-                            className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-display font-black text-xs shrink-0 shadow-sm cursor-pointer hover:scale-105 active:scale-95 transition-transform ${badgeClass}`}
+                            className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-display font-black text-xs shrink-0 shadow-sm cursor-pointer hover:scale-105 active:scale-95 transition-transform mt-0.5 ${badgeClass}`}
                             title={`View ${player.name} profile`}
                           >
                             {player.rating}
                           </button>
 
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5 min-w-0">
+                            <div className="flex flex-wrap items-center gap-1.5 min-w-0">
                               <button
                                 type="button"
                                 onClick={() => setProfilePlayer(player)}
-                                className="group text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded min-w-0 max-w-full"
+                                className="group text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded min-w-0"
                                 title={`View ${player.name} full profile, stats & scouting report`}
                               >
-                                <h3 className="font-display font-black text-xs sm:text-sm text-slate-900 group-hover:text-blue-600 truncate transition-colors underline-offset-2 group-hover:underline">
+                                <h3 className="font-display font-black text-xs sm:text-sm text-slate-900 group-hover:text-blue-600 leading-tight break-words transition-colors underline-offset-2 group-hover:underline">
                                   {player.name}
                                 </h3>
                               </button>
@@ -1651,43 +1654,8 @@ export function TransferHub({
                                 </span>
                               )}
                             </div>
-                            <div className="text-[9.5px] text-slate-500 font-medium flex items-center gap-1 truncate mt-0.5">
-                              <span className={isLegend ? 'text-amber-700 font-bold' : 'text-blue-600 font-bold'}>
-                                {player.position}
-                              </span>
-                              <span className="text-slate-300">•</span>
-                              <span>{player.age}y</span>
-                              <span className="text-slate-300">•</span>
-                              <span className="font-mono font-bold text-slate-900">
-                                {formatCurrency(player.value)}
-                              </span>
-                              <span className="text-slate-300">•</span>
-                              <span className="font-mono text-slate-500">
-                                {formatWage(player.wageDemand)}
-                              </span>
-                            </div>
                             <div className="text-[8.5px] text-slate-500 truncate mt-0.5 font-medium">
                               {resolvedClub}
-                            </div>
-                            <div className="flex flex-wrap items-center gap-1 mt-0.5">
-                              {isFA ? (
-                                <span className="text-[7.5px] font-bold uppercase px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
-                                  🆓 Free Agent
-                                </span>
-                              ) : (
-                                <>
-                                  {isExp && (
-                                    <span className="text-[7.5px] font-bold uppercase px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-300">
-                                      ⏳ Expiring (Bosman)
-                                    </span>
-                                  )}
-                                  {isLoan && (
-                                    <span className="text-[7.5px] font-bold uppercase px-1.5 py-0.2 rounded bg-cyan-100 text-cyan-800 border border-cyan-300">
-                                      🤝 Loan Listed
-                                    </span>
-                                  )}
-                                </>
-                              )}
                             </div>
                           </div>
                         </div>
@@ -1727,7 +1695,7 @@ export function TransferHub({
                                 ? 'bg-rose-50 border border-rose-200 text-rose-700 cursor-not-allowed'
                                 : isFA
                                 ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm shadow-emerald-500/20'
-                                : !windowIsOpen && !isExp
+                                : !windowIsOpen && !canBosmanNow
                                 ? 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed'
                                 : isLegend
                                 ? 'my11-badge-legend shadow-sm'
@@ -1740,16 +1708,55 @@ export function TransferHub({
                               ? 'Squad Full'
                               : isFA
                               ? '🆓 Sign'
-                              : !windowIsOpen && !isExp
+                              : !windowIsOpen && !canBosmanNow
                               ? 'Closed'
                               : isLegend
                               ? '👑 Bid'
                               : isLoan
                               ? '🤝 Loan'
-                              : isExp
+                              : canBosmanNow
                               ? '⏳ Bosman'
                               : 'Bid'}
                           </button>
+                        </div>
+                      </div>
+
+                      {/* Full-Width Valuation, Contract & Wage Row (never clipped) */}
+                      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-[9.5px] text-slate-600 font-medium">
+                        <div className="flex flex-wrap items-center gap-1">
+                          <span className={isLegend ? 'text-amber-700 font-bold' : 'text-blue-600 font-bold'}>
+                            {player.position}
+                          </span>
+                          <span className="text-slate-300">•</span>
+                          <span>{player.age}y</span>
+                          <span className="text-slate-300">•</span>
+                          <span className="font-mono font-bold text-slate-900">
+                            {formatCurrency(player.value)}
+                          </span>
+                          <span className="text-slate-300">•</span>
+                          <span className="font-mono text-slate-500">
+                            {formatWage(player.wageDemand)}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1">
+                          {isFA ? (
+                            <span className="text-[7.5px] font-bold uppercase px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
+                              🆓 Free Agent
+                            </span>
+                          ) : (
+                            <>
+                              {isExp && (
+                                <span className="text-[7.5px] font-bold uppercase px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-300">
+                                  {canBosmanNow ? '⏳ Expiring (Bosman)' : '⏳ Expiring (Jan Bosman)'}
+                                </span>
+                              )}
+                              {isLoan && (
+                                <span className="text-[7.5px] font-bold uppercase px-1.5 py-0.2 rounded bg-cyan-100 text-cyan-800 border border-cyan-300">
+                                  🤝 Loan Listed
+                                </span>
+                              )}
+                            </>
+                          )}
                         </div>
                       </div>
 
@@ -2318,8 +2325,9 @@ export function TransferHub({
                 const isSeniorFull = isSenior && seniorCount >= MAX_SENIOR_SQUAD_SIZE;
                 const isFA = Boolean(player.isFreeAgent || player.value === 0);
                 const isExp = player.contractYears === 1;
+                const canBosmanNow = isExp && isBosmanWindowOpen(save.season.currentDate);
                 const isLoan = Boolean(player.loanListed);
-                const isBlocked = isFA || isExp ? isSquadFull : (!windowIsOpen || isSquadFull);
+                const isBlocked = isFA || canBosmanNow ? isSquadFull : (!windowIsOpen || isSquadFull);
                 const fs = player.faceStats || calculateEaFcFaceStats(player as unknown as CareerPlayer);
                 const canAfford = player.value <= save.finances.transferBudget;
 
@@ -2353,7 +2361,7 @@ export function TransferHub({
                             className="group text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
                             title={`View ${player.name} full profile, stats & scouting report`}
                           >
-                            <h4 className="font-display font-black text-xs sm:text-sm text-slate-900 group-hover:text-blue-600 truncate max-w-[130px] sm:max-w-[170px] transition-colors underline-offset-2 group-hover:underline">
+                            <h4 className="font-display font-black text-xs sm:text-sm text-slate-900 group-hover:text-blue-600 leading-tight break-words transition-colors underline-offset-2 group-hover:underline">
                               {player.name}
                             </h4>
                           </button>
@@ -2448,7 +2456,7 @@ export function TransferHub({
                             ? 'bg-rose-50 text-rose-700 cursor-not-allowed border border-rose-200'
                             : isFA
                             ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm shadow-emerald-500/20'
-                            : !windowIsOpen && !isExp
+                            : !windowIsOpen && !canBosmanNow
                             ? 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed'
                             : canAfford
                             ? 'my11-btn-gradient text-white shadow-sm shadow-blue-500/20'
@@ -2459,11 +2467,11 @@ export function TransferHub({
                           ? 'Squad Full'
                           : isFA
                           ? '🆓 Sign Free'
-                          : !windowIsOpen && !isExp
+                          : !windowIsOpen && !canBosmanNow
                           ? 'Window Closed'
                           : isLoan
                           ? '🤝 Enquire Loan'
-                          : isExp
+                          : canBosmanNow
                           ? '⏳ Bosman Offer'
                           : 'Make Offer'}
                       </button>
@@ -5112,6 +5120,7 @@ export function TransferHub({
             {(() => {
               const isFA = Boolean(negotiatingPlayer.isFreeAgent || negotiatingPlayer.value === 0);
               const isExp = negotiatingPlayer.contractYears === 1;
+              const canBosmanNow = isExp && isBosmanWindowOpen(save.season.currentDate);
               const isLoan = Boolean(negotiatingPlayer.loanListed);
 
               return (
@@ -5137,14 +5146,18 @@ export function TransferHub({
                   {isExp && !isFA && (
                     <button
                       type="button"
-                      onClick={() => setDealType('pre_contract')}
-                      className={`flex-1 py-1.5 px-2 rounded-xl font-display font-black text-[10.5px] uppercase tracking-wider transition-all cursor-pointer ${
-                        dealType === 'pre_contract'
-                          ? 'bg-white text-amber-600 shadow-xs font-black'
-                          : 'text-slate-600 hover:text-slate-900'
+                      disabled={!canBosmanNow}
+                      onClick={() => canBosmanNow && setDealType('pre_contract')}
+                      title={canBosmanNow ? 'Approach for free Bosman pre-contract' : 'Bosman approaches open January 1 (6 months before expiry)'}
+                      className={`flex-1 py-1.5 px-2 rounded-xl font-display font-black text-[10.5px] uppercase tracking-wider transition-all ${
+                        !canBosmanNow
+                          ? 'text-slate-400 bg-slate-200/60 cursor-not-allowed'
+                          : dealType === 'pre_contract'
+                          ? 'bg-white text-amber-600 shadow-xs font-black cursor-pointer'
+                          : 'text-slate-600 hover:text-slate-900 cursor-pointer'
                       }`}
                     >
-                      ⏳ Bosman (£0)
+                      {canBosmanNow ? '⏳ Bosman (£0)' : '⏳ Bosman (Jan 1)'}
                     </button>
                   )}
                   {isLoan && !isFA && (

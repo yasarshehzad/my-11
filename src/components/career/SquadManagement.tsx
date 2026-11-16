@@ -59,6 +59,7 @@ import {
   offerPlayerToClubs,
   hireIntermediaryForPlayer,
   releasePlayerContract,
+  executePlayerSale,
 } from '../../career/transfers';
 
 const TRAINING_FOCUS_OPTIONS: Array<{
@@ -233,7 +234,7 @@ export function SquadManagement({
 
   const handleHireIntermediary = () => {
     if (!selectedPlayer) return;
-    const res = hireIntermediaryForPlayer(save, selectedPlayer.id);
+    const res = hireIntermediaryForPlayer(save, selectedPlayer.id, askingPriceInput);
     if (res.success) {
       onUpdateSave(res.updatedSave);
       const updated = res.updatedSave.squad.find((p) => p.id === selectedPlayer.id);
@@ -2773,13 +2774,6 @@ export function SquadManagement({
                   >
                     🔄 Swap on Pitch
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setPlayerModalTab('market')}
-                    className="py-2.5 px-3 rounded-xl border border-[#E2DFD9] bg-[#F7F6F3] hover:bg-zinc-200/70 text-zinc-900 text-xs font-display font-black uppercase tracking-wider cursor-pointer"
-                  >
-                    ⚙️ Market
-                  </button>
                 </div>
               </div>
             ) : playerModalTab === 'stats' ? (
@@ -2836,7 +2830,7 @@ export function SquadManagement({
                           {isGkOrDef ? 'Clean Sh' : 'Rating'}
                         </span>
                         <span className="font-display font-black text-amber-700 text-base">
-                          {isGkOrDef ? pStats.currentSeason.cleanSheets : (pStats.currentSeason.averageRating || '7.1')}
+                          {isGkOrDef ? pStats.currentSeason.cleanSheets : (pStats.currentSeason.appearances > 0 ? pStats.currentSeason.averageRating : '–')}
                         </span>
                         <span className="text-[8px] text-slate-500 block">
                           {isGkOrDef ? '🧤 Zeroes' : '⭐ Avg OVR'}
@@ -2862,7 +2856,7 @@ export function SquadManagement({
                       <div>
                         <span className="text-[9px] uppercase font-bold text-slate-500 block">Avg Match Rating</span>
                         <span className="font-mono font-black text-blue-700 text-xs mt-0.5 block">
-                          ⭐ {pStats.currentSeason.averageRating || '7.0'} / 10
+                          ⭐ {pStats.currentSeason.appearances > 0 ? `${pStats.currentSeason.averageRating} / 10` : '–'}
                         </span>
                       </div>
                     </div>
@@ -2903,10 +2897,12 @@ export function SquadManagement({
                                 <td className="py-1.5 px-1.5 text-center font-mono">
                                   {isGkOrDef ? pStats.currentSeason.cleanSheets : pStats.currentSeason.goals + pStats.currentSeason.assists}
                                 </td>
-                                <td className="py-1.5 px-2 text-right font-mono font-black text-blue-700">{pStats.currentSeason.averageRating || '7.1'}</td>
+                                <td className="py-1.5 px-2 text-right font-mono font-black text-blue-700">
+                                  {pStats.currentSeason.appearances > 0 ? pStats.currentSeason.averageRating : '–'}
+                                </td>
                               </tr>
 
-                              {/* Previous seasons rows */}
+                              {/* Previous seasons rows (only seasons actually played in this career) */}
                               {pStats.previousSeasons.map((prev) => (
                                 <tr key={prev.seasonLabel} className="text-slate-700 hover:bg-slate-50">
                                   <td className="py-1.5 px-2.5 font-mono text-slate-500">{prev.seasonLabel}</td>
@@ -2917,7 +2913,9 @@ export function SquadManagement({
                                   <td className="py-1.5 px-1.5 text-center font-mono">
                                     {isGkOrDef ? prev.cleanSheets : prev.goals + prev.assists}
                                   </td>
-                                  <td className="py-1.5 px-2 text-right font-mono font-bold text-blue-700">{prev.averageRating}</td>
+                                  <td className="py-1.5 px-2 text-right font-mono font-bold text-blue-700">
+                                    {prev.appearances > 0 ? prev.averageRating : '–'}
+                                  </td>
                                 </tr>
                               ))}
                             </tbody>
@@ -2932,11 +2930,18 @@ export function SquadManagement({
                                 <td className="py-2 px-1.5 text-center font-mono">
                                   {isGkOrDef ? pStats.careerTotals.cleanSheets : pStats.careerTotals.goals + pStats.careerTotals.assists}
                                 </td>
-                                <td className="py-2 px-2 text-right font-mono text-amber-700">{pStats.careerTotals.averageRating}</td>
+                                <td className="py-2 px-2 text-right font-mono text-amber-700">
+                                  {pStats.careerTotals.appearances > 0 ? pStats.careerTotals.averageRating : '–'}
+                                </td>
                               </tr>
                             </tfoot>
                           </table>
                         </div>
+                        {pStats.previousSeasons.length === 0 && (
+                          <p className="px-3 py-2 text-[10px] text-slate-500 bg-slate-50/70 border-t border-slate-100">
+                            Completed seasons are recorded here automatically as your career progresses.
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -3044,14 +3049,34 @@ export function SquadManagement({
                     </button>
                   </div>
 
-                  <div className="flex justify-between items-center pt-1 text-[10px]">
+                  <div className="grid grid-cols-3 gap-1 text-[9px] font-bold pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setAskingPriceInput(Math.max(100_000, Math.round((selectedPlayer.value * 0.85) / 100_000) * 100_000))}
+                      className="py-1 rounded bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer shadow-2xs"
+                    >
+                      85% Quick Sale
+                    </button>
                     <button
                       type="button"
                       onClick={() => setAskingPriceInput(selectedPlayer.value)}
-                      className="text-slate-500 hover:text-slate-800 underline cursor-pointer"
+                      className="py-1 rounded bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer shadow-2xs"
                     >
-                      Reset to Valuation ({formatCurrency(selectedPlayer.value)})
+                      100% Fair Value
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => setAskingPriceInput(Math.round((selectedPlayer.value * 1.2) / 100_000) * 100_000)}
+                      className="py-1 rounded bg-white border border-slate-200 hover:bg-slate-50 text-blue-700 cursor-pointer shadow-2xs"
+                    >
+                      120% Premium
+                    </button>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-1 text-[10px]">
+                    <span className="text-slate-500">
+                      Valuation: {formatCurrency(selectedPlayer.value)}
+                    </span>
                     <button
                       type="button"
                       onClick={handleUpdateTransferStatus}
@@ -3061,6 +3086,86 @@ export function SquadManagement({
                     </button>
                   </div>
                 </div>
+
+                {/* Active Incoming Bids for this Player */}
+                {(() => {
+                  const playerBids = (save.incomingOffers || []).filter(
+                    (o) => o.playerId === selectedPlayer.id && o.status === 'pending'
+                  );
+                  if (playerBids.length === 0) return null;
+                  return (
+                    <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-2.5 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-display font-black uppercase tracking-wider text-emerald-900">
+                          📩 Active Incoming Bids ({playerBids.length})
+                        </span>
+                        {selectedPlayer.agentBrokeringActive && (
+                          <span className="text-[9px] font-bold text-purple-700 bg-purple-100 border border-purple-200 px-1.5 py-0.5 rounded">
+                            5% Broker Fee
+                          </span>
+                        )}
+                      </div>
+                      {playerBids.map((bid) => (
+                        <div
+                          key={bid.id}
+                          className="flex items-center justify-between gap-2 bg-white border border-emerald-200/80 rounded-lg px-2.5 py-1.5"
+                        >
+                          <div className="min-w-0">
+                            <div className="font-display font-black text-xs text-slate-900 truncate">
+                              {bid.buyingClubName}
+                            </div>
+                            <div className="text-[10px] font-mono font-bold text-emerald-700">
+                              {formatCurrency(bid.offeredFee)}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const res = executePlayerSale(
+                                  save,
+                                  bid.playerId,
+                                  bid.offeredFee,
+                                  bid.buyingClubName,
+                                  bid.sellOnPercent
+                                );
+                                if (res.success) {
+                                  const cleanedOffers = (res.updatedSave.incomingOffers || []).filter(
+                                    (o) => o.id !== bid.id && o.playerId !== bid.playerId
+                                  );
+                                  onUpdateSave({ ...res.updatedSave, incomingOffers: cleanedOffers });
+                                  setSelectedPlayer(null);
+                                  setAcademyToast({
+                                    message: `Sold ${selectedPlayer.name} to ${bid.buyingClubName} for ${formatCurrency(bid.offeredFee)}.`,
+                                    type: 'success',
+                                  });
+                                } else {
+                                  setSquadActionMessage({ text: res.error || 'Could not complete sale.', type: 'error' });
+                                }
+                              }}
+                              className="px-2 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-display font-black text-[10px] uppercase cursor-pointer"
+                            >
+                              Accept
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updatedOffers = (save.incomingOffers || []).map((o) =>
+                                  o.id === bid.id ? { ...o, status: 'rejected' as const } : o
+                                );
+                                onUpdateSave({ ...save, incomingOffers: updatedOffers });
+                                setSquadActionMessage({ text: `Rejected ${bid.buyingClubName}'s offer.`, type: 'success' });
+                              }}
+                              className="px-2 py-1 rounded bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 font-display font-bold text-[10px] uppercase cursor-pointer"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
 
                 {/* Market Operations Buttons */}
                 <div className="grid grid-cols-2 gap-2">

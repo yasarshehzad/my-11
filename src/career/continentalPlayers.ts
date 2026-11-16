@@ -27567,5 +27567,228 @@ export const CONTINENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
     "heightCm": 182,
     "weightKg": 76,
     "dateOfBirth": "1998-08-28"
+  },
+  {
+    "id": "euro_26_trent",
+    "name": "Trent Alexander-Arnold",
+    "clubId": "madrid_royal",
+    "position": "RB",
+    "rating": 87,
+    "age": 28,
+    "potential": 88,
+    "nationality": "England",
+    "isHomegrown": true
+  },
+  {
+    "id": "euro_26_konate",
+    "name": "Ibrahima Konate",
+    "clubId": "madrid_royal",
+    "position": "CB",
+    "rating": 85,
+    "age": 27,
+    "potential": 87,
+    "nationality": "France"
+  },
+  {
+    "id": "euro_26_bsilva",
+    "name": "Bernardo Silva",
+    "clubId": "madrid_royal",
+    "position": "CM",
+    "rating": 87,
+    "age": 32,
+    "potential": 87,
+    "nationality": "Portugal"
+  },
+  {
+    "id": "euro_26_cucurella",
+    "name": "Marc Cucurella",
+    "clubId": "madrid_royal",
+    "position": "LB",
+    "rating": 83,
+    "age": 28,
+    "potential": 84,
+    "nationality": "Spain"
+  },
+  {
+    "id": "euro_26_huijsen",
+    "name": "Dean Huijsen",
+    "clubId": "madrid_royal",
+    "position": "CB",
+    "rating": 82,
+    "age": 21,
+    "potential": 89,
+    "nationality": "Spain"
+  },
+  {
+    "id": "euro_26_mastantuono",
+    "name": "Franco Mastantuono",
+    "clubId": "madrid_royal",
+    "position": "CAM",
+    "rating": 80,
+    "age": 19,
+    "potential": 90,
+    "nationality": "Argentina"
+  },
+  {
+    "id": "euro_26_rodri",
+    "name": "Rodri",
+    "clubId": "barcelona_blaugrana",
+    "position": "CDM",
+    "rating": 90,
+    "age": 30,
+    "potential": 90,
+    "nationality": "Spain"
+  },
+  {
+    "id": "euro_26_gjesus",
+    "name": "Gabriel Jesus",
+    "clubId": "barcelona_blaugrana",
+    "position": "ST",
+    "rating": 82,
+    "age": 29,
+    "potential": 82,
+    "nationality": "Brazil"
+  },
+  {
+    "id": "euro_26_joangarcia",
+    "name": "Joan Garcia",
+    "clubId": "barcelona_blaugrana",
+    "position": "GK",
+    "rating": 83,
+    "age": 25,
+    "potential": 87,
+    "nationality": "Spain"
+  },
+  {
+    "id": "euro_26_cjones",
+    "name": "Curtis Jones",
+    "clubId": "milan_blue",
+    "position": "CM",
+    "rating": 82,
+    "age": 25,
+    "potential": 85,
+    "nationality": "England",
+    "isHomegrown": true
+  },
+  {
+    "id": "euro_26_akanji",
+    "name": "Manuel Akanji",
+    "clubId": "milan_blue",
+    "position": "CB",
+    "rating": 84,
+    "age": 31,
+    "potential": 84,
+    "nationality": "Switzerland"
+  },
+  {
+    "id": "euro_26_romero",
+    "name": "Cristian Romero",
+    "clubId": "atletico_madrid",
+    "position": "CB",
+    "rating": 85,
+    "age": 28,
+    "potential": 86,
+    "nationality": "Argentina"
+  },
+  {
+    "id": "euro_26_vicario",
+    "name": "Guglielmo Vicario",
+    "clubId": "turin_stripes",
+    "position": "GK",
+    "rating": 84,
+    "age": 30,
+    "potential": 85,
+    "nationality": "Italy"
+  },
+  {
+    "id": "euro_26_pm_sarr",
+    "name": "Pape Matar Sarr",
+    "clubId": "turin_stripes",
+    "position": "CM",
+    "rating": 82,
+    "age": 24,
+    "potential": 87,
+    "nationality": "Senegal"
+  },
+  {
+    "id": "euro_26_luisdiaz",
+    "name": "Luis Diaz",
+    "clubId": "bavarian_munich",
+    "position": "LW",
+    "rating": 86,
+    "age": 29,
+    "potential": 86,
+    "nationality": "Colombia"
+  },
+  {
+    "id": "euro_26_osimhen",
+    "name": "Viktor Osimhen",
+    "clubId": "galatasaray_red_yellow",
+    "position": "ST",
+    "rating": 87,
+    "age": 27,
+    "potential": 88,
+    "nationality": "Nigeria"
+  },
+  {
+    "id": "euro_26_trossard",
+    "name": "Leandro Trossard",
+    "clubId": "besiktas_black_white",
+    "position": "LW",
+    "rating": 82,
+    "age": 31,
+    "potential": 82,
+    "nationality": "Belgium"
+  },
+  {
+    "id": "euro_26_nunez",
+    "name": "Darwin Nunez",
+    "clubId": "al_hilal_blue",
+    "position": "ST",
+    "rating": 83,
+    "age": 27,
+    "potential": 85,
+    "nationality": "Uruguay"
+  },
+  {
+    "id": "euro_26_martinelli",
+    "name": "Gabriel Martinelli",
+    "clubId": "al_hilal_blue",
+    "position": "LW",
+    "rating": 85,
+    "age": 25,
+    "potential": 87,
+    "nationality": "Brazil"
+  },
+  {
+    "id": "euro_26_watkins",
+    "name": "Ollie Watkins",
+    "clubId": "al_hilal_blue",
+    "position": "ST",
+    "rating": 84,
+    "age": 30,
+    "potential": 84,
+    "nationality": "England",
+    "isHomegrown": true
+  },
+  {
+    "id": "euro_26_casemiro",
+    "name": "Casemiro",
+    "clubId": "inter_miami_pink",
+    "position": "CDM",
+    "rating": 81,
+    "age": 34,
+    "potential": 81,
+    "nationality": "Brazil"
+  },
+  {
+    "id": "euro_26_son",
+    "name": "Son Heung-min",
+    "clubId": "lafc_black_gold",
+    "position": "LW",
+    "rating": 85,
+    "age": 34,
+    "potential": 85,
+    "nationality": "South Korea"
   }
 ];
