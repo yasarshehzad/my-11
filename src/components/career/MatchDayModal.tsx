@@ -43,6 +43,7 @@ import {
   isPlayerRegisteredForMatch,
   getBestStartingLineup,
   adaptLineupToFormation,
+  autoRotateFitLineup,
   SUPPORTED_CAREER_FORMATIONS,
   categorizePosition,
 } from '../../career/squad';
@@ -136,11 +137,33 @@ export function MatchDayModal({
   const oppDanger = opponentMatchday.dangerPlayer;
   const oppDangerFace = oppDanger ? (oppDanger.faceStats || calculateEaFcFaceStats(oppDanger)) : null;
 
-  const starterIdsSet = new Set(currentLineup?.starterIds || []);
-  const benchIdsSet = new Set(currentLineup?.benchIds || []);
+  const squadById = new Map(squad.map((p) => [p.id, p]));
+  const starters = (currentLineup?.starterIds || [])
+    .map((id) => squadById.get(id))
+    .filter((p): p is CareerPlayer => Boolean(p));
+  const bench = (currentLineup?.benchIds || [])
+    .map((id) => squadById.get(id))
+    .filter((p): p is CareerPlayer => Boolean(p));
 
-  const starters = squad.filter((p) => starterIdsSet.has(p.id));
-  const bench = squad.filter((p) => benchIdsSet.has(p.id));
+  const activeFormationSlots =
+    SUPPORTED_CAREER_FORMATIONS.find((f) => f.name === formation)?.slots ||
+    SUPPORTED_CAREER_FORMATIONS[0].slots;
+  const fatiguedStarters = starters.filter((p) => (p.fitness ?? 100) < 75);
+
+  const handleRotateFatigued = () => {
+    const res = autoRotateFitLineup(
+      squad,
+      currentLineup,
+      75,
+      save.registeredPlayerIds,
+      save.season?.yearStart
+    );
+    setCurrentLineup(res.updatedLineup);
+    onSaveMatchResult({
+      ...save,
+      lineup: res.updatedLineup,
+    });
+  };
 
   // Premier League registration & disciplinary suspension check
   const ineligibleStarters = !isCup
@@ -855,45 +878,72 @@ export function MatchDayModal({
 
             {/* Starting 11 */}
             <div className="space-y-2">
-              <div className="flex justify-between items-center text-xs">
+              <div className="flex flex-wrap justify-between items-center gap-2 text-xs">
                 <span className="font-display font-bold uppercase text-[var(--office-text-muted)]">
                   Confirmed Starting XI ({starters.length})
                 </span>
-                <span className="text-[var(--office-text-muted)] text-[10px] font-medium">Bench: {bench.length} subs</span>
+                <div className="flex items-center gap-2">
+                  {fatiguedStarters.length > 0 && (
+                    <button
+                      type="button"
+                      data-office-ui="true"
+                      onClick={handleRotateFatigued}
+                      className="px-2.5 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 border border-amber-300 text-[10px] font-display font-bold text-amber-950 cursor-pointer transition-colors"
+                    >
+                      ⚡ Rotate {fatiguedStarters.length} Tired
+                    </button>
+                  )}
+                  <span className="text-[var(--office-text-muted)] text-[10px] font-medium">Bench: {bench.length} subs</span>
+                </div>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                {starters.slice(0, 11).map((p) => {
+                {starters.slice(0, 11).map((p, idx) => {
                   const isSuspended = Boolean(p.suspendedMatches && p.suspendedMatches > 0);
+                  const slotPos = activeFormationSlots[idx] || p.position;
+                  const fit = Math.round(p.fitness ?? 100);
+                  const fitColor =
+                    fit >= 75 ? 'text-emerald-700' : fit >= 60 ? 'text-amber-700' : 'text-rose-700';
+                  const fitBar =
+                    fit >= 75 ? 'bg-emerald-500' : fit >= 60 ? 'bg-amber-500' : 'bg-rose-500';
                   return (
                     <div
                       key={p.id}
-                      className={`p-2 rounded-xl border shadow-2xs flex justify-between items-center ${
+                      className={`p-2 rounded-xl border shadow-2xs flex flex-col gap-1.5 ${
                         isSuspended
                           ? 'border-red-300 bg-red-50/80'
                           : p.injured
                           ? 'border-rose-300 bg-rose-50/80'
-                          : 'border-indigo-50/80 bg-white'
+                          : fit < 65
+                          ? 'border-amber-300 bg-amber-50/60'
+                          : 'border-[#E2DFD9] bg-white'
                       }`}
                     >
-                      <div className="truncate">
-                        <div className="font-bold text-[var(--office-text-primary)] truncate text-[11px] flex items-center gap-1">
-                          <span>{p.name}</span>
-                          {isSuspended && (
-                            <span className="text-[7.5px] px-1 py-0.2 rounded bg-red-600 text-white font-mono font-bold">
-                              SUSP
-                            </span>
-                          )}
-                          {p.injured && (
-                            <span className="text-[7.5px] px-1 py-0.2 rounded bg-rose-600 text-white font-mono font-bold">
-                              INJ
-                            </span>
-                          )}
+                      <div className="flex justify-between items-center gap-1">
+                        <div className="truncate min-w-0">
+                          <div className="font-bold text-[var(--office-text-primary)] truncate text-[11px] flex items-center gap-1">
+                            <span className="truncate">{p.name}</span>
+                            {isSuspended && (
+                              <span className="text-[7.5px] px-1 py-0.2 rounded bg-red-600 text-white font-mono font-bold shrink-0">
+                                SUSP
+                              </span>
+                            )}
+                            {p.injured && (
+                              <span className="text-[7.5px] px-1 py-0.2 rounded bg-rose-600 text-white font-mono font-bold shrink-0">
+                                INJ
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[9px] text-[var(--office-text-muted)] font-mono">
+                            {slotPos}{slotPos !== p.position ? ` (${p.position})` : ''}
+                          </div>
                         </div>
-                        <div className="text-[9px] text-[var(--office-text-muted)]">{p.position}</div>
+                        <div className="text-right shrink-0 ml-1">
+                          <div className="font-display font-black text-zinc-900 text-xs">{p.rating}</div>
+                          <div className={`text-[8.5px] font-mono font-bold ${fitColor}`}>{fit}%</div>
+                        </div>
                       </div>
-                      <div className="text-right shrink-0 ml-1">
-                        <div className="font-display font-black text-[#1d5eff] text-xs">{p.rating}</div>
-                        <div className="text-[8px] font-bold text-emerald-600">{p.fitness}%</div>
+                      <div className="w-full h-1 rounded-full bg-zinc-200 overflow-hidden">
+                        <div className={`h-full rounded-full ${fitBar}`} style={{ width: `${Math.max(5, Math.min(100, fit))}%` }} />
                       </div>
                     </div>
                   );

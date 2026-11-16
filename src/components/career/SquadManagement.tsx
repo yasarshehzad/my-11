@@ -874,7 +874,7 @@ export function SquadManagement({
               <button
                 type="button"
                 onClick={() => setShowRegistrationModal(true)}
-                className="py-1 px-2.5 rounded-lg bg-gradient-to-r from-teal-600 via-emerald-600 to-blue-600 hover:from-teal-500 hover:to-blue-500 text-white text-[10px] font-display font-black uppercase tracking-wider shadow-2xs transition-all cursor-pointer flex items-center gap-1 active:scale-95 whitespace-nowrap shrink-0"
+                className="py-1.5 px-3 rounded-xl bg-[#1E2024] hover:bg-zinc-800 text-white text-[10px] font-display font-bold uppercase tracking-wider shadow-2xs transition-all cursor-pointer flex items-center gap-1 active:scale-95 whitespace-nowrap shrink-0"
               >
                 <span>Manage</span>
                 <span>›</span>
@@ -936,7 +936,7 @@ export function SquadManagement({
             }}
             className={`py-1 px-2.5 rounded-lg text-xs font-display font-black uppercase transition-all cursor-pointer ${
               viewMode === 'pitch'
-                ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-xs'
+                ? 'office-nav-tab-active shadow-xs'
                 : 'office-nav-tab-inactive'
             }`}
           >
@@ -953,7 +953,7 @@ export function SquadManagement({
             }}
             className={`py-1 px-2.5 rounded-lg text-xs font-display font-black uppercase transition-all cursor-pointer ${
               viewMode === 'list'
-                ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-xs'
+                ? 'office-nav-tab-active shadow-xs'
                 : 'office-nav-tab-inactive'
             }`}
           >
@@ -970,7 +970,7 @@ export function SquadManagement({
             }}
             className={`py-1 px-2.5 rounded-lg text-xs font-display font-black uppercase transition-all flex items-center gap-1 cursor-pointer ${
               viewMode === 'tactics'
-                ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-xs'
+                ? 'office-nav-tab-active shadow-xs'
                 : 'office-nav-tab-inactive'
             }`}
           >
@@ -994,7 +994,7 @@ export function SquadManagement({
             }}
             className={`py-1 px-2 rounded-lg text-xs font-display font-black uppercase transition-all flex items-center gap-1 cursor-pointer ${
               viewMode === 'academy'
-                ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-xs'
+                ? 'office-nav-tab-active shadow-xs'
                 : 'office-nav-tab-inactive'
             }`}
           >
@@ -1016,7 +1016,7 @@ export function SquadManagement({
             }}
             className={`py-1 px-2.5 rounded-lg text-xs font-display font-black uppercase transition-all flex items-center gap-1 cursor-pointer ${
               viewMode === 'training'
-                ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-xs'
+                ? 'office-nav-tab-active shadow-xs'
                 : 'office-nav-tab-inactive'
             }`}
           >
@@ -1629,57 +1629,64 @@ export function SquadManagement({
       {/* TACTICAL PHILOSOPHIES & MANAGERIAL DNA VIEW */}
       {viewMode === 'tactics' && (
         <section id="squad-tactics-section" className="space-y-6 scroll-mt-20 animate-fade-in" aria-label="Tactical DNA & Managerial Identity">
-          {/* Hero Banner: Identity & Familiarity */}
-          <div className="office-subcard p-5 sm:p-6 rounded-3xl space-y-4 shadow-sm border border-slate-200/90 bg-gradient-to-br from-white via-slate-50/50 to-blue-50/30">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
+          {/* Hero Banner: V11 Charcoal Identity & Familiarity */}
+          <div className="rounded-2xl bg-[#E8E6E1] border border-zinc-300/70 p-1 shadow-xs overflow-hidden">
+            <div
+              data-force-white="true"
+              className="rounded-t-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              style={{ backgroundColor: '#1E2024', borderBottom: '2px solid #D97706' }}
+            >
+              <div className="space-y-1 text-left">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="text-2xl">{getTacticalPhilosophy(currentTactics.philosophy).icon}</span>
-                  <h3 className="text-lg sm:text-xl font-display font-black text-[#0b1536] uppercase tracking-tight">
+                  <h3 className="text-lg sm:text-xl font-display font-black text-white uppercase tracking-tight">
                     {getTacticalPhilosophy(currentTactics.philosophy).name}
                   </h3>
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-amber-500/20 text-amber-200 border border-amber-400/40">
                     Active Philosophy
                   </span>
                 </div>
-                <p className="text-xs text-slate-600 font-medium max-w-2xl leading-relaxed">
+                <p className="text-xs text-zinc-300 font-medium max-w-2xl leading-relaxed">
                   {getTacticalPhilosophy(currentTactics.philosophy).description}
                 </p>
               </div>
 
               {/* Tactical Familiarity Gauge */}
-              <div className="bg-white/90 backdrop-blur-xs p-3.5 rounded-2xl border border-slate-200 shadow-2xs min-w-[220px] space-y-2">
+              <div className="bg-zinc-900/90 p-3.5 rounded-xl border border-white/15 min-w-[210px] space-y-2 shrink-0">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-display font-black uppercase text-slate-600 tracking-wider">Tactical Familiarity</span>
-                  <span className="font-mono font-black text-sm text-blue-700">{currentTactics.familiarity}%</span>
+                  <span className="font-display font-bold uppercase text-zinc-300 tracking-wider">Familiarity</span>
+                  <span className="font-mono font-black text-sm text-amber-300">{currentTactics.familiarity}%</span>
                 </div>
-                <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-slate-200">
+                <div className="w-full bg-zinc-800 rounded-full h-2 overflow-hidden border border-white/10">
                   <div
-                    className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-teal-500 via-blue-600 to-indigo-600"
+                    className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-amber-400 to-emerald-400"
                     style={{ width: `${currentTactics.familiarity}%` }}
                   />
                 </div>
-                <div className="flex justify-between text-[10px] text-slate-500 font-medium">
-                  <span>60% Synergy Threshold</span>
-                  <span>{currentTactics.familiarity >= 80 ? '⭐ Fluent' : currentTactics.familiarity >= 60 ? '✓ Acclimated' : '⚠️ Adapting'}</span>
+                <div className="flex justify-between text-[10px] text-zinc-300 font-medium">
+                  <span>60% Threshold</span>
+                  <span>{currentTactics.familiarity >= 80 ? 'Fluent' : currentTactics.familiarity >= 60 ? 'Acclimated' : 'Adapting'}</span>
                 </div>
               </div>
             </div>
+            <div className="bg-white rounded-b-xl p-4 sm:p-5 space-y-4">
 
             {/* Live Starting XI Synergy Status */}
-            <div className={`p-4 rounded-2xl border transition-all ${
+            <div className={`p-4 rounded-xl border transition-all ${
               philosophyBonus.synergyActive
-                ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
-                : 'bg-amber-50/70 border-amber-200 text-amber-950'
+                ? 'bg-[#ECFDF5] border-emerald-200'
+                : 'bg-[#FFFBEB] border-amber-200'
             }`}>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{philosophyBonus.synergyActive ? '🔥' : '⏳'}</span>
                   <div>
-                    <h4 className="font-display font-black text-xs sm:text-sm uppercase tracking-wider">
+                    <h4 className={`font-display font-black text-xs sm:text-sm uppercase tracking-wider ${
+                      philosophyBonus.synergyActive ? 'text-emerald-950' : 'text-amber-950'
+                    }`} style={{ color: philosophyBonus.synergyActive ? '#064E3B' : '#78350F' }}>
                       Starting XI Tactical Synergy: {philosophyBonus.synergyActive ? 'Activated' : 'Building Requirements'}
                     </h4>
-                    <p className="text-xs opacity-90 mt-0.5">
+                    <p className="text-xs text-zinc-700 mt-0.5" style={{ color: '#3F3F46' }}>
                       {philosophyBonus.description}
                     </p>
                   </div>
@@ -1705,6 +1712,7 @@ export function SquadManagement({
                   </div>
                 )}
               </div>
+            </div>
             </div>
           </div>
 
@@ -3446,7 +3454,7 @@ export function SquadManagement({
           fit === 'natural' ? 'Natural 100%' : fit === 'competent' ? 'Secondary 98%' : 'Out of Position 86%'
         }) • ${effectiveRating} OVR • Drag or click to swap`}
         aria-label={`${player.name}, position ${player.position}, rating ${effectiveRating}`}
-        className={`my11-pitch-player-card w-[74px] min-w-0 sm:w-22 md:w-24 p-1.5 sm:p-2 cursor-grab active:cursor-grabbing text-center scroll-mt-20 transition-all ${
+        className={`my11-pitch-player-card w-[76px] min-w-0 sm:w-22 md:w-24 p-1.5 sm:p-2 cursor-grab active:cursor-grabbing text-center scroll-mt-20 transition-all overflow-hidden ${
           isDragTarget
             ? 'my11-pitch-player-card-target'
             : isSwapping
@@ -3464,34 +3472,14 @@ export function SquadManagement({
             : 'ring-1 ring-emerald-500/40'
         }`}
       >
-        <div className="flex justify-between items-center text-[9px] font-black leading-none mb-1">
-          <div className="flex items-center gap-0.5">
-            <span className={`px-1 py-0.5 rounded font-display uppercase tracking-wider text-[8.5px] border ${fitBadgeClass}`}>
-              {slotPos}
-            </span>
-            <span
-              className={`px-1 py-0.5 rounded text-[7.5px] font-black uppercase font-display border shadow-2xs ${
-                fit === 'natural'
-                  ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                  : fit === 'competent'
-                  ? 'bg-amber-100 text-amber-900 border-amber-300'
-                  : 'bg-rose-100 text-rose-900 border-rose-300'
-              }`}
-              title={
-                fit === 'natural'
-                  ? 'Natural Role (100% Efficiency)'
-                  : fit === 'competent'
-                  ? 'Secondary Role (98% Efficiency)'
-                  : 'Out of Position (86% Match Penalty)'
-              }
-            >
-              {fit === 'natural' ? 'NAT' : fit === 'competent' ? 'SEC' : 'OOP'}
-            </span>
-          </div>
-          <div className="flex items-center gap-0.5">
+        <div className="flex justify-between items-center text-[8.5px] font-black leading-none mb-1 gap-0.5">
+          <span className={`px-1 py-0.5 rounded font-display uppercase tracking-tight text-[8px] border shrink-0 ${fitBadgeClass}`}>
+            {slotPos}
+          </span>
+          <div className="flex items-center gap-0.5 shrink-0">
             {player.id === currentTactics.captainId && (
               <span
-                className="px-1 py-0.2 rounded font-display font-black text-[8px] bg-amber-400 text-slate-950 border border-amber-500 shadow-2xs"
+                className="px-1 py-0.2 rounded font-display font-black text-[7.5px] bg-amber-400 text-slate-950 border border-amber-500"
                 title="Club Captain (C)"
               >
                 C
@@ -3499,13 +3487,13 @@ export function SquadManagement({
             )}
             {player.id === currentTactics.viceCaptainId && (
               <span
-                className="px-1 py-0.2 rounded font-display font-black text-[8px] bg-slate-300 text-slate-900 border border-slate-400 shadow-2xs"
+                className="px-1 py-0.2 rounded font-display font-black text-[7.5px] bg-slate-300 text-slate-900 border border-slate-400"
                 title="Vice-Captain (VC)"
               >
                 VC
               </span>
             )}
-            <span className={`px-1.5 py-0.5 rounded-md font-display font-black text-[10.5px] ${ratingBadgeClass}`}>
+            <span className={`px-1 py-0.5 rounded-md font-display font-black text-[10px] ${ratingBadgeClass}`}>
               {effectiveRating}
             </span>
           </div>
@@ -3531,13 +3519,30 @@ export function SquadManagement({
         >
           {player.name}
         </div>
-        <div className="text-[8px] text-slate-500 font-semibold truncate mt-0.5 flex items-center justify-center gap-1">
+        <div className="text-[8px] text-zinc-600 font-semibold truncate mt-0.5 flex items-center justify-center gap-1">
           <span>{player.position}</span>
+          {fit !== 'natural' && (
+            <span
+              className={`text-[7px] font-black px-1 rounded ${
+                fit === 'competent' ? 'bg-amber-100 text-amber-900' : 'bg-rose-100 text-rose-900'
+              }`}
+            >
+              {fit === 'competent' ? 'SEC' : 'OOP'}
+            </span>
+          )}
+          <span
+            className={`font-mono font-bold text-[8px] ${
+              (player.fitness ?? 100) >= 80
+                ? 'text-emerald-700'
+                : (player.fitness ?? 100) >= 65
+                ? 'text-amber-700'
+                : 'text-rose-700'
+            }`}
+          >
+            {Math.round(player.fitness ?? 100)}%
+          </span>
           {bonus > 0 && <span title={`In-Form (+${bonus})`}>🔥</span>}
           {bonus < 0 && <span title={`Slump (${bonus})`}>❄️</span>}
-          {player.age <= 23 && typeof player.developmentProgress === 'number' && player.developmentProgress >= 40 && (
-            <span title={`In-Season Growth: ${player.developmentProgress}%`}>🌱</span>
-          )}
           {player.injured && (
             <span className="text-[7px] font-black px-1 rounded bg-rose-600 text-white" title={player.injuryDescription || 'Injured'}>
               INJ
@@ -3548,6 +3553,18 @@ export function SquadManagement({
               SUSP
             </span>
           )}
+        </div>
+        <div className="w-full h-1 rounded-full bg-zinc-200 overflow-hidden mt-1" title={`Fitness: ${Math.round(player.fitness ?? 100)}%`}>
+          <div
+            className={`h-full rounded-full ${
+              (player.fitness ?? 100) >= 80
+                ? 'bg-emerald-500'
+                : (player.fitness ?? 100) >= 65
+                ? 'bg-amber-500'
+                : 'bg-rose-500'
+            }`}
+            style={{ width: `${Math.max(5, Math.min(100, Math.round(player.fitness ?? 100)))}%` }}
+          />
         </div>
       </div>
     );

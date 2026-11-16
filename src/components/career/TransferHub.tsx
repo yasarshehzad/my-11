@@ -1263,10 +1263,10 @@ export function TransferHub({
                     setPlayerPoolType('modern');
                     setCurrentPage(1);
                   }}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-display font-bold uppercase tracking-wider transition-all cursor-pointer ${
                     playerPoolType === 'modern'
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'office-nav-tab-active shadow-sm'
+                      : 'text-zinc-700 hover:text-zinc-900'
                   }`}
                 >
                   ⚡ Modern
@@ -1291,10 +1291,10 @@ export function TransferHub({
                     setPlayerPoolType('all');
                     setCurrentPage(1);
                   }}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-display font-bold uppercase tracking-wider transition-all cursor-pointer ${
                     playerPoolType === 'all'
-                      ? 'bg-slate-700 text-white shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'office-nav-tab-active shadow-sm'
+                      : 'text-zinc-700 hover:text-zinc-900'
                   }`}
                 >
                   🌐 All

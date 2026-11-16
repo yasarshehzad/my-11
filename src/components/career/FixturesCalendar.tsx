@@ -233,31 +233,39 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
         <section className="space-y-3.5">
           {!isReleaseDateReached ? (
             /* BEFORE RELEASE DAY (July 1 - July 7) */
-            <div className="office-floating-card rounded-2xl p-5 sm:p-6 text-center space-y-3 shadow-xs border border-blue-200/80">
-              <span className="text-3xl block">🔒</span>
-              <div className="space-y-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-blue-700 bg-blue-50 border border-blue-200 px-3 py-0.5 rounded-full font-display inline-block">
+            <div className="rounded-2xl bg-[#E8E6E1] border border-zinc-300/70 p-1 shadow-xs overflow-hidden">
+              <div
+                data-force-white="true"
+                className="rounded-t-xl px-4 py-3 flex items-center justify-between"
+                style={{ backgroundColor: '#1E2024', borderBottom: '2px solid #D97706' }}
+              >
+                <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-300">
                   Embargo Active • Calendar Compilation
                 </span>
-                <h3 className="text-base sm:text-lg font-display font-black text-[#0b1536] uppercase tracking-tight mt-1">
+                <span className="text-[10px] font-mono text-zinc-300">
+                  8 July {save.season.yearStart}
+                </span>
+              </div>
+              <div className="bg-white rounded-b-xl p-5 sm:p-6 text-center space-y-3">
+                <h3 className="text-base sm:text-lg font-display font-black text-zinc-900 uppercase tracking-tight">
                   Official Fixtures Released on 8 July {save.season.yearStart}
                 </h3>
-                <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed pt-0.5">
+                <p className="text-xs text-zinc-600 max-w-md mx-auto leading-relaxed">
                   The Premier League computer is currently compiling the official 38-game schedule. Advance day-by-day through pre-season in your Office until Fixture Release Day.
                 </p>
-              </div>
 
-              {onNavigateOffice && (
-                <div className="pt-1">
-                  <button
-                    type="button"
-                    onClick={onNavigateOffice}
-                    className="office-action-btn-primary py-2 px-4 rounded-xl text-white font-display font-black text-xs uppercase tracking-wider transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5 active:scale-95"
-                  >
-                    <span>➔ Go to Manager Office</span>
-                  </button>
-                </div>
-              )}
+                {onNavigateOffice && (
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={onNavigateOffice}
+                      className="office-play-match-btn py-2.5 px-5 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5 active:scale-95"
+                    >
+                      <span>Go to Manager Office &rarr;</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             /* ON OR AFTER RELEASE DAY (July 8+) BUT UNREVEALED */
