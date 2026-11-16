@@ -2625,7 +2625,7 @@ export function SquadManagement({
                 onClick={(e) => e.stopPropagation()}
                 onTouchStart={handleModalTouchStart}
                 onTouchEnd={handleModalTouchEnd}
-                className="office-floating-card my11-mobile-sheet bg-white border border-slate-200/90 rounded-t-3xl sm:rounded-3xl max-w-md w-full shadow-2xl relative max-h-[88vh] flex flex-col overflow-hidden text-[#0b1536]"
+                className="office-floating-card my11-mobile-sheet bg-white border border-slate-200/90 rounded-t-3xl sm:rounded-3xl max-w-md w-full shadow-2xl relative h-[85dvh] sm:h-[670px] max-h-[90dvh] sm:max-h-[88vh] flex flex-col overflow-hidden text-[#0b1536]"
               >
                 {/* Compact Sticky Top Header */}
                 <div className="shrink-0 flex items-center justify-between gap-2 px-4 pt-4 pb-3 border-b border-[#E2DFD9] bg-white">

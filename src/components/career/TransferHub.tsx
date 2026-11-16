@@ -281,6 +281,31 @@ export function TransferHub({
   // Transfer Negotiation Modal & Detailed Terms
   const [negotiatingPlayer, setNegotiatingPlayer] = useState<MarketPlayer | null>(null);
   const [profilePlayer, setProfilePlayer] = useState<MarketPlayer | null>(null);
+  const [profileTab, setProfileTab] = useState<'overview' | 'attributes' | 'contract'>('overview');
+  const [profileSwipeStart, setProfileSwipeStart] = useState<{ x: number; y: number } | null>(null);
+
+  const handleProfileTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    if (t) setProfileSwipeStart({ x: t.clientX, y: t.clientY });
+  };
+
+  const handleProfileTouchEnd = (e: React.TouchEvent) => {
+    if (!profileSwipeStart) return;
+    const t = e.changedTouches[0];
+    if (!t) return;
+    const dx = t.clientX - profileSwipeStart.x;
+    const dy = t.clientY - profileSwipeStart.y;
+    setProfileSwipeStart(null);
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.4) return;
+    const order: Array<'overview' | 'attributes' | 'contract'> = ['overview', 'attributes', 'contract'];
+    const idx = order.indexOf(profileTab);
+    if (dx < 0 && idx < order.length - 1) setProfileTab(order[idx + 1]);
+    else if (dx > 0 && idx > 0) setProfileTab(order[idx - 1]);
+  };
+
+  useEffect(() => {
+    if (profilePlayer) setProfileTab('overview');
+  }, [profilePlayer?.id]);
 
   useEffect(() => {
     if (!profilePlayer && !negotiatingPlayer) return;
@@ -5705,11 +5730,13 @@ export function TransferHub({
           >
             <div
               data-office-ui="true"
-              className="office-floating-card rounded-3xl max-w-sm sm:max-w-md w-full p-4 sm:p-5 space-y-3 shadow-2xl relative my-auto border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 max-h-[84vh] overflow-y-auto scrollbar-none"
+              className="office-floating-card rounded-3xl max-w-sm sm:max-w-md w-full shadow-2xl relative my-auto border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 h-[84dvh] sm:h-[580px] max-h-[90dvh] sm:max-h-[88vh] flex flex-col overflow-hidden"
               onClick={(e) => e.stopPropagation()}
+              onTouchStart={handleProfileTouchStart}
+              onTouchEnd={handleProfileTouchEnd}
             >
-              {/* Modal Header */}
-              <header className="flex justify-between items-start border-b border-slate-200 dark:border-slate-800 pb-2.5">
+              {/* Sticky Top Modal Header */}
+              <header className="shrink-0 flex justify-between items-start border-b border-slate-200 dark:border-slate-800 px-4 sm:px-5 pt-4 pb-3 bg-white dark:bg-slate-900">
                 <div className="space-y-1 min-w-0 pr-2">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${
@@ -5751,170 +5778,233 @@ export function TransferHub({
                 </button>
               </header>
 
-              {/* Authentic Biometrics Badge Strip */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
-                  <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Height / Weight</span>
-                  <span className="font-mono font-black text-slate-900 dark:text-white text-xs">
-                    {bio.heightCm}cm • {bio.weightKg}kg
-                  </span>
-                </div>
-                <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
-                  <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Preferred Foot</span>
-                  <span className="font-mono font-black text-slate-900 dark:text-white text-xs">{bio.preferredFoot}</span>
-                </div>
-                <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
-                  <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Date of Birth</span>
-                  <span className="font-mono font-black text-slate-900 dark:text-white text-xs">{bio.dateOfBirth || `${bio.birthYear}`}</span>
-                </div>
-                <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
-                  <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Peak Age / Stage</span>
-                  <span className="font-mono font-black text-slate-900 dark:text-white text-xs">{bio.peakAge} yrs</span>
-                </div>
-              </div>
-
-              {/* Valuation & Contract Demand Card */}
-              <div className="rounded-2xl p-3 space-y-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-                <div className="flex justify-between items-center text-xs">
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Estimated Valuation</span>
-                    <span className="font-mono font-black text-sm sm:text-base text-slate-950 dark:text-white">
-                      {formatCurrency(profilePlayer.value)}
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Wage Demand</span>
-                    <span className="font-mono font-black text-sm sm:text-base text-blue-600 dark:text-blue-400">
-                      {formatWage(profilePlayer.wageDemand)}
-                    </span>
-                  </div>
-                </div>
-                <div className="pt-2 border-t border-slate-200 dark:border-slate-700 grid grid-cols-3 gap-2 text-center text-xs">
-                  <div>
-                    <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Desired Contract</span>
-                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{pref.preferredContractYears} Years</span>
-                  </div>
-                  <div>
-                    <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Expected Role</span>
-                    <span className="font-mono font-bold text-blue-600 dark:text-blue-400 uppercase">{pref.expectedSquadRole}</span>
-                  </div>
-                  <div>
-                    <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Signing Bonus</span>
-                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formatCurrency(pref.expectedSigningBonus)}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Detailed Face Stats Breakdown */}
-              <div className="rounded-2xl p-3 space-y-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-                <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider">
-                  <span>📊 Detailed Attribute Ratings</span>
-                  <span className="font-mono text-slate-500">{fs.isGoalkeeper ? 'Goalkeeper Matrix' : 'Outfield Matrix'}</span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {statItems.map((item) => (
-                    <div key={item.key} className="space-y-1 bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-200 dark:border-slate-700/80">
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="font-bold text-slate-700 dark:text-slate-300 text-[11px]">{item.label}</span>
-                        <span className="font-mono font-black text-slate-950 dark:text-white text-xs">{item.val}</span>
+              {/* Middle Scrollable Tab Body (Swipeable) */}
+              <div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-5 py-3.5 space-y-3 scrollbar-none">
+                {profileTab === 'overview' && (
+                  <>
+                    {/* Authentic Biometrics Badge Strip */}
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                        <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Height / Weight</span>
+                        <span className="font-mono font-black text-slate-900 dark:text-white text-xs mt-0.5 block">
+                          {bio.heightCm}cm • {bio.weightKg}kg
+                        </span>
                       </div>
-                      <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${
-                            item.val >= 88
-                              ? 'bg-amber-500'
-                              : item.val >= 80
-                              ? 'bg-blue-600'
-                              : item.val >= 70
-                              ? 'bg-emerald-500'
-                              : 'bg-slate-400'
-                          }`}
-                          style={{ width: `${Math.min(100, (item.val / 99) * 100)}%` }}
-                        />
+                      <div className="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                        <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Preferred Foot</span>
+                        <span className="font-mono font-black text-slate-900 dark:text-white text-xs mt-0.5 block">{bio.preferredFoot}</span>
+                      </div>
+                      <div className="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                        <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Date of Birth</span>
+                        <span className="font-mono font-black text-slate-900 dark:text-white text-xs mt-0.5 block">{bio.dateOfBirth || `${bio.birthYear}`}</span>
+                      </div>
+                      <div className="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                        <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Peak Age / Stage</span>
+                        <span className="font-mono font-black text-slate-900 dark:text-white text-xs mt-0.5 block">{bio.peakAge} yrs</span>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
 
-              {/* Transfer Window Status Notice */}
-              {!windowIsOpen && (
-                <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/80 text-xs space-y-0.5">
-                  <div className="flex items-center gap-1.5 font-black text-amber-950 dark:text-amber-200 text-xs">
-                    <span>🔒</span>
-                    <span>Transfer Window is Closed</span>
+                    {/* Valuation & Wage Summary */}
+                    <div className="rounded-2xl p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex justify-between items-center text-xs">
+                      <div>
+                        <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Estimated Valuation</span>
+                        <span className="font-mono font-black text-base text-slate-950 dark:text-white">
+                          {formatCurrency(profilePlayer.value)}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Wage Demand</span>
+                        <span className="font-mono font-black text-base text-blue-600 dark:text-blue-400">
+                          {formatWage(profilePlayer.wageDemand)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Quick Actions */}
+                    <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleShortlist(profilePlayer.id)}
+                        className={`flex-1 py-2.5 px-3 rounded-xl font-display font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs border ${
+                          isShortlisted
+                            ? 'bg-amber-100 text-amber-950 border-amber-300 hover:bg-amber-200 dark:bg-amber-950/60 dark:text-amber-200 dark:border-amber-700'
+                            : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-slate-200 dark:border-slate-600'
+                        }`}
+                      >
+                        <span>★</span>
+                        <span>{isShortlisted ? 'Shortlisted' : 'Add to Shortlist'}</span>
+                      </button>
+
+                      {onOpenCompare && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const p = profilePlayer;
+                            setProfilePlayer(null);
+                            onOpenCompare(p);
+                          }}
+                          className="py-2.5 px-3 rounded-xl font-display font-bold text-xs uppercase tracking-wider bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-slate-200 dark:border-slate-600 flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+                        >
+                          <span>📊</span>
+                          <span>Compare</span>
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {profileTab === 'attributes' && (
+                  <div className="rounded-2xl p-3.5 space-y-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                    <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider">
+                      <span>📊 Detailed Attribute Ratings</span>
+                      <span className="font-mono text-slate-500">{fs.isGoalkeeper ? 'Goalkeeper Matrix' : 'Outfield Matrix'}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      {statItems.map((item) => (
+                        <div key={item.key} className="space-y-1.5 bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/80">
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="font-bold text-slate-700 dark:text-slate-300 text-[11px]">{item.label}</span>
+                            <span className="font-mono font-black text-slate-950 dark:text-white text-xs">{item.val}</span>
+                          </div>
+                          <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${
+                                item.val >= 88
+                                  ? 'bg-amber-500'
+                                  : item.val >= 80
+                                  ? 'bg-blue-600'
+                                  : item.val >= 70
+                                  ? 'bg-emerald-500'
+                                  : 'bg-slate-400'
+                              }`}
+                              style={{ width: `${Math.min(100, (item.val / 99) * 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <p className="text-[11px] text-amber-900 dark:text-amber-300 leading-snug font-medium">
-                    Official bids and negotiations are prohibited outside the transfer window. You can scout player stats and add them to your shortlist.
-                  </p>
-                </div>
-              )}
-
-              {/* Modal Action Bar */}
-              <div className="flex flex-col sm:flex-row gap-2 pt-0.5">
-                {/* Shortlist Toggle */}
-                <button
-                  type="button"
-                  onClick={() => handleToggleShortlist(profilePlayer.id)}
-                  className={`flex-1 py-2 px-3 rounded-xl font-display font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs border ${
-                    isShortlisted
-                      ? 'bg-amber-100 text-amber-950 border-amber-300 hover:bg-amber-200 dark:bg-amber-950/60 dark:text-amber-200 dark:border-amber-700'
-                      : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-slate-200 dark:border-slate-600'
-                  }`}
-                >
-                  <span>★</span>
-                  <span>{isShortlisted ? 'Shortlisted' : 'Add to Shortlist'}</span>
-                </button>
-
-                {/* Compare Button */}
-                {onOpenCompare && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const p = profilePlayer;
-                      setProfilePlayer(null);
-                      onOpenCompare(p);
-                    }}
-                    className="py-2 px-3 rounded-xl font-display font-bold text-xs uppercase tracking-wider bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-slate-200 dark:border-slate-600 flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
-                  >
-                    <span>📊</span>
-                    <span>Compare</span>
-                  </button>
                 )}
 
-                {/* Offer / Negotiation Button */}
-                {windowIsOpen ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const p = profilePlayer;
-                      setProfilePlayer(null);
-                      handleStartNegotiation(p);
-                    }}
-                    disabled={isSquadFull}
-                    className={`flex-1 py-2 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md ${
-                      isSquadFull
-                        ? 'bg-rose-50 text-rose-700 border border-rose-200 cursor-not-allowed'
-                        : isLegend
-                        ? 'my11-badge-legend shadow-amber-500/20'
-                        : 'my11-btn-gradient text-white shadow-blue-500/20'
-                    }`}
-                  >
-                    <span>💼</span>
-                    <span>{isSquadFull ? 'Squad Full' : isLegend ? '👑 Negotiate Deal' : 'Make Offer'}</span>
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    disabled
-                    className="flex-1 py-2 px-4 rounded-xl font-display font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed select-none"
-                    title="Transfer window is closed. Official offers and bids are prohibited."
-                  >
-                    <span>🔒</span>
-                    <span>Window Closed</span>
-                  </button>
+                {profileTab === 'contract' && (
+                  <div className="space-y-3">
+                    {/* Contract Demand Card */}
+                    <div className="rounded-2xl p-3.5 space-y-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                      <div className="flex justify-between items-center text-xs">
+                        <div>
+                          <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Estimated Valuation</span>
+                          <span className="font-mono font-black text-sm sm:text-base text-slate-950 dark:text-white">
+                            {formatCurrency(profilePlayer.value)}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Wage Demand</span>
+                          <span className="font-mono font-black text-sm sm:text-base text-blue-600 dark:text-blue-400">
+                            {formatWage(profilePlayer.wageDemand)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="pt-2 border-t border-slate-200 dark:border-slate-700 grid grid-cols-3 gap-2 text-center text-xs">
+                        <div>
+                          <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Desired Contract</span>
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{pref.preferredContractYears} Years</span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Expected Role</span>
+                          <span className="font-mono font-bold text-blue-600 dark:text-blue-400 uppercase">{pref.expectedSquadRole}</span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Signing Bonus</span>
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formatCurrency(pref.expectedSigningBonus)}</span>
+                        </div>
+                      </div>
+                      <div className="pt-2 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-[11px]">
+                        <span className="text-slate-500 font-semibold">Current Club Contract</span>
+                        <span className="font-mono font-bold text-slate-900 dark:text-white">
+                          {profilePlayer.isFreeAgent ? 'Free Agent' : `${profilePlayer.contractYears ?? 3} yrs remaining`}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Transfer Window Status Notice */}
+                    {!windowIsOpen && (
+                      <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/80 text-xs space-y-0.5">
+                        <div className="flex items-center gap-1.5 font-black text-amber-950 dark:text-amber-200 text-xs">
+                          <span>🔒</span>
+                          <span>Transfer Window is Closed</span>
+                        </div>
+                        <p className="text-[11px] text-amber-900 dark:text-amber-300 leading-snug font-medium">
+                          Official bids and negotiations are prohibited outside the transfer window.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Primary Offer CTA */}
+                    {windowIsOpen ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const p = profilePlayer;
+                          setProfilePlayer(null);
+                          handleStartNegotiation(p);
+                        }}
+                        disabled={isSquadFull}
+                        className={`w-full py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md ${
+                          isSquadFull
+                            ? 'bg-rose-50 text-rose-700 border border-rose-200 cursor-not-allowed'
+                            : isLegend
+                            ? 'my11-badge-legend shadow-amber-500/20'
+                            : 'my11-btn-gradient text-white shadow-blue-500/20'
+                        }`}
+                      >
+                        <span>💼</span>
+                        <span>{isSquadFull ? 'Squad Full' : isLegend ? '👑 Negotiate Deal' : 'Make Offer'}</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled
+                        className="w-full py-2.5 px-4 rounded-xl font-display font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed select-none"
+                        title="Transfer window is closed."
+                      >
+                        <span>🔒</span>
+                        <span>Window Closed</span>
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
+
+              {/* Sticky Bottom Thumb-Zone Tab Switcher (Always Visible on Mobile & Desktop) */}
+              <nav
+                aria-label="Scouting dossier tabs"
+                className="shrink-0 grid grid-cols-3 gap-1.5 px-4 py-2.5 border-t border-slate-200 dark:border-slate-800 bg-[#F7F6F3] dark:bg-slate-900"
+              >
+                {(
+                  [
+                    { id: 'overview', label: 'Overview', icon: '🪪' },
+                    { id: 'attributes', label: 'Attributes', icon: '📊' },
+                    { id: 'contract', label: 'Deal', icon: '💼' },
+                  ] as const
+                ).map((t) => {
+                  const active = profileTab === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setProfileTab(t.id)}
+                      className={`py-2 px-2 rounded-xl font-display font-black text-[11px] uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                        active
+                          ? 'office-nav-tab-active shadow-xs'
+                          : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-[#E2DFD9] dark:border-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span>{t.icon}</span>
+                      <span>{t.label}</span>
+                    </button>
+                  );
+                })}
+              </nav>
             </div>
           </div>
         );
