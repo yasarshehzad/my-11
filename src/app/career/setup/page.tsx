@@ -50,6 +50,10 @@ function SetupWizardContent() {
   const goToStep = (next: 1 | 2 | 3) => {
     setStepDir(next >= step ? 'forward' : 'back');
     setStep(next);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }));
+    }
   };
 
   // Step 1: Manager
@@ -228,7 +232,7 @@ function SetupWizardContent() {
               {idx > 0 && <div className="w-5 h-px bg-slate-300" />}
               <button
                 type="button"
-                onClick={() => setStep(item.num)}
+                onClick={() => goToStep(item.num)}
                 className={`px-4 py-1.5 rounded-lg text-xs font-display font-black tracking-tight transition-all cursor-pointer ${
                   step === item.num
                     ? 'office-nav-tab-active'
@@ -989,7 +993,7 @@ function SetupWizardContent() {
             <div className="flex justify-between items-center pt-2 gap-3.5">
               <button
                 type="button"
-                onClick={() => setStep(2)}
+                onClick={() => goToStep(2)}
                 className="bg-white border border-slate-300 hover:bg-slate-100 py-3 px-5 rounded-xl text-xs font-bold text-slate-800 font-display uppercase tracking-wider cursor-pointer transition-colors"
               >
                 Back to Clubs
