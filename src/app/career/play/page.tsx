@@ -2050,10 +2050,10 @@ function CareerPlayHubContent() {
                     type="button"
                     data-office-ui="true"
                     onClick={() => handleTabChange(sub.id as typeof activeTab)}
-                    className={`py-1.5 px-1.5 sm:px-2 rounded-xl font-display font-black text-[11px] sm:text-xs uppercase tracking-wider flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                    className={`py-1.5 px-1.5 sm:px-2 rounded-xl font-display font-bold text-[11px] sm:text-xs uppercase tracking-wider flex items-center justify-center gap-1 transition-all cursor-pointer ${
                       isSubActive
-                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs'
-                        : 'office-nav-tab-inactive hover:bg-slate-100'
+                        ? 'office-nav-tab-active shadow-xs'
+                        : 'office-nav-tab-inactive hover:bg-[#F7F6F3]'
                     }`}
                   >
                     <span className="text-xs">{sub.icon}</span>
@@ -2145,143 +2145,137 @@ function CareerPlayHubContent() {
                 <section
                   aria-label="Key Performance Indicators"
                   data-office-ui="true"
-                  className="office-reveal-2 grid grid-cols-3 divide-x divide-slate-300/80 py-1 select-none"
+                  className="office-reveal-2 rounded-2xl bg-[#E8E6E1] border border-zinc-300/70 p-1 select-none shadow-xs"
                 >
-                  {/* Metric 1: Transfer Budget (Teal/Mint Financial Semantic) */}
-                  <button
-                    type="button"
-                    data-office-ui="true"
-                    aria-label={`Transfer Budget ${formatOfficeBudget(save.finances.transferBudget, save.settings.currency)}, Wage room ${formatOfficeWageRoom(wageHeadroom, save.settings.currency)}`}
-                    onClick={() => {
-                      navigateToSection('transfers', 'market');
-                      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-                    }}
-                    className="px-2 sm:px-3 py-2 text-left hover:bg-teal-500/[0.06] transition-colors cursor-pointer flex flex-col justify-between min-h-[64px] group focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#0f766e]"
-                  >
-                    <div className="flex items-center justify-between gap-1 w-full">
-                      <span className="text-xs font-display font-extrabold uppercase tracking-wider text-[#0f534c]">
-                        Budget
-                      </span>
-                      <span className="text-sm font-black text-[#0f766e] leading-none group-hover:translate-x-0.5 transition-transform" aria-hidden="true">
-                        &rsaquo;
-                      </span>
-                    </div>
-                    <div className="font-display font-black text-lg sm:text-xl text-[#0b1536] leading-tight tracking-tight mt-0.5">
-                      {formatOfficeBudget(save.finances.transferBudget, save.settings.currency)}
-                    </div>
-                    <div className="text-xs sm:text-[13px] font-bold text-[#115e59] whitespace-nowrap mt-0.5">
-                      {formatOfficeWageRoom(wageHeadroom, save.settings.currency)} room
-                    </div>
-                  </button>
+                  <div className="bg-white rounded-xl grid grid-cols-3 divide-x divide-[#E2DFD9]">
+                    {/* Metric 1: Transfer Budget */}
+                    <button
+                      type="button"
+                      data-office-ui="true"
+                      aria-label={`Transfer Budget ${formatOfficeBudget(save.finances.transferBudget, save.settings.currency)}, Wage room ${formatOfficeWageRoom(wageHeadroom, save.settings.currency)}`}
+                      onClick={() => {
+                        navigateToSection('transfers', 'market');
+                        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                      }}
+                      className="px-2.5 sm:px-3.5 py-2.5 text-left hover:bg-[#F7F6F3] rounded-l-xl transition-colors cursor-pointer flex flex-col justify-between min-h-[64px] group focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#D97706]"
+                    >
+                      <div className="flex items-center justify-between gap-1 w-full">
+                        <span className="text-[11px] font-display font-bold uppercase tracking-wider text-zinc-600">
+                          Budget
+                        </span>
+                        <span className="text-sm font-black text-emerald-700 leading-none group-hover:translate-x-0.5 transition-transform" aria-hidden="true">
+                          &rsaquo;
+                        </span>
+                      </div>
+                      <div className="font-display font-extrabold text-lg sm:text-xl text-zinc-900 leading-tight tracking-tight mt-0.5 font-mono">
+                        {formatOfficeBudget(save.finances.transferBudget, save.settings.currency)}
+                      </div>
+                      <div className="text-[11px] sm:text-xs font-semibold text-emerald-700 whitespace-nowrap mt-0.5">
+                        {formatOfficeWageRoom(wageHeadroom, save.settings.currency)} room
+                      </div>
+                    </button>
 
-                  {/* Metric 2: League Position (Blue Competition Semantic) */}
-                  <button
-                    type="button"
-                    data-office-ui="true"
-                    aria-label={`League Position ${formatOrdinalRank(userRank)}, ${userStanding?.points || 0} points`}
-                    onClick={() => handleTabChange('table')}
-                    className="px-2 sm:px-3 py-2 text-left hover:bg-blue-500/[0.06] transition-colors cursor-pointer flex flex-col justify-between min-h-[64px] group focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#1d5eff]"
-                  >
-                    <div className="flex items-center justify-between gap-1 w-full">
-                      <span className="text-xs font-display font-extrabold uppercase tracking-wider text-[#1e3a8a]">
-                        League
-                      </span>
-                      <span className="text-sm font-black text-[#1d4ed8] leading-none group-hover:translate-x-0.5 transition-transform" aria-hidden="true">
-                        &rsaquo;
-                      </span>
-                    </div>
-                    <div className="flex items-baseline gap-1.5 mt-0.5">
-                      <span className="font-display font-black text-lg sm:text-xl text-[#0b1536] leading-tight">
-                        {formatOrdinalRank(userRank)}
-                      </span>
-                      <span className="text-xs sm:text-[13px] font-extrabold text-[#1e40af] whitespace-nowrap">
-                        {userStanding?.points || 0} pts
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1 mt-1" aria-label="Recent 5 match form">
-                      {(recentFormResults.length > 0
-                        ? recentFormResults.slice(-5)
-                        : (['W', 'W', 'D', 'W', 'W'] as const)
-                      ).map((res, idx) => (
+                    {/* Metric 2: League Position */}
+                    <button
+                      type="button"
+                      data-office-ui="true"
+                      aria-label={`League Position ${formatOrdinalRank(userRank)}, ${userStanding?.points || 0} points`}
+                      onClick={() => handleTabChange('table')}
+                      className="px-2.5 sm:px-3.5 py-2.5 text-left hover:bg-[#F7F6F3] transition-colors cursor-pointer flex flex-col justify-between min-h-[64px] group focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#D97706]"
+                    >
+                      <div className="flex items-center justify-between gap-1 w-full">
+                        <span className="text-[11px] font-display font-bold uppercase tracking-wider text-zinc-600">
+                          League
+                        </span>
+                        <span className="text-sm font-black text-amber-700 leading-none group-hover:translate-x-0.5 transition-transform" aria-hidden="true">
+                          &rsaquo;
+                        </span>
+                      </div>
+                      <div className="flex items-baseline gap-1.5 mt-0.5">
+                        <span className="font-display font-extrabold text-lg sm:text-xl text-zinc-900 leading-tight">
+                          {formatOrdinalRank(userRank)}
+                        </span>
+                        <span className="text-[11px] sm:text-xs font-bold font-mono text-zinc-600 whitespace-nowrap">
+                          {userStanding?.points || 0} pts
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 mt-1" aria-label="Recent 5 match form">
+                        {(recentFormResults.length > 0
+                          ? recentFormResults.slice(-5)
+                          : (['W', 'W', 'D', 'W', 'W'] as const)
+                        ).map((res, idx) => (
+                          <span
+                            key={idx}
+                            data-force-white="true"
+                            className={`w-4.5 h-4.5 rounded-[4px] text-[10px] font-display font-extrabold text-white flex items-center justify-center ${
+                              res === 'W'
+                                ? 'bg-[#047857]'
+                                : res === 'D'
+                                ? 'bg-[#D97706]'
+                                : 'bg-[#DC2626]'
+                            }`}
+                          >
+                            {res}
+                          </span>
+                        ))}
+                      </div>
+                    </button>
+
+                    {/* Metric 3: Items for Review */}
+                    <button
+                      type="button"
+                      data-office-ui="true"
+                      aria-label={`Items for Review: ${reviewTotal}`}
+                      onClick={() => {
+                        if (contractReviewPlayers.length > 0) {
+                          navigateToSection(
+                            'transfers',
+                            'contracts',
+                            `contract-player-${contractReviewPlayers[0].id}`
+                          );
+                        } else {
+                          setShowOfficeInboxModal(true);
+                        }
+                      }}
+                      className="px-2.5 sm:px-3.5 py-2.5 text-left hover:bg-[#F7F6F3] rounded-r-xl transition-colors cursor-pointer flex flex-col justify-between min-h-[64px] group focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#D97706]"
+                    >
+                      <div className="flex items-center justify-between gap-1 w-full">
                         <span
-                          key={idx}
-                          className={`w-4.5 h-4.5 rounded-[4px] text-[10.5px] font-display font-black text-white flex items-center justify-center shadow-2xs ${
-                            res === 'W'
-                              ? 'bg-[#047857]'
-                              : res === 'D'
-                              ? 'bg-[#b45309]'
-                              : 'bg-[#b91c1c]'
+                          className={`text-[11px] font-display font-bold uppercase tracking-wider flex items-center gap-1 ${
+                            reviewTotal > 0 ? 'text-amber-800' : 'text-zinc-600'
                           }`}
                         >
-                          {res}
+                          {reviewTotal > 0 && (
+                            <span className="w-2 h-2 rounded-full bg-[#D97706] shrink-0" aria-hidden="true" />
+                          )}
+                          <span>Review</span>
                         </span>
-                      ))}
-                    </div>
-                  </button>
-
-                  {/* Metric 3: Items for Review (Amber Attention Semantic when > 0, Teal when 0) */}
-                  <button
-                    type="button"
-                    data-office-ui="true"
-                    aria-label={`Items for Review: ${reviewTotal}`}
-                    onClick={() => {
-                      if (contractReviewPlayers.length > 0) {
-                        navigateToSection(
-                          'transfers',
-                          'contracts',
-                          `contract-player-${contractReviewPlayers[0].id}`
-                        );
-                      } else {
-                        setShowOfficeInboxModal(true);
-                      }
-                    }}
-                    className={`px-2 sm:px-3 py-2 text-left transition-colors cursor-pointer flex flex-col justify-between min-h-[64px] group focus-visible:outline-2 focus-visible:outline-offset-[-2px] ${
-                      reviewTotal > 0
-                        ? 'hover:bg-amber-500/[0.08] focus-visible:outline-[#b45309]'
-                        : 'hover:bg-teal-500/[0.06] focus-visible:outline-[#0f766e]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-1 w-full">
-                      <span
-                        className={`text-xs font-display font-extrabold uppercase tracking-wider flex items-center gap-1 ${
-                          reviewTotal > 0 ? 'text-[#92400e]' : 'text-[#0f534c]'
+                        <span className="text-sm font-black text-zinc-600 leading-none group-hover:translate-x-0.5 transition-transform" aria-hidden="true">
+                          &rsaquo;
+                        </span>
+                      </div>
+                      <div
+                        className={`font-display font-extrabold text-lg sm:text-xl leading-tight mt-0.5 font-mono ${
+                          reviewTotal > 0 ? 'text-amber-800' : 'text-zinc-900'
                         }`}
                       >
-                        {reviewTotal > 0 && (
-                          <span className="w-2 h-2 rounded-full bg-[#d97706] shrink-0" aria-hidden="true" />
-                        )}
-                        <span>Review</span>
-                      </span>
-                      <span
-                        className={`text-sm font-black leading-none group-hover:translate-x-0.5 transition-transform ${
-                          reviewTotal > 0 ? 'text-[#b45309]' : 'text-[#0f766e]'
+                        {reviewTotal}
+                      </div>
+                      <div
+                        className={`text-[11px] sm:text-xs font-semibold whitespace-nowrap mt-0.5 ${
+                          reviewTotal > 0 ? 'text-amber-800' : 'text-zinc-600'
                         }`}
-                        aria-hidden="true"
                       >
-                        &rsaquo;
-                      </span>
-                    </div>
-                    <div
-                      className={`font-display font-black text-lg sm:text-xl leading-tight mt-0.5 ${
-                        reviewTotal > 0 ? 'text-[#78350f]' : 'text-[#0b1536]'
-                      }`}
-                    >
-                      {reviewTotal}
-                    </div>
-                    <div
-                      className={`text-xs sm:text-[13px] font-bold whitespace-nowrap mt-0.5 ${
-                        reviewTotal > 0 ? 'text-[#92400e]' : 'text-[#115e59]'
-                      }`}
-                    >
-                      {officeReviewCount > 0
-                        ? officeReviewCount === 1
-                          ? '1 contract due'
-                          : `${officeReviewCount} contracts due`
-                        : actionableAlerts.length > 0
-                        ? `${actionableAlerts.length} inbox action${actionableAlerts.length > 1 ? 's' : ''}`
-                        : 'All clear'}
-                    </div>
-                  </button>
+                        {officeReviewCount > 0
+                          ? officeReviewCount === 1
+                            ? '1 contract due'
+                            : `${officeReviewCount} contracts due`
+                          : actionableAlerts.length > 0
+                          ? `${actionableAlerts.length} inbox action${actionableAlerts.length > 1 ? 's' : ''}`
+                          : 'All clear'}
+                      </div>
+                    </button>
+                  </div>
                 </section>
               );
             })()}
@@ -2330,87 +2324,89 @@ function CareerPlayHubContent() {
 
                   return (
                     <div className="space-y-3">
-                      {/* Open Stadium Illustration & Teams Showcase (No outer card container) */}
-                      <div className="relative pt-2.5 pb-1 px-2 sm:px-3">
-                        <OfficeStadiumSceneSvg />
-
-                        {/* Top Fixture Metadata Header with Restrained Local Contrast over Artwork */}
-                        <div className="relative z-10 flex items-start justify-between gap-2">
-                          <div className="flex items-center gap-2 min-w-0 bg-white/84 backdrop-blur-xs px-2.5 py-1.5 rounded-xl border border-white/90 shadow-2xs">
-                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-[#eff6ff] border border-blue-200 text-[#1d4ed8] shrink-0">
-                              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
-                                <path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V10h14v10zm-9.5-2.5L7 15l1.4-1.4 1.1 1.1 3.6-3.6L14.5 12.5l-5 5z" />
-                              </svg>
-                            </span>
-                            <div className="min-w-0">
-                              <div className="text-xs font-display font-black uppercase tracking-wider text-[#1e40af] leading-tight whitespace-nowrap">
-                                Next Fixture
-                              </div>
-                              <div className="text-[13px] sm:text-sm font-display font-extrabold text-[#0b1536] leading-tight whitespace-nowrap mt-0.5">
-                                {nextScheduled.cupId === CUP_IDS.PRESEASON
-                                  ? `${save.preseasonState?.tournamentName || 'Pre-Season Tour'}`
-                                  : nextScheduled.isCup
-                                  ? `${nextScheduled.cupName} • ${nextScheduled.roundName}`
-                                  : `Matchday ${(nextScheduled.fixture as LeagueFixture).round} of 38`}
-                              </div>
+                      {/* V11 Double-Bezel Matchday Showcase Card */}
+                      <div className="rounded-2xl bg-[#E8E6E1] border border-zinc-300/70 p-1 shadow-xs overflow-hidden">
+                        {/* Charcoal Stadium Header Strip */}
+                        <div
+                          data-force-white="true"
+                          className="relative rounded-t-xl overflow-hidden px-3.5 py-3 flex items-start justify-between gap-2"
+                          style={{
+                            backgroundColor: '#1E2024',
+                            borderBottom: '2px solid #D97706',
+                          }}
+                        >
+                          <img
+                            src="/images/photo_stadium_bowl.jpg"
+                            alt=""
+                            className="absolute inset-0 w-full h-full object-cover opacity-25 pointer-events-none"
+                          />
+                          <div className="relative z-10 min-w-0 text-left">
+                            <div className="text-[10.5px] font-mono font-bold uppercase tracking-wider text-amber-300 leading-tight whitespace-nowrap">
+                              Next Fixture
+                            </div>
+                            <div className="text-[13px] sm:text-sm font-display font-bold text-white leading-tight whitespace-nowrap mt-0.5">
+                              {nextScheduled.cupId === CUP_IDS.PRESEASON
+                                ? `${save.preseasonState?.tournamentName || 'Pre-Season Tour'}`
+                                : nextScheduled.isCup
+                                ? `${nextScheduled.cupName} • ${nextScheduled.roundName}`
+                                : `Matchday ${(nextScheduled.fixture as LeagueFixture).round} of 38`}
                             </div>
                           </div>
 
-                          <div className="text-right shrink-0 bg-white/84 backdrop-blur-xs px-2.5 py-1.5 rounded-xl border border-white/90 shadow-2xs">
-                            <div className="font-display font-extrabold text-[13px] sm:text-sm text-[#0b1536] leading-tight whitespace-nowrap">
+                          <div className="relative z-10 text-right shrink-0">
+                            <div className="font-display font-bold text-[12.5px] sm:text-sm text-white leading-tight whitespace-nowrap">
                               {formatOfficeFixtureDate(nextScheduled.fixture.date)}
                             </div>
-                            <div className="text-xs sm:text-[13px] font-bold text-[#1e3a8a] leading-tight flex items-center justify-end gap-1 mt-0.5 whitespace-nowrap">
-                              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current text-[#1d4ed8] shrink-0" aria-hidden="true">
-                                <path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zM2 22h19v-3H2v3zm14-12v7h3v-7h-3zm-4.5-9L2 6v2h19V6l-9.5-5z" />
-                              </svg>
-                              <span>{venueDisplay}</span>
+                            <div className="text-[11px] sm:text-xs font-semibold text-zinc-300 leading-tight mt-0.5 whitespace-nowrap">
+                              {venueDisplay}
                             </div>
                           </div>
                         </div>
 
-                        {/* 3D Fictional Jerseys & VS Showcase */}
-                        <div className="relative z-10 grid grid-cols-[1fr_auto_1fr] items-center pt-2.5 pb-1 px-0.5">
-                          {/* Home Club Kit */}
-                          <div className="flex flex-col items-center text-center min-w-0 office-kit-enter-left">
-                            <OfficeClubJerseySvg
-                              club={home}
-                              displayName={homeName}
-                              uid="office-hero-home"
-                            />
-                            <h3 className="font-display font-black text-[15px] sm:text-base text-[#0b1536] tracking-tight whitespace-nowrap mt-1">
-                              {homeName}
-                            </h3>
-                            <span className="mt-1 inline-block px-2.5 py-0.5 rounded-full bg-[#ccfbf1] text-[#065f46] border border-[#5eead4] text-[11px] font-extrabold uppercase tracking-wider">
-                              {isNeutralWembley ? 'Neutral' : 'Home'}
-                            </span>
-                          </div>
+                        {/* Crisp Matchup Body */}
+                        <div className="bg-white rounded-b-xl px-3 py-4">
+                          <div className="grid grid-cols-[1fr_auto_1fr] items-center px-0.5">
+                            {/* Home Club Kit */}
+                            <div className="flex flex-col items-center text-center min-w-0 office-kit-enter-left">
+                              <OfficeClubJerseySvg
+                                club={home}
+                                displayName={homeName}
+                                uid="office-hero-home"
+                              />
+                              <h3 className="font-display font-extrabold text-[15px] sm:text-base text-zinc-900 tracking-tight truncate max-w-full mt-1.5">
+                                {homeName}
+                              </h3>
+                              <span className="mt-1 inline-block px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10.5px] font-mono font-bold uppercase tracking-wider">
+                                {isNeutralWembley ? 'Neutral' : 'Home'}
+                              </span>
+                            </div>
 
-                          {/* Center VS */}
-                          <div className="flex flex-col items-center justify-center px-1.5 -mt-5">
-                            <span className="w-9 h-9 rounded-full bg-white/92 backdrop-blur-xs border border-blue-200 shadow-xs flex items-center justify-center font-display font-black text-sm text-[#1e40af] tracking-wider">
-                              vs
-                            </span>
-                          </div>
+                            {/* Center VS */}
+                            <div className="flex flex-col items-center justify-center px-1.5 -mt-5">
+                              <span className="w-9 h-9 rounded-full bg-[#F7F6F3] border border-[#E2DFD9] flex items-center justify-center font-display font-black text-xs text-zinc-700 uppercase tracking-wider">
+                                vs
+                              </span>
+                            </div>
 
-                          {/* Away Club Kit */}
-                          <div className="flex flex-col items-center text-center min-w-0 office-kit-enter-right">
-                            <OfficeClubJerseySvg
-                              club={away}
-                              displayName={awayName}
-                              uid="office-hero-away"
-                            />
-                            <h3 className="font-display font-black text-[15px] sm:text-base text-[#0b1536] tracking-tight whitespace-nowrap mt-1">
-                              {awayName}
-                            </h3>
-                            <span className="mt-1 inline-block px-2.5 py-0.5 rounded-full bg-[#dbeafe] text-[#1e3a8a] border border-[#93c5fd] text-[11px] font-extrabold uppercase tracking-wider">
-                              {isNeutralWembley ? 'Neutral' : 'Away'}
-                            </span>
+                            {/* Away Club Kit */}
+                            <div className="flex flex-col items-center text-center min-w-0 office-kit-enter-right">
+                              <OfficeClubJerseySvg
+                                club={away}
+                                displayName={awayName}
+                                uid="office-hero-away"
+                              />
+                              <h3 className="font-display font-extrabold text-[15px] sm:text-base text-zinc-900 tracking-tight truncate max-w-full mt-1.5">
+                                {awayName}
+                              </h3>
+                              <span className="mt-1 inline-block px-2.5 py-0.5 rounded-full bg-[#F7F6F3] text-zinc-700 border border-[#E2DFD9] text-[10.5px] font-mono font-bold uppercase tracking-wider">
+                                {isNeutralWembley ? 'Neutral' : 'Away'}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Action Hierarchy: Unmistakable Primary CTA + Clear Secondary Pills */}
+                      {/* Action Hierarchy: Tactile Amber Primary CTA + Clean V11 Secondary Pills */}
                       <div className="relative z-10 space-y-2">
                         <button
                           type="button"
@@ -2454,7 +2450,7 @@ function CareerPlayHubContent() {
                             }
                             setActiveMatchFixture(nextScheduled.fixture);
                           }}
-                          className="office-play-match-btn w-full py-3.5 px-6 rounded-full font-display font-black text-base sm:text-[17px] tracking-tight flex items-center justify-center gap-2 cursor-pointer min-h-[50px] shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d5eff]"
+                          className="office-play-match-btn w-full py-3.5 px-6 rounded-xl font-display font-extrabold text-base sm:text-[17px] tracking-tight flex items-center justify-center gap-2 cursor-pointer min-h-[50px] shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D97706]"
                         >
                           <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current shrink-0" aria-hidden="true">
                             <path d="M8 5v14l11-7z" />
@@ -2463,16 +2459,15 @@ function CareerPlayHubContent() {
                           <span className="text-lg leading-none font-bold ml-0.5" aria-hidden="true">&rsaquo;</span>
                         </button>
 
-                        {/* Secondary Match Actions (14px functional text, clearly subordinate to Play Match) */}
                         <div className="grid grid-cols-2 gap-2">
                           <button
                             type="button"
                             data-office-ui="true"
                             disabled={simulating}
                             onClick={handlePlayNextMatchInstant}
-                            className="py-2.5 px-3 rounded-full bg-white/85 hover:bg-white border border-slate-300 flex items-center justify-center gap-1.5 font-display font-extrabold text-sm text-[#0b1536] cursor-pointer min-h-[44px] transition-all active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-[#1d5eff]"
+                            className="py-2.5 px-3 rounded-xl bg-white hover:bg-[#F7F6F3] border border-zinc-300/80 flex items-center justify-center gap-1.5 font-display font-bold text-sm text-zinc-900 cursor-pointer min-h-[44px] transition-all active:scale-[0.98] shadow-2xs focus-visible:outline-2 focus-visible:outline-[#D97706]"
                           >
-                            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[#1d4ed8]" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-amber-600" aria-hidden="true">
                               <path d="M7 2v11h3v9l7-12h-4l4-8z" />
                             </svg>
                             <span>Instant Sim</span>
@@ -2482,9 +2477,9 @@ function CareerPlayHubContent() {
                             type="button"
                             data-office-ui="true"
                             onClick={() => setMatchOverviewModal({ type: 'preview', fixture: nextScheduled.fixture })}
-                            className="py-2.5 px-3 rounded-full bg-white/85 hover:bg-white border border-slate-300 flex items-center justify-center gap-1.5 font-display font-extrabold text-sm text-[#0b1536] cursor-pointer min-h-[44px] transition-all active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-[#1d5eff]"
+                            className="py-2.5 px-3 rounded-xl bg-white hover:bg-[#F7F6F3] border border-zinc-300/80 flex items-center justify-center gap-1.5 font-display font-bold text-sm text-zinc-900 cursor-pointer min-h-[44px] transition-all active:scale-[0.98] shadow-2xs focus-visible:outline-2 focus-visible:outline-[#D97706]"
                           >
-                            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[#1d4ed8]" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-zinc-700" aria-hidden="true">
                               <path d="M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zm5.6 8H19v6h-2.8v-6z" />
                             </svg>
                             <span>Match Dossier</span>
@@ -2669,90 +2664,92 @@ function CareerPlayHubContent() {
                 </div>
               )}
 
-              {/* 4-Column Colourful Icon Shortcuts Directly on Page Background */}
-              <div className="grid grid-cols-4 gap-2">
-                {/* Tactics (Teal Squad Semantic) */}
-                <button
-                  type="button"
-                  data-office-ui="true"
-                  onClick={() => {
-                    handleTabChange('squad');
-                    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-                  }}
-                  className="rounded-2xl hover:bg-teal-500/[0.06] py-1.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 min-h-[68px] focus-visible:outline-2 focus-visible:outline-[#0f766e]"
-                >
-                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#ccfbf1] text-[#065f46] border border-[#5eead4] flex items-center justify-center shrink-0 shadow-2xs">
-                    <svg viewBox="0 0 24 24" className="w-5.5 h-5.5 fill-none stroke-current" strokeWidth="2" aria-hidden="true">
-                      <circle cx="6" cy="6" r="2" fill="currentColor" />
-                      <circle cx="18" cy="6" r="2" fill="currentColor" />
-                      <circle cx="12" cy="12" r="2" fill="currentColor" />
-                      <circle cx="6" cy="18" r="2" fill="currentColor" />
-                      <circle cx="18" cy="18" r="2" fill="currentColor" />
-                      <path d="M7.5 7.5 10.5 10.5M16.5 7.5 13.5 10.5M10.5 13.5 7.5 16.5M13.5 13.5 16.5 16.5" strokeLinecap="round" />
-                    </svg>
-                  </div>
-                  <span className="font-display font-extrabold text-[13.5px] sm:text-sm text-[#0b1536] leading-tight whitespace-nowrap">
-                    Tactics
-                  </span>
-                </button>
+              {/* V11 Tactile Quick Actions Tray */}
+              <div className="rounded-2xl bg-[#E8E6E1] border border-zinc-300/70 p-1 shadow-xs">
+                <div className="bg-white rounded-xl p-2 grid grid-cols-4 gap-2">
+                  {/* Tactics */}
+                  <button
+                    type="button"
+                    data-office-ui="true"
+                    onClick={() => {
+                      handleTabChange('squad');
+                      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                    }}
+                    className="my11-tactile rounded-xl bg-[#F7F6F3] hover:bg-white border border-[#E2DFD9] hover:border-amber-400/80 py-2.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer min-h-[68px]"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-[#1E2024] text-amber-300 flex items-center justify-center shrink-0">
+                      <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-none stroke-current" strokeWidth="2" aria-hidden="true">
+                        <circle cx="6" cy="6" r="2" fill="currentColor" />
+                        <circle cx="18" cy="6" r="2" fill="currentColor" />
+                        <circle cx="12" cy="12" r="2" fill="currentColor" />
+                        <circle cx="6" cy="18" r="2" fill="currentColor" />
+                        <circle cx="18" cy="18" r="2" fill="currentColor" />
+                        <path d="M7.5 7.5 10.5 10.5M16.5 7.5 13.5 10.5M10.5 13.5 7.5 16.5M13.5 13.5 16.5 16.5" strokeLinecap="round" />
+                      </svg>
+                    </div>
+                    <span className="font-display font-bold text-xs text-zinc-900 leading-tight whitespace-nowrap">
+                      Tactics
+                    </span>
+                  </button>
 
-                {/* Calendar (Blue Match/Schedule Semantic) */}
-                <button
-                  type="button"
-                  data-office-ui="true"
-                  onClick={() => {
-                    handleTabChange('fixtures');
-                    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-                  }}
-                  className="rounded-2xl hover:bg-blue-500/[0.06] py-1.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 min-h-[68px] focus-visible:outline-2 focus-visible:outline-[#1d5eff]"
-                >
-                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#dbeafe] text-[#1e40af] border border-[#93c5fd] flex items-center justify-center shrink-0 shadow-2xs">
-                    <svg viewBox="0 0 24 24" className="w-5.5 h-5.5 fill-current" aria-hidden="true">
-                      <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm-12-8h5v5H7v-5z" />
-                    </svg>
-                  </div>
-                  <span className="font-display font-extrabold text-[13.5px] sm:text-sm text-[#0b1536] leading-tight whitespace-nowrap">
-                    Calendar
-                  </span>
-                </button>
+                  {/* Calendar */}
+                  <button
+                    type="button"
+                    data-office-ui="true"
+                    onClick={() => {
+                      handleTabChange('fixtures');
+                      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                    }}
+                    className="my11-tactile rounded-xl bg-[#F7F6F3] hover:bg-white border border-[#E2DFD9] hover:border-amber-400/80 py-2.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer min-h-[68px]"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-[#1E2024] text-white flex items-center justify-center shrink-0">
+                      <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
+                        <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm-12-8h5v5H7v-5z" />
+                      </svg>
+                    </div>
+                    <span className="font-display font-bold text-xs text-zinc-900 leading-tight whitespace-nowrap">
+                      Calendar
+                    </span>
+                  </button>
 
-                {/* Training (Mint/Teal Squad Semantic) */}
-                <button
-                  type="button"
-                  data-office-ui="true"
-                  onClick={() => {
-                    setSquadInitialViewMode('training');
-                    handleTabChange('squad');
-                    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-                  }}
-                  className="rounded-2xl hover:bg-emerald-500/[0.06] py-1.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 min-h-[68px] focus-visible:outline-2 focus-visible:outline-[#047857]"
-                >
-                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#d1fae5] text-[#065f46] border border-[#6ee7b7] flex items-center justify-center shrink-0 shadow-2xs">
-                    <svg viewBox="0 0 24 24" className="w-5.5 h-5.5 fill-current" aria-hidden="true">
-                      <path d="M20.57 14.86 22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z" />
-                    </svg>
-                  </div>
-                  <span className="font-display font-extrabold text-[13.5px] sm:text-sm text-[#0b1536] leading-tight whitespace-nowrap">
-                    Training
-                  </span>
-                </button>
+                  {/* Training */}
+                  <button
+                    type="button"
+                    data-office-ui="true"
+                    onClick={() => {
+                      setSquadInitialViewMode('training');
+                      handleTabChange('squad');
+                      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                    }}
+                    className="my11-tactile rounded-xl bg-[#F7F6F3] hover:bg-white border border-[#E2DFD9] hover:border-amber-400/80 py-2.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer min-h-[68px]"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-[#1E2024] text-emerald-300 flex items-center justify-center shrink-0">
+                      <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
+                        <path d="M20.57 14.86 22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z" />
+                      </svg>
+                    </div>
+                    <span className="font-display font-bold text-xs text-zinc-900 leading-tight whitespace-nowrap">
+                      Training
+                    </span>
+                  </button>
 
-                {/* Boardroom (Teal Financial/Club Semantic) */}
-                <button
-                  type="button"
-                  data-office-ui="true"
-                  onClick={() => navigateToSection('transfers', 'board', 'board-room-section')}
-                  className="rounded-2xl hover:bg-teal-500/[0.06] py-1.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 min-h-[68px] focus-visible:outline-2 focus-visible:outline-[#0f766e]"
-                >
-                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#ccfbf1] text-[#065f46] border border-[#5eead4] flex items-center justify-center shrink-0 shadow-2xs">
-                    <svg viewBox="0 0 24 24" className="w-5.5 h-5.5 fill-current" aria-hidden="true">
-                      <path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zM2 22h19v-3H2v3zm14-12v7h3v-7h-3zm-4.5-9L2 6v2h19V6l-9.5-5z" />
-                    </svg>
-                  </div>
-                  <span className="font-display font-extrabold text-[13.5px] sm:text-sm text-[#0b1536] leading-tight whitespace-nowrap">
-                    Boardroom
-                  </span>
-                </button>
+                  {/* Boardroom */}
+                  <button
+                    type="button"
+                    data-office-ui="true"
+                    onClick={() => navigateToSection('transfers', 'board', 'board-room-section')}
+                    className="my11-tactile rounded-xl bg-[#F7F6F3] hover:bg-white border border-[#E2DFD9] hover:border-amber-400/80 py-2.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer min-h-[68px]"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-[#1E2024] text-zinc-200 flex items-center justify-center shrink-0">
+                      <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
+                        <path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zM2 22h19v-3H2v3zm14-12v7h3v-7h-3zm-4.5-9L2 6v2h19V6l-9.5-5z" />
+                      </svg>
+                    </div>
+                    <span className="font-display font-bold text-xs text-zinc-900 leading-tight whitespace-nowrap">
+                      Boardroom
+                    </span>
+                  </button>
+                </div>
               </div>
             </section>
 
@@ -2771,30 +2768,35 @@ function CareerPlayHubContent() {
                 >
                   <button
                     type="button"
+                    data-force-white="true"
                     onClick={() => {
                       navigateToSection('transfers', 'infrastructure', 'transfer-infrastructure-section');
                     }}
-                    className="w-full text-left rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-3.5 sm:p-4 flex items-center justify-between gap-3 shadow-sm hover:brightness-110 active:scale-[0.99] transition-all cursor-pointer group border border-indigo-900/50"
+                    className="w-full text-left rounded-2xl p-3.5 sm:p-4 flex items-center justify-between gap-3 shadow-sm hover:brightness-110 active:scale-[0.99] transition-all cursor-pointer group border border-zinc-800"
+                    style={{
+                      backgroundColor: '#1E2024',
+                      borderBottom: '2px solid #D97706',
+                    }}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-xl shrink-0 group-hover:scale-105 transition-transform">
-                        🏟️
+                      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center font-display font-bold text-xs text-amber-300 shrink-0 group-hover:scale-105 transition-transform">
+                        HQ
                       </div>
                       <div className="min-w-0 space-y-0.5">
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-display font-black uppercase tracking-wider text-indigo-400">
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-300">
                             Facilities &amp; Stadium Empire
                           </span>
                           {activeCount > 0 && (
-                            <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-amber-400 text-amber-950 animate-pulse">
-                              🏗️ {activeCount} Upgrading
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-400 text-zinc-950">
+                              {activeCount} Upgrading
                             </span>
                           )}
                         </div>
-                        <h4 className="font-display font-black text-sm sm:text-base text-white truncate">
+                        <h4 className="font-display font-extrabold text-sm sm:text-base text-white truncate">
                           {save.club.stadiumName || 'Club Stadium'} • {cap.toLocaleString()} seats
                         </h4>
-                        <div className="flex items-center gap-3 text-xs text-indigo-200/90 font-medium">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-zinc-300 font-medium">
                           <span>Stadium: Tier {stadLvl}</span>
                           <span>•</span>
                           <span>Training: Tier {infra?.trainingGroundLevel || 1}</span>
@@ -2804,9 +2806,9 @@ function CareerPlayHubContent() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 text-xs font-display font-bold text-indigo-300 group-hover:text-white transition-colors shrink-0">
-                      <span className="hidden sm:inline">Manage Facilities</span>
-                      <span className="text-base font-black leading-none group-hover:translate-x-0.5 transition-transform">›</span>
+                    <div className="flex items-center gap-1.5 text-xs font-display font-bold text-amber-300 group-hover:text-white transition-colors shrink-0">
+                      <span className="hidden sm:inline">Manage</span>
+                      <span className="text-base font-black leading-none group-hover:translate-x-0.5 transition-transform">&rsaquo;</span>
                     </div>
                   </button>
                 </section>

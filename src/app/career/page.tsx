@@ -227,8 +227,7 @@ export default function CareerEntryPage() {
                     <div className="space-y-2.5">
                       <Link
                         href={`/career/setup?slot=${slot.slotId}`}
-                        data-force-white="true"
-                        className="office-play-match-btn w-full py-3 px-4 rounded-xl text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
+                        className="office-play-match-btn w-full py-3 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
                       >
                         <span>Start New Career</span>
                         <span aria-hidden="true">-&gt;</span>
@@ -323,8 +322,7 @@ export default function CareerEntryPage() {
                   <div className="space-y-2">
                     <Link
                       href={`/career/play?slot=${slot.slotId}`}
-                      data-force-white="true"
-                      className="office-play-match-btn w-full py-3 px-4 rounded-xl text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
+                      className="office-play-match-btn w-full py-3 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <span>Continue Career</span>
                       <span aria-hidden="true">-&gt;</span>
