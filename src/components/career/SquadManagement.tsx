@@ -56,10 +56,12 @@ import {
   IconHandshake,
   IconAlert,
   IconTrophy,
+  IconBolt,
 } from './GameIcons';
 import { getPlayerCompleteStats } from '../../career/playerStats';
 import {
   calculateFormRatingBonus,
+  calculateEaFcFaceStats,
   getEffectiveRating,
   applyWeeklySquadTraining,
   WeeklyTrainingResult,
@@ -165,7 +167,7 @@ export function SquadManagement({
   const [showReleaseModal, setShowReleaseModal] = useState<boolean>(false);
   const [releaseActionType, setReleaseActionType] = useState<'mutual' | 'unilateral'>('mutual');
   const [squadActionMessage, setSquadActionMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
-  const [playerModalTab, setPlayerModalTab] = useState<'profile' | 'stats' | 'market'>('profile');
+  const [playerModalTab, setPlayerModalTab] = useState<'profile' | 'attributes' | 'stats' | 'market'>('profile');
   const playerModalCardRef = React.useRef<HTMLDivElement>(null);
   const modalSwipeStartRef = React.useRef<{ x: number; y: number } | null>(null);
 
@@ -199,7 +201,7 @@ export function SquadManagement({
     const dy = e.changedTouches[0].clientY - modalSwipeStartRef.current.y;
     modalSwipeStartRef.current = null;
     if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.3) return;
-    const order: Array<'profile' | 'stats' | 'market'> = ['profile', 'stats', 'market'];
+    const order: Array<'profile' | 'attributes' | 'stats' | 'market'> = ['profile', 'attributes', 'stats', 'market'];
     const idx = order.indexOf(playerModalTab);
     if (dx < 0 && idx < order.length - 1) setPlayerModalTab(order[idx + 1]);
     if (dx > 0 && idx > 0) setPlayerModalTab(order[idx - 1]);
@@ -2790,6 +2792,97 @@ export function SquadManagement({
                   </button>
                 </div>
               </div>
+            ) : playerModalTab === 'attributes' ? (
+              /* DETAILED ATTRIBUTES & SQUAD ROLE ASSESSMENT TAB */
+              (() => {
+                const fs = calculateEaFcFaceStats(selectedPlayer);
+                const statItems = fs.isGoalkeeper
+                  ? [
+                      { label: 'Diving', val: fs.pac, key: 'DIV' },
+                      { label: 'Handling', val: fs.sho, key: 'HAN' },
+                      { label: 'Kicking', val: fs.pas, key: 'KIC' },
+                      { label: 'Reflexes', val: fs.dri, key: 'REF' },
+                      { label: 'Speed', val: fs.def, key: 'SPD' },
+                      { label: 'Positioning', val: fs.phy, key: 'POS' },
+                    ]
+                  : [
+                      { label: 'Pace', val: fs.pac, key: 'PAC' },
+                      { label: 'Shooting', val: fs.sho, key: 'SHO' },
+                      { label: 'Passing', val: fs.pas, key: 'PAS' },
+                      { label: 'Dribbling', val: fs.dri, key: 'DRI' },
+                      { label: 'Defending', val: fs.def, key: 'DEF' },
+                      { label: 'Physicality', val: fs.phy, key: 'PHY' },
+                    ];
+                const peakAge = 27;
+
+                return (
+                  <div className="min-h-full flex flex-col justify-between gap-3 text-xs">
+                    <div className="rounded-2xl p-3.5 space-y-3 bg-slate-50 border border-slate-200">
+                      <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-700 tracking-wider">
+                        <span>Detailed Attribute Ratings</span>
+                        <span className="font-mono text-slate-500">{fs.isGoalkeeper ? 'Goalkeeper Matrix' : 'Outfield Matrix'}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {statItems.map((item) => (
+                          <div key={item.key} className="space-y-1.5 bg-white p-2.5 rounded-xl border border-slate-200/80">
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="font-bold text-slate-700 text-[11px]">{item.label}</span>
+                              <span className="font-mono font-black text-slate-950 text-xs">{item.val}</span>
+                            </div>
+                            <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${
+                                  item.val >= 88
+                                    ? 'bg-amber-500'
+                                    : item.val >= 80
+                                    ? 'bg-blue-600'
+                                    : item.val >= 70
+                                    ? 'bg-emerald-500'
+                                    : 'bg-slate-400'
+                                }`}
+                                style={{ width: `${Math.min(100, (item.val / 99) * 100)}%` }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Squad Role & Development Assessment */}
+                    <div className="rounded-2xl p-3.5 bg-slate-50 border border-slate-200 space-y-2.5">
+                      <div className="text-[10px] font-black uppercase text-slate-700 tracking-wider">
+                        Squad Role &amp; Development Assessment
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="bg-white p-2.5 rounded-xl border border-slate-200/80">
+                          <span className="text-[9px] uppercase font-bold text-slate-500 block">Natural Positions</span>
+                          <span className="font-display font-black text-slate-900 text-xs mt-0.5 block">
+                            {(selectedPlayer.naturalPositions || [selectedPlayer.position]).join(', ')}
+                          </span>
+                        </div>
+                        <div className="bg-white p-2.5 rounded-xl border border-slate-200/80">
+                          <span className="text-[9px] uppercase font-bold text-slate-500 block">Development Stage</span>
+                          <span className="font-display font-black text-slate-900 text-xs mt-0.5 block">
+                            {selectedPlayer.age} yrs ({selectedPlayer.age < peakAge ? 'Developing' : selectedPlayer.age <= peakAge + 2 ? 'Prime' : 'Veteran'})
+                          </span>
+                        </div>
+                        <div className="bg-white p-2.5 rounded-xl border border-slate-200/80">
+                          <span className="text-[9px] uppercase font-bold text-slate-500 block">Homegrown Status</span>
+                          <span className="font-display font-black text-slate-900 text-xs mt-0.5 block">
+                            {isHomegrownPlayer(selectedPlayer) ? 'Homegrown Eligible' : 'Non-Homegrown'}
+                          </span>
+                        </div>
+                        <div className="bg-white p-2.5 rounded-xl border border-slate-200/80">
+                          <span className="text-[9px] uppercase font-bold text-slate-500 block">Potential / Morale</span>
+                          <span className="font-display font-black text-blue-700 text-xs mt-0.5 block">
+                            POT {selectedPlayer.potential ?? selectedPlayer.rating} • {Math.round(selectedPlayer.morale ?? 80)}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()
             ) : playerModalTab === 'stats' ? (
               /* STATS & HISTORICAL CAREER DOSSIER TAB */
               (() => {
@@ -2831,14 +2924,14 @@ export function SquadManagement({
                         <span className="font-display font-black text-blue-700 text-base">
                           {pStats.currentSeason.goals}
                         </span>
-                        <span className="text-[8px] text-slate-500 block">⚽ Goals</span>
+                        <span className="text-[8px] text-slate-500 block">Scored</span>
                       </div>
                       <div className="bg-slate-50 border border-slate-200 p-2 rounded-xl">
                         <span className="text-[9px] uppercase font-bold text-slate-500 block">Assists</span>
                         <span className="font-display font-black text-blue-600 text-base">
                           {pStats.currentSeason.assists}
                         </span>
-                        <span className="text-[8px] text-slate-500 block">🎯 Assists</span>
+                        <span className="text-[8px] text-slate-500 block">Created</span>
                       </div>
                       <div className="bg-slate-50 border border-slate-200 p-2 rounded-xl">
                         <span className="text-[9px] uppercase font-bold text-slate-500 block">
@@ -2848,7 +2941,7 @@ export function SquadManagement({
                           {isGkOrDef ? pStats.currentSeason.cleanSheets : (pStats.currentSeason.appearances > 0 ? pStats.currentSeason.averageRating : '–')}
                         </span>
                         <span className="text-[8px] text-slate-500 block">
-                          {isGkOrDef ? '🧤 Zeroes' : '⭐ Avg OVR'}
+                          {isGkOrDef ? 'Shutouts' : 'Avg OVR'}
                         </span>
                       </div>
                     </div>
@@ -2858,20 +2951,21 @@ export function SquadManagement({
                       <div>
                         <span className="text-[9px] uppercase font-bold text-slate-500 block">Cards</span>
                         <span className="font-mono font-bold text-xs mt-0.5 inline-flex items-center gap-1.5">
-                          <span className="text-amber-600 font-extrabold">🟨 {pStats.currentSeason.yellowCards}</span>
-                          <span className="text-rose-600 font-extrabold">🟥 {pStats.currentSeason.redCards}</span>
+                          <span className="text-amber-700 font-extrabold">{pStats.currentSeason.yellowCards} YC</span>
+                          <span className="text-rose-700 font-extrabold">{pStats.currentSeason.redCards} RC</span>
                         </span>
                       </div>
                       <div>
                         <span className="text-[9px] uppercase font-bold text-slate-500 block">Man of Match</span>
-                        <span className="font-display font-black text-amber-700 text-xs mt-0.5 block">
-                          🏆 {pStats.currentSeason.manOfTheMatch} Awards
+                        <span className="font-display font-black text-amber-700 text-xs mt-0.5 inline-flex items-center gap-1">
+                          <IconTrophy className="w-3 h-3" />
+                          <span>{pStats.currentSeason.manOfTheMatch} Awards</span>
                         </span>
                       </div>
                       <div>
                         <span className="text-[9px] uppercase font-bold text-slate-500 block">Avg Match Rating</span>
                         <span className="font-mono font-black text-blue-700 text-xs mt-0.5 block">
-                          ⭐ {pStats.currentSeason.appearances > 0 ? `${pStats.currentSeason.averageRating} / 10` : '–'}
+                          {pStats.currentSeason.appearances > 0 ? `${pStats.currentSeason.averageRating} / 10` : '–'}
                         </span>
                       </div>
                     </div>
@@ -2879,8 +2973,8 @@ export function SquadManagement({
                     {/* Previous Seasons Career History Table */}
                     <div className="space-y-1.5 pt-1">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-display font-black text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                          <span>📜</span> Career History &amp; Previous Seasons
+                        <span className="font-display font-black text-slate-800 uppercase tracking-wider text-[11px]">
+                          Career History &amp; Previous Seasons
                         </span>
                         <span className="text-[9px] font-mono text-slate-500">
                           {pStats.careerTotals.appearances} Total Career Apps
@@ -3321,41 +3415,53 @@ export function SquadManagement({
 
                 {/* Bottom Thumb-Zone Tab Switcher (Swipeable or Tap) */}
                 <div className="shrink-0 border-t border-[#E2DFD9] bg-[#F7F6F3] p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-                  <div className="grid grid-cols-3 gap-1.5">
+                  <div className="grid grid-cols-4 gap-1.5">
                     <button
                       type="button"
                       onClick={() => setPlayerModalTab('profile')}
-                      className={`py-2 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate flex items-center justify-center gap-1.5 ${
+                      className={`py-2 px-1 rounded-xl text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate flex items-center justify-center gap-1 ${
                         playerModalTab === 'profile'
                           ? 'office-nav-tab-active shadow-sm'
                           : 'bg-white border border-[#E2DFD9] text-zinc-700'
                       }`}
                     >
-                      <IconUser className="w-3.5 h-3.5" />
+                      <IconUser className="w-3.5 h-3.5 shrink-0" />
                       <span>Profile</span>
                     </button>
                     <button
                       type="button"
+                      onClick={() => setPlayerModalTab('attributes')}
+                      className={`py-2 px-1 rounded-xl text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate flex items-center justify-center gap-1 ${
+                        playerModalTab === 'attributes'
+                          ? 'office-nav-tab-active shadow-sm'
+                          : 'bg-white border border-[#E2DFD9] text-zinc-700'
+                      }`}
+                    >
+                      <IconBolt className="w-3.5 h-3.5 shrink-0" />
+                      <span>Attrs</span>
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => setPlayerModalTab('stats')}
-                      className={`py-2 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate flex items-center justify-center gap-1.5 ${
+                      className={`py-2 px-1 rounded-xl text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate flex items-center justify-center gap-1 ${
                         playerModalTab === 'stats'
                           ? 'office-nav-tab-active shadow-sm'
                           : 'bg-white border border-[#E2DFD9] text-zinc-700'
                       }`}
                     >
-                      <IconBarChart className="w-3.5 h-3.5" />
+                      <IconBarChart className="w-3.5 h-3.5 shrink-0" />
                       <span>Stats</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setPlayerModalTab('market')}
-                      className={`py-2 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate flex items-center justify-center gap-1.5 ${
+                      className={`py-2 px-1 rounded-xl text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate flex items-center justify-center gap-1 ${
                         playerModalTab === 'market'
                           ? 'office-nav-tab-active shadow-sm'
                           : 'bg-white border border-[#E2DFD9] text-zinc-700'
                       }`}
                     >
-                      <IconBriefcase className="w-3.5 h-3.5" />
+                      <IconBriefcase className="w-3.5 h-3.5 shrink-0" />
                       <span>Market</span>
                     </button>
                   </div>
