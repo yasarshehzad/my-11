@@ -1802,7 +1802,8 @@ function CareerPlayHubContent() {
           role="status"
           aria-live="polite"
           data-force-white="true"
-          className="fixed top-18 left-1/2 -translate-x-1/2 z-50 bg-[#1E2024] border border-amber-500/60 text-white px-4 py-2 rounded-xl font-display font-bold text-xs tracking-wide shadow-xl flex items-center gap-2 max-w-[92vw]"
+          className="fixed top-18 left-1/2 -translate-x-1/2 z-50 bg-[#1E2024] border text-white px-4 py-2 rounded-xl font-display font-bold text-xs tracking-wide shadow-xl flex items-center gap-2 max-w-[92vw]"
+          style={{ backgroundColor: '#1E2024', borderColor: '#D97706' }}
         >
           <span className="text-amber-300 shrink-0">✓</span>
           <span className="truncate">{toastMessage}</span>
