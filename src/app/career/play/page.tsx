@@ -2680,7 +2680,7 @@ function CareerPlayHubContent() {
                     }}
                     className="my11-tactile rounded-xl bg-[#F7F6F3] hover:bg-white border border-[#E2DFD9] hover:border-amber-400/80 py-2.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer min-h-[68px]"
                   >
-                    <div className="w-9 h-9 rounded-lg bg-[#1E2024] text-amber-300 flex items-center justify-center shrink-0">
+                    <div className="w-9 h-9 rounded-lg bg-[#1E2024] text-white flex items-center justify-center shrink-0">
                       <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-none stroke-current" strokeWidth="2" aria-hidden="true">
                         <circle cx="6" cy="6" r="2" fill="currentColor" />
                         <circle cx="18" cy="6" r="2" fill="currentColor" />
@@ -2726,7 +2726,7 @@ function CareerPlayHubContent() {
                     }}
                     className="my11-tactile rounded-xl bg-[#F7F6F3] hover:bg-white border border-[#E2DFD9] hover:border-amber-400/80 py-2.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer min-h-[68px]"
                   >
-                    <div className="w-9 h-9 rounded-lg bg-[#1E2024] text-emerald-300 flex items-center justify-center shrink-0">
+                    <div className="w-9 h-9 rounded-lg bg-[#1E2024] text-white flex items-center justify-center shrink-0">
                       <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
                         <path d="M20.57 14.86 22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z" />
                       </svg>
@@ -2743,7 +2743,7 @@ function CareerPlayHubContent() {
                     onClick={() => navigateToSection('transfers', 'board', 'board-room-section')}
                     className="my11-tactile rounded-xl bg-[#F7F6F3] hover:bg-white border border-[#E2DFD9] hover:border-amber-400/80 py-2.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer min-h-[68px]"
                   >
-                    <div className="w-9 h-9 rounded-lg bg-[#1E2024] text-zinc-200 flex items-center justify-center shrink-0">
+                    <div className="w-9 h-9 rounded-lg bg-[#1E2024] text-white flex items-center justify-center shrink-0">
                       <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
                         <path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zM2 22h19v-3H2v3zm14-12v7h3v-7h-3zm-4.5-9L2 6v2h19V6l-9.5-5z" />
                       </svg>

@@ -50,6 +50,18 @@ import { formatCareerDate } from '../../career/formatters';
 import { getEffectiveClubName, getAllClubs } from '../../career/clubs';
 import { CONTINENTAL_EUROPEAN_CLUBS } from '../../career/continentalClubs';
 import { EaFcCard } from './EaFcCard';
+import {
+  IconUser,
+  IconBarChart,
+  IconBriefcase,
+  IconBolt,
+  IconCrown,
+  IconGlobe,
+  IconStar,
+  IconLock,
+  IconHandshake,
+  IconClock,
+} from './GameIcons';
 import { calculateEaFcFaceStats } from '../../career/formAndProgression';
 import { getPlayerBio } from '../../career/playerBioDatabase';
 import {
@@ -1317,13 +1329,14 @@ export function TransferHub({
                       setPlayerPoolType('modern');
                       setCurrentPage(1);
                     }}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-display font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-display font-bold uppercase tracking-wider transition-all cursor-pointer inline-flex items-center gap-1 ${
                       effectivePlayerPoolType === 'modern'
                         ? 'office-nav-tab-active shadow-sm'
                         : 'text-zinc-700 hover:text-zinc-900'
                     }`}
                   >
-                    ⚡ Modern
+                    <IconBolt className="w-3 h-3" />
+                    <span>Modern</span>
                   </button>
                 )}
                 {(configuredPool === 'legends' || configuredPool === 'all') && (
@@ -1333,13 +1346,14 @@ export function TransferHub({
                       setPlayerPoolType('legends');
                       setCurrentPage(1);
                     }}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer inline-flex items-center gap-1 ${
                       effectivePlayerPoolType === 'legends'
                         ? 'bg-amber-400 text-slate-950 font-black shadow-sm'
                         : 'text-amber-800 hover:text-amber-900'
                     }`}
                   >
-                    👑 Icons
+                    <IconCrown className="w-3 h-3" />
+                    <span>Icons</span>
                   </button>
                 )}
                 {configuredPool === 'all' && (
@@ -1349,13 +1363,14 @@ export function TransferHub({
                       setPlayerPoolType('all');
                       setCurrentPage(1);
                     }}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-display font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-display font-bold uppercase tracking-wider transition-all cursor-pointer inline-flex items-center gap-1 ${
                       effectivePlayerPoolType === 'all'
                         ? 'office-nav-tab-active shadow-sm'
                         : 'text-zinc-700 hover:text-zinc-900'
                     }`}
                   >
-                    🌐 All
+                    <IconGlobe className="w-3 h-3" />
+                    <span>All</span>
                   </button>
                 )}
               </div>
@@ -1691,13 +1706,13 @@ export function TransferHub({
                             type="button"
                             onClick={() => handleToggleShortlist(player.id)}
                             title={isShortlisted ? 'Remove from Shortlist' : 'Add to Shortlist'}
-                            className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs transition-colors cursor-pointer ${
+                            className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
                               isShortlisted
-                                ? 'bg-amber-100 text-amber-600 border border-amber-300 shadow-2xs font-bold'
+                                ? 'bg-amber-100 text-amber-600 border border-amber-300 shadow-2xs'
                                 : 'bg-slate-100 text-slate-500 hover:text-slate-800 border border-slate-200'
                             }`}
                           >
-                            ★
+                            <IconStar className="w-3.5 h-3.5" filled={isShortlisted} />
                           </button>
 
                           {onOpenCompare && (
@@ -1705,9 +1720,9 @@ export function TransferHub({
                               type="button"
                               onClick={() => onOpenCompare(player)}
                               title={`Compare ${player.name} with squad or target`}
-                              className="w-7 h-7 rounded-lg flex items-center justify-center text-xs bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 transition-colors cursor-pointer"
+                              className="w-7 h-7 rounded-lg flex items-center justify-center bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 transition-colors cursor-pointer"
                             >
-                              📊
+                              <IconBarChart className="w-3.5 h-3.5" />
                             </button>
                           )}
 
@@ -1732,15 +1747,15 @@ export function TransferHub({
                             {isSquadFull
                               ? 'Squad Full'
                               : isFA
-                              ? '🆓 Sign'
+                              ? 'Sign'
                               : !windowIsOpen && !canBosmanNow
                               ? 'Closed'
                               : isLegend
-                              ? '👑 Bid'
+                              ? 'Bid'
                               : isLoan
-                              ? '🤝 Loan'
+                              ? 'Loan'
                               : canBosmanNow
-                              ? '⏳ Bosman'
+                              ? 'Bosman'
                               : 'Bid'}
                           </button>
                         </div>
@@ -5730,7 +5745,7 @@ export function TransferHub({
           >
             <div
               data-office-ui="true"
-              className="office-floating-card rounded-3xl max-w-sm sm:max-w-md w-full shadow-2xl relative my-auto border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 h-[84dvh] sm:h-[580px] max-h-[90dvh] sm:max-h-[88vh] flex flex-col overflow-hidden"
+              className="office-floating-card rounded-3xl max-w-sm sm:max-w-md w-full shadow-2xl relative my-auto border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 h-[85dvh] sm:h-[670px] max-h-[90dvh] sm:max-h-[88vh] flex flex-col overflow-hidden"
               onClick={(e) => e.stopPropagation()}
               onTouchStart={handleProfileTouchStart}
               onTouchEnd={handleProfileTouchEnd}
@@ -5744,14 +5759,14 @@ export function TransferHub({
                         ? 'bg-amber-100 text-amber-950 border-amber-300 dark:bg-amber-950/60 dark:text-amber-200 dark:border-amber-700'
                         : 'bg-blue-100 text-blue-950 border-blue-300 dark:bg-blue-950/60 dark:text-blue-200 dark:border-blue-700'
                     }`}>
-                      {isLegend ? '👑 Legend Dossier' : 'Scouting Dossier'}
+                      {isLegend ? 'Legend Dossier' : 'Scouting Dossier'}
                     </span>
                     <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${
                       windowIsOpen
                         ? 'bg-emerald-100 text-emerald-950 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700'
                         : 'bg-slate-100 text-slate-800 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600'
                     }`}>
-                      {windowIsOpen ? '● Window Open' : '○ Window Closed'}
+                      {windowIsOpen ? 'Window Open' : 'Window Closed'}
                     </span>
                   </div>
                   <h3 className="text-base sm:text-lg font-display font-black text-slate-950 dark:text-white truncate">
@@ -5778,50 +5793,66 @@ export function TransferHub({
                 </button>
               </header>
 
-              {/* Middle Scrollable Tab Body (Swipeable) */}
-              <div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-5 py-3.5 space-y-3 scrollbar-none">
+              {/* Middle Scrollable Tab Body (Swipeable, evenly spaced) */}
+              <div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-5 py-3.5 scrollbar-none">
                 {profileTab === 'overview' && (
-                  <>
-                    {/* Authentic Biometrics Badge Strip */}
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
-                        <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Height / Weight</span>
-                        <span className="font-mono font-black text-slate-900 dark:text-white text-xs mt-0.5 block">
-                          {bio.heightCm}cm • {bio.weightKg}kg
-                        </span>
-                      </div>
-                      <div className="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
-                        <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Preferred Foot</span>
-                        <span className="font-mono font-black text-slate-900 dark:text-white text-xs mt-0.5 block">{bio.preferredFoot}</span>
-                      </div>
-                      <div className="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
-                        <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Date of Birth</span>
-                        <span className="font-mono font-black text-slate-900 dark:text-white text-xs mt-0.5 block">{bio.dateOfBirth || `${bio.birthYear}`}</span>
-                      </div>
-                      <div className="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
-                        <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Peak Age / Stage</span>
-                        <span className="font-mono font-black text-slate-900 dark:text-white text-xs mt-0.5 block">{bio.peakAge} yrs</span>
-                      </div>
-                    </div>
+                  <div className="min-h-full flex flex-col justify-between gap-3">
+                    <div className="space-y-3">
+                      {/* Rich EA FC Player Card (Full Parity with Squad Players) */}
+                      <EaFcCard
+                        player={{
+                          ...(profilePlayer as unknown as CareerPlayer),
+                          club: resolvedClub,
+                          wageWeekly: profilePlayer.wageDemand,
+                          contractYears: profilePlayer.contractYears ?? 3,
+                          fitness: 100,
+                          morale: 85,
+                          form: 7.4,
+                          injured: false,
+                          potential: Math.max(profilePlayer.rating, profilePlayer.age <= 23 ? profilePlayer.rating + 5 : profilePlayer.rating + 1),
+                        }}
+                        size="standard"
+                        showFormHistory={false}
+                        showProgressionBar={false}
+                      />
 
-                    {/* Valuation & Wage Summary */}
-                    <div className="rounded-2xl p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex justify-between items-center text-xs">
-                      <div>
-                        <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Estimated Valuation</span>
-                        <span className="font-mono font-black text-base text-slate-950 dark:text-white">
-                          {formatCurrency(profilePlayer.value)}
-                        </span>
+                      {/* Authentic Biometrics Strip */}
+                      <div className="grid grid-cols-3 gap-2 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 text-center text-xs">
+                        <div>
+                          <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Height / Weight</span>
+                          <span className="font-mono font-black text-slate-900 dark:text-white text-xs mt-0.5 block">
+                            {bio.heightCm}cm • {bio.weightKg}kg
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Foot</span>
+                          <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-xs mt-0.5 block">{bio.preferredFoot}</span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Date of Birth</span>
+                          <span className="font-mono font-black text-slate-900 dark:text-white text-xs mt-0.5 block">{bio.dateOfBirth || `${bio.birthYear}`}</span>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Wage Demand</span>
-                        <span className="font-mono font-black text-base text-blue-600 dark:text-blue-400">
-                          {formatWage(profilePlayer.wageDemand)}
-                        </span>
+
+                      {/* Valuation & Wage Summary */}
+                      <div className="rounded-2xl p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex justify-between items-center text-xs">
+                        <div>
+                          <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Estimated Valuation</span>
+                          <span className="font-mono font-black text-base text-slate-950 dark:text-white">
+                            {formatCurrency(profilePlayer.value)}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Wage Demand</span>
+                          <span className="font-mono font-black text-base text-blue-600 dark:text-blue-400">
+                            {formatWage(profilePlayer.wageDemand)}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
                     {/* Quick Actions */}
-                    <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                    <div className="flex gap-2 pt-1">
                       <button
                         type="button"
                         onClick={() => handleToggleShortlist(profilePlayer.id)}
@@ -5831,8 +5862,8 @@ export function TransferHub({
                             : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-slate-200 dark:border-slate-600'
                         }`}
                       >
-                        <span>★</span>
-                        <span>{isShortlisted ? 'Shortlisted' : 'Add to Shortlist'}</span>
+                        <IconStar className="w-3.5 h-3.5" filled={isShortlisted} />
+                        <span>{isShortlisted ? 'Shortlisted' : 'Shortlist'}</span>
                       </button>
 
                       {onOpenCompare && (
@@ -5843,101 +5874,158 @@ export function TransferHub({
                             setProfilePlayer(null);
                             onOpenCompare(p);
                           }}
-                          className="py-2.5 px-3 rounded-xl font-display font-bold text-xs uppercase tracking-wider bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-slate-200 dark:border-slate-600 flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+                          className="flex-1 py-2.5 px-3 rounded-xl font-display font-bold text-xs uppercase tracking-wider bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-500/40 flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
                         >
-                          <span>📊</span>
+                          <IconBarChart className="w-3.5 h-3.5" />
                           <span>Compare</span>
                         </button>
                       )}
                     </div>
-                  </>
+                  </div>
                 )}
 
                 {profileTab === 'attributes' && (
-                  <div className="rounded-2xl p-3.5 space-y-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-                    <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider">
-                      <span>📊 Detailed Attribute Ratings</span>
-                      <span className="font-mono text-slate-500">{fs.isGoalkeeper ? 'Goalkeeper Matrix' : 'Outfield Matrix'}</span>
+                  <div className="min-h-full flex flex-col justify-between gap-3">
+                    <div className="rounded-2xl p-3.5 space-y-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                      <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider">
+                        <span>Detailed Attribute Ratings</span>
+                        <span className="font-mono text-slate-500">{fs.isGoalkeeper ? 'Goalkeeper Matrix' : 'Outfield Matrix'}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {statItems.map((item) => (
+                          <div key={item.key} className="space-y-1.5 bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/80">
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="font-bold text-slate-700 dark:text-slate-300 text-[11px]">{item.label}</span>
+                              <span className="font-mono font-black text-slate-950 dark:text-white text-xs">{item.val}</span>
+                            </div>
+                            <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${
+                                  item.val >= 88
+                                    ? 'bg-amber-500'
+                                    : item.val >= 80
+                                    ? 'bg-blue-600'
+                                    : item.val >= 70
+                                    ? 'bg-emerald-500'
+                                    : 'bg-slate-400'
+                                }`}
+                                style={{ width: `${Math.min(100, (item.val / 99) * 100)}%` }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2.5">
-                      {statItems.map((item) => (
-                        <div key={item.key} className="space-y-1.5 bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/80">
-                          <div className="flex justify-between items-center text-xs">
-                            <span className="font-bold text-slate-700 dark:text-slate-300 text-[11px]">{item.label}</span>
-                            <span className="font-mono font-black text-slate-950 dark:text-white text-xs">{item.val}</span>
-                          </div>
-                          <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${
-                                item.val >= 88
-                                  ? 'bg-amber-500'
-                                  : item.val >= 80
-                                  ? 'bg-blue-600'
-                                  : item.val >= 70
-                                  ? 'bg-emerald-500'
-                                  : 'bg-slate-400'
-                              }`}
-                              style={{ width: `${Math.min(100, (item.val / 99) * 100)}%` }}
-                            />
-                          </div>
+
+                    {/* Scouting Assessment & Role Fit */}
+                    <div className="rounded-2xl p-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-2.5 text-xs">
+                      <div className="text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider">
+                        Scouting Assessment &amp; Role Fit
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/80">
+                          <span className="text-[9px] uppercase font-bold text-slate-500 block">Natural Positions</span>
+                          <span className="font-display font-black text-slate-900 dark:text-white text-xs mt-0.5 block">
+                            {(profilePlayer.naturalPositions || [profilePlayer.position]).join(', ')}
+                          </span>
                         </div>
-                      ))}
+                        <div className="bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/80">
+                          <span className="text-[9px] uppercase font-bold text-slate-500 block">Peak Age Stage</span>
+                          <span className="font-display font-black text-slate-900 dark:text-white text-xs mt-0.5 block">
+                            {bio.peakAge ?? 27} yrs ({profilePlayer.age < (bio.peakAge ?? 27) ? 'Developing' : profilePlayer.age <= (bio.peakAge ?? 27) + 2 ? 'Prime' : 'Veteran'})
+                          </span>
+                        </div>
+                        <div className="bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/80">
+                          <span className="text-[9px] uppercase font-bold text-slate-500 block">Homegrown Status</span>
+                          <span className="font-display font-black text-slate-900 dark:text-white text-xs mt-0.5 block">
+                            {profilePlayer.isHomegrown ? 'Homegrown Eligible' : 'Non-Homegrown'}
+                          </span>
+                        </div>
+                        <div className="bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/80">
+                          <span className="text-[9px] uppercase font-bold text-slate-500 block">Rarity Tier</span>
+                          <span className="font-display font-black text-blue-700 dark:text-blue-400 text-xs mt-0.5 block uppercase">
+                            {profilePlayer.rarity || 'Standard'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {profileTab === 'contract' && (
-                  <div className="space-y-3">
-                    {/* Contract Demand Card */}
-                    <div className="rounded-2xl p-3.5 space-y-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-                      <div className="flex justify-between items-center text-xs">
-                        <div>
-                          <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Estimated Valuation</span>
-                          <span className="font-mono font-black text-sm sm:text-base text-slate-950 dark:text-white">
-                            {formatCurrency(profilePlayer.value)}
-                          </span>
+                  <div className="min-h-full flex flex-col justify-between gap-3">
+                    <div className="space-y-3">
+                      {/* Contract Demand Card */}
+                      <div className="rounded-2xl p-3.5 space-y-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                        <div className="flex justify-between items-center text-xs">
+                          <div>
+                            <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Estimated Valuation</span>
+                            <span className="font-mono font-black text-base text-slate-950 dark:text-white">
+                              {formatCurrency(profilePlayer.value)}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Wage Demand</span>
+                            <span className="font-mono font-black text-base text-blue-600 dark:text-blue-400">
+                              {formatWage(profilePlayer.wageDemand)}
+                            </span>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Wage Demand</span>
-                          <span className="font-mono font-black text-sm sm:text-base text-blue-600 dark:text-blue-400">
-                            {formatWage(profilePlayer.wageDemand)}
-                          </span>
+                        <div className="pt-2 border-t border-slate-200 dark:border-slate-700 grid grid-cols-3 gap-2 text-center text-xs">
+                          <div>
+                            <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Desired Term</span>
+                            <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{pref.preferredContractYears} Years</span>
+                          </div>
+                          <div>
+                            <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Expected Role</span>
+                            <span className="font-mono font-bold text-blue-600 dark:text-blue-400 uppercase">{pref.expectedSquadRole}</span>
+                          </div>
+                          <div>
+                            <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Signing Bonus</span>
+                            <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formatCurrency(pref.expectedSigningBonus)}</span>
+                          </div>
                         </div>
                       </div>
-                      <div className="pt-2 border-t border-slate-200 dark:border-slate-700 grid grid-cols-3 gap-2 text-center text-xs">
-                        <div>
-                          <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Desired Contract</span>
-                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{pref.preferredContractYears} Years</span>
-                        </div>
-                        <div>
-                          <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Expected Role</span>
-                          <span className="font-mono font-bold text-blue-600 dark:text-blue-400 uppercase">{pref.expectedSquadRole}</span>
-                        </div>
-                        <div>
-                          <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Signing Bonus</span>
-                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formatCurrency(pref.expectedSigningBonus)}</span>
-                        </div>
-                      </div>
-                      <div className="pt-2 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-[11px]">
-                        <span className="text-slate-500 font-semibold">Current Club Contract</span>
-                        <span className="font-mono font-bold text-slate-900 dark:text-white">
-                          {profilePlayer.isFreeAgent ? 'Free Agent' : `${profilePlayer.contractYears ?? 3} yrs remaining`}
-                        </span>
-                      </div>
-                    </div>
 
-                    {/* Transfer Window Status Notice */}
-                    {!windowIsOpen && (
-                      <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/80 text-xs space-y-0.5">
-                        <div className="flex items-center gap-1.5 font-black text-amber-950 dark:text-amber-200 text-xs">
-                          <span>🔒</span>
-                          <span>Transfer Window is Closed</span>
+                      {/* Contract Eligibility & Market Status */}
+                      <div className="rounded-2xl p-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-2 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-semibold">Current Club</span>
+                          <span className="font-display font-bold text-slate-900 dark:text-white">{resolvedClub}</span>
                         </div>
-                        <p className="text-[11px] text-amber-900 dark:text-amber-300 leading-snug font-medium">
-                          Official bids and negotiations are prohibited outside the transfer window.
-                        </p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-semibold">Contract Remaining</span>
+                          <span className="font-mono font-bold text-slate-900 dark:text-white">
+                            {profilePlayer.isFreeAgent ? 'Free Agent (£0 Fee)' : `${profilePlayer.contractYears ?? 3} yrs remaining`}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-semibold">Transfer Availability</span>
+                          <span className="font-mono font-bold text-blue-700 dark:text-blue-400">
+                            {profilePlayer.isFreeAgent
+                              ? 'Immediate Free Signing'
+                              : profilePlayer.loanListed
+                              ? 'Available for Loan / Bid'
+                              : profilePlayer.contractYears === 1
+                              ? (isBosmanWindowOpen(save.season.currentDate) ? 'Bosman Eligible Now' : 'Bosman Opens Jan 1')
+                              : 'Standard Transfer Bid'}
+                          </span>
+                        </div>
                       </div>
-                    )}
+
+                      {/* Transfer Window Status Notice */}
+                      {!windowIsOpen && (
+                        <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/80 text-xs space-y-0.5">
+                          <div className="flex items-center gap-1.5 font-black text-amber-950 dark:text-amber-200 text-xs">
+                            <IconLock className="w-3.5 h-3.5" />
+                            <span>Transfer Window is Closed</span>
+                          </div>
+                          <p className="text-[11px] text-amber-900 dark:text-amber-300 leading-snug font-medium">
+                            Official bids and negotiations are prohibited outside the transfer window.
+                          </p>
+                        </div>
+                      )}
+                    </div>
 
                     {/* Primary Offer CTA */}
                     {windowIsOpen ? (
@@ -5957,8 +6045,8 @@ export function TransferHub({
                             : 'my11-btn-gradient text-white shadow-blue-500/20'
                         }`}
                       >
-                        <span>💼</span>
-                        <span>{isSquadFull ? 'Squad Full' : isLegend ? '👑 Negotiate Deal' : 'Make Offer'}</span>
+                        <IconBriefcase className="w-3.5 h-3.5" />
+                        <span>{isSquadFull ? 'Squad Full' : isLegend ? 'Negotiate Deal' : 'Make Offer'}</span>
                       </button>
                     ) : (
                       <button
@@ -5967,7 +6055,7 @@ export function TransferHub({
                         className="w-full py-2.5 px-4 rounded-xl font-display font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed select-none"
                         title="Transfer window is closed."
                       >
-                        <span>🔒</span>
+                        <IconLock className="w-3.5 h-3.5" />
                         <span>Window Closed</span>
                       </button>
                     )}
@@ -5982,9 +6070,9 @@ export function TransferHub({
               >
                 {(
                   [
-                    { id: 'overview', label: 'Overview', icon: '🪪' },
-                    { id: 'attributes', label: 'Attributes', icon: '📊' },
-                    { id: 'contract', label: 'Deal', icon: '💼' },
+                    { id: 'overview', label: 'Overview', icon: <IconUser className="w-3.5 h-3.5" /> },
+                    { id: 'attributes', label: 'Attributes', icon: <IconBarChart className="w-3.5 h-3.5" /> },
+                    { id: 'contract', label: 'Deal', icon: <IconBriefcase className="w-3.5 h-3.5" /> },
                   ] as const
                 ).map((t) => {
                   const active = profileTab === t.id;
@@ -5999,7 +6087,7 @@ export function TransferHub({
                           : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-[#E2DFD9] dark:border-slate-700 hover:bg-slate-50'
                       }`}
                     >
-                      <span>{t.icon}</span>
+                      {t.icon}
                       <span>{t.label}</span>
                     </button>
                   );

@@ -47,6 +47,16 @@ import {
 } from '../../career/formatters';
 import { generateYouthIntake, promoteYouthProspect, releaseYouthProspect } from '../../career/youthAcademy';
 import { EaFcCard } from './EaFcCard';
+import {
+  IconUser,
+  IconBarChart,
+  IconBriefcase,
+  IconSwap,
+  IconMegaphone,
+  IconHandshake,
+  IconAlert,
+  IconTrophy,
+} from './GameIcons';
 import { getPlayerCompleteStats } from '../../career/playerStats';
 import {
   calculateFormRatingBonus,
@@ -2655,7 +2665,8 @@ export function SquadManagement({
                 >
 
                 {playerModalTab === 'profile' ? (
-                  <div className="space-y-3">
+                  <div className="min-h-full flex flex-col justify-between gap-3">
+                    <div className="space-y-3">
                     {/* Authentic EA FC Card */}
                     <EaFcCard
                       player={selectedPlayer}
@@ -2737,17 +2748,18 @@ export function SquadManagement({
                       title="Click to view full statistical dossier & historical career records"
                     >
                       <div className="flex items-center gap-2.5 sm:gap-3 font-mono text-[11px] text-blue-700 dark:text-blue-300">
-                        <span>⚽ <strong>{pStats.currentSeason.goals}</strong> G</span>
-                        <span>🎯 <strong>{pStats.currentSeason.assists}</strong> A</span>
-                        <span>👕 <strong>{pStats.currentSeason.appearances}</strong> Apps</span>
-                        <span>⭐ <strong>{pStats.currentSeason.averageRating || '7.1'}</strong> Avg</span>
+                        <span><strong>{pStats.currentSeason.goals}</strong> G</span>
+                        <span><strong>{pStats.currentSeason.assists}</strong> A</span>
+                        <span><strong>{pStats.currentSeason.appearances}</strong> Apps</span>
+                        <span><strong>{pStats.currentSeason.appearances > 0 ? pStats.currentSeason.averageRating : '–'}</strong> Avg</span>
                       </div>
                       <span className="text-[10px] font-display font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
-                        Stats ➔
+                        Stats →
                       </span>
                     </div>
                   );
                 })()}
+                    </div>
 
                 {/* Action Row */}
                 <div className="flex gap-2 pt-1">
@@ -2762,7 +2774,8 @@ export function SquadManagement({
                       className="py-2.5 px-3 rounded-xl border border-blue-200 dark:border-blue-500/40 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-950/70 text-blue-700 dark:text-blue-300 font-display font-black text-xs uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5"
                       title="Compare player with squad rivals or transfer targets"
                     >
-                      <span>📊 Compare</span>
+                      <IconBarChart className="w-3.5 h-3.5" />
+                      <span>Compare</span>
                     </button>
                   )}
                   <button
@@ -2770,9 +2783,10 @@ export function SquadManagement({
                       setSwapSourceId(selectedPlayer.id);
                       setSelectedPlayer(null);
                     }}
-                    className="flex-1 py-2.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-display font-black text-xs uppercase tracking-wider cursor-pointer"
+                    className="flex-1 py-2.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-display font-black text-xs uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5"
                   >
-                    🔄 Swap on Pitch
+                    <IconSwap className="w-3.5 h-3.5" />
+                    <span>Swap on Pitch</span>
                   </button>
                 </div>
               </div>
@@ -2783,11 +2797,12 @@ export function SquadManagement({
                 const isGkOrDef = ['GK', 'CB', 'LB', 'RB', 'LWB', 'RWB', 'DEF'].includes(selectedPlayer.position?.toUpperCase() || '');
 
                 return (
-                  <div className="space-y-3.5 text-xs">
+                  <div className="min-h-full flex flex-col justify-between gap-3 text-xs">
+                    <div className="space-y-3">
                     {/* Current Season Header */}
                     <div className="bg-gradient-to-r from-blue-50 via-white to-indigo-50/40 border border-blue-200/80 rounded-2xl p-3 flex items-center justify-between gap-2 shadow-2xs">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-xl shrink-0">📊</span>
+                        <IconBarChart className="w-4 h-4 text-blue-700 shrink-0" />
                         <div className="min-w-0">
                           <span className="text-[10px] font-black uppercase text-blue-700 tracking-wider font-display block">
                             Season {save.season?.seasonNumber || 1} • {pStats.currentSeason.seasonLabel}
@@ -2944,11 +2959,13 @@ export function SquadManagement({
                         )}
                       </div>
                     </div>
+                    </div>
                   </div>
                 );
               })()
             ) : (
-              <div className="space-y-3 text-xs">
+              <div className="min-h-full flex flex-col justify-between gap-3 text-xs">
+                <div className="space-y-3">
                 {/* Feedback Alert */}
                 {squadActionMessage && (
                   <div
@@ -3175,8 +3192,8 @@ export function SquadManagement({
                     className="p-2.5 rounded-xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100/70 text-blue-900 font-display font-bold text-xs uppercase tracking-wider text-left transition-all cursor-pointer flex items-center justify-between gap-1 shadow-2xs active:scale-95"
                   >
                     <div>
-                      <div className="font-black text-slate-900 flex items-center gap-1">
-                        <span>📢</span>
+                      <div className="font-black text-slate-900 flex items-center gap-1.5">
+                        <IconMegaphone className="w-3.5 h-3.5 text-blue-700 shrink-0" />
                         <span>Offer to Clubs</span>
                       </div>
                       <div className="text-[9.5px] text-slate-500 font-normal">
@@ -3191,8 +3208,8 @@ export function SquadManagement({
                     className="p-2.5 rounded-xl border border-purple-200 bg-purple-50/70 hover:bg-purple-100/70 text-purple-900 font-display font-bold text-xs uppercase tracking-wider text-left transition-all cursor-pointer flex items-center justify-between gap-1 shadow-2xs active:scale-95"
                   >
                     <div>
-                      <div className="font-black text-slate-900 flex items-center gap-1">
-                        <span>🤝</span>
+                      <div className="font-black text-slate-900 flex items-center gap-1.5">
+                        <IconHandshake className="w-3.5 h-3.5 text-purple-700 shrink-0" />
                         <span>Intermediary</span>
                       </div>
                       <div className="text-[9.5px] text-slate-500 font-normal">
@@ -3209,7 +3226,7 @@ export function SquadManagement({
                     onClick={() => setShowReleaseModal(!showReleaseModal)}
                     className="w-full py-2 px-3 rounded-xl border border-rose-200 hover:border-rose-300 bg-rose-50/70 hover:bg-rose-100/70 text-rose-800 font-display font-bold text-[11px] uppercase tracking-wider text-center transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95 shadow-2xs"
                   >
-                    <span>⚠️</span>
+                    <IconAlert className="w-3.5 h-3.5 text-rose-700 shrink-0" />
                     <span>Release Player on Free Transfer</span>
                   </button>
                 </div>
@@ -3281,6 +3298,7 @@ export function SquadManagement({
                 )}
 
                 {/* Market Tab Bottom Controls */}
+                </div>
                 <div className="flex gap-2 pt-1">
                   <button
                     type="button"
@@ -3307,35 +3325,38 @@ export function SquadManagement({
                     <button
                       type="button"
                       onClick={() => setPlayerModalTab('profile')}
-                      className={`py-2 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate ${
+                      className={`py-2 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate flex items-center justify-center gap-1.5 ${
                         playerModalTab === 'profile'
                           ? 'office-nav-tab-active shadow-sm'
                           : 'bg-white border border-[#E2DFD9] text-zinc-700'
                       }`}
                     >
-                      🎴 Profile
+                      <IconUser className="w-3.5 h-3.5" />
+                      <span>Profile</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setPlayerModalTab('stats')}
-                      className={`py-2 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate ${
+                      className={`py-2 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate flex items-center justify-center gap-1.5 ${
                         playerModalTab === 'stats'
                           ? 'office-nav-tab-active shadow-sm'
                           : 'bg-white border border-[#E2DFD9] text-zinc-700'
                       }`}
                     >
-                      📊 Stats
+                      <IconBarChart className="w-3.5 h-3.5" />
+                      <span>Stats</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setPlayerModalTab('market')}
-                      className={`py-2 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate ${
+                      className={`py-2 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate flex items-center justify-center gap-1.5 ${
                         playerModalTab === 'market'
                           ? 'office-nav-tab-active shadow-sm'
                           : 'bg-white border border-[#E2DFD9] text-zinc-700'
                       }`}
                     >
-                      💱 Market
+                      <IconBriefcase className="w-3.5 h-3.5" />
+                      <span>Market</span>
                     </button>
                   </div>
                 </div>
