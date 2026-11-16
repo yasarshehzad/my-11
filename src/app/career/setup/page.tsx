@@ -604,23 +604,31 @@ function SetupWizardContent() {
               {/* EASY */}
               <button
                 type="button"
+                aria-pressed={preset === 'easy'}
                 onClick={() => handlePresetSelect('easy')}
-                className={`office-floating-card rounded-2xl p-4 text-left transition-all cursor-pointer ${
+                className={`rounded-2xl p-4 text-left transition-all cursor-pointer border-2 ${
                   preset === 'easy'
-                    ? 'border-2 border-emerald-700 ring-2 ring-emerald-600/20 shadow-md'
-                    : 'hover:border-slate-400'
+                    ? 'bg-emerald-50/50 border-emerald-600 ring-4 ring-emerald-500/20 shadow-md'
+                    : 'bg-white border-[#D4D2CD] hover:border-zinc-400 shadow-xs'
                 }`}
               >
-                <div className="flex justify-between items-center mb-1">
+                <div className="flex justify-between items-center mb-1 gap-2">
                   <h3 className="font-display font-black uppercase text-sm text-emerald-700">Easy</h3>
-                  <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
-                    Sandbox
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    {preset === 'easy' && (
+                      <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-[#1E2024] text-emerald-300">
+                        ✓ Selected
+                      </span>
+                    )}
+                    <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      Sandbox
+                    </span>
+                  </div>
                 </div>
                 <p className="text-[11px] text-slate-600 leading-relaxed mb-3">
                   Generous finances, board immunity, and match retry enabled.
                 </p>
-                <div className="space-y-1 text-[10px] text-slate-700 font-medium bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+                <div className="space-y-1 text-[10px] text-slate-700 font-medium bg-white/80 border border-slate-200 rounded-xl p-2.5">
                   <div>• +50% Starting Budget (1.5x)</div>
                   <div>• No Board Sackings</div>
                   <div>• Match Retry Enabled</div>
@@ -631,23 +639,31 @@ function SetupWizardContent() {
               {/* HARD */}
               <button
                 type="button"
+                aria-pressed={preset === 'hard'}
                 onClick={() => handlePresetSelect('hard')}
-                className={`office-floating-card rounded-2xl p-4 text-left transition-all cursor-pointer ${
+                className={`rounded-2xl p-4 text-left transition-all cursor-pointer border-2 ${
                   preset === 'hard'
-                    ? 'border-2 border-rose-700 ring-2 ring-rose-600/20 shadow-md'
-                    : 'hover:border-slate-400'
+                    ? 'bg-rose-50/50 border-rose-600 ring-4 ring-rose-500/20 shadow-md'
+                    : 'bg-white border-[#D4D2CD] hover:border-zinc-400 shadow-xs'
                 }`}
               >
-                <div className="flex justify-between items-center mb-1">
+                <div className="flex justify-between items-center mb-1 gap-2">
                   <h3 className="font-display font-black uppercase text-sm text-rose-700">Hard</h3>
-                  <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-rose-50 text-rose-800 border border-rose-200">
-                    Authentic
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    {preset === 'hard' && (
+                      <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-[#1E2024] text-rose-300">
+                        ✓ Selected
+                      </span>
+                    )}
+                    <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-rose-50 text-rose-800 border border-rose-200">
+                      Authentic
+                    </span>
+                  </div>
                 </div>
                 <p className="text-[11px] text-slate-600 leading-relaxed mb-3">
                   True football reality with realistic injuries, sackings, and locked rules.
                 </p>
-                <div className="space-y-1 text-[10px] text-slate-700 font-medium bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+                <div className="space-y-1 text-[10px] text-slate-700 font-medium bg-white/80 border border-slate-200 rounded-xl p-2.5">
                   <div>• 1.0x Authentic Budget</div>
                   <div>• Board Can Sack You</div>
                   <div>• Realistic Injuries</div>
@@ -658,23 +674,31 @@ function SetupWizardContent() {
               {/* CUSTOM */}
               <button
                 type="button"
+                aria-pressed={preset === 'custom'}
                 onClick={() => handlePresetSelect('custom')}
-                className={`office-floating-card rounded-2xl p-4 text-left transition-all cursor-pointer ${
+                className={`rounded-2xl p-4 text-left transition-all cursor-pointer border-2 ${
                   preset === 'custom'
-                    ? 'border-2 border-blue-700 ring-2 ring-blue-600/20 shadow-md'
-                    : 'hover:border-slate-400'
+                    ? 'bg-amber-50/60 border-amber-600 ring-4 ring-amber-500/20 shadow-md'
+                    : 'bg-white border-[#D4D2CD] hover:border-zinc-400 shadow-xs'
                 }`}
               >
-                <div className="flex justify-between items-center mb-1">
+                <div className="flex justify-between items-center mb-1 gap-2">
                   <h3 className="font-display font-black uppercase text-sm text-amber-700">Custom</h3>
-                  <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200">
-                    Bespoke
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    {preset === 'custom' && (
+                      <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-[#1E2024] text-amber-300">
+                        ✓ Selected
+                      </span>
+                    )}
+                    <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">
+                      Bespoke
+                    </span>
+                  </div>
                 </div>
                 <p className="text-[11px] text-slate-600 leading-relaxed mb-3">
                   Configure every governance toggle, budget multiplier, and player era pool.
                 </p>
-                <div className="space-y-1 text-[10px] text-slate-700 font-medium bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+                <div className="space-y-1 text-[10px] text-slate-700 font-medium bg-white/80 border border-slate-200 rounded-xl p-2.5">
                   <div>• Full Switch Control</div>
                   <div>• Optional Rule Lock</div>
                   <div>• 0.75x to 2.0x Budget Scale</div>
