@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WonderPitch — Manager's Office & Tactics Board</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Hanken+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-canvas: #F2F1EE;
+      --bg-shell: #E8E6E1;
+      --bg-surface: #FFFFFF;
+      --bg-subtle: #F7F6F3;
+      --bg-pine: #1E2024;
+      --bg-pine-mid: #2B2E34;
+      --ink-primary: #18181B;
+      --ink-secondary: #52525B;
+      --ink-muted: #71717A;
+      --border-subtle: #E2DFD9;
+      --border-strong: #CCC8C0;
+      --accent-turf: #15803D;
+      --accent-sky: #D97706;
+      --accent-pine: #18181B;
+      --grad-signature: linear-gradient(135deg, #1E2024 0%, #2B2E34 100%);
+      --grad-masthead: linear-gradient(135deg, #1E2024 0%, #272A30 68%, #2E333B 100%);
+      --grad-gold: linear-gradient(180deg, #FBBF24 0%, #D97706 100%);
+      --grad-cta-turf: linear-gradient(180deg, #2B2E34 0%, #181A1E 100%);
+      --grad-bar-turf: linear-gradient(90deg, #D97706 0%, #F59E0B 100%);
+      --grad-bar-sky: linear-gradient(90deg, #3F3F46 0%, #71717A 100%);
+      --shadow-card: 0 1px 3px rgba(24, 24, 27, 0.05), 0 6px 16px rgba(24, 24, 27, 0.04);
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      --font-display: 'Hanken Grotesk', system-ui, sans-serif;
+      --font-sans: 'Golos Text', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-canvas);
+      color: var(--ink-primary);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* Sticky Topbar */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .topbar-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand-lockup {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--grad-signature);
+      display: grid;
+      place-items: center;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), 0 4px 10px rgba(7, 59, 42, 0.22);
+    }
+
+    .brand-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    .brand-sub {
+      font-size: 12px;
+      color: var(--ink-muted);
+      font-weight: 500;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink-secondary);
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+
+    .nav-link:hover { background: var(--bg-subtle); color: var(--ink-primary); }
+    .nav-link.is-active { background: var(--grad-signature); color: #FFFFFF; }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .club-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .club-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #0095D9;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 600;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+
+    .btn-gold {
+      background: var(--grad-gold);
+      color: #071F15;
+      font-weight: 700;
+      border-color: rgba(255, 255, 255, 0.35);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 6px 16px rgba(217, 119, 6, 0.34);
+    }
+
+    .btn-turf {
+      background: var(--grad-cta-turf);
+      color: #FFFFFF;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), 0 6px 16px rgba(10, 97, 65, 0.28);
+    }
+
+    .btn-glass {
+      background: rgba(255, 255, 255, 0.14);
+      border-color: rgba(255, 255, 255, 0.26);
+      color: #FFFFFF;
+    }
+
+    .btn-glass:hover { background: rgba(255, 255, 255, 0.22); }
+
+    /* Main Container */
+    .container {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 20px 24px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Signature Coventry Sky-to-Turf Club Header Strip */
+    .club-masthead {
+      position: relative;
+      border-radius: var(--radius-lg);
+      background: var(--grad-masthead);
+      color: #FFFFFF;
+      padding: 20px 24px;
+      box-shadow: 0 10px 28px rgba(2, 132, 199, 0.16);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .masthead-kit-accent {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 6px;
+      background: linear-gradient(180deg, #FBBF24 0%, #D97706 100%);
+    }
+
+    .masthead-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .crest-lg {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #0095D9 0%, #026AA7 100%);
+      display: grid;
+      place-items: center;
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 16px;
+      color: #FFFFFF;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 6px 14px rgba(0,0,0,0.3);
+      flex-shrink: 0;
+    }
+
+    .masthead-left h1 {
+      margin: 0 0 2px;
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #FFFFFF;
+      line-height: 1.15;
+    }
+
+    .masthead-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      color: #E2E8F0;
+      flex-wrap: wrap;
+    }
+
+    .masthead-kpis {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .mkpi {
+      padding: 8px 14px;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.22);
+      border: 1px solid rgba(255, 255, 255, 0.26);
+    }
+
+    .mkpi-lbl { font-size: 11px; color: #F0FDF4; font-weight: 600; }
+    .mkpi-val { font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: #FFFFFF; }
+
+    .masthead-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* Main Portal Workspace */
+    .portal-layout {
+      display: grid;
+      grid-template-columns: 1.75fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* FLAGSHIP TACTICS STAGE */
+    .tactics-stage {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tactics-topbar {
+      background: var(--grad-signature);
+      color: #FFFFFF;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .tactics-heading {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .tactics-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: rgba(251, 191, 36, 0.18);
+      border: 1px solid rgba(253, 230, 138, 0.42);
+      display: grid;
+      place-items: center;
+      color: #FDE68A;
+      flex-shrink: 0;
+    }
+
+    .tactics-title {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 700;
+      color: #FFFFFF;
+      line-height: 1.15;
+    }
+
+    .tactics-sub {
+      font-size: 12px;
+      color: #D1FAE5;
+    }
+
+    .formation-switcher {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      padding: 4px;
+      border-radius: 10px;
+    }
+
+    .form-btn {
+      border: 0;
+      background: transparent;
+      color: #FFFFFF;
+      padding: 6px 12px;
+      border-radius: 7px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+
+    .form-btn.is-active {
+      background: linear-gradient(180deg, #FBBF24 0%, #D97706 100%);
+      color: #0F172A;
+      font-weight: 700;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.45);
+    }
+
+    /* Tactics Meters Strip — Clean White Strip */
+    .tactics-meters {
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 12px 20px;
+      display: grid;
+      grid-template-columns: auto 1fr 1fr auto;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .mentality-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-strong);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-primary);
+      cursor: pointer;
+    }
+
+    .mentality-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: #0B7A54;
+    }
+
+    .meter-box {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .meter-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-secondary);
+    }
+
+    .meter-track {
+      height: 7px;
+      border-radius: 999px;
+      background: #E2E8F0;
+      overflow: hidden;
+    }
+
+    .meter-fill-turf {
+      height: 100%;
+      width: 88%;
+      border-radius: 999px;
+      background: var(--grad-bar-turf);
+    }
+
+    .meter-fill-sky {
+      height: 100%;
+      width: 84%;
+      border-radius: 999px;
+      background: var(--grad-bar-sky);
+    }
+
+    .chemistry-legend {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-secondary);
+    }
+
+    .chem-swatch {
+      width: 14px;
+      height: 3px;
+      border-radius: 99px;
+      background: #10B981;
+      display: inline-block;
+    }
+
+    /* Pitch + Tactical Pillars Split */
+    .tactics-workspace {
+      padding: 16px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: var(--bg-surface);
+    }
+
+    .pitch-and-pillars {
+      display: grid;
+      grid-template-columns: 1.55fr 1fr;
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    /* THE FOOTBALL PITCH BOARD */
+    .pitch-frame {
+      position: relative;
+      border-radius: 16px;
+      padding: 10px;
+      background: var(--bg-shell);
+      border: 1px solid rgba(24, 24, 27, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.75);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .pitch-surface {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 440 / 520;
+      height: auto;
+      border-radius: 12px;
+      overflow: hidden;
+      background: repeating-linear-gradient(
+        180deg,
+        #1F9D55 0%,
+        #1F9D55 9.09%,
+        #25AD60 9.09%,
+        #25AD60 18.18%
+      );
+      border: 2px solid #1A8748;
+      box-shadow: inset 0 0 24px rgba(15, 83, 45, 0.16);
+    }
+
+    .pitch-telemetry-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 2px 4px;
+    }
+
+    .telemetry-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #FFFFFF;
+      border: 1px solid #CFE3D9;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--ink-primary);
+    }
+
+    .telemetry-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #10B981;
+    }
+
+    .pitch-geometry-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .pitch-players-layer {
+      position: absolute;
+      inset: 0;
+    }
+
+    /* Individual Player Token with SVG Jersey + Dark Broadcast Nameplate */
+    .player-node {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.16s ease;
+    }
+
+    .player-node:hover {
+      transform: translate(-50%, -54%) scale(1.04);
+      z-index: 10;
+    }
+
+    .kit-wrap {
+      position: relative;
+      width: 40px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4));
+    }
+
+    .kit-num {
+      position: absolute;
+      top: 9px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 12px;
+      color: #FFFFFF;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+      line-height: 1;
+    }
+
+    .captain-armband {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      background: #F59E0B;
+      border: 1.5px solid #091326;
+      color: #091326;
+      font-family: var(--font-display);
+      font-size: 8px;
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+    }
+
+    .nameplate {
+      margin-top: 2px;
+      min-width: 82px;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 7px;
+      padding: 3px 6px 4px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.26);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .np-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .np-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: #FFFFFF;
+      white-space: nowrap;
+      line-height: 1.1;
+    }
+
+    .np-ovr {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 4px;
+      border-radius: 4px;
+      background: rgba(16, 185, 129, 0.25);
+      color: #6EE7B7;
+      line-height: 1.1;
+    }
+
+    .np-role {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      color: #94A3B8;
+      line-height: 1;
+      text-align: left;
+    }
+
+    .np-stam-track {
+      height: 3px;
+      width: 100%;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, 0.14);
+      overflow: hidden;
+    }
+
+    .np-stam-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: #10B981;
+    }
+
+    /* 3 Elevated Coaching Pillars Column */
+    .pillars-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .pillar-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 14px 16px;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .pillar-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--ink-primary);
+    }
+
+    .pillar-title-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pillar-icon-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .pi-green { background: #ECFDF5; color: #059669; border: 1px solid #A7F3D0; }
+    .pi-amber { background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A; }
+    .pi-sky { background: #F0F9FF; color: #0284C7; border: 1px solid #BAE6FD; }
+
+    .pillar-tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      color: var(--accent-pine);
+    }
+
+    .pillar-meter {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .pillar-meter-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--ink-secondary);
+    }
+
+    .pillar-meter-track {
+      height: 5px;
+      border-radius: 99px;
+      background: #E2E8F0;
+      overflow: hidden;
+    }
+
+    .pillar-meter-fill-g { height: 100%; background: var(--grad-bar-turf); border-radius: 99px; }
+    .pillar-meter-fill-s { height: 100%; background: var(--grad-bar-sky); border-radius: 99px; }
+
+    .inst-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .inst-chip {
+      padding: 5px 9px;
+      border-radius: 7px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--ink-primary);
+    }
+
+    .inst-chip.is-key {
+      border-color: rgba(234, 88, 12, 0.35);
+      background: #FFF7ED;
+      color: #C2410C;
+    }
+
+    /* Elevated Substitutes Bench Strip */
+    .bench-panel {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .bench-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-primary);
+    }
+
+    .bench-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+
+    .bench-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 9px 7px;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      text-align: center;
+      align-items: center;
+    }
+
+    .bench-kit-mini {
+      position: relative;
+      width: 28px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+    }
+
+    .bench-kit-num {
+      position: absolute;
+      top: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--font-display);
+      font-size: 9px;
+      font-weight: 800;
+      color: #FFFFFF;
+      line-height: 1;
+    }
+
+    .bench-top-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .bench-pos {
+      padding: 1px 6px;
+      border-radius: 99px;
+      background: #FFF7ED;
+      border: 1px solid #FED7AA;
+      color: #C2410C;
+    }
+
+    .bench-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .bench-meta {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--ink-secondary);
+    }
+
+    .bench-stam {
+      width: 100%;
+      height: 3px;
+      border-radius: 99px;
+      background: #E2E8F0;
+      overflow: hidden;
+      margin-top: 2px;
+    }
+
+    .bench-stam > i {
+      display: block;
+      height: 100%;
+      background: #10B981;
+      border-radius: 99px;
+    }
+
+    /* Right Portal Stack — Clean Pure #FFFFFF Cards, Zero Gradient Washes */
+    .right-rail {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .portal-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #FFFFFF;
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink-primary);
+    }
+
+    .panel-count {
+      padding: 2px 9px;
+      border-radius: 999px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-secondary);
+    }
+
+    .panel-body {
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: #FFFFFF;
+    }
+
+    /* Pure Flat Clean Inbox Items */
+    .inbox-row {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .inbox-row.is-priority {
+      border-left: 3px solid var(--accent-sky);
+      background: #FFFFFF;
+    }
+
+    .inbox-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-primary);
+    }
+
+    .inbox-time {
+      font-weight: 500;
+      color: var(--ink-muted);
+    }
+
+    .inbox-desc {
+      font-size: 12px;
+      color: var(--ink-secondary);
+      line-height: 1.4;
+    }
+
+    /* Standings Table */
+    .standings-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .standings-table th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .standings-table td {
+      padding: 8px;
+      border-bottom: 1px solid var(--border-subtle);
+      font-weight: 600;
+    }
+
+    .standings-table tr:last-child td { border-bottom: 0; }
+
+    .standings-table tr.is-user {
+      background: #FFFBEB;
+      color: #92400E;
+    }
+
+    .num-col {
+      text-align: right;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    /* Scouting Card Photo Header */
+    .scout-photo-banner {
+      position: relative;
+      height: 96px;
+      background: var(--bg-pine);
+      overflow: hidden;
+    }
+
+    .scout-photo-banner img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .scout-photo-scrim {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(24, 24, 27, 0.84) 0%, rgba(24, 24, 27, 0.28) 100%);
+    }
+
+    .scout-photo-caption {
+      position: absolute;
+      left: 18px;
+      bottom: 12px;
+      color: #FFFFFF;
+    }
+
+    .scout-photo-caption strong {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 15px;
+    }
+
+    .scout-photo-caption span {
+      font-size: 12px;
+      color: #CBD5E1;
+    }
+
+    .scout-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-radius: 9px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .scout-player {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-primary);
+    }
+
+    .scout-club {
+      font-size: 11px;
+      color: var(--ink-muted);
+    }
+
+    .scout-fee {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent-turf);
+    }
+
+    @media (max-width: 1140px) {
+      .portal-layout { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 900px) {
+      .pitch-and-pillars { grid-template-columns: 1fr; }
+      .tactics-meters { grid-template-columns: 1fr 1fr; }
+      .bench-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    @media (max-width: 640px) {
+      .topbar-inner { padding: 12px 16px; flex-wrap: wrap; }
+      .club-pill { display: none; }
+      .container { padding: 16px 16px 40px; }
+      .club-masthead { padding: 16px; }
+      .bench-grid { grid-template-columns: repeat(2, 1fr); }
+      .kit-wrap { width: 32px; height: 28px; }
+      .kit-wrap svg { width: 32px; height: 28px; }
+      .kit-num { top: 6px; font-size: 10px; }
+      .nameplate { min-width: 56px; padding: 2px 4px; }
+      .np-name { font-size: 9.5px; }
+      .np-ovr { font-size: 8.5px; padding: 0 3px; }
+      .np-role { font-size: 8px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        transition-duration: 0.001ms !important;
+        animation-duration: 0.001ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand-lockup" href="1-homepage.html">
+        <div class="brand-mark" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="16" rx="2"/>
+            <line x1="12" y1="4" x2="12" y2="20"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">WonderPitch</div>
+          <div class="brand-sub">Manager's Office</div>
+        </div>
+      </a>
+
+      <nav class="nav-links" aria-label="Main navigation">
+        <a class="nav-link" href="1-homepage.html">Home</a>
+        <a class="nav-link" href="2-club-selection.html">Club Setup</a>
+        <a class="nav-link is-active" href="3-managers-office.html">Manager's Office</a>
+      </nav>
+
+      <div class="topbar-right">
+        <div class="club-pill">
+          <span class="club-dot" aria-hidden="true"></span>
+          <span>Coventry City (8th)</span>
+        </div>
+        <a class="btn btn-turf" style="padding:8px 14px;" href="#tactics-stage">
+          <span>Play Next Match</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="club-masthead" aria-label="Club overview banner">
+      <div class="masthead-kit-accent" aria-hidden="true"></div>
+
+      <div class="masthead-left">
+        <div class="crest-lg" aria-hidden="true">COV</div>
+        <div>
+          <h1>Coventry City Portal</h1>
+          <div class="masthead-meta">
+            <span>Next Fixture: vs Arsenal (CBS Arena)</span>
+            <span>Kickoff: Saturday 15:00</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="masthead-kpis">
+        <div class="mkpi">
+          <div class="mkpi-lbl">Position</div>
+          <div class="mkpi-val">8th (22 pts)</div>
+        </div>
+        <div class="mkpi">
+          <div class="mkpi-lbl">Transfer Funds</div>
+          <div class="mkpi-val">£34.2M</div>
+        </div>
+        <div class="mkpi">
+          <div class="mkpi-lbl">Board Trust</div>
+          <div class="mkpi-val">B+ (86%)</div>
+        </div>
+      </div>
+
+      <div class="masthead-actions">
+        <button class="btn btn-glass" id="auto-pick-btn" type="button">Auto-Pick Best XI</button>
+        <a class="btn btn-gold" href="#tactics-stage">
+          <span>Matchday Kickoff</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+      </div>
+    </section>
+
+    <div class="portal-layout">
+      <!-- FLAGSHIP TACTICS BOARD -->
+      <section class="tactics-stage" id="tactics-stage" aria-labelledby="tactics-heading">
+        <div class="tactics-topbar">
+          <div class="tactics-heading">
+            <div class="tactics-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <circle cx="9" cy="15" r="2"/>
+                <circle cx="15" cy="9" r="2"/>
+                <path d="M10.5 13.5 14 10"/>
+              </svg>
+            </div>
+            <div>
+              <div class="tactics-title" id="tactics-heading">Matchday Tactics & Starting XI</div>
+              <div class="tactics-sub">Tap a system to preview shape, roles, and chemistry links</div>
+            </div>
+          </div>
+
+          <div class="formation-switcher" id="formation-switcher" role="tablist" aria-label="Formation selector">
+            <button class="form-btn is-active" data-form="4231" type="button">4-2-3-1 DM Wide</button>
+            <button class="form-btn" data-form="433" type="button">4-3-3 Holding</button>
+            <button class="form-btn" data-form="3421" type="button">3-4-2-1</button>
+          </div>
+        </div>
+
+        <div class="tactics-meters">
+          <button class="mentality-btn" id="mentality-btn" type="button" title="Cycle mentality">
+            <span class="mentality-dot" aria-hidden="true"></span>
+            <span id="mentality-label">Positive</span>
+          </button>
+
+          <div class="meter-box">
+            <div class="meter-row">
+              <span>Tactical Familiarity</span>
+              <span style="font-family:var(--font-mono); color:var(--accent-turf);" id="fam-val">88% Fluid</span>
+            </div>
+            <div class="meter-track"><div class="meter-fill-turf" id="fam-bar"></div></div>
+          </div>
+
+          <div class="meter-box">
+            <div class="meter-row">
+              <span>Team Cohesion</span>
+              <span style="font-family:var(--font-mono); color:var(--accent-sky);">84% Strong</span>
+            </div>
+            <div class="meter-track"><div class="meter-fill-sky"></div></div>
+          </div>
+
+          <div class="chemistry-legend">
+            <span class="chem-swatch" aria-hidden="true"></span>
+            <span>Partnership Links</span>
+          </div>
+        </div>
+
+        <div class="tactics-workspace">
+          <div class="pitch-and-pillars">
+            <!-- Striped Mowed Turf Pitch -->
+            <div class="pitch-frame">
+              <div class="pitch-surface">
+                <svg class="pitch-geometry-svg" viewBox="0 0 440 520" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <defs>
+                    <clipPath id="top-d-clip"><rect x="0" y="102" width="440" height="418"/></clipPath>
+                    <clipPath id="bot-d-clip"><rect x="0" y="0" width="440" height="418"/></clipPath>
+                  </defs>
+                  <!-- Goal Nets -->
+                  <rect x="188" y="8" width="64" height="10" rx="1.5" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.42)" stroke-width="1.3"/>
+                  <rect x="188" y="502" width="64" height="10" rx="1.5" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.42)" stroke-width="1.3"/>
+                  <!-- Touchline Boundary -->
+                  <rect x="20" y="18" width="400" height="484" rx="3" fill="none" stroke="rgba(255,255,255,0.44)" stroke-width="1.6"/>
+                  <!-- Corner Arcs -->
+                  <path d="M 20 28 A 10 10 0 0 0 30 18" fill="none" stroke="rgba(255,255,255,0.42)" stroke-width="1.4"/>
+                  <path d="M 410 18 A 10 10 0 0 0 420 28" fill="none" stroke="rgba(255,255,255,0.42)" stroke-width="1.4"/>
+                  <path d="M 20 492 A 10 10 0 0 1 30 502" fill="none" stroke="rgba(255,255,255,0.42)" stroke-width="1.4"/>
+                  <path d="M 410 502 A 10 10 0 0 1 420 492" fill="none" stroke="rgba(255,255,255,0.42)" stroke-width="1.4"/>
+                  <!-- Halfway Line & True Center Circle -->
+                  <line x1="20" y1="260" x2="420" y2="260" stroke="rgba(255,255,255,0.42)" stroke-width="1.5"/>
+                  <circle cx="220" cy="260" r="50" fill="none" stroke="rgba(255,255,255,0.42)" stroke-width="1.5"/>
+                  <circle cx="220" cy="260" r="3" fill="rgba(255,255,255,0.68)"/>
+                  <!-- Top Penalty Box (Attacking Goal) & True Circular D -->
+                  <rect x="110" y="18" width="220" height="84" fill="none" stroke="rgba(255,255,255,0.42)" stroke-width="1.5"/>
+                  <rect x="166" y="18" width="108" height="28" fill="none" stroke="rgba(255,255,255,0.42)" stroke-width="1.4"/>
+                  <circle cx="220" cy="76" r="2.5" fill="rgba(255,255,255,0.68)"/>
+                  <circle cx="220" cy="76" r="42" fill="none" stroke="rgba(255,255,255,0.42)" stroke-width="1.5" clip-path="url(#top-d-clip)"/>
+                  <!-- Bottom Penalty Box (Home Goal) & True Circular D -->
+                  <rect x="110" y="418" width="220" height="84" fill="none" stroke="rgba(255,255,255,0.42)" stroke-width="1.5"/>
+                  <rect x="166" y="474" width="108" height="28" fill="none" stroke="rgba(255,255,255,0.42)" stroke-width="1.4"/>
+                  <circle cx="220" cy="444" r="2.5" fill="rgba(255,255,255,0.68)"/>
+                  <circle cx="220" cy="444" r="42" fill="none" stroke="rgba(255,255,255,0.42)" stroke-width="1.5" clip-path="url(#bot-d-clip)"/>
+                  <!-- Attacking Direction Indicator -->
+                  <path d="M 34 62 L 34 38 M 29 44 L 34 38 L 39 44" fill="none" stroke="rgba(255,255,255,0.44)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  <!-- Partnership & Chemistry Lines Layer -->
+                  <g id="chemistry-lines"></g>
+                </svg>
+                <div class="pitch-players-layer" id="pitch-players"></div>
+              </div>
+
+              <div class="pitch-telemetry-strip" aria-label="Pitch tactical telemetry">
+                <span class="telemetry-pill"><span class="telemetry-dot" aria-hidden="true"></span><span id="telemetry-shape">Shape: 4-2-3-1 DM Wide</span></span>
+                <span class="telemetry-pill">Line: High (68m)</span>
+                <span class="telemetry-pill">Width: Balanced</span>
+              </div>
+            </div>
+
+            <!-- 3 Elevated Coaching Instruction Pillars -->
+            <div class="pillars-stack" id="pillars-stack">
+              <div class="pillar-card">
+                <div class="pillar-head">
+                  <span class="pillar-title-wrap">
+                    <span class="pillar-icon-dot pi-green" aria-hidden="true">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </span>
+                    <span>Attacking Build-Up</span>
+                  </span>
+                  <span class="pillar-tag">Fluid Width</span>
+                </div>
+                <div class="pillar-meter">
+                  <div class="pillar-meter-row"><span>Tempo &amp; Ball Speed</span><span>Fast</span></div>
+                  <div class="pillar-meter-track"><div class="pillar-meter-fill-g" style="width: 78%;"></div></div>
+                </div>
+                <div class="inst-list">
+                  <span class="inst-chip is-key">Fairly Wide</span>
+                  <span class="inst-chip">Shorter Passing</span>
+                  <span class="inst-chip is-key">Pass Into Space</span>
+                  <span class="inst-chip">Overlap Right Flank</span>
+                </div>
+              </div>
+
+              <div class="pillar-card">
+                <div class="pillar-head">
+                  <span class="pillar-title-wrap">
+                    <span class="pillar-icon-dot pi-amber" aria-hidden="true">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    </span>
+                    <span>Turnover Reaction</span>
+                  </span>
+                  <span class="pillar-tag">6-Second Press</span>
+                </div>
+                <div class="pillar-meter">
+                  <div class="pillar-meter-row"><span>Pressing Trigger</span><span>Intense</span></div>
+                  <div class="pillar-meter-track"><div class="pillar-meter-fill-g" style="width: 86%;"></div></div>
+                </div>
+                <div class="inst-list">
+                  <span class="inst-chip is-key">Counter-Press</span>
+                  <span class="inst-chip is-key">Quick Counter</span>
+                  <span class="inst-chip">Distribute to Full-Backs</span>
+                </div>
+              </div>
+
+              <div class="pillar-card">
+                <div class="pillar-head">
+                  <span class="pillar-title-wrap">
+                    <span class="pillar-icon-dot pi-sky" aria-hidden="true">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </span>
+                    <span>Defensive Block</span>
+                  </span>
+                  <span class="pillar-tag">High Line</span>
+                </div>
+                <div class="pillar-meter">
+                  <div class="pillar-meter-row"><span>Engagement Height</span><span>68m High</span></div>
+                  <div class="pillar-meter-track"><div class="pillar-meter-fill-s" style="width: 74%;"></div></div>
+                </div>
+                <div class="inst-list">
+                  <span class="inst-chip is-key">Higher Defensive Line</span>
+                  <span class="inst-chip">Step Up More</span>
+                  <span class="inst-chip">Trap Outside</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 7-Man Matchday Bench -->
+          <div class="bench-panel" aria-label="Substitutes bench">
+            <div class="bench-head">
+              <span>Matchday Substitutes (7 Available)</span>
+              <span style="font-size:12px; font-weight:600; color:var(--accent-turf);">5 Subs Permitted</span>
+            </div>
+            <div class="bench-grid" id="bench-grid"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT PORTAL RAIL -->
+      <aside class="right-rail" aria-label="Portal briefings and league table">
+        <section class="portal-panel" aria-labelledby="inbox-heading">
+          <div class="panel-head">
+            <h2 id="inbox-heading">Manager Inbox</h2>
+            <span class="panel-count">3 Unread</span>
+          </div>
+          <div class="panel-body">
+            <div class="inbox-row is-priority">
+              <div class="inbox-top">
+                <span>Pre-Match Tactical Briefing</span>
+                <span class="inbox-time">09:30</span>
+              </div>
+              <div class="inbox-desc">Arsenal overlap heavily on Saka's flank; Bidwell briefed to tuck in beside Kitching.</div>
+            </div>
+            <div class="inbox-row">
+              <div class="inbox-top">
+                <span>Medical & Fitness Report</span>
+                <span class="inbox-time">Yesterday</span>
+              </div>
+              <div class="inbox-desc">Full 25-man squad cleared for selection with average sharpness at 94%.</div>
+            </div>
+            <div class="inbox-row">
+              <div class="inbox-top">
+                <span>Chief Scout Watchlist</span>
+                <span class="inbox-time">2d ago</span>
+              </div>
+              <div class="inbox-desc">Two winter right-back targets graded A- ahead of the January window.</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="portal-panel" aria-labelledby="table-heading">
+          <div class="panel-head">
+            <h2 id="table-heading">2026/27 Standings</h2>
+            <span class="panel-count">Week 14</span>
+          </div>
+          <div class="panel-body" style="padding: 8px 18px 12px;">
+            <table class="standings-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Club</th>
+                  <th class="num-col">P</th>
+                  <th class="num-col">GD</th>
+                  <th class="num-col">Pts</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>2</td>
+                  <td>Arsenal</td>
+                  <td class="num-col">14</td>
+                  <td class="num-col">+19</td>
+                  <td class="num-col">31</td>
+                </tr>
+                <tr>
+                  <td>6</td>
+                  <td>Newcastle Utd</td>
+                  <td class="num-col">14</td>
+                  <td class="num-col">+8</td>
+                  <td class="num-col">24</td>
+                </tr>
+                <tr>
+                  <td>7</td>
+                  <td>Brighton</td>
+                  <td class="num-col">14</td>
+                  <td class="num-col">+5</td>
+                  <td class="num-col">23</td>
+                </tr>
+                <tr class="is-user">
+                  <td>8</td>
+                  <td>Coventry City</td>
+                  <td class="num-col">14</td>
+                  <td class="num-col">+4</td>
+                  <td class="num-col">22</td>
+                </tr>
+                <tr>
+                  <td>9</td>
+                  <td>Ipswich Town</td>
+                  <td class="num-col">14</td>
+                  <td class="num-col">+1</td>
+                  <td class="num-col">20</td>
+                </tr>
+                <tr>
+                  <td>10</td>
+                  <td>Nottm Forest</td>
+                  <td class="num-col">14</td>
+                  <td class="num-col">-2</td>
+                  <td class="num-col">18</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="portal-panel" id="scouting" aria-labelledby="scout-heading">
+          <div class="scout-photo-banner">
+            <img src="assets/photo_boardroom_pitch.jpg" alt="Glass scouting boardroom overlooking stadium turf" />
+            <div class="scout-photo-scrim" aria-hidden="true"></div>
+            <div class="scout-photo-caption">
+              <strong id="scout-heading">Boardroom Shortlist</strong>
+              <span>Remaining January Budget: £34.2M</span>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="scout-item">
+              <div>
+                <div class="scout-player">R. Edwards (RB, 23)</div>
+                <div class="scout-club">Scout Grade: A- (High Pace)</div>
+              </div>
+              <div class="scout-fee">£14.5M</div>
+            </div>
+            <div class="scout-item">
+              <div>
+                <div class="scout-player">T. Fellows (RW, 23)</div>
+                <div class="scout-club">Scout Grade: B+ (Crossing)</div>
+              </div>
+              <div class="scout-fee">£11.8M</div>
+            </div>
+            <div class="scout-item">
+              <div>
+                <div class="scout-player">J. Gelhardt (ST, 24)</div>
+                <div class="scout-club">Scout Grade: B (Pressing)</div>
+              </div>
+              <div class="scout-fee">£9.2M</div>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const FORMATIONS = {
+      '4231': {
+        familiarity: '88% Fluid',
+        famWidth: '88%',
+        players: [
+          { num: 19, name: 'Rushworth', role: 'SK · Def', ovr: 78, stam: 96, x: 50, y: 85, gk: true },
+          { num: 27, name: 'Van Ewijk', role: 'WB · Att', ovr: 79, stam: 93, x: 81, y: 68 },
+          { num: 4, name: 'Thomas', role: 'BPD · Def', ovr: 77, stam: 94, x: 62, y: 72 },
+          { num: 15, name: 'Kitching', role: 'CD · Def', ovr: 76, stam: 91, x: 38, y: 72 },
+          { num: 21, name: 'Bidwell', role: 'FB · Sup', ovr: 75, stam: 90, x: 19, y: 68 },
+          { num: 14, name: 'Sheaf', role: 'DLP · Def', ovr: 79, stam: 92, x: 62, y: 52, cap: true },
+          { num: 29, name: 'Torp', role: 'VOL · Sup', ovr: 77, stam: 95, x: 38, y: 52 },
+          { num: 7, name: 'Sakamoto', role: 'IW · Att', ovr: 79, stam: 91, x: 81, y: 31 },
+          { num: 5, name: 'Rudoni', role: 'AM · Sup', ovr: 80, stam: 94, x: 50, y: 34 },
+          { num: 10, name: 'Mason-Clark', role: 'IF · Att', ovr: 78, stam: 89, x: 19, y: 31 },
+          { num: 11, name: 'Wright', role: 'AF · Att', ovr: 81, stam: 93, x: 50, y: 12 }
+        ],
+        links: [
+          [2, 3, 'strong'],
+          [5, 6, 'strong'],
+          [1, 7, 'strong'],
+          [8, 10, 'gold'],
+          [4, 9, 'strong']
+        ]
+      },
+      '433': {
+        familiarity: '82% Accomplished',
+        famWidth: '82%',
+        players: [
+          { num: 19, name: 'Rushworth', role: 'SK · Def', ovr: 78, stam: 96, x: 50, y: 85, gk: true },
+          { num: 27, name: 'Van Ewijk', role: 'WB · Sup', ovr: 79, stam: 93, x: 81, y: 68 },
+          { num: 4, name: 'Thomas', role: 'BPD · Def', ovr: 77, stam: 94, x: 62, y: 72 },
+          { num: 15, name: 'Kitching', role: 'CD · Def', ovr: 76, stam: 91, x: 38, y: 72 },
+          { num: 21, name: 'Bidwell', role: 'FB · Def', ovr: 75, stam: 90, x: 19, y: 68 },
+          { num: 14, name: 'Sheaf', role: 'DM · Def', ovr: 79, stam: 92, x: 50, y: 57, cap: true },
+          { num: 29, name: 'Torp', role: 'CM · Sup', ovr: 77, stam: 95, x: 70, y: 42 },
+          { num: 5, name: 'Rudoni', role: 'MEZ · Att', ovr: 80, stam: 94, x: 30, y: 42 },
+          { num: 7, name: 'Sakamoto', role: 'IW · Att', ovr: 79, stam: 91, x: 81, y: 22 },
+          { num: 10, name: 'Mason-Clark', role: 'IF · Att', ovr: 78, stam: 89, x: 19, y: 22 },
+          { num: 11, name: 'Wright', role: 'PF · Att', ovr: 81, stam: 93, x: 50, y: 12 }
+        ],
+        links: [
+          [2, 3, 'strong'],
+          [5, 6, 'strong'],
+          [7, 9, 'strong'],
+          [7, 10, 'gold'],
+          [1, 8, 'strong']
+        ]
+      },
+      '3421': {
+        familiarity: '75% Competent',
+        famWidth: '75%',
+        players: [
+          { num: 19, name: 'Rushworth', role: 'SK · Def', ovr: 78, stam: 96, x: 50, y: 85, gk: true },
+          { num: 2, name: 'Binks', role: 'WCB · Def', ovr: 74, stam: 92, x: 75, y: 71 },
+          { num: 4, name: 'Thomas', role: 'BPD · Cov', ovr: 77, stam: 94, x: 50, y: 73 },
+          { num: 15, name: 'Kitching', role: 'WCB · Sup', ovr: 76, stam: 91, x: 25, y: 71 },
+          { num: 27, name: 'Van Ewijk', role: 'CWB · Att', ovr: 79, stam: 93, x: 82, y: 49 },
+          { num: 14, name: 'Sheaf', role: 'DLP · Def', ovr: 79, stam: 92, x: 63, y: 52, cap: true },
+          { num: 29, name: 'Torp', role: 'BBM · Sup', ovr: 77, stam: 95, x: 37, y: 52 },
+          { num: 21, name: 'Bidwell', role: 'WB · Sup', ovr: 75, stam: 90, x: 18, y: 49 },
+          { num: 7, name: 'Sakamoto', role: 'AM · Att', ovr: 79, stam: 91, x: 67, y: 31 },
+          { num: 5, name: 'Rudoni', role: 'AM · Sup', ovr: 80, stam: 94, x: 33, y: 31 },
+          { num: 11, name: 'Wright', role: 'AF · Att', ovr: 81, stam: 93, x: 50, y: 12 }
+        ],
+        links: [
+          [1, 2, 'strong'],
+          [2, 3, 'strong'],
+          [5, 6, 'strong'],
+          [8, 10, 'gold'],
+          [9, 10, 'strong']
+        ]
+      }
+    };
+
+    const MENTALITIES = [
+      { name: 'Positive', dot: '#0B7A54' },
+      { name: 'Balanced', dot: '#0284C7' },
+      { name: 'Attacking', dot: '#D97706' }
+    ];
+    let mentalityIdx = 0;
+
+    function jerseySvg(isGk) {
+      const main = isGk ? '#D97706' : '#0095D9';
+      const trim = isGk ? '#92400E' : '#026AA7';
+      return `
+        <svg viewBox="0 0 40 36" width="40" height="36" aria-hidden="true">
+          <path d="M9 5 L15 2 Q20 6 25 2 L31 5 L38 13 L33 17 L29 13 L29 33 L11 33 L11 13 L7 17 L2 13 Z" fill="${main}" stroke="#FFFFFF" stroke-width="1.4" stroke-linejoin="round"/>
+          <path d="M15 2 Q20 7 25 2 L24 6 Q20 9 16 6 Z" fill="${trim}"/>
+          ${!isGk ? '<rect x="16" y="7" width="8" height="25" fill="rgba(255,255,255,0.14)"/>' : ''}
+        </svg>
+      `;
+    }
+
+    const BENCH = [
+      { num: 9, pos: 'ST', name: 'E. Simms', ovr: 76, stam: 95 },
+      { num: 8, pos: 'DM', name: 'M. Grimes', ovr: 77, stam: 96 },
+      { num: 2, pos: 'CB', name: 'L. Binks', ovr: 74, stam: 92 },
+      { num: 3, pos: 'LB', name: 'J. Dasilva', ovr: 74, stam: 94 },
+      { num: 1, pos: 'GK', name: 'B. Collins', ovr: 73, stam: 98, gk: true },
+      { num: 28, pos: 'CM', name: 'J. Eccles', ovr: 74, stam: 93 },
+      { num: 18, pos: 'AM', name: 'N. Tavares', ovr: 75, stam: 91 }
+    ];
+
+    function miniShirtSvg(isGk) {
+      const main = isGk ? '#D97706' : '#0095D9';
+      return `<svg viewBox="0 0 28 24" width="28" height="24" aria-hidden="true"><path d="M6 3 L10 1 Q14 4 18 1 L22 3 L26 9 L23 12 L20 9 L20 22 L8 22 L8 9 L5 12 L2 9 Z" fill="${main}" stroke="#0F172A" stroke-opacity="0.18" stroke-width="1"/></svg>`;
+    }
+
+    function renderBench() {
+      const benchEl = document.getElementById('bench-grid');
+      benchEl.innerHTML = BENCH.map((b) => `
+        <div class="bench-card">
+          <div class="bench-kit-mini">
+            ${miniShirtSvg(b.gk)}
+            <span class="bench-kit-num">${b.num}</span>
+          </div>
+          <div class="bench-top-badge"><span class="bench-pos">${b.pos}</span></div>
+          <div class="bench-name">${b.name}</div>
+          <div class="bench-meta"><span>${b.ovr}</span><span>${b.stam}%</span></div>
+          <div class="bench-stam"><i style="width:${b.stam}%;"></i></div>
+        </div>
+      `).join('');
+    }
+
+    const SHAPE_LABELS = {
+      '4231': 'Shape: 4-2-3-1 DM Wide',
+      '433': 'Shape: 4-3-3 Holding',
+      '3421': 'Shape: 3-4-2-1'
+    };
+
+    function renderPitch(formKey) {
+      const cfg = FORMATIONS[formKey];
+      document.getElementById('fam-val').textContent = cfg.familiarity;
+      document.getElementById('fam-bar').style.width = cfg.famWidth;
+      document.getElementById('telemetry-shape').textContent = SHAPE_LABELS[formKey];
+
+      const chemEl = document.getElementById('chemistry-lines');
+      chemEl.innerHTML = '';
+      cfg.links.forEach(([aIdx, bIdx, kind]) => {
+        const a = cfg.players[aIdx];
+        const b = cfg.players[bIdx];
+        const x1 = a.x * 4.4;
+        const y1 = a.y * 5.2;
+        const x2 = b.x * 4.4;
+        const y2 = b.y * 5.2;
+        const cx = (x1 + x2) / 2;
+        const cy = (y1 + y2) / 2 - 12;
+        const stroke = kind === 'gold' ? 'rgba(253, 224, 71, 0.55)' : 'rgba(255, 255, 255, 0.35)';
+        chemEl.innerHTML += `<path d="M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}" fill="none" stroke="${stroke}" stroke-width="1.75" stroke-dasharray="4 4" stroke-linecap="round"/>`;
+      });
+
+      const layer = document.getElementById('pitch-players');
+      layer.innerHTML = '';
+      cfg.players.forEach((p) => {
+        const node = document.createElement('div');
+        node.className = 'player-node';
+        node.style.left = p.x + '%';
+        node.style.top = p.y + '%';
+        node.innerHTML = `
+          <div class="kit-wrap">
+            ${jerseySvg(p.gk)}
+            <span class="kit-num">${p.num}</span>
+            ${p.cap ? '<span class="captain-armband" title="Club Captain">C</span>' : ''}
+          </div>
+          <div class="nameplate">
+            <div class="np-top">
+              <span class="np-name">${p.name}</span>
+              <span class="np-ovr">${p.ovr}</span>
+            </div>
+            <div class="np-role">${p.role}</div>
+            <div class="np-stam-track"><div class="np-stam-fill" style="width:${p.stam}%;"></div></div>
+          </div>
+        `;
+        layer.appendChild(node);
+      });
+    }
+
+    document.getElementById('formation-switcher').addEventListener('click', (e) => {
+      const btn = e.target.closest('.form-btn');
+      if (!btn) return;
+      document.querySelectorAll('.form-btn').forEach((b) => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+      renderPitch(btn.dataset.form);
+    });
+
+    document.getElementById('mentality-btn').addEventListener('click', () => {
+      mentalityIdx = (mentalityIdx + 1) % MENTALITIES.length;
+      const m = MENTALITIES[mentalityIdx];
+      document.getElementById('mentality-label').textContent = m.name;
+      document.querySelector('.mentality-dot').style.background = m.dot;
+    });
+
+    document.getElementById('auto-pick-btn').addEventListener('click', () => {
+      renderBench();
+    renderPitch('4231');
+      document.querySelectorAll('.form-btn').forEach((b) => {
+        b.classList.toggle('is-active', b.dataset.form === '4231');
+      });
+    });
+
+    renderBench();
+    renderPitch('4231');
+  </script>
+</body>
+</html>

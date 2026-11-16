@@ -156,12 +156,43 @@ export function SquadManagement({
   const [squadActionMessage, setSquadActionMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [playerModalTab, setPlayerModalTab] = useState<'profile' | 'stats' | 'market'>('profile');
   const playerModalCardRef = React.useRef<HTMLDivElement>(null);
+  const modalSwipeStartRef = React.useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     if (selectedPlayer && playerModalCardRef.current) {
       playerModalCardRef.current.scrollTop = 0;
     }
   }, [selectedPlayer?.id, playerModalTab]);
+
+  // Lock background scroll while any Squad modal is open (especially on mobile Safari)
+  useEffect(() => {
+    if (!selectedPlayer && !showRegistrationModal) return;
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+    };
+  }, [selectedPlayer, showRegistrationModal]);
+
+  const handleModalTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    modalSwipeStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
+
+  const handleModalTouchEnd = (e: React.TouchEvent) => {
+    if (!modalSwipeStartRef.current || e.changedTouches.length !== 1) return;
+    const dx = e.changedTouches[0].clientX - modalSwipeStartRef.current.x;
+    const dy = e.changedTouches[0].clientY - modalSwipeStartRef.current.y;
+    modalSwipeStartRef.current = null;
+    if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.3) return;
+    const order: Array<'profile' | 'stats' | 'market'> = ['profile', 'stats', 'market'];
+    const idx = order.indexOf(playerModalTab);
+    if (dx < 0 && idx < order.length - 1) setPlayerModalTab(order[idx + 1]);
+    if (dx > 0 && idx > 0) setPlayerModalTab(order[idx - 1]);
+  };
 
   const handleSelectPlayerWithActions = (player: CareerPlayer) => {
     setSelectedPlayer(player);
@@ -1119,7 +1150,7 @@ export function SquadManagement({
                       const slotPos = activeFormationConfig.slots[slotIndex];
                       const playerId = lineup.starterIds[slotIndex];
                       const player = squad.find((p) => p.id === playerId);
-                      return renderPitchSlot(slotPos, player, playerId);
+                      return renderPitchSlot(slotPos, player, playerId, lineIndices.length);
                     })}
                   </div>
                 ))}
@@ -2590,57 +2621,37 @@ export function SquadManagement({
               }}
             >
               <div
-                ref={playerModalCardRef}
                 onClick={(e) => e.stopPropagation()}
-                className="office-floating-card my11-mobile-sheet bg-white border border-slate-200/90 rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 max-w-md w-full space-y-3.5 shadow-2xl relative max-h-[88vh] overflow-y-auto scrollbar-none text-[#0b1536]"
+                onTouchStart={handleModalTouchStart}
+                onTouchEnd={handleModalTouchEnd}
+                className="office-floating-card my11-mobile-sheet bg-white border border-slate-200/90 rounded-t-3xl sm:rounded-3xl max-w-md w-full shadow-2xl relative max-h-[88vh] flex flex-col overflow-hidden text-[#0b1536]"
               >
-                {/* Header: Segmented Switcher & Clear Accessible Close Button */}
-                <div className="flex items-center justify-between gap-2">
-                  <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 rounded-2xl border border-slate-200 flex-1">
-                    <button
-                      type="button"
-                      onClick={() => setPlayerModalTab('profile')}
-                      className={`py-1.5 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate ${
-                        playerModalTab === 'profile'
-                          ? 'office-nav-tab-active shadow-sm'
-                          : 'office-nav-tab-inactive'
-                      }`}
-                    >
-                      🎴 Profile
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPlayerModalTab('stats')}
-                      className={`py-1.5 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate ${
-                        playerModalTab === 'stats'
-                          ? 'office-nav-tab-active shadow-sm'
-                          : 'office-nav-tab-inactive'
-                      }`}
-                    >
-                      📊 Stats
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPlayerModalTab('market')}
-                      className={`py-1.5 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate ${
-                        playerModalTab === 'market'
-                          ? 'office-nav-tab-active shadow-sm'
-                          : 'office-nav-tab-inactive'
-                      }`}
-                    >
-                      💱 Market
-                    </button>
+                {/* Compact Sticky Top Header */}
+                <div className="shrink-0 flex items-center justify-between gap-2 px-4 pt-4 pb-3 border-b border-[#E2DFD9] bg-white">
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-700">
+                      {selectedPlayer.position} • {getEffectiveRating(selectedPlayer)} OVR • {Math.round(selectedPlayer.fitness ?? 100)}% Fit
+                    </div>
+                    <h3 className="text-base font-display font-black text-zinc-900 truncate">
+                      {selectedPlayer.name}
+                    </h3>
                   </div>
 
                   <button
                     type="button"
                     onClick={() => setSelectedPlayer(null)}
-                    className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 hover:text-slate-900 flex items-center justify-center font-bold text-sm shadow-2xs transition-colors cursor-pointer shrink-0"
+                    className="w-9 h-9 rounded-full bg-[#F7F6F3] hover:bg-zinc-200 border border-[#E2DFD9] text-zinc-700 hover:text-zinc-950 flex items-center justify-center font-bold text-sm transition-colors cursor-pointer shrink-0"
                     aria-label="Close player profile"
                   >
                     ✕
                   </button>
                 </div>
+
+                {/* Scrollable Body (Swipe left/right between Profile / Stats / Market) */}
+                <div
+                  ref={playerModalCardRef}
+                  className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5 space-y-3.5 scrollbar-none"
+                >
 
                 {playerModalTab === 'profile' ? (
                   <div className="space-y-3">
@@ -2758,14 +2769,14 @@ export function SquadManagement({
                       setSwapSourceId(selectedPlayer.id);
                       setSelectedPlayer(null);
                     }}
-                    className="flex-1 py-2.5 rounded-xl border border-amber-500/40 bg-amber-950/30 hover:bg-amber-950/60 text-amber-300 font-display font-black text-xs uppercase tracking-wider cursor-pointer"
+                    className="flex-1 py-2.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-display font-black text-xs uppercase tracking-wider cursor-pointer"
                   >
                     🔄 Swap on Pitch
                   </button>
                   <button
                     type="button"
                     onClick={() => setPlayerModalTab('market')}
-                    className="py-2.5 px-3 rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-850 text-slate-200 text-xs font-display font-black uppercase tracking-wider cursor-pointer"
+                    className="py-2.5 px-3 rounded-xl border border-[#E2DFD9] bg-[#F7F6F3] hover:bg-zinc-200/70 text-zinc-900 text-xs font-display font-black uppercase tracking-wider cursor-pointer"
                   >
                     ⚙️ Market
                   </button>
@@ -3169,20 +3180,60 @@ export function SquadManagement({
                   <button
                     type="button"
                     onClick={() => setPlayerModalTab('profile')}
-                    className="flex-1 py-2 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 font-display font-bold text-xs uppercase tracking-wider cursor-pointer"
+                    className="flex-1 py-2 rounded-xl border border-[#E2DFD9] bg-[#F7F6F3] hover:bg-zinc-200/70 text-zinc-900 font-display font-bold text-xs uppercase tracking-wider cursor-pointer"
                   >
                     ← Back to Profile
                   </button>
                   <button
                     type="button"
                     onClick={() => setSelectedPlayer(null)}
-                    className="py-2 px-4 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 text-xs font-bold cursor-pointer"
+                    className="py-2 px-4 rounded-xl border border-[#E2DFD9] bg-white hover:bg-[#F7F6F3] text-zinc-700 text-xs font-bold cursor-pointer"
                   >
                     Close
                   </button>
                 </div>
               </div>
             )}
+                </div>
+
+                {/* Bottom Thumb-Zone Tab Switcher (Swipeable or Tap) */}
+                <div className="shrink-0 border-t border-[#E2DFD9] bg-[#F7F6F3] p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+                  <div className="grid grid-cols-3 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setPlayerModalTab('profile')}
+                      className={`py-2 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate ${
+                        playerModalTab === 'profile'
+                          ? 'office-nav-tab-active shadow-sm'
+                          : 'bg-white border border-[#E2DFD9] text-zinc-700'
+                      }`}
+                    >
+                      🎴 Profile
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPlayerModalTab('stats')}
+                      className={`py-2 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate ${
+                        playerModalTab === 'stats'
+                          ? 'office-nav-tab-active shadow-sm'
+                          : 'bg-white border border-[#E2DFD9] text-zinc-700'
+                      }`}
+                    >
+                      📊 Stats
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPlayerModalTab('market')}
+                      className={`py-2 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate ${
+                        playerModalTab === 'market'
+                          ? 'office-nav-tab-active shadow-sm'
+                          : 'bg-white border border-[#E2DFD9] text-zinc-700'
+                      }`}
+                    >
+                      💱 Market
+                    </button>
+                  </div>
+                </div>
           </div>
         </div>,
         document.body
@@ -3376,7 +3427,16 @@ export function SquadManagement({
     </div>
   );
 
-  function renderPitchSlot(slotPos: string, player: CareerPlayer | undefined, playerId: string | undefined) {
+  function renderPitchSlot(
+    slotPos: string,
+    player: CareerPlayer | undefined,
+    playerId: string | undefined,
+    colCount: number = 4
+  ) {
+    const slotWidthClass =
+      colCount >= 5
+        ? 'flex-1 max-w-[66px] min-w-0 sm:w-20 md:w-24'
+        : 'w-[76px] min-w-0 sm:w-22 md:w-24';
     const activeMovingPlayer = swapSourceId
       ? squad.find((p) => p.id === swapSourceId)
       : draggedPlayer;
@@ -3399,7 +3459,7 @@ export function SquadManagement({
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
           }}
-          className={`my11-pitch-empty-slot w-[74px] min-w-0 sm:w-22 md:w-24 p-2 text-center cursor-pointer flex flex-col items-center justify-center min-h-[66px] select-none transition-all ${
+          className={`my11-pitch-empty-slot ${slotWidthClass} p-2 text-center cursor-pointer flex flex-col items-center justify-center min-h-[66px] select-none transition-all ${
             prospectiveFit === 'natural'
               ? 'border-emerald-400 ring-2 ring-emerald-400 bg-emerald-500/25 text-emerald-100 animate-pulse'
               : prospectiveFit === 'competent'
@@ -3471,7 +3531,7 @@ export function SquadManagement({
           fit === 'natural' ? 'Natural 100%' : fit === 'competent' ? 'Secondary 98%' : 'Out of Position 86%'
         }) • ${effectiveRating} OVR • Drag or click to swap`}
         aria-label={`${player.name}, position ${player.position}, rating ${effectiveRating}`}
-        className={`my11-pitch-player-card w-[76px] min-w-0 sm:w-22 md:w-24 p-1.5 sm:p-2 cursor-grab active:cursor-grabbing text-center scroll-mt-20 transition-all overflow-hidden ${
+        className={`my11-pitch-player-card ${slotWidthClass} p-1.5 sm:p-2 cursor-grab active:cursor-grabbing text-center scroll-mt-20 transition-all overflow-hidden ${
           isDragTarget
             ? 'my11-pitch-player-card-target'
             : isSwapping

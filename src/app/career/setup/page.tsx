@@ -316,57 +316,23 @@ function SetupWizardContent() {
                 Choose Your Club
               </h2>
               <p className="text-xs text-slate-600 max-w-xl mx-auto">
-                Select any of the 20 English Top Flight sides for the chosen season database, sort by name, budget, or reputation, and optionally customize your club&apos;s display name.
+                Select any of the 20 English Top Flight sides for the current 2026/27 season, sort by name, budget, or reputation, and optionally customize your club&apos;s display name.
               </p>
             </header>
 
-            {/* Compact Roster Database Season Selector */}
-            <div className="office-floating-card rounded-2xl p-3.5 sm:p-4 flex flex-col gap-2.5">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] font-display font-black text-zinc-900 uppercase tracking-wider">
-                  Roster Database Season
-                </span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[#F7F6F3] border border-[#E2DFD9] text-zinc-800 font-bold">
-                  {databaseSeason}
-                </span>
+            {/* Current Season Roster Badge */}
+            <div className="office-floating-card rounded-2xl p-3.5 sm:p-4 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-[11px] font-display font-black text-zinc-900 uppercase tracking-wider">
+                  2026/27 Current Season
+                </div>
+                <p className="text-[11px] text-zinc-600 leading-snug mt-0.5">
+                  Updated 2026/27 Premier League lineup featuring promoted Coventry, Ipswich &amp; Hull alongside Leeds &amp; Sunderland.
+                </p>
               </div>
-
-              <div className="grid grid-cols-3 gap-1.5 bg-[#F7F6F3] border border-[#E2DFD9] p-1 rounded-xl">
-                {(
-                  [
-                    { id: '2026/27', tag: 'Current' },
-                    { id: '2025/26', tag: 'Previous' },
-                    { id: '2024/25', tag: 'Classic' },
-                  ] as const
-                ).map((db) => {
-                  const isActive = databaseSeason === db.id;
-                  return (
-                    <button
-                      key={db.id}
-                      type="button"
-                      onClick={() => handleDatabaseSeasonChange(db.id)}
-                      className={`py-2 px-2 rounded-lg text-center transition-all cursor-pointer ${
-                        isActive
-                          ? 'office-nav-tab-active shadow-xs'
-                          : 'text-zinc-700 hover:bg-white'
-                      }`}
-                    >
-                      <div className="text-xs sm:text-sm font-display font-black leading-tight">{db.id}</div>
-                      <div className={`text-[9px] font-mono uppercase tracking-wider ${isActive ? 'text-amber-300' : 'text-zinc-500'}`}>
-                        {db.tag}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <p className="text-[11px] text-zinc-600 leading-snug">
-                {databaseSeason === '2026/27'
-                  ? '2026/27 Premier League lineup featuring promoted Coventry, Ipswich & Hull alongside Leeds & Sunderland.'
-                  : databaseSeason === '2025/26'
-                  ? 'Calibrated 2025/26 top-flight rosters including West Ham, Wolves & Burnley alongside Leeds & Sunderland.'
-                  : 'Classic 2024/25 campaign featuring Leicester City, Southampton & Ipswich Town authentic rosters.'}
-              </p>
+              <span className="shrink-0 text-[10px] font-mono px-2.5 py-1 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold uppercase tracking-wider">
+                2026/27
+              </span>
             </div>
 
             {/* Filter, Search & Sort Bar */}

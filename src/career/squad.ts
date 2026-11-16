@@ -360,7 +360,7 @@ export const SUPPORTED_CAREER_FORMATIONS: CareerFormationConfig[] = [
     slots: ['GK', 'LB', 'CB', 'CB', 'RB', 'CDM', 'CM', 'CAM', 'LW', 'ST', 'RW'],
     lines: [
       [8, 9, 10],    // LW, ST, RW
-      [5, 6, 7],     // CDM, CM, CAM
+      [6, 5, 7],     // CM, CDM (center), CAM
       [1, 2, 3, 4],  // LB, CB, CB, RB
       [0],           // GK
     ],

@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WonderPitch — 2026/27 Football Manager Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Hanken+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-canvas: #F2F1EE;
+      --bg-shell: #E8E6E1;
+      --bg-surface: #FFFFFF;
+      --bg-subtle: #F7F6F3;
+      --bg-charcoal: #1E2024;
+      --ink-primary: #18181B;
+      --ink-secondary: #52525B;
+      --ink-muted: #71717A;
+      --border-subtle: #E2DFD9;
+      --border-strong: #CCC8C0;
+      --accent-turf: #15803D;
+      --accent-turf-bright: #16A34A;
+      --accent-amber: #D97706;
+      --accent-rust: #B45309;
+      --grad-signature: linear-gradient(135deg, #1E2024 0%, #2B2E34 100%);
+      --grad-clash: linear-gradient(135deg, #1E2024 0%, #272A30 60%, #342426 100%);
+      --grad-gold: linear-gradient(180deg, #FBBF24 0%, #D97706 100%);
+      --grad-cta-turf: linear-gradient(180deg, #2B2E34 0%, #181A1E 100%);
+      --grad-bar-turf: linear-gradient(90deg, #D97706 0%, #F59E0B 100%);
+      --shadow-card: 0 1px 3px rgba(24, 24, 27, 0.05), 0 6px 16px rgba(24, 24, 27, 0.04);
+      --shadow-hero: 0 10px 28px rgba(24, 24, 27, 0.14);
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      --font-display: 'Hanken Grotesk', system-ui, sans-serif;
+      --font-sans: 'Golos Text', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-canvas);
+      color: var(--ink-primary);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* Top Navigation Header */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .topbar-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand-lockup {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--grad-signature);
+      display: grid;
+      place-items: center;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 4px 10px rgba(7, 59, 42, 0.22);
+    }
+
+    .brand-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+      color: var(--ink-primary);
+      line-height: 1.1;
+    }
+
+    .brand-sub {
+      font-size: 12px;
+      color: var(--ink-muted);
+      font-weight: 500;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink-secondary);
+      transition: background-color 0.18s ease, color 0.18s ease;
+    }
+
+    .nav-link:hover {
+      background-color: var(--bg-subtle);
+      color: var(--ink-primary);
+    }
+
+    .nav-link.is-active {
+      background: var(--grad-signature);
+      color: #FFFFFF;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .save-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink-primary);
+    }
+
+    .save-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--accent-turf-bright);
+      box-shadow: 0 0 0 3px rgba(16, 149, 103, 0.18);
+    }
+
+    /* Main Container on 8px Grid */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px 24px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Hero Split */
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.45fr 1fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .hero-banner {
+      position: relative;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      min-height: 416px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 32px;
+      color: #FFFFFF;
+      background-color: var(--bg-pine);
+      box-shadow: var(--shadow-hero);
+      border: 1px solid rgba(7, 59, 42, 0.22);
+    }
+
+    .hero-banner img.hero-photo {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 45%;
+    }
+
+    .hero-scrim {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        95deg,
+        rgba(15, 23, 42, 0.72) 0%,
+        rgba(15, 23, 42, 0.42) 48%,
+        rgba(15, 23, 42, 0.08) 100%
+      );
+    }
+
+    .hero-top {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge-broadcast {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--grad-signature);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      font-size: 12px;
+      font-weight: 600;
+      color: #FFFFFF;
+    }
+
+    .badge-glass {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.14);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      font-size: 12px;
+      font-weight: 600;
+      color: #F8FAFC;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 560px;
+      margin-top: auto;
+    }
+
+    .hero-content h1 {
+      margin: 0 0 12px;
+      font-family: var(--font-display);
+      font-size: 40px;
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -0.025em;
+      color: #FFFFFF;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+    }
+
+    .hero-content p {
+      margin: 0 0 24px;
+      font-size: 15px;
+      line-height: 1.55;
+      color: #E2E8F0;
+    }
+
+    .cta-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary-gold {
+      background: var(--grad-gold);
+      color: #071F15;
+      font-weight: 700;
+      border-color: rgba(255, 255, 255, 0.35);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 6px 18px rgba(217, 119, 6, 0.35);
+    }
+
+    .btn-primary-turf {
+      background: var(--grad-cta-turf);
+      color: #FFFFFF;
+      border-color: rgba(255, 255, 255, 0.18);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 6px 16px rgba(10, 97, 65, 0.28);
+    }
+
+    .btn-primary-signature {
+      background: var(--grad-signature);
+      color: #FFFFFF;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 4px 12px rgba(7, 59, 42, 0.22);
+    }
+
+    .btn-glass {
+      background: rgba(255, 255, 255, 0.15);
+      color: #FFFFFF;
+      border-color: rgba(255, 255, 255, 0.32);
+      backdrop-filter: blur(8px);
+    }
+
+    .btn-glass:hover {
+      background: rgba(255, 255, 255, 0.24);
+    }
+
+    /* Right Active Career Card — Clean White Body, Gradient Restricted to Broadcast Match Header */
+    .save-card {
+      background: var(--bg-shell);
+      border: 1px solid rgba(24, 24, 27, 0.08);
+      border-radius: 18px;
+      padding: 4px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .scorebug-header {
+      background: var(--grad-clash);
+      color: #FFFFFF;
+      padding: 18px 20px;
+      border-radius: 14px 14px 0 0;
+      border-bottom: 2px solid #D97706;
+    }
+
+    .scorebug-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #E2E8F0;
+    }
+
+    .fixture-pill {
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(251, 191, 36, 0.22);
+      border: 1px solid rgba(253, 230, 138, 0.55);
+      color: #FEF3C7;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .matchup-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .club-side {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .club-side.is-away {
+      flex-direction: row-reverse;
+      text-align: right;
+    }
+
+    .crest-badge {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 13px;
+      color: #FFFFFF;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 4px 10px rgba(0, 0, 0, 0.28);
+      flex-shrink: 0;
+    }
+
+    .crest-cov {
+      background: linear-gradient(135deg, #0095D9 0%, #026AA7 100%);
+    }
+
+    .crest-ars {
+      background: linear-gradient(135deg, #EF0107 0%, #9C0209 100%);
+    }
+
+    .club-name-sm {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 15px;
+      color: #FFFFFF;
+      line-height: 1.2;
+    }
+
+    .club-record-sm {
+      font-size: 12px;
+      color: #E2E8F0;
+    }
+
+    .vs-chip {
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: rgba(7, 31, 21, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: #FEF3C7;
+    }
+
+    /* Pure #FFFFFF Card Body */
+    .save-card-body {
+      padding: 18px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1;
+      background: var(--bg-surface);
+      border-radius: 0 0 14px 14px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .metric-box {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+    }
+
+    .metric-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-muted);
+      margin-bottom: 4px;
+    }
+
+    .metric-val {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--ink-primary);
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .metric-sub {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent-turf);
+    }
+
+    .form-chips {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 2px;
+    }
+
+    .form-chip {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: #FFFFFF;
+    }
+
+    .fc-w { background: #0B7A54; }
+    .fc-d { background: #64748B; }
+    .fc-l { background: #DC2626; }
+
+    .readiness-wrap {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+    }
+
+    .readiness-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .progress-track {
+      height: 8px;
+      border-radius: 999px;
+      background: #E2E8F0;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 94%;
+      border-radius: 999px;
+      background: var(--grad-bar-turf);
+    }
+
+    .save-card-footer {
+      margin-top: auto;
+      display: flex;
+      gap: 8px;
+    }
+
+    .save-card-footer .btn {
+      flex: 1;
+      padding: 11px 16px;
+    }
+
+    /* Section Header */
+    .section-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .section-header h2 {
+      margin: 0 0 4px;
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      color: var(--ink-primary);
+    }
+
+    .section-header p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--ink-secondary);
+    }
+
+    /* Compact Game Mode Dock */
+    .portal-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .game-tile {
+      background: var(--bg-shell);
+      border: 1px solid rgba(24, 24, 27, 0.08);
+      border-radius: 14px;
+      padding: 4px;
+      box-shadow: 0 1px 3px rgba(24, 24, 27, 0.04);
+      display: flex;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .game-tile-inner {
+      background: var(--bg-surface);
+      border-radius: 10px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .game-tile:hover {
+      transform: translateY(-2px);
+      border-color: rgba(217, 119, 6, 0.45);
+      box-shadow: 0 8px 18px rgba(24, 24, 27, 0.08);
+    }
+
+    .game-tile-thumb {
+      width: 46px;
+      height: 46px;
+      border-radius: 8px;
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .game-tile-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .game-tile-info {
+      min-width: 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .game-tile-title {
+      font-family: var(--font-display);
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--ink-primary);
+      line-height: 1.15;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .game-tile-tag {
+      display: inline-flex;
+      align-items: center;
+      align-self: flex-start;
+      padding: 1px 6px;
+      border-radius: 5px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      color: var(--ink-secondary);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .game-tile-go {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      display: grid;
+      place-items: center;
+      color: var(--accent-amber);
+      flex-shrink: 0;
+    }
+
+    /* Database Integrity Strip */
+    .db-strip {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 16px 24px;
+      box-shadow: var(--shadow-card);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      align-items: center;
+    }
+
+    .db-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .db-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      display: grid;
+      place-items: center;
+      color: var(--accent-pine);
+      flex-shrink: 0;
+    }
+
+    .db-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-primary);
+    }
+
+    .db-desc {
+      font-size: 12px;
+      color: var(--ink-secondary);
+    }
+
+    footer {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px 32px;
+      font-size: 12px;
+      color: var(--ink-muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 1040px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .portal-grid { grid-template-columns: repeat(2, 1fr); }
+      .db-strip { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 680px) {
+      .topbar-inner { flex-wrap: wrap; padding: 12px 16px; }
+      .nav-links { order: 3; width: 100%; overflow-x: auto; padding-bottom: 4px; }
+      .container { padding: 16px 16px 40px; gap: 16px; }
+      .hero-banner { min-height: 360px; padding: 24px; }
+      .hero-content h1 { font-size: 30px; }
+      .portal-grid { grid-template-columns: 1fr; }
+      .save-status-pill { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        transition-duration: 0.001ms !important;
+        animation-duration: 0.001ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand-lockup" href="1-homepage.html">
+        <div class="brand-mark" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="16" rx="2"/>
+            <line x1="12" y1="4" x2="12" y2="20"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">WonderPitch</div>
+          <div class="brand-sub">Season 2026/27 Edition</div>
+        </div>
+      </a>
+
+      <nav class="nav-links" aria-label="Main navigation">
+        <a class="nav-link is-active" href="1-homepage.html">Home</a>
+        <a class="nav-link" href="2-club-selection.html">Club Setup</a>
+        <a class="nav-link" href="3-managers-office.html">Manager's Office</a>
+      </nav>
+
+      <div class="topbar-actions">
+        <div class="save-status-pill">
+          <span class="save-dot" aria-hidden="true"></span>
+          <span>Coventry City (Week 14)</span>
+        </div>
+        <a class="btn btn-primary-signature" href="3-managers-office.html" style="padding: 8px 16px;">
+          <span>Resume Career</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero-grid" aria-label="Career launchpad and active fixture">
+      <article class="hero-banner">
+        <img class="hero-photo" src="assets/hero_tunnel_stadium.jpg" alt="Sunlit championship stadium tunnel looking out onto green turf" />
+        <div class="hero-scrim" aria-hidden="true"></div>
+
+        <div class="hero-top">
+          <span class="badge-broadcast">2026/27 Top-Flight Verified</span>
+          <span class="badge-glass">Matchday Portal Ready</span>
+        </div>
+
+        <div class="hero-content">
+          <h1>Own the Touchline. Build Your Dynasty.</h1>
+          <p>Command a bright, sunlit football management hub with verified 2026/27 clubs, signature turf-to-gold match headers, and an interactive pitch board built for real coaching.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary-gold" href="3-managers-office.html">
+              <span>Continue Coventry City</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </a>
+            <a class="btn btn-glass" href="2-club-selection.html">
+              <span>Start New Career</span>
+            </a>
+          </div>
+        </div>
+      </article>
+
+      <aside class="save-card" aria-label="Active save matchday preview">
+        <div class="scorebug-header">
+          <div class="scorebug-meta">
+            <span>Next League Fixture</span>
+            <span class="fixture-pill">Matchweek 14</span>
+          </div>
+          <div class="matchup-row">
+            <div class="club-side">
+              <div class="crest-badge crest-cov" aria-hidden="true">COV</div>
+              <div>
+                <div class="club-name-sm">Coventry City</div>
+                <div class="club-record-sm">8th (22 pts)</div>
+              </div>
+            </div>
+            <div class="vs-chip">15:00</div>
+            <div class="club-side is-away">
+              <div class="crest-badge crest-ars" aria-hidden="true">ARS</div>
+              <div>
+                <div class="club-name-sm">Arsenal</div>
+                <div class="club-record-sm">2nd (31 pts)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="save-card-body">
+          <div class="metric-grid">
+            <div class="metric-box">
+              <div class="metric-label">Recent League Form</div>
+              <div class="form-chips" aria-label="Win, Draw, Win, Loss, Win">
+                <span class="form-chip fc-w">W</span>
+                <span class="form-chip fc-d">D</span>
+                <span class="form-chip fc-w">W</span>
+                <span class="form-chip fc-l">L</span>
+                <span class="form-chip fc-w">W</span>
+              </div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">Transfer Budget</div>
+              <div class="metric-val">
+                <span>£34.2M</span>
+                <span class="metric-sub">Healthy</span>
+              </div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">Selected System</div>
+              <div class="metric-val" style="font-size: 16px;">4-2-3-1 DM Wide</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">Dressing Room Morale</div>
+              <div class="metric-val" style="font-size: 16px;">Very Good</div>
+            </div>
+          </div>
+
+          <div class="readiness-wrap">
+            <div class="readiness-head">
+              <span>Squad Match Readiness</span>
+              <span style="font-family: var(--font-mono); color: var(--accent-turf);">94%</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill"></div>
+            </div>
+          </div>
+
+          <div class="save-card-footer">
+            <a class="btn btn-primary-signature" href="3-managers-office.html">
+              <span>Open Tactics & Office</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            </a>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section aria-labelledby="portal-modules-heading">
+      <div class="section-header" style="margin-bottom: 10px;">
+        <div>
+          <h2 id="portal-modules-heading" style="font-size:17px;">Touchline Command Dock</h2>
+        </div>
+      </div>
+
+      <div class="portal-grid">
+        <a class="game-tile" href="3-managers-office.html">
+          <div class="game-tile-inner">
+            <div class="game-tile-thumb"><img src="assets/photo_stadium_bowl.jpg" alt="Tactics Pitch" /></div>
+            <div class="game-tile-info">
+              <div class="game-tile-title">Tactics Room</div>
+              <span class="game-tile-tag">4-2-3-1 Ready</span>
+            </div>
+            <div class="game-tile-go" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </div>
+          </div>
+        </a>
+
+        <a class="game-tile" href="2-club-selection.html">
+          <div class="game-tile-inner">
+            <div class="game-tile-thumb"><img src="assets/photo_dressing_room.jpg" alt="Club Setup" /></div>
+            <div class="game-tile-info">
+              <div class="game-tile-title">Club Selection</div>
+              <span class="game-tile-tag">20 Clubs A-Z</span>
+            </div>
+            <div class="game-tile-go" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </div>
+          </div>
+        </a>
+
+        <a class="game-tile" href="3-managers-office.html#scouting">
+          <div class="game-tile-inner">
+            <div class="game-tile-thumb"><img src="assets/photo_boardroom_pitch.jpg" alt="Scouting Hub" /></div>
+            <div class="game-tile-info">
+              <div class="game-tile-title">Scout Shortlist</div>
+              <span class="game-tile-tag">3 Top Targets</span>
+            </div>
+            <div class="game-tile-go" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </div>
+          </div>
+        </a>
+
+        <a class="game-tile" href="3-managers-office.html#training">
+          <div class="game-tile-inner">
+            <div class="game-tile-thumb"><img src="assets/photo_training_pitch.jpg" alt="Match Prep" /></div>
+            <div class="game-tile-info">
+              <div class="game-tile-title">Match Prep</div>
+              <span class="game-tile-tag">94% Sharpness</span>
+            </div>
+            <div class="game-tile-go" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </div>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <section class="db-strip" aria-label="2026/27 Season Database Status">
+      <div class="db-item">
+        <div class="db-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div>
+          <div class="db-title">2026/27 Promoted Sides Live</div>
+          <div class="db-desc">Coventry City, Hull City, Ipswich Town active (replaces WHU, BUR, WOL)</div>
+        </div>
+      </div>
+
+      <div class="db-item">
+        <div class="db-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/></svg>
+        </div>
+        <div>
+          <div class="db-title">A to Z Default & Clean Naming</div>
+          <div class="db-desc">Alphabetical default sorting with single custom club name input</div>
+        </div>
+      </div>
+
+      <div class="db-item">
+        <div class="db-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+        </div>
+        <div>
+          <div class="db-title">Tactile Linen &amp; Amber Craft</div>
+          <div class="db-desc">Restrained neutral plates with warm floodlight amber accents</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>WonderPitch Manager — V11 Tactile Linen Edition</span>
+    <span>2026/27 Top-Flight Season Database</span>
+  </footer>
+</body>
+</html>

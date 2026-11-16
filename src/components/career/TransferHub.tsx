@@ -181,9 +181,16 @@ export function TransferHub({
   );
 
   // Era pool toggle ('modern' default per user requirement)
+  const configuredPool = save.settings?.playerPool || 'modern';
   const [playerPoolType, setPlayerPoolType] = useState<'modern' | 'legends' | 'all'>(
-    save.settings?.playerPool || 'modern'
+    configuredPool
   );
+  const effectivePlayerPoolType: 'modern' | 'legends' | 'all' =
+    configuredPool === 'modern'
+      ? 'modern'
+      : configuredPool === 'legends'
+      ? 'legends'
+      : playerPoolType;
 
   // Global Scouting Network state
   const [selectedScoutingRegion, setSelectedScoutingRegion] = useState<ScoutingRegion>('south_america');
@@ -273,6 +280,18 @@ export function TransferHub({
   // Transfer Negotiation Modal & Detailed Terms
   const [negotiatingPlayer, setNegotiatingPlayer] = useState<MarketPlayer | null>(null);
   const [profilePlayer, setProfilePlayer] = useState<MarketPlayer | null>(null);
+
+  useEffect(() => {
+    if (!profilePlayer && !negotiatingPlayer) return;
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+    };
+  }, [profilePlayer, negotiatingPlayer]);
   const [offeredFee, setOfferedFee] = useState<number>(0);
   const [offeredWage, setOfferedWage] = useState<number>(0);
   const [offeredContractYears, setOfferedContractYears] = useState<number>(3);
@@ -324,7 +343,7 @@ export function TransferHub({
     }
 
     return {
-      playerPoolType,
+      playerPoolType: effectivePlayerPoolType,
       positionCategory: selectedPosCategory,
       specificPosition: specificPosition !== 'ALL' ? specificPosition : undefined,
       minRating: minRating > 0 ? minRating : undefined,
@@ -340,7 +359,7 @@ export function TransferHub({
       sortBy: selectedSortBy,
     };
   }, [
-    playerPoolType,
+    effectivePlayerPoolType,
     selectedPosCategory,
     specificPosition,
     minRating,
@@ -378,10 +397,13 @@ export function TransferHub({
 
   const shortlistedPlayers = useMemo(
     () =>
-      getScoutingMarketPool(save.squad, undefined, dbSeason, save.season?.yearStart || 2026).filter((p) =>
-        shortlistIdsSet.has(p.id)
-      ),
-    [save.squad, shortlistIdsSet, dbSeason, save.season?.yearStart]
+      getScoutingMarketPool(
+        save.squad,
+        { playerPoolType: configuredPool },
+        dbSeason,
+        save.season?.yearStart || 2026
+      ).filter((p) => shortlistIdsSet.has(p.id)),
+    [save.squad, shortlistIdsSet, configuredPool, dbSeason, save.season?.yearStart]
   );
 
 
@@ -1261,48 +1283,54 @@ export function TransferHub({
             <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100">
               {/* Era Pills */}
               <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl border border-slate-200/80">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPlayerPoolType('modern');
-                    setCurrentPage(1);
-                  }}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-display font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                    playerPoolType === 'modern'
-                      ? 'office-nav-tab-active shadow-sm'
-                      : 'text-zinc-700 hover:text-zinc-900'
-                  }`}
-                >
-                  ⚡ Modern
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPlayerPoolType('legends');
-                    setCurrentPage(1);
-                  }}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
-                    playerPoolType === 'legends'
-                      ? 'bg-amber-400 text-slate-950 font-black shadow-sm'
-                      : 'text-amber-800 hover:text-amber-900'
-                  }`}
-                >
-                  👑 Icons
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPlayerPoolType('all');
-                    setCurrentPage(1);
-                  }}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-display font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                    playerPoolType === 'all'
-                      ? 'office-nav-tab-active shadow-sm'
-                      : 'text-zinc-700 hover:text-zinc-900'
-                  }`}
-                >
-                  🌐 All
-                </button>
+                {(configuredPool === 'modern' || configuredPool === 'all') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPlayerPoolType('modern');
+                      setCurrentPage(1);
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-display font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                      effectivePlayerPoolType === 'modern'
+                        ? 'office-nav-tab-active shadow-sm'
+                        : 'text-zinc-700 hover:text-zinc-900'
+                    }`}
+                  >
+                    ⚡ Modern
+                  </button>
+                )}
+                {(configuredPool === 'legends' || configuredPool === 'all') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPlayerPoolType('legends');
+                      setCurrentPage(1);
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
+                      effectivePlayerPoolType === 'legends'
+                        ? 'bg-amber-400 text-slate-950 font-black shadow-sm'
+                        : 'text-amber-800 hover:text-amber-900'
+                    }`}
+                  >
+                    👑 Icons
+                  </button>
+                )}
+                {configuredPool === 'all' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPlayerPoolType('all');
+                      setCurrentPage(1);
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-display font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                      effectivePlayerPoolType === 'all'
+                        ? 'office-nav-tab-active shadow-sm'
+                        : 'text-zinc-700 hover:text-zinc-900'
+                    }`}
+                  >
+                    🌐 All
+                  </button>
+                )}
               </div>
 
               {/* Position Category Pills */}
@@ -1375,7 +1403,9 @@ export function TransferHub({
                     <option value="ALL">All Leagues</option>
                     <option value="pl">Premier League</option>
                     <option value="continental">Europe Continental</option>
-                    <option value="legends">Legends / Icons</option>
+                    {configuredPool !== 'modern' && (
+                      <option value="legends">Legends / Icons</option>
+                    )}
                   </select>
                 </div>
 
@@ -1593,7 +1623,7 @@ export function TransferHub({
                       {/* Primary Header Row */}
                       <div className="flex items-center justify-between gap-2">
                         {/* Rating Badge + Name + Info */}
-                        <div className="flex items-center gap-2 min-w-0">
+                        <div className="flex items-center gap-2 flex-1 min-w-0 overflow-hidden">
                           <button
                             type="button"
                             onClick={() => setProfilePlayer(player)}
@@ -1603,15 +1633,15 @@ export function TransferHub({
                             {player.rating}
                           </button>
 
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-1.5">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 min-w-0">
                               <button
                                 type="button"
                                 onClick={() => setProfilePlayer(player)}
-                                className="group text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+                                className="group text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded min-w-0 max-w-full"
                                 title={`View ${player.name} full profile, stats & scouting report`}
                               >
-                                <h3 className="font-display font-black text-xs sm:text-sm text-slate-900 group-hover:text-blue-600 truncate max-w-[120px] sm:max-w-[170px] transition-colors underline-offset-2 group-hover:underline">
+                                <h3 className="font-display font-black text-xs sm:text-sm text-slate-900 group-hover:text-blue-600 truncate transition-colors underline-offset-2 group-hover:underline">
                                   {player.name}
                                 </h3>
                               </button>

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WonderPitch UI Gallery — V11 Tactile Linen &amp; Floodlight Amber</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Hanken+Grotesk:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-canvas: #F2F1EE;
+      --bg-surface: #FFFFFF;
+      --bg-subtle: #F7F6F3;
+      --ink-primary: #18181B;
+      --ink-secondary: #52525B;
+      --border-subtle: #E2DFD9;
+      --grad-signature: linear-gradient(135deg, #1E2024 0%, #2B2E34 100%);
+      --grad-cta-turf: linear-gradient(180deg, #FBBF24 0%, #D97706 100%);
+      --font-display: 'Hanken Grotesk', system-ui, sans-serif;
+      --font-sans: 'Golos Text', system-ui, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg-canvas); color: var(--ink-primary); font-family: var(--font-sans); }
+
+    .header-bar {
+      background: var(--grad-signature);
+      color: #FFFFFF;
+      padding: 20px 28px;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .header-inner {
+      max-width: 1360px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .header-inner h1 {
+      margin: 0 0 4px;
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .header-inner p { margin: 0; font-size: 13px; color: #CBD5E1; }
+
+    .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    .ver-tabs {
+      display: flex;
+      gap: 6px;
+      background: rgba(255,255,255,0.1);
+      padding: 4px;
+      border-radius: 10px;
+    }
+
+    .ver-btn {
+      border: 0;
+      background: transparent;
+      color: #CBD5E1;
+      padding: 8px 14px;
+      border-radius: 7px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .ver-btn.is-active { background: #FFFFFF; color: #091326; }
+
+    .dev-toggle {
+      border: 1px solid rgba(255,255,255,0.28);
+      background: rgba(255,255,255,0.12);
+      color: #FFFFFF;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .main {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 24px 28px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-head {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .card-head h2 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .open-btn {
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: var(--grad-cta-turf);
+      color: #FFFFFF;
+      font-size: 12px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .shot-box {
+      padding: 14px;
+      background: var(--bg-subtle);
+      display: grid;
+      place-items: center;
+      min-height: 260px;
+    }
+
+    .shot-box img {
+      width: 100%;
+      height: auto;
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+      display: block;
+    }
+
+    .shot-box.is-mobile img {
+      max-width: 240px;
+    }
+
+    .card-note {
+      padding: 12px 18px 16px;
+      font-size: 13px;
+      color: var(--ink-secondary);
+      line-height: 1.45;
+    }
+
+    .tactics-feature {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+    }
+
+    .tactics-feature img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    @media (max-width: 1040px) { .grid-3 { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header class="header-bar">
+    <div class="header-inner">
+      <div>
+        <h1>WonderPitch UI Gallery — V11 Tactile Linen &amp; Floodlight Amber</h1>
+        <p>Restrained linen-grey surfaces, Double-Bezel machined cards, compact game command dock, and true-circle pitch.</p>
+      </div>
+      <div class="controls">
+        <div class="ver-tabs">
+          <button class="ver-btn is-active" data-ver="v11" type="button">Latest V11 (Tactile Linen)</button>
+          <button class="ver-btn" data-ver="v10" type="button">Earlier V10</button>
+          <button class="ver-btn" data-ver="v7" type="button">Earlier V9</button>
+        </div>
+        <button class="dev-toggle" id="device-btn" type="button">View: Desktop</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="grid-3" id="cards-grid"></section>
+
+    <section class="tactics-feature" id="tactics-closeup-card">
+      <div class="card-head">
+        <h2>Flagship Pitch &amp; Tactics Board Close-Up (V11)</h2>
+        <a class="open-btn" style="color:#18181B;" href="3-managers-office.html">Test Interactive Pitch</a>
+      </div>
+      <div style="padding:16px; background:var(--bg-subtle);">
+        <img src="screenshots/v11-tactics-closeup.png" alt="Flagship V11 Football Pitch and Tactics Board close-up" style="border-radius:10px; border:1px solid var(--border-subtle);" />
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const DATA = {
+      v11: [
+        { title: '1. Game Launchpad', link: '1-homepage.html', desk: 'screenshots/v11-1-homepage-desktop.png', mob: 'screenshots/v11-1-homepage-mobile.png', note: 'Restrained unbleached linen canvas, Double-Bezel scorebug, compact Touchline Command Dock, and floodlight amber CTA.' },
+        { title: '2. 2026/27 Club Selection', link: '2-club-selection.html', desk: 'screenshots/v11-2-club-selection-desktop.png', mob: 'screenshots/v11-2-club-selection-mobile.png', note: 'All 20 verified Top-Flight clubs A to Z with calm charcoal chrome, duotone club header, and true-circle mini pitch.' },
+        { title: "3. Manager's Office & Tactics", link: '3-managers-office.html', desk: 'screenshots/v11-3-managers-office-desktop.png', mob: 'screenshots/v11-3-managers-office-mobile.png', note: 'Charcoal matchday masthead, true-circle pitch inside tactile linen tray, elevated coaching cards, and 7-man bench.' }
+      ],
+      v10: [
+        { title: '1. Game Launchpad', link: '1-homepage.html', desk: 'screenshots/v10-1-homepage-desktop.png', mob: 'screenshots/v10-1-homepage-mobile.png', note: 'Compact Touchline Command Dock (game-first buttons), warm Solar Flare headers, and beloved orange-gold CTA.' },
+        { title: '2. 2026/27 Club Selection', link: '2-club-selection.html', desk: 'screenshots/v10-2-club-selection-desktop.png', mob: 'screenshots/v10-2-club-selection-mobile.png', note: 'All 20 verified Top-Flight clubs A to Z with warm Solar Flare accents, duotone club header, and true-circle mini pitch.' },
+        { title: "3. Manager's Office & Tactics", link: '3-managers-office.html', desk: 'screenshots/v10-3-managers-office-desktop.png', mob: 'screenshots/v10-3-managers-office-mobile.png', note: 'Warm orange-crimson masthead, true-circle pitch with understated lines, elevated coaching cards, and 7-man bench.' }
+      ],
+      v7: [
+        { title: '1. Homepage Launchpad', link: '1-homepage.html', desk: 'screenshots/v7-1-homepage-desktop.png', mob: 'screenshots/v7-1-homepage-mobile.png', note: 'Pure white cards on warm stadium chalk with Turf-to-Jade signature bar, Club-Clash matchup header, and floodlight gold CTA.' },
+        { title: '2. 2026/27 Club Selection', link: '2-club-selection.html', desk: 'screenshots/v7-2-club-selection-desktop.png', mob: 'screenshots/v7-2-club-selection-mobile.png', note: 'All 20 verified Top-Flight clubs A to Z (promotes Coventry, Hull, Ipswich), bespoke club duotone dossier header, and mini pitch.' },
+        { title: "3. Manager's Office & Tactics", link: '3-managers-office.html', desk: 'screenshots/v7-3-managers-office-desktop.png', mob: 'screenshots/v7-3-managers-office-mobile.png', note: 'Sky-to-Turf club masthead, golden-hour formation switcher, striped pitch with SVG kits, original coaching pillars, and 7-man bench.' }
+      ],
+      v6: [
+        { title: '1. Homepage (V6)', link: '1-homepage.html', desk: 'screenshots/v6-1-homepage-desktop.png', mob: 'screenshots/v6-1-homepage-mobile.png', note: 'Earlier V6 gradient direction.' },
+        { title: '2. Club Selection (V6)', link: '2-club-selection.html', desk: 'screenshots/v6-2-club-selection-desktop.png', mob: 'screenshots/v6-2-club-selection-mobile.png', note: 'Earlier V6 pastel card tints.' },
+        { title: "3. Manager's Office (V6)", link: '3-managers-office.html', desk: 'screenshots/v6-3-managers-office-desktop.png', mob: 'screenshots/v6-3-managers-office-mobile.png', note: 'Earlier V6 circle token pitch.' }
+      ],
+      v5: [
+        { title: '1. Homepage (V5)', link: '1-homepage.html', desk: 'screenshots/v5-1-homepage-desktop.png', mob: 'screenshots/v5-1-homepage-mobile.png', note: 'Earlier V5 photo-led layout.' },
+        { title: '2. Club Selection (V5)', link: '2-club-selection.html', desk: 'screenshots/v5-2-club-selection-desktop.png', mob: 'screenshots/v5-2-club-selection-mobile.png', note: 'Earlier V5 flat setup grid.' },
+        { title: "3. Manager's Office (V5)", link: '3-managers-office.html', desk: 'screenshots/v5-3-managers-office-desktop.png', mob: 'screenshots/v5-3-managers-office-mobile.png', note: 'Earlier V5 office hub.' }
+      ]
+    };
+
+    let currentSet = 'v11';
+    let device = 'desk';
+
+    function render() {
+      const grid = document.getElementById('cards-grid');
+      grid.innerHTML = DATA[currentSet].map((item) => `
+        <article class="card">
+          <div class="card-head">
+            <h2>${item.title}</h2>
+            <a class="open-btn" style="color:#18181B;" href="${item.link}">Open Live HTML</a>
+          </div>
+          <div class="shot-box ${device === 'mob' ? 'is-mobile' : ''}">
+            <img src="${item[device]}" alt="${item.title}" />
+          </div>
+          <div class="card-note">${item.note}</div>
+        </article>
+      `).join('');
+      document.getElementById('tactics-closeup-card').style.display = currentSet === 'v11' ? 'block' : 'none';
+    }
+
+    document.querySelectorAll('.ver-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.ver-btn').forEach((b) => b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+        currentSet = btn.dataset.ver;
+        render();
+      });
+    });
+
+    document.getElementById('device-btn').addEventListener('click', (e) => {
+      device = device === 'desk' ? 'mob' : 'desk';
+      e.target.textContent = 'View: ' + (device === 'desk' ? 'Desktop' : 'Mobile');
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

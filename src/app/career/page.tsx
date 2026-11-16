@@ -182,7 +182,7 @@ export default function CareerEntryPage() {
                 Select Manager Save Slot
               </h1>
               <p className="text-xs sm:text-sm text-slate-200 max-w-2xl">
-                Run up to 3 independent multi-season managerial careers side-by-side, switch season databases (2026/27, 2025/26, 2024/25), and back up any save as JSON.
+                Run up to 3 independent multi-season 2026/27 managerial careers side-by-side and back up any save as JSON.
               </p>
             </div>
             <div className="rounded-2xl bg-white/10 border border-white/15 px-4 py-3 text-left shrink-0">

@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WonderPitch — 2026/27 Club Selection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Hanken+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-canvas: #F2F1EE;
+      --bg-surface: #FFFFFF;
+      --bg-subtle: #F7F6F3;
+      --bg-pine: #1E2024;
+      --bg-pine-mid: #2B2E34;
+      --ink-primary: #18181B;
+      --ink-secondary: #52525B;
+      --ink-muted: #71717A;
+      --border-subtle: #E2DFD9;
+      --border-strong: #CCC8C0;
+      --accent-turf: #15803D;
+      --accent-pine: #18181B;
+      --grad-signature: linear-gradient(135deg, #1E2024 0%, #2B2E34 100%);
+      --grad-gold: linear-gradient(180deg, #FBBF24 0%, #D97706 100%);
+      --grad-cta-turf: linear-gradient(180deg, #2B2E34 0%, #181A1E 100%);
+      --shadow-card: 0 1px 3px rgba(24, 24, 27, 0.05), 0 6px 16px rgba(24, 24, 27, 0.04);
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      --font-display: 'Hanken Grotesk', system-ui, sans-serif;
+      --font-sans: 'Golos Text', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-canvas);
+      color: var(--ink-primary);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* Topbar */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .topbar-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand-lockup {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--grad-signature);
+      display: grid;
+      place-items: center;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), 0 4px 10px rgba(7, 59, 42, 0.22);
+    }
+
+    .brand-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    .brand-sub {
+      font-size: 12px;
+      color: var(--ink-muted);
+      font-weight: 500;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink-secondary);
+      transition: background-color 0.16s ease, color 0.16s ease;
+    }
+
+    .nav-link:hover { background: var(--bg-subtle); color: var(--ink-primary); }
+    .nav-link.is-active {
+      background: var(--grad-signature);
+      color: #FFFFFF;
+    }
+
+    .step-strip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .step-pill {
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      color: var(--ink-muted);
+    }
+
+    .step-pill.is-done { color: var(--accent-turf); border-color: rgba(12, 99, 67, 0.25); background: #ECFDF5; }
+    .step-pill.is-current { background: var(--grad-signature); color: #FFFFFF; border-color: transparent; }
+
+    /* Main Layout */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 20px 24px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Compact Page Masthead */
+    .setup-banner {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 16px 24px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .setup-title h1 {
+      margin: 0 0 4px;
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--ink-primary);
+    }
+
+    .setup-title p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--ink-secondary);
+    }
+
+    .season-tabs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      padding: 4px;
+      border-radius: 12px;
+    }
+
+    .season-tab {
+      border: 0;
+      background: transparent;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink-secondary);
+      cursor: pointer;
+      transition: background-color 0.16s ease, color 0.16s ease;
+    }
+
+    .season-tab.is-active {
+      background: var(--grad-signature);
+      color: #FFFFFF;
+      box-shadow: 0 2px 6px rgba(7, 59, 42, 0.18);
+    }
+
+    /* Filter & Sort Toolbar */
+    .toolbar {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .filter-chips {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .filter-chip {
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-subtle);
+      color: var(--ink-secondary);
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .filter-chip:hover { border-color: var(--border-strong); color: var(--ink-primary); }
+    .filter-chip.is-active {
+      background: var(--grad-signature);
+      color: #FFFFFF;
+      border-color: transparent;
+    }
+
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .search-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-wrap svg {
+      position: absolute;
+      left: 12px;
+      color: var(--ink-muted);
+      pointer-events: none;
+    }
+
+    .input-ctrl, .select-ctrl {
+      height: 38px;
+      border-radius: 9px;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-subtle);
+      color: var(--ink-primary);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      outline: none;
+      transition: border-color 0.16s ease, background-color 0.16s ease;
+    }
+
+    .input-ctrl {
+      padding: 0 12px 0 36px;
+      width: 210px;
+    }
+
+    .select-ctrl {
+      padding: 0 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .input-ctrl:focus, .select-ctrl:focus {
+      border-color: var(--accent-pine);
+      background: #FFFFFF;
+    }
+
+    /* Two-column Workspace */
+    .workspace {
+      display: grid;
+      grid-template-columns: 1.55fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* Club Grid — Crisp Pure #FFFFFF Cards with Contained Top Kit Trim */
+    .club-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .club-card {
+      position: relative;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      padding: 16px;
+      box-shadow: var(--shadow-card);
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .club-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-strong);
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+    }
+
+    .club-card.is-selected {
+      border: 2px solid #D97706;
+      box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.14), 0 10px 20px rgba(24, 24, 27, 0.08);
+    }
+
+    /* Contained 4px kit gradient stripe strictly at top edge — zero wash on white card */
+    .kit-trim {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .club-identity {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .club-crest {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 12px;
+      color: #FFFFFF;
+      flex-shrink: 0;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.28);
+    }
+
+    .club-name {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .club-ground {
+      font-size: 12px;
+      color: var(--ink-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tag-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .pill-badge {
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      color: var(--ink-secondary);
+    }
+
+    .pill-promoted {
+      background: #ECFDF5;
+      border-color: #A7F3D0;
+      color: #065F46;
+    }
+
+    .pill-selected {
+      background: #18181B;
+      border-color: #18181B;
+      color: #FFFFFF;
+    }
+
+    .card-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+
+    .stat-cell-label {
+      font-size: 11px;
+      color: var(--ink-muted);
+      font-weight: 600;
+    }
+
+    .stat-cell-val {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-primary);
+    }
+
+    /* Sticky Right Dossier */
+    .dossier {
+      position: sticky;
+      top: 76px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dossier-header {
+      background: var(--grad-signature);
+      color: #FFFFFF;
+      padding: 20px;
+      position: relative;
+    }
+
+    .dossier-kit-stripe {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 5px;
+    }
+
+    .dossier-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .dossier-club-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .dossier-crest {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 15px;
+      color: #FFFFFF;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 6px 14px rgba(0,0,0,0.3);
+      flex-shrink: 0;
+    }
+
+    .dossier-club-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 800;
+      color: #FFFFFF;
+      line-height: 1.15;
+    }
+
+    .dossier-club-sub {
+      font-size: 12px;
+      color: #CBD5E1;
+      margin-top: 2px;
+    }
+
+    .dossier-ovr {
+      text-align: center;
+      padding: 6px 12px;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.22);
+      border: 1px solid rgba(255, 255, 255, 0.26);
+    }
+
+    .dossier-ovr-num {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1;
+      color: #FFFFFF;
+    }
+
+    .dossier-ovr-lbl {
+      font-size: 11px;
+      color: #F0FDF4;
+      font-weight: 600;
+    }
+
+    .dossier-kpis {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .dossier-kpi {
+      background: rgba(15, 23, 42, 0.22);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+
+    .dossier-kpi-lbl {
+      font-size: 11px;
+      color: #F8FAFC;
+    }
+
+    .dossier-kpi-val {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: #FFFFFF;
+    }
+
+    .dossier-body {
+      padding: 16px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background: var(--bg-surface);
+    }
+
+    .pitch-preview-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-primary);
+    }
+
+    .formation-chip {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 6px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      color: var(--ink-primary);
+    }
+
+    /* Upgraded Mini Tactical Pitch */
+    .mini-pitch-box {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1.5px solid #1A8748;
+      background: #1F9D55;
+      box-shadow: inset 0 2px 8px rgba(15, 83, 45, 0.16);
+    }
+
+    .mini-pitch-box svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    /* Custom Club Name Dock — Single Clean Input */
+    .custom-club-box {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .custom-club-box label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-primary);
+    }
+
+    .custom-name-input {
+      width: 100%;
+      height: 38px;
+      border-radius: 8px;
+      border: 1px solid var(--border-strong);
+      background: #FFFFFF;
+      padding: 0 12px;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink-primary);
+      outline: none;
+    }
+
+    .custom-name-input:focus {
+      border-color: var(--accent-pine);
+      box-shadow: 0 0 0 3px rgba(7, 59, 42, 0.14);
+    }
+
+    .launch-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 600;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+
+    .btn-gold {
+      flex: 1;
+      background: var(--grad-gold);
+      color: #071F15;
+      font-weight: 700;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 6px 14px rgba(217, 119, 6, 0.28);
+    }
+
+    .btn-turf {
+      flex: 1;
+      background: var(--grad-cta-turf);
+      color: #FFFFFF;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), 0 6px 14px rgba(10, 97, 65, 0.25);
+    }
+
+    .btn-outline {
+      background: #FFFFFF;
+      border-color: var(--border-strong);
+      color: var(--ink-primary);
+    }
+
+    @media (max-width: 1020px) {
+      .workspace { grid-template-columns: 1fr; }
+      .dossier { position: static; }
+    }
+
+    @media (max-width: 680px) {
+      .topbar-inner { padding: 12px 16px; flex-wrap: wrap; }
+      .step-strip { display: none; }
+      .container { padding: 16px 16px 40px; }
+      .club-grid { grid-template-columns: 1fr; }
+      .toolbar { padding: 12px; }
+      .input-ctrl { width: 100%; }
+      .toolbar-right { width: 100%; justify-content: space-between; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        transition-duration: 0.001ms !important;
+        animation-duration: 0.001ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand-lockup" href="1-homepage.html">
+        <div class="brand-mark" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="16" rx="2"/>
+            <line x1="12" y1="4" x2="12" y2="20"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">WonderPitch</div>
+          <div class="brand-sub">Career Setup</div>
+        </div>
+      </a>
+
+      <nav class="nav-links" aria-label="Main navigation">
+        <a class="nav-link" href="1-homepage.html">Home</a>
+        <a class="nav-link is-active" href="2-club-selection.html">Club Setup</a>
+        <a class="nav-link" href="3-managers-office.html">Manager's Office</a>
+      </nav>
+
+      <div class="step-strip" aria-label="Setup steps">
+        <span class="step-pill is-done">1. Profile</span>
+        <span class="step-pill is-current">2. Choose Club</span>
+        <span class="step-pill">3. Rules</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="setup-banner" aria-label="Club selection header">
+      <div class="setup-title">
+        <h1>Choose Your 2026/27 Club</h1>
+        <p>Verified 20 Top-Flight English clubs arranged A to Z (promotes Coventry City, Hull City, and Ipswich Town).</p>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <div class="season-tabs" role="tablist" aria-label="Database Season">
+          <button class="season-tab is-active" type="button">2026/27 Current</button>
+          <button class="season-tab" type="button">2025/26</button>
+          <button class="season-tab" type="button">2024/25</button>
+        </div>
+        <a class="btn btn-turf" style="flex:0 0 auto; padding:10px 18px;" href="3-managers-office.html">
+          <span>Enter Manager's Office</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+      </div>
+    </section>
+
+    <section class="toolbar" aria-label="Filter and sort clubs">
+      <div class="filter-chips" id="tier-filters">
+        <button class="filter-chip is-active" data-tier="all" type="button">All 20 Clubs</button>
+        <button class="filter-chip" data-tier="Contender" type="button">Title Contenders</button>
+        <button class="filter-chip" data-tier="European" type="button">European Push</button>
+        <button class="filter-chip" data-tier="Mid-Table" type="button">Mid-Table</button>
+        <button class="filter-chip" data-tier="Promoted" type="button">Newly Promoted</button>
+      </div>
+
+      <div class="toolbar-right">
+        <div class="search-wrap">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="club-search" class="input-ctrl" type="search" placeholder="Search club or ground..." aria-label="Search clubs" />
+        </div>
+
+        <label for="sort-select" style="font-size:13px; font-weight:600; color:var(--ink-secondary);">Sort by</label>
+        <select id="sort-select" class="select-ctrl">
+          <option value="alpha" selected>Club Name (A to Z)</option>
+          <option value="budget">Transfer Budget (High to Low)</option>
+          <option value="rating">Club Rating (High to Low)</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="workspace" aria-label="Club list and selected dossier">
+      <div class="club-grid" id="club-grid" role="list"></div>
+
+      <aside class="dossier" id="club-dossier" aria-label="Selected club dossier">
+        <div class="dossier-header">
+          <div class="dossier-kit-stripe" id="d-kit-stripe"></div>
+          <div class="dossier-top-row">
+            <div class="dossier-club-row">
+              <div class="dossier-crest" id="d-crest">COV</div>
+              <div>
+                <div class="dossier-club-title" id="d-name">Coventry City</div>
+                <div class="dossier-club-sub" id="d-ground">Coventry Building Society Arena</div>
+              </div>
+            </div>
+            <div class="dossier-ovr">
+              <div class="dossier-ovr-num" id="d-ovr">78</div>
+              <div class="dossier-ovr-lbl">Rating</div>
+            </div>
+          </div>
+
+          <div class="dossier-kpis">
+            <div class="dossier-kpi">
+              <div class="dossier-kpi-lbl">Budget</div>
+              <div class="dossier-kpi-val" id="d-budget">£38M</div>
+            </div>
+            <div class="dossier-kpi">
+              <div class="dossier-kpi-lbl">Reputation</div>
+              <div class="dossier-kpi-val" id="d-rep">77/100</div>
+            </div>
+            <div class="dossier-kpi">
+              <div class="dossier-kpi-lbl">Board Target</div>
+              <div class="dossier-kpi-val" id="d-target">Stay Up</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dossier-body">
+          <div class="pitch-preview-head">
+            <span>Preferred Matchday Shape</span>
+            <span class="formation-chip" id="d-formation">4-2-3-1 DM Wide</span>
+          </div>
+
+          <div class="mini-pitch-box" id="d-mini-pitch"></div>
+
+          <div class="custom-club-box">
+            <label for="custom-club-input">Custom Club Name (Optional)</label>
+            <input id="custom-club-input" class="custom-name-input" type="text" value="Coventry City" placeholder="Enter preferred display name..." />
+          </div>
+
+          <div class="launch-actions">
+            <a class="btn btn-outline" href="1-homepage.html">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+              <span>Back</span>
+            </a>
+            <a class="btn btn-gold" href="3-managers-office.html">
+              <span>Start Career with Club</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </a>
+          </div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const CLUBS = [
+      { id: 'ars', code: 'ARS', name: 'Arsenal', ground: 'Emirates Stadium', tier: 'Contender', rating: 86, budget: 95, rep: 94, target: 'Title Race', c1: '#DB0007', c2: '#9C0209', formation: '4-3-3 Holding', xi: ['Raya', 'White', 'Saliba', 'Gabriel', 'Timber', 'Zubimendi', 'Odegaard', 'Rice', 'Saka', 'Havertz', 'Martinelli'] },
+      { id: 'avl', code: 'AVL', name: 'Aston Villa', ground: 'Villa Park', tier: 'European', rating: 81, budget: 64, rep: 85, target: 'Top Six', c1: '#670E36', c2: '#4A0825', formation: '4-2-3-1 DM', xi: ['Martinez', 'Cash', 'Konsa', 'Torres', 'Maatsen', 'Onana', 'Tielemans', 'Rogers', 'McGinn', 'Watkins', 'Malen'] },
+      { id: 'bou', code: 'BOU', name: 'Bournemouth', ground: 'Vitality Stadium', tier: 'Mid-Table', rating: 77, budget: 44, rep: 78, target: 'Top Half', c1: '#DA291C', c2: '#8B140C', formation: '4-2-3-1 Wide', xi: ['Petrovic', 'Smith', 'Zabarnyi', 'Senesi', 'Kerkez', 'Adams', 'Christie', 'Semenyo', 'Kluivert', 'Evanilson', 'Ouattara'] },
+      { id: 'bre', code: 'BRE', name: 'Brentford', ground: 'Gtech Community', tier: 'Mid-Table', rating: 77, budget: 42, rep: 77, target: 'Mid-Table', c1: '#E30613', c2: '#9B050D', formation: '4-3-3 Wide', xi: ['Flekken', 'Kayode', 'Collins', 'Pinnock', 'Lewis-Potter', 'Norgaard', 'Damsgaard', 'Jensen', 'Mbeumo', 'Wissa', 'Schade'] },
+      { id: 'bha', code: 'BHA', name: 'Brighton & Hove Albion', ground: 'Amex Stadium', tier: 'European', rating: 79, budget: 58, rep: 81, target: 'Top Half', c1: '#0057B8', c2: '#003C82', formation: '4-2-3-1 DM', xi: ['Verbruggen', 'Veltman', 'Van Hecke', 'Dunk', 'Estupinan', 'Baleba', 'Ayari', 'Minteh', 'Pedro', 'Mitoma', 'Welbeck'] },
+      { id: 'che', code: 'CHE', name: 'Chelsea', ground: 'Stamford Bridge', tier: 'Contender', rating: 84, budget: 105, rep: 90, target: 'Top Four', c1: '#034694', c2: '#022E64', formation: '4-2-3-1 Wide', xi: ['Sanchez', 'James', 'Fofana', 'Colwill', 'Cucurella', 'Caicedo', 'Fernandez', 'Madueke', 'Palmer', 'Neto', 'Jackson'] },
+      { id: 'cov', code: 'COV', name: 'Coventry City', ground: 'CBS Arena', tier: 'Promoted', promoted: true, rating: 78, budget: 38, rep: 77, target: 'Stay Up', c1: '#0095D9', c2: '#026AA7', formation: '4-2-3-1 DM Wide', xi: ['Rushworth', 'Van Ewijk', 'Thomas', 'Kitching', 'Bidwell', 'Sheaf', 'Torp', 'Sakamoto', 'Rudoni', 'Mason-Clark', 'Wright'] },
+      { id: 'cry', code: 'CRY', name: 'Crystal Palace', ground: 'Selhurst Park', tier: 'Mid-Table', rating: 78, budget: 48, rep: 79, target: 'Mid-Table', c1: '#1B458F', c2: '#A71930', formation: '3-4-2-1', xi: ['Henderson', 'Munoz', 'Guehi', 'Lacroix', 'Mitchell', 'Wharton', 'Hughes', 'Sarr', 'Eze', 'Kamada', 'Mateta'] },
+      { id: 'eve', code: 'EVE', name: 'Everton', ground: 'Bramley-Moore Dock', tier: 'Mid-Table', rating: 77, budget: 46, rep: 80, target: 'Top Half', c1: '#003399', c2: '#002266', formation: '4-2-3-1 DM', xi: ['Pickford', 'O-Brien', 'Tarkowski', 'Branthwaite', 'Mykolenko', 'Gueye', 'Garner', 'Harrison', 'Doucoure', 'Ndiaye', 'Beto'] },
+      { id: 'ful', code: 'FUL', name: 'Fulham', ground: 'Craven Cottage', tier: 'Mid-Table', rating: 78, budget: 50, rep: 79, target: 'Top Half', c1: '#1E293B', c2: '#475569', formation: '4-2-3-1 DM', xi: ['Leno', 'Tete', 'Andersen', 'Bassey', 'Robinson', 'Berge', 'Lukic', 'Wilson', 'Smith Rowe', 'Iwobi', 'Muniz'] },
+      { id: 'hul', code: 'HUL', name: 'Hull City', ground: 'MKM Stadium', tier: 'Promoted', promoted: true, rating: 73, budget: 29, rep: 72, target: 'Stay Up', c1: '#D97706', c2: '#92400E', formation: '4-2-3-1 Wide', xi: ['Pandur', 'Coyle', 'Jones', 'Hughes', 'Giles', 'Slater', 'Puerta', 'Belloumi', 'Palmer', 'Millar', 'Pedro'] },
+      { id: 'ips', code: 'IPS', name: 'Ipswich Town', ground: 'Portman Road', tier: 'Promoted', promoted: true, rating: 74, budget: 35, rep: 74, target: 'Stay Up', c1: '#1D4ED8', c2: '#1E3A8A', formation: '4-2-3-1 DM', xi: ['Palmer', 'Tuanzebe', 'O-Shea', 'Greaves', 'Davis', 'Morsy', 'Cajuste', 'Hutchinson', 'Szmodics', 'Clarke', 'Delap'] },
+      { id: 'lee', code: 'LEE', name: 'Leeds United', ground: 'Elland Road', tier: 'Mid-Table', rating: 76, budget: 44, rep: 80, target: 'Consolidate', c1: '#1D4ED8', c2: '#CA8A04', formation: '4-2-3-1 Wide', xi: ['Meslier', 'Bogle', 'Rodon', 'Struijk', 'Firpo', 'Ampadu', 'Tanaka', 'James', 'Aaronson', 'Gnonto', 'Piroe'] },
+      { id: 'liv', code: 'LIV', name: 'Liverpool', ground: 'Anfield', tier: 'Contender', rating: 87, budget: 112, rep: 96, target: 'Win League', c1: '#C8102E', c2: '#8C0B20', formation: '4-2-3-1 DM', xi: ['Alisson', 'Bradley', 'Konate', 'Van Dijk', 'Robertson', 'Gravenberch', 'Mac Allister', 'Salah', 'Szoboszlai', 'Gakpo', 'Nunez'] },
+      { id: 'mci', code: 'MCI', name: 'Manchester City', ground: 'Etihad Stadium', tier: 'Contender', rating: 87, budget: 135, rep: 96, target: 'Win League', c1: '#288BE2', c2: '#1B61A3', formation: '4-1-4-1', xi: ['Ederson', 'Lewis', 'Dias', 'Gvardiol', 'Ake', 'Rodri', 'Foden', 'De Bruyne', 'Silva', 'Doku', 'Haaland'] },
+      { id: 'mun', code: 'MUN', name: 'Manchester United', ground: 'Old Trafford', tier: 'European', rating: 82, budget: 88, rep: 92, target: 'Top Four', c1: '#DA291C', c2: '#8B0000', formation: '3-4-2-1', xi: ['Onana', 'Yoro', 'De Ligt', 'Martinez', 'Mazraoui', 'Ugarte', 'Mainoo', 'Dalot', 'Amad', 'Fernandes', 'Hojlund'] },
+      { id: 'new', code: 'NEW', name: 'Newcastle United', ground: "St. James' Park", tier: 'European', rating: 83, budget: 76, rep: 87, target: 'Top Four', c1: '#0F172A', c2: '#334155', formation: '4-3-3 Holding', xi: ['Pope', 'Livramento', 'Schar', 'Botman', 'Hall', 'Tonali', 'Guimaraes', 'Joelinton', 'Murphy', 'Isak', 'Gordon'] },
+      { id: 'nfo', code: 'NFO', name: 'Nottingham Forest', ground: 'City Ground', tier: 'European', rating: 79, budget: 54, rep: 82, target: 'European', c1: '#DD0000', c2: '#990000', formation: '4-2-3-1 Wide', xi: ['Sels', 'Aina', 'Milenkovic', 'Murillo', 'Williams', 'Anderson', 'Dominguez', 'Elanga', 'Gibbs-White', 'Hudson-Odoi', 'Wood'] },
+      { id: 'sun', code: 'SUN', name: 'Sunderland', ground: 'Stadium of Light', tier: 'Mid-Table', rating: 75, budget: 39, rep: 77, target: 'Mid-Table', c1: '#C8102E', c2: '#8B0A1F', formation: '4-3-3 Holding', xi: ['Patterson', 'Hume', 'Ballard', 'O-Nien', 'Cirkin', 'Neil', 'Jobe', 'Rigg', 'Roberts', 'Isidor', 'Mundle'] },
+      { id: 'tot', code: 'TOT', name: 'Tottenham Hotspur', ground: 'Tottenham Hotspur', tier: 'European', rating: 82, budget: 84, rep: 89, target: 'Top Four', c1: '#132257', c2: '#273E8C', formation: '4-3-3 Attack', xi: ['Vicario', 'Porro', 'Romero', 'Van de Ven', 'Udogie', 'Bentancur', 'Kulusevski', 'Maddison', 'Johnson', 'Solanke', 'Son'] }
+    ];
+
+    let state = {
+      selectedId: 'cov',
+      tier: 'all',
+      sort: 'alpha',
+      query: ''
+    };
+
+    const gridEl = document.getElementById('club-grid');
+    const customInput = document.getElementById('custom-club-input');
+
+    function miniPitchSvg(club) {
+      const coords = [
+        [200, 224, club.xi[0], 1, true],
+        [324, 174, club.xi[1], 2],
+        [244, 182, club.xi[2], 4],
+        [156, 182, club.xi[3], 15],
+        [76, 174, club.xi[4], 21],
+        [246, 130, club.xi[5], 14],
+        [154, 130, club.xi[6], 29],
+        [314, 78, club.xi[7], 7],
+        [200, 84, club.xi[8], 5],
+        [86, 78, club.xi[9], 10],
+        [200, 32, club.xi[10], 11]
+      ];
+      let nodes = '';
+      coords.forEach(([x, y, name, num, isGk]) => {
+        const fill = isGk ? '#D97706' : club.c1;
+        nodes += `
+          <g transform="translate(${x}, ${y})">
+            <path d="M-11 -9 L-5 -12 L5 -12 L11 -9 L14 -3 L10 0 L8 -3 L8 10 L-8 10 L-8 -3 L-10 0 L-14 -3 Z" fill="${fill}" stroke="#FFFFFF" stroke-width="1.3"/>
+            <text y="3" text-anchor="middle" fill="#FFFFFF" font-family="Outfit, sans-serif" font-size="9" font-weight="800">${num}</text>
+            <rect x="-28" y="13" width="56" height="14" rx="4" fill="#0F172A" fill-opacity="0.86" stroke="rgba(255,255,255,0.24)" stroke-width="0.8"/>
+            <text y="23" text-anchor="middle" fill="#FFFFFF" font-family="Albert Sans, sans-serif" font-size="8.5" font-weight="700">${name}</text>
+          </g>
+        `;
+      });
+
+      return `
+        <svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Starting XI formation pitch">
+          <defs>
+            <clipPath id="mp-top-d"><rect x="0" y="56" width="400" height="204"/></clipPath>
+            <clipPath id="mp-bot-d"><rect x="0" y="0" width="400" height="204"/></clipPath>
+          </defs>
+          <rect width="400" height="260" fill="#1F9D55"/>
+          <rect x="0" y="0" width="400" height="32.5" fill="#25AD60"/>
+          <rect x="0" y="65" width="400" height="32.5" fill="#25AD60"/>
+          <rect x="0" y="130" width="400" height="32.5" fill="#25AD60"/>
+          <rect x="0" y="195" width="400" height="32.5" fill="#25AD60"/>
+          <rect x="16" y="12" width="368" height="236" rx="4" fill="none" stroke="rgba(255,255,255,0.44)" stroke-width="1.4"/>
+          <line x1="16" y1="130" x2="384" y2="130" stroke="rgba(255,255,255,0.42)" stroke-width="1.3"/>
+          <circle cx="200" cy="130" r="32" fill="none" stroke="rgba(255,255,255,0.42)" stroke-width="1.3"/>
+          <circle cx="200" cy="130" r="2.2" fill="rgba(255,255,255,0.65)"/>
+          <rect x="118" y="12" width="164" height="44" fill="none" stroke="rgba(255,255,255,0.42)" stroke-width="1.3"/>
+          <circle cx="200" cy="40" r="24" fill="none" stroke="rgba(255,255,255,0.42)" stroke-width="1.3" clip-path="url(#mp-top-d)"/>
+          <rect x="118" y="204" width="164" height="44" fill="none" stroke="rgba(255,255,255,0.42)" stroke-width="1.3"/>
+          <circle cx="200" cy="220" r="24" fill="none" stroke="rgba(255,255,255,0.42)" stroke-width="1.3" clip-path="url(#mp-bot-d)"/>
+          <path d="M156 182 L244 182 M154 130 L246 130 M86 78 L200 84 L314 78 L200 32" fill="none" stroke="rgba(255,255,255,0.32)" stroke-width="1.3" stroke-dasharray="3 3"/>
+          ${nodes}
+        </svg>
+      `;
+    }
+
+    function renderDossier(club) {
+      document.querySelector('.dossier-header').style.background = `linear-gradient(135deg, ${club.c1} 0%, ${club.c2} 100%)`;
+      document.getElementById('d-kit-stripe').style.background = `linear-gradient(90deg, ${club.c1} 0%, #FBBF24 50%, ${club.c2} 100%)`;
+      const crest = document.getElementById('d-crest');
+      crest.textContent = club.code;
+      crest.style.background = `linear-gradient(135deg, ${club.c1} 0%, ${club.c2} 100%)`;
+      document.getElementById('d-name').textContent = customInput.dataset.manual === '1' && customInput.value.trim() ? customInput.value.trim() : club.name;
+      document.getElementById('d-ground').textContent = club.ground;
+      document.getElementById('d-ovr').textContent = club.rating;
+      document.getElementById('d-budget').textContent = '£' + club.budget + 'M';
+      document.getElementById('d-rep').textContent = club.rep + '/100';
+      document.getElementById('d-target').textContent = club.target;
+      document.getElementById('d-formation').textContent = club.formation;
+      document.getElementById('d-mini-pitch').innerHTML = miniPitchSvg(club);
+    }
+
+    function renderClubs() {
+      let list = CLUBS.filter((c) => {
+        if (state.tier !== 'all' && c.tier !== state.tier) return false;
+        if (state.query) {
+          const q = state.query.toLowerCase();
+          return c.name.toLowerCase().includes(q) || c.ground.toLowerCase().includes(q) || c.code.toLowerCase().includes(q);
+        }
+        return true;
+      });
+
+      list.sort((a, b) => {
+        if (state.sort === 'budget') return b.budget - a.budget;
+        if (state.sort === 'rating') return b.rating - a.rating;
+        return a.name.localeCompare(b.name);
+      });
+
+      gridEl.innerHTML = '';
+      list.forEach((club) => {
+        const isSel = club.id === state.selectedId;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'club-card' + (isSel ? ' is-selected' : '');
+        btn.setAttribute('role', 'listitem');
+        btn.innerHTML = `
+          <div class="kit-trim" style="background: linear-gradient(90deg, ${club.c1} 0%, ${club.c2} 100%);"></div>
+          <div class="card-top">
+            <div class="club-identity">
+              <div class="club-crest" style="background: linear-gradient(135deg, ${club.c1} 0%, ${club.c2} 100%);">${club.code}</div>
+              <div style="min-width:0;">
+                <div class="club-name">${club.name}</div>
+                <div class="club-ground">${club.ground}</div>
+              </div>
+            </div>
+            <div class="tag-row">
+              ${club.promoted ? '<span class="pill-badge pill-promoted">Promoted</span>' : `<span class="pill-badge">${club.tier}</span>`}
+              ${isSel ? '<span class="pill-badge pill-selected">Selected</span>' : ''}
+            </div>
+          </div>
+          <div class="card-stats">
+            <div>
+              <div class="stat-cell-label">Budget</div>
+              <div class="stat-cell-val">£${club.budget}M</div>
+            </div>
+            <div>
+              <div class="stat-cell-label">Rating</div>
+              <div class="stat-cell-val">${club.rating}</div>
+            </div>
+            <div>
+              <div class="stat-cell-label">Rep</div>
+              <div class="stat-cell-val">${club.rep}/100</div>
+            </div>
+          </div>
+        `;
+        btn.addEventListener('click', () => {
+          state.selectedId = club.id;
+          customInput.dataset.manual = '0';
+          customInput.value = club.name;
+          renderClubs();
+          renderDossier(club);
+        });
+        gridEl.appendChild(btn);
+      });
+
+      const selected = CLUBS.find((c) => c.id === state.selectedId) || list[0];
+      if (selected) renderDossier(selected);
+    }
+
+    document.getElementById('tier-filters').addEventListener('click', (e) => {
+      const btn = e.target.closest('.filter-chip');
+      if (!btn) return;
+      document.querySelectorAll('.filter-chip').forEach((b) => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+      state.tier = btn.dataset.tier;
+      renderClubs();
+    });
+
+    document.getElementById('sort-select').addEventListener('change', (e) => {
+      state.sort = e.target.value;
+      renderClubs();
+    });
+
+    document.getElementById('club-search').addEventListener('input', (e) => {
+      state.query = e.target.value.trim();
+      renderClubs();
+    });
+
+    customInput.addEventListener('input', () => {
+      customInput.dataset.manual = '1';
+      const selected = CLUBS.find((c) => c.id === state.selectedId);
+      if (selected) {
+        document.getElementById('d-name').textContent = customInput.value.trim() || selected.name;
+      }
+    });
+
+    renderClubs();
+  </script>
+</body>
+</html>

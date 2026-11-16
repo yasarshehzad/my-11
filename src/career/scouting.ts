@@ -227,7 +227,13 @@ export function generateScoutingDossier(
   mission: ActiveScoutingMission,
   save: CareerSaveFile
 ): ScoutingDossierReport {
-  const marketPool = getScoutingMarketPool(save.squad);
+  const dbSeason = save.settings?.databaseSeason || save.season?.databaseSeason || '2026/27';
+  const marketPool = getScoutingMarketPool(
+    save.squad,
+    { playerPoolType: save.settings?.playerPool || 'modern' },
+    dbSeason,
+    save.season?.yearStart || 2026
+  );
   const regionConfig = SCOUTING_REGIONS[mission.region];
 
   // Filter pool based on region and profile
