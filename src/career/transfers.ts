@@ -408,6 +408,15 @@ export function getScoutingMarketPool(
     safeSquad.map((p) => (p.name || '').toLowerCase()).filter(Boolean)
   );
 
+  // 0. Build authoritative 2026/27 current-club lookup from supplemental PL + Continental pools
+  const supplementalPlayers = getAllSupplementalPlayers(effectiveSeason, seasonYear);
+  const currentClubByName = new Map<string, string>();
+  for (const supp of supplementalPlayers) {
+    if (supp.name && supp.club) {
+      currentClubByName.set(supp.name.toLowerCase(), supp.club);
+    }
+  }
+
   // 1. Group base players by canonical name to deduplicate historical versions of legends
   const playerGroups = new Map<
     string,
@@ -534,7 +543,11 @@ export function getScoutingMarketPool(
       'son heung-min': 'LAFC',
       'luka modric': 'AC Milan',
     };
-    const resolvedBaseClub = isLegend ? baseClub : (clubOverrideMap[cleanPlayerName.toLowerCase()] || baseClub);
+    const resolvedBaseClub = isLegend
+      ? baseClub
+      : (currentClubByName.get(cleanPlayerName.toLowerCase()) ||
+         clubOverrideMap[cleanPlayerName.toLowerCase()] ||
+         baseClub);
 
     const { contractYears, isFreeAgent, loanListed } = computeMarketContractAndStatus(
       topVariant.id,
@@ -583,8 +596,6 @@ export function getScoutingMarketPool(
   }
 
   // 2. Include supplemental database expansion players (modern current season)
-  const supplementalPlayers = getAllSupplementalPlayers(effectiveSeason, seasonYear);
-
   for (const supp of supplementalPlayers) {
     const lowerName = supp.name.toLowerCase();
     if (
