@@ -1858,7 +1858,7 @@ function CareerPlayHubContent() {
                 {effectiveClubName}
               </h1>
               <p className="text-[10.5px] min-[390px]:text-[11px] sm:text-xs font-bold text-[#1d4ed8] leading-tight truncate mt-0.5">
-                S{save.season.seasonNumber} &bull; {formatOfficeShortDate(save.season.currentDate)}
+                {formatOfficeShortDate(save.season.currentDate)}
               </p>
             </div>
           </div>
