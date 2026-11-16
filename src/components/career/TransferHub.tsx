@@ -4991,11 +4991,13 @@ export function TransferHub({
                     <span className="font-mono text-blue-600 font-bold">{formatCurrency(renewSigningBonus)}</span>
                   </div>
                   <input
-                    type="number"
-                    min={0}
-                    step={100_000}
-                    value={renewSigningBonus}
-                    onChange={(e) => setRenewSigningBonus(Math.max(0, Number(e.target.value)))}
+                    type="text"
+                    inputMode="numeric"
+                    value={renewSigningBonus.toLocaleString('en-GB')}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/[^0-9]/g, '');
+                      setRenewSigningBonus(raw ? Number(raw) : 0);
+                    }}
                     className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono text-xs focus:outline-none focus:border-blue-500 shadow-xs"
                   />
                   <span className="text-[10px] text-slate-500 block">Deducted from transfer budget</span>
@@ -5006,12 +5008,12 @@ export function TransferHub({
                     <span className="font-mono text-blue-600 font-bold">{renewReleaseClause ? formatCurrency(renewReleaseClause) : 'None'}</span>
                   </div>
                   <input
-                    type="number"
-                    min={0}
-                    step={1_000_000}
-                    value={renewReleaseClause ?? 0}
+                    type="text"
+                    inputMode="numeric"
+                    value={(renewReleaseClause ?? 0).toLocaleString('en-GB')}
                     onChange={(e) => {
-                      const val = Number(e.target.value);
+                      const raw = e.target.value.replace(/[^0-9]/g, '');
+                      const val = raw ? Number(raw) : 0;
                       setRenewReleaseClause(val > 0 ? val : undefined);
                     }}
                     placeholder="None"
@@ -5590,11 +5592,13 @@ export function TransferHub({
                         <span className="font-mono text-blue-600 font-bold">{formatCurrency(offeredSigningBonus)}</span>
                       </div>
                       <input
-                        type="number"
-                        min={0}
-                        step={250_000}
-                        value={offeredSigningBonus}
-                        onChange={(e) => setOfferedSigningBonus(Math.max(0, Number(e.target.value)))}
+                        type="text"
+                        inputMode="numeric"
+                        value={offeredSigningBonus.toLocaleString('en-GB')}
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(/[^0-9]/g, '');
+                          setOfferedSigningBonus(raw ? Number(raw) : 0);
+                        }}
                         className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono text-xs focus:outline-none focus:border-blue-500 shadow-xs"
                       />
                       <span className="text-[10px] text-slate-500 block">Upfront loyalty payment</span>
@@ -5605,12 +5609,12 @@ export function TransferHub({
                         <span className="font-mono text-blue-600 font-bold">{offeredReleaseClause ? formatCurrency(offeredReleaseClause) : 'None'}</span>
                       </div>
                       <input
-                        type="number"
-                        min={0}
-                        step={1_000_000}
-                        value={offeredReleaseClause ?? 0}
+                        type="text"
+                        inputMode="numeric"
+                        value={(offeredReleaseClause ?? 0).toLocaleString('en-GB')}
                         onChange={(e) => {
-                          const val = Number(e.target.value);
+                          const raw = e.target.value.replace(/[^0-9]/g, '');
+                          const val = raw ? Number(raw) : 0;
                           setOfferedReleaseClause(val > 0 ? val : undefined);
                         }}
                         placeholder="None"
