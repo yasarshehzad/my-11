@@ -27721,16 +27721,6 @@ export const CONTINENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
     "nationality": "Colombia"
   },
   {
-    "id": "euro_26_osimhen",
-    "name": "Viktor Osimhen",
-    "clubId": "galatasaray_red_yellow",
-    "position": "ST",
-    "rating": 87,
-    "age": 27,
-    "potential": 88,
-    "nationality": "Nigeria"
-  },
-  {
     "id": "euro_26_trossard",
     "name": "Leandro Trossard",
     "clubId": "besiktas_black_white",
@@ -27790,5 +27780,75 @@ export const CONTINENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
     "age": 34,
     "potential": 85,
     "nationality": "South Korea"
+  },
+  {
+    "id": "euro_26_jhon_duran",
+    "name": "Jhon Duran",
+    "clubId": "al_nassr_yellow",
+    "position": "ST",
+    "rating": 83,
+    "age": 22,
+    "potential": 88,
+    "nationality": "Colombia"
+  },
+  {
+    "id": "euro_26_skriniar",
+    "name": "Milan Skriniar",
+    "clubId": "fenerbahce_navy_yellow",
+    "position": "CB",
+    "rating": 83,
+    "age": 31,
+    "potential": 83,
+    "nationality": "Slovakia"
+  },
+  {
+    "id": "euro_26_gundogan_gs",
+    "name": "Ilkay Gundogan",
+    "clubId": "galatasaray_red_yellow",
+    "position": "CM",
+    "rating": 82,
+    "age": 36,
+    "potential": 82,
+    "nationality": "Germany"
+  },
+  {
+    "id": "euro_26_lozano_mls",
+    "name": "Hirving Lozano",
+    "clubId": "la_galaxy_navy",
+    "position": "LW",
+    "rating": 80,
+    "age": 31,
+    "potential": 80,
+    "nationality": "Mexico"
+  },
+  {
+    "id": "euro_26_cucho_mls",
+    "name": "Cucho Hernandez",
+    "clubId": "la_galaxy_navy",
+    "position": "ST",
+    "rating": 80,
+    "age": 27,
+    "potential": 82,
+    "nationality": "Colombia"
+  },
+  {
+    "id": "euro_26_evander_mls",
+    "name": "Evander",
+    "clubId": "lafc_black_gold",
+    "position": "CAM",
+    "rating": 79,
+    "age": 28,
+    "potential": 81,
+    "nationality": "Brazil"
+  },
+  {
+    "id": "euro_26_kdb_nap",
+    "name": "Kevin De Bruyne",
+    "clubId": "napoli_blue",
+    "position": "CAM",
+    "rating": 86,
+    "age": 35,
+    "potential": 86,
+    "nationality": "Belgium"
   }
 ];
