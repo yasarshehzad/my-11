@@ -515,15 +515,24 @@ export function getScoutingMarketPool(
     const baseClub = topVariant.club || 'International';
     const clubOverrideMap: Record<string, string> = {
       'rodri hernandez': 'Barcelona',
+      'anthony gordon': 'Barcelona',
       'kylian mbappe': 'Real Madrid',
       'trent alexander-arnold': 'Real Madrid',
       'ibrahima konate': 'Real Madrid',
       'bernardo silva': 'Real Madrid',
       'marc cucurella': 'Real Madrid',
       'luis diaz': 'Bayern Munich',
+      'harry kane': 'Bayern Munich',
       'mohamed salah': 'Trabzonspor',
       'andy robertson': 'Tottenham Hotspur',
       'cristian romero': 'Atletico Madrid',
+      'ederson moraes': 'Fenerbahce',
+      'emiliano martinez': 'Chelsea',
+      'jordan henderson': 'Chelsea',
+      'joao cancelo': 'Al-Hilal',
+      'kevin de bruyne': 'Napoli',
+      'son heung-min': 'LAFC',
+      'luka modric': 'AC Milan',
     };
     const resolvedBaseClub = isLegend ? baseClub : (clubOverrideMap[cleanPlayerName.toLowerCase()] || baseClub);
 

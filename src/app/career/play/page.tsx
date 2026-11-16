@@ -1813,11 +1813,7 @@ function CareerPlayHubContent() {
       {/* Main Hub Layout */}
       <main
         data-office-ui="true"
-        className={`relative z-10 flex-1 w-full mx-auto flex flex-col gap-2.5 sm:gap-3 px-2 sm:px-4 py-2 sm:py-4 safe-pb ${
-          activeTab === 'overview'
-            ? 'max-w-[440px] sm:max-w-[480px]'
-            : 'max-w-4xl'
-        }`}
+        className="relative z-10 flex-1 w-full max-w-4xl mx-auto flex flex-col gap-2.5 sm:gap-3 px-2 sm:px-4 py-2 sm:py-4 safe-pb"
         onTouchStart={handleTouchStartCapture}
         onTouchEnd={handleTouchEndCapture}
       >

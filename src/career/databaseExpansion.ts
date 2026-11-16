@@ -122,7 +122,6 @@ export const SUPPLEMENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
   {id: "sup_new_17",name: "Sean Longstaff",clubId: "tyneside_stripes",position: "CAM",rating: 78,age: 28,potential: 79,nationality: "England"},
   {id: "sup_new_18",name: "Harvey Barnes",clubId: "tyneside_stripes",position: "LM",rating: 80,age: 28,potential: 81,nationality: "England"},
   {id: "sup_new_19",name: "Jacob Murphy",clubId: "tyneside_stripes",position: "RM",rating: 78,age: 31,potential: 78,nationality: "England"},
-  {id: "sup_new_20",name: "Anthony Gordon",clubId: "tyneside_stripes",position: "LW",rating: 85,age: 25,potential: 89,nationality: "England"},
   {id: "sup_new_24",name: "William Osula",clubId: "tyneside_stripes",position: "ST",rating: 77,age: 23,potential: 84,nationality: "Denmark",isHomegrown: true},
   {id: "sup_new_25",name: "Emil Krafth",clubId: "tyneside_stripes",position: "RB",rating: 76,age: 32,potential: 76,nationality: "Sweden"},
   {id: "sup_new_26",name: "Garang Kuol",clubId: "tyneside_stripes",position: "RW",rating: 74,age: 21,potential: 83,nationality: "Australia"},

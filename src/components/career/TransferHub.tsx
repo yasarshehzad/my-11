@@ -1436,34 +1436,6 @@ export function TransferHub({
               <button
                 type="button"
                 onClick={() => {
-                  setSelectedLeague(selectedLeague === 'continental' ? 'ALL' : 'continental');
-                  setCurrentPage(1);
-                }}
-                className={`px-2.5 py-1 rounded-lg text-[10.5px] font-display font-bold uppercase tracking-wider whitespace-nowrap cursor-pointer transition-colors border ${
-                  selectedLeague === 'continental'
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
-                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                }`}
-              >
-                Global / Europe
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedLeague(selectedLeague === 'pl' ? 'ALL' : 'pl');
-                  setCurrentPage(1);
-                }}
-                className={`px-2.5 py-1 rounded-lg text-[10.5px] font-display font-bold uppercase tracking-wider whitespace-nowrap cursor-pointer transition-colors border ${
-                  selectedLeague === 'pl'
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
-                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                }`}
-              >
-                Premier League
-              </button>
-              <button
-                type="button"
-                onClick={() => {
                   setHomegrownOnly(!homegrownOnly);
                   setCurrentPage(1);
                 }}
@@ -1474,6 +1446,34 @@ export function TransferHub({
                 }`}
               >
                 Homegrown
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedContractStatus(selectedContractStatus === 'loans' ? 'ALL' : 'loans');
+                  setCurrentPage(1);
+                }}
+                className={`px-2.5 py-1 rounded-lg text-[10.5px] font-display font-bold uppercase tracking-wider whitespace-nowrap cursor-pointer transition-colors border ${
+                  selectedContractStatus === 'loans'
+                    ? 'bg-cyan-600 text-white border-cyan-600 shadow-2xs'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                Loan Listed
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAgeCategory(ageCategory === 'U21' ? 'ALL' : 'U21');
+                  setCurrentPage(1);
+                }}
+                className={`px-2.5 py-1 rounded-lg text-[10.5px] font-display font-bold uppercase tracking-wider whitespace-nowrap cursor-pointer transition-colors border ${
+                  ageCategory === 'U21'
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                U21 Wonderkids
               </button>
               <button
                 type="button"

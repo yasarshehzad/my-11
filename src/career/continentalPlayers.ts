@@ -27850,5 +27850,16 @@ export const CONTINENTAL_PLAYERS_2026_27: SupplementalPlayerDef[] = [
     "age": 35,
     "potential": 86,
     "nationality": "Belgium"
+  },
+  {
+    "id": "euro_26_agordon_barca",
+    "name": "Anthony Gordon",
+    "clubId": "barcelona_blaugrana",
+    "position": "LW",
+    "rating": 85,
+    "age": 25,
+    "potential": 89,
+    "nationality": "England",
+    "isHomegrown": true
   }
 ];
