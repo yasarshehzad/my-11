@@ -45,6 +45,12 @@ function SetupWizardContent() {
   const paramClub = searchParams.get('club');
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [stepDir, setStepDir] = useState<'forward' | 'back'>('forward');
+
+  const goToStep = (next: 1 | 2 | 3) => {
+    setStepDir(next >= step ? 'forward' : 'back');
+    setStep(next);
+  };
 
   // Step 1: Manager
   const [managerName, setManagerName] = useState('Alex Manager');
@@ -285,8 +291,8 @@ function SetupWizardContent() {
             <div className="pt-2">
               <button
                 type="button"
-                onClick={() => setStep(2)}
-                className="office-play-match-btn w-full py-3.5 px-4 rounded-xl text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
+                onClick={() => goToStep(2)}
+                className="office-play-match-btn my11-tactile w-full py-3.5 px-4 rounded-xl text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>Continue to Club Selection</span>
                 <span aria-hidden="true">-&gt;</span>
@@ -297,7 +303,7 @@ function SetupWizardContent() {
 
         {/* STEP 2: CLUB SELECTION */}
         {step === 2 && (
-          <section className="w-full space-y-5 pb-28">
+          <section className={`w-full space-y-5 pb-28 ${stepDir === 'forward' ? 'my11-step-forward' : 'my11-step-back'}`}>
             <header className="text-center space-y-1.5">
               <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-blue-700">
                 Step 02 // League &amp; Club Selection
@@ -393,14 +399,14 @@ function SetupWizardContent() {
 
             {/* Filter, Search & Sort Bar */}
             <div className="office-floating-card rounded-2xl p-3.5 sm:p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-              {/* Tier Filters */}
-              <div className="flex items-center gap-1.5 flex-wrap" role="group" aria-label="Filter clubs by tier">
+              {/* Tier Filters — Swipeable Thumb-Reachable Strip on Mobile */}
+              <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto sm:flex-wrap pb-1 sm:pb-0 snap-x scrollbar-none" role="group" aria-label="Filter clubs by tier">
                 {(['all', 'elite', 'upper', 'mid', 'lower'] as const).map((tier) => (
                   <button
                     key={tier}
                     type="button"
                     onClick={() => setTierFilter(tier)}
-                    className={`px-3 py-1.5 rounded-lg text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
+                    className={`my11-tactile shrink-0 snap-start px-3 py-1.5 rounded-lg text-[11px] font-display font-black uppercase tracking-wider cursor-pointer ${
                       tierFilter === tier
                         ? 'office-nav-tab-active'
                         : 'bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200'
@@ -516,7 +522,7 @@ function SetupWizardContent() {
                       type="button"
                       key={club.id}
                       onClick={() => setSelectedClubId(club.id)}
-                      className={`office-floating-card text-left rounded-2xl p-4 cursor-pointer transition-all duration-150 relative overflow-hidden flex flex-col justify-between min-h-[148px] ${
+                      className={`office-floating-card my11-tactile text-left rounded-2xl p-4 cursor-pointer relative overflow-hidden flex flex-col justify-between min-h-[148px] ${
                         isSelected
                           ? 'border-2 border-amber-600 ring-2 ring-amber-500/25 shadow-md'
                           : 'hover:border-zinc-400'
@@ -597,15 +603,15 @@ function SetupWizardContent() {
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
-                  onClick={() => setStep(1)}
-                  className="bg-slate-100 hover:bg-slate-200 border border-slate-300 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-800 uppercase tracking-wider cursor-pointer transition-colors"
+                  onClick={() => goToStep(1)}
+                  className="my11-tactile bg-slate-100 hover:bg-slate-200 border border-slate-300 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-800 uppercase tracking-wider cursor-pointer transition-colors"
                 >
                   Back
                 </button>
                 <button
                   type="button"
-                  onClick={() => setStep(3)}
-                  className="office-play-match-btn px-4 py-2.5 rounded-xl text-white font-display font-black text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer"
+                  onClick={() => goToStep(3)}
+                  className="office-play-match-btn my11-tactile px-4 py-2.5 rounded-xl text-white font-display font-black text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer"
                 >
                   <span>Next: Rules</span>
                   <span aria-hidden="true">-&gt;</span>
@@ -617,7 +623,7 @@ function SetupWizardContent() {
 
         {/* STEP 3: DIFFICULTY & RULES */}
         {step === 3 && (
-          <section className="max-w-3xl mx-auto w-full space-y-6 pb-8">
+          <section className={`max-w-3xl mx-auto w-full space-y-6 pb-8 ${stepDir === 'forward' ? 'my11-step-forward' : 'my11-step-back'}`}>
             <header className="text-center space-y-1.5">
               <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-blue-700">
                 Step 03 // Club Governance &amp; Simulation Rules

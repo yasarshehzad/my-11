@@ -2196,11 +2196,90 @@ div[role="dialog"].fixed,
   color: #ffffff !important;
 }
 
+/* 60fps Tactile & Mobile Motion Primitives (GPU-safe transform & opacity) */
+.my11-tactile {
+  transition: transform 180ms cubic-bezier(0.2, 0, 0, 1), box-shadow 180ms ease, border-color 180ms ease;
+  will-change: transform;
+}
+
+.my11-tactile:active {
+  transform: scale(0.97) !important;
+  transition-duration: 70ms;
+}
+
+@keyframes my11-step-forward {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes my11-step-back {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes my11-sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes my11-pitch-settle {
+  from {
+    opacity: 0.72;
+    transform: scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.my11-step-forward {
+  animation: my11-step-forward 240ms cubic-bezier(0.05, 0.7, 0.1, 1) both;
+}
+
+.my11-step-back {
+  animation: my11-step-back 240ms cubic-bezier(0.05, 0.7, 0.1, 1) both;
+}
+
+.my11-mobile-sheet {
+  animation: my11-sheet-up 260ms cubic-bezier(0.05, 0.7, 0.1, 1) both;
+}
+
+.my11-pitch-settle {
+  animation: my11-pitch-settle 220ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .my11-module-tile {
+  .my11-module-tile,
+  .my11-tactile {
     transition: none !important;
   }
-  .my11-module-tile:hover {
+  .my11-module-tile:hover,
+  .my11-tactile:active {
     transform: none !important;
+  }
+  .my11-step-forward,
+  .my11-step-back,
+  .my11-mobile-sheet,
+  .my11-pitch-settle {
+    animation: none !important;
   }
 }

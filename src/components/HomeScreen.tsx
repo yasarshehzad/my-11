@@ -381,7 +381,7 @@ export function HomeScreen({
             <Link
               key={tile.title}
               href={tile.href}
-              className="group rounded-xl bg-[#E8E6E1] border border-zinc-300/70 p-1 transition-transform hover:-translate-y-0.5 active:scale-[0.98]"
+              className="group my11-tactile rounded-xl bg-[#E8E6E1] border border-zinc-300/70 p-1 hover:-translate-y-0.5"
             >
               <div className="bg-white rounded-lg p-2 sm:p-2.5 flex items-center gap-2.5">
                 <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg overflow-hidden shrink-0 border border-[#E2DFD9]">
@@ -434,7 +434,7 @@ export function HomeScreen({
                 <Link
                   key={club.id}
                   href={`/career/setup?slot=slot_1&club=${club.id}`}
-                  className="group rounded-xl border border-[#E2DFD9] bg-[#F7F6F3] hover:bg-white hover:border-amber-500/70 transition-all overflow-hidden text-left"
+                  className="group my11-tactile rounded-xl border border-[#E2DFD9] bg-[#F7F6F3] hover:bg-white hover:border-amber-500/70 overflow-hidden text-left"
                 >
                   <div
                     className="h-1 w-full"

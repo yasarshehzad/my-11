@@ -1106,7 +1106,10 @@ export function SquadManagement({
               </svg>
 
               {/* Starting XI Placed in Dedicated Tactical Lines */}
-              <div className="relative z-10 w-full flex flex-col justify-between h-full py-3 sm:py-5 gap-1.5 sm:gap-3">
+              <div
+                key={currentFormation}
+                className="relative z-10 w-full flex flex-col justify-between h-full py-3 sm:py-5 gap-1.5 sm:gap-3 my11-pitch-settle"
+              >
                 {activeFormationConfig.lines.map((lineIndices, rowIndex) => (
                   <div
                     key={rowIndex}
@@ -2554,7 +2557,7 @@ export function SquadManagement({
               aria-modal="true"
               data-scrim="true"
               onClick={() => setSelectedPlayer(null)}
-              className="fixed inset-0 z-50 overflow-y-auto flex items-start justify-center p-4 sm:p-6 pt-6 sm:pt-8 select-none animate-fade-in"
+              className="fixed inset-0 z-50 overflow-y-auto flex items-end sm:items-center justify-center p-0 sm:p-6 select-none animate-fade-in"
               style={{
                 backgroundColor: 'rgba(11, 21, 54, 0.82)',
                 backdropFilter: 'blur(12px)',
@@ -2564,7 +2567,7 @@ export function SquadManagement({
               <div
                 ref={playerModalCardRef}
                 onClick={(e) => e.stopPropagation()}
-                className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 max-w-sm sm:max-w-md w-full space-y-3.5 shadow-2xl relative max-h-[90vh] overflow-y-auto scrollbar-none my-auto sm:my-0 text-[#0b1536]"
+                className="office-floating-card my11-mobile-sheet bg-white border border-slate-200/90 rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 max-w-md w-full space-y-3.5 shadow-2xl relative max-h-[88vh] overflow-y-auto scrollbar-none text-[#0b1536]"
               >
                 {/* Header: Segmented Switcher & Clear Accessible Close Button */}
                 <div className="flex items-center justify-between gap-2">
@@ -3260,11 +3263,11 @@ export function SquadManagement({
       {/* Reserve Picker Modal for Empty Bench Slots */}
       {showReservePickerModal && isMounted && createPortal(
             <div
-              className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
+              className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in"
               onClick={() => setShowReservePickerModal(false)}
             >
           <div
-            className="office-floating-card bg-white border border-slate-200/90 rounded-3xl max-w-md w-full p-4 sm:p-5 shadow-2xl space-y-4 max-h-[85vh] flex flex-col text-slate-900"
+            className="office-floating-card my11-mobile-sheet bg-white border border-slate-200/90 rounded-t-3xl sm:rounded-3xl max-w-md w-full p-4 sm:p-5 shadow-2xl space-y-4 max-h-[85vh] flex flex-col text-slate-900"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
