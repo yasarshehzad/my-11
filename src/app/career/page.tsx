@@ -130,27 +130,25 @@ export default function CareerEntryPage() {
 
       {/* Top Navigation Bar */}
       <header className="w-full max-w-5xl mx-auto px-3 sm:px-4 pt-3 sm:pt-4 sticky top-0 z-40 select-none">
-        <div className="office-floating-card rounded-2xl px-4 py-2.5 flex justify-between items-center shadow-xs border border-slate-200 gap-2 bg-white">
-          <div className="flex items-center gap-3">
+        <div className="office-floating-card rounded-2xl px-3 sm:px-4 py-2.5 flex justify-between items-center shadow-xs border border-slate-200 gap-2 bg-white">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <Link
               href="/"
-              className="px-3 py-1.5 rounded-xl office-subcard text-xs font-bold text-slate-700 hover:text-slate-900 flex items-center gap-1.5 transition-colors shadow-2xs"
+              className="px-2.5 sm:px-3 py-1.5 rounded-xl office-subcard text-xs font-bold text-slate-700 hover:text-slate-900 flex items-center gap-1 transition-colors shadow-2xs whitespace-nowrap shrink-0"
             >
               <span>&larr;</span>
               <span>Home</span>
             </Link>
-            <div className="h-4 w-px bg-slate-200" />
-            <div className="flex items-center gap-2">
-              <span className="text-sm sm:text-base font-display font-black uppercase tracking-tight text-slate-900">
-                MY-11 <span className="text-[#047857]">Career Hub</span>
-              </span>
-            </div>
+            <div className="h-4 w-px bg-slate-200 shrink-0" />
+            <span className="text-xs sm:text-base font-display font-black uppercase tracking-tight text-slate-900 whitespace-nowrap truncate">
+              MY-11 <span className="text-amber-700">Career Hub</span>
+            </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <Link
               href="/draft"
-              className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 text-[10.5px] font-display font-black uppercase tracking-wider transition-colors"
+              className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#F7F6F3] hover:bg-zinc-200/70 border border-[#E2DFD9] text-zinc-900 text-[10px] sm:text-[10.5px] font-display font-black uppercase tracking-wider transition-colors whitespace-nowrap"
             >
               Draft Mode
             </Link>

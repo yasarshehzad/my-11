@@ -330,7 +330,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
                     <p className="text-[10px] text-slate-500">Pre-season conditioning tour matches</p>
                   </div>
                 </div>
-                <span className="text-[10px] text-blue-700 font-mono font-bold bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] text-amber-800 font-mono font-bold bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
                   {preseasonCup.fixtures.filter((f) => f.played).length} / {preseasonCup.fixtures.length} Played
                 </span>
               </div>

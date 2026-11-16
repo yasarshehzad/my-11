@@ -1114,7 +1114,7 @@ export function MatchDayModal({
                         onClick={() => setSimSpeed(spd)}
                         className={`px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer transition-colors ${
                           simSpeed === spd
-                            ? 'bg-[#1d5eff] text-white font-bold'
+                            ? 'office-nav-tab-active font-bold'
                             : 'office-subcard text-[var(--office-text-muted)]'
                         }`}
                       >
@@ -1287,7 +1287,7 @@ export function MatchDayModal({
 
             {/* Extra Time Prompt */}
             {matchState === 'extratime_prompt' && (
-              <div className="office-subcard p-4 rounded-2xl bg-gradient-to-r from-purple-50 via-white to-indigo-50 border border-purple-200 text-center space-y-3">
+              <div className="office-subcard p-4 rounded-2xl bg-[#FFFBEB] border border-amber-300 text-center space-y-3">
                 <div className="text-xl">⏱️</div>
                 <div className="font-display font-extrabold text-sm text-[var(--office-text-primary)] uppercase">
                   Tied at 90&apos;! Knockout Match Enters Extra Time
@@ -1385,15 +1385,15 @@ export function MatchDayModal({
         {/* ======================================================== */}
         {matchState === 'shootout' && shootoutData && session && (
           <div className="space-y-4">
-            <div className="office-subcard rounded-3xl p-5 text-center space-y-3 bg-gradient-to-br from-white via-purple-50/30 to-indigo-50/30 border border-purple-200">
-              <span className="text-[11px] font-mono font-black uppercase tracking-widest text-purple-700 bg-purple-50 border border-purple-200 px-3 py-0.5 rounded-full">
+            <div className="office-subcard rounded-3xl p-5 text-center space-y-3 bg-white border border-amber-300">
+              <span className="text-[11px] font-mono font-black uppercase tracking-widest text-amber-900 bg-amber-50 border border-amber-300 px-3 py-0.5 rounded-full">
                 PENALTY SHOOTOUT
               </span>
               <div className="grid grid-cols-3 gap-2 items-center">
                 <div className="font-display font-extrabold text-sm text-[var(--office-text-primary)]">
                   {getEffectiveClubName(homeClub)}
                 </div>
-                <div className="font-display font-black text-3xl text-purple-700 tracking-widest">
+                <div className="font-display font-black text-3xl text-zinc-900 tracking-widest">
                   {shootoutData.kicks.slice(0, shootoutKickIndex).filter((k) => k.clubId === homeClub.id && k.scored).length}
                   {' - '}
                   {shootoutData.kicks.slice(0, shootoutKickIndex).filter((k) => k.clubId === awayClub.id && k.scored).length}

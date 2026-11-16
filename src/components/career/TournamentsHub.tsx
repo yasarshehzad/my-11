@@ -272,7 +272,7 @@ export function TournamentsHub({
 
             return (
               <div className="space-y-3.5">
-                {roundEntries.map(([roundName, roundFixtures]) => {
+                {roundEntries.map(([roundName, roundFixtures], roundIndex) => {
                   const isFinal = roundName.toLowerCase().includes('final') && !roundName.toLowerCase().includes('semi') && !roundName.toLowerCase().includes('quarter');
                   const userTie = roundFixtures.find(
                     (f) => f.homeClubId === userClubId || f.awayClubId === userClubId
@@ -296,37 +296,41 @@ export function TournamentsHub({
                         </span>
                       </div>
 
-                      {/* Draw Pending Banner when round has not been drawn */}
-                      {!currentTournament.drawCompleted && currentTournament.drawDate && (
+                      {/* Draw Pending Banner (shown once on the first undrawn round) */}
+                      {!currentTournament.drawCompleted && currentTournament.drawDate && roundIndex === 0 && (
                         <div className="office-subcard rounded-2xl p-3 sm:p-3.5 space-y-2 border border-amber-300 bg-gradient-to-r from-amber-50/70 via-white to-amber-50/30 shadow-xs">
                           <div className="flex items-center justify-between text-xs font-display font-black text-amber-900 uppercase">
                             <span>🎲 Official Draw Pending</span>
-                            <span className="font-mono text-[10px] text-amber-700 font-bold">
+                            <span className="font-mono text-[10px] text-amber-800 font-bold">
                               📅 {formatCareerDate(currentTournament.drawDate, save.settings?.dateFormat)}
                             </span>
                           </div>
-                          <p className="text-[11px] text-slate-600 leading-relaxed">
+                          <p className="text-[11px] text-zinc-600 leading-relaxed">
                             Qualified clubs are confirmed for the {currentTournament.currentRound}. Pairings will be officially drawn on {formatCareerDate(currentTournament.drawDate, save.settings?.dateFormat)}.
                           </p>
                           {currentTournament.qualifyingClubs && currentTournament.qualifyingClubs.length > 0 && (
                             <div className="pt-0.5">
-                              <span className="text-[9px] uppercase font-black text-slate-500 block mb-1 font-display">
+                              <span className="text-[9px] uppercase font-black text-zinc-600 block mb-1 font-display">
                                 Confirmed Participants ({currentTournament.qualifyingClubs.length}):
                               </span>
                               <div className="flex flex-wrap gap-1">
                                 {currentTournament.qualifyingClubs.map((cId) => {
                                   const club = findAnyClub(cId);
                                   const isUser = cId === userClubId;
+                                  const fallbackName = cId
+                                    .split('_')
+                                    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                                    .join(' ');
                                   return (
                                     <span
                                       key={cId}
                                       className={`text-[9.5px] px-2 py-0.5 rounded-lg border font-bold ${
                                         isUser
-                                          ? 'bg-blue-50 border-blue-300 text-blue-700 font-black'
-                                          : 'bg-white border-slate-200 text-slate-700'
+                                          ? 'bg-[#1E2024] border-[#1E2024] text-amber-300 font-black'
+                                          : 'bg-white border-zinc-200 text-zinc-700'
                                       }`}
                                     >
-                                      {club ? getEffectiveClubName(club, save.club) : cId}
+                                      {club ? getEffectiveClubName(club, save.club) : fallbackName}
                                     </span>
                                   );
                                 })}
@@ -345,10 +349,10 @@ export function TournamentsHub({
                         return (
                           <article className={`p-3 sm:p-3.5 rounded-2xl border ${
                             isFinal
-                              ? 'border-2 border-amber-400 bg-gradient-to-br from-amber-50/70 via-white to-purple-50/40 shadow-sm'
-                              : 'border-2 border-blue-500 bg-gradient-to-r from-blue-50/70 via-white to-indigo-50/40 shadow-sm'
+                              ? 'border-2 border-amber-400 bg-gradient-to-br from-amber-50/70 via-white to-amber-50/30 shadow-sm'
+                              : 'border-2 border-amber-500/80 bg-white shadow-sm'
                           }`}>
-                            <div className="flex justify-between items-center text-[10px] text-slate-500 font-bold mb-2">
+                            <div className="flex justify-between items-center text-[10px] text-zinc-500 font-bold mb-2">
                               <span className={`font-display font-black px-2 py-0.5 rounded-lg text-[9.5px] uppercase tracking-wider shadow-2xs ${
                                 isFinal
                                   ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
@@ -357,10 +361,10 @@ export function TournamentsHub({
                                 {isFinal ? '🏆 The Cup Final' : '⭐ Your Cup Fixture'}
                               </span>
                               <div className="flex items-center gap-1.5 font-mono">
-                                <span className={`text-[9px] font-black uppercase px-1.5 py-0.2 rounded ${
+                                <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${
                                   isUserHome
-                                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
-                                    : 'bg-slate-100 text-slate-600 border border-slate-200'
+                                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                    : 'bg-zinc-100 text-zinc-700 border border-zinc-200'
                                 }`}>
                                   {isUserHome ? 'Home' : 'Away'}
                                 </span>

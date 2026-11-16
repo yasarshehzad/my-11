@@ -2039,8 +2039,8 @@ function CareerPlayHubContent() {
               className="office-floating-card rounded-2xl p-1 mt-2 grid grid-cols-3 gap-1 select-none shadow-xs text-xs"
             >
               {[
-                { id: 'table', label: 'League Table', icon: '📊' },
-                { id: 'cups', label: 'Cups & Europe', icon: '🏆' },
+                { id: 'table', label: 'Table', icon: '📊' },
+                { id: 'cups', label: 'Cups', icon: '🏆' },
                 { id: 'settings', label: 'Settings', icon: '⚙️' },
               ].map((sub) => {
                 const isSubActive = activeTab === sub.id;
@@ -2605,7 +2605,7 @@ function CareerPlayHubContent() {
                   data-office-ui="true"
                   aria-expanded={showOfficeSeasonDrawer}
                   onClick={() => setShowOfficeSeasonDrawer((prev) => !prev)}
-                  className="text-[13.5px] sm:text-sm font-display font-extrabold text-[#1e40af] hover:text-[#1d4ed8] inline-flex items-center gap-1 cursor-pointer min-h-[34px] px-1.5 py-0.5 rounded-lg hover:bg-blue-500/10 transition-colors focus-visible:outline-2 focus-visible:outline-[#1d5eff]"
+                  className="text-[13px] sm:text-sm font-display font-bold text-amber-800 hover:text-amber-950 inline-flex items-center gap-1 cursor-pointer min-h-[34px] px-1.5 py-0.5 rounded-lg hover:bg-amber-500/10 transition-colors focus-visible:outline-2 focus-visible:outline-[#D97706]"
                 >
                   <span>Manage your season</span>
                   <span aria-hidden="true" className="text-xs">

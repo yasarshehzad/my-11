@@ -138,16 +138,16 @@ export function LeagueTable({
 
       {/* Informative Pre-Season State */}
       {isPreSeason && (
-        <div className="office-subcard rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3 text-xs shadow-xs border border-blue-200/90 bg-gradient-to-r from-blue-50/70 via-white to-purple-50/40">
+        <div className="office-subcard rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3 text-xs shadow-xs border border-amber-300/70">
           <div className="flex items-center gap-2.5 min-w-0">
-            <span className="w-8 h-8 rounded-xl bg-blue-100/80 border border-blue-200 flex items-center justify-center text-sm shadow-2xs shrink-0">
+            <span className="w-8 h-8 rounded-xl bg-[#1E2024] text-amber-300 flex items-center justify-center text-sm shadow-2xs shrink-0">
               ⚡
             </span>
             <div className="min-w-0">
-              <span className="font-display font-black text-blue-700 uppercase tracking-wider block text-xs">
+              <span className="font-display font-black text-amber-800 uppercase tracking-wider block text-xs">
                 Pre-Season • Matchday 1 Pending
               </span>
-              <span className="text-[11px] text-slate-600 truncate block">
+              <span className="text-[11px] text-zinc-600 truncate block">
                 {activeSubTab === 'standings'
                   ? 'All 20 clubs start level on 0 points. Play your opening league fixture in Office to kick off the table!'
                   : 'Displaying season contenders. Statistics update automatically as matches are played.'}
@@ -214,8 +214,8 @@ export function LeagueTable({
                         key={row.clubId}
                         className={`transition-colors ${rowBorderClass} ${zoneBg} ${
                           isUserClub
-                            ? 'bg-blue-50/90 hover:bg-blue-100/70 font-bold ring-1 ring-inset ring-blue-500/30'
-                            : 'hover:bg-slate-50/80'
+                            ? 'bg-amber-50/90 hover:bg-amber-100/70 font-bold ring-1 ring-inset ring-amber-500/40'
+                            : 'hover:bg-[#F7F6F3]'
                         }`}
                       >
                         {/* Position */}

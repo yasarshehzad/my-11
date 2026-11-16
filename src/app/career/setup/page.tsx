@@ -316,85 +316,53 @@ function SetupWizardContent() {
               </p>
             </header>
 
-            {/* Roster Database Season Selector */}
-            <div className="office-floating-card rounded-2xl p-4 sm:p-5 flex flex-col gap-3">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                  <svg viewBox="0 0 16 16" className="w-4 h-4 text-blue-700" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                    <rect x="2" y="3" width="12" height="11" rx="2" />
-                    <path d="M5 1.5v2M11 1.5v2M2 6.5h12" strokeLinecap="round" />
-                  </svg>
-                  <span>Roster Database Season</span>
+            {/* Compact Roster Database Season Selector */}
+            <div className="office-floating-card rounded-2xl p-3.5 sm:p-4 flex flex-col gap-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-display font-black text-zinc-900 uppercase tracking-wider">
+                  Roster Database Season
                 </span>
-                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 font-bold">
-                  Active: {databaseSeason}
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[#F7F6F3] border border-[#E2DFD9] text-zinc-800 font-bold">
+                  {databaseSeason}
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => handleDatabaseSeasonChange('2026/27')}
-                  className={`p-3.5 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
-                    databaseSeason === '2026/27'
-                      ? 'bg-blue-50/70 border-blue-600 ring-1 ring-blue-600'
-                      : 'bg-slate-50 border-slate-200 hover:border-slate-400'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-display font-black uppercase text-slate-900">2026/27</span>
-                    {databaseSeason === '2026/27' && (
-                      <span className="text-blue-700 text-[10px] font-mono font-bold uppercase">Active</span>
-                    )}
-                  </div>
-                  <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">Current Season</span>
-                  <p className="text-[11px] text-slate-600 leading-snug">
-                    Current 2026/27 Premier League lineup featuring promoted Coventry, Ipswich &amp; Hull alongside Leeds &amp; Sunderland.
-                  </p>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleDatabaseSeasonChange('2025/26')}
-                  className={`p-3.5 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
-                    databaseSeason === '2025/26'
-                      ? 'bg-blue-50/70 border-blue-600 ring-1 ring-blue-600'
-                      : 'bg-slate-50 border-slate-200 hover:border-slate-400'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-display font-black uppercase text-slate-900">2025/26</span>
-                    {databaseSeason === '2025/26' && (
-                      <span className="text-blue-700 text-[10px] font-mono font-bold uppercase">Active</span>
-                    )}
-                  </div>
-                  <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Previous Season</span>
-                  <p className="text-[11px] text-slate-600 leading-snug">
-                    Calibrated 2025/26 top-flight rosters including West Ham, Wolves &amp; Burnley alongside Leeds &amp; Sunderland.
-                  </p>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleDatabaseSeasonChange('2024/25')}
-                  className={`p-3.5 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
-                    databaseSeason === '2024/25'
-                      ? 'bg-blue-50/70 border-blue-600 ring-1 ring-blue-600'
-                      : 'bg-slate-50 border-slate-200 hover:border-slate-400'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-display font-black uppercase text-slate-900">2024/25</span>
-                    {databaseSeason === '2024/25' && (
-                      <span className="text-blue-700 text-[10px] font-mono font-bold uppercase">Active</span>
-                    )}
-                  </div>
-                  <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Classic Season</span>
-                  <p className="text-[11px] text-slate-600 leading-snug">
-                    Classic campaign featuring Leicester City, Southampton &amp; Ipswich Town authentic rosters.
-                  </p>
-                </button>
+              <div className="grid grid-cols-3 gap-1.5 bg-[#F7F6F3] border border-[#E2DFD9] p-1 rounded-xl">
+                {(
+                  [
+                    { id: '2026/27', tag: 'Current' },
+                    { id: '2025/26', tag: 'Previous' },
+                    { id: '2024/25', tag: 'Classic' },
+                  ] as const
+                ).map((db) => {
+                  const isActive = databaseSeason === db.id;
+                  return (
+                    <button
+                      key={db.id}
+                      type="button"
+                      onClick={() => handleDatabaseSeasonChange(db.id)}
+                      className={`py-2 px-2 rounded-lg text-center transition-all cursor-pointer ${
+                        isActive
+                          ? 'office-nav-tab-active shadow-xs'
+                          : 'text-zinc-700 hover:bg-white'
+                      }`}
+                    >
+                      <div className="text-xs sm:text-sm font-display font-black leading-tight">{db.id}</div>
+                      <div className={`text-[9px] font-mono uppercase tracking-wider ${isActive ? 'text-amber-300' : 'text-zinc-500'}`}>
+                        {db.tag}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
+
+              <p className="text-[11px] text-zinc-600 leading-snug">
+                {databaseSeason === '2026/27'
+                  ? '2026/27 Premier League lineup featuring promoted Coventry, Ipswich & Hull alongside Leeds & Sunderland.'
+                  : databaseSeason === '2025/26'
+                  ? 'Calibrated 2025/26 top-flight rosters including West Ham, Wolves & Burnley alongside Leeds & Sunderland.'
+                  : 'Classic 2024/25 campaign featuring Leicester City, Southampton & Ipswich Town authentic rosters.'}
+              </p>
             </div>
 
             {/* Filter, Search & Sort Bar */}
@@ -447,51 +415,6 @@ function SetupWizardContent() {
                     <option value="capacity_desc">Stadium Capacity</option>
                   </select>
                 </div>
-              </div>
-            </div>
-
-            {/* Single Authoritative Selected Club Dossier & Custom Name Bar */}
-            <div className="office-floating-card rounded-2xl p-4 sm:p-5 border-l-4 border-l-amber-500 grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-              <div className="lg:col-span-7 flex items-center gap-3.5 min-w-0">
-                <div
-                  className="w-11 h-11 rounded-xl border border-zinc-300 shrink-0 flex items-center justify-center font-mono font-black text-xs text-white shadow-xs"
-                  style={{
-                    background: `linear-gradient(135deg, ${selectedClub.primaryColor}, ${selectedClub.secondaryColor})`,
-                  }}
-                >
-                  <span className="bg-zinc-950/75 px-1.5 py-0.5 rounded text-[10px] tracking-wider">
-                    {selectedClub.shortName}
-                  </span>
-                </div>
-                <div className="min-w-0">
-                  <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-700">
-                    Selected Dossier // {selectedClub.tier.toUpperCase()} TIER
-                  </div>
-                  <h3 className="text-base sm:text-lg font-display font-black text-slate-900 truncate">
-                    {effectiveSelectedName}
-                  </h3>
-                  <div className="text-[11px] text-slate-600 flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5">
-                    <span>{selectedClub.stadiumName} ({selectedClub.stadiumCapacity.toLocaleString()})</span>
-                    <span>•</span>
-                    <span>Budget £{(selectedClub.startingBudget / 1_000_000).toFixed(0)}M</span>
-                    <span>•</span>
-                    <span>Rep {selectedClub.reputation}/100</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="lg:col-span-5 space-y-1">
-                <label htmlFor="single-custom-club-name" className="block text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                  Custom Club Name (Optional)
-                </label>
-                <input
-                  id="single-custom-club-name"
-                  type="text"
-                  value={customClubNames[selectedClub.id] ?? ''}
-                  onChange={(e) => handleClubRename(selectedClub.id, e.target.value)}
-                  placeholder={`Keep "${selectedClub.defaultName}" or enter custom name`}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-semibold focus:outline-none focus:border-blue-600"
-                />
               </div>
             </div>
 
@@ -636,23 +559,39 @@ function SetupWizardContent() {
               </p>
             </header>
 
-            {/* Effective Club Summary Strip */}
-            <div className="office-floating-card rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <div className="text-[10px] font-mono font-bold uppercase text-slate-500">Ready to Sign</div>
-                <div className="text-sm font-display font-black text-slate-900">
-                  {managerName.trim() || 'Manager'} at {effectiveSelectedName} ({databaseSeason})
+            {/* Effective Club Summary & Optional Rename Strip */}
+            <div className="office-floating-card rounded-2xl p-4 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <div className="text-[10px] font-mono font-bold uppercase text-slate-500">Ready to Sign</div>
+                  <div className="text-sm font-display font-black text-slate-900">
+                    {managerName.trim() || 'Manager'} at {effectiveSelectedName} ({databaseSeason})
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 text-xs tabular-nums">
+                  <div>
+                    <span className="text-slate-500 font-medium">Adjusted Budget: </span>
+                    <strong className="text-blue-700 font-display font-black">£{effectiveBudgetMillions}M</strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 font-medium">Multiplier: </span>
+                    <strong className="text-slate-900 font-mono">{customSettings.startingBudgetMultiplier}x</strong>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-4 text-xs tabular-nums">
-                <div>
-                  <span className="text-slate-500 font-medium">Adjusted Budget: </span>
-                  <strong className="text-blue-700 font-display font-black">£{effectiveBudgetMillions}M</strong>
-                </div>
-                <div>
-                  <span className="text-slate-500 font-medium">Multiplier: </span>
-                  <strong className="text-slate-900 font-mono">{customSettings.startingBudgetMultiplier}x</strong>
-                </div>
+
+              <div className="pt-2.5 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center gap-2">
+                <label htmlFor="single-custom-club-name" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider shrink-0">
+                  Custom Club Name (Optional):
+                </label>
+                <input
+                  id="single-custom-club-name"
+                  type="text"
+                  value={customClubNames[selectedClub.id] ?? ''}
+                  onChange={(e) => handleClubRename(selectedClub.id, e.target.value)}
+                  placeholder={`Keep "${selectedClub.defaultName}" or enter custom name`}
+                  className="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs text-slate-900 font-semibold focus:outline-none focus:border-amber-600"
+                />
               </div>
             </div>
 
@@ -765,7 +704,7 @@ function SetupWizardContent() {
                     onChange={(e) =>
                       setCustomSettings({ ...customSettings, boardCanSack: e.target.checked })
                     }
-                    className="w-4 h-4 accent-blue-700 cursor-pointer"
+                    className="w-4 h-4 accent-amber-600 cursor-pointer"
                   />
                 </label>
 
@@ -781,7 +720,7 @@ function SetupWizardContent() {
                     onChange={(e) =>
                       setCustomSettings({ ...customSettings, retryMatch: e.target.checked })
                     }
-                    className="w-4 h-4 accent-blue-700 cursor-pointer"
+                    className="w-4 h-4 accent-amber-600 cursor-pointer"
                   />
                 </label>
 
@@ -797,7 +736,7 @@ function SetupWizardContent() {
                     onChange={(e) =>
                       setCustomSettings({ ...customSettings, homegrownRule: e.target.checked })
                     }
-                    className="w-4 h-4 accent-blue-700 cursor-pointer"
+                    className="w-4 h-4 accent-amber-600 cursor-pointer"
                   />
                 </label>
 
@@ -813,7 +752,7 @@ function SetupWizardContent() {
                     onChange={(e) =>
                       setCustomSettings({ ...customSettings, financialPenalties: e.target.checked })
                     }
-                    className="w-4 h-4 accent-blue-700 cursor-pointer"
+                    className="w-4 h-4 accent-amber-600 cursor-pointer"
                   />
                 </label>
 

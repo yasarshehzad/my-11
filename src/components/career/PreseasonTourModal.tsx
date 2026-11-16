@@ -77,8 +77,8 @@ export function PreseasonTourModal({
                   onClick={() => setSelectedTourId(tour.id)}
                   className={`p-4 rounded-2xl border-2 transition-all cursor-pointer relative shadow-2xs ${
                     isSelected
-                      ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20 shadow-md'
-                      : 'border-slate-200 bg-slate-50/60 hover:border-slate-300 hover:bg-slate-100/50'
+                      ? 'border-amber-600 bg-amber-50/50 ring-2 ring-amber-500/20 shadow-md'
+                      : 'border-[#E2DFD9] bg-[#F7F6F3] hover:border-zinc-400 hover:bg-white'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -86,51 +86,51 @@ export function PreseasonTourModal({
                       <span className="text-2xl">{tour.badgeEmoji}</span>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="font-display font-black text-sm sm:text-base text-[#0b1536]">
+                          <h3 className="font-display font-black text-sm sm:text-base text-zinc-900">
                             {tour.title}
                           </h3>
                           {isSelected && (
-                            <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded bg-blue-600 text-white font-bold shadow-2xs">
+                            <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#1E2024] text-amber-300 shadow-2xs">
                               SELECTED
                             </span>
                           )}
                         </div>
-                        <span className="text-[11px] text-slate-500 block font-medium">
+                        <span className="text-[11px] text-zinc-500 block font-medium">
                           📍 {tour.destinationCity} ({tour.region})
                         </span>
                       </div>
                     </div>
 
                     <div className="text-right shrink-0">
-                      <span className="text-xs sm:text-sm font-display font-black text-blue-700 block">
+                      <span className="text-xs sm:text-sm font-display font-black text-emerald-700 block">
                         +{formatCurrency(tour.prizeMoney)}
                       </span>
-                      <span className="text-[9px] uppercase font-bold text-slate-500">
+                      <span className="text-[9px] uppercase font-bold text-zinc-500">
                         Prize &amp; Commercial
                       </span>
                     </div>
                   </div>
 
-                  <p className="text-xs text-slate-600 mt-2.5 leading-relaxed">
+                  <p className="text-xs text-zinc-600 mt-2.5 leading-relaxed">
                     {tour.description}
                   </p>
 
                   {/* Opponents & Venues */}
-                  <div className="mt-3 pt-3 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-2">
+                  <div className="mt-3 pt-3 border-t border-zinc-200/80 flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
                         3 Tour Matches:
                       </span>
                       {tour.opponents.map((opp) => (
                         <span
                           key={opp.clubId}
-                          className="text-[10.5px] font-medium px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-slate-700 shadow-2xs"
+                          className="text-[10.5px] font-medium px-2 py-0.5 rounded-lg bg-white border border-zinc-200 text-zinc-700 shadow-2xs"
                         >
                           vs {opp.name}
                         </span>
                       ))}
                     </div>
-                    <span className="text-[10px] font-bold text-blue-700 font-mono">
+                    <span className="text-[10px] font-bold text-amber-800 font-mono">
                       {tour.fitnessBonusDescription}
                     </span>
                   </div>

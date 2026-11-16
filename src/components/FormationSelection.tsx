@@ -76,7 +76,7 @@ export function FormationSelection({
                   onClick={() => onSelectLeague(lg.id)}
                   className={`w-full p-3 rounded-2xl text-left transition-all duration-200 flex items-center gap-3 cursor-pointer relative active:scale-[0.99] ${
                     active
-                      ? 'border-2 border-[#1d5eff] bg-blue-50/70 shadow-md ring-2 ring-blue-500/20'
+                      ? 'border-2 border-amber-600 bg-amber-50/40 shadow-md ring-2 ring-amber-500/20'
                       : 'office-subcard hover:border-indigo-200'
                   }`}
                 >
@@ -124,7 +124,7 @@ export function FormationSelection({
                   onClick={() => onSelectDraftModifier?.(mode.id)}
                   className={`p-3 rounded-2xl text-center transition-all duration-200 flex flex-col items-center justify-between gap-1.5 cursor-pointer relative active:scale-98 ${
                     active
-                      ? 'border-2 border-[#1d5eff] bg-blue-50/70 shadow-md ring-2 ring-blue-500/20'
+                      ? 'border-2 border-amber-600 bg-amber-50/40 shadow-md ring-2 ring-amber-500/20'
                       : 'office-subcard hover:border-indigo-200'
                   }`}
                 >
@@ -218,7 +218,7 @@ export function FormationSelection({
                   onClick={() => onSelectFormation(f.type)}
                   className={`w-full p-3 rounded-2xl text-left transition-all duration-200 group active:scale-[0.99] cursor-pointer flex flex-col justify-between ${
                     active
-                      ? 'border-2 border-[#1d5eff] bg-blue-50/70 shadow-md ring-2 ring-blue-500/20'
+                      ? 'border-2 border-amber-600 bg-amber-50/40 shadow-md ring-2 ring-amber-500/20'
                       : 'office-subcard hover:border-indigo-200'
                   }`}
                 >

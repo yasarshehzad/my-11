@@ -104,7 +104,7 @@ export function HowToPlayModal({
         {activeTab === 'draft' && (
           <div className="text-xs text-slate-600 space-y-4 font-semibold leading-relaxed">
             <div className="flex gap-3 items-start">
-              <span className="w-6 h-6 rounded-full bg-blue-100 border border-blue-200 text-blue-700 flex items-center justify-center font-display font-black flex-shrink-0 text-xs">
+              <span className="w-6 h-6 rounded-full bg-[#1E2024] border border-amber-500/40 text-amber-300 flex items-center justify-center font-display font-black flex-shrink-0 text-xs">
                 1
               </span>
               <div>
@@ -118,7 +118,7 @@ export function HowToPlayModal({
             </div>
 
             <div className="flex gap-3 items-start">
-              <span className="w-6 h-6 rounded-full bg-blue-100 border border-blue-200 text-blue-700 flex items-center justify-center font-display font-black flex-shrink-0 text-xs">
+              <span className="w-6 h-6 rounded-full bg-[#1E2024] border border-amber-500/40 text-amber-300 flex items-center justify-center font-display font-black flex-shrink-0 text-xs">
                 2
               </span>
               <div>
@@ -132,7 +132,7 @@ export function HowToPlayModal({
             </div>
 
             <div className="flex gap-3 items-start">
-              <span className="w-6 h-6 rounded-full bg-blue-100 border border-blue-200 text-blue-700 flex items-center justify-center font-display font-black flex-shrink-0 text-xs">
+              <span className="w-6 h-6 rounded-full bg-[#1E2024] border border-amber-500/40 text-amber-300 flex items-center justify-center font-display font-black flex-shrink-0 text-xs">
                 3
               </span>
               <div>
@@ -216,7 +216,7 @@ export function HowToPlayModal({
                 type="checkbox"
                 checked={dontShowAgain}
                 onChange={(e) => setDontShowAgain(e.target.checked)}
-                className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 w-4 h-4 bg-white focus:outline-none"
+                className="rounded border-slate-300 accent-amber-600 focus:ring-amber-500/20 w-4 h-4 bg-white focus:outline-none"
               />
               <span className="text-[10px] text-slate-600 font-bold uppercase tracking-wider">
                 Don't show this popup again when starting
