@@ -192,8 +192,15 @@ describe('Shortlist, Free Agency, and Loan System (Option 3)', () => {
     expect(updated.inbox[0].subject).toContain('Free Agent Secured');
   });
 
-  it('finalizes a Bosman pre-contract agreement for players with 1 year remaining', () => {
-    const save = createMockSave();
+  it('finalizes a Bosman pre-contract agreement for players with 1 year remaining during the Jan-Jun window', () => {
+    const save = createMockSave({
+      season: {
+        seasonNumber: 1,
+        yearStart: 2026,
+        currentDate: '2027-01-15',
+        transferWindowOpen: true,
+      },
+    });
     const targetPlayer: MarketPlayer = {
       id: 'bosman_winger',
       cardId: 'bosman_winger_card',
@@ -208,6 +215,9 @@ describe('Shortlist, Free Agency, and Loan System (Option 3)', () => {
       contractYears: 1,
       isHomegrown: true,
     };
+
+    const outsideWindow = executeBosmanPreContract(createMockSave(), targetPlayer, 165_000, 3, 1_000_000);
+    expect(outsideWindow.success).toBe(false);
 
     const res = executeBosmanPreContract(save, targetPlayer, 165_000, 3, 1_000_000);
     expect(res.success).toBe(true);

@@ -7,11 +7,13 @@ import {
   deleteCareerSave,
   exportCareerSaveAsJson,
   importCareerSaveFromJson,
+  hydrateCareerSaveVault,
   ValidSlotId,
-} from '../../career/saves';
+} from '../../career/saveVault';
 import { SaveSlotMeta } from '../../career/types';
 import { saveTheme, saveHideCareerTutorial } from '../../utils/storage';
 import { HowToPlayModal } from '../../components/HowToPlayModal';
+import { IconClose } from '../../components/career/GameIcons';
 
 function formatBudgetShort(amount: number): string {
   if (!Number.isFinite(amount)) return '£0M';
@@ -19,12 +21,7 @@ function formatBudgetShort(amount: number): string {
 }
 
 export default function CareerEntryPage() {
-  const [slots, setSlots] = useState<SaveSlotMeta[]>(() => {
-    if (typeof window !== 'undefined') {
-      return listSaveSlots();
-    }
-    return [];
-  });
+  const [slots, setSlots] = useState<SaveSlotMeta[]>([]);
   const [theme] = useState<'dark' | 'light'>('light');
   const [deleteConfirmSlot, setDeleteConfirmSlot] = useState<string | null>(null);
   const [importingSlot, setImportingSlot] = useState<ValidSlotId | null>(null);
@@ -39,6 +36,21 @@ export default function CareerEntryPage() {
 
   useEffect(() => {
     saveTheme('light');
+    let cancelled = false;
+    hydrateCareerSaveVault()
+      .then(() => {
+        if (!cancelled) {
+          setSlots(listSaveSlots());
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSlots(listSaveSlots());
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const showToast = (msg: string) => {
@@ -171,28 +183,14 @@ export default function CareerEntryPage() {
 
       {/* Main Content */}
       <main className="flex-1 w-full max-w-5xl mx-auto px-3 sm:px-4 pt-4 sm:pt-6 space-y-6">
-        {/* Canopy Intro Header */}
-        <section aria-label="Career Save Slots Overview" className="my11-canopy-card">
-          <div className="my11-canopy-head p-6 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1 text-left">
-              <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-emerald-300">
-                Manager Save Vault // Local &amp; Portable
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-display font-black uppercase tracking-tight text-white">
-                Select Manager Save Slot
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-200 max-w-2xl">
-                Run up to 3 independent multi-season 2026/27 managerial careers side-by-side and back up any save as JSON.
-              </p>
-            </div>
-            <div className="rounded-2xl bg-white/10 border border-white/15 px-4 py-3 text-left shrink-0">
-              <div className="text-[10px] font-mono uppercase tracking-wider text-slate-300">Active Slots</div>
-              <div className="text-xl font-display font-black text-white mt-0.5">
-                {occupiedCount} / {slots.length || 3}
-              </div>
-            </div>
-          </div>
-        </section>
+        <div className="flex items-baseline justify-between gap-3 px-1">
+          <h1 className="text-xl sm:text-2xl font-display font-black uppercase tracking-tight text-slate-900">
+            Save Slots
+          </h1>
+          <span className="text-xs font-mono font-bold text-slate-600">
+            {occupiedCount} / {slots.length || 3} in use
+          </span>
+        </div>
 
         {/* 3 Save Slots Tactile Cards */}
         <section aria-label="Save Slots" className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -203,24 +201,16 @@ export default function CareerEntryPage() {
             if (slot.isEmpty || !slot.save) {
               return (
                 <article key={slot.slotId} className="my11-canopy-card flex flex-col">
-                  <div className="my11-canopy-head p-5 flex items-center justify-between">
-                    <div>
-                      <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-300">
-                        {slotLabel}
-                      </div>
-                      <h2 className="text-lg font-display font-black uppercase text-white mt-0.5">
-                        Open Dugout
-                      </h2>
+                  <div className="my11-canopy-head p-5">
+                    <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-300">
+                      {slotLabel}
                     </div>
-                    <span className="w-9 h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center font-mono text-xs font-bold text-emerald-300">
-                      0{slotNumber}
-                    </span>
+                    <h2 className="text-lg font-display font-black uppercase text-white mt-0.5">
+                      Empty
+                    </h2>
                   </div>
 
-                  <div className="p-5 flex-1 flex flex-col justify-between gap-4 bg-white">
-                    <p className="text-xs text-slate-600 leading-relaxed">
-                      Empty career slot ready for a new 2026/27 campaign or a restored JSON backup.
-                    </p>
+                  <div className="p-5 flex-1 flex flex-col justify-end gap-4 bg-white">
 
                     <div className="space-y-2.5">
                       <Link
@@ -233,7 +223,7 @@ export default function CareerEntryPage() {
 
                       <div className="grid grid-cols-2 gap-2">
                         <label className="office-subcard py-2 px-2 rounded-xl text-[11px] font-bold text-slate-700 hover:text-slate-900 flex items-center justify-center gap-1.5 cursor-pointer transition-colors">
-                          <span>Upload File</span>
+                          <span>Import File</span>
                           <input
                             type="file"
                             accept=".json,application/json"
@@ -290,32 +280,19 @@ export default function CareerEntryPage() {
 
                 {/* Telemetry & Controls Body */}
                 <div className="p-5 flex-1 flex flex-col justify-between gap-4 bg-white">
-                  <div className="grid grid-cols-2 gap-2.5 text-left">
-                    <div className="rounded-xl bg-slate-50 border border-slate-200 p-2.5">
-                      <div className="text-[9.5px] font-mono uppercase text-slate-500 font-bold">Date</div>
-                      <div className="text-xs font-mono font-bold text-slate-900 mt-0.5">
-                        {save.currentDate}
+                  <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-left">
+                    {[
+                      { label: 'Date', value: save.currentDate },
+                      { label: 'Budget', value: formatBudgetShort(save.budget) },
+                      { label: 'Squad', value: `${save.squadSize} players` },
+                      { label: 'Rules', value: save.isLocked ? 'Locked' : 'Editable' },
+                    ].map((stat) => (
+                      <div key={stat.label} className="flex items-baseline justify-between gap-2 border-b border-slate-100 pb-1.5">
+                        <dt className="text-[11px] text-slate-500">{stat.label}</dt>
+                        <dd className="text-xs font-mono font-bold text-slate-900">{stat.value}</dd>
                       </div>
-                    </div>
-                    <div className="rounded-xl bg-slate-50 border border-slate-200 p-2.5">
-                      <div className="text-[9.5px] font-mono uppercase text-slate-500 font-bold">Budget</div>
-                      <div className="text-xs font-mono font-bold text-emerald-700 mt-0.5">
-                        {formatBudgetShort(save.budget)}
-                      </div>
-                    </div>
-                    <div className="rounded-xl bg-slate-50 border border-slate-200 p-2.5">
-                      <div className="text-[9.5px] font-mono uppercase text-slate-500 font-bold">Squad</div>
-                      <div className="text-xs font-mono font-bold text-slate-900 mt-0.5">
-                        {save.squadSize} Players
-                      </div>
-                    </div>
-                    <div className="rounded-xl bg-slate-50 border border-slate-200 p-2.5">
-                      <div className="text-[9.5px] font-mono uppercase text-slate-500 font-bold">Rules</div>
-                      <div className="text-xs font-mono font-bold text-slate-900 mt-0.5">
-                        {save.isLocked ? 'Locked' : 'Editable'}
-                      </div>
-                    </div>
-                  </div>
+                    ))}
+                  </dl>
 
                   <div className="space-y-2">
                     <Link
@@ -350,45 +327,6 @@ export default function CareerEntryPage() {
               </article>
             );
           })}
-        </section>
-
-        {/* Core Pillars Highlights (Zero Emojis) */}
-        <section aria-label="Career Mode Capabilities" className="office-floating-card rounded-2xl p-5 sm:p-6 border border-slate-200 bg-white shadow-xs">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
-            <div className="office-subcard rounded-xl p-4 space-y-1.5">
-              <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-700">
-                Authentic Rosters
-              </div>
-              <h3 className="text-xs font-display font-black text-slate-900 uppercase">
-                3 Era Databases (26/27 – 24/25)
-              </h3>
-              <p className="text-[11px] text-slate-600 leading-relaxed">
-                Accurate promotion &amp; relegation clubs, stadium capacities, budgets, and custom club renaming.
-              </p>
-            </div>
-            <div className="office-subcard rounded-xl p-4 space-y-1.5">
-              <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-blue-700">
-                Governance &amp; Difficulty
-              </div>
-              <h3 className="text-xs font-display font-black text-slate-900 uppercase">
-                Custom Rule Presets
-              </h3>
-              <p className="text-[11px] text-slate-600 leading-relaxed">
-                Choose Easy, Normal, Realistic, Hard, or Custom simulation sliders with optional rule locking.
-              </p>
-            </div>
-            <div className="office-subcard rounded-xl p-4 space-y-1.5">
-              <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-700">
-                Zero Account Lock-In
-              </div>
-              <h3 className="text-xs font-display font-black text-slate-900 uppercase">
-                Local Storage &amp; JSON Backups
-              </h3>
-              <p className="text-[11px] text-slate-600 leading-relaxed">
-                Saves live securely on your device and can be exported or restored cleanly via JSON anytime.
-              </p>
-            </div>
-          </div>
         </section>
       </main>
 
@@ -445,9 +383,10 @@ export default function CareerEntryPage() {
               <button
                 type="button"
                 onClick={() => setImportingSlot(null)}
-                className="text-slate-500 hover:text-slate-900 text-sm cursor-pointer p-1"
+                aria-label="Close modal"
+                className="w-9 h-9 inline-flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 cursor-pointer"
               >
-                ✕
+                <IconClose className="w-4 h-4" />
               </button>
             </div>
             <p className="text-xs text-slate-600">

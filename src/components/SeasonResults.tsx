@@ -1,27 +1,43 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Player, FormationType, SimulationResult, ChallengeTemplate, StreakStats, MatchSimResult } from '../types/game';
+import { Player, FormationType, SimulationResult, ChallengeTemplate, MatchSimResult, H2HShowdownResult } from '../types/game';
 import { FORMATION_SLOTS, getDetailedChemistryLogs } from '../utils/gameLogic';
 import { PitchLayout } from './PitchLayout';
 import { StatsDisplay } from './StatsDisplay';
 import { SharePreview } from './SharePreview';
 import { getAllClubs, getEffectiveClubName } from '../career/clubs';
-import { createNewCareerSave, listSaveSlots, ValidSlotId } from '../career/saves';
+import { createNewCareerSave, hydrateCareerSaveVault, listSaveSlots, ValidSlotId } from '../career/saves';
+import { ensureCareerDatabaseLoaded } from '../career/databaseExpansion';
 import { validateSettings } from '../career/settings';
 import { formatCareerCurrency } from '../career/formatters';
+import {
+  IconClock,
+  IconHeart,
+  IconCrown,
+  IconTrophy,
+  IconHandshake,
+  IconCheck,
+  IconClose,
+  IconAlert,
+  IconStar,
+  IconMedal,
+  IconShield,
+  IconChevronUp,
+  IconChevronDown,
+  IconPlay,
+  IconRefresh,
+} from './career/GameIcons';
 
 interface SeasonResultsProps {
   formation: FormationType;
   selectedPlayers: (Player | null)[];
   stats: { attack: number; midfield: number; defence: number; chemistry: number; overall: number };
   simResult: SimulationResult;
-  streakStats: StreakStats;
   isDailyChallenge: boolean;
   todayChallenge: ChallengeTemplate | null;
   challengeBeaten: boolean;
-  showFixturesBreakdown: boolean;
   exportRef: React.RefObject<HTMLDivElement | null>;
-  onToggleFixturesBreakdown: () => void;
+  h2hShowdown?: H2HShowdownResult | null;
   onStartDraft: () => void;
   onRandomDraft: () => void;
 }
@@ -31,13 +47,11 @@ export function SeasonResults({
   selectedPlayers,
   stats,
   simResult,
-  streakStats,
   isDailyChallenge,
   todayChallenge,
   challengeBeaten,
-  showFixturesBreakdown,
   exportRef,
-  onToggleFixturesBreakdown,
+  h2hShowdown,
   onStartDraft,
   onRandomDraft,
 }: SeasonResultsProps) {
@@ -46,59 +60,77 @@ export function SeasonResults({
 
   const router = useRouter();
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [tab, setTab] = useState<'summary' | 'squad' | 'story'>('summary');
+  const [showTips, setShowTips] = useState(false);
+  const [showAllHighlights, setShowAllHighlights] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<ValidSlotId>('slot_1');
   const [selectedClubId, setSelectedClubId] = useState<string>('man_blue');
   const [managerName, setManagerName] = useState<string>('Manager');
   const [managerNationality, setManagerNationality] = useState<string>('England');
   const [budgetMultiplier, setBudgetMultiplier] = useState<number>(1.0);
   const [isExporting, setIsExporting] = useState(false);
-  const [saveSlots, setSaveSlots] = useState(() => (typeof window !== 'undefined' ? listSaveSlots() : []));
+  const [saveSlots, setSaveSlots] = useState<ReturnType<typeof listSaveSlots>>([]);
 
-  useEffect(() => {
-    if (showExportModal && typeof window !== 'undefined') {
-      const slots = listSaveSlots();
-      setSaveSlots(slots);
-      const firstEmpty = slots.find((s) => s.isEmpty);
-      if (firstEmpty) {
-        setSelectedSlot(firstEmpty.slotId);
-      }
+  const openExportModal = () => {
+    setShowExportModal(true);
+    if (typeof window !== 'undefined') {
+      void Promise.all([
+        hydrateCareerSaveVault(),
+        ensureCareerDatabaseLoaded('2026/27'),
+      ]).then(() => {
+        const slots = listSaveSlots();
+        setSaveSlots(slots);
+        const firstEmpty = slots.find((s) => s.isEmpty);
+        if (firstEmpty) {
+          setSelectedSlot(firstEmpty.slotId);
+        }
+      });
     }
-  }, [showExportModal]);
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && showExportModal) {
-        setShowExportModal(false);
-      }
+      if (e.key !== 'Escape') return;
+      if (showExportModal) setShowExportModal(false);
+      if (showShare) setShowShare(false);
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showExportModal]);
+  }, [showExportModal, showShare]);
 
-  const handleConfirmExport = () => {
+  const handleConfirmExport = async () => {
     setIsExporting(true);
-    const clubs = getAllClubs();
-    const targetClub = clubs.find((c) => c.id === selectedClubId) || clubs[0];
-    const validDrafted = selectedPlayers.filter((p): p is Player => Boolean(p));
+    try {
+      await Promise.all([
+        hydrateCareerSaveVault(),
+        ensureCareerDatabaseLoaded('2026/27'),
+      ]);
+      const clubs = getAllClubs();
+      const targetClub = clubs.find((c) => c.id === selectedClubId) || clubs[0];
+      const validDrafted = selectedPlayers.filter((p): p is Player => Boolean(p));
 
-    const finalSettings = validateSettings({
-      preset: 'hard',
-      startingBudgetMultiplier: budgetMultiplier,
-    });
+      const finalSettings = validateSettings({
+        preset: 'hard',
+        startingBudgetMultiplier: budgetMultiplier,
+      });
 
-    createNewCareerSave({
-      slotId: selectedSlot,
-      manager: {
-        name: managerName.trim() || 'Manager',
-        nationality: managerNationality.trim() || 'England',
-      },
-      club: targetClub,
-      settings: finalSettings,
-      customDraftedPlayers: validDrafted,
-      initialFormation: formation,
-    });
+      createNewCareerSave({
+        slotId: selectedSlot,
+        manager: {
+          name: managerName.trim() || 'Manager',
+          nationality: managerNationality.trim() || 'England',
+        },
+        club: targetClub,
+        settings: finalSettings,
+        customDraftedPlayers: validDrafted,
+        initialFormation: formation,
+      });
 
-    router.push(`/career/play?slot=${selectedSlot}`);
+      router.push(`/career/play?slot=${selectedSlot}`);
+    } catch {
+      setIsExporting(false);
+    }
   };
 
   // Confetti Animation for 35+ wins
@@ -167,14 +199,21 @@ export function SeasonResults({
   }, [simResult.wins]);
 
   const leagueFinishLabel = {
-    1: '🏆 LEAGUE CHAMPIONS!',
-    2: '🥈 RUNNERS-UP',
-    3: '🥉 3RD PLACE',
-    4: '🇪🇺 4TH PLACE (CHAMPIONS LEAGUE)',
-    5: '🇪🇺 5TH PLACE (EUROPA LEAGUE)',
-    6: '🇪🇺 6TH PLACE (EUROPA LEAGUE)',
-    7: '🇪🇺 7TH PLACE',
-  }[simResult.leaguePosition] || `🤝 #${simResult.leaguePosition} MID-TABLE`;
+    1: 'LEAGUE CHAMPIONS',
+    2: 'RUNNERS-UP',
+    3: '3RD PLACE',
+    4: '4TH PLACE (CHAMPIONS LEAGUE)',
+    5: '5TH PLACE (EUROPA LEAGUE)',
+    6: '6TH PLACE (EUROPA LEAGUE)',
+    7: '7TH PLACE',
+  }[simResult.leaguePosition] || `#${simResult.leaguePosition} MID-TABLE`;
+
+  const renderFinishIcon = (pos: number) => {
+    if (pos === 1) return <IconTrophy className="w-3.5 h-3.5 shrink-0" />;
+    if (pos <= 3) return <IconMedal className="w-3.5 h-3.5 shrink-0" />;
+    if (pos <= 7) return <IconStar className="w-3.5 h-3.5 shrink-0" filled />;
+    return <IconHandshake className="w-3.5 h-3.5 shrink-0" />;
+  };
 
   const getFinishAccentClass = (pos: number) => {
     if (pos === 1) return 'from-amber-400 to-yellow-500 text-yellow-950 border-yellow-500 shadow-amber-500/20';
@@ -200,78 +239,42 @@ export function SeasonResults({
     }
   };
 
-  const getManagerAdvice = () => {
-    const advice = [];
-    
-    // 1. Chemistry Advice
-    if (stats.chemistry < 80) {
-      advice.push({
-        type: 'chemistry',
-        status: 'warning',
-        title: 'Squad Chemistry is Low',
-        desc: `Your team chemistry is ${stats.chemistry}/100. Focus on linking adjacent players of the same club, nationality, or era. Good chemistry scales up your squad overall rating.`,
-      });
-    } else {
-      advice.push({
-        type: 'chemistry',
-        status: 'good',
-        title: 'Fluid Chemistry Links',
-        desc: `Excellent squad chemistry (${stats.chemistry}/100). Your players established strong links, boosting your team's tactical coordination.`,
-      });
-    }
-
-    // 2. Department Checks
-    if (stats.attack < 82) {
-      advice.push({
-        type: 'attack',
-        status: 'warning',
-        title: 'Attack Lacks Bite',
-        desc: `Your attack rating is ${stats.attack}. In your next draft, prioritize forwards with high finishing and pace ratings to convert critical chances.`,
-      });
-    }
-    if (stats.midfield < 82) {
-      advice.push({
-        type: 'midfield',
-        status: 'warning',
-        title: 'Midfield Control Weak',
-        desc: `Your midfield rating is ${stats.midfield}. Draft central midfielders (CM/CDM) with high passing and technique to control the tempo and possession.`,
-      });
-    }
-    if (stats.defence < 82) {
-      advice.push({
-        type: 'defence',
-        status: 'warning',
-        title: 'Backline is Vulnerable',
-        desc: `Your defence rating is ${stats.defence}. Try securing a defensive leader (CB) or anchor midfielder (CDM) to lock down opposing attacks.`,
-      });
-    }
-
-    // 3. Challenge Contextual Advice
-    if (isDailyChallenge && todayChallenge) {
-      if (todayChallenge.rule === 'no_legends') {
-        advice.push({
-          type: 'challenge',
-          status: 'info',
-          title: 'No Legends Strategy',
-          desc: 'Without 90+ rated superstar legends, maximizing tactical chemistry blocks (e.g. English core or Manchester United links) is crucial to overcome elite opponents.',
-        });
-      } else if (todayChallenge.rule === 'underdog_xi') {
-        advice.push({
-          type: 'challenge',
-          status: 'info',
-          title: 'Underdog Efficiency',
-          desc: 'Underdog drafts depend on high-efficiency Rare cards. Look for high-performing rare cards with strong nationality or club links to build chemistry.',
-        });
-      }
-    }
-
-    return advice;
-  };
+  // Short pointers for the next draft (the season review already explains what worked and what did not)
+  const nextDraftTips: string[] = [];
+  if (stats.chemistry < 80) nextDraftTips.push(`Chemistry ${stats.chemistry}/100: link neighbours by club, nation or era.`);
+  if (stats.attack < 82) nextDraftTips.push(`Attack ${stats.attack}: pick forwards with finishing and pace.`);
+  if (stats.midfield < 82) nextDraftTips.push(`Midfield ${stats.midfield}: pick CM/CDMs with passing and technique.`);
+  if (stats.defence < 82) nextDraftTips.push(`Defence ${stats.defence}: add a leading CB or a holding CDM.`);
+  if (isDailyChallenge && todayChallenge?.rule === 'no_legends') {
+    nextDraftTips.push('No legends: lean on chemistry blocks such as a shared club or nation.');
+  } else if (isDailyChallenge && todayChallenge?.rule === 'underdog_xi') {
+    nextDraftTips.push('Underdog XI: look for Rare cards with strong club or nation links.');
+  }
 
   const activePlayers = selectedPlayers.filter((p): p is Player => p !== null);
+  const story = simResult.seasonStory;
+  const highlights = simResult.highlights || [];
+  const shownHighlights = showAllHighlights ? highlights : highlights.slice(0, 3);
+  const leagueName = {
+    english: 'Premier League',
+    spanish: 'La Liga',
+    german: 'Bundesliga',
+    italian: 'Serie A',
+    french: 'Ligue 1',
+  }[simResult.selectedLeague || 'english'];
+  const modeName =
+    simResult.draftModifier === 'quick' ? 'Quick draft' : simResult.draftModifier === 'mystery' ? 'Mystery draft' : 'Classic draft';
+  const slipUps = 38 - simResult.wins;
+  const bannerClass = 'w-full px-4 py-2.5 rounded-2xl border flex items-center gap-2 text-xs font-bold';
+  const sectionLabel = 'text-[10px] font-black text-slate-500 uppercase tracking-widest';
+  const tabs = [
+    { id: 'summary' as const, label: 'Summary' },
+    { id: 'squad' as const, label: 'Squad & Stats' },
+    { id: 'story' as const, label: 'Season Story' },
+  ];
 
   return (
-    <div className="flex flex-col gap-8 px-4 sm:px-6 py-8 w-full max-w-lg mx-auto min-h-[95vh] relative overflow-hidden">
+    <div className="flex flex-col gap-4 px-4 sm:px-6 py-5 w-full max-w-lg mx-auto min-h-[95vh] relative overflow-hidden">
       {simResult.wins >= 35 && (
         <canvas
           ref={canvasRef}
@@ -280,588 +283,502 @@ export function SeasonResults({
       )}
 
       {/* Results Header */}
-      <div className="text-center mt-2 relative z-10 leading-none">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold uppercase tracking-widest mb-3 shadow-sm">
-          ⚽ FIXTURES COMPLETE
-        </div>
-        
-        <h2 className="text-3xl font-display font-black text-[#0b1536] uppercase tracking-tight">
-          CAMPAIGN DEBRIEF
+      <div className="text-center relative z-10">
+        <h2 className="text-2xl font-display font-black text-[#0b1536] uppercase tracking-tight leading-none">
+          Season Complete
         </h2>
-        
-        {isDailyChallenge && todayChallenge && (
-          <p className="text-[10px] text-slate-600 font-bold tracking-widest uppercase mt-2">
-            Daily Challenge: <span className="text-blue-600 font-display">{todayChallenge.title}</span>
-          </p>
-        )}
-        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mt-1.5">
-          <p className="text-[10px] text-slate-600 font-bold tracking-widest uppercase">
-            League: <span className="text-blue-600 font-display">
-              {
-                {
-                  english: 'English Premier League 🇬🇧',
-                  spanish: 'La Liga 🇪🇸',
-                  german: 'Bundesliga 🇩🇪',
-                  italian: 'Serie A 🇮🇹',
-                  french: 'Ligue 1 🇫🇷',
-                }[simResult.selectedLeague || 'english']
-              }
-            </span>
-          </p>
-          <span className="text-slate-300 hidden sm:inline">•</span>
-          <p className="text-[10px] text-slate-600 font-bold tracking-widest uppercase">
-            Mode: <span className="text-blue-600 font-display">
-              {simResult.draftModifier === 'quick' ? '⚡ QUICK DRAFT' : simResult.draftModifier === 'mystery' ? '❓ MYSTERY DRAFT' : '⏱️ CLASSIC DRAFT'}
-            </span>
-          </p>
-        </div>
+        <p className="text-[11px] text-slate-600 font-bold mt-1.5">
+          {leagueName} · {modeName}
+          {isDailyChallenge && todayChallenge ? ` · ${todayChallenge.title}` : ''}
+        </p>
       </div>
 
-      {/* Heartbreak / Celebratory Banner */}
-      {isSoClose && (
-        <div className="w-full p-4.5 rounded-3xl office-subcard border-rose-200 bg-rose-50/90 relative z-10 text-center animate-pulse shadow-sm">
-          <span className="text-xl">💔</span>
-          <h3 className="text-sm font-display font-black text-rose-800 uppercase mt-1 leading-none">So close to perfection!</h3>
-          <p className="text-[10px] text-rose-700 mt-1.5 leading-relaxed max-w-xs mx-auto font-medium">
-            Just {38 - simResult.wins} slip-up{38 - simResult.wins > 1 ? 's' : ''} cost you the legendary 38-0 Invincibles campaign.
-          </p>
-        </div>
-      )}
+      {/* One-line banners */}
+      {(isSoClose || simResult.wins === 38 || simResult.beatTargetResult || (simResult.newPersonalBests && simResult.newPersonalBests.length > 0)) && (
+        <div className="flex flex-col gap-2 relative z-10">
+          {isSoClose && (
+            <div className={`${bannerClass} border-rose-200 bg-rose-50/90 text-rose-800`}>
+              <IconHeart className="w-4 h-4 text-rose-600 shrink-0" />
+              <span>So close: {slipUps} slip-up{slipUps > 1 ? 's' : ''} from a perfect 38-0.</span>
+            </div>
+          )}
 
-      {simResult.wins === 38 && (
-        <div className="w-full p-5 rounded-3xl office-subcard border-amber-300 bg-amber-50/90 relative z-10 text-center animate-bounce shadow-sm">
-          <span className="text-xl">👑</span>
-          <h3 className="text-sm font-display font-black text-amber-800 uppercase mt-1 leading-none">THE PERFECT SEASON!</h3>
-          <p className="text-[10px] text-amber-700 mt-1.5 leading-relaxed max-w-xs mx-auto font-semibold">
-            38 wins. 0 draws. 0 losses. You have achieved absolute football immortality!
-          </p>
-        </div>
-      )}
+          {simResult.wins === 38 && (
+            <div className={`${bannerClass} border-amber-300 bg-amber-50/90 text-amber-800`}>
+              <IconCrown className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>The perfect season: 38 wins from 38.</span>
+            </div>
+          )}
 
-      {/* Target Replay Outcome Banner */}
-      {simResult.beatTargetResult && (
-        <div className={`w-full p-4.5 rounded-3xl border relative z-10 text-center shadow-sm ${
-          simResult.beatTargetResult.beaten
-            ? 'office-subcard border-blue-200 bg-blue-50/80 text-blue-900'
-            : simResult.beatTargetResult.matched
-            ? 'office-subcard border-amber-200 bg-amber-50/80 text-amber-900'
-            : 'office-subcard border-slate-200 bg-slate-50/80 text-slate-800'
-        }`}>
-          <div className="flex items-center justify-center gap-1.5">
-            <span className="text-lg">
-              {simResult.beatTargetResult.beaten ? '🏆' : simResult.beatTargetResult.matched ? '🤝' : '⏱️'}
-            </span>
-            <h3 className="text-xs font-display font-black uppercase tracking-wider">
-              {simResult.beatTargetResult.beaten
-                ? `🏆 TARGET BEATEN (${simResult.wins} wins vs target ${simResult.beatTargetResult.targetWins})`
+          {simResult.beatTargetResult && (
+            <div className={`${bannerClass} ${
+              simResult.beatTargetResult.beaten
+                ? 'border-blue-200 bg-blue-50/80 text-blue-900'
                 : simResult.beatTargetResult.matched
-                ? `TARGET MATCHED (${simResult.wins} wins)`
-                : `SO CLOSE (${simResult.wins} wins vs target ${simResult.beatTargetResult.targetWins})`}
-            </h3>
-          </div>
-          <p className="text-[10px] text-slate-600 mt-1 font-semibold">
-            {simResult.beatTargetResult.beaten
-              ? `You conquered the challenge target of ${simResult.beatTargetResult.targetWins} wins with ${simResult.wins} wins!`
-              : simResult.beatTargetResult.matched
-              ? `You matched the target of ${simResult.beatTargetResult.targetWins} wins.`
-              : `Finished with ${simResult.wins} wins (Target was ${simResult.beatTargetResult.targetWins} wins). Share your score or try again!`}
-          </p>
-        </div>
-      )}
-
-      {/* New Personal Best Banner */}
-      {simResult.newPersonalBests && simResult.newPersonalBests.length > 0 && (
-        <div className="w-full p-4 rounded-3xl office-subcard border-blue-200 bg-blue-50/90 relative z-10 text-center shadow-sm animate-pulse">
-          <div className="flex items-center justify-center gap-1.5">
-            <span className="text-lg">🏆</span>
-            <h3 className="text-xs font-display font-black text-blue-700 uppercase tracking-widest">
-              NEW PERSONAL BEST!
-            </h3>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-2 mt-1.5">
-            {simResult.newPersonalBests.map((record, idx) => (
-              <span
-                key={idx}
-                className="text-[9px] font-display font-black uppercase px-2.5 py-1 rounded-full bg-blue-100 border border-blue-200 text-blue-800"
-              >
-                {record}
+                ? 'border-amber-200 bg-amber-50/80 text-amber-900'
+                : 'border-slate-200 bg-slate-50/80 text-slate-800'
+            }`}>
+              {simResult.beatTargetResult.beaten ? (
+                <IconTrophy className="w-4 h-4 text-blue-700 shrink-0" />
+              ) : simResult.beatTargetResult.matched ? (
+                <IconHandshake className="w-4 h-4 text-amber-700 shrink-0" />
+              ) : (
+                <IconClock className="w-4 h-4 text-slate-600 shrink-0" />
+              )}
+              <span>
+                {simResult.beatTargetResult.beaten
+                  ? `Target beaten: ${simResult.wins} wins vs ${simResult.beatTargetResult.targetWins}.`
+                  : simResult.beatTargetResult.matched
+                  ? `Target matched: ${simResult.wins} wins.`
+                  : `Target missed: ${simResult.wins} wins vs ${simResult.beatTargetResult.targetWins}.`}
               </span>
+            </div>
+          )}
+
+          {simResult.newPersonalBests && simResult.newPersonalBests.length > 0 && (
+            <div className={`${bannerClass} border-blue-200 bg-blue-50/90 text-blue-800`}>
+              <IconTrophy className="w-4 h-4 text-blue-700 shrink-0" />
+              <span>New personal best: {simResult.newPersonalBests.join(', ')}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Head-to-Head Showdown (2-Legged Clash) */}
+      {h2hShowdown && (
+        <div className={`w-full p-4 rounded-2xl border relative z-10 space-y-3 ${
+          h2hShowdown.winner === 'user'
+            ? 'border-emerald-300 bg-emerald-50/80'
+            : h2hShowdown.winner === 'challenger'
+            ? 'border-rose-300 bg-rose-50/80'
+            : 'border-amber-300 bg-amber-50/80'
+        }`}>
+          <div className="text-center">
+            <div className={`inline-flex items-center gap-1.5 text-[11px] font-display font-black uppercase tracking-wider ${
+              h2hShowdown.winner === 'user'
+                ? 'text-emerald-800'
+                : h2hShowdown.winner === 'challenger'
+                ? 'text-rose-800'
+                : 'text-amber-800'
+            }`}>
+              {h2hShowdown.winner === 'user' ? (
+                <IconTrophy className="w-3.5 h-3.5 shrink-0" />
+              ) : (
+                <IconHandshake className="w-3.5 h-3.5 shrink-0" />
+              )}
+              <span>
+                {h2hShowdown.winner === 'user'
+                  ? 'H2H win'
+                  : h2hShowdown.winner === 'challenger'
+                  ? 'H2H defeat'
+                  : 'H2H draw'}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-center gap-3 mt-1 text-[#0b1536]">
+              <span className="text-xs font-display font-black uppercase">Your XI</span>
+              <span className="text-2xl font-display font-black tracking-tight leading-none">
+                {h2hShowdown.userAggregateGoals} - {h2hShowdown.challengerAggregateGoals}
+              </span>
+              <span className="text-xs font-display font-black uppercase truncate">{h2hShowdown.challenger.clubName}</span>
+            </div>
+
+            {h2hShowdown.decidedByPenalties && (
+              <p className="text-[11px] font-bold text-slate-700 mt-1">
+                Penalties {h2hShowdown.userPenalties ?? 0} - {h2hShowdown.challengerPenalties ?? 0}
+              </p>
+            )}
+          </div>
+
+          <div className="text-[11px] text-slate-700 font-semibold divide-y divide-slate-200/80 border-t border-slate-200/80">
+            <p className="py-1.5 flex justify-between gap-2">
+              <span>You ({formation})</span>
+              <span>{stats.overall} OVR · {stats.chemistry} chem</span>
+            </p>
+            <p className="py-1.5 flex justify-between gap-2">
+              <span className="truncate">{h2hShowdown.challenger.managerName} ({h2hShowdown.challenger.formation})</span>
+              <span className="shrink-0">{h2hShowdown.challengerStats.overall} OVR · {h2hShowdown.challengerStats.chemistry} chem</span>
+            </p>
+            {h2hShowdown.legs.map((leg) => (
+              <div key={leg.leg} className="py-1.5">
+                <p className="flex justify-between gap-2 font-black text-[#0b1536]">
+                  <span>Leg {leg.leg} ({leg.venue === 'home' ? 'home' : 'away'})</span>
+                  <span>{leg.userGoals} - {leg.challengerGoals}</span>
+                </p>
+                {(leg.userScorers.length > 0 || leg.challengerScorers.length > 0) && (
+                  <p className="font-medium text-slate-600">
+                    {[
+                      leg.userScorers.length > 0 ? `You: ${leg.userScorers.join(', ')}` : '',
+                      leg.challengerScorers.length > 0 ? `Them: ${leg.challengerScorers.join(', ')}` : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </p>
+                )}
+              </div>
             ))}
+            <p className="py-1.5 flex items-start gap-1.5">
+              <IconStar className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+              <span>
+                MOTM {h2hShowdown.motmName}. <span className="font-medium text-slate-600">{h2hShowdown.summary}</span>
+              </span>
+            </p>
           </div>
         </div>
       )}
 
-      {/* 1. Main League Outcome Card */}
-      <div className="w-full flex flex-col items-center p-6 office-floating-card relative overflow-hidden text-center z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none" />
-
-        {/* Daily Challenge Clear Status Badge */}
+      {/* Main League Outcome Card */}
+      <div className="w-full flex flex-col items-center p-5 office-floating-card relative overflow-hidden text-center z-10">
         {isDailyChallenge ? (
-          <div className={`px-5 py-2 rounded-2xl bg-gradient-to-r border shadow-lg font-display font-black text-sm uppercase tracking-wider mb-4 leading-none ${
-            challengeBeaten 
-              ? 'from-blue-600 via-indigo-600 to-violet-600 text-white border-blue-400 shadow-blue-500/20'
-              : 'from-rose-500 to-red-700 text-white border-rose-400'
+          <div className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl border font-display font-black text-xs uppercase tracking-wider mb-3 leading-none ${
+            challengeBeaten
+              ? 'bg-blue-50 text-blue-800 border-blue-300'
+              : 'bg-rose-50 text-rose-800 border-rose-300'
           }`}>
-            {challengeBeaten ? '✅ CHALLENGE CLEARED!' : '❌ CHALLENGE FAILED'}
+            {challengeBeaten ? <IconCheck className="w-4 h-4 shrink-0" /> : <IconClose className="w-4 h-4 shrink-0" />}
+            <span>{challengeBeaten ? 'Challenge cleared' : 'Challenge failed'}</span>
           </div>
         ) : (
-          <div className={`px-5 py-2 rounded-2xl bg-gradient-to-r border shadow-sm font-display font-black text-xs uppercase tracking-wider ${getFinishAccentClass(simResult.leaguePosition)} mb-4 leading-none`}>
-            {leagueFinishLabel}
+          <div className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-gradient-to-r border font-display font-black text-xs uppercase tracking-wider ${getFinishAccentClass(simResult.leaguePosition)} mb-3 leading-none`}>
+            {renderFinishIcon(simResult.leaguePosition)}
+            <span>{leagueFinishLabel}</span>
           </div>
         )}
 
-        <p className="text-5xl font-display font-black text-[#0b1536] leading-none tracking-tight">
+        <p className="text-4xl font-display font-black text-[#0b1536] leading-none tracking-tight">
           {simResult.wins}W - {simResult.draws}D - {simResult.losses}L
         </p>
-        
-        <p className="text-xs font-bold text-slate-600 mt-2 leading-none uppercase tracking-wide">
-          Record: <span className="text-[#0b1536] font-extrabold">{simResult.points} PTS</span> • Goals: <span className="text-[#0b1536] font-extrabold">{simResult.goalsFor}F / {simResult.goalsAgainst}A</span>
+
+        <p className="text-xs font-bold text-slate-600 mt-2 leading-none">
+          <span className="text-[#0b1536] font-extrabold">{simResult.points} pts</span> · goals{' '}
+          <span className="text-[#0b1536] font-extrabold">{simResult.goalsFor}-{simResult.goalsAgainst}</span>
+          {story ? ` · expected ${story.expectedWinsBand}` : ''}
         </p>
 
-        <div className="h-[1.5px] w-12 bg-[var(--office-divider)] my-4" />
-
-        <p className="text-xs font-semibold text-slate-600 max-w-sm leading-relaxed italic">
-          "{simResult.summary}"
-        </p>
-
-        {/* Season Verdict & Expectation Band */}
-        {simResult.seasonStory && (
-          <div className="flex flex-wrap items-center justify-center gap-2 mt-4 pt-3 border-t border-[var(--office-divider)] w-full">
-            <span className={`text-[9px] font-black px-3 py-1 rounded-full border uppercase tracking-wider font-display leading-none ${
-              simResult.seasonStory.verdict === 'Exceeded expectations'
-                ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                : simResult.seasonStory.verdict === 'Underperformed'
-                ? 'bg-rose-100 text-rose-800 border-rose-300'
-                : 'bg-indigo-100 text-indigo-800 border-indigo-300'
-            }`}>
-              VERDICT: {simResult.seasonStory.verdict}
-            </span>
-            <span className="text-[9px] font-bold text-slate-600 office-subcard px-2.5 py-1 rounded-full uppercase tracking-wider font-display">
-              Expected: {simResult.seasonStory.expectedWinsBand}
-            </span>
-          </div>
+        {story && (
+          <p className={`text-[11px] font-black uppercase tracking-wider mt-2 ${
+            story.verdict === 'Exceeded expectations'
+              ? 'text-emerald-700'
+              : story.verdict === 'Underperformed'
+              ? 'text-rose-700'
+              : 'text-indigo-700'
+          }`}>
+            {story.verdict}
+          </p>
         )}
+
+        <p className="text-xs font-medium text-slate-600 max-w-sm leading-relaxed mt-2">{simResult.summary}</p>
       </div>
 
-      {/* Season Narrative & Story Review Card */}
-      {simResult.seasonStory && (
-        <div className="w-full p-6 office-floating-card z-10 flex flex-col gap-4 select-none">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--office-divider)] pb-3">
-            <div>
-              <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">
-                Official Season Review
-              </span>
-              <h3 className="text-lg font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 uppercase tracking-tight mt-0.5">
-                {simResult.seasonStory.title}
-              </h3>
-            </div>
-            <span className="text-[9px] font-extrabold px-2.5 py-1 rounded-xl office-subcard text-[#0b1536] font-display">
-              {simResult.seasonStory.longestStreak.description}
-            </span>
-          </div>
+      {/* Actions (visible on every tab) */}
+      <div className="grid grid-cols-2 gap-2 relative z-10">
+        <button
+          type="button"
+          onClick={onStartDraft}
+          className="min-h-[44px] px-3 rounded-2xl office-play-match-btn text-white font-display font-black text-xs uppercase tracking-wider cursor-pointer inline-flex items-center justify-center gap-1.5 active:scale-98"
+        >
+          <IconRefresh className="w-4 h-4 shrink-0" />
+          <span>New Draft</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowShare(true)}
+          className="min-h-[44px] px-3 rounded-2xl office-action-btn-primary text-white font-display font-black text-xs uppercase tracking-wider cursor-pointer inline-flex items-center justify-center gap-1.5 active:scale-98"
+        >
+          <span>Share / Challenge</span>
+        </button>
+        <button
+          type="button"
+          onClick={onRandomDraft}
+          className="min-h-[40px] px-3 rounded-2xl office-subcard text-[#0b1536] hover:bg-slate-100 font-display font-black text-[11px] uppercase tracking-wider cursor-pointer active:scale-98"
+        >
+          Random Draft
+        </button>
+        <button
+          type="button"
+          onClick={openExportModal}
+          className="min-h-[40px] px-3 rounded-2xl office-subcard text-emerald-800 hover:bg-emerald-50 font-display font-black text-[11px] uppercase tracking-wider cursor-pointer inline-flex items-center justify-center gap-1.5 active:scale-98"
+        >
+          <IconPlay className="w-3.5 h-3.5 shrink-0" />
+          <span>Take to Career</span>
+        </button>
+      </div>
 
-          <div className="flex flex-col gap-3 text-xs leading-relaxed text-slate-600">
-            <div className="p-3.5 rounded-2xl office-subcard">
-              <span className="text-[9.5px] font-extrabold text-blue-600 uppercase tracking-wider font-display block mb-1">
-                🏁 The Opening 10 Matchdays
-              </span>
-              <p className="text-slate-800 font-medium">{simResult.seasonStory.howStarted}</p>
-            </div>
+      {/* Tabs */}
+      <div role="tablist" aria-label="Season results" className="flex gap-1 p-1 office-subcard relative z-10 text-[11px] font-display font-black uppercase tracking-wider">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            id={`results-tab-${t.id}`}
+            aria-selected={tab === t.id}
+            aria-controls="results-tabpanel"
+            onClick={() => setTab(t.id)}
+            className={`flex-1 min-h-[40px] px-1 rounded-xl cursor-pointer whitespace-nowrap ${
+              tab === t.id ? 'office-nav-tab-active shadow-sm' : 'office-nav-tab'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
 
-            {simResult.seasonStory.turningPoint && (
-              <div className="p-3.5 rounded-2xl office-subcard">
-                <span className="text-[9.5px] font-extrabold text-amber-600 uppercase tracking-wider font-display block mb-1">
-                  ⚡ The Turning Point
-                </span>
-                <p className="text-slate-800 font-medium">{simResult.seasonStory.turningPoint}</p>
+      <div id="results-tabpanel" role="tabpanel" aria-labelledby={`results-tab-${tab}`} className="flex flex-col gap-4 relative z-10 w-full">
+        {tab === 'summary' && (
+          <>
+            {/* Condensed season review */}
+            {story && (
+              <div className="office-floating-card p-4 space-y-2">
+                <div className="flex items-baseline justify-between gap-2 flex-wrap">
+                  <h3 className="text-base font-display font-black text-[#0b1536] uppercase tracking-tight">{story.title}</h3>
+                  <span className="text-[11px] font-bold text-slate-600">{story.longestStreak.description}</span>
+                </div>
+                <p className="text-xs text-slate-700 font-medium leading-relaxed flex items-start gap-1.5">
+                  <IconCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>{story.whyItWorked}</span>
+                </p>
+                <p className="text-xs text-slate-700 font-medium leading-relaxed flex items-start gap-1.5">
+                  <IconAlert className="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5" />
+                  <span>{story.whatHeldBack}</span>
+                </p>
+                {nextDraftTips.length > 0 && (
+                  <div className="pt-1 border-t border-[var(--office-divider)]">
+                    <button
+                      type="button"
+                      aria-expanded={showTips}
+                      onClick={() => setShowTips(!showTips)}
+                      className="w-full min-h-[40px] flex items-center justify-between text-[11px] font-black uppercase tracking-wider text-slate-600 cursor-pointer"
+                    >
+                      <span>Tips for next draft ({nextDraftTips.length})</span>
+                      {showTips ? <IconChevronUp className="w-4 h-4" /> : <IconChevronDown className="w-4 h-4" />}
+                    </button>
+                    {showTips && (
+                      <ul className="text-xs text-slate-700 font-medium leading-relaxed space-y-1 pb-1 list-disc pl-4">
+                        {nextDraftTips.map((tip) => (
+                          <li key={tip}>{tip}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="p-3.5 rounded-2xl office-subcard border-blue-200 bg-blue-50/60">
-                <span className="text-[9.5px] font-extrabold text-blue-600 uppercase tracking-wider font-display block mb-1">
-                  💪 Why It Worked
-                </span>
-                <p className="text-slate-800 font-medium text-[11px]">{simResult.seasonStory.whyItWorked}</p>
-              </div>
-
-              <div className="p-3.5 rounded-2xl office-subcard border-rose-200 bg-rose-50/60">
-                <span className="text-[9.5px] font-extrabold text-rose-600 uppercase tracking-wider font-display block mb-1">
-                  ⚠️ What Held You Back
-                </span>
-                <p className="text-slate-800 font-medium text-[11px]">{simResult.seasonStory.whatHeldBack}</p>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-2xl office-subcard">
-              <span className="text-[9.5px] font-extrabold text-indigo-600 uppercase tracking-wider font-display block mb-1">
-                🏆 Final Campaign Appraisal
-              </span>
-              <p className="text-slate-800 font-medium">{simResult.seasonStory.howEnded}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Season Key Match Highlights */}
-      {simResult.highlights && simResult.highlights.length > 0 && (
-        <div className="w-full flex flex-col gap-3 z-10">
-          <div className="flex justify-between items-center px-1">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">
-              Key Fixture Highlights ({simResult.highlights.length} Spotlight Matches)
-            </span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {simResult.highlights.map((hl, i) => (
-              <div
-                key={i}
-                className="p-4 rounded-2xl office-subcard border-[var(--office-divider)] bg-white/95 flex flex-col justify-between gap-3 text-left shadow-sm"
-              >
-                <div>
-                  <div className="flex justify-between items-center mb-1.5 leading-none">
-                    <span className="text-[8.5px] font-black uppercase text-amber-700 font-display tracking-wider">
-                      {hl.categoryLabel}
-                    </span>
-                    <span className="text-[9px] font-extrabold text-slate-500 font-display">
-                      MD {hl.matchIndex + 1}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-baseline mb-1">
-                    <h4 className="text-sm font-display font-black text-[#0b1536] uppercase truncate">
-                      vs {hl.match.opponent}
-                    </h4>
-                    <span className="text-sm font-display font-black text-blue-600">
-                      {hl.match.ourScore} - {hl.match.opponentScore}
-                    </span>
-                  </div>
-                  {hl.match.headline && (
-                    <p className="text-[11px] font-bold text-slate-700 leading-snug">
-                      "{hl.match.headline}"
-                    </p>
-                  )}
-                  {hl.match.scorers && hl.match.scorers.length > 0 && (
-                    <p className="text-[9.5px] text-blue-600 font-semibold mt-1">
-                      ⚽ {hl.match.scorers.join(', ')}
-                    </p>
-                  )}
-                </div>
-
-                <div className="pt-2 border-t border-[var(--office-divider)] flex flex-col gap-1">
-                  {hl.match.motm && (
-                    <span className="text-[8.5px] text-slate-600 font-medium">
-                      ⭐ <span className="font-bold text-[#0b1536]">{hl.match.motm.player.displayName}</span>: {hl.match.motm.reason}
-                    </span>
-                  )}
-                  <p className="text-[9.5px] text-slate-500 font-normal leading-normal italic">
-                    {hl.description}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 2. Premium Share Card Preview (Streaks inside) */}
-      <SharePreview
-        formation={formation}
-        selectedPlayers={activePlayers}
-        stats={stats}
-        simResult={simResult}
-        streakStats={streakStats}
-        isDailyChallenge={isDailyChallenge}
-        dailyChallengeTitle={todayChallenge?.title}
-        dailyChallengeBeaten={challengeBeaten}
-        exportRef={exportRef}
-      />
-
-      {/* 3. Pitch XI Representation */}
-      <div className="flex flex-col gap-3 relative z-10 w-full">
-        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1 leading-none">
-          Squad Tactical Pitch Layout
-        </span>
-        <PitchLayout
-          formation={formation}
-          selectedPlayers={selectedPlayers}
-          currentSlotIndex={-1}
-        />
-      </div>
-
-      {/* 4. Complete Stats Breakdown */}
-      <div className="flex flex-col gap-3 relative z-10 w-full">
-        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1 leading-none">
-          Complete Team Statistics
-        </span>
-        <StatsDisplay
-          attack={stats.attack}
-          midfield={stats.midfield}
-          defence={stats.defence}
-          chemistry={stats.chemistry}
-          overall={stats.overall}
-          logs={getDetailedChemistryLogs(selectedPlayers, FORMATION_SLOTS[formation])}
-        />
-      </div>
-
-      {/* Manager's Tactical Report Card */}
-      <div className="w-full p-6 rounded-3xl office-floating-card z-10 flex flex-col gap-4 shadow-md">
-        <div className="flex items-center gap-2">
-          <span className="text-xl">📋</span>
-          <div className="flex-1 leading-none">
-            <h3 className="text-md font-display font-black text-[#0b1536] uppercase tracking-tight">
-              Manager's Tactical Report
-            </h3>
-            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">
-              Post-Campaign Analysis
-            </span>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-3.5 mt-2">
-          {getManagerAdvice().map((adv, idx) => {
-            const borderColors = {
-              warning: 'border-rose-200 bg-rose-50/70 text-rose-900',
-              good: 'border-emerald-200 bg-emerald-50/70 text-emerald-900',
-              info: 'border-indigo-200 bg-indigo-50/70 text-indigo-900',
-            }[adv.status as 'warning' | 'good' | 'info'];
-
-            const icon = {
-              warning: '🔴',
-              good: '🟢',
-              info: '💡',
-            }[adv.status as 'warning' | 'good' | 'info'];
-
-            return (
-              <div key={idx} className={`p-4.5 rounded-2xl border ${borderColors} flex gap-3.5 leading-normal text-xs`}>
-                <span className="text-base flex-shrink-0 mt-0.5">{icon}</span>
-                <div className="flex-1 space-y-1">
-                  <h4 className="font-extrabold uppercase text-[11px] tracking-wide leading-tight text-[#0b1536]">
-                    {adv.title}
-                  </h4>
-                  <p className="text-slate-600 font-medium leading-relaxed">
-                    {adv.desc}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Season Awards: Top Scorer & Clean Sheets */}
-      {(simResult.topScorer || simResult.cleanSheets !== undefined) && (
-        <div className="w-full grid grid-cols-2 gap-3 z-10">
-          {simResult.topScorer && (
-            <div className="p-4 rounded-2xl office-subcard border-amber-200 bg-amber-50/80 flex flex-col justify-between shadow-sm">
-              <span className="text-[9px] font-black uppercase text-amber-800 tracking-wider flex items-center gap-1">
-                🥇 Golden Boot
-              </span>
-              <div className="mt-2">
-                <h4 className="text-sm font-display font-black text-[#0b1536] uppercase truncate">
-                  {simResult.topScorer.player.displayName}
-                </h4>
-                <p className="text-[10px] text-slate-600 font-semibold mt-0.5">
-                  {simResult.topScorer.goals} Goals in 38 Matches
+            {/* Awards */}
+            <div className="office-subcard px-4 divide-y divide-[var(--office-divider)] text-xs">
+              <p className="py-2.5 flex items-center gap-2">
+                <IconStar className="w-3.5 h-3.5 text-amber-500 shrink-0" filled />
+                <span className="font-bold text-slate-600">MVP</span>
+                <span className="ml-auto font-display font-black text-[#0b1536] uppercase truncate">{simResult.mvp.displayName}</span>
+              </p>
+              {simResult.topScorer && (
+                <p className="py-2.5 flex items-center gap-2">
+                  <IconMedal className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                  <span className="font-bold text-slate-600">Golden Boot</span>
+                  <span className="ml-auto font-display font-black text-[#0b1536] uppercase truncate">
+                    {simResult.topScorer.player.displayName} · {simResult.topScorer.goals}
+                  </span>
                 </p>
-              </div>
-            </div>
-          )}
-          {simResult.cleanSheets !== undefined && (
-            <div className="p-4 rounded-2xl office-subcard border-blue-200 bg-blue-50/80 flex flex-col justify-between shadow-sm">
-              <span className="text-[9px] font-black uppercase text-blue-800 tracking-wider flex items-center gap-1">
-                🧤 Golden Glove
-              </span>
-              <div className="mt-2">
-                <h4 className="text-sm font-display font-black text-[#0b1536] uppercase">
-                  {simResult.cleanSheets} Clean Sheets
-                </h4>
-                <p className="text-[10px] text-slate-600 font-semibold mt-0.5">
-                  {38 - simResult.cleanSheets} Matches Conceded
+              )}
+              {simResult.cleanSheets !== undefined && (
+                <p className="py-2.5 flex items-center gap-2">
+                  <IconShield className="w-3.5 h-3.5 text-blue-700 shrink-0" />
+                  <span className="font-bold text-slate-600">Clean sheets</span>
+                  <span className="ml-auto font-display font-black text-[#0b1536]">{simResult.cleanSheets}</span>
                 </p>
-              </div>
+              )}
             </div>
-          )}
-        </div>
-      )}
 
-      {/* Detailed Season Fixtures & Results (Collapsible) */}
-      <div className="w-full z-10 flex flex-col gap-3">
-        <button
-          onClick={onToggleFixturesBreakdown}
-          className="w-full p-4.5 rounded-2xl office-subcard border-[var(--office-divider)] hover:bg-slate-50 transition-all duration-300 flex items-center justify-between cursor-pointer active:scale-99 shadow-sm"
-        >
-          <div className="flex items-center gap-2.5">
-            <span className="text-lg">📅</span>
-            <span className="text-xs font-display font-black text-[#0b1536] uppercase tracking-wider">
-              {showFixturesBreakdown ? 'Hide' : 'Show'} Detailed Season Fixtures
-            </span>
-          </div>
-          <span className="text-xs text-slate-500 font-extrabold font-display">
-            {showFixturesBreakdown ? '▲' : '▼'}
-          </span>
-        </button>
+            {/* Key match highlights */}
+            {highlights.length > 0 && (
+              <div className="flex flex-col gap-1">
+                <span className={`${sectionLabel} px-1`}>Key matches</span>
+                <div className="office-subcard px-4 divide-y divide-[var(--office-divider)]">
+                  {shownHighlights.map((hl, i) => (
+                    <div key={i} className="py-2.5 text-left">
+                      <div className="flex justify-between items-baseline gap-2">
+                        <h4 className="text-xs font-display font-black text-[#0b1536] uppercase truncate">
+                          vs {hl.match.opponent}
+                        </h4>
+                        <span className="text-xs font-display font-black text-blue-600 shrink-0">
+                          {hl.match.ourScore} - {hl.match.opponentScore}
+                        </span>
+                      </div>
+                      <p className="text-[11px] font-bold text-amber-700">
+                        {hl.categoryLabel} · MD {hl.matchIndex + 1}
+                      </p>
+                      <p className="text-[11px] text-slate-600 font-medium leading-snug line-clamp-2">
+                        {hl.match.headline || hl.description}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                {highlights.length > 3 && (
+                  <button
+                    type="button"
+                    aria-expanded={showAllHighlights}
+                    onClick={() => setShowAllHighlights(!showAllHighlights)}
+                    className="min-h-[40px] text-[11px] font-black uppercase tracking-wider text-blue-700 cursor-pointer inline-flex items-center justify-center gap-1"
+                  >
+                    <span>{showAllHighlights ? 'Show fewer' : `Show all ${highlights.length}`}</span>
+                    {showAllHighlights ? <IconChevronUp className="w-4 h-4" /> : <IconChevronDown className="w-4 h-4" />}
+                  </button>
+                )}
+              </div>
+            )}
+          </>
+        )}
 
-        {showFixturesBreakdown && (
-          <div className="w-full p-4.5 rounded-3xl office-floating-card flex flex-col gap-2.5 animate-card-deal shadow-md border border-slate-200">
-            {simResult.matches.map((match, idx) => {
-              const outcomeColors = {
-                W: 'bg-emerald-50/80 border-emerald-200 text-emerald-900',
-                D: 'bg-slate-50/80 border-slate-200 text-slate-800',
-                L: 'bg-rose-50/80 border-rose-200 text-rose-900',
-              }[match.outcome];
+        {tab === 'squad' && (
+          <>
+            <PitchLayout formation={formation} selectedPlayers={selectedPlayers} currentSlotIndex={-1} />
+            <StatsDisplay
+              attack={stats.attack}
+              midfield={stats.midfield}
+              defence={stats.defence}
+              chemistry={stats.chemistry}
+              overall={stats.overall}
+              logs={getDetailedChemistryLogs(selectedPlayers, FORMATION_SLOTS[formation])}
+            />
+          </>
+        )}
 
-              const outcomeBadge = {
-                W: 'bg-emerald-100 border-emerald-300 text-emerald-800',
-                D: 'bg-slate-200 border-slate-300 text-slate-700',
-                L: 'bg-rose-100 border-rose-300 text-rose-800',
-              }[match.outcome];
+        {tab === 'story' && (
+          <>
+            {story && (
+              <div className="office-floating-card p-4 space-y-2 text-xs text-slate-700 font-medium leading-relaxed">
+                <p><span className="font-black text-[#0b1536]">Start. </span>{story.howStarted}</p>
+                {story.turningPoint && (
+                  <p><span className="font-black text-[#0b1536]">Turning point. </span>{story.turningPoint}</p>
+                )}
+                <p><span className="font-black text-[#0b1536]">Finish. </span>{story.howEnded}</p>
+              </div>
+            )}
 
-              return (
-                <div
-                  key={idx}
-                  className={`flex items-start gap-4 p-3.5 rounded-2xl border ${outcomeColors} text-left leading-normal shadow-sm`}
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-center w-full leading-none">
-                      <span className="text-[9.5px] text-slate-500 font-bold uppercase tracking-wider">
-                        Game {idx + 1}
+            <div className="flex flex-col gap-1">
+              <span className={`${sectionLabel} px-1`}>All 38 matches</span>
+              <div className="office-subcard px-4 divide-y divide-[var(--office-divider)]">
+                {simResult.matches.map((match, idx) => {
+                  const outcomeBadge = {
+                    W: 'bg-emerald-100 border-emerald-300 text-emerald-800',
+                    D: 'bg-slate-200 border-slate-300 text-slate-700',
+                    L: 'bg-rose-100 border-rose-300 text-rose-800',
+                  }[match.outcome];
+                  const people = [
+                    match.scorers && match.scorers.length > 0 ? match.scorers.join(', ') : '',
+                    match.motm ? `MOTM ${match.motm.player.displayName}` : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' · ');
+
+                  return (
+                    <div key={idx} className="py-2 flex items-center gap-3 text-left">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-xs font-display font-black text-[#0b1536] uppercase truncate">
+                          <span className="text-slate-500 font-mono mr-1.5">{idx + 1}</span>
+                          vs {match.opponent}
+                          <span className="text-slate-500 font-bold ml-1.5">{match.opponentRating}</span>
+                        </h4>
+                        <p className="text-[11px] text-slate-600 font-medium truncate">
+                          {match.headline || match.summary || getMatchCommentary(match)}
+                        </p>
+                        {people && <p className="text-[11px] text-blue-700 font-semibold truncate">{people}</p>}
+                      </div>
+                      <span className="text-sm font-display font-black text-[#0b1536] shrink-0">
+                        {match.ourScore} - {match.opponentScore}
                       </span>
-                      <span className={`text-[8.5px] font-extrabold px-1.5 py-0.5 rounded border uppercase leading-none font-display ${outcomeBadge}`}>
-                        {match.outcome === 'W' ? 'WIN' : match.outcome === 'D' ? 'DRAW' : 'LOSS'}
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black border leading-none font-display shrink-0 ${outcomeBadge}`}>
+                        {match.outcome}
                       </span>
                     </div>
-                    <h4 className="text-sm font-display font-black text-[#0b1536] mt-1.5 leading-none uppercase">
-                      vs {match.opponent}
-                    </h4>
-                    {match.headline && (
-                      <p className="text-[11px] font-bold text-slate-700 leading-snug mt-1">
-                        "{match.headline}"
-                      </p>
-                    )}
-                    {match.scorers && match.scorers.length > 0 && (
-                      <p className="text-[10px] text-blue-600 font-bold leading-normal mt-1 flex items-center gap-1 flex-wrap">
-                        <span>⚽</span> {match.scorers.join(', ')}
-                      </p>
-                    )}
-                    {match.motm && (
-                      <p className="text-[9.5px] text-amber-700 font-semibold mt-1">
-                        ⭐ MOTM: {match.motm.player.displayName} ({match.motm.reason})
-                      </p>
-                    )}
-                    <p className="text-[10px] text-slate-500 leading-normal mt-1 italic">
-                      {match.summary || getMatchCommentary(match)}
-                    </p>
-                  </div>
-
-                  <div className="text-right flex flex-col items-end gap-1 flex-shrink-0 self-center leading-none">
-                    <span className="text-md font-display font-black text-[#0b1536] tracking-tight">
-                      {match.ourScore} - {match.opponentScore}
-                    </span>
-                    <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">
-                      {match.opponentRating} OVR
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                  );
+                })}
+              </div>
+            </div>
+          </>
         )}
       </div>
 
-      {/* Action Buttons: Export to Career, Build Another Team, Randomize */}
-      <div className="mt-4 mb-6 relative z-10 flex flex-col gap-3 w-full">
-        <button
-          type="button"
-          onClick={() => setShowExportModal(true)}
-          className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:via-teal-500 hover:to-cyan-500 text-white font-display font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 transform active:scale-98 cursor-pointer text-center flex items-center justify-center gap-2"
+      {/* Share / Challenge Modal */}
+      {showShare && (
+        <div
+          data-scrim="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto bg-slate-950/80 backdrop-blur-sm motion-safe:animate-fade-in"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="share-modal-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowShare(false);
+          }}
         >
-          <span className="text-lg">🚀</span>
-          <span>Take This Squad into Career Mode</span>
-        </button>
-
-        <div className="flex flex-col sm:flex-row gap-3 w-full">
-          <button
-            type="button"
-            onClick={onStartDraft}
-            className="flex-1 py-4 px-6 rounded-2xl office-subcard text-[#0b1536] hover:bg-slate-100 font-display font-black text-sm uppercase tracking-wider transition-all duration-300 transform active:scale-98 cursor-pointer text-center shadow-sm"
-          >
-            🎮 Build Another Team
-          </button>
-          <button
-            type="button"
-            onClick={onRandomDraft}
-            className="flex-grow py-4 px-6 rounded-2xl office-play-match-btn text-white font-display font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 transform active:scale-98 cursor-pointer text-center"
-          >
-            🎲 Randomize Again
-          </button>
+          <div className="office-floating-card w-full max-w-sm bg-white border border-slate-200/90 rounded-3xl p-4 shadow-2xl relative my-auto max-h-[90dvh] overflow-y-auto scrollbar-none space-y-3 text-left">
+            <div className="flex items-center justify-between gap-3">
+              <h3 id="share-modal-title" className="text-base font-display font-black text-[#0b1536] uppercase tracking-wide">
+                Share / Challenge
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowShare(false)}
+                className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                aria-label="Close share"
+              >
+                <IconClose className="w-4 h-4" />
+              </button>
+            </div>
+            <SharePreview
+              formation={formation}
+              selectedPlayers={activePlayers}
+              stats={stats}
+              simResult={simResult}
+              isDailyChallenge={isDailyChallenge}
+              dailyChallengeTitle={todayChallenge?.title}
+              dailyChallengeBeaten={challengeBeaten}
+              exportRef={exportRef}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Export to Career Mode Modal */}
       {showExportModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto bg-slate-950/80 backdrop-blur-sm animate-fade-in"
+          data-scrim="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto bg-slate-950/80 backdrop-blur-sm motion-safe:animate-fade-in"
           role="dialog"
           aria-modal="true"
           aria-labelledby="export-draft-modal-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowExportModal(false);
+          }}
         >
-          <div className="office-floating-card w-full max-w-xl bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-2xl relative my-auto max-h-[90vh] overflow-y-auto space-y-5 text-left">
+          <div className="office-floating-card w-full max-w-xl bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-2xl relative my-auto max-h-[90dvh] overflow-y-auto scrollbar-none space-y-4 text-left">
             {/* Header */}
-            <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-xl shadow-xs border border-emerald-100">
-                  🚀
-                </div>
-                <div>
-                  <h3 id="export-draft-modal-title" className="text-base font-display font-black text-[#0b1536] uppercase tracking-wide">
-                    Take Drafted XI to Career Mode
-                  </h3>
-                  <p className="text-xs text-slate-500 font-medium mt-0.5">
-                    Launch a persistent Career save with your drafted 11 stars as the starting squad.
-                  </p>
-                </div>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 id="export-draft-modal-title" className="text-base font-display font-black text-[#0b1536] uppercase tracking-wide">
+                  Take Squad to Career
+                </h3>
+                <p className="text-xs text-slate-600 font-medium mt-0.5">
+                  Your XI ({formation}, {stats.overall} OVR) becomes the starting squad of a new career save.
+                </p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowExportModal(false)}
-                className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 text-sm font-bold flex items-center justify-center transition-colors cursor-pointer"
+                className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors cursor-pointer shrink-0"
                 aria-label="Close modal"
               >
-                ✕
+                <IconClose className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Squad Snapshot */}
-            <div className="p-3.5 rounded-2xl bg-slate-50/90 border border-slate-200/80 space-y-2.5">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-display font-black text-[#0b1536] uppercase tracking-wider flex items-center gap-1.5">
-                  <span>⚽</span> Drafted Foundation ({formation})
-                </span>
-                <span className="font-mono text-[11px] font-bold text-emerald-700">
-                  {stats.overall} OVR • {stats.chemistry}% Chem
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
-                {selectedPlayers.filter((p): p is Player => Boolean(p)).map((p, idx) => (
-                  <span
-                    key={p.id || idx}
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white border border-slate-200 text-[10.5px] font-bold text-[#0b1536] shadow-2xs"
-                  >
-                    <span className="text-[9px] font-display font-black text-blue-700 px-1 py-0.2 bg-blue-50 rounded">
-                      {p.primaryPosition}
-                    </span>
-                    <span className="truncate max-w-[90px]">{p.displayName}</span>
-                    <span className="font-mono font-black text-[9.5px] text-slate-600">{p.rating}</span>
-                  </span>
-                ))}
-              </div>
-            </div>
-
             {/* Save Slot Selector */}
-            <div className="space-y-2">
-              <label className="text-xs font-display font-black text-[#0b1536] uppercase tracking-wider block">
-                1. Select Destination Save Slot
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div className="space-y-1.5">
+              <span className="text-xs font-display font-black text-[#0b1536] uppercase tracking-wider block">
+                Save slot
+              </span>
+              <div className="grid grid-cols-3 gap-2">
                 {saveSlots.map((slot) => {
                   const isSelected = selectedSlot === slot.slotId;
                   const slotLabel = slot.slotId === 'slot_1' ? 'Slot 1' : slot.slotId === 'slot_2' ? 'Slot 2' : 'Slot 3';
@@ -869,28 +786,21 @@ export function SeasonResults({
                     <button
                       key={slot.slotId}
                       type="button"
+                      aria-pressed={isSelected}
                       onClick={() => setSelectedSlot(slot.slotId)}
-                      className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between min-h-[78px] ${
+                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer min-h-[56px] ${
                         isSelected
-                          ? 'border-emerald-600 bg-emerald-50/70 ring-2 ring-emerald-500 shadow-xs'
-                          : 'border-slate-200/90 bg-slate-50/50 hover:bg-slate-100 hover:border-slate-300'
+                          ? 'border-emerald-600 bg-emerald-50/70 ring-1 ring-emerald-500'
+                          : 'border-slate-200/90 hover:bg-slate-50'
                       }`}
                     >
-                      <div className="flex items-center justify-between w-full">
-                        <span className="text-xs font-display font-black text-[#0b1536] uppercase">
-                          {slotLabel}
-                        </span>
-                        {isSelected && <span className="text-emerald-700 font-bold text-xs">✓</span>}
-                      </div>
+                      <span className="text-xs font-display font-black text-[#0b1536] uppercase block">{slotLabel}</span>
                       {slot.isEmpty ? (
-                        <div className="text-[10.5px] font-bold text-emerald-700 flex items-center gap-1 mt-1">
-                          <span>🟢</span> Empty Slot
-                        </div>
+                        <span className="text-[11px] font-bold text-emerald-700 block">Empty</span>
                       ) : (
-                        <div className="text-[10px] text-slate-600 mt-1 line-clamp-2">
-                          <span className="text-amber-700 font-bold">⚠️ Overwrites:</span>{' '}
-                          <span className="font-semibold">{slot.save?.clubName || 'Club'}</span> (S{slot.save?.seasonNumber || 1})
-                        </div>
+                        <span className="text-[11px] font-bold text-amber-700 block truncate">
+                          Replaces {slot.save?.clubName || 'Club'} (S{slot.save?.seasonNumber || 1})
+                        </span>
                       )}
                     </button>
                   );
@@ -899,29 +809,29 @@ export function SeasonResults({
             </div>
 
             {/* Club Identity Selection */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <label htmlFor="target-club-select" className="text-xs font-display font-black text-[#0b1536] uppercase tracking-wider block">
-                2. Choose Club Identity
+                Club
               </label>
               <select
                 id="target-club-select"
                 value={selectedClubId}
                 onChange={(e) => setSelectedClubId(e.target.value)}
-                className="w-full p-3 rounded-xl border border-slate-300 bg-white text-xs font-display font-bold text-[#0b1536] focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer shadow-2xs"
+                className="w-full p-3 rounded-xl border border-slate-300 bg-white text-xs font-display font-bold text-[#0b1536] focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
               >
                 {getAllClubs().map((club) => (
                   <option key={club.id} value={club.id}>
-                    {getEffectiveClubName(club)} • {club.stadiumName} (Budget: {formatCareerCurrency(club.startingBudget)})
+                    {getEffectiveClubName(club)} ({formatCareerCurrency(club.startingBudget)})
                   </option>
                 ))}
               </select>
             </div>
 
             {/* Manager Credentials */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1.5">
                 <label htmlFor="export-manager-name" className="text-xs font-display font-black text-[#0b1536] uppercase tracking-wider block">
-                  3. Manager Name
+                  Manager
                 </label>
                 <input
                   id="export-manager-name"
@@ -930,7 +840,7 @@ export function SeasonResults({
                   onChange={(e) => setManagerName(e.target.value)}
                   placeholder="Manager"
                   maxLength={30}
-                  className="w-full p-2.5 rounded-xl border border-slate-300 bg-white text-xs font-bold text-[#0b1536] focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs"
+                  className="w-full p-2.5 rounded-xl border border-slate-300 bg-white text-xs font-bold text-[#0b1536] focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
@@ -945,27 +855,28 @@ export function SeasonResults({
                   onChange={(e) => setManagerNationality(e.target.value)}
                   placeholder="England"
                   maxLength={30}
-                  className="w-full p-2.5 rounded-xl border border-slate-300 bg-white text-xs font-bold text-[#0b1536] focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs"
+                  className="w-full p-2.5 rounded-xl border border-slate-300 bg-white text-xs font-bold text-[#0b1536] focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
             </div>
 
-            {/* Starting Budget Boost Selection */}
+            {/* Starting Budget */}
             <div className="space-y-1.5">
-              <label className="text-xs font-display font-black text-[#0b1536] uppercase tracking-wider block">
-                4. Starting Financial Backing
-              </label>
+              <span className="text-xs font-display font-black text-[#0b1536] uppercase tracking-wider block">
+                Budget
+              </span>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { value: 1.0, label: 'Standard (1.0x)' },
-                  { value: 1.5, label: 'Well-Funded (1.5x)' },
-                  { value: 2.0, label: 'Tycoon (2.0x)' },
+                  { value: 1.0, label: 'Standard' },
+                  { value: 1.5, label: '1.5x' },
+                  { value: 2.0, label: '2x' },
                 ].map((b) => (
                   <button
                     key={b.value}
                     type="button"
+                    aria-pressed={budgetMultiplier === b.value}
                     onClick={() => setBudgetMultiplier(b.value)}
-                    className={`py-2 px-2.5 rounded-xl border text-[11px] font-display font-black uppercase text-center transition-all cursor-pointer ${
+                    className={`min-h-[40px] px-2 rounded-xl border text-[11px] font-display font-black uppercase text-center transition-all cursor-pointer ${
                       budgetMultiplier === b.value
                         ? 'border-emerald-600 bg-emerald-50 text-emerald-800 ring-1 ring-emerald-500'
                         : 'border-slate-200 text-slate-600 hover:bg-slate-50'
@@ -978,11 +889,11 @@ export function SeasonResults({
             </div>
 
             {/* Modal Actions */}
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+            <div className="flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setShowExportModal(false)}
-                className="py-3 px-4.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-xs font-display font-black text-slate-700 transition-colors cursor-pointer"
+                className="min-h-[44px] px-4 rounded-xl border border-slate-200 hover:bg-slate-100 text-xs font-display font-black text-slate-700 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -990,9 +901,19 @@ export function SeasonResults({
                 type="button"
                 onClick={handleConfirmExport}
                 disabled={isExporting}
-                className="py-3 px-6 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-display font-black text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all transform active:scale-98 cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                className="min-h-[44px] px-5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-display font-black text-xs uppercase tracking-wider cursor-pointer disabled:opacity-50 inline-flex items-center gap-2 active:scale-98"
               >
-                <span>{isExporting ? '⏳ Initializing Career...' : '🚀 Launch Career Mode'}</span>
+                {isExporting ? (
+                  <>
+                    <IconClock className="w-3.5 h-3.5 shrink-0" />
+                    <span>Starting...</span>
+                  </>
+                ) : (
+                  <>
+                    <IconPlay className="w-3.5 h-3.5 shrink-0" />
+                    <span>Start Career</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

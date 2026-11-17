@@ -30,7 +30,7 @@ export const SCOUTING_REGIONS: Record<ScoutingRegion, ScoutingRegionConfig> = {
   south_america: {
     id: 'south_america',
     name: 'South America (CONMEBOL)',
-    flag: '🌎',
+    flag: 'SA',
     description: 'Brazil, Argentina, Colombia & Uruguay. World-renowned breeding ground for explosive dribblers, wonderkid wingers, and Samba flair.',
     cost: 450_000,
     durationDays: 14,
@@ -39,7 +39,7 @@ export const SCOUTING_REGIONS: Record<ScoutingRegion, ScoutingRegionConfig> = {
   central_europe: {
     id: 'central_europe',
     name: 'Central & Western Europe',
-    flag: '🌍',
+    flag: 'EU',
     description: 'Germany, Spain, France, Italy, Portugal & Netherlands. Tactical masterminds, midfield metronomes, and modern pressing architects.',
     cost: 380_000,
     durationDays: 14,
@@ -48,7 +48,7 @@ export const SCOUTING_REGIONS: Record<ScoutingRegion, ScoutingRegionConfig> = {
   uk_domestic: {
     id: 'uk_domestic',
     name: 'UK & Ireland (Homegrown Pathway)',
-    flag: '🛡️',
+    flag: 'UK',
     description: 'Premier League academies, Championship stars & Scottish Premiership. High workrate, physical grit, and instant Homegrown status.',
     cost: 250_000,
     durationDays: 10,
@@ -57,7 +57,7 @@ export const SCOUTING_REGIONS: Record<ScoutingRegion, ScoutingRegionConfig> = {
   scandinavia_east: {
     id: 'scandinavia_east',
     name: 'Scandinavia & Eastern Europe',
-    flag: '⚡',
+    flag: 'NE',
     description: 'Norway, Sweden, Denmark, Croatia, Poland & Serbia. Imposing physical target forwards, athletic box-to-box dynamos, and bargain market value.',
     cost: 320_000,
     durationDays: 12,
@@ -202,7 +202,7 @@ export function processDailyScoutingProgress(
         date: currentDate,
         sender: mission.scoutName,
         senderRole: `Chief Scout (${regionConfig?.name || 'Recruitment'})`,
-        subject: `📋 Scouting Intelligence Dossier: ${regionConfig?.name || 'International'} (${dossier.prospects.length} Targets Found)`,
+        subject: `Scouting Intelligence Dossier: ${regionConfig?.name || 'International'} (${dossier.prospects.length} Targets Found)`,
         body: `Manager,\n\nOur scouting expedition across ${regionConfig?.name || 'the targeted territory'} is complete. We have identified ${dossier.prospects.length} high-priority targets fitting our ${mission.targetProfile.replace(/_/g, ' ')} requirements.\n\nKey Discovery: ${topProspect ? `${topProspect.name} (${topProspect.rating} OVR, ${topProspect.position} • Potential: ${topProspect.potential}) at ${topProspect.club}` : 'Multiple targets verified'}.\n\nInspect the full scouting dossier in the Transfer Hub to review scout notes, wage demands, and initiate formal inquiries.`,
         type: 'scouting',
         isRead: false,

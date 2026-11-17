@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "./globals.css";
+import { ServiceWorkerRegistrar } from "../components/ServiceWorkerRegistrar";
 
 export const viewport: Viewport = {
   themeColor: "#F2F1EE",
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
     default: "MY-11 — Football Draft & Career Mode",
     template: "%s | MY-11",
   },
-  description: "Draft legendary football squads from 3,200+ iconic player seasons or take total control in multi-season Career Mode with live transfers and cup glory. Free to play at my-11.com.",
+  description: "Draft legendary football squads from 3,600+ iconic player seasons or take total control in multi-season Career Mode with live transfers and cup glory. Free to play at my-11.com.",
   keywords: ["MY-11", "football draft", "career mode", "football manager", "squad builder", "football simulation", "tactics", "38-game season", "legends", "Premier League"],
   authors: [{ name: "MY-11" }],
   appleWebApp: {
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "MY-11 — Football Draft & Career Mode",
-    description: "Draft your dream XI from 3,200+ iconic player seasons or lead your club across multi-season careers. Play free at my-11.com.",
+    description: "Draft your dream XI from 3,600+ iconic player seasons or lead your club across multi-season careers. Play free at my-11.com.",
     url: "https://my-11.com",
     siteName: "MY-11",
     type: "website",
@@ -43,7 +44,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "MY-11 — Football Draft & Career Mode",
-    description: "Draft your dream XI from 3,200+ iconic player seasons or lead your club across multi-season careers. Play free at my-11.com.",
+    description: "Draft your dream XI from 3,600+ iconic player seasons or lead your club across multi-season careers. Play free at my-11.com.",
     images: ["/og-image.png"],
   },
   icons: {
@@ -73,6 +74,10 @@ export default function RootLayout({
             })()`,
           }}
         />
+      </head>
+      <body className="min-h-full flex flex-col bg-background text-foreground select-none">
+        {children}
+        <ServiceWorkerRegistrar />
         {/* Google tag (gtag.js) */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-C5ETLYL50J"
@@ -87,9 +92,6 @@ export default function RootLayout({
             gtag('config', 'G-C5ETLYL50J');
           `}
         </Script>
-      </head>
-      <body className="min-h-full flex flex-col bg-background text-foreground select-none">
-        {children}
       </body>
     </html>
   );

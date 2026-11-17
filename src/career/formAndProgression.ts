@@ -62,12 +62,14 @@ export function resolvePlayerRecord(player: CareerPlayer): Player | null {
   }
 
   if (candidate) {
-    const rawPos = player.position || (player as any).primaryPosition;
+    const rawPos = player.position || (player as { primaryPosition?: string }).primaryPosition;
     if (!rawPos) {
       return candidate;
     }
     const playerCategory = categorizePosition(rawPos);
-    const candidateCategory = categorizePosition(candidate.primaryPosition || (candidate as any).position);
+    const candidateCategory = categorizePosition(
+      candidate.primaryPosition || (candidate as { position?: string }).position
+    );
     if (playerCategory === candidateCategory) {
       return candidate;
     }
@@ -103,7 +105,7 @@ function clamp(value: number, min: number = 30, max: number = 99): number {
  * If formBonus is applied (+1 or +2), the face stats receive an in-form boost.
  */
 export function calculateEaFcFaceStats(player: CareerPlayer, formBonus: number = 0): PlayerFaceStats {
-  const rawPos = (player.position || (player as any).primaryPosition || '').toUpperCase();
+  const rawPos = (player.position || (player as { primaryPosition?: string }).primaryPosition || '').toUpperCase();
   const isGk = rawPos === 'GK';
   const record = resolvePlayerRecord(player);
 
@@ -428,7 +430,7 @@ export function applyInSeasonMatchProgression(
       updatedPlayer: leveledUpPlayer,
       leveledUp: true,
       pointsEarned: points,
-      log: `🌱 ${player.name} (${player.position}, Age ${player.age}) developed through match experience to ${newRating} OVR! (+1)`,
+      log: `${player.name} (${player.position}, Age ${player.age}) developed through match experience to ${newRating} OVR! (+1)`,
     };
   }
 
@@ -477,7 +479,7 @@ export function applyMonthlySquadTraining(
       const faceStats = calculateEaFcFaceStats({ ...player, rating: newRating }, bonus);
 
       logs.push(
-        `🌱 Training Breakthrough: ${player.name} (${player.position}, ${player.age}) increased to ${newRating} OVR (+1)`
+        `Training Breakthrough: ${player.name} (${player.position}, ${player.age}) increased to ${newRating} OVR (+1)`
       );
 
       return {
@@ -644,7 +646,7 @@ export function applyWeeklySquadTraining(
       });
 
       logs.push(
-        `⭐ Training Breakthrough: ${player.name} (${player.position}) leveled up to ${newRating} OVR!${drill ? ` [Drill: ${drill}]` : ''}`
+        `Training Breakthrough: ${player.name} (${player.position}) leveled up to ${newRating} OVR!${drill ? ` [Drill: ${drill}]` : ''}`
       );
 
       return updatedPlayer;
@@ -678,7 +680,7 @@ export function getEaFcCardStyle(player: CareerPlayer) {
     // Team of the Week / In-Form Special Card (Black & Gold holographic)
     return {
       tier: 'totw_in_form',
-      badge: '🔥 TOTW IN-FORM',
+      badge: 'TOTW IN-FORM',
       bgClass: 'from-amber-950 via-slate-950 to-amber-900 border-amber-400/90 shadow-amber-500/20 text-amber-200',
       statColor: 'text-amber-300',
       headerBg: 'bg-amber-500/20 text-amber-300 border-amber-400/40',
@@ -690,7 +692,7 @@ export function getEaFcCardStyle(player: CareerPlayer) {
     // Good form boost
     return {
       tier: 'in_form',
-      badge: '🔥 IN-FORM (+1)',
+      badge: 'IN-FORM (+1)',
       bgClass: 'from-emerald-950 via-slate-950 to-slate-900 border-emerald-400/70 shadow-emerald-500/20 text-emerald-200',
       statColor: 'text-emerald-300',
       headerBg: 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40',
@@ -702,7 +704,7 @@ export function getEaFcCardStyle(player: CareerPlayer) {
     // Dip in form
     return {
       tier: 'cold',
-      badge: '↘️ OFF-FORM (-1)',
+      badge: 'OFF-FORM (-1)',
       bgClass: 'from-slate-950 via-sky-950/40 to-slate-900 border-sky-600/40 text-sky-200',
       statColor: 'text-sky-300',
       headerBg: 'bg-sky-950/60 text-sky-300 border-sky-700/40',
@@ -714,7 +716,7 @@ export function getEaFcCardStyle(player: CareerPlayer) {
     // Severe slump
     return {
       tier: 'slump',
-      badge: '❄️ COLD SLUMP (-2)',
+      badge: 'COLD SLUMP (-2)',
       bgClass: 'from-slate-950 via-blue-950/60 to-slate-900 border-blue-500/60 text-blue-200',
       statColor: 'text-blue-300',
       headerBg: 'bg-blue-950/80 text-blue-300 border-blue-600/40',

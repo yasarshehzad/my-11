@@ -39,7 +39,7 @@ describe('Draft Mode 4-Chapter Tension Simulation Suite', () => {
       SEASON_CHAPTERS.forEach((ch) => {
         expect(ch.title).toBeTruthy();
         expect(ch.tagline).toBeTruthy();
-        expect(ch.icon).toBeTruthy();
+        expect(ch.iconKey).toBeTruthy();
         expect(ch.accentColor).toBeTruthy();
       });
     });

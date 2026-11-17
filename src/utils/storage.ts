@@ -357,7 +357,7 @@ export function checkAndApplyPersonalBests(
   // Check overall record
   if (isBetterPerformance(entry, currentBests.overall)) {
     updatedBests.overall = candidateSnapshot;
-    brokenRecords.push(`🏆 NEW ALL-TIME BEST: ${entry.wins} WINS (${entry.points} PTS)`);
+    brokenRecords.push(`NEW ALL-TIME BEST: ${entry.wins} WINS (${entry.points} PTS)`);
   }
 
   // Check mode-specific record
@@ -365,7 +365,7 @@ export function checkAndApplyPersonalBests(
   if (modeKey === 'classic' || modeKey === 'quick' || modeKey === 'mystery') {
     if (isBetterPerformance(entry, currentBests[modeKey])) {
       updatedBests[modeKey] = candidateSnapshot;
-      const modeLabel = modeKey === 'classic' ? '⏱️ CLASSIC' : modeKey === 'quick' ? '⚡ QUICK' : '❓ MYSTERY';
+      const modeLabel = modeKey === 'classic' ? 'CLASSIC' : modeKey === 'quick' ? 'QUICK' : 'MYSTERY';
       brokenRecords.push(`${modeLabel} BEST: ${entry.wins} WINS`);
     }
   }
@@ -476,8 +476,8 @@ export function snapshotToPlayer(s: Partial<CampaignPlayerSnapshot>): Player {
   const club = s.club || 'Club';
   const nationality = s.nationality || 'Nation';
   const season = s.season || 'Iconic';
-  const pos = (s.primaryPosition || s.selectedPosition || 'CM') as any;
-  const rarity = (s.rarity as any) || 'common';
+  const pos = (s.primaryPosition || s.selectedPosition || 'CM') as Player['primaryPosition'];
+  const rarity = (s.rarity as Player['rarity']) || 'common';
 
   return {
     id: s.id || `rehydrated_${Math.random()}`,

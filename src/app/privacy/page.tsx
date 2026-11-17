@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { IconArrowRight } from '@/components/career/GameIcons';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
@@ -37,9 +38,10 @@ export default function PrivacyPage() {
         <div className="pt-4 border-t border-[var(--office-divider)]">
           <Link
             href="/"
-            className="inline-block py-3.5 px-6 rounded-2xl office-play-match-btn text-white font-display font-black text-xs uppercase tracking-wider shadow-lg hover:shadow-xl transition-all duration-300 transform active:scale-95 cursor-pointer text-center"
+            className="inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl office-play-match-btn text-white font-display font-black text-xs uppercase tracking-wider shadow-lg hover:shadow-xl transition-all duration-300 transform active:scale-95 cursor-pointer text-center"
           >
-            ➔ Return to Main Game
+            <IconArrowRight className="w-3.5 h-3.5 rotate-180" />
+            <span>Return to Main Game</span>
           </Link>
         </div>
       </main>

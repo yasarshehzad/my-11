@@ -3,9 +3,14 @@ import {
   TacticalPhilosophyConfig,
   ClubTactics,
   CareerPlayer,
+  Club,
+  TacticalMentality,
+  PressingIntensity,
+  AttackingStyle,
 } from './types';
 import { players } from '../data/players';
 import { Player } from '../types/game';
+import { categorizePosition } from './squad';
 
 // Card attribute lookup cache
 let cardLookupCache: Map<string, Player> | null = null;
@@ -25,7 +30,7 @@ export const TACTICAL_PHILOSOPHIES: Record<TacticalPhilosophyType, TacticalPhilo
     name: 'Balanced System',
     tagline: 'Pragmatic, adaptable structure without extreme tactical exposure',
     description: 'A versatile, balanced setup that dynamically reacts to game states. Maintains disciplined spacing, standard tempo, and reliable defensive cover.',
-    icon: '⚖️',
+    icon: 'balanced',
     primaryAttributes: ['Overall Balance', 'Positional Versatility'],
     strengths: ['No severe tactical vulnerabilities', 'Stable stamina expenditure', 'Easily adaptable mid-match'],
     vulnerabilities: ['Lacks a dominant identity against specialized systems'],
@@ -40,7 +45,7 @@ export const TACTICAL_PHILOSOPHIES: Record<TacticalPhilosophyType, TacticalPhilo
     name: 'Gegenpressing',
     tagline: 'Relentless high-octane pressure & rapid transition turnovers',
     description: 'Heavy-metal football demanding immediate suffocating pressure upon turnover. Forces mistakes in the opposition third and creates high-frequency attacking surges.',
-    icon: '⚡',
+    icon: 'gegenpress',
     primaryAttributes: ['Pace (PAC)', 'Physicality (PHY)', 'Pressing Workrate'],
     strengths: ['+18% chance generation from final-third turnovers', 'Suppresses opponent build-up play', 'High match momentum'],
     vulnerabilities: ['+30% stamina drain across 90 minutes', 'Vulnerable to direct counter-attacks behind high defensive line'],
@@ -55,7 +60,7 @@ export const TACTICAL_PHILOSOPHIES: Record<TacticalPhilosophyType, TacticalPhilo
     name: 'Tiki-Taka',
     tagline: 'Hypnotic possession dominance, passing triangles & tempo control',
     description: 'Patience and surgical technical precision. Circulates the ball continuously to exhaust defenders and isolate passing lanes through the half-spaces.',
-    icon: '🎯',
+    icon: 'tiki_taka',
     primaryAttributes: ['Passing (PAS)', 'Dribbling (DRI)', 'Vision & Composure'],
     strengths: ['56–68% possession monopoly', '-20% fatigue drain while in control', 'Starves opponent attackers of service'],
     vulnerabilities: ['Patient shot selection (lower shot volume)', 'Susceptible to aggressive Gegenpress swarms'],
@@ -70,7 +75,7 @@ export const TACTICAL_PHILOSOPHIES: Record<TacticalPhilosophyType, TacticalPhilo
     name: 'Direct Counter-Attack',
     tagline: 'Compact defensive absorb-and-spring transition lethal breaks',
     description: 'Absorbs territorial pressure in a disciplined mid/low block before launching devastating, vertical transitions behind advancing fullbacks.',
-    icon: '🏹',
+    icon: 'counter_attack',
     primaryAttributes: ['Pace (PAC)', 'Shooting (SHO)', 'Defensive Discipline (DEF)'],
     strengths: ['+22% xG conversion quality on fast breaks', 'Exploits high-pressing opponent lines', 'Disciplined defensive shape'],
     vulnerabilities: ['Lower territorial possession share (38–46%)', 'Relies on clinical finishing from few opportunities'],
@@ -85,7 +90,7 @@ export const TACTICAL_PHILOSOPHIES: Record<TacticalPhilosophyType, TacticalPhilo
     name: 'Wing Overload & Crosses',
     tagline: 'Touchline overlaps, whipped crosses & aerial penalty box dominance',
     description: 'Isolates fullbacks in wide 2v1 overloads to deliver dangerous crosses into the 18-yard box for commanding aerial threats.',
-    icon: '🦅',
+    icon: 'wing_play',
     primaryAttributes: ['Pace (PAC)', 'Passing / Crossing (PAS)', 'Heading & Aerial (PHY)'],
     strengths: ['High corner kick & cross generation', 'Spreads compact defensive blocks wide', 'Devastating with tall target strikers'],
     vulnerabilities: ['Leaves central midfield open if wingers do not tuck in defensively'],
@@ -100,7 +105,7 @@ export const TACTICAL_PHILOSOPHIES: Record<TacticalPhilosophyType, TacticalPhilo
     name: 'Catenaccio Fortress',
     tagline: 'Iron-curtain defensive solidity, low block & zero concessions',
     description: 'An impenetrable defensive system built on spatial denial and physical intimidation. Neutralizes elite superstar forwards and protects slim leads.',
-    icon: '🛡️',
+    icon: 'catenaccio',
     primaryAttributes: ['Defending (DEF)', 'Physicality (PHY)', 'Goalkeeper Reflexes'],
     strengths: ['Minimizes high-danger opposition xG conceded (-25%)', 'Exceptional clean sheet efficiency', 'Unflappable under late siege'],
     vulnerabilities: ['Reduced attacking numbers and chance volume', 'Slightly higher tactical yellow card frequency'],
@@ -210,7 +215,7 @@ export function getPhilosophyDepartmentBonus(
         attackBonus = Math.round(3.5 * famScale);
         midfieldBonus = Math.round(2.5 * famScale);
         synergyActive = true;
-        description = `🔥 Heavy Metal Synergy Active! (${avgPhy} PHY / ${avgPac} PAC meets pressing threshold).`;
+        description = `Heavy Metal Synergy Active! (${avgPhy} PHY / ${avgPac} PAC meets pressing threshold).`;
       } else {
         description = `Gegenpress synergy requires higher squad Physicality & Pace (Current: ${avgPhy} PHY, ${avgPac} PAC).`;
       }
@@ -221,7 +226,7 @@ export function getPhilosophyDepartmentBonus(
         midfieldBonus = Math.round(4.0 * famScale);
         defenceBonus = Math.round(2.0 * famScale);
         synergyActive = true;
-        description = `🎯 Precision Triangle Synergy Active! (${avgPas} PAS / ${avgDri} DRI delivers hypnotic ball retention).`;
+        description = `Precision Triangle Synergy Active! (${avgPas} PAS / ${avgDri} DRI delivers hypnotic ball retention).`;
       } else {
         description = `Tiki-Taka synergy requires higher squad Passing & Dribbling (Current: ${avgPas} PAS, ${avgDri} DRI).`;
       }
@@ -232,7 +237,7 @@ export function getPhilosophyDepartmentBonus(
         attackBonus = Math.round(4.0 * famScale);
         defenceBonus = Math.round(1.5 * famScale);
         synergyActive = true;
-        description = `🏹 Rapid Transition Synergy Active! (${avgPac} avg squad PAC delivers breakaway strikes).`;
+        description = `Rapid Transition Synergy Active! (${avgPac} avg squad PAC delivers breakaway strikes).`;
       } else {
         description = `Counter-Attack synergy requires rapid pace to exploit transition openings (Current: ${avgPac} PAC).`;
       }
@@ -243,7 +248,7 @@ export function getPhilosophyDepartmentBonus(
         attackBonus = Math.round(3.0 * famScale);
         midfieldBonus = Math.round(2.0 * famScale);
         synergyActive = true;
-        description = `🦅 Flank Overload Synergy Active! (${avgPac} PAC / ${avgPas} PAS provides wide dominance).`;
+        description = `Flank Overload Synergy Active! (${avgPac} PAC / ${avgPas} PAS provides wide dominance).`;
       } else {
         description = `Wing Play synergy requires pace and crossing delivery on the flanks.`;
       }
@@ -253,7 +258,7 @@ export function getPhilosophyDepartmentBonus(
       if (avgDef >= 76 && avgPhy >= 75) {
         defenceBonus = Math.round(5.0 * famScale);
         synergyActive = true;
-        description = `🛡️ Fortress Lockout Synergy Active! (${avgDef} DEF / ${avgPhy} PHY shuts down opposition chances).`;
+        description = `Fortress Lockout Synergy Active! (${avgDef} DEF / ${avgPhy} PHY shuts down opposition chances).`;
       } else {
         description = `Catenaccio synergy requires iron-clad Defending & Physical strength (Current: ${avgDef} DEF).`;
       }
@@ -265,7 +270,7 @@ export function getPhilosophyDepartmentBonus(
       midfieldBonus = Math.round(1.5 * famScale);
       defenceBonus = Math.round(1.5 * famScale);
       synergyActive = true;
-      description = `⚖️ Balanced Equilibrium: Solid all-round consistency across all thirds.`;
+      description = `Balanced Equilibrium: Solid all-round consistency across all thirds.`;
       break;
   }
 
@@ -295,7 +300,7 @@ export function calculateCaptaincyEffects(
   const cardLookup = getCardLookup();
 
   let captain = squad.find((p) => p.id === captainId) || null;
-  let viceCaptain = squad.find((p) => p.id === viceCaptainId) || null;
+  const viceCaptain = squad.find((p) => p.id === viceCaptainId) || null;
 
   // Fallback to highest rated veteran if not appointed
   if (!captain && squad.length > 0) {
@@ -332,16 +337,16 @@ export function calculateCaptaincyEffects(
 
   if (leadershipScore >= 88) {
     composureBonus = 8;
-    rallyEffect = `🏆 Inspiring General: ${captain.name} commands extraordinary respect. Team gains +8% late-game composure in high-stakes ties & shootouts.`;
+    rallyEffect = `Inspiring General: ${captain.name} commands extraordinary respect. Team gains +8% late-game composure in high-stakes ties & shootouts.`;
   } else if (leadershipScore >= 78) {
     composureBonus = 5;
-    rallyEffect = `🛡️ Solid Anchor: ${captain.name} provides steady on-pitch leadership (+5% composure in critical moments).`;
+    rallyEffect = `Solid Anchor: ${captain.name} provides steady on-pitch leadership (+5% composure in critical moments).`;
   } else if (leadershipScore >= 68) {
     composureBonus = 2;
     rallyEffect = `Standard Captaincy: ${captain.name} fulfills routine armband duties.`;
   } else {
     composureBonus = -3;
-    rallyEffect = `⚠️ Leadership Strain: ${captain.name} lacks natural authority (${leadershipScore} Leadership). Squad vulnerable to red cards and second-half collapses.`;
+    rallyEffect = `Leadership Strain: ${captain.name} lacks natural authority (${leadershipScore} Leadership). Squad vulnerable to red cards and second-half collapses.`;
   }
 
   return {
@@ -463,20 +468,102 @@ export function updateTacticalFamiliarity(
 }
 
 /**
+ * Picks optimal penalty, free-kick, and corner specialists from a squad.
+ */
+export function pickDefaultSetPieceTakers(squad: CareerPlayer[]): {
+  penaltyTakerId?: string;
+  freeKickTakerId?: string;
+  cornerTakerId?: string;
+} {
+  const outfield = squad.filter((p) => categorizePosition(p.position) !== 'GK');
+  const pool = outfield.length > 0 ? outfield : squad;
+  if (pool.length === 0) return {};
+
+  const scorePen = (p: CareerPlayer) => {
+    const sho = p.faceStats?.sho ?? p.rating;
+    const pas = p.faceStats?.pas ?? p.rating;
+    return sho * 0.6 + p.rating * 0.35 + pas * 0.05;
+  };
+  const scoreFk = (p: CareerPlayer) => {
+    const sho = p.faceStats?.sho ?? p.rating;
+    const pas = p.faceStats?.pas ?? p.rating;
+    return sho * 0.5 + pas * 0.4 + p.rating * 0.1;
+  };
+  const scoreCorner = (p: CareerPlayer) => {
+    const pas = p.faceStats?.pas ?? p.rating;
+    const dri = p.faceStats?.dri ?? p.rating;
+    return pas * 0.65 + dri * 0.25 + p.rating * 0.1;
+  };
+
+  const penaltyTaker = [...pool].sort((a, b) => scorePen(b) - scorePen(a))[0];
+  const freeKickTaker = [...pool].sort((a, b) => scoreFk(b) - scoreFk(a))[0];
+  const cornerTaker = [...pool].sort((a, b) => scoreCorner(b) - scoreCorner(a))[0];
+
+  return {
+    penaltyTakerId: penaltyTaker?.id,
+    freeKickTakerId: freeKickTaker?.id,
+    cornerTakerId: cornerTaker?.id,
+  };
+}
+
+/**
  * Sets initial default tactics for a club if not already present.
  */
 export function getInitialClubTactics(squad: CareerPlayer[]): ClubTactics {
   const sorted = [...squad].sort((a, b) => b.rating - a.rating);
   const captain = sorted.find((p) => p.age >= 26) || sorted[0];
   const viceCaptain = sorted.find((p) => p.id !== captain?.id && p.age >= 24) || sorted[1];
+  const setPieces = pickDefaultSetPieceTakers(squad);
 
   return {
     philosophy: 'balanced',
     familiarity: 72,
     captainId: captain?.id,
     viceCaptainId: viceCaptain?.id,
+    penaltyTakerId: setPieces.penaltyTakerId,
+    freeKickTakerId: setPieces.freeKickTakerId,
+    cornerTakerId: setPieces.cornerTakerId,
     pressingIntensity: 'balanced',
     passingStyle: 'mixed',
     tempo: 'standard',
   };
 }
+
+/**
+ * Returns an authentic tactical profile for an AI club based on club identity, tier, and reputation.
+ */
+export function getClubTacticalProfile(club: Club): {
+  philosophy: TacticalPhilosophyType;
+  mentality: TacticalMentality;
+  pressing: PressingIntensity;
+  style: AttackingStyle;
+} {
+  const id = (club.id || '').toLowerCase();
+  if (id.includes('man_blue') || id.includes('barca') || id.includes('barcelona') || id.includes('arsenal')) {
+    return { philosophy: 'tiki_taka', mentality: 'attacking', pressing: 'high_press', style: 'patient' };
+  }
+  if (id.includes('liverpool') || id.includes('bayern') || id.includes('psg') || id.includes('newcastle')) {
+    return { philosophy: 'gegenpress', mentality: 'attacking', pressing: 'high_press', style: 'mixed' };
+  }
+  if (id.includes('madrid') || id.includes('villa') || id.includes('brighton')) {
+    return { philosophy: 'counter_attack', mentality: 'balanced', pressing: 'balanced', style: 'direct_counter' };
+  }
+  if (id.includes('inter') || id.includes('atletico') || id.includes('juventus') || id.includes('everton')) {
+    return { philosophy: 'catenaccio', mentality: 'defensive', pressing: 'low_block', style: 'direct_counter' };
+  }
+  if (id.includes('tottenham') || id.includes('chelsea') || id.includes('man_red')) {
+    return { philosophy: 'wing_play', mentality: 'balanced', pressing: 'high_press', style: 'mixed' };
+  }
+
+  if (club.tier === 'elite') {
+    return { philosophy: 'gegenpress', mentality: 'attacking', pressing: 'high_press', style: 'mixed' };
+  }
+  if (club.tier === 'upper') {
+    return { philosophy: 'wing_play', mentality: 'balanced', pressing: 'balanced', style: 'mixed' };
+  }
+  if (club.tier === 'lower') {
+    return { philosophy: 'catenaccio', mentality: 'defensive', pressing: 'low_block', style: 'direct_counter' };
+  }
+  return { philosophy: 'counter_attack', mentality: 'balanced', pressing: 'balanced', style: 'direct_counter' };
+}
+

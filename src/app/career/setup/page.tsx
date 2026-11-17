@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getClubsForSeason } from '../../../career/clubs';
 import { getPresetSettings, validateSettings } from '../../../career/settings';
-import { createNewCareerSave, isValidSlotId, ValidSlotId } from '../../../career/saves';
+import { createNewCareerSave, hydrateCareerSaveVault, isValidSlotId, ValidSlotId } from '../../../career/saves';
+import { ensureCareerDatabaseLoaded, getCareerDatabaseLoadError } from '../../../career/databaseExpansion';
 import {
   CareerSettings,
   Club,
@@ -22,12 +23,61 @@ import {
   NumberFormatPreference,
 } from '../../../career/types';
 import { saveTheme } from '../../../utils/storage';
+import { IconCheck, IconChevronDown, IconChevronUp } from '../../../components/career/GameIcons';
 
 const NATIONALITIES = [
   'England', 'Scotland', 'Wales', 'Northern Ireland', 'Republic of Ireland',
   'Spain', 'Germany', 'France', 'Italy', 'Netherlands', 'Portugal', 'Belgium',
   'Brazil', 'Argentina', 'Uruguay', 'United States', 'Japan', 'Nigeria', 'Ghana', 'Australia',
 ];
+
+const DIFFICULTY_PRESETS: {
+  id: DifficultyPreset;
+  name: string;
+  summary: string;
+  bullets: string[];
+  titleClass: string;
+  activeClass: string;
+}[] = [
+  {
+    id: 'easy',
+    name: 'Easy',
+    summary: 'Bigger budget, no sackings, match retry.',
+    bullets: ['+50% starting budget (1.5x)', 'No board sackings', 'Match retry enabled', 'Light injuries'],
+    titleClass: 'text-emerald-700',
+    activeClass: 'bg-emerald-50/50 border-emerald-600 shadow-md',
+  },
+  {
+    id: 'hard',
+    name: 'Hard',
+    summary: 'Realistic injuries, sackings, locked rules.',
+    bullets: ['Standard budget (1.0x)', 'Board can sack you', 'Realistic injuries', 'Settings permanently locked'],
+    titleClass: 'text-rose-700',
+    activeClass: 'bg-rose-50/50 border-rose-600 shadow-md',
+  },
+  {
+    id: 'custom',
+    name: 'Custom',
+    summary: 'Set every rule yourself.',
+    bullets: [],
+    titleClass: 'text-amber-700',
+    activeClass: 'bg-amber-50/60 border-amber-600 shadow-md',
+  },
+];
+
+const CUSTOM_TOGGLES: {
+  key: 'boardCanSack' | 'retryMatch' | 'homegrownRule' | 'financialPenalties';
+  label: string;
+  hint?: string;
+}[] = [
+  { key: 'boardCanSack', label: 'Board Can Sack You' },
+  { key: 'retryMatch', label: 'Allow Match Retry' },
+  { key: 'homegrownRule', label: 'Homegrown Rule', hint: '8+ homegrown registered players' },
+  { key: 'financialPenalties', label: 'Financial Penalties', hint: 'Points deductions under severe debt' },
+];
+
+const INLINE_SELECT_CLASS =
+  'max-w-[60%] bg-white border border-slate-300 rounded-lg px-2 py-2 text-xs text-slate-900 font-semibold cursor-pointer';
 
 type ClubSortOption =
   | 'name_asc'
@@ -44,8 +94,15 @@ function SetupWizardContent() {
   const targetSlot: ValidSlotId = isValidSlotId(rawSlot) ? rawSlot : 'slot_1';
   const paramClub = searchParams.get('club');
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const validParamClub = useMemo(() => {
+    if (!paramClub) return null;
+    const seasonClubs = getClubsForSeason('2026/27');
+    return seasonClubs.some((c) => c.id === paramClub) ? paramClub : null;
+  }, [paramClub]);
+
+  const [step, setStep] = useState<1 | 2 | 3>(() => (validParamClub ? 2 : 1));
   const [stepDir, setStepDir] = useState<'forward' | 'back'>('forward');
+  const [isStartingCareer, setIsStartingCareer] = useState(false);
 
   const goToStep = (next: 1 | 2 | 3) => {
     setStepDir(next >= step ? 'forward' : 'back');
@@ -62,7 +119,13 @@ function SetupWizardContent() {
 
   // Step 2: Club & Season
   const [databaseSeason, setDatabaseSeason] = useState<DatabaseSeason>('2026/27');
-  const [selectedClubId, setSelectedClubId] = useState<string>('london_red');
+  const [selectedClubId, setSelectedClubId] = useState<string>(() => validParamClub || 'london_red');
+  const [prevValidParamClub, setPrevValidParamClub] = useState<string | null>(validParamClub);
+  if (validParamClub && validParamClub !== prevValidParamClub) {
+    setPrevValidParamClub(validParamClub);
+    setSelectedClubId(validParamClub);
+    setStep(2);
+  }
   const [tierFilter, setTierFilter] = useState<'all' | ClubTier>('all');
   const [sortBy, setSortBy] = useState<ClubSortOption>('name_asc');
   const [clubSearch, setClubSearch] = useState('');
@@ -71,20 +134,29 @@ function SetupWizardContent() {
   // Step 3: Difficulty & Rules
   const [preset, setPreset] = useState<DifficultyPreset>('easy');
   const [customSettings, setCustomSettings] = useState<CareerSettings>(getPresetSettings('easy'));
+  const [dbError, setDbError] = useState<string | null>(null);
+  const [unitsOpen, setUnitsOpen] = useState(false);
+  const activePreset = DIFFICULTY_PRESETS.find((item) => item.id === preset) ?? DIFFICULTY_PRESETS[0];
 
   useEffect(() => {
     saveTheme('light');
+    void hydrateCareerSaveVault();
   }, []);
 
   useEffect(() => {
-    if (paramClub) {
-      const seasonClubs = getClubsForSeason('2026/27');
-      if (seasonClubs.some((c) => c.id === paramClub)) {
-        setSelectedClubId(paramClub);
-        setStep(2);
+    let cancelled = false;
+    void ensureCareerDatabaseLoaded(databaseSeason).then((loaded) => {
+      if (cancelled) return;
+      if (!loaded) {
+        setDbError(getCareerDatabaseLoadError() || 'Could not load player database. Check connection and retry.');
+      } else {
+        setDbError(null);
       }
-    }
-  }, [paramClub]);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [databaseSeason]);
 
   const handlePresetSelect = (newPreset: DifficultyPreset) => {
     setPreset(newPreset);
@@ -155,29 +227,55 @@ function SetupWizardContent() {
   const effectiveSelectedName = customClubNames[selectedClub.id]?.trim() || selectedClub.defaultName;
   const effectiveBudgetMillions = ((selectedClub.startingBudget * customSettings.startingBudgetMultiplier) / 1_000_000).toFixed(1);
 
-  const handleStartCareer = () => {
-    const finalClub: Club = {
-      ...selectedClub,
-      customName: customClubNames[selectedClub.id]?.trim() || undefined,
-    };
-
-    const finalSettings = validateSettings({
-      ...customSettings,
-      preset,
-      databaseSeason,
+  const handleRetryDbLoad = () => {
+    setDbError(null);
+    void ensureCareerDatabaseLoaded(databaseSeason).then((loaded) => {
+      if (!loaded) {
+        setDbError(getCareerDatabaseLoadError() || 'Could not load player database. Check connection and retry.');
+      }
     });
+  };
 
-    createNewCareerSave({
-      slotId: targetSlot,
-      manager: {
-        name: managerName.trim() || 'Manager',
-        nationality: nationality.trim() || 'England',
-      },
-      club: finalClub,
-      settings: finalSettings,
-    });
+  const handleStartCareer = async () => {
+    if (isStartingCareer) return;
+    setIsStartingCareer(true);
+    try {
+      const [, dbLoaded] = await Promise.all([
+        hydrateCareerSaveVault(),
+        ensureCareerDatabaseLoaded(databaseSeason),
+      ]);
 
-    router.push(`/career/play?slot=${targetSlot}`);
+      if (!dbLoaded) {
+        setDbError(getCareerDatabaseLoadError() || 'Could not load player database. Please check connection and retry.');
+        setIsStartingCareer(false);
+        return;
+      }
+
+      const finalClub: Club = {
+        ...selectedClub,
+        customName: customClubNames[selectedClub.id]?.trim() || undefined,
+      };
+
+      const finalSettings = validateSettings({
+        ...customSettings,
+        preset,
+        databaseSeason,
+      });
+
+      createNewCareerSave({
+        slotId: targetSlot,
+        manager: {
+          name: managerName.trim() || 'Manager',
+          nationality: nationality.trim() || 'England',
+        },
+        club: finalClub,
+        settings: finalSettings,
+      });
+
+      router.push(`/career/play?slot=${targetSlot}`);
+    } catch {
+      setIsStartingCareer(false);
+    }
   };
 
   const tierCounts = useMemo(() => {
@@ -221,6 +319,21 @@ function SetupWizardContent() {
 
       {/* Main Wizard */}
       <main className="flex-1 w-full max-w-5xl mx-auto px-1 sm:px-2 py-2 flex flex-col safe-pb">
+        {dbError && (
+          <div
+            role="alert"
+            className="mb-4 rounded-2xl bg-rose-50 border border-rose-300 px-4 py-3 flex flex-wrap items-center justify-between gap-3 text-xs text-rose-900 shadow-xs"
+          >
+            <span className="font-semibold">{dbError}</span>
+            <button
+              type="button"
+              onClick={handleRetryDbLoad}
+              className="px-3 py-1.5 rounded-xl bg-rose-700 hover:bg-rose-800 text-white font-display font-bold uppercase tracking-wider text-[10px] cursor-pointer"
+            >
+              Retry Load
+            </button>
+          </div>
+        )}
         {/* Step Progress Indicators */}
         <nav aria-label="Setup steps" className="flex items-center justify-center gap-2 mb-6">
           {[
@@ -250,7 +363,7 @@ function SetupWizardContent() {
           <section className="office-floating-card max-w-md mx-auto w-full space-y-5 rounded-2xl p-6 sm:p-8">
             <header className="space-y-1 border-b border-slate-200 pb-4">
               <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-700">
-                Step 01 // Technical Director
+                Step 01
               </div>
               <h2 className="text-xl font-display font-black uppercase text-slate-900">
                 Manager Profile
@@ -307,33 +420,16 @@ function SetupWizardContent() {
 
         {/* STEP 2: CLUB SELECTION */}
         {step === 2 && (
-          <section className={`w-full space-y-5 pb-28 ${stepDir === 'forward' ? 'my11-step-forward' : 'my11-step-back'}`}>
+          <section className={`w-full space-y-4 pb-28 ${stepDir === 'forward' ? 'my11-step-forward' : 'my11-step-back'}`}>
             <header className="text-center space-y-1.5">
               <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-700">
-                Step 02 // League &amp; Club Selection
+                Step 02
               </div>
               <h2 className="text-2xl font-display font-black uppercase text-slate-900 tracking-tight">
                 Choose Your Club
               </h2>
-              <p className="text-xs text-slate-600 max-w-xl mx-auto">
-                Select any of the 20 English Top Flight sides for the current 2026/27 season, sort by name, budget, or reputation, and optionally customize your club&apos;s display name.
-              </p>
+              <p className="text-xs text-slate-600">20 top-flight clubs, {databaseSeason} season.</p>
             </header>
-
-            {/* Current Season Roster Badge */}
-            <div className="office-floating-card rounded-2xl p-3.5 sm:p-4 flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <div className="text-[11px] font-display font-black text-zinc-900 uppercase tracking-wider">
-                  2026/27 Current Season
-                </div>
-                <p className="text-[11px] text-zinc-600 leading-snug mt-0.5">
-                  Updated 2026/27 Premier League lineup featuring promoted Coventry, Ipswich &amp; Hull alongside Leeds &amp; Sunderland.
-                </p>
-              </div>
-              <span className="shrink-0 text-[10px] font-mono px-2.5 py-1 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold uppercase tracking-wider">
-                2026/27
-              </span>
-            </div>
 
             {/* Filter, Search & Sort Bar */}
             <div className="office-floating-card rounded-2xl p-3.5 sm:p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
@@ -362,7 +458,7 @@ function SetupWizardContent() {
                     type="search"
                     value={clubSearch}
                     onChange={(e) => setClubSearch(e.target.value)}
-                    placeholder="Search club, code, stadium..."
+                    placeholder="Search clubs"
                     aria-label="Search clubs"
                     className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-900 font-medium focus:outline-none focus:border-blue-600"
                   />
@@ -414,8 +510,9 @@ function SetupWizardContent() {
                     <button
                       type="button"
                       key={club.id}
+                      aria-pressed={isSelected}
                       onClick={() => setSelectedClubId(club.id)}
-                      className={`office-floating-card my11-tactile text-left rounded-2xl p-4 cursor-pointer relative overflow-hidden flex flex-col justify-between min-h-[148px] ${
+                      className={`office-floating-card my11-tactile text-left rounded-2xl p-4 cursor-pointer relative overflow-hidden flex flex-col justify-between ${
                         isSelected
                           ? 'border-2 border-amber-600 ring-2 ring-amber-500/25 shadow-md'
                           : 'hover:border-zinc-400'
@@ -430,41 +527,27 @@ function SetupWizardContent() {
                       />
 
                       <div className="pt-1">
-                        <div className="flex justify-between items-center gap-1 mb-2">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-700">
-                              {club.tier}
-                            </span>
-                            {isSelected && (
-                              <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-[#1E2024] text-white">
-                                Selected
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-[11px] font-mono font-bold text-slate-500">
-                            {club.shortName}
-                          </span>
-                        </div>
-
-                        <h3 className="text-sm sm:text-base font-display font-black text-slate-900 leading-tight">
+                        <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-700">
+                          {club.tier}
+                        </span>
+                        <h3 className="text-sm sm:text-base font-display font-black text-slate-900 leading-tight mt-2">
                           {displayName}
                         </h3>
-                        <p className="text-[11px] text-slate-600 mt-1 truncate">
-                          {club.stadiumName} ({club.stadiumCapacity.toLocaleString()})
-                        </p>
                       </div>
 
-                      <div className="mt-4 pt-2.5 border-t border-slate-200 flex justify-between items-center text-xs tabular-nums">
+                      <div className="mt-3 pt-2.5 border-t border-slate-200 flex justify-between items-center text-xs tabular-nums">
                         <div>
-                          <div className="text-[9px] uppercase font-bold text-zinc-500">Budget</div>
+                          <div className="text-[10px] uppercase font-bold text-zinc-500">Budget</div>
                           <div className="font-display font-black text-amber-700">
                             £{(club.startingBudget / 1_000_000).toFixed(0)}M
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-[9px] uppercase font-bold text-slate-500">Reputation</div>
+                          <div className="text-[10px] uppercase font-bold text-slate-500">
+                            {sortBy === 'capacity_desc' ? 'Capacity' : 'Reputation'}
+                          </div>
                           <div className="font-display font-black text-slate-800">
-                            {club.reputation}/100
+                            {sortBy === 'capacity_desc' ? club.stadiumCapacity.toLocaleString() : `${club.reputation}/100`}
                           </div>
                         </div>
                       </div>
@@ -484,8 +567,8 @@ function SetupWizardContent() {
                   }}
                 />
                 <div className="min-w-0">
-                  <div className="text-[9px] uppercase font-mono font-bold text-slate-500 leading-tight">
-                    Selected Club ({selectedClub.shortName})
+                  <div className="text-[10px] uppercase font-mono font-bold text-slate-500 leading-tight">
+                    Selected
                   </div>
                   <div className="text-xs sm:text-sm font-display font-black text-slate-900 truncate">
                     {effectiveSelectedName}
@@ -516,484 +599,300 @@ function SetupWizardContent() {
 
         {/* STEP 3: DIFFICULTY & RULES */}
         {step === 3 && (
-          <section className={`max-w-3xl mx-auto w-full space-y-6 pb-8 ${stepDir === 'forward' ? 'my11-step-forward' : 'my11-step-back'}`}>
+          <section className={`max-w-3xl mx-auto w-full space-y-5 pb-8 ${stepDir === 'forward' ? 'my11-step-forward' : 'my11-step-back'}`}>
             <header className="text-center space-y-1.5">
               <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-700">
-                Step 03 // Club Governance &amp; Simulation Rules
+                Step 03
               </div>
               <h2 className="text-2xl font-display font-black uppercase text-slate-900">
                 Difficulty &amp; Rules
               </h2>
-              <p className="text-xs text-slate-600 max-w-md mx-auto">
-                Choose a managerial preset or tailor financial, injury, and registration rules.
-              </p>
             </header>
 
-            {/* Effective Club Summary & Optional Rename Strip */}
+            {/* Summary & optional rename */}
             <div className="office-floating-card rounded-2xl p-4 space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <div className="text-[10px] font-mono font-bold uppercase text-slate-500">Ready to Sign</div>
-                  <div className="text-sm font-display font-black text-slate-900">
-                    {managerName.trim() || 'Manager'} at {effectiveSelectedName} ({databaseSeason})
-                  </div>
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                <div className="text-sm font-display font-black text-slate-900">
+                  {managerName.trim() || 'Manager'} at {effectiveSelectedName}
                 </div>
-                <div className="flex items-center gap-4 text-xs tabular-nums">
-                  <div>
-                    <span className="text-slate-500 font-medium">Adjusted Budget: </span>
-                    <strong className="text-amber-700 font-display font-black">£{effectiveBudgetMillions}M</strong>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 font-medium">Multiplier: </span>
-                    <strong className="text-slate-900 font-mono">{customSettings.startingBudgetMultiplier}x</strong>
-                  </div>
+                <div className="text-xs tabular-nums text-slate-600">
+                  Budget <strong className="text-amber-700 font-display font-black">£{effectiveBudgetMillions}M</strong>
                 </div>
               </div>
-
-              <div className="pt-2.5 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center gap-2">
-                <label htmlFor="single-custom-club-name" className="text-[10px] font-bold text-slate-700 uppercase tracking-wider shrink-0">
-                  Custom Club Name (Optional):
+              <div className="flex items-center gap-2.5">
+                <label htmlFor="single-custom-club-name" className="text-[11px] font-bold text-slate-700 uppercase tracking-wider shrink-0">
+                  Club name
                 </label>
                 <input
                   id="single-custom-club-name"
                   type="text"
                   value={customClubNames[selectedClub.id] ?? ''}
                   onChange={(e) => handleClubRename(selectedClub.id, e.target.value)}
-                  placeholder={`Keep "${selectedClub.defaultName}" or enter custom name`}
-                  className="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs text-slate-900 font-semibold focus:outline-none focus:border-amber-600"
+                  placeholder={selectedClub.defaultName}
+                  className="flex-1 min-w-0 bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-semibold focus:outline-none focus:border-amber-600"
                 />
               </div>
             </div>
 
-            {/* Presets Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-              {/* EASY */}
-              <button
-                type="button"
-                aria-pressed={preset === 'easy'}
-                onClick={() => handlePresetSelect('easy')}
-                className={`rounded-2xl p-4 text-left transition-all cursor-pointer border-2 ${
-                  preset === 'easy'
-                    ? 'bg-emerald-50/50 border-emerald-600 ring-4 ring-emerald-500/20 shadow-md'
-                    : 'bg-white border-[#D4D2CD] hover:border-zinc-400 shadow-xs'
-                }`}
-              >
-                <div className="flex justify-between items-center mb-1 gap-2">
-                  <h3 className="font-display font-black uppercase text-sm text-emerald-700">Easy</h3>
-                  <div className="flex items-center gap-1.5">
-                    {preset === 'easy' && (
-                      <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-[#1E2024] text-emerald-300">
-                        ✓ Selected
-                      </span>
-                    )}
-                    <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
-                      Sandbox
-                    </span>
-                  </div>
-                </div>
-                <p className="text-[11px] text-slate-600 leading-relaxed mb-3">
-                  Generous finances, board immunity, and match retry enabled.
-                </p>
-                <div className="space-y-1 text-[10px] text-slate-700 font-medium bg-white/80 border border-slate-200 rounded-xl p-2.5">
-                  <div>• +50% Starting Budget (1.5x)</div>
-                  <div>• No Board Sackings</div>
-                  <div>• Match Retry Enabled</div>
-                  <div>• Light Injuries</div>
-                </div>
-              </button>
-
-              {/* HARD */}
-              <button
-                type="button"
-                aria-pressed={preset === 'hard'}
-                onClick={() => handlePresetSelect('hard')}
-                className={`rounded-2xl p-4 text-left transition-all cursor-pointer border-2 ${
-                  preset === 'hard'
-                    ? 'bg-rose-50/50 border-rose-600 ring-4 ring-rose-500/20 shadow-md'
-                    : 'bg-white border-[#D4D2CD] hover:border-zinc-400 shadow-xs'
-                }`}
-              >
-                <div className="flex justify-between items-center mb-1 gap-2">
-                  <h3 className="font-display font-black uppercase text-sm text-rose-700">Hard</h3>
-                  <div className="flex items-center gap-1.5">
-                    {preset === 'hard' && (
-                      <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-[#1E2024] text-rose-300">
-                        ✓ Selected
-                      </span>
-                    )}
-                    <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-rose-50 text-rose-800 border border-rose-200">
-                      Authentic
-                    </span>
-                  </div>
-                </div>
-                <p className="text-[11px] text-slate-600 leading-relaxed mb-3">
-                  True football reality with realistic injuries, sackings, and locked rules.
-                </p>
-                <div className="space-y-1 text-[10px] text-slate-700 font-medium bg-white/80 border border-slate-200 rounded-xl p-2.5">
-                  <div>• 1.0x Authentic Budget</div>
-                  <div>• Board Can Sack You</div>
-                  <div>• Realistic Injuries</div>
-                  <div>• Permanently Locked Settings</div>
-                </div>
-              </button>
-
-              {/* CUSTOM */}
-              <button
-                type="button"
-                aria-pressed={preset === 'custom'}
-                onClick={() => handlePresetSelect('custom')}
-                className={`rounded-2xl p-4 text-left transition-all cursor-pointer border-2 ${
-                  preset === 'custom'
-                    ? 'bg-amber-50/60 border-amber-600 ring-4 ring-amber-500/20 shadow-md'
-                    : 'bg-white border-[#D4D2CD] hover:border-zinc-400 shadow-xs'
-                }`}
-              >
-                <div className="flex justify-between items-center mb-1 gap-2">
-                  <h3 className="font-display font-black uppercase text-sm text-amber-700">Custom</h3>
-                  <div className="flex items-center gap-1.5">
-                    {preset === 'custom' && (
-                      <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-[#1E2024] text-amber-300">
-                        ✓ Selected
-                      </span>
-                    )}
-                    <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">
-                      Bespoke
-                    </span>
-                  </div>
-                </div>
-                <p className="text-[11px] text-slate-600 leading-relaxed mb-3">
-                  Configure every governance toggle, budget multiplier, and player era pool.
-                </p>
-                <div className="space-y-1 text-[10px] text-slate-700 font-medium bg-white/80 border border-slate-200 rounded-xl p-2.5">
-                  <div>• Full Switch Control</div>
-                  <div>• Optional Rule Lock</div>
-                  <div>• 0.75x to 2.0x Budget Scale</div>
-                </div>
-              </button>
+            {/* Difficulty presets */}
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                {DIFFICULTY_PRESETS.map((item) => {
+                  const isActive = preset === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      aria-pressed={isActive}
+                      onClick={() => handlePresetSelect(item.id)}
+                      className={`rounded-2xl px-4 py-3 min-h-[56px] text-left transition-all cursor-pointer border-2 ${
+                        isActive ? item.activeClass : 'bg-white border-[#D4D2CD] hover:border-zinc-400 shadow-xs'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className={`font-display font-black uppercase text-sm ${item.titleClass}`}>{item.name}</h3>
+                        {isActive && <IconCheck className={`w-4 h-4 ${item.titleClass}`} />}
+                      </div>
+                      <p className="text-[11px] text-slate-600 leading-snug mt-0.5">{item.summary}</p>
+                    </button>
+                  );
+                })}
+              </div>
+              {activePreset.bullets.length > 0 && (
+                <ul className="list-disc pl-5 text-xs text-slate-700 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
+                  {activePreset.bullets.map((bullet) => (
+                    <li key={bullet}>{bullet}</li>
+                  ))}
+                </ul>
+              )}
             </div>
 
-            {/* Custom Rules Switchboard */}
-            <div className="office-floating-card rounded-2xl p-5 space-y-4">
-              <div className="flex justify-between items-center border-b border-slate-200 pb-3">
-                <h3 className="text-xs font-display font-black uppercase tracking-wider text-slate-900">
-                  {preset === 'custom' ? 'Custom Rules Switchboard' : `${preset.toUpperCase()} Preset Configuration`}
+            {/* Custom rules: only when Custom is selected */}
+            {preset === 'custom' && (
+              <div className="office-floating-card rounded-2xl px-4 py-2">
+                <h3 className="text-xs font-display font-black uppercase tracking-wider text-slate-900 py-2.5">
+                  Custom Rules
                 </h3>
-                {preset !== 'custom' && (
-                  <span className="text-[10px] font-bold text-slate-500">
-                    Select &ldquo;Custom&rdquo; above to modify switches
+                <div className="divide-y divide-slate-200 text-xs border-t border-slate-200">
+                  {CUSTOM_TOGGLES.map((toggle) => (
+                    <label key={toggle.key} className="flex justify-between items-center gap-3 py-3 min-h-[44px] cursor-pointer">
+                      <span className="min-w-0">
+                        <span className="font-bold text-slate-900">{toggle.label}</span>
+                        {toggle.hint && <span className="block text-[11px] text-slate-600">{toggle.hint}</span>}
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={customSettings[toggle.key]}
+                        onChange={(e) => setCustomSettings({ ...customSettings, [toggle.key]: e.target.checked })}
+                        className="w-5 h-5 accent-amber-600 cursor-pointer shrink-0"
+                      />
+                    </label>
+                  ))}
+
+                  <label className="flex justify-between items-center gap-3 py-3 min-h-[44px]">
+                    <span className="font-bold text-slate-900">Injury Severity</span>
+                    <select
+                      value={customSettings.injurySeverity}
+                      onChange={(e) =>
+                        setCustomSettings({ ...customSettings, injurySeverity: e.target.value as InjurySeverity })
+                      }
+                      className={INLINE_SELECT_CLASS}
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
+                  </label>
+
+                  <label className="flex justify-between items-center gap-3 py-3 min-h-[44px]">
+                    <span className="font-bold text-slate-900">Budget Multiplier</span>
+                    <select
+                      value={String(customSettings.startingBudgetMultiplier)}
+                      onChange={(e) =>
+                        setCustomSettings({ ...customSettings, startingBudgetMultiplier: parseFloat(e.target.value) })
+                      }
+                      className={INLINE_SELECT_CLASS}
+                    >
+                      <option value="0.75">0.75x (Strict)</option>
+                      <option value="1">1.0x (Standard)</option>
+                      <option value="1.25">1.25x (Generous)</option>
+                      <option value="1.5">1.5x (Abundant)</option>
+                      <option value="2">2.0x (Warchest)</option>
+                    </select>
+                  </label>
+
+                  <label className="flex justify-between items-center gap-3 py-3 min-h-[44px]">
+                    <span className="font-bold text-slate-900">Player Pool</span>
+                    <select
+                      value={customSettings.playerPool}
+                      onChange={(e) =>
+                        setCustomSettings({ ...customSettings, playerPool: e.target.value as PlayerPoolFilter })
+                      }
+                      className={INLINE_SELECT_CLASS}
+                    >
+                      <option value="modern">Modern Only</option>
+                      <option value="all">Modern + Legends</option>
+                      <option value="legends">Legends Only</option>
+                    </select>
+                  </label>
+
+                  <label className="flex justify-between items-center gap-3 py-3 min-h-[44px] cursor-pointer">
+                    <span className="min-w-0">
+                      <span className="font-bold text-amber-900">Lock Settings Permanently</span>
+                      <span className="block text-[11px] text-amber-800">No rule edits after you start</span>
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={customSettings.locked}
+                      onChange={(e) =>
+                        setCustomSettings({
+                          ...customSettings,
+                          locked: e.target.checked,
+                          editSettingsMidSave: !e.target.checked,
+                        })
+                      }
+                      className="w-5 h-5 accent-amber-600 cursor-pointer shrink-0"
+                    />
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* Display units: collapsed by default, also editable in Settings */}
+            <div className="office-floating-card rounded-2xl px-4">
+              <button
+                type="button"
+                aria-expanded={unitsOpen}
+                aria-controls="setup-display-units"
+                onClick={() => setUnitsOpen((open) => !open)}
+                className="w-full min-h-[48px] flex items-center justify-between gap-3 text-left cursor-pointer"
+              >
+                <span className="min-w-0">
+                  <span className="block text-xs font-display font-black uppercase tracking-wider text-slate-900">
+                    Display units
                   </span>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
-                <label className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-200 cursor-pointer">
-                  <div>
-                    <div className="font-bold text-slate-900">Board Can Sack You</div>
-                    <div className="text-[10px] text-slate-600">Dismissed if confidence collapses</div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={customSettings.boardCanSack}
-                    disabled={preset !== 'custom'}
-                    onChange={(e) =>
-                      setCustomSettings({ ...customSettings, boardCanSack: e.target.checked })
-                    }
-                    className="w-4 h-4 accent-amber-600 cursor-pointer"
-                  />
-                </label>
-
-                <label className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-200 cursor-pointer">
-                  <div>
-                    <div className="font-bold text-slate-900">Allow Match Retry</div>
-                    <div className="text-[10px] text-slate-600">Replay a simulated fixture</div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={customSettings.retryMatch}
-                    disabled={preset !== 'custom'}
-                    onChange={(e) =>
-                      setCustomSettings({ ...customSettings, retryMatch: e.target.checked })
-                    }
-                    className="w-4 h-4 accent-amber-600 cursor-pointer"
-                  />
-                </label>
-
-                <label className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-200 cursor-pointer">
-                  <div>
-                    <div className="font-bold text-slate-900">Homegrown Rule</div>
-                    <div className="text-[10px] text-slate-600">Enforce 8+ homegrown registered players</div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={customSettings.homegrownRule}
-                    disabled={preset !== 'custom'}
-                    onChange={(e) =>
-                      setCustomSettings({ ...customSettings, homegrownRule: e.target.checked })
-                    }
-                    className="w-4 h-4 accent-amber-600 cursor-pointer"
-                  />
-                </label>
-
-                <label className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-200 cursor-pointer">
-                  <div>
-                    <div className="font-bold text-slate-900">Financial Penalties</div>
-                    <div className="text-[10px] text-slate-600">Points deductions under severe debt</div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={customSettings.financialPenalties}
-                    disabled={preset !== 'custom'}
-                    onChange={(e) =>
-                      setCustomSettings({ ...customSettings, financialPenalties: e.target.checked })
-                    }
-                    className="w-4 h-4 accent-amber-600 cursor-pointer"
-                  />
-                </label>
-
-                <div className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-200">
-                  <div>
-                    <div className="font-bold text-slate-900">Injury Severity</div>
-                    <div className="text-[10px] text-slate-600">Match injury frequency</div>
-                  </div>
-                  <select
-                    value={customSettings.injurySeverity}
-                    disabled={preset !== 'custom'}
-                    onChange={(e) =>
-                      setCustomSettings({
-                        ...customSettings,
-                        injurySeverity: e.target.value as InjurySeverity,
-                      })
-                    }
-                    className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs text-slate-900 font-semibold"
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                  </select>
-                </div>
-
-                <div className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-200">
-                  <div>
-                    <div className="font-bold text-slate-900">Budget Multiplier</div>
-                    <div className="text-[10px] text-slate-600">Scales initial transfer fund</div>
-                  </div>
-                  <select
-                    value={String(customSettings.startingBudgetMultiplier)}
-                    disabled={preset !== 'custom'}
-                    onChange={(e) =>
-                      setCustomSettings({
-                        ...customSettings,
-                        startingBudgetMultiplier: parseFloat(e.target.value),
-                      })
-                    }
-                    className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs text-slate-900 font-semibold"
-                  >
-                    <option value="0.75">0.75x (Strict)</option>
-                    <option value="1">1.0x (Standard)</option>
-                    <option value="1.25">1.25x (Generous)</option>
-                    <option value="1.5">1.5x (Abundant)</option>
-                    <option value="2">2.0x (Warchest)</option>
-                  </select>
-                </div>
-
-                <div className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-200">
-                  <div>
-                    <div className="font-bold text-slate-900">Player Pool</div>
-                    <div className="text-[10px] text-slate-600">Scouting database scope</div>
-                  </div>
-                  <select
-                    value={customSettings.playerPool}
-                    disabled={preset !== 'custom'}
-                    onChange={(e) =>
-                      setCustomSettings({
-                        ...customSettings,
-                        playerPool: e.target.value as PlayerPoolFilter,
-                      })
-                    }
-                    className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs text-slate-900 font-semibold"
-                  >
-                    <option value="modern">Modern Only (Legends Off)</option>
-                    <option value="all">All Eras (Modern + Legends)</option>
-                    <option value="legends">Legends Only</option>
-                  </select>
-                </div>
-
-                <label className="flex justify-between items-center bg-amber-50 p-3 rounded-xl border border-amber-200 cursor-pointer">
-                  <div>
-                    <div className="font-bold text-amber-900">Lock Settings Permanently</div>
-                    <div className="text-[10px] text-amber-800">Prevents mid-save rule edits</div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={customSettings.locked}
-                    disabled={preset !== 'custom'}
-                    onChange={(e) =>
-                      setCustomSettings({
-                        ...customSettings,
-                        locked: e.target.checked,
-                        editSettingsMidSave: !e.target.checked,
-                      })
-                    }
-                    className="w-4 h-4 accent-amber-600 cursor-pointer"
-                  />
-                </label>
-              </div>
-            </div>
-
-            {/* Regional & Display Preferences */}
-            <div className="office-floating-card rounded-2xl p-5 space-y-4">
-              <div className="flex justify-between items-center border-b border-slate-200 pb-3">
-                <div className="space-y-0.5">
-                  <h3 className="text-xs font-display font-black uppercase tracking-wider text-slate-900">
-                    Regional &amp; Display Units
-                  </h3>
-                  <p className="text-[10px] text-slate-600">
-                    Default follows United Kingdom broadcast standards. Editable anytime from Settings.
-                  </p>
-                </div>
-                <span className="text-[9px] font-mono font-bold text-blue-800 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded uppercase">
-                  UK Standard
+                  <span className="block text-[11px] text-slate-600">UK defaults. Can be changed later in Settings.</span>
                 </span>
-              </div>
+                {unitsOpen ? (
+                  <IconChevronUp className="w-4 h-4 text-slate-600 shrink-0" />
+                ) : (
+                  <IconChevronDown className="w-4 h-4 text-slate-600 shrink-0" />
+                )}
+              </button>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5">
-                  <label className="block text-[11px] font-bold text-slate-800 uppercase tracking-wider">
-                    Date Format
+              {unitsOpen && (
+                <div id="setup-display-units" className="divide-y divide-slate-200 border-t border-slate-200 text-xs">
+                  <label className="flex justify-between items-center gap-3 py-3">
+                    <span className="font-bold text-slate-900">Date</span>
+                    <select
+                      value={customSettings.dateFormat || 'uk'}
+                      onChange={(e) =>
+                        setCustomSettings({ ...customSettings, dateFormat: e.target.value as DateFormatPreference })
+                      }
+                      className={INLINE_SELECT_CLASS}
+                    >
+                      <option value="uk">UK (14/08/2026)</option>
+                      <option value="iso">ISO (2026-08-14)</option>
+                      <option value="us">US (08/14/2026)</option>
+                    </select>
                   </label>
-                  <select
-                    value={customSettings.dateFormat || 'uk'}
-                    onChange={(e) =>
-                      setCustomSettings({
-                        ...customSettings,
-                        dateFormat: e.target.value as DateFormatPreference,
-                      })
-                    }
-                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-semibold"
-                  >
-                    <option value="uk">UK (14/08/2026 - DD/MM/YYYY)</option>
-                    <option value="iso">ISO (2026-08-14 - YYYY-MM-DD)</option>
-                    <option value="us">US (08/14/2026 - MM/DD/YYYY)</option>
-                  </select>
-                </div>
 
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5">
-                  <label className="block text-[11px] font-bold text-slate-800 uppercase tracking-wider">
-                    Currency Unit
+                  <label className="flex justify-between items-center gap-3 py-3">
+                    <span className="font-bold text-slate-900">Currency</span>
+                    <select
+                      value={customSettings.currency || 'GBP'}
+                      onChange={(e) =>
+                        setCustomSettings({ ...customSettings, currency: e.target.value as CurrencyPreference })
+                      }
+                      className={INLINE_SELECT_CLASS}
+                    >
+                      <option value="GBP">GBP (£)</option>
+                      <option value="EUR">EUR (€)</option>
+                      <option value="USD">USD ($)</option>
+                    </select>
                   </label>
-                  <select
-                    value={customSettings.currency || 'GBP'}
-                    onChange={(e) =>
-                      setCustomSettings({
-                        ...customSettings,
-                        currency: e.target.value as CurrencyPreference,
-                      })
-                    }
-                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-semibold"
-                  >
-                    <option value="GBP">GBP (£ - British Pound)</option>
-                    <option value="EUR">EUR (€ - Euro)</option>
-                    <option value="USD">USD ($ - US Dollar)</option>
-                  </select>
-                </div>
 
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5">
-                  <label className="block text-[11px] font-bold text-slate-800 uppercase tracking-wider">
-                    Wage Rate Frequency
+                  <label className="flex justify-between items-center gap-3 py-3">
+                    <span className="font-bold text-slate-900">Wages</span>
+                    <select
+                      value={customSettings.wageUnit || 'weekly'}
+                      onChange={(e) =>
+                        setCustomSettings({ ...customSettings, wageUnit: e.target.value as WageUnitPreference })
+                      }
+                      className={INLINE_SELECT_CLASS}
+                    >
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                      <option value="annual">Annual</option>
+                    </select>
                   </label>
-                  <select
-                    value={customSettings.wageUnit || 'weekly'}
-                    onChange={(e) =>
-                      setCustomSettings({
-                        ...customSettings,
-                        wageUnit: e.target.value as WageUnitPreference,
-                      })
-                    }
-                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-semibold"
-                  >
-                    <option value="weekly">Weekly (£/wk)</option>
-                    <option value="monthly">Monthly (£/mo)</option>
-                    <option value="annual">Annual (£/yr)</option>
-                  </select>
-                </div>
 
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5">
-                  <label className="block text-[11px] font-bold text-slate-800 uppercase tracking-wider">
-                    Height Unit
+                  <label className="flex justify-between items-center gap-3 py-3">
+                    <span className="font-bold text-slate-900">Height</span>
+                    <select
+                      value={customSettings.heightUnit || 'ft_in'}
+                      onChange={(e) =>
+                        setCustomSettings({ ...customSettings, heightUnit: e.target.value as HeightUnitPreference })
+                      }
+                      className={INLINE_SELECT_CLASS}
+                    >
+                      <option value="ft_in">Feet &amp; inches (5&apos; 11&quot;)</option>
+                      <option value="cm">Centimetres (180 cm)</option>
+                      <option value="m">Metres (1.80 m)</option>
+                    </select>
                   </label>
-                  <select
-                    value={customSettings.heightUnit || 'ft_in'}
-                    onChange={(e) =>
-                      setCustomSettings({
-                        ...customSettings,
-                        heightUnit: e.target.value as HeightUnitPreference,
-                      })
-                    }
-                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-semibold"
-                  >
-                    <option value="ft_in">Feet &amp; Inches (5&apos; 11&quot;)</option>
-                    <option value="cm">Centimetres (180 cm)</option>
-                    <option value="m">Metres (1.80 m)</option>
-                  </select>
-                </div>
 
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5">
-                  <label className="block text-[11px] font-bold text-slate-800 uppercase tracking-wider">
-                    Weight Unit
+                  <label className="flex justify-between items-center gap-3 py-3">
+                    <span className="font-bold text-slate-900">Weight</span>
+                    <select
+                      value={customSettings.weightUnit || 'kg'}
+                      onChange={(e) =>
+                        setCustomSettings({ ...customSettings, weightUnit: e.target.value as WeightUnitPreference })
+                      }
+                      className={INLINE_SELECT_CLASS}
+                    >
+                      <option value="kg">Kilograms (75 kg)</option>
+                      <option value="st_lbs">Stone &amp; pounds (11st 11lbs)</option>
+                      <option value="lbs">Pounds (165 lbs)</option>
+                    </select>
                   </label>
-                  <select
-                    value={customSettings.weightUnit || 'kg'}
-                    onChange={(e) =>
-                      setCustomSettings({
-                        ...customSettings,
-                        weightUnit: e.target.value as WeightUnitPreference,
-                      })
-                    }
-                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-semibold"
-                  >
-                    <option value="kg">Kilograms (75 kg)</option>
-                    <option value="st_lbs">Stone &amp; Pounds (11st 11lbs)</option>
-                    <option value="lbs">Pounds (165 lbs)</option>
-                  </select>
-                </div>
 
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5">
-                  <label className="block text-[11px] font-bold text-slate-800 uppercase tracking-wider">
-                    Number Formatting
+                  <label className="flex justify-between items-center gap-3 py-3">
+                    <span className="font-bold text-slate-900">Numbers</span>
+                    <select
+                      value={customSettings.numberFormat || 'comma'}
+                      onChange={(e) =>
+                        setCustomSettings({ ...customSettings, numberFormat: e.target.value as NumberFormatPreference })
+                      }
+                      className={INLINE_SELECT_CLASS}
+                    >
+                      <option value="comma">1,000,000</option>
+                      <option value="dot">1.000.000</option>
+                      <option value="space">1 000 000</option>
+                    </select>
                   </label>
-                  <select
-                    value={customSettings.numberFormat || 'comma'}
-                    onChange={(e) =>
-                      setCustomSettings({
-                        ...customSettings,
-                        numberFormat: e.target.value as NumberFormatPreference,
-                      })
-                    }
-                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-semibold"
-                  >
-                    <option value="comma">Standard Comma (1,000,000)</option>
-                    <option value="dot">Continental Dot (1.000.000)</option>
-                    <option value="space">Space Separator (1 000 000)</option>
-                  </select>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Actions */}
-            <div className="flex justify-between items-center pt-2 gap-3.5">
+            <div className="flex justify-between items-center pt-2 gap-3">
               <button
                 type="button"
                 onClick={() => goToStep(2)}
                 className="bg-white border border-slate-300 hover:bg-slate-100 py-3 px-5 rounded-xl text-xs font-bold text-slate-800 font-display uppercase tracking-wider cursor-pointer transition-colors"
               >
-                Back to Clubs
+                Back
               </button>
               <button
                 type="button"
                 onClick={handleStartCareer}
-                className="office-play-match-btn flex-1 py-3.5 px-4 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
+                disabled={isStartingCareer}
+                className="office-play-match-btn flex-1 min-w-0 py-3.5 px-4 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap disabled:opacity-60"
               >
-                <span className="truncate">Start Career at {effectiveSelectedName}</span>
+                <span className="truncate">
+                  {isStartingCareer ? 'Starting...' : `Start Career at ${effectiveSelectedName}`}
+                </span>
                 <span aria-hidden="true" className="shrink-0">-&gt;</span>
               </button>
             </div>

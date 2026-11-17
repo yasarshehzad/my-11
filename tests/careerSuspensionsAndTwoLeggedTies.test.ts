@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { applyPostMatchSquadImpact, InGamePlayerState } from '../src/career/matchEngine';
-import { CareerPlayer, CupFixture, CupTournament } from '../src/career/types';
+import { CareerLineup, CareerPlayer, Club, CupFixture, CupTournament } from '../src/career/types';
 import { autoRotateFitLineup, isPlayerAvailableForMatch } from '../src/career/squad';
 import { advanceCupTournament, CUP_IDS, getCupWinner, simulateKnockoutCupFixture } from '../src/career/cups';
 
@@ -45,7 +45,12 @@ describe('Option 1: Disciplinary Tracking & Suspensions', () => {
       },
     ];
 
-    const updated = applyPostMatchSquadImpact([p1], pStates, false, {} as any);
+    const updated = applyPostMatchSquadImpact(
+      [p1],
+      pStates,
+      false,
+      {} as Parameters<typeof applyPostMatchSquadImpact>[3]
+    );
     const updatedP1 = updated.find((p) => p.id === 'p1')!;
 
     expect(updatedP1.redCardsTotal).toBe(1);
@@ -61,7 +66,12 @@ describe('Option 1: Disciplinary Tracking & Suspensions', () => {
     // Player did not feature in this match (no in-game state for p1)
     const pStates: InGamePlayerState[] = [];
 
-    const updated = applyPostMatchSquadImpact([p1], pStates, true, {} as any);
+    const updated = applyPostMatchSquadImpact(
+      [p1],
+      pStates,
+      true,
+      {} as Parameters<typeof applyPostMatchSquadImpact>[3]
+    );
     const updatedP1 = updated.find((p) => p.id === 'p1')!;
 
     expect(updatedP1.suspendedMatches).toBe(0);
@@ -88,7 +98,12 @@ describe('Option 1: Disciplinary Tracking & Suspensions', () => {
       },
     ];
 
-    const updated = applyPostMatchSquadImpact([p1], pStates, true, {} as any);
+    const updated = applyPostMatchSquadImpact(
+      [p1],
+      pStates,
+      true,
+      {} as Parameters<typeof applyPostMatchSquadImpact>[3]
+    );
     const updatedP1 = updated.find((p) => p.id === 'p1')!;
 
     expect(updatedP1.yellowCardsTotal).toBe(5);
@@ -119,7 +134,7 @@ describe('Option 1: Disciplinary Tracking & Suspensions', () => {
       benchIds: ['b1'],
     };
 
-    const rotation = autoRotateFitLineup(squad, currentLineup as any, 78, ['s1', 'b1'], 2026);
+    const rotation = autoRotateFitLineup(squad, currentLineup as CareerLineup, 78, ['s1', 'b1'], 2026);
     expect(rotation.rotatedCount).toBe(1);
     expect(rotation.updatedLineup.starterIds[0]).toBe('b1');
     expect(rotation.swaps[0].fatiguedPlayer.id).toBe('s1');
@@ -155,8 +170,8 @@ describe('Option 1: Two-Legged European Knockouts', () => {
 
     const sim = simulateKnockoutCupFixture(
       leg1Fix,
-      { id: 'chelsea', name: 'Chelsea', reputation: 85, shortName: 'CHE', defaultName: 'Chelsea' } as any,
-      { id: 'arsenal', name: 'Arsenal', reputation: 85, shortName: 'ARS', defaultName: 'Arsenal' } as any,
+      { id: 'chelsea', name: 'Chelsea', reputation: 85, shortName: 'CHE', defaultName: 'Chelsea' } as unknown as Club,
+      { id: 'arsenal', name: 'Arsenal', reputation: 85, shortName: 'ARS', defaultName: 'Arsenal' } as unknown as Club,
       squadH,
       squadA
     );

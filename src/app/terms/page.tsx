@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { IconArrowRight } from '@/components/career/GameIcons';
 
 export const metadata: Metadata = {
   title: 'Terms of Service',
@@ -30,16 +31,17 @@ export default function TermsPage() {
             <strong className="text-[#0b1536]">Intellectual Property & Disclaimer:</strong> All player names, seasons, and references are historical and educational in nature. This is an unofficial game and is not affiliated with, endorsed by, or representing any official football club, league, player, rights holder, or governing body. No real badges, logos, or copyrighted assets are used in the application.
           </p>
           <p>
-            <strong className="text-[#0b1536]">Limitation of Liability:</strong> The game is provided "as is" without any warranties. We are not responsible for any local browser storage data clearing or browser incompatibility.
+            <strong className="text-[#0b1536]">Limitation of Liability:</strong> The game is provided &ldquo;as is&rdquo; without any warranties. We are not responsible for any local browser storage data clearing or browser incompatibility.
           </p>
         </div>
 
         <div className="pt-4 border-t border-[var(--office-divider)]">
           <Link
             href="/"
-            className="inline-block py-3.5 px-6 rounded-2xl office-play-match-btn text-white font-display font-black text-xs uppercase tracking-wider shadow-lg hover:shadow-xl transition-all duration-300 transform active:scale-95 cursor-pointer text-center"
+            className="inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl office-play-match-btn text-white font-display font-black text-xs uppercase tracking-wider shadow-lg hover:shadow-xl transition-all duration-300 transform active:scale-95 cursor-pointer text-center"
           >
-            ➔ Return to Main Game
+            <IconArrowRight className="w-3.5 h-3.5 rotate-180" />
+            <span>Return to Main Game</span>
           </Link>
         </div>
       </main>

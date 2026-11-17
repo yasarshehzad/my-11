@@ -23,11 +23,11 @@ import { createInitialStandings, calculateStandings } from './table';
 import { generateRoundRobinFixtures } from './calendar';
 import { initializeSeasonCups, autoResolvePendingCupFixtures } from './cups';
 import { simulateMatchFixture } from './sim';
-import { applySeasonalPlayerProgression, generateYouthIntake, ProgressionReport } from './youthAcademy';
+import { applySeasonalPlayerProgression, generateYouthIntake, processVeteranRetirementsAndRegens, ProgressionReport } from './youthAcademy';
 import { generateIncomingAiBids, simulateAiToAiTransfers } from './transfers';
 import { formatCareerCurrency } from './formatters';
 import { calculatePlayerValue, createInitialSeasonLedger } from './finance';
-import { getRegisteredSeniorPlayerIds } from './squad';
+import { getBestStartingLineup, getRegisteredSeniorPlayerIds } from './squad';
 import { getLeagueLeaderboards } from './playerStats';
 
 export interface SeasonReviewSummary {
@@ -198,18 +198,30 @@ export function advanceToNextSeason(save: CareerSaveFile): {
     fitness: 100,
     injured: false,
     injuryWeeks: 0,
+    suspendedMatches: 0,
+    suspensionReason: undefined,
+    benchedStreak: 0,
     morale: Math.max(85, player.morale),
     form: 7.0,
   }));
 
-  // 1b. Process Inbound Loans Return, Outbound Loans Return, and Bosman Pre-Contracts Arrival
+  // 1a. Veteran Retirements & World Regens (user squad -> academy)
   const userClubName = save.club.customName || save.club.defaultName;
+  const userRegenOutcome = processVeteranRetirementsAndRegens(
+    summerRecoveredSquad,
+    userClubName,
+    save.club.id,
+    nextYearStart,
+    { placeInSquadDirectly: false, minSquadSize: 16 }
+  );
+
+  // 1b. Process Inbound Loans Return, Outbound Loans Return, and Bosman Pre-Contracts Arrival
   const returnedLoanOutPlayers: string[] = [];
   const expiredLoanInPlayers: string[] = [];
 
   // Filter out inbound loans (they return to parent club) and restore outbound loans
   const squadAfterLoanResolutions: CareerPlayer[] = [];
-  for (const player of summerRecoveredSquad) {
+  for (const player of userRegenOutcome.survivingSquad) {
     if (player.isOnLoan) {
       const isOutboundLoan =
         player.loanOriginClubId === save.club.id ||
@@ -242,23 +254,28 @@ export function advanceToNextSeason(save: CareerSaveFile): {
     }
   }
 
-  // Process arriving Bosman pre-contract players
+  // Process arriving Bosman pre-contract players with full preserved metadata
   const newTransferRecords: TransferRecord[] = [];
   const arrivingPreContractPlayers = save.preContracts || [];
   const arrivedPlayerNames: string[] = [];
 
   for (const pc of arrivingPreContractPlayers) {
     arrivedPlayerNames.push(pc.playerName);
-    const playerVal = calculatePlayerValue(pc.rating, 25, pc.position);
+    const arrivalAge = typeof pc.age === 'number' ? pc.age + 1 : 25;
+    const arrivalNationality = pc.nationality || 'International';
+    const arrivalNatPositions =
+      pc.naturalPositions && pc.naturalPositions.length > 0 ? pc.naturalPositions : [pc.position];
+    const playerVal = calculatePlayerValue(pc.rating, arrivalAge, pc.position);
     const newSquadMember: CareerPlayer = {
       id: `cp_bosman_${pc.playerId}_${nextYearStart}`,
-      cardId: `${pc.playerId}_career`,
+      cardId: pc.cardId || `${pc.playerId}_career`,
       name: pc.playerName,
       rating: pc.rating,
       position: pc.position,
-      naturalPositions: [pc.position],
-      age: 25,
-      dateOfBirth: `${nextYearStart - 25}-07-01`,
+      naturalPositions: arrivalNatPositions,
+      secondaryPositions: pc.secondaryPositions,
+      age: arrivalAge,
+      dateOfBirth: pc.dateOfBirth || `${nextYearStart - arrivalAge}-07-01`,
       value: playerVal,
       wageWeekly: pc.wageWeekly,
       contractYears: pc.contractYears || 3,
@@ -266,11 +283,15 @@ export function advanceToNextSeason(save: CareerSaveFile): {
       morale: 90,
       form: 7.2,
       injured: false,
-      isHomegrown: false,
+      isHomegrown: Boolean(pc.isHomegrown),
       club: userClubName,
-      nationality: 'International',
-      squadRole: pc.rating >= 82 ? 'important' : 'squad',
-      potential: Math.max(pc.rating, pc.rating + 3),
+      nationality: arrivalNationality,
+      faceStats: pc.faceStats,
+      preferredFoot: pc.preferredFoot,
+      heightCm: pc.heightCm,
+      weightKg: pc.weightKg,
+      squadRole: pc.squadRole || (pc.rating >= 85 ? 'crucial' : pc.rating >= 80 ? 'important' : 'squad'),
+      potential: pc.potential ? Math.max(pc.rating, pc.potential) : Math.max(pc.rating, pc.rating + 3),
     };
     squadAfterLoanResolutions.push(newSquadMember);
 
@@ -378,12 +399,12 @@ export function advanceToNextSeason(save: CareerSaveFile): {
     lastPayrollDate: newCurrentDate,
   };
 
-  // 3. Fresh annual youth intake
+  // 3. Fresh annual youth intake + World Regens replacing retiring veterans
   const newIntake = generateYouthIntake(save.club, nextYearStart);
-  const updatedAcademy = [...(save.youthAcademy || []), ...newIntake];
+  const updatedAcademy = [...(save.youthAcademy || []), ...userRegenOutcome.academyRegens, ...newIntake];
 
   // 4. Calculate Promotion & Relegation for the active 20 top-flight clubs
-  let standings = save.standings || calculateStandings(save.fixtures || [], currentActiveClubs);
+  const standings = save.standings || calculateStandings(save.fixtures || [], currentActiveClubs);
   const bottomStandings = standings.slice(17, 20);
   let relegatedIds = bottomStandings.map((s) => s.clubId);
 
@@ -490,7 +511,7 @@ export function advanceToNextSeason(save: CareerSaveFile): {
     sender: 'Board of Directors',
     senderRole: 'Club Executive Committee',
     subject: `Season ${nextSeasonNumber} Campaign Kickoff & Board Review`,
-    body: `Dear ${save.manager.name},\n\nCongratulations on completing Season ${save.season.seasonNumber}! You finished in position #${summary.finalPosition}${summary.leagueTitle ? ' as champions' : ''}. We have credited ${formatCareerCurrency(summary.prizeMoney, save.settings.currency)} in prize money to your transfer war chest. European qualification: ${summary.europeanQualification}.\n\n📢 Division Update: Welcome ${promotedStr} to the top flight! Farewell to ${relegatedStr}.\n\nThe summer window is officially open!`,
+    body: `Dear ${save.manager.name},\n\nCongratulations on completing Season ${save.season.seasonNumber}! You finished in position #${summary.finalPosition}${summary.leagueTitle ? ' as champions' : ''}. We have credited ${formatCareerCurrency(summary.prizeMoney, save.settings.currency)} in prize money to your transfer war chest. European qualification: ${summary.europeanQualification}.\n\nDivision Update: Welcome ${promotedStr} to the top flight! Farewell to ${relegatedStr}.\n\nThe summer window is officially open!`,
     type: 'board',
     isRead: false,
     priority: 'urgent',
@@ -504,11 +525,75 @@ export function advanceToNextSeason(save: CareerSaveFile): {
     nextYearStart
   );
 
+  // Sanitize user lineup if any starter/bench player retired or departed on loan expiry
+  const validIdsSet = new Set(finalSquad.map((p) => p.id));
+  const hasInvalidLineupPlayer =
+    !save.lineup ||
+    save.lineup.starterIds.some((id) => !validIdsSet.has(id)) ||
+    save.lineup.starterIds.length < 11;
+  const nextLineup = hasInvalidLineupPlayer
+    ? getBestStartingLineup(finalSquad, save.lineup?.formation || '4-3-3', nextRegisteredPlayerIds, nextYearStart)
+    : save.lineup;
+
   // 8. Simulate active summer transfers between rival AI clubs for the upcoming season
   const summerTransfersRes = simulateAiToAiTransfers(save, {
     dealCount: 6,
     date: `${nextYearStart}-07-15`,
   });
+
+  // 8b. Apply off-season aging & World Regens across persisted AI club squads
+  const nextAiClubSquads: Record<string, CareerPlayer[]> = {};
+  const aiRegenHighlights: string[] = [];
+  if (summerTransfersRes.updatedSave.aiClubSquads) {
+    for (const [aiClubId, aiSquad] of Object.entries(summerTransfersRes.updatedSave.aiClubSquads)) {
+      if (!aiSquad || aiSquad.length === 0) continue;
+      const aiClubObj = getClubById(aiClubId);
+      const aiClubName = aiClubObj?.defaultName || aiClubId;
+      const aged = applySeasonalPlayerProgression(aiSquad).updatedSquad.map((p) => ({
+        ...p,
+        fitness: 100,
+        injured: false,
+        injuryWeeks: 0,
+        suspendedMatches: 0,
+        suspensionReason: undefined,
+      }));
+      const regenOutcome = processVeteranRetirementsAndRegens(
+        aged,
+        aiClubName,
+        aiClubId,
+        nextYearStart,
+        { placeInSquadDirectly: true, minSquadSize: 18 }
+      );
+      nextAiClubSquads[aiClubId] = regenOutcome.survivingSquad;
+      for (const r of regenOutcome.squadRegens) {
+        if ((r.potential ?? 0) >= 85 && aiRegenHighlights.length < 4) {
+          aiRegenHighlights.push(`${r.name} (${r.position}, ${r.nationality}, POT ${r.potential}) -> ${aiClubName}`);
+        }
+      }
+    }
+  }
+
+  const regenAndRetirementMessages: ManagerMessage[] = [];
+  if (userRegenOutcome.retiredPlayers.length > 0 || aiRegenHighlights.length > 0) {
+    const retiredLines = userRegenOutcome.retiredPlayers.map(
+      (p, idx) =>
+        `• ${p.name} (${p.position}, age ${p.age}) retired — Academy Regen: ${userRegenOutcome.academyRegens[idx]?.name || 'Promising prospect'} (${userRegenOutcome.academyRegens[idx]?.nationality}, POT ${userRegenOutcome.academyRegens[idx]?.potential})`
+    );
+    const aiLines = aiRegenHighlights.map((line) => `• World Scouting Alert: ${line}`);
+    regenAndRetirementMessages.push({
+      id: `msg_world_regens_${nextSeasonNumber}`,
+      date: newCurrentDate,
+      sender: 'Chief Scout & Academy Director',
+      senderRole: 'Global Talent Pipeline',
+      subject: `Season ${nextSeasonNumber} Retirements & World Regens Report`,
+      body: `Boss,\n\nVeteran retirements across world football have unlocked a new wave of prodigies inheriting their tactical DNA:\n\n${[...retiredLines, ...aiLines].join('\n')}`,
+      type: 'scouting',
+      isRead: false,
+      priority: userRegenOutcome.retiredPlayers.length > 0 ? 'urgent' : 'normal',
+      actionLabel: 'Inspect Youth Academy',
+      actionTab: 'squad',
+    });
+  }
 
   const prevFeeder = save.feederNetwork || getInitialFeederNetwork();
   const nextFeederNetwork = {
@@ -561,6 +646,7 @@ export function advanceToNextSeason(save: CareerSaveFile): {
     },
     phase: 'transfer_window',
     squad: finalSquad,
+    lineup: nextLineup,
     registeredPlayerIds: nextRegisteredPlayerIds,
     youthAcademy: updatedAcademy,
     fixtures,
@@ -574,8 +660,16 @@ export function advanceToNextSeason(save: CareerSaveFile): {
     boardStatus: updatedBoardStatus,
     feederNetwork: nextFeederNetwork,
     managerCareer: nextManagerCareer,
-    inbox: [newInboxMsg, ...loanAndPreContractMessages, ...(summerTransfersRes.updatedSave.inbox || [])],
-    aiClubSquads: summerTransfersRes.updatedSave.aiClubSquads,
+    inbox: [
+      newInboxMsg,
+      ...loanAndPreContractMessages,
+      ...regenAndRetirementMessages,
+      ...(summerTransfersRes.updatedSave.inbox || []),
+    ],
+    aiClubSquads:
+      Object.keys(nextAiClubSquads).length > 0
+        ? nextAiClubSquads
+        : summerTransfersRes.updatedSave.aiClubSquads,
     worldTransfersHistory: summerTransfersRes.updatedSave.worldTransfersHistory,
     transfersHistory: [...newTransferRecords, ...(save.transfersHistory || [])],
     preContracts: [],

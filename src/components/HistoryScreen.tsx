@@ -2,6 +2,18 @@ import React, { useState, useMemo } from 'react';
 import { CampaignHistoryEntry, PersonalBests, FormationType, Player, DraftModifier } from '../types/game';
 import { snapshotToPlayer } from '../utils/storage';
 import { PitchLayout } from './PitchLayout';
+import {
+  IconArrowLeft,
+  IconTarget,
+  IconTrophy,
+  IconClipboard,
+  IconStar,
+  IconArrowRight,
+  IconBolt,
+  IconSparkles,
+  IconClock,
+  IconDocument,
+} from './career/GameIcons';
 
 interface HistoryScreenProps {
   history: CampaignHistoryEntry[];
@@ -52,14 +64,14 @@ export function HistoryScreen({
   const getModeBadge = (mode: DraftModifier | 'daily_challenge') => {
     switch (mode) {
       case 'quick':
-        return { label: '⚡ QUICK', bg: 'bg-amber-100 text-amber-800 border-amber-300' };
+        return { label: 'QUICK', icon: <IconBolt className="w-2.5 h-2.5 shrink-0" />, bg: 'bg-amber-100 text-amber-800 border-amber-300' };
       case 'mystery':
-        return { label: '❓ MYSTERY', bg: 'bg-purple-100 text-purple-800 border-purple-300' };
+        return { label: 'MYSTERY', icon: <IconSparkles className="w-2.5 h-2.5 shrink-0" />, bg: 'bg-purple-100 text-purple-800 border-purple-300' };
       case 'daily_challenge':
-        return { label: '🏆 CHALLENGE', bg: 'bg-indigo-100 text-indigo-800 border-indigo-300' };
+        return { label: 'CHALLENGE', icon: <IconTrophy className="w-2.5 h-2.5 shrink-0" />, bg: 'bg-indigo-100 text-indigo-800 border-indigo-300' };
       case 'classic':
       default:
-        return { label: '⏱️ CLASSIC', bg: 'bg-blue-100 text-blue-800 border-blue-300' };
+        return { label: 'CLASSIC', icon: <IconClock className="w-2.5 h-2.5 shrink-0" />, bg: 'bg-blue-100 text-blue-800 border-blue-300' };
     }
   };
 
@@ -71,16 +83,17 @@ export function HistoryScreen({
     return (
       <section aria-label="Campaign Run Details" className="flex flex-col gap-6 px-4 sm:px-6 py-6 w-full max-w-lg mx-auto min-h-[90vh]">
         {/* Navigation & Header */}
-        <div className="flex justify-between items-center w-full">
+        <div className="flex justify-between items-center w-full gap-2">
           <button
             onClick={() => setActiveEntry(null)}
             className="office-subcard py-2 px-3.5 rounded-xl text-slate-700 hover:text-[#0b1536] font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 shadow-sm"
           >
-            ← Back to History
+            <IconArrowLeft className="w-3.5 h-3.5 shrink-0" /> Back to History
           </button>
           
-          <span className={`text-[9px] font-display font-black uppercase px-2.5 py-1 rounded-full border ${modeBadge.bg}`}>
-            {modeBadge.label}
+          <span className={`inline-flex items-center gap-1 text-[10px] font-display font-black uppercase px-2.5 py-1 rounded-full border ${modeBadge.bg}`}>
+            {modeBadge.icon}
+            <span>{modeBadge.label}</span>
           </span>
         </div>
 
@@ -104,17 +117,17 @@ export function HistoryScreen({
           {/* Quick Stats Pill */}
           <div className="flex gap-4 mt-4 pt-4 border-t border-[var(--office-divider)] w-full justify-around text-center">
             <div>
-              <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block">Squad OVR</span>
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">Squad OVR</span>
               <span className="text-sm font-display font-black text-[#0b1536]">{activeEntry.squadRating}</span>
             </div>
             <div className="w-[1px] bg-[var(--office-divider)]" />
             <div>
-              <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block">Chemistry</span>
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">Chemistry</span>
               <span className="text-sm font-display font-black text-blue-600">{activeEntry.chemistryScore}/100 ({activeEntry.chemistryGrade})</span>
             </div>
             <div className="w-[1px] bg-[var(--office-divider)]" />
             <div>
-              <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block">MVP</span>
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">MVP</span>
               <span className="text-sm font-display font-black text-amber-700 truncate max-w-[100px] block">{activeEntry.mvp.name}</span>
             </div>
           </div>
@@ -125,19 +138,14 @@ export function HistoryScreen({
           onClick={() => onTryToBeat(activeEntry)}
           className="w-full py-4 px-6 rounded-2xl office-play-match-btn text-white font-display font-black text-sm uppercase tracking-wider shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 transform active:translate-y-0 active:scale-98 cursor-pointer flex items-center justify-center gap-2"
         >
-          <span>🎯</span> Try to Beat This ({activeEntry.wins} Wins)
+          <IconTarget className="w-4 h-4 shrink-0" /> Try to Beat This ({activeEntry.wins} Wins)
         </button>
 
         {/* Squad Pitch */}
         <div className="space-y-3">
-          <div className="flex justify-between items-center px-1">
-            <h3 className="text-xs font-display font-black text-[#0b1536] uppercase tracking-wider">
-              Squad XI ({activeEntry.formation})
-            </h3>
-            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
-              11 Players Recorded
-            </span>
-          </div>
+          <h3 className="px-1 text-xs font-display font-black text-[#0b1536] uppercase tracking-wider">
+            Squad XI
+          </h3>
 
           <PitchLayout
             formation={activeEntry.formation as FormationType}
@@ -153,16 +161,16 @@ export function HistoryScreen({
   return (
     <section aria-label="Campaign History and Records" className="flex flex-col gap-6 px-4 sm:px-6 py-6 w-full max-w-lg mx-auto min-h-[90vh]">
       {/* Header */}
-      <div className="flex justify-between items-center w-full">
+      <div className="flex justify-between items-center w-full gap-2">
         <button
           onClick={onBackToHome}
-          className="office-subcard py-2 px-3.5 rounded-xl text-slate-700 hover:text-[#0b1536] font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 shadow-sm"
+          className="office-subcard py-2 px-3.5 rounded-xl text-slate-700 hover:text-[#0b1536] font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 shadow-sm shrink-0"
         >
-          ← Home
+          <IconArrowLeft className="w-3.5 h-3.5 shrink-0" /> Home
         </button>
 
-        <h1 className="text-sm font-display font-black text-[#0b1536] uppercase tracking-wider">
-          📜 Squads & History
+        <h1 className="text-sm font-display font-black text-[#0b1536] uppercase tracking-wider inline-flex items-center gap-1.5 truncate">
+          <IconDocument className="w-4 h-4 text-blue-600 shrink-0" /> Squads &amp; History
         </h1>
 
         {history.length > 0 && onClearHistory ? (
@@ -173,7 +181,7 @@ export function HistoryScreen({
               }
             }}
             title="Clear history"
-            className="py-1.5 px-2.5 rounded-lg border border-rose-200 bg-rose-50 text-[9px] font-black text-rose-700 hover:bg-rose-100 transition-colors uppercase cursor-pointer"
+            className="py-1.5 px-2.5 rounded-lg border border-rose-200 bg-rose-50 text-[10px] font-black text-rose-700 hover:bg-rose-100 transition-colors uppercase cursor-pointer shrink-0"
           >
             Clear
           </button>
@@ -182,60 +190,24 @@ export function HistoryScreen({
         )}
       </div>
 
-      {/* Personal Bests Bar */}
-      <div className="office-floating-card p-4 space-y-3">
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs">🏆</span>
-          <h2 className="text-[10px] font-display font-black uppercase text-[#0b1536] tracking-wider">
-            Personal Bests
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
-          {/* Overall PB */}
-          <div className="office-subcard p-2.5">
-            <span className="text-[7.5px] font-bold text-blue-600 uppercase tracking-widest block">All-Time</span>
-            <div className="text-base font-display font-black text-[#0b1536] mt-0.5">
-              {personalBests.overall ? `${personalBests.overall.bestWins}W` : '—'}
-            </div>
-            <span className="text-[8px] font-bold text-slate-500 block">
-              {personalBests.overall ? `${personalBests.overall.bestPoints} pts` : 'No runs'}
+      {/* Personal Bests: one slim row */}
+      <div
+        aria-label="Personal bests"
+        className="office-subcard px-2 py-2 grid grid-cols-4 divide-x divide-[var(--office-divider)] text-center"
+      >
+        {([
+          ['Best', personalBests.overall],
+          ['Classic', personalBests.classic],
+          ['Quick', personalBests.quick],
+          ['Mystery', personalBests.mystery],
+        ] as const).map(([label, pb]) => (
+          <div key={label} className="px-1 min-w-0">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block truncate">{label}</span>
+            <span className="text-xs font-display font-black text-[#0b1536] block truncate">
+              {pb ? `${pb.bestWins}W · ${pb.bestPoints}pts` : '—'}
             </span>
           </div>
-
-          {/* Classic PB */}
-          <div className="office-subcard p-2.5">
-            <span className="text-[7.5px] font-bold text-slate-500 uppercase tracking-widest block">Classic</span>
-            <div className="text-base font-display font-black text-[#0b1536] mt-0.5">
-              {personalBests.classic ? `${personalBests.classic.bestWins}W` : '—'}
-            </div>
-            <span className="text-[8px] font-bold text-slate-500 block">
-              {personalBests.classic ? `${personalBests.classic.bestPoints} pts` : 'No runs'}
-            </span>
-          </div>
-
-          {/* Quick PB */}
-          <div className="office-subcard p-2.5">
-            <span className="text-[7.5px] font-bold text-amber-700 uppercase tracking-widest block">Quick</span>
-            <div className="text-base font-display font-black text-[#0b1536] mt-0.5">
-              {personalBests.quick ? `${personalBests.quick.bestWins}W` : '—'}
-            </div>
-            <span className="text-[8px] font-bold text-slate-500 block">
-              {personalBests.quick ? `${personalBests.quick.bestPoints} pts` : 'No runs'}
-            </span>
-          </div>
-
-          {/* Mystery PB */}
-          <div className="office-subcard p-2.5">
-            <span className="text-[7.5px] font-bold text-purple-700 uppercase tracking-widest block">Mystery</span>
-            <div className="text-base font-display font-black text-[#0b1536] mt-0.5">
-              {personalBests.mystery ? `${personalBests.mystery.bestWins}W` : '—'}
-            </div>
-            <span className="text-[8px] font-bold text-slate-500 block">
-              {personalBests.mystery ? `${personalBests.mystery.bestPoints} pts` : 'No runs'}
-            </span>
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Filter Tabs */}
@@ -259,7 +231,7 @@ export function HistoryScreen({
       <div className="space-y-3">
         {filteredHistory.length === 0 ? (
           <div className="py-12 px-6 rounded-3xl border border-slate-200 bg-white/60 text-center space-y-3 shadow-sm">
-            <span className="text-3xl block">📋</span>
+            <IconClipboard className="w-8 h-8 mx-auto text-slate-400" />
             <h3 className="text-sm font-display font-black uppercase text-[#0b1536]">
               No Campaign Runs Found
             </h3>
@@ -288,14 +260,15 @@ export function HistoryScreen({
                 {/* Header row */}
                 <div className="flex justify-between items-center text-[10px]">
                   <div className="flex items-center gap-2">
-                    <span className={`px-2 py-0.5 rounded-full border text-[8px] font-display font-black uppercase ${badge.bg}`}>
-                      {badge.label}
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-display font-black uppercase ${badge.bg}`}>
+                      {badge.icon}
+                      <span>{badge.label}</span>
                     </span>
                     <span className="font-bold text-slate-500 uppercase tracking-wider">
                       {entry.formation}
                     </span>
                   </div>
-                  <span className="text-[9px] font-bold text-slate-500">
+                  <span className="text-[10px] font-bold text-slate-500">
                     {formatDate(entry.completedAt)}
                   </span>
                 </div>
@@ -319,18 +292,19 @@ export function HistoryScreen({
                 </div>
 
                 {/* Footer details row */}
-                <div className="flex justify-between items-center pt-2 border-t border-[var(--office-divider)] text-[9px] text-slate-500">
-                  <div className="flex items-center gap-2">
-                    <span>{entry.squadRating} OVR</span>
-                    <span>•</span>
-                    <span>{entry.chemistryScore} CHEM ({entry.chemistryGrade})</span>
-                    <span>•</span>
-                    <span className="text-amber-800 font-semibold truncate max-w-[90px]">★ {entry.mvp.name}</span>
+                <div className="flex justify-between items-center pt-2 border-t border-[var(--office-divider)] text-[10px] text-slate-500 gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="shrink-0">{entry.squadRating} OVR</span>
+                    <span className="shrink-0">•</span>
+                    <span className="shrink-0">{entry.chemistryScore} CHEM ({entry.chemistryGrade})</span>
+                    <span className="shrink-0">•</span>
+                    <span className="text-amber-800 font-semibold truncate max-w-[100px] inline-flex items-center gap-1">
+                      <IconStar className="w-3 h-3 text-amber-500 shrink-0" filled />
+                      <span className="truncate">{entry.mvp.name}</span>
+                    </span>
                   </div>
 
-                  <span className="text-blue-600 font-bold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
-                    View Squad ➔
-                  </span>
+                  <IconArrowRight className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                 </div>
               </div>
             );

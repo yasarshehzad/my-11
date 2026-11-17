@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { IconTarget, IconHandshake, IconTrophy, IconArrowRight } from './career/GameIcons';
 
 interface DraftOnboardingGuideProps {
   currentSlotIndex?: number;
@@ -23,112 +24,63 @@ export function DraftOnboardingGuide({
     return 1;
   });
 
-  useEffect(() => {
-    if (currentStep) {
-      setInternalStep(currentStep);
-    }
-  }, [currentStep]);
-
-  const activeStep = currentStep || internalStep;
+  // The parent passes the step that matches draft progress; "Next" lets the player read ahead.
+  const activeStep = Math.max(currentStep || 0, internalStep);
 
   const handleNext = () => {
-    if (activeStep === 1) {
-      setInternalStep(2);
-    } else if (activeStep === 2) {
-      setInternalStep(3);
-    } else {
-      onComplete();
-    }
+    if (activeStep >= 3) onComplete();
+    else setInternalStep(activeStep + 1);
   };
 
-  const stepsData = {
-    1: {
-      stepNumber: 1,
-      badge: '🎯 STEP 1 OF 3',
-      title: 'PICK YOUR PLAYER',
-      description: 'Each round gives you 3 choices. Rating matters — but team fit matters too.',
-      actionLabel: 'Next: Chemistry ➔',
-    },
-    2: {
-      stepNumber: 2,
-      badge: '🔗 STEP 2 OF 3',
-      title: 'BUILD CHEMISTRY',
-      description: 'Club, nation and era links can improve how your XI performs. Watch the projected CHEM tags.',
-      actionLabel: 'Next: The Season ➔',
-    },
-    3: {
-      stepNumber: 3,
-      badge: '🏆 STEP 3 OF 3',
-      title: 'BUILD THE TEAM, THEN SIMULATE',
-      description: 'Draft all 11, then see how your XI survives a 38-game season. Can you go unbeaten?',
-      actionLabel: 'Start Drafting! ⚽',
-    },
-  }[activeStep] || {
-    stepNumber: 1,
-    badge: '🎯 STEP 1 OF 3',
-    title: 'PICK YOUR PLAYER',
-    description: 'Each round gives you 3 choices. Rating matters — but team fit matters too.',
-    actionLabel: 'Next ➔',
-  };
+  const steps = [
+    { title: 'Pick your player', description: 'Each round gives you 3 choices. Rating matters, but so does team fit.', actionLabel: 'Next' },
+    { title: 'Build chemistry', description: 'Shared club, nation and era links lift your XI. Watch the CHEM value on each choice.', actionLabel: 'Next' },
+    { title: 'Simulate the season', description: 'Draft all 11, then play a 38-game season. Can you go unbeaten?', actionLabel: 'Got it' },
+  ];
+  const step = steps[Math.min(Math.max(activeStep, 1), 3) - 1];
 
   return (
     <aside
       aria-label="First-run draft guide"
-      className="w-full rounded-2xl border border-blue-500/40 bg-gradient-to-r from-blue-500/10 via-indigo-500/5 to-slate-950/90 p-4 shadow-2xl relative z-30 transition-all duration-300 animate-card-deal glass"
+      className="w-full rounded-2xl border border-blue-200 bg-blue-50/80 px-4 py-3 relative z-30 animate-card-deal motion-reduce:animate-none"
     >
       <div className="flex justify-between items-start gap-3">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/35 text-[8.5px] font-display font-black uppercase tracking-wider">
-              {stepsData.badge}
-            </span>
-            <span className="text-[9px] font-extrabold uppercase text-slate-400 tracking-wider">
-              Quick Guide
-            </span>
-          </div>
-
-          <h3 className="text-sm font-display font-black text-foreground uppercase tracking-tight">
-            {stepsData.title}
+        <div className="flex-1 min-w-0">
+          <span className="text-[10px] font-display font-black uppercase tracking-wider text-blue-700 inline-flex items-center gap-1">
+            {activeStep === 1 ? (
+              <IconTarget className="w-3 h-3" />
+            ) : activeStep === 2 ? (
+              <IconHandshake className="w-3 h-3" />
+            ) : (
+              <IconTrophy className="w-3 h-3" />
+            )}
+            <span>Step {Math.min(Math.max(activeStep, 1), 3)} of 3</span>
+          </span>
+          <h3 className="text-sm font-display font-black text-[#0b1536] uppercase tracking-tight">
+            {step.title}
           </h3>
-
-          <p className="text-xs text-slate-350 mt-1 leading-relaxed font-semibold">
-            {stepsData.description}
+          <p className="text-xs text-slate-700 mt-0.5 leading-snug font-medium">
+            {step.description}
           </p>
         </div>
+      </div>
 
+      <div className="flex justify-end items-center gap-2 mt-2">
         <button
           onClick={onSkip}
           type="button"
-          className="text-[10px] text-slate-400 hover:text-white px-2 py-1 rounded-lg hover:bg-slate-900 border border-transparent hover:border-slate-800 transition-colors uppercase font-bold tracking-wider cursor-pointer flex-shrink-0"
-          aria-label="Skip interactive guide"
+          className="min-h-[40px] px-3 rounded-xl text-[11px] text-slate-600 hover:text-[#0b1536] uppercase font-bold tracking-wider cursor-pointer"
+          aria-label="Skip guide"
         >
           Skip
         </button>
-      </div>
-
-      <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-900/80">
-        {/* Step dots */}
-        <div className="flex gap-1.5 items-center" aria-hidden="true">
-          {[1, 2, 3].map((s) => (
-            <span
-              key={s}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                s === activeStep
-                  ? 'w-6 bg-blue-500'
-                  : s < activeStep
-                  ? 'w-1.5 bg-blue-500/40'
-                  : 'w-1.5 bg-slate-800'
-              }`}
-            />
-          ))}
-        </div>
-
         <button
           onClick={handleNext}
           type="button"
-          className="py-2 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider shadow-md shadow-blue-500/20 active:scale-95 transition-all cursor-pointer"
+          className="min-h-[40px] px-4 rounded-xl office-action-btn-primary text-white font-display font-black text-xs uppercase tracking-wider active:scale-95 transition-transform cursor-pointer inline-flex items-center gap-1.5"
         >
-          {stepsData.actionLabel}
+          <span>{step.actionLabel}</span>
+          {activeStep < 3 && <IconArrowRight className="w-3.5 h-3.5" />}
         </button>
       </div>
     </aside>

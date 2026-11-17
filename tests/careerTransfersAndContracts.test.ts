@@ -88,8 +88,8 @@ describe('Career Mode Phase 6: Transfers, Scouting & Contracts', () => {
       expect(r9!.id).toBe('ronaldo_nazario_barcelona_1996');
       expect(henry!.id).toBe('thierry_henry_arsenal_2003');
 
-      const r9Fs = r9!.faceStats || calculateEaFcFaceStats(r9 as any);
-      const henryFs = henry!.faceStats || calculateEaFcFaceStats(henry as any);
+      const r9Fs = r9!.faceStats || calculateEaFcFaceStats(r9 as unknown as Parameters<typeof calculateEaFcFaceStats>[0]);
+      const henryFs = henry!.faceStats || calculateEaFcFaceStats(henry as unknown as Parameters<typeof calculateEaFcFaceStats>[0]);
 
       // Verify they do NOT have identical six-stat profiles
       expect(r9Fs).not.toEqual(henryFs);
@@ -1125,7 +1125,7 @@ describe('Career Mode Phase 6: Transfers, Scouting & Contracts', () => {
       });
 
       save.season.currentDate = '2026-09-01';
-      let state = initializeDeadlineDay(save);
+      const state = initializeDeadlineDay(save);
 
       // 1. Advance to Afternoon
       const afternoonRes = advanceDeadlineDayPhase(state);
@@ -1535,7 +1535,7 @@ describe('Career Mode Phase 6: Transfers, Scouting & Contracts', () => {
 
       const target = marketPool[0];
       // Face stats are computable
-      const faceStats = calculateEaFcFaceStats(target as any);
+      const faceStats = calculateEaFcFaceStats(target as unknown as Parameters<typeof calculateEaFcFaceStats>[0]);
       expect(faceStats.pac).toBeGreaterThan(0);
       expect(faceStats.sho).toBeGreaterThan(0);
 

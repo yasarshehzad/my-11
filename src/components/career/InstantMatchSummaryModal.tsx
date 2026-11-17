@@ -10,6 +10,17 @@ import {
 import { getEffectiveClubName, getClubsWithUserClub } from '../../career/clubs';
 import { findAnyClub, CUP_IDS } from '../../career/cups';
 import { formatCareerDate } from '../../career/formatters';
+import {
+  IconBall,
+  IconBarChart,
+  IconBolt,
+  IconClose,
+  IconMegaphone,
+  IconStadium,
+  IconStar,
+  IconTrendingUp,
+  IconUsers,
+} from './GameIcons';
 
 export interface InstantMatchSummaryModalProps {
   fixture: LeagueFixture | CupFixture;
@@ -39,7 +50,7 @@ export function InstantMatchSummaryModal({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
-  const allClubs = getClubsWithUserClub(save.club);
+  const allClubs = getClubsWithUserClub(save.club, save.activeLeagueClubIds, save.settings?.databaseSeason);
   const clubsMap = new Map<string, Club>(allClubs.map((c) => [c.id, c]));
 
   const homeClub = clubsMap.get(fixture.homeClubId) || findAnyClub(fixture.homeClubId) || allClubs[0];
@@ -104,7 +115,7 @@ export function InstantMatchSummaryModal({
       role="dialog"
       aria-modal="true"
       data-scrim="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-hidden animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-hidden animate-fade-in motion-reduce:animate-none"
       style={{
         backgroundColor: 'rgba(11, 21, 54, 0.85)',
         backdropFilter: 'blur(12px)',
@@ -114,14 +125,15 @@ export function InstantMatchSummaryModal({
     >
       <div
         data-office-ui="true"
-        className="office-floating-card rounded-3xl p-4 sm:p-5 max-w-md w-full space-y-3.5 shadow-2xl relative my-auto border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 motion-reduce:transition-none"
+        className="office-floating-card rounded-3xl p-4 sm:p-5 max-w-md w-full space-y-3.5 shadow-2xl relative my-auto max-h-[90dvh] overflow-y-auto border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 motion-reduce:transition-none"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Bar */}
         <header className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-[11px] font-black uppercase tracking-widest text-[#0f3eb5] dark:text-blue-400 font-display truncate flex items-center gap-1">
-              <span>⚡</span> Match Result
+            <span className="text-[11px] font-black uppercase tracking-widest text-[#0f3eb5] dark:text-blue-400 font-display truncate inline-flex items-center gap-1">
+              <IconBolt className="w-3.5 h-3.5 shrink-0" />
+              <span>Match Result</span>
             </span>
             {isUserMatch && (
               <span
@@ -140,11 +152,11 @@ export function InstantMatchSummaryModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 flex items-center justify-center text-xs font-black transition-colors cursor-pointer shrink-0"
+            className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
             title="Close"
             aria-label="Close modal"
           >
-            ✕
+            <IconClose className="w-4 h-4" />
           </button>
         </header>
 
@@ -170,8 +182,15 @@ export function InstantMatchSummaryModal({
                 <h3 className="font-display font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate">
                   {getEffectiveClubName(homeClub, save.club)}
                 </h3>
-                <span className="text-[10px] uppercase font-extrabold text-slate-600 dark:text-slate-400 block truncate mt-0.5">
-                  {isUserHome ? '★ (YOU)' : 'Home'}
+                <span className="text-[10px] uppercase font-extrabold text-slate-600 dark:text-slate-400 inline-flex items-center justify-center gap-0.5 truncate mt-0.5">
+                  {isUserHome ? (
+                    <>
+                      <IconStar className="w-2.5 h-2.5 text-amber-500" filled />
+                      <span>YOU</span>
+                    </>
+                  ) : (
+                    'Home'
+                  )}
                 </span>
               </div>
             </div>
@@ -206,37 +225,48 @@ export function InstantMatchSummaryModal({
                 <h3 className="font-display font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate">
                   {getEffectiveClubName(awayClub, save.club)}
                 </h3>
-                <span className="text-[10px] uppercase font-extrabold text-slate-600 dark:text-slate-400 block truncate mt-0.5">
-                  {isUserAway ? '★ (YOU)' : 'Away'}
+                <span className="text-[10px] uppercase font-extrabold text-slate-600 dark:text-slate-400 inline-flex items-center justify-center gap-0.5 truncate mt-0.5">
+                  {isUserAway ? (
+                    <>
+                      <IconStar className="w-2.5 h-2.5 text-amber-500" filled />
+                      <span>YOU</span>
+                    </>
+                  ) : (
+                    'Away'
+                  )}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-[11px] font-mono font-medium text-slate-700 dark:text-slate-300 pt-1.5 border-t border-slate-200 dark:border-slate-700">
-            <span className="truncate max-w-[180px]">🏟️ {venueDisplay}</span>
-            <span>{formatCareerDate(fixture.date, save.settings.dateFormat, 'short')}</span>
+          <div className="flex items-center justify-between text-[11px] font-mono font-medium text-slate-700 dark:text-slate-300 pt-1.5 border-t border-slate-200 dark:border-slate-700 gap-2">
+            <span className="truncate inline-flex items-center gap-1 min-w-0">
+              <IconStadium className="w-3.5 h-3.5 shrink-0 text-slate-500" />
+              <span className="truncate">{venueDisplay}</span>
+            </span>
+            <span className="shrink-0">{formatCareerDate(fixture.date, save.settings.dateFormat, 'short')}</span>
           </div>
         </article>
 
         {/* Compact Goalscorers */}
         <section className="rounded-2xl p-2.5 sm:p-3 space-y-1.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 shadow-2xs">
           <div className="text-[11px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider flex items-center gap-1.5">
-            <span>⚽</span> Goalscorers
+            <IconBall className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+            <span>Goalscorers</span>
           </div>
 
           {homeScore + awayScore === 0 ? (
             <div className="text-center py-1.5 text-xs text-slate-600 dark:text-slate-400 italic font-medium">
-              Goalless draw — Stalemate at {venueDisplay.split(' ')[0]}.
+              No goals.
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-2 text-xs divide-x divide-slate-200 dark:divide-slate-700 pt-0.5">
               {/* Home Scorers */}
-              <div className="space-y-1 pr-1.5">
+              <div className="space-y-1 pr-1.5 min-w-0">
                 {homeScorers.length > 0 ? (
                   homeScorers.map((s, idx) => (
                     <div key={idx} className="flex items-center gap-1 text-[11px] text-slate-900 dark:text-slate-100">
-                      <span className="text-slate-700 dark:text-slate-300">⚽</span>
+                      <IconBall className="w-3 h-3 shrink-0 text-slate-600 dark:text-slate-300" />
                       <span className="font-extrabold text-slate-950 dark:text-white truncate">{s.name}</span>
                       <span className="text-slate-600 dark:text-slate-400 text-[10px] shrink-0 font-mono font-bold">({s.minute}&apos;)</span>
                     </div>
@@ -247,11 +277,11 @@ export function InstantMatchSummaryModal({
               </div>
 
               {/* Away Scorers */}
-              <div className="space-y-1 pl-2">
+              <div className="space-y-1 pl-2 min-w-0">
                 {awayScorers.length > 0 ? (
                   awayScorers.map((s, idx) => (
                     <div key={idx} className="flex items-center gap-1 text-[11px] text-slate-900 dark:text-slate-100">
-                      <span className="text-slate-700 dark:text-slate-300">⚽</span>
+                      <IconBall className="w-3 h-3 shrink-0 text-slate-600 dark:text-slate-300" />
                       <span className="font-extrabold text-slate-950 dark:text-white truncate">{s.name}</span>
                       <span className="text-slate-600 dark:text-slate-400 text-[10px] shrink-0 font-mono font-bold">({s.minute}&apos;)</span>
                     </div>
@@ -267,68 +297,72 @@ export function InstantMatchSummaryModal({
         {/* Man of the Match Spotlight */}
         <section className="bg-gradient-to-r from-amber-50 via-amber-100/50 to-orange-50 dark:from-amber-950/40 dark:via-amber-900/30 dark:to-orange-950/40 border border-amber-300 dark:border-amber-700 rounded-xl px-3 py-2 flex items-center justify-between gap-2 text-xs shadow-2xs">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-base shrink-0">⭐</span>
+            <IconStar className="w-4 h-4 shrink-0 text-amber-500" filled />
             <div className="min-w-0 flex items-center gap-1.5 truncate">
               <span className="text-[10px] font-black uppercase text-amber-950 dark:text-amber-200 shrink-0">MOTM:</span>
               <span className="font-display font-black text-xs text-slate-950 dark:text-white truncate">{motm.name}</span>
               <span className="text-[11px] text-slate-700 dark:text-slate-300 font-semibold truncate">({getEffectiveClubName(motmClub, save.club)})</span>
             </div>
           </div>
-          <div className="bg-amber-600 text-white px-2.5 py-0.5 rounded-lg font-display font-black text-[11px] shrink-0 shadow-xs">
-            {motm.rating.toFixed(1)} ★
+          <div className="bg-amber-600 text-white px-2.5 py-0.5 rounded-lg font-display font-black text-[11px] shrink-0 shadow-xs inline-flex items-center gap-1">
+            <span>{motm.rating.toFixed(1)}</span>
+            <IconStar className="w-3 h-3" filled />
           </div>
         </section>
 
-        {/* Navigation & Action Links */}
+        {/* Post-match actions: one primary, up to two secondary, a small "More" row */}
         <nav aria-label="Post-match actions" className="space-y-2 pt-0.5">
           <div className="flex gap-2">
             <button
               type="button"
               data-office-ui="true"
               onClick={onViewDetailedDossier}
-              className="flex-1 py-2.5 px-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-display font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-2xs active:scale-[0.98] cursor-pointer"
+              className="flex-1 min-h-10 px-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-display font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-2xs active:scale-[0.98] cursor-pointer motion-reduce:transition-none"
             >
-              <span className="text-slate-900 dark:text-white">📊 Full Dossier</span>
+              <IconBarChart className="w-3.5 h-3.5 shrink-0" />
+              <span>Full Stats</span>
             </button>
-            <button
-              type="button"
-              data-office-ui="true"
-              onClick={() => handleNavigate('table')}
-              className="flex-1 py-2.5 px-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-display font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-2xs active:scale-[0.98] cursor-pointer"
-            >
-              <span className="text-slate-900 dark:text-white">📈 Table</span>
-            </button>
-            <button
-              type="button"
-              data-office-ui="true"
-              onClick={() => handleNavigate('squad')}
-              className="flex-1 py-2.5 px-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-display font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-2xs active:scale-[0.98] cursor-pointer motion-reduce:transition-none"
-            >
-              <span className="text-slate-900 dark:text-white">👥 Squad</span>
-            </button>
+            {onAttendPressConference && (
+              <button
+                type="button"
+                data-office-ui="true"
+                onClick={onAttendPressConference}
+                className="flex-1 min-h-10 px-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-800 font-display font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer motion-reduce:transition-none"
+              >
+                <IconMegaphone className="w-3.5 h-3.5 shrink-0" />
+                <span>Press Conference</span>
+              </button>
+            )}
           </div>
 
-          {onAttendPressConference && (
-            <button
-              type="button"
-              data-office-ui="true"
-              onClick={onAttendPressConference}
-              className="w-full py-2.5 px-4 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-800 font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-2xs cursor-pointer motion-reduce:transition-none"
-            >
-              <span>🎙️</span>
-              <span>Attend Post-Match Press Conference</span>
-            </button>
-          )}
-
-          {/* Primary Action Button: "Continue" */}
           <button
             type="button"
             data-office-ui="true"
             onClick={onClose}
-            className="office-action-btn-primary w-full py-3 px-4 rounded-xl font-display font-black text-sm uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md cursor-pointer transition-all active:scale-[0.99]"
+            className="office-action-btn-primary w-full py-3 px-4 rounded-xl font-display font-black text-sm uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md cursor-pointer transition-all active:scale-[0.99] motion-reduce:transition-none"
           >
             <span>Continue</span>
           </button>
+
+          <div className="flex items-center justify-center gap-1 text-[11px] text-slate-600 dark:text-slate-400">
+            <span>More:</span>
+            <button
+              type="button"
+              onClick={() => handleNavigate('table')}
+              className="min-h-9 px-2 font-bold text-[#0f3eb5] dark:text-blue-400 underline underline-offset-2 cursor-pointer inline-flex items-center gap-1"
+            >
+              <IconTrendingUp className="w-3.5 h-3.5 shrink-0" />
+              <span>Table</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavigate('squad')}
+              className="min-h-9 px-2 font-bold text-[#0f3eb5] dark:text-blue-400 underline underline-offset-2 cursor-pointer inline-flex items-center gap-1"
+            >
+              <IconUsers className="w-3.5 h-3.5 shrink-0" />
+              <span>Squad</span>
+            </button>
+          </div>
         </nav>
       </div>
     </div>

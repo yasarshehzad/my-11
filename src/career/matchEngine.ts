@@ -20,6 +20,8 @@ import {
   getPhilosophyDepartmentBonus,
   calculateTacticalMatchupMultiplier,
   calculateCaptaincyEffects,
+  getClubTacticalProfile,
+  getInitialClubTactics,
 } from './tactics';
 import {
   categorizePosition,
@@ -62,6 +64,23 @@ export interface DepartmentRatings {
 }
 
 export type PitchZone = 'HOME_BOX' | 'HOME_THIRD' | 'MID' | 'AWAY_THIRD' | 'AWAY_BOX';
+
+export type TouchlineShoutType =
+  | 'encourage'
+  | 'demand_more'
+  | 'focus'
+  | 'push_forward'
+  | 'tighten_up';
+
+export interface ActiveTouchlineShout {
+  type: TouchlineShoutType;
+  label: string;
+  expiresAtMinute: number;
+  attackMod: number;
+  midfieldMod: number;
+  defenseMod: number;
+  composureMod: number;
+}
 
 export interface MatchSimulationConfig {
   homeClub: Club;
@@ -148,6 +167,12 @@ export interface LiveMatchSession {
   awayStyle: AttackingStyle;
   homeTeamTalkBuff?: TeamTalkBuff;
   awayTeamTalkBuff?: TeamTalkBuff;
+  activeShoutHome?: ActiveTouchlineShout;
+  activeShoutAway?: ActiveTouchlineShout;
+  shoutCooldownUntilHome?: number;
+  shoutCooldownUntilAway?: number;
+  lastAiTacticalSwitchMinuteHome?: number;
+  lastAiTacticalSwitchMinuteAway?: number;
   subsRemainingHome: number;
   subsRemainingAway: number;
   aiSubsMadeHome: number;
@@ -191,6 +216,7 @@ export function calculateTeamDepartmentRatings(
     isHome?: boolean;
     isNeutralVenue?: boolean;
     teamTalkBuff?: TeamTalkBuff;
+    activeShout?: ActiveTouchlineShout;
     trainingFocus?: TeamTrainingFocus;
     tactics?: ClubTactics;
     opponentTactics?: ClubTactics;
@@ -346,6 +372,13 @@ export function calculateTeamDepartmentRatings(
     defense *= options.teamTalkBuff.defenseMod;
   }
 
+  // Active Touchline Shout buffs
+  if (options.activeShout) {
+    attack *= options.activeShout.attackMod;
+    midfield *= options.activeShout.midfieldMod;
+    defense *= options.activeShout.defenseMod;
+  }
+
   // Team Training Focus modifiers
   if (options.trainingFocus === 'match_prep') {
     attack += 1.2;
@@ -453,12 +486,44 @@ export function createLiveMatchSession(
     ...awayBench.map((p) => createPlayerState(p, false, p.position)),
   ];
 
-  const homeMentality = config.homeMentality || 'balanced';
-  const awayMentality = config.awayMentality || 'balanced';
-  const homePressing = config.homePressing || 'balanced';
-  const awayPressing = config.awayPressing || 'balanced';
-  const homeStyle = config.homeStyle || 'mixed';
-  const awayStyle = config.awayStyle || 'mixed';
+  const isHomeAi = config.userClubId ? config.homeClub.id !== config.userClubId : false;
+  const isAwayAi = config.userClubId ? config.awayClub.id !== config.userClubId : true;
+  const homeProfile = isHomeAi ? getClubTacticalProfile(config.homeClub) : null;
+  const awayProfile = isAwayAi ? getClubTacticalProfile(config.awayClub) : null;
+
+  const mapPressingToClubTactic = (p: 'low_block' | 'balanced' | 'high_press'): 'low' | 'balanced' | 'high' =>
+    p === 'high_press' ? 'high' : p === 'low_block' ? 'low' : 'balanced';
+  const mapStyleToPassingTactic = (s: 'patient' | 'mixed' | 'direct_counter'): 'short' | 'mixed' | 'direct' =>
+    s === 'patient' ? 'short' : s === 'direct_counter' ? 'direct' : 'mixed';
+
+  const resolvedHomeTactics: ClubTactics | undefined =
+    config.homeTactics ||
+    (isHomeAi && homeProfile
+      ? {
+          ...getInitialClubTactics(homeStarters),
+          philosophy: homeProfile.philosophy,
+          pressingIntensity: mapPressingToClubTactic(homeProfile.pressing),
+          passingStyle: mapStyleToPassingTactic(homeProfile.style),
+        }
+      : undefined);
+
+  const resolvedAwayTactics: ClubTactics | undefined =
+    config.awayTactics ||
+    (isAwayAi && awayProfile
+      ? {
+          ...getInitialClubTactics(awayStarters),
+          philosophy: awayProfile.philosophy,
+          pressingIntensity: mapPressingToClubTactic(awayProfile.pressing),
+          passingStyle: mapStyleToPassingTactic(awayProfile.style),
+        }
+      : undefined);
+
+  const homeMentality = config.homeMentality || homeProfile?.mentality || 'balanced';
+  const awayMentality = config.awayMentality || awayProfile?.mentality || 'balanced';
+  const homePressing = config.homePressing || homeProfile?.pressing || 'balanced';
+  const awayPressing = config.awayPressing || awayProfile?.pressing || 'balanced';
+  const homeStyle = config.homeStyle || homeProfile?.style || 'mixed';
+  const awayStyle = config.awayStyle || awayProfile?.style || 'mixed';
   const isNeutral = Boolean(
     config.isNeutralVenue ||
     (fixture.venue && fixture.venue.toLowerCase().includes('neutral'))
@@ -471,8 +536,8 @@ export function createLiveMatchSession(
     isHome: true,
     isNeutralVenue: isNeutral,
     trainingFocus: config.homeTrainingFocus,
-    tactics: config.homeTactics,
-    opponentTactics: config.awayTactics,
+    tactics: resolvedHomeTactics,
+    opponentTactics: resolvedAwayTactics,
   });
 
   const awayDeptRatings = calculateTeamDepartmentRatings(awayStates, {
@@ -482,8 +547,8 @@ export function createLiveMatchSession(
     isHome: false,
     isNeutralVenue: isNeutral,
     trainingFocus: config.awayTrainingFocus,
-    tactics: config.awayTactics,
-    opponentTactics: config.homeTactics,
+    tactics: resolvedAwayTactics,
+    opponentTactics: resolvedHomeTactics,
   });
 
   return {
@@ -494,6 +559,8 @@ export function createLiveMatchSession(
       homeBench,
       awayStarters,
       awayBench,
+      homeTactics: resolvedHomeTactics,
+      awayTactics: resolvedAwayTactics,
       isNeutralVenue: isNeutral,
     },
     minute: 0,
@@ -627,31 +694,150 @@ export function stepLiveMatchMinute(
     }
   }
 
-  // 2. Adaptive AI tactical adjustments & AI substitutions in the 2nd half
+  const resolveSpecialist = (
+    states: InGamePlayerState[],
+    preferredId: string | undefined,
+    kind: 'penalty' | 'free_kick' | 'corner'
+  ): InGamePlayerState | undefined => {
+    const activeOutfield = states.filter(
+      (s) => s.isOnPitch && !s.redCard && categorizePosition(s.player.position) !== 'GK'
+    );
+    const pool = activeOutfield.length > 0 ? activeOutfield : states.filter((s) => s.isOnPitch && !s.redCard);
+    if (pool.length === 0) return undefined;
+    if (preferredId) {
+      const designated = pool.find((s) => s.player.id === preferredId);
+      if (designated) return designated;
+    }
+    return [...pool].sort((a, b) => {
+      const fa = a.player.faceStats || calculateEaFcFaceStats(a.player);
+      const fb = b.player.faceStats || calculateEaFcFaceStats(b.player);
+      const scoreA = kind === 'corner' ? fa.pas * 0.7 + fa.dri * 0.3 : fa.sho * 0.65 + fa.pas * 0.35;
+      const scoreB = kind === 'corner' ? fb.pas * 0.7 + fb.dri * 0.3 : fb.sho * 0.65 + fb.pas * 0.35;
+      return scoreB - scoreA;
+    })[0];
+  };
+
+  // Clear expired touchline shouts
+  const activeShoutHome =
+    session.activeShoutHome && nextMinute <= session.activeShoutHome.expiresAtMinute
+      ? session.activeShoutHome
+      : undefined;
+  const activeShoutAway =
+    session.activeShoutAway && nextMinute <= session.activeShoutAway.expiresAtMinute
+      ? session.activeShoutAway
+      : undefined;
+
+  // 2. Reactive AI tactical adjustments & AI substitutions
   let effectiveAwayMentality = awayMentality;
   let effectiveHomeMentality = homeMentality;
+  let effectiveAwayPressing = awayPressing;
+  let effectiveHomePressing = homePressing;
+  let effectiveAwayStyle = awayStyle;
+  let effectiveHomeStyle = homeStyle;
+  let lastAiSwitchHome = session.lastAiTacticalSwitchMinuteHome ?? 0;
+  let lastAiSwitchAway = session.lastAiTacticalSwitchMinuteAway ?? 0;
 
-  if (isAwayAi && nextMinute >= 60) {
-    if (awayScore < homeScore) effectiveAwayMentality = 'attacking';
-    else if (awayScore > homeScore && nextMinute >= 75) effectiveAwayMentality = 'defensive';
+  const awayRedCount = awayStates.filter((s) => s.redCard).length;
+  const homeRedCount = homeStates.filter((s) => s.redCard).length;
+
+  if (isAwayAi && (nextMinute === 46 || (nextMinute >= 55 && nextMinute - lastAiSwitchAway >= 15))) {
+    const awayClubName = getEffectiveClubName(session.config.awayClub);
+    if ((awayScore < homeScore && nextMinute >= 60) || homeScore - awayScore >= 2) {
+      if (effectiveAwayMentality !== 'attacking' || effectiveAwayPressing !== 'high_press') {
+        effectiveAwayMentality = 'attacking';
+        effectiveAwayPressing = 'high_press';
+        effectiveAwayStyle = 'direct_counter';
+        lastAiSwitchAway = nextMinute;
+        events.push({
+          minute: nextMinute,
+          type: 'tactical',
+          clubId: session.config.awayClub.id,
+          playerName: awayClubName,
+          detail: `Tactical Shift: ${awayClubName} push numbers forward with High Press chasing the game!`,
+        });
+      }
+    } else if (
+      (awayScore > homeScore && nextMinute >= 74) ||
+      (awayRedCount > homeRedCount && awayScore >= homeScore && nextMinute >= 50)
+    ) {
+      if (effectiveAwayMentality !== 'defensive' || effectiveAwayPressing !== 'low_block') {
+        effectiveAwayMentality = 'defensive';
+        effectiveAwayPressing = 'low_block';
+        effectiveAwayStyle = 'direct_counter';
+        lastAiSwitchAway = nextMinute;
+        events.push({
+          minute: nextMinute,
+          type: 'tactical',
+          clubId: session.config.awayClub.id,
+          playerName: awayClubName,
+          detail: `Tactical Shift: ${awayClubName} drop into a disciplined Low Block to lock down the result.`,
+        });
+      }
+    }
   }
-  if (isHomeAi && nextMinute >= 60) {
-    if (homeScore < awayScore) effectiveHomeMentality = 'attacking';
-    else if (homeScore > awayScore && nextMinute >= 75) effectiveHomeMentality = 'defensive';
+
+  if (isHomeAi && (nextMinute === 46 || (nextMinute >= 55 && nextMinute - lastAiSwitchHome >= 15))) {
+    const homeClubName = getEffectiveClubName(session.config.homeClub);
+    if ((homeScore < awayScore && nextMinute >= 60) || awayScore - homeScore >= 2) {
+      if (effectiveHomeMentality !== 'attacking' || effectiveHomePressing !== 'high_press') {
+        effectiveHomeMentality = 'attacking';
+        effectiveHomePressing = 'high_press';
+        effectiveHomeStyle = 'direct_counter';
+        lastAiSwitchHome = nextMinute;
+        events.push({
+          minute: nextMinute,
+          type: 'tactical',
+          clubId: session.config.homeClub.id,
+          playerName: homeClubName,
+          detail: `Tactical Shift: ${homeClubName} push numbers forward with High Press chasing the game!`,
+        });
+      }
+    } else if (
+      (homeScore > awayScore && nextMinute >= 74) ||
+      (homeRedCount > awayRedCount && homeScore >= awayScore && nextMinute >= 50)
+    ) {
+      if (effectiveHomeMentality !== 'defensive' || effectiveHomePressing !== 'low_block') {
+        effectiveHomeMentality = 'defensive';
+        effectiveHomePressing = 'low_block';
+        effectiveHomeStyle = 'direct_counter';
+        lastAiSwitchHome = nextMinute;
+        events.push({
+          minute: nextMinute,
+          type: 'tactical',
+          clubId: session.config.homeClub.id,
+          playerName: homeClubName,
+          detail: `Tactical Shift: ${homeClubName} drop into a disciplined Low Block to protect their advantage.`,
+        });
+      }
+    }
   }
 
   // AI Substitutions at 62', 71', 80', and 98' (in extra time)
   const aiSubMinutes = [62, 71, 80, 98];
   if (aiSubMinutes.includes(nextMinute)) {
     if (isAwayAi && subsRemainingAway > 0 && aiSubsMadeAway < (session.isExtraTime ? 4 : 3)) {
-      const subMade = performSmartAiSubstitution(awayStates, session.config.awayClub.id, nextMinute, events);
+      const subMade = performSmartAiSubstitution(
+        awayStates,
+        session.config.awayClub.id,
+        nextMinute,
+        events,
+        undefined,
+        awayScore < homeScore ? 'attack' : awayScore > homeScore && nextMinute >= 75 ? 'defend' : 'balanced'
+      );
       if (subMade) {
         subsRemainingAway -= 1;
         aiSubsMadeAway += 1;
       }
     }
     if (isHomeAi && subsRemainingHome > 0 && aiSubsMadeHome < (session.isExtraTime ? 4 : 3)) {
-      const subMade = performSmartAiSubstitution(homeStates, session.config.homeClub.id, nextMinute, events);
+      const subMade = performSmartAiSubstitution(
+        homeStates,
+        session.config.homeClub.id,
+        nextMinute,
+        events,
+        undefined,
+        homeScore < awayScore ? 'attack' : homeScore > awayScore && nextMinute >= 75 ? 'defend' : 'balanced'
+      );
       if (subMade) {
         subsRemainingHome -= 1;
         aiSubsMadeHome += 1;
@@ -662,11 +848,12 @@ export function stepLiveMatchMinute(
   // 3. Calculate live department ratings
   const homeDept = calculateTeamDepartmentRatings(homeStates, {
     mentality: effectiveHomeMentality,
-    pressing: homePressing,
-    style: homeStyle,
+    pressing: effectiveHomePressing,
+    style: effectiveHomeStyle,
     isHome: true,
     isNeutralVenue: session.config.isNeutralVenue,
     teamTalkBuff: session.homeTeamTalkBuff,
+    activeShout: activeShoutHome,
     trainingFocus: session.config.homeTrainingFocus,
     tactics: session.config.homeTactics,
     opponentTactics: session.config.awayTactics,
@@ -674,11 +861,12 @@ export function stepLiveMatchMinute(
 
   const awayDept = calculateTeamDepartmentRatings(awayStates, {
     mentality: effectiveAwayMentality,
-    pressing: awayPressing,
-    style: awayStyle,
+    pressing: effectiveAwayPressing,
+    style: effectiveAwayStyle,
     isHome: false,
     isNeutralVenue: session.config.isNeutralVenue,
     teamTalkBuff: session.awayTeamTalkBuff,
+    activeShout: activeShoutAway,
     trainingFocus: session.config.awayTrainingFocus,
     tactics: session.config.awayTactics,
     opponentTactics: session.config.homeTactics,
@@ -687,8 +875,8 @@ export function stepLiveMatchMinute(
   // 4. Minute possession & momentum calculation
   const midDiff = homeDept.midfield - awayDept.midfield;
   const stylePossessionMod =
-    (homeStyle === 'patient' ? 3.5 : homeStyle === 'direct_counter' ? -3.0 : 0) -
-    (awayStyle === 'patient' ? 3.5 : awayStyle === 'direct_counter' ? -3.0 : 0);
+    (effectiveHomeStyle === 'patient' ? 3.5 : effectiveHomeStyle === 'direct_counter' ? -3.0 : 0) -
+    (effectiveAwayStyle === 'patient' ? 3.5 : effectiveAwayStyle === 'direct_counter' ? -3.0 : 0);
   const minuteHomePoss = clamp(
     Math.round(50 + midDiff * 1.45 + stylePossessionMod + (Math.random() * 10 - 5)),
     32,
@@ -710,7 +898,7 @@ export function stepLiveMatchMinute(
       ? 'HOME_THIRD'
       : 'MID';
 
-  // 5. Chance Creation & Shot Resolution
+  // 5. Chance Creation & Shot Resolution (including Set-Piece & Penalty specialists)
   const homeAttVsDef = homeDept.attack - awayDept.defense;
   const awayAttVsDef = awayDept.attack - homeDept.defense;
 
@@ -723,13 +911,25 @@ export function stepLiveMatchMinute(
     momentum = clamp(momentum - 22, -100, 100);
     ballZone = 'AWAY_BOX';
 
-    const shooter = pickWeightedAttackingPlayer(homeStates) || homeStates[0];
+    const setPieceRoll = Math.random();
+    const isPenalty = setPieceRoll < 0.025;
+    const isDirectFreeKick = !isPenalty && setPieceRoll < 0.075;
+    const isCornerSetPiece = !isPenalty && !isDirectFreeKick && setPieceRoll < 0.145;
+    if (isCornerSetPiece) homeCorners += 1;
+
+    const shooter = isPenalty
+      ? resolveSpecialist(homeStates, session.config.homeTactics?.penaltyTakerId, 'penalty') || homeStates[0]
+      : isDirectFreeKick
+      ? resolveSpecialist(homeStates, session.config.homeTactics?.freeKickTakerId, 'free_kick') || homeStates[0]
+      : pickWeightedAttackingPlayer(homeStates) || homeStates[0];
     const awayGk = awayStates.find((s) => s.isOnPitch && categorizePosition(s.player.position) === 'GK') || awayStates[0];
 
-    const isBigChance = Math.random() < clamp(0.19 + homeAttVsDef * 0.006, 0.10, 0.34);
+    const isBigChance = isPenalty || Math.random() < clamp(0.19 + homeAttVsDef * 0.006, 0.10, 0.34);
     if (isBigChance) homeBigChances += 1;
 
-    const shotXg = isBigChance
+    const shotXg = isPenalty
+      ? 0.76
+      : isBigChance
       ? 0.24 + Math.random() * 0.18
       : 0.04 + Math.random() * 0.10;
     homeXg = Number((homeXg + shotXg).toFixed(2));
@@ -738,6 +938,7 @@ export function stepLiveMatchMinute(
     const gkFace = awayGk.player.faceStats || calculateEaFcFaceStats(awayGk.player);
     const finishAdvantage = (shooterFace.sho - (gkFace.dri * 0.55 + gkFace.pac * 0.45)) * 0.003;
     const talkComposure = session.homeTeamTalkBuff ? (session.homeTeamTalkBuff.composureMod - 1) * 0.04 : 0;
+    const shoutComposure = activeShoutHome ? (activeShoutHome.composureMod - 1) * 0.05 : 0;
     const homeCapComposure =
       nextMinute >= 85 && session.config.homeTactics?.captainId
         ? calculateCaptaincyEffects(
@@ -746,7 +947,10 @@ export function stepLiveMatchMinute(
             session.config.homeTactics.viceCaptainId
           ).composureBonus * 0.004
         : 0;
-    const goalProb = clamp(shotXg * (0.94 + finishAdvantage + talkComposure + homeCapComposure), 0.025, 0.62);
+    const rawGoalProb = isPenalty
+      ? 0.74 + (shooterFace.sho - gkFace.dri) * 0.003 + shoutComposure
+      : shotXg * (0.94 + finishAdvantage + talkComposure + shoutComposure + homeCapComposure);
+    const goalProb = clamp(rawGoalProb, 0.025, isPenalty ? 0.90 : 0.62);
 
     const roll = Math.random();
     if (roll < goalProb) {
@@ -757,18 +961,32 @@ export function stepLiveMatchMinute(
       shooter.matchRating = clamp(Number((shooter.matchRating + 0.85).toFixed(1)), 5.0, 10.0);
 
       let assister: InGamePlayerState | undefined;
-      if (Math.random() < 0.74) {
-        assister = pickWeightedAssister(homeStates, shooter.player.id);
-        if (assister) {
-          assister.assists += 1;
-          assister.matchRating = clamp(Number((assister.matchRating + 0.55).toFixed(1)), 5.0, 10.0);
+      if (!isPenalty && !isDirectFreeKick && isCornerSetPiece) {
+        const cornerTaker = resolveSpecialist(homeStates, session.config.homeTactics?.cornerTakerId, 'corner');
+        if (cornerTaker && cornerTaker.player.id !== shooter.player.id) {
+          assister = cornerTaker;
+        } else {
+          assister = pickWeightedAssister(homeStates, shooter.player.id);
         }
+      } else if (!isPenalty && !isDirectFreeKick && Math.random() < 0.74) {
+        assister = pickWeightedAssister(homeStates, shooter.player.id);
+      }
+
+      if (assister) {
+        assister.assists += 1;
+        assister.matchRating = clamp(Number((assister.matchRating + 0.55).toFixed(1)), 5.0, 10.0);
       }
 
       const clubName = getEffectiveClubName(session.config.homeClub);
-      const detail = assister
+      const detail = isPenalty
+        ? `PENALTY GOAL! ${shooter.player.name} steps up and buries it from the spot for ${clubName}!`
+        : isDirectFreeKick
+        ? `FREE KICK GOAL! ${shooter.player.name} bends a dead-ball stunner into the corner for ${clubName}!`
+        : isCornerSetPiece && assister
+        ? `CORNER GOAL! ${shooter.player.name} heads home from ${assister.player.name}'s pinpoint corner for ${clubName}!`
+        : assister
         ? `GOAL! ${shooter.player.name} strikes for ${clubName}! (Assist: ${assister.player.name})`
-        : `GOAL! ${shooter.player.name} finishes clinicaly for ${clubName}!`;
+        : `GOAL! ${shooter.player.name} finishes clinically for ${clubName}!`;
 
       events.push({
         minute: nextMinute,
@@ -795,13 +1013,15 @@ export function stepLiveMatchMinute(
       awayGk.matchRating = clamp(Number((awayGk.matchRating + 0.18).toFixed(1)), 5.0, 10.0);
       if (Math.random() < 0.45) homeCorners += 1;
 
-      if (isBigChance) {
+      if (isPenalty || isBigChance) {
         events.push({
           minute: nextMinute,
           type: 'save',
           clubId: session.config.awayClub.id,
           playerName: awayGk.player.name,
-          detail: `🧤 Big Save! ${awayGk.player.name} denies ${shooter.player.name} from point-blank range!`,
+          detail: isPenalty
+            ? `PENALTY SAVED! ${awayGk.player.name} guesses right to deny ${shooter.player.name} from the spot!`
+            : `Big Save! ${awayGk.player.name} denies ${shooter.player.name} from point-blank range!`,
         });
       }
     } else if (isBigChance && roll < goalProb + 0.37) {
@@ -811,7 +1031,7 @@ export function stepLiveMatchMinute(
         type: 'woodwork',
         clubId: session.config.homeClub.id,
         playerName: shooter.player.name,
-        detail: `💥 Woodwork! ${shooter.player.name} rattles the frame of the goal for ${getEffectiveClubName(session.config.homeClub)}!`,
+        detail: `Woodwork! ${shooter.player.name} rattles the frame of the goal for ${getEffectiveClubName(session.config.homeClub)}!`,
       });
     } else if (Math.random() < 0.32) {
       homeCorners += 1;
@@ -824,13 +1044,25 @@ export function stepLiveMatchMinute(
     momentum = clamp(momentum + 22, -100, 100);
     ballZone = 'HOME_BOX';
 
-    const shooter = pickWeightedAttackingPlayer(awayStates) || awayStates[0];
+    const setPieceRoll = Math.random();
+    const isPenalty = setPieceRoll < 0.025;
+    const isDirectFreeKick = !isPenalty && setPieceRoll < 0.075;
+    const isCornerSetPiece = !isPenalty && !isDirectFreeKick && setPieceRoll < 0.145;
+    if (isCornerSetPiece) awayCorners += 1;
+
+    const shooter = isPenalty
+      ? resolveSpecialist(awayStates, session.config.awayTactics?.penaltyTakerId, 'penalty') || awayStates[0]
+      : isDirectFreeKick
+      ? resolveSpecialist(awayStates, session.config.awayTactics?.freeKickTakerId, 'free_kick') || awayStates[0]
+      : pickWeightedAttackingPlayer(awayStates) || awayStates[0];
     const homeGk = homeStates.find((s) => s.isOnPitch && categorizePosition(s.player.position) === 'GK') || homeStates[0];
 
-    const isBigChance = Math.random() < clamp(0.18 + awayAttVsDef * 0.006, 0.09, 0.33);
+    const isBigChance = isPenalty || Math.random() < clamp(0.18 + awayAttVsDef * 0.006, 0.09, 0.33);
     if (isBigChance) awayBigChances += 1;
 
-    const shotXg = isBigChance
+    const shotXg = isPenalty
+      ? 0.76
+      : isBigChance
       ? 0.23 + Math.random() * 0.18
       : 0.04 + Math.random() * 0.095;
     awayXg = Number((awayXg + shotXg).toFixed(2));
@@ -839,6 +1071,7 @@ export function stepLiveMatchMinute(
     const gkFace = homeGk.player.faceStats || calculateEaFcFaceStats(homeGk.player);
     const finishAdvantage = (shooterFace.sho - (gkFace.dri * 0.55 + gkFace.pac * 0.45)) * 0.003;
     const talkComposure = session.awayTeamTalkBuff ? (session.awayTeamTalkBuff.composureMod - 1) * 0.04 : 0;
+    const shoutComposure = activeShoutAway ? (activeShoutAway.composureMod - 1) * 0.05 : 0;
     const awayCapComposure =
       nextMinute >= 85 && session.config.awayTactics?.captainId
         ? calculateCaptaincyEffects(
@@ -847,7 +1080,10 @@ export function stepLiveMatchMinute(
             session.config.awayTactics.viceCaptainId
           ).composureBonus * 0.004
         : 0;
-    const goalProb = clamp(shotXg * (0.94 + finishAdvantage + talkComposure + awayCapComposure), 0.025, 0.62);
+    const rawGoalProb = isPenalty
+      ? 0.74 + (shooterFace.sho - gkFace.dri) * 0.003 + shoutComposure
+      : shotXg * (0.94 + finishAdvantage + talkComposure + shoutComposure + awayCapComposure);
+    const goalProb = clamp(rawGoalProb, 0.025, isPenalty ? 0.90 : 0.62);
 
     const roll = Math.random();
     if (roll < goalProb) {
@@ -858,16 +1094,30 @@ export function stepLiveMatchMinute(
       shooter.matchRating = clamp(Number((shooter.matchRating + 0.85).toFixed(1)), 5.0, 10.0);
 
       let assister: InGamePlayerState | undefined;
-      if (Math.random() < 0.74) {
-        assister = pickWeightedAssister(awayStates, shooter.player.id);
-        if (assister) {
-          assister.assists += 1;
-          assister.matchRating = clamp(Number((assister.matchRating + 0.55).toFixed(1)), 5.0, 10.0);
+      if (!isPenalty && !isDirectFreeKick && isCornerSetPiece) {
+        const cornerTaker = resolveSpecialist(awayStates, session.config.awayTactics?.cornerTakerId, 'corner');
+        if (cornerTaker && cornerTaker.player.id !== shooter.player.id) {
+          assister = cornerTaker;
+        } else {
+          assister = pickWeightedAssister(awayStates, shooter.player.id);
         }
+      } else if (!isPenalty && !isDirectFreeKick && Math.random() < 0.74) {
+        assister = pickWeightedAssister(awayStates, shooter.player.id);
+      }
+
+      if (assister) {
+        assister.assists += 1;
+        assister.matchRating = clamp(Number((assister.matchRating + 0.55).toFixed(1)), 5.0, 10.0);
       }
 
       const clubName = getEffectiveClubName(session.config.awayClub);
-      const detail = assister
+      const detail = isPenalty
+        ? `PENALTY GOAL! ${shooter.player.name} dispatches the penalty for ${clubName}!`
+        : isDirectFreeKick
+        ? `FREE KICK GOAL! ${shooter.player.name} whips a sublime free kick past the keeper for ${clubName}!`
+        : isCornerSetPiece && assister
+        ? `CORNER GOAL! ${shooter.player.name} meets ${assister.player.name}'s corner to score for ${clubName}!`
+        : assister
         ? `GOAL! ${shooter.player.name} finds the net for ${clubName}! (Assist: ${assister.player.name})`
         : `GOAL! ${shooter.player.name} scores for ${clubName}!`;
 
@@ -896,13 +1146,15 @@ export function stepLiveMatchMinute(
       homeGk.matchRating = clamp(Number((homeGk.matchRating + 0.18).toFixed(1)), 5.0, 10.0);
       if (Math.random() < 0.45) awayCorners += 1;
 
-      if (isBigChance) {
+      if (isPenalty || isBigChance) {
         events.push({
           minute: nextMinute,
           type: 'save',
           clubId: session.config.homeClub.id,
           playerName: homeGk.player.name,
-          detail: `🧤 Crucial Save! ${homeGk.player.name} parries away a fierce strike from ${shooter.player.name}!`,
+          detail: isPenalty
+            ? `PENALTY SAVED! ${homeGk.player.name} produces a huge stop against ${shooter.player.name}!`
+            : `Crucial Save! ${homeGk.player.name} parries away a fierce strike from ${shooter.player.name}!`,
         });
       }
     } else if (isBigChance && roll < goalProb + 0.37) {
@@ -911,7 +1163,7 @@ export function stepLiveMatchMinute(
         type: 'woodwork',
         clubId: session.config.awayClub.id,
         playerName: shooter.player.name,
-        detail: `💥 Woodwork! ${shooter.player.name} strikes the post for ${getEffectiveClubName(session.config.awayClub)}!`,
+        detail: `Woodwork! ${shooter.player.name} strikes the post for ${getEffectiveClubName(session.config.awayClub)}!`,
       });
     } else if (Math.random() < 0.32) {
       awayCorners += 1;
@@ -938,10 +1190,10 @@ export function stepLiveMatchMinute(
             type: 'red_card',
             clubId: session.config.homeClub.id,
             playerName: offender.player.name,
-            detail: `🟥 RED CARD! Second bookable offence for ${offender.player.name} (${getEffectiveClubName(session.config.homeClub)})!`,
+            detail: `RED CARD! Second bookable offence for ${offender.player.name} (${getEffectiveClubName(session.config.homeClub)})!`,
           });
           if (userClubId === session.config.homeClub.id) {
-            criticalPauseReason = `🟥 ${offender.player.name} has been sent off! Consider adjusting your tactical shape.`;
+            criticalPauseReason = `${offender.player.name} has been sent off! Consider adjusting your tactical shape.`;
           }
         } else if (!offender.yellowCard) {
           offender.yellowCard = true;
@@ -974,10 +1226,10 @@ export function stepLiveMatchMinute(
             type: 'red_card',
             clubId: session.config.awayClub.id,
             playerName: offender.player.name,
-            detail: `🟥 RED CARD! Second yellow card for ${offender.player.name} (${getEffectiveClubName(session.config.awayClub)})!`,
+            detail: `RED CARD! Second yellow card for ${offender.player.name} (${getEffectiveClubName(session.config.awayClub)})!`,
           });
           if (userClubId === session.config.awayClub.id) {
-            criticalPauseReason = `🟥 ${offender.player.name} has been sent off! Consider adjusting your tactical shape.`;
+            criticalPauseReason = `${offender.player.name} has been sent off! Consider adjusting your tactical shape.`;
           }
         } else if (!offender.yellowCard) {
           offender.yellowCard = true;
@@ -1034,11 +1286,11 @@ export function stepLiveMatchMinute(
           type: 'injury',
           clubId: targetClub.id,
           playerName: injuredPlayer.player.name,
-          detail: `🩹 Injury! ${injuredPlayer.player.name} picks up a knock and signals to the bench.`,
+          detail: `Injury! ${injuredPlayer.player.name} picks up a knock and signals to the bench.`,
         });
 
         if (userClubId === targetClub.id) {
-          criticalPauseReason = `🩹 ${injuredPlayer.player.name} has suffered an injury! Select a substitute from the dugout.`;
+          criticalPauseReason = `${injuredPlayer.player.name} has suffered an injury! Select a substitute from the dugout.`;
         } else {
           // AI automatically substitutes the injured player if subs remain
           const subMade = performSmartAiSubstitution(
@@ -1081,10 +1333,14 @@ export function stepLiveMatchMinute(
     awayPlayerStates: awayStates,
     homeMentality: effectiveHomeMentality,
     awayMentality: effectiveAwayMentality,
-    homePressing,
-    awayPressing,
-    homeStyle,
-    awayStyle,
+    homePressing: effectiveHomePressing,
+    awayPressing: effectiveAwayPressing,
+    homeStyle: effectiveHomeStyle,
+    awayStyle: effectiveAwayStyle,
+    activeShoutHome,
+    activeShoutAway,
+    lastAiTacticalSwitchMinuteHome: lastAiSwitchHome,
+    lastAiTacticalSwitchMinuteAway: lastAiSwitchAway,
     subsRemainingHome,
     subsRemainingAway,
     aiSubsMadeHome,
@@ -1131,7 +1387,7 @@ export function applyHalfTimeTeamTalk(
         composureMod: 1.04,
         label: 'Fired Up (+5% Attack, +4% Midfield)',
       };
-      feedback = '📣 Your squad responded fiercely to the challenge! Second-half attacking intensity and work-rate increased.';
+      feedback = 'Your squad responded fiercely to the challenge! Second-half attacking intensity and work-rate increased.';
       effectSummary = '+5% Attack • +4% Midfield Work-Rate';
     } else {
       buff = {
@@ -1141,7 +1397,7 @@ export function applyHalfTimeTeamTalk(
         composureMod: 1.01,
         label: 'Focused (+2% Attack & Midfield)',
       };
-      feedback = '📣 Despite leading at the break, the players nodded and vowed not to let their standards drop.';
+      feedback = 'Despite leading at the break, the players nodded and vowed not to let their standards drop.';
       effectSummary = '+2% Attack • +2% Midfield';
     }
   } else if (talkType === 'keep_composed') {
@@ -1152,7 +1408,7 @@ export function applyHalfTimeTeamTalk(
       composureMod: 1.06,
       label: 'Composed (+5% Midfield Control & Finishing)',
     };
-    feedback = '👏 You praised their tactical discipline! Players look calm on the ball with sharper passing and finishing composure.';
+    feedback = 'You praised their tactical discipline! Players look calm on the ball with sharper passing and finishing composure.';
     effectSummary = '+5% Midfield Control • +6% Finishing Composure';
   } else if (talkType === 'tighten_up') {
     buff = {
@@ -1162,7 +1418,7 @@ export function applyHalfTimeTeamTalk(
       composureMod: 1.02,
       label: 'Organized Backline (+6% Defense)',
     };
-    feedback = '🛡️ You drilled the defensive shape on the tactics board! The back four and midfield pivot are locked in.';
+    feedback = 'You drilled the defensive shape on the tactics board! The back four and midfield pivot are locked in.';
     effectSummary = '+6% Defensive Solidity • +2% Midfield Shield';
   } else {
     // aggressive
@@ -1174,7 +1430,7 @@ export function applyHalfTimeTeamTalk(
         composureMod: 1.03,
         label: 'All-Out Response (+7% Attack)',
       };
-      feedback = '🔥 The hairdryer treatment stung the dressing room into action! Expect a ferocious second-half surge.';
+      feedback = 'The hairdryer treatment stung the dressing room into action! Expect a ferocious second-half surge.';
       effectSummary = '+7% Attack Surge • +4% Pressing';
     } else {
       buff = {
@@ -1184,7 +1440,7 @@ export function applyHalfTimeTeamTalk(
         composureMod: 0.98,
         label: 'Tense (+1% Attack, -2% Composure)',
       };
-      feedback = '⚠️ Several players looked stunned by the harsh criticism while not trailing.';
+      feedback = 'Several players looked stunned by the harsh criticism while not trailing.';
       effectSummary = '+1% Attack • Slight Composure Dip';
     }
   }
@@ -1203,6 +1459,10 @@ export function applyHalfTimeTeamTalk(
     isHome: true,
     isNeutralVenue: updatedSession.config.isNeutralVenue,
     teamTalkBuff: updatedSession.homeTeamTalkBuff,
+    activeShout: updatedSession.activeShoutHome,
+    trainingFocus: updatedSession.config.homeTrainingFocus,
+    tactics: updatedSession.config.homeTactics,
+    opponentTactics: updatedSession.config.awayTactics,
   });
   updatedSession.awayDeptRatings = calculateTeamDepartmentRatings(updatedSession.awayPlayerStates, {
     mentality: updatedSession.awayMentality,
@@ -1211,12 +1471,164 @@ export function applyHalfTimeTeamTalk(
     isHome: false,
     isNeutralVenue: updatedSession.config.isNeutralVenue,
     teamTalkBuff: updatedSession.awayTeamTalkBuff,
+    activeShout: updatedSession.activeShoutAway,
+    trainingFocus: updatedSession.config.awayTrainingFocus,
+    tactics: updatedSession.config.awayTactics,
+    opponentTactics: updatedSession.config.homeTactics,
   });
 
   return {
     session: updatedSession,
     feedback,
     effectSummary,
+  };
+}
+
+/**
+ * Issues a live Touchline Shout during active play (12-minute duration, 15-minute cooldown).
+ */
+export function applyTouchlineShout(
+  session: LiveMatchSession,
+  clubId: string,
+  shoutType: TouchlineShoutType
+): {
+  session: LiveMatchSession;
+  feedback: string;
+  applied: boolean;
+} {
+  const isHome = session.config.homeClub.id === clubId;
+  const currentMinute = Math.max(1, session.minute);
+  const cooldownUntil = isHome
+    ? session.shoutCooldownUntilHome ?? 0
+    : session.shoutCooldownUntilAway ?? 0;
+
+  if (currentMinute < cooldownUntil) {
+    const minsLeft = Math.max(1, cooldownUntil - currentMinute);
+    return {
+      session,
+      feedback: `Your players are still digesting your last instruction (${minsLeft}m cooldown).`,
+      applied: false,
+    };
+  }
+
+  const myScore = isHome ? session.homeScore : session.awayScore;
+  const oppScore = isHome ? session.awayScore : session.homeScore;
+  const goalDiff = myScore - oppScore;
+  const club = isHome ? session.config.homeClub : session.config.awayClub;
+  const clubName = getEffectiveClubName(club);
+
+  let shout: ActiveTouchlineShout;
+  let feedback: string;
+  const expiresAtMinute = Math.min(session.maxMinutes, currentMinute + 12);
+
+  if (shoutType === 'encourage') {
+    shout = {
+      type: shoutType,
+      label: 'Encourage',
+      expiresAtMinute,
+      attackMod: 1.03,
+      midfieldMod: 1.03,
+      defenseMod: 1.01,
+      composureMod: 1.04,
+    };
+    feedback = `${clubName} respond positively to encouraging words from the touchline!`;
+  } else if (shoutType === 'demand_more') {
+    const reactiveBoost = goalDiff <= 0 ? 1.05 : 1.02;
+    shout = {
+      type: shoutType,
+      label: 'Demand More',
+      expiresAtMinute,
+      attackMod: reactiveBoost,
+      midfieldMod: 1.04,
+      defenseMod: 0.99,
+      composureMod: goalDiff <= 0 ? 1.03 : 0.99,
+    };
+    feedback =
+      goalDiff <= 0
+        ? `Urgent demand from the technical area lifts ${clubName}'s pressing tempo!`
+        : `${clubName} raise their work-rate, though some legs look tested.`;
+  } else if (shoutType === 'focus') {
+    shout = {
+      type: shoutType,
+      label: 'Focus',
+      expiresAtMinute,
+      attackMod: 1.0,
+      midfieldMod: 1.04,
+      defenseMod: 1.04,
+      composureMod: 1.07,
+    };
+    feedback = `Clear tactical cues sharpen ${clubName}'s concentration and decision-making.`;
+  } else if (shoutType === 'push_forward') {
+    shout = {
+      type: shoutType,
+      label: 'Push Forward',
+      expiresAtMinute,
+      attackMod: 1.07,
+      midfieldMod: 1.02,
+      defenseMod: 0.96,
+      composureMod: 1.01,
+    };
+    feedback = `Fullbacks overlap and midfielders bomb forward for ${clubName}!`;
+  } else {
+    shout = {
+      type: shoutType,
+      label: 'Tighten Up',
+      expiresAtMinute,
+      attackMod: 0.96,
+      midfieldMod: 1.02,
+      defenseMod: 1.07,
+      composureMod: 1.03,
+    };
+    feedback = `${clubName} compact the spaces between lines to shut down gaps.`;
+  }
+
+  const shoutEvent: MatchEvent = {
+    minute: currentMinute,
+    type: 'tactical',
+    clubId,
+    playerName: clubName,
+    detail: `Touchline Shout (${shout.label}): ${feedback}`,
+  };
+
+  const nextCooldownUntil = currentMinute + 15;
+  const updatedSession: LiveMatchSession = {
+    ...session,
+    activeShoutHome: isHome ? shout : session.activeShoutHome,
+    activeShoutAway: !isHome ? shout : session.activeShoutAway,
+    shoutCooldownUntilHome: isHome ? nextCooldownUntil : session.shoutCooldownUntilHome,
+    shoutCooldownUntilAway: !isHome ? nextCooldownUntil : session.shoutCooldownUntilAway,
+    events: [...session.events, shoutEvent],
+  };
+
+  updatedSession.homeDeptRatings = calculateTeamDepartmentRatings(updatedSession.homePlayerStates, {
+    mentality: updatedSession.homeMentality,
+    pressing: updatedSession.homePressing,
+    style: updatedSession.homeStyle,
+    isHome: true,
+    isNeutralVenue: updatedSession.config.isNeutralVenue,
+    teamTalkBuff: updatedSession.homeTeamTalkBuff,
+    activeShout: updatedSession.activeShoutHome,
+    trainingFocus: updatedSession.config.homeTrainingFocus,
+    tactics: updatedSession.config.homeTactics,
+    opponentTactics: updatedSession.config.awayTactics,
+  });
+  updatedSession.awayDeptRatings = calculateTeamDepartmentRatings(updatedSession.awayPlayerStates, {
+    mentality: updatedSession.awayMentality,
+    pressing: updatedSession.awayPressing,
+    style: updatedSession.awayStyle,
+    isHome: false,
+    isNeutralVenue: updatedSession.config.isNeutralVenue,
+    teamTalkBuff: updatedSession.awayTeamTalkBuff,
+    activeShout: updatedSession.activeShoutAway,
+    trainingFocus: updatedSession.config.awayTrainingFocus,
+    tactics: updatedSession.config.awayTactics,
+    opponentTactics: updatedSession.config.homeTactics,
+  });
+
+  return {
+    session: updatedSession,
+    feedback,
+    applied: true,
   };
 }
 
@@ -1271,6 +1683,10 @@ export function makeLiveSubstitution(
     isHome: true,
     isNeutralVenue: session.config.isNeutralVenue,
     teamTalkBuff: session.homeTeamTalkBuff,
+    activeShout: session.activeShoutHome,
+    trainingFocus: session.config.homeTrainingFocus,
+    tactics: session.config.homeTactics,
+    opponentTactics: session.config.awayTactics,
   });
 
   const awayDeptRatings = calculateTeamDepartmentRatings(nextAwayStates, {
@@ -1280,6 +1696,10 @@ export function makeLiveSubstitution(
     isHome: false,
     isNeutralVenue: session.config.isNeutralVenue,
     teamTalkBuff: session.awayTeamTalkBuff,
+    activeShout: session.activeShoutAway,
+    trainingFocus: session.config.awayTrainingFocus,
+    tactics: session.config.awayTactics,
+    opponentTactics: session.config.homeTactics,
   });
 
   return {
@@ -1350,18 +1770,28 @@ export function simulatePenaltyShootoutDetailed(
     awayOnPitch.find((s) => categorizePosition(s.player.position) === 'GK')?.player ||
     awayStates[0]?.player;
 
-  const sortTakers = (list: InGamePlayerState[]) => {
+  const sortTakers = (list: InGamePlayerState[], preferredPenaltyTakerId?: string) => {
     const outfield = list.filter((s) => categorizePosition(s.player.position) !== 'GK');
     const pool = outfield.length >= 5 ? outfield : list;
     return [...pool].sort((a, b) => {
+      if (preferredPenaltyTakerId) {
+        if (a.player.id === preferredPenaltyTakerId) return -1;
+        if (b.player.id === preferredPenaltyTakerId) return 1;
+      }
       const fA = a.player.faceStats || calculateEaFcFaceStats(a.player);
       const fB = b.player.faceStats || calculateEaFcFaceStats(b.player);
       return fB.sho + b.player.rating * 0.5 - (fA.sho + a.player.rating * 0.5);
     });
   };
 
-  const homeTakers = sortTakers(homeOnPitch.length > 0 ? homeOnPitch : homeStates);
-  const awayTakers = sortTakers(awayOnPitch.length > 0 ? awayOnPitch : awayStates);
+  const homeTakers = sortTakers(
+    homeOnPitch.length > 0 ? homeOnPitch : homeStates,
+    homeTactics?.penaltyTakerId
+  );
+  const awayTakers = sortTakers(
+    awayOnPitch.length > 0 ? awayOnPitch : awayStates,
+    awayTactics?.penaltyTakerId
+  );
 
   const homeGkFace = homeGk ? (homeGk.faceStats || calculateEaFcFaceStats(homeGk)) : { dri: 80, pac: 80 };
   const awayGkFace = awayGk ? (awayGk.faceStats || calculateEaFcFaceStats(awayGk)) : { dri: 80, pac: 80 };
@@ -1386,10 +1816,10 @@ export function simulatePenaltyShootoutDetailed(
     );
     const scored = Math.random() < convProb;
     const detail = scored
-      ? `🟢 GOAL! ${taker.name} sends ${oppGkName} the wrong way!`
+      ? `GOAL! ${taker.name} sends ${oppGkName} the wrong way!`
       : Math.random() < 0.72
-      ? `🔴 SAVED! ${oppGkName} dives to parry ${taker.name}'s spot-kick!`
-      : `🔴 MISSED! ${taker.name} fires off the woodwork!`;
+      ? `SAVED! ${oppGkName} dives to parry ${taker.name}'s spot-kick!`
+      : `MISSED! ${taker.name} fires off the woodwork!`;
     return {
       round,
       clubId: club.id,
@@ -1701,7 +2131,8 @@ function performSmartAiSubstitution(
   clubId: string,
   minute: number,
   events: MatchEvent[],
-  forcedPlayerOutId?: string
+  forcedPlayerOutId?: string,
+  tacticalBias: 'attack' | 'defend' | 'balanced' = 'balanced'
 ): boolean {
   const onPitchOutfield = states.filter(
     (s) => s.isOnPitch && !s.redCard && categorizePosition(s.player.position) !== 'GK'
@@ -1717,10 +2148,24 @@ function performSmartAiSubstitution(
     : undefined;
 
   if (!playerOut) {
-    // Prioritize booked or most fatigued outfield player
+    // Prioritize booked or most fatigued outfield player (plus tactical bias when chasing/closing out)
     const sortedCandidates = [...onPitchOutfield].sort((a, b) => {
-      const scoreA = a.currentFitness - (a.yellowCard ? 12 : 0) - (a.injured ? 50 : 0);
-      const scoreB = b.currentFitness - (b.yellowCard ? 12 : 0) - (b.injured ? 50 : 0);
+      const grpA = categorizePosition(a.slotPosition || a.player.position);
+      const grpB = categorizePosition(b.slotPosition || b.player.position);
+      const biasOutA =
+        tacticalBias === 'attack' && grpA === 'DEF'
+          ? -8
+          : tacticalBias === 'defend' && grpA === 'FWD'
+          ? -8
+          : 0;
+      const biasOutB =
+        tacticalBias === 'attack' && grpB === 'DEF'
+          ? -8
+          : tacticalBias === 'defend' && grpB === 'FWD'
+          ? -8
+          : 0;
+      const scoreA = a.currentFitness - (a.yellowCard ? 12 : 0) - (a.injured ? 50 : 0) + biasOutA;
+      const scoreB = b.currentFitness - (b.yellowCard ? 12 : 0) - (b.injured ? 50 : 0) + biasOutB;
       return scoreA - scoreB;
     });
     playerOut = sortedCandidates[0];
@@ -1729,10 +2174,31 @@ function performSmartAiSubstitution(
   if (!playerOut) return false;
 
   const targetGroup = categorizePosition(playerOut.slotPosition || playerOut.player.position);
-  const sameGroupBench = benchAvailable.filter(
-    (b) => categorizePosition(b.player.position) === targetGroup
-  );
-  const playerIn = sameGroupBench.length > 0 ? sameGroupBench[0] : benchAvailable[0];
+  let playerIn: InGamePlayerState | undefined;
+  if (tacticalBias === 'attack') {
+    const attackingBench = benchAvailable
+      .filter((b) => {
+        const g = categorizePosition(b.player.position);
+        return g === 'FWD' || g === 'MID';
+      })
+      .sort((a, b) => b.player.rating - a.player.rating);
+    playerIn = attackingBench[0];
+  } else if (tacticalBias === 'defend') {
+    const defensiveBench = benchAvailable
+      .filter((b) => {
+        const g = categorizePosition(b.player.position);
+        return g === 'DEF' || g === 'MID';
+      })
+      .sort((a, b) => b.player.rating - a.player.rating);
+    playerIn = defensiveBench[0];
+  }
+
+  if (!playerIn) {
+    const sameGroupBench = benchAvailable
+      .filter((b) => categorizePosition(b.player.position) === targetGroup)
+      .sort((a, b) => b.player.rating - a.player.rating);
+    playerIn = sameGroupBench.length > 0 ? sameGroupBench[0] : [...benchAvailable].sort((a, b) => b.player.rating - a.player.rating)[0];
+  }
 
   if (!playerIn) return false;
 
@@ -1740,7 +2206,10 @@ function performSmartAiSubstitution(
   playerOut.subbedOutMinute = minute;
 
   playerIn.isOnPitch = true;
-  playerIn.slotPosition = playerOut.slotPosition || playerOut.player.position;
+  playerIn.slotPosition =
+    tacticalBias === 'balanced' || forcedPlayerOutId
+      ? playerOut.slotPosition || playerOut.player.position
+      : playerIn.player.position;
   playerIn.subbedInMinute = minute;
 
   events.push({
@@ -1783,9 +2252,30 @@ export function applyPostMatchSquadImpact(
       const fitnessDrain = Math.round(drainBase * drainMult);
       const newFitness = Math.max(50, (player.fitness ?? 100) - fitnessDrain);
 
-      // Morale update
+      // Morale & Playing Time Promise update
       const moraleDelta = wonMatch ? 5 : drewMatch ? 1 : -3;
-      const newMorale = Math.max(30, Math.min(100, (player.morale ?? 85) + moraleDelta));
+      let promiseMoraleShift = 0;
+      let updatedPromise = player.playingTimePromise;
+      if (updatedPromise && updatedPromise.status === 'active') {
+        const startsCompleted = updatedPromise.startsCompleted + (playedState.isStarter ? 1 : 0);
+        const matchesRemaining = Math.max(0, updatedPromise.matchesRemaining - 1);
+        let status: 'active' | 'fulfilled' | 'broken' = 'active';
+        if (startsCompleted >= updatedPromise.targetStarts) {
+          status = 'fulfilled';
+          promiseMoraleShift = 10;
+        } else if (matchesRemaining <= 0) {
+          status = 'broken';
+          promiseMoraleShift = -18;
+        }
+        updatedPromise = {
+          ...updatedPromise,
+          startsCompleted,
+          matchesRemaining,
+          status,
+        };
+      }
+
+      const newMorale = Math.max(20, Math.min(100, (player.morale ?? 85) + moraleDelta + promiseMoraleShift));
 
       // Injury state
       const isInjured = playedState.injured;
@@ -1829,6 +2319,8 @@ export function applyPostMatchSquadImpact(
           redCardsTotal,
           suspendedMatches,
           suspensionReason,
+          benchedStreak: 0,
+          playingTimePromise: updatedPromise,
         },
         matchRating
       );
@@ -1847,6 +2339,39 @@ export function applyPostMatchSquadImpact(
       const baseRecovery = trainingFocus === 'recovery' ? 18 : 12;
       const recovery = Math.round(baseRecovery * fitnessRecoveryModifier);
       const newFitness = Math.min(100, (player.fitness ?? 100) + recovery);
+
+      const wasAvailable =
+        !player.injured &&
+        !(player.suspendedMatches && player.suspendedMatches > 0) &&
+        !player.isOnLoan;
+
+      let benchedStreak = player.benchedStreak ?? 0;
+      let updatedPromise = player.playingTimePromise;
+      let newMorale = player.morale ?? 85;
+
+      if (wasAvailable) {
+        benchedStreak += 1;
+        if (updatedPromise && updatedPromise.status === 'active') {
+          const matchesRemaining = Math.max(0, updatedPromise.matchesRemaining - 1);
+          const status: 'active' | 'fulfilled' | 'broken' =
+            matchesRemaining <= 0 && updatedPromise.startsCompleted < updatedPromise.targetStarts
+              ? 'broken'
+              : 'active';
+          if (status === 'broken') {
+            newMorale = Math.max(20, newMorale - 18);
+          }
+          updatedPromise = {
+            ...updatedPromise,
+            matchesRemaining,
+            status,
+          };
+        } else if (
+          (player.squadRole === 'crucial' || player.squadRole === 'important') &&
+          benchedStreak >= 3
+        ) {
+          newMorale = Math.max(25, newMorale - 3);
+        }
+      }
 
       // Existing injury recovery countdown
       let injuryWeeks = player.injuryWeeks;
@@ -1872,10 +2397,13 @@ export function applyPostMatchSquadImpact(
       const restedBase: CareerPlayer = {
         ...player,
         fitness: newFitness,
+        morale: newMorale,
         injured,
         injuryWeeks,
         suspendedMatches,
         suspensionReason,
+        benchedStreak,
+        playingTimePromise: updatedPromise,
       };
 
       // Unused young squad members still gain training experience from matchday prep

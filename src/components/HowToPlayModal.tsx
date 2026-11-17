@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { IconClose } from './career/GameIcons';
 
 export interface HowToPlayModalProps {
   isOpen: boolean;
@@ -18,11 +19,12 @@ export function HowToPlayModal({
   );
   const [dontShowAgain, setDontShowAgain] = useState(false);
 
-  // Sync tab with mode prop when reopened
-  React.useEffect(() => {
+  const [prevMode, setPrevMode] = useState(mode);
+  if (mode !== prevMode) {
+    setPrevMode(mode);
     if (mode === 'career') setActiveTab('career');
     else if (mode === 'draft') setActiveTab('draft');
-  }, [mode]);
+  }
 
   if (!isOpen) return null;
 
@@ -48,7 +50,7 @@ export function HowToPlayModal({
       />
 
       {/* Modal Container */}
-      <div className="w-full max-w-lg office-floating-card border-[var(--office-divider)] bg-white/98 rounded-3xl p-6 sm:p-7 shadow-2xl relative z-10 space-y-5 animate-card-deal my-auto">
+      <div className="w-full max-w-lg office-floating-card border-[var(--office-divider)] bg-white/98 rounded-3xl p-6 sm:p-7 shadow-2xl relative z-10 space-y-5 animate-card-deal motion-reduce:animate-none my-auto max-h-[90dvh] overflow-y-auto scrollbar-none">
         {/* Modal Header */}
         <div className="flex justify-between items-center pb-3 border-b border-[var(--office-divider)]">
           <div className="flex items-center gap-2">
@@ -64,11 +66,12 @@ export function HowToPlayModal({
             </h3>
           </div>
           <button
+            type="button"
             onClick={() => onClose(false)}
             aria-label="Close modal"
-            className="w-8 h-8 rounded-full office-subcard text-slate-500 hover:text-[#0b1536] flex items-center justify-center transition-colors cursor-pointer text-sm font-bold shadow-sm"
+            className="w-9 h-9 rounded-full office-subcard text-slate-500 hover:text-[#0b1536] flex items-center justify-center transition-colors cursor-pointer shadow-sm shrink-0"
           >
-            ✕
+            <IconClose className="w-4 h-4" />
           </button>
         </div>
 
@@ -156,10 +159,10 @@ export function HowToPlayModal({
               </span>
               <div>
                 <h4 className="text-[#0b1536] uppercase font-display font-black text-xs mb-0.5">
-                  Pick Your Club & Season
+                  Pick Your Club
                 </h4>
                 <p className="text-[11.5px] text-slate-600 font-medium">
-                  Manage any of the 20 Premier League clubs across <b>2026/27 (Current)</b>, <b>2025/26 (Previous)</b>, or <b>2024/25 (Classic)</b> authentic rosters.
+                  Manage any of the 20 Premier League clubs with updated <b>2026/27</b> rosters, budgets, and realistic club profiles.
                 </p>
               </div>
             </div>
@@ -219,7 +222,7 @@ export function HowToPlayModal({
                 className="rounded border-slate-300 accent-amber-600 focus:ring-amber-500/20 w-4 h-4 bg-white focus:outline-none"
               />
               <span className="text-[10px] text-slate-600 font-bold uppercase tracking-wider">
-                Don't show this popup again when starting
+                Don&apos;t show again
               </span>
             </label>
           )}

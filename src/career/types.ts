@@ -197,6 +197,15 @@ export interface CareerPlayer {
   loanBuyOptionFee?: number;
   isPreContractSigned?: boolean;
   preContractJoiningClubName?: string;
+  // Dressing Room Dynamics & Playing Time Promises
+  benchedStreak?: number;
+  playingTimePromise?: {
+    targetStarts: number;
+    matchesRemaining: number;
+    startsCompleted: number;
+    promisedDate: string;
+    status: 'active' | 'fulfilled' | 'broken';
+  };
 }
 
 export type SquadRole = 'crucial' | 'important' | 'squad' | 'sporadic' | 'prospect';
@@ -571,9 +580,22 @@ export interface TransferRecord {
 export interface PreContractAgreement {
   id: string;
   playerId: string;
+  cardId?: string;
   playerName: string;
   rating: number;
   position: string;
+  naturalPositions?: string[];
+  secondaryPositions?: string[];
+  age?: number;
+  dateOfBirth?: string;
+  nationality?: string;
+  potential?: number;
+  faceStats?: PlayerFaceStats;
+  preferredFoot?: 'Right' | 'Left' | 'Both';
+  heightCm?: number;
+  weightKg?: number;
+  isHomegrown?: boolean;
+  squadRole?: SquadRole;
   originClub: string;
   wageWeekly: number;
   contractYears: number;
@@ -732,7 +754,8 @@ export type ActionType =
   | 'open_press_conference'
   | 'open_feeder_network'
   | 'open_job_offers'
-  | 'respond_ultimatum';
+  | 'respond_ultimatum'
+  | 'promise_game_time';
 
 export interface ManagerMessage {
   id: string;
@@ -741,7 +764,7 @@ export interface ManagerMessage {
   senderRole?: string;
   subject: string;
   body: string;
-  type: 'match_report' | 'injury' | 'transfer' | 'board' | 'cup_draw' | 'international' | 'system' | 'scouting' | 'facility' | 'media' | 'accolade' | 'job_offer';
+  type: 'match_report' | 'injury' | 'transfer' | 'board' | 'cup_draw' | 'international' | 'system' | 'scouting' | 'facility' | 'media' | 'accolade' | 'job_offer' | 'dressing_room';
   isRead: boolean;
   priority?: 'normal' | 'urgent';
   classification?: MessageClassification;
@@ -1095,6 +1118,9 @@ export interface ClubTactics {
   familiarity: number; // 0 to 100
   captainId?: string;
   viceCaptainId?: string;
+  penaltyTakerId?: string;
+  freeKickTakerId?: string;
+  cornerTakerId?: string;
   pressingIntensity?: 'low' | 'balanced' | 'high';
   passingStyle?: 'short' | 'mixed' | 'direct';
   tempo?: 'slow' | 'standard' | 'high';
@@ -1182,3 +1208,24 @@ export interface SaveSlotMeta {
     budget: number;
   };
 }
+
+export interface SupplementalPlayerDef {
+  id: string;
+  name: string;
+  clubId: string;
+  position: string;
+  naturalPositions?: string[];
+  secondaryPositions?: string[];
+  rating: number;
+  age: number;
+  potential: number;
+  nationality: string;
+  isHomegrown?: boolean;
+  dateOfBirth?: string;
+  contractYears?: number;
+  wageWeekly?: number;
+  preferredFoot?: 'Right' | 'Left' | 'Both';
+  heightCm?: number;
+  weightKg?: number;
+}
+

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Club } from '../../career/types';
 import { getEffectiveClubName } from '../../career/clubs';
+import { IconRefresh, IconStar } from './GameIcons';
 
 export interface InstantSimLoadingModalProps {
   homeClub: Club;
@@ -68,7 +69,7 @@ export function InstantSimLoadingModal({
       role="dialog"
       aria-modal="true"
       data-scrim="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden animate-fade-in motion-reduce:animate-none"
       style={{
         backgroundColor: 'rgba(11, 21, 54, 0.85)',
         backdropFilter: 'blur(12px)',
@@ -107,8 +108,15 @@ export function InstantSimLoadingModal({
               <h3 className="font-display font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate">
                 {getEffectiveClubName(homeClub, userClub)}
               </h3>
-              <span className="text-[10px] uppercase font-extrabold text-slate-600 dark:text-slate-400 block truncate mt-0.5">
-                {homeClub.id === userClub.id ? '★ YOU (HOME)' : 'Home'}
+              <span className="text-[10px] uppercase font-extrabold text-slate-600 dark:text-slate-400 inline-flex items-center justify-center gap-0.5 truncate mt-0.5">
+                {homeClub.id === userClub.id ? (
+                  <>
+                    <IconStar className="w-2.5 h-2.5 text-amber-500" filled />
+                    <span>YOU (HOME)</span>
+                  </>
+                ) : (
+                  'Home'
+                )}
               </span>
             </div>
           </div>
@@ -141,8 +149,15 @@ export function InstantSimLoadingModal({
               <h3 className="font-display font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate">
                 {getEffectiveClubName(awayClub, userClub)}
               </h3>
-              <span className="text-[10px] uppercase font-extrabold text-slate-600 dark:text-slate-400 block truncate mt-0.5">
-                {awayClub.id === userClub.id ? '★ YOU (AWAY)' : 'Away'}
+              <span className="text-[10px] uppercase font-extrabold text-slate-600 dark:text-slate-400 inline-flex items-center justify-center gap-0.5 truncate mt-0.5">
+                {awayClub.id === userClub.id ? (
+                  <>
+                    <IconStar className="w-2.5 h-2.5 text-amber-500" filled />
+                    <span>YOU (AWAY)</span>
+                  </>
+                ) : (
+                  'Away'
+                )}
               </span>
             </div>
           </div>
@@ -160,7 +175,7 @@ export function InstantSimLoadingModal({
 
           {/* Status Message */}
           <div className="flex items-center justify-center gap-2 text-xs text-slate-800 dark:text-slate-200 min-h-[24px]">
-            <span className="inline-block animate-spin motion-reduce:animate-none text-[#1d5eff]">⚙️</span>
+            <IconRefresh className="w-3.5 h-3.5 animate-spin motion-reduce:animate-none text-[#1d5eff] shrink-0" />
             <span className="font-bold">{currentPhase.text}</span>
           </div>
         </section>

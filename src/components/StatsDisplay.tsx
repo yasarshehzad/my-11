@@ -1,6 +1,19 @@
 import React, { useState } from 'react';
 import { ChemistryLog } from '../types/game';
 import { SquadChemistryBreakdown } from '../utils/gameLogic';
+import {
+  IconSearch,
+  IconHandshake,
+  IconChevronUp,
+  IconChevronDown,
+  IconClose,
+  IconShield,
+  IconGlobe,
+  IconClock,
+  IconSliders,
+  IconAlert,
+  IconUsers,
+} from './career/GameIcons';
 
 interface StatsDisplayProps {
   attack: number;
@@ -63,7 +76,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
           <span className="text-2xl sm:text-3xl font-display font-black text-[var(--office-text-primary)] relative z-10 leading-none">
             {overall || '--'}
           </span>
-          <span className="text-[9px] font-black text-[var(--office-text-muted)] tracking-widest relative z-10 mt-1 uppercase font-display">
+          <span className="text-[10px] font-black text-[var(--office-text-muted)] tracking-widest relative z-10 mt-1 uppercase font-display">
             OVR
           </span>
         </div>
@@ -73,7 +86,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
           {/* Attack */}
           <div>
             <div className="flex justify-between items-center text-xs mb-1">
-              <span className="font-bold text-[var(--office-text-muted)] tracking-wider uppercase text-[9px]">Attack</span>
+              <span className="font-bold text-[var(--office-text-muted)] tracking-wider uppercase text-[10px]">Attack</span>
               <span className="font-bold text-[#1d5eff] font-display text-xs sm:text-sm">{attack || '--'}</span>
             </div>
             <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/80">
@@ -87,7 +100,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
           {/* Midfield */}
           <div>
             <div className="flex justify-between items-center text-xs mb-1">
-              <span className="font-bold text-[var(--office-text-muted)] tracking-wider uppercase text-[9px]">Midfield</span>
+              <span className="font-bold text-[var(--office-text-muted)] tracking-wider uppercase text-[10px]">Midfield</span>
               <span className="font-bold text-[#0284c7] font-display text-xs sm:text-sm">{midfield || '--'}</span>
             </div>
             <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/80">
@@ -101,7 +114,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
           {/* Defence */}
           <div>
             <div className="flex justify-between items-center text-xs mb-1">
-              <span className="font-bold text-[var(--office-text-muted)] tracking-wider uppercase text-[9px]">Defence</span>
+              <span className="font-bold text-[var(--office-text-muted)] tracking-wider uppercase text-[10px]">Defence</span>
               <span className="font-bold text-rose-600 font-display text-xs sm:text-sm">{defence || '--'}</span>
             </div>
             <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/80">
@@ -117,13 +130,13 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
             type="button"
             onClick={() => setShowBreakdownModal(true)}
             className="w-full text-left group cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-400/50 rounded-lg p-0.5 -m-0.5 transition-colors"
-            title="Click to view full Chemistry breakdown"
+            title="View chemistry breakdown"
             aria-label={`Chemistry: ${chemistry || 0} out of 100. Click to inspect full breakdown.`}
           >
             <div className="flex justify-between items-center text-xs mb-1">
-              <span className="font-bold text-[var(--office-text-muted)] tracking-wider uppercase text-[9px] flex items-center gap-1 group-hover:text-amber-700 transition-colors">
+              <span className="font-bold text-[var(--office-text-muted)] tracking-wider uppercase text-[10px] flex items-center gap-1 group-hover:text-amber-700 transition-colors">
                 <span>Chemistry</span>
-                <span className="text-[8px] text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded-full font-sans uppercase font-bold">Inspect 🔍</span>
+                <IconSearch className="w-3 h-3 shrink-0 text-amber-700" />
               </span>
               <span className="font-bold text-amber-600 font-display text-xs sm:text-sm group-hover:scale-105 transition-transform">{chemistry || '--'}/100</span>
             </div>
@@ -140,33 +153,29 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
       {/* 3. Collapsible Quick Chemistry Log */}
       {logs.length > 0 && (
         <div className="mt-1 pt-2.5 border-t border-[var(--office-divider)] w-full">
-          <div className="flex justify-between items-center">
+          <div>
             <button
               type="button"
               onClick={() => setShowLogs(!showLogs)}
-              className="flex justify-between items-center text-[10px] font-bold text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] cursor-pointer uppercase tracking-widest py-1 flex-1"
+              className="flex justify-between items-center text-[10px] font-bold text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] cursor-pointer uppercase tracking-widest py-2 w-full"
               aria-expanded={showLogs}
             >
-              <span>🔗 Live Chemistry Log ({logs.length})</span>
-              <span>{showLogs ? 'Hide ▲' : 'Show ▼'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowBreakdownModal(true)}
-              className="text-[9px] font-bold text-amber-800 hover:bg-amber-100 ml-2 px-2.5 py-0.5 rounded-lg bg-amber-50 border border-amber-200 uppercase tracking-wider cursor-pointer"
-            >
-              Breakdown
+              <span className="inline-flex items-center gap-1.5">
+                <IconHandshake className="w-3.5 h-3.5 shrink-0" />
+                <span>Chemistry Log ({logs.length})</span>
+              </span>
+              {showLogs ? <IconChevronUp className="w-3.5 h-3.5 shrink-0" /> : <IconChevronDown className="w-3.5 h-3.5 shrink-0" />}
             </button>
           </div>
 
           {showLogs && (
-            <div className="mt-2.5 flex flex-col gap-2 max-h-[340px] overflow-y-auto pr-1 leading-normal text-[11px] animate-card-deal">
+            <div className="mt-2.5 flex flex-col gap-2 max-h-[240px] overflow-y-auto pr-1 leading-normal text-[11px] motion-safe:animate-card-deal">
               {positiveLogs.length > 0 && (
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-[8px] font-bold text-emerald-600 uppercase tracking-widest">Synergy Bonuses</span>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">Synergy Bonuses</span>
                   {positiveLogs.map((log, idx) => (
-                    <div key={`pos-${idx}`} className="flex justify-between items-center text-emerald-800 bg-emerald-50/80 px-3 py-1.5 rounded-xl border border-emerald-200 shadow-2xs">
-                      <span className="truncate max-w-[210px] font-medium">{log.reason}</span>
+                    <div key={`pos-${idx}`} className="flex justify-between items-center gap-2 text-emerald-800 py-0.5">
+                      <span className="truncate min-w-0 font-medium">{log.reason}</span>
                       <span className="font-display font-black text-xs flex-shrink-0 text-emerald-700">+{log.delta}</span>
                     </div>
                   ))}
@@ -174,11 +183,11 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
               )}
 
               {negativeLogs.length > 0 && (
-                <div className="flex flex-col gap-1.5 mt-1.5">
-                  <span className="text-[8px] font-bold text-rose-600 uppercase tracking-widest">Penalties &amp; Gaps</span>
+                <div className="flex flex-col mt-1.5">
+                  <span className="text-[10px] font-bold text-rose-700 uppercase tracking-widest">Penalties &amp; Gaps</span>
                   {negativeLogs.map((log, idx) => (
-                    <div key={`neg-${idx}`} className="flex justify-between items-center text-rose-800 bg-rose-50/80 px-3 py-1.5 rounded-xl border border-rose-200 shadow-2xs">
-                      <span className="truncate max-w-[210px] font-medium">{log.reason}</span>
+                    <div key={`neg-${idx}`} className="flex justify-between items-center gap-2 text-rose-800 py-0.5">
+                      <span className="truncate min-w-0 font-medium">{log.reason}</span>
                       <span className="font-display font-black text-xs flex-shrink-0 text-rose-700">-{log.delta}</span>
                     </div>
                   ))}
@@ -192,16 +201,15 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
       {/* 4. Full Squad Chemistry Breakdown Modal */}
       {showBreakdownModal && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-card-deal"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm motion-safe:animate-card-deal"
           role="dialog"
           aria-modal="true"
           aria-labelledby="chem-breakdown-title"
         >
-          <div className="office-floating-card rounded-3xl p-5 sm:p-6 w-full max-w-md shadow-2xl flex flex-col gap-4 max-h-[85vh] overflow-y-auto">
+          <div className="office-floating-card rounded-3xl p-5 sm:p-6 w-full max-w-md shadow-2xl flex flex-col gap-4 max-h-[90dvh] overflow-y-auto scrollbar-none">
             {/* Header */}
-            <div className="flex justify-between items-center border-b border-[var(--office-divider)] pb-3">
-              <div>
-                <span className="text-[9px] font-black text-amber-700 uppercase tracking-widest block">Squad Architecture</span>
+            <div className="flex justify-between items-center gap-3 border-b border-[var(--office-divider)] pb-3">
+              <div className="min-w-0">
                 <h3 id="chem-breakdown-title" className="text-base font-display font-black text-[var(--office-text-primary)] uppercase tracking-wide">
                   Chemistry Breakdown
                 </h3>
@@ -209,111 +217,41 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
               <button
                 type="button"
                 onClick={() => setShowBreakdownModal(false)}
-                className="w-8 h-8 rounded-full office-subcard text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] flex items-center justify-center cursor-pointer shadow-2xs font-bold"
+                className="w-9 h-9 rounded-full office-subcard text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] flex items-center justify-center cursor-pointer shadow-2xs shrink-0"
                 aria-label="Close chemistry breakdown"
               >
-                ✕
+                <IconClose className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Score Banner */}
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200">
-              <div>
-                <span className="text-xs text-[var(--office-text-primary)] font-bold uppercase tracking-wider block">Total Squad Chemistry</span>
-                <span className="text-[10px] text-[var(--office-text-secondary)]">Target: 80+ for peak match engine performance</span>
-              </div>
-              <div className="text-right">
+            {/* Score */}
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-xs text-[var(--office-text-secondary)] font-semibold">Total (aim for 80+)</span>
+              <span>
                 <span className="text-2xl font-display font-black text-amber-600">{chemistry}</span>
                 <span className="text-xs font-bold text-[var(--office-text-muted)]">/100</span>
-              </div>
+              </span>
             </div>
 
-            {/* Category Breakdown Cards */}
+            {/* Category rows */}
             {breakdown && (
-              <div className="grid grid-cols-2 gap-2.5 text-xs">
-                {/* Club Links */}
-                <div className="p-3 rounded-2xl office-subcard border border-blue-200 bg-blue-50/50 flex flex-col gap-1">
-                  <span className="text-[9px] font-bold text-[#1d5eff] uppercase tracking-wider flex items-center justify-between">
-                    <span>🛡️ Club Links</span>
-                    {breakdown.clubLinks.count > 0 && (
-                      <span className="text-[8px] bg-blue-100 text-[#1d5eff] px-1.5 py-0.5 rounded font-display font-bold">
-                        {breakdown.clubLinks.count} links
-                      </span>
-                    )}
-                  </span>
-                  <span className="text-lg font-display font-black text-[#1d5eff]">+{breakdown.clubLinks.delta}</span>
-                  <span className="text-[9px] text-[var(--office-text-secondary)] leading-tight">Same club teammates sharing familiarity</span>
-                </div>
-
-                {/* Nation Links */}
-                <div className="p-3 rounded-2xl office-subcard border border-cyan-200 bg-cyan-50/50 flex flex-col gap-1">
-                  <span className="text-[9px] font-bold text-cyan-800 uppercase tracking-wider flex items-center justify-between">
-                    <span>🌍 Nation Links</span>
-                    {breakdown.nationLinks.count > 0 && (
-                      <span className="text-[8px] bg-cyan-100 text-cyan-800 px-1.5 py-0.5 rounded font-display font-bold">
-                        {breakdown.nationLinks.count} links
-                      </span>
-                    )}
-                  </span>
-                  <span className="text-lg font-display font-black text-cyan-800">+{breakdown.nationLinks.delta}</span>
-                  <span className="text-[9px] text-[var(--office-text-secondary)] leading-tight">Shared country and language communication</span>
-                </div>
-
-                {/* Era Cohesion */}
-                <div className="p-3 rounded-2xl office-subcard border border-purple-200 bg-purple-50/50 flex flex-col gap-1">
-                  <span className="text-[9px] font-bold text-purple-800 uppercase tracking-wider flex items-center justify-between">
-                    <span>⏳ Era Cohesion</span>
-                    {breakdown.eraLinks.count > 0 && (
-                      <span className="text-[8px] bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded font-display font-bold">
-                        {breakdown.eraLinks.count} links
-                      </span>
-                    )}
-                  </span>
-                  <span className="text-lg font-display font-black text-purple-800">+{breakdown.eraLinks.delta}</span>
-                  <span className="text-[9px] text-[var(--office-text-secondary)] leading-tight">Similar generation footballing tempo</span>
-                </div>
-
-                {/* Tactical Balance */}
-                <div className="p-3 rounded-2xl office-subcard border border-amber-200 bg-amber-50/50 flex flex-col gap-1">
-                  <span className="text-[9px] font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1">
-                    ♟️ Tactical Balance
-                  </span>
-                  <span className="text-lg font-display font-black text-amber-800">+{breakdown.tacticalBalance.delta}</span>
-                  <span className="text-[9px] text-[var(--office-text-secondary)] leading-tight">Pivots, wingers &amp; spine balance bonus</span>
-                </div>
-
-                {/* Position Penalties */}
-                <div className="p-3 rounded-2xl office-subcard border border-rose-200 bg-rose-50/50 flex flex-col gap-1">
-                  <span className="text-[9px] font-bold text-rose-800 uppercase tracking-wider flex items-center justify-between">
-                    <span>⚠️ Position Penalties</span>
-                    {breakdown.positionPenalties.count > 0 && (
-                      <span className="text-[8px] bg-rose-100 text-rose-800 px-1.5 py-0.5 rounded font-display font-bold">
-                        {breakdown.positionPenalties.count} out of pos
-                      </span>
-                    )}
-                  </span>
-                  <span className="text-lg font-display font-black text-rose-800">
-                    {breakdown.positionPenalties.delta > 0 ? `-${breakdown.positionPenalties.delta}` : '0'}
-                  </span>
-                  <span className="text-[9px] text-[var(--office-text-secondary)] leading-tight">Penalties for out-of-position players</span>
-                </div>
-
-                {/* Fragmentation */}
-                <div className="p-3 rounded-2xl office-subcard border border-slate-200 flex flex-col gap-1">
-                  <span className="text-[9px] font-bold text-[var(--office-text-muted)] uppercase tracking-wider flex items-center justify-between">
-                    <span>🧩 Squad Cohesion</span>
-                    {breakdown.fragmentationPenalties.details.length > 0 && (
-                      <span className="text-[8px] bg-slate-100 text-[var(--office-text-secondary)] px-1.5 py-0.5 rounded font-display font-bold">
-                        {breakdown.fragmentationPenalties.details.length} isolated
-                      </span>
-                    )}
-                  </span>
-                  <span className="text-lg font-display font-black text-[var(--office-text-primary)]">
-                    {breakdown.fragmentationPenalties.delta > 0 ? `-${breakdown.fragmentationPenalties.delta}` : '0'}
-                  </span>
-                  <span className="text-[9px] text-[var(--office-text-secondary)] leading-tight">Penalty for unlinked isolated players</span>
-                </div>
-              </div>
+              <ul className="divide-y divide-[var(--office-divider)] border-y border-[var(--office-divider)] text-xs">
+                {[
+                  { icon: <IconShield className="w-3.5 h-3.5 shrink-0" />, label: 'Club links', note: breakdown.clubLinks.count > 0 ? `${breakdown.clubLinks.count} links` : '', value: `+${breakdown.clubLinks.delta}`, tone: 'text-[#1d5eff]' },
+                  { icon: <IconGlobe className="w-3.5 h-3.5 shrink-0" />, label: 'Nation links', note: breakdown.nationLinks.count > 0 ? `${breakdown.nationLinks.count} links` : '', value: `+${breakdown.nationLinks.delta}`, tone: 'text-cyan-800' },
+                  { icon: <IconClock className="w-3.5 h-3.5 shrink-0" />, label: 'Era links', note: breakdown.eraLinks.count > 0 ? `${breakdown.eraLinks.count} links` : '', value: `+${breakdown.eraLinks.delta}`, tone: 'text-purple-800' },
+                  { icon: <IconSliders className="w-3.5 h-3.5 shrink-0" />, label: 'Tactical balance', note: '', value: `+${breakdown.tacticalBalance.delta}`, tone: 'text-amber-800' },
+                  { icon: <IconAlert className="w-3.5 h-3.5 shrink-0" />, label: 'Out of position', note: breakdown.positionPenalties.count > 0 ? `${breakdown.positionPenalties.count} players` : '', value: breakdown.positionPenalties.delta > 0 ? `-${breakdown.positionPenalties.delta}` : '0', tone: 'text-rose-800' },
+                  { icon: <IconUsers className="w-3.5 h-3.5 shrink-0" />, label: 'Unlinked players', note: breakdown.fragmentationPenalties.details.length > 0 ? `${breakdown.fragmentationPenalties.details.length} isolated` : '', value: breakdown.fragmentationPenalties.delta > 0 ? `-${breakdown.fragmentationPenalties.delta}` : '0', tone: 'text-[var(--office-text-primary)]' },
+                ].map((row) => (
+                  <li key={row.label} className="flex items-center gap-2 py-2.5">
+                    <span className={row.tone}>{row.icon}</span>
+                    <span className="font-bold text-[var(--office-text-primary)]">{row.label}</span>
+                    {row.note && <span className="text-[11px] text-[var(--office-text-muted)]">{row.note}</span>}
+                    <span className={`ml-auto font-display font-black text-sm ${row.tone}`}>{row.value}</span>
+                  </li>
+                ))}
+              </ul>
             )}
 
             {/* Close CTA */}
@@ -322,7 +260,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
               onClick={() => setShowBreakdownModal(false)}
               className="w-full py-3 rounded-2xl office-action-btn-primary text-white font-display font-black text-xs uppercase tracking-wider cursor-pointer text-center shadow-md transition-all mt-1"
             >
-              Done &amp; Return to Draft
+              Done
             </button>
           </div>
         </div>

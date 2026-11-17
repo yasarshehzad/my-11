@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Player, FormationType } from '../types/game';
 import { FORMATION_SLOTS } from '../utils/gameLogic';
 import { PlayerCard } from './PlayerCard';
+import { IconHandshake, IconClose } from './career/GameIcons';
 
 interface PitchLayoutProps {
   formation: FormationType;
@@ -145,7 +146,7 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
 
   return (
     <div
-      className="w-full relative aspect-[1/1.22] rounded-3xl overflow-hidden bg-gradient-to-b from-pitch-green to-pitch-green-light border border-emerald-900/40 shadow-2xl shadow-emerald-950/20 select-none"
+      className="w-full relative aspect-[1/1.3] sm:aspect-[1/1.22] rounded-3xl overflow-hidden bg-gradient-to-b from-pitch-green to-pitch-green-light border border-emerald-900/40 shadow-2xl shadow-emerald-950/20 select-none"
       onClick={(e) => {
         // If clicking outside players, clear selection
         if ((e.target as HTMLElement).tagName === 'DIV' && selectedSlotIndex !== null) {
@@ -254,9 +255,9 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
 
       {/* 4. Active Link Summary Banner overlay when player is tapped */}
       {selectedSlotIndex !== null && selectedPlayers[selectedSlotIndex] && (
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 bg-white/95 border border-indigo-200 px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider text-[#1d5eff] shadow-xl flex items-center gap-2 animate-card-deal">
-          <span>🔗</span>
-          <span>
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 bg-white/95 border border-indigo-200 px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider text-[#1d5eff] shadow-xl flex items-center gap-2 motion-safe:animate-card-deal max-w-[92%]">
+          <IconHandshake className="w-3.5 h-3.5 shrink-0" />
+          <span className="truncate">
             {selectedPlayers[selectedSlotIndex]?.displayName}: {getPlayerLinkCount(selectedSlotIndex)} teammate connection{getPlayerLinkCount(selectedSlotIndex) !== 1 ? 's' : ''}
           </span>
           <button
@@ -265,10 +266,10 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
               e.stopPropagation();
               setSelectedSlotIndex(null);
             }}
-            className="text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] ml-1 font-bold cursor-pointer"
+            className="text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] ml-1 font-bold cursor-pointer shrink-0 flex items-center justify-center"
             aria-label="Dismiss link inspection"
           >
-            ✕
+            <IconClose className="w-3 h-3" />
           </button>
         </div>
       )}
@@ -332,14 +333,15 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
                 {/* Subtle link badge on player card when they have active connections */}
                 {linkCount > 0 && (
                   <span
-                    className={`absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-full text-[7.5px] font-black font-display uppercase tracking-tight shadow-md border leading-none transition-transform ${
+                    className={`absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-full text-[10px] font-black font-display uppercase tracking-tight shadow-md border leading-none transition-transform inline-flex items-center gap-0.5 ${
                       isLinkedToFocused || isFocused
                         ? 'bg-[#1d5eff] text-white border-blue-400 scale-110'
                         : 'bg-white text-[#1d5eff] border-blue-200'
                     }`}
                     title={`${linkCount} teammate link${linkCount !== 1 ? 's' : ''} (tap to inspect)`}
                   >
-                    🔗 {linkCount}
+                    <IconHandshake className="w-2.5 h-2.5 shrink-0" />
+                    <span>{linkCount}</span>
                   </span>
                 )}
               </div>
@@ -349,7 +351,7 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
                 type="button"
                 onClick={() => handleSlotClick(index)}
                 aria-label={accessibleLabel}
-                className={`w-[68px] h-[100px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition-all duration-300 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 cursor-pointer ${
+                className={`w-[62px] h-[60px] sm:w-[68px] sm:h-[84px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition-all duration-300 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 cursor-pointer ${
                   isActive
                     ? 'border-[#1d5eff] bg-blue-50/80 text-[#1d5eff] shadow-[0_0_15px_rgba(29,94,255,0.3)] scale-105 ring-2 ring-blue-500/30 motion-safe:animate-pulse font-black'
                     : 'border-slate-300/80 bg-white/60 text-slate-500 hover:border-indigo-300 hover:bg-white/90 hover:text-slate-800 hover:scale-102 font-bold'

@@ -760,6 +760,123 @@ export function getBestStartingLineup(
 }
 
 /**
+ * Preserves the manager's chosen starting XI & bench while replacing only injured,
+ * suspended, or (for league matches) unregistered starters with eligible alternatives.
+ */
+export function resolveMatchdayLineup(
+  squad: CareerPlayer[],
+  savedLineup?: CareerLineup,
+  registeredPlayerIds?: string[],
+  seasonYearStart: number = 2026,
+  isLeagueMatch: boolean = true,
+  userClubId?: string
+): CareerLineup {
+  const activePool = userClubId
+    ? squad.filter((p) => !(p.isOnLoan && p.loanOriginClubId === userClubId))
+    : squad;
+  const formationName = savedLineup?.formation || '4-3-3';
+
+  const isEligible = (p: CareerPlayer): boolean => {
+    if (p.injured) return false;
+    if (p.suspendedMatches && p.suspendedMatches > 0) return false;
+    if (isLeagueMatch && !isPlayerRegisteredForMatch(p, activePool, registeredPlayerIds, seasonYearStart)) {
+      return false;
+    }
+    return true;
+  };
+
+  if (!savedLineup?.starterIds || savedLineup.starterIds.length < 11) {
+    return getBestStartingLineup(
+      activePool,
+      formationName,
+      isLeagueMatch ? registeredPlayerIds : undefined,
+      seasonYearStart
+    );
+  }
+
+  const formation =
+    SUPPORTED_CAREER_FORMATIONS.find((f) => f.name === formationName) ||
+    SUPPORTED_CAREER_FORMATIONS[0];
+  const playerMap = new Map(activePool.map((p) => [p.id, p]));
+  const eligiblePool = activePool.filter(isEligible);
+  const effectivePool = eligiblePool.length >= 11 ? eligiblePool : activePool;
+  const effectiveSet = new Set(effectivePool.map((p) => p.id));
+
+  const nextStarterIds: string[] = Array(formation.slots.length).fill('');
+  const usedIds = new Set<string>();
+
+  // 1. Keep every chosen starter who is still in the squad and eligible
+  formation.slots.forEach((_, idx) => {
+    const id = savedLineup.starterIds[idx];
+    const p = id ? playerMap.get(id) : undefined;
+    if (p && effectiveSet.has(p.id) && !usedIds.has(p.id)) {
+      nextStarterIds[idx] = p.id;
+      usedIds.add(p.id);
+    }
+  });
+
+  // 2. Replace only unavailable/missing starter slots, preferring the user's bench first
+  const benchPriority = new Map<string, number>();
+  (savedLineup.benchIds || []).forEach((id, i) => benchPriority.set(id, i));
+
+  formation.slots.forEach((slotPos, idx) => {
+    if (nextStarterIds[idx]) return;
+    const isGkSlot = slotPos === 'GK';
+    const candidates = effectivePool.filter((p) => !usedIds.has(p.id));
+    if (candidates.length === 0) return;
+
+    candidates.sort((a, b) => {
+      if (isGkSlot) {
+        const aGk = categorizePosition(a.position) === 'GK' ? 1 : 0;
+        const bGk = categorizePosition(b.position) === 'GK' ? 1 : 0;
+        if (aGk !== bGk) return bGk - aGk;
+      } else {
+        const aGk = categorizePosition(a.position) === 'GK' ? 1 : 0;
+        const bGk = categorizePosition(b.position) === 'GK' ? 1 : 0;
+        if (aGk !== bGk) return aGk - bGk;
+      }
+
+      const fitScore = (p: CareerPlayer) => {
+        const fit = calculatePositionFit(p, slotPos);
+        return fit === 'natural' ? 12 : fit === 'competent' ? 6 : -10;
+      };
+      const aBenchBonus = benchPriority.has(a.id) ? 3 : 0;
+      const bBenchBonus = benchPriority.has(b.id) ? 3 : 0;
+      return (b.rating + fitScore(b) + bBenchBonus) - (a.rating + fitScore(a) + aBenchBonus);
+    });
+
+    const chosen = candidates[0];
+    nextStarterIds[idx] = chosen.id;
+    usedIds.add(chosen.id);
+  });
+
+  // 3. Preserve eligible bench players first, then top up to 9 subs
+  const nextBenchIds: string[] = [];
+  for (const id of savedLineup.benchIds || []) {
+    if (nextBenchIds.length >= 9) break;
+    const p = playerMap.get(id);
+    if (p && effectiveSet.has(p.id) && !usedIds.has(p.id)) {
+      nextBenchIds.push(p.id);
+      usedIds.add(p.id);
+    }
+  }
+  const leftovers = effectivePool
+    .filter((p) => !usedIds.has(p.id))
+    .sort((a, b) => b.rating - a.rating);
+  for (const p of leftovers) {
+    if (nextBenchIds.length >= 9) break;
+    nextBenchIds.push(p.id);
+    usedIds.add(p.id);
+  }
+
+  return {
+    formation: formation.name,
+    starterIds: nextStarterIds,
+    benchIds: nextBenchIds,
+  };
+}
+
+/**
  * Adapts an existing chosen lineup to a new formation WITHOUT replacing the manager's chosen starting 11.
  * Intelligently maps the same 11 chosen players to the tactical slots of the new formation.
  */

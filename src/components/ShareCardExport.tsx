@@ -1,6 +1,14 @@
 import React from 'react';
-import { Player, FormationType, SimulationResult, StreakStats } from '../types/game';
+import { Player, FormationType, SimulationResult } from '../types/game';
 import { FORMATION_SLOTS } from '../utils/gameLogic';
+import {
+  IconTrophy,
+  IconMedal,
+  IconHandshake,
+  IconCheck,
+  IconClose,
+  IconStar,
+} from './career/GameIcons';
 
 interface ShareCardExportProps {
   formation: FormationType;
@@ -13,7 +21,6 @@ interface ShareCardExportProps {
     overall: number;
   };
   simResult: SimulationResult;
-  streakStats?: StreakStats | null;
   isDailyChallenge?: boolean;
   dailyChallengeTitle?: string;
   dailyChallengeBeaten?: boolean;
@@ -25,7 +32,6 @@ export const ShareCardExport: React.FC<ShareCardExportProps> = ({
   selectedPlayers,
   stats,
   simResult,
-  streakStats,
   isDailyChallenge = false,
   dailyChallengeTitle = '',
   dailyChallengeBeaten = false,
@@ -95,10 +101,16 @@ export const ShareCardExport: React.FC<ShareCardExportProps> = ({
   };
 
   const getFinishText = (pos: number) => {
-    if (pos === 1) return 'LEAGUE CHAMPIONS 🏆';
-    if (pos <= 4) return 'CHAMPIONS LEAGUE QUALIFICATION 🥈';
-    if (pos <= 7) return 'EUROPA LEAGUE BOUND 🥉';
-    return 'MID TABLE LEAGUE RUN 🤝';
+    if (pos === 1) return 'LEAGUE CHAMPIONS';
+    if (pos <= 4) return 'CHAMPIONS LEAGUE QUALIFICATION';
+    if (pos <= 7) return 'EUROPA LEAGUE BOUND';
+    return 'MID TABLE LEAGUE RUN';
+  };
+
+  const renderFinishIcon = (pos: number) => {
+    if (pos === 1) return <IconTrophy className="w-5 h-5 shrink-0" />;
+    if (pos <= 7) return <IconMedal className="w-5 h-5 shrink-0" />;
+    return <IconHandshake className="w-5 h-5 shrink-0" />;
   };
 
   const getFinishClass = (pos: number) => {
@@ -137,16 +149,27 @@ export const ShareCardExport: React.FC<ShareCardExportProps> = ({
         </div>
 
         {isDailyChallenge ? (
-          <span className={`text-xl font-black px-7 py-3 rounded-2xl border uppercase tracking-wider font-display ${
+          <span className={`inline-flex items-center gap-2 text-xl font-black px-7 py-3 rounded-2xl border uppercase tracking-wider font-display ${
             dailyChallengeBeaten 
               ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40 shadow-[0_0_20px_rgba(59,130,246,0.25)]' 
               : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
           }`}>
-            {dailyChallengeBeaten ? '✅ CHALLENGE CLEARED' : '❌ CHALLENGE FAILED'}
+            {dailyChallengeBeaten ? (
+              <>
+                <IconCheck className="w-5 h-5 shrink-0" />
+                <span>CHALLENGE CLEARED</span>
+              </>
+            ) : (
+              <>
+                <IconClose className="w-5 h-5 shrink-0" />
+                <span>CHALLENGE FAILED</span>
+              </>
+            )}
           </span>
         ) : (
-          <span className={`text-lg font-black px-7 py-3 rounded-2xl bg-gradient-to-r border uppercase tracking-wider font-display ${getFinishClass(simResult.leaguePosition)}`}>
-            {getFinishText(simResult.leaguePosition)}
+          <span className={`inline-flex items-center gap-2 text-lg font-black px-7 py-3 rounded-2xl bg-gradient-to-r border uppercase tracking-wider font-display ${getFinishClass(simResult.leaguePosition)}`}>
+            {renderFinishIcon(simResult.leaguePosition)}
+            <span>{getFinishText(simResult.leaguePosition)}</span>
           </span>
         )}
       </div>
@@ -214,11 +237,11 @@ export const ShareCardExport: React.FC<ShareCardExportProps> = ({
                 </div>
 
                 {/* Club + Season rendered nicely at bottom of card */}
-                <div className="flex flex-col text-[8.5px] text-slate-400 border-t border-slate-800/60 pt-1.5 mt-1 font-semibold leading-none gap-1">
+                <div className="flex flex-col text-[11px] text-slate-400 border-t border-slate-800/60 pt-1.5 mt-1 font-semibold leading-none gap-1">
                   <span className="truncate max-w-[110px] uppercase text-slate-350">{player.club}</span>
                   <div className="flex justify-between items-center w-full">
-                    <span className="text-[8px] text-slate-500 uppercase">{player.era}</span>
-                    <span className={`text-[8.5px] font-black ${player.rarity === 'legend' ? 'text-amber-400' : player.rarity === 'elite' ? 'text-purple-400' : player.rarity === 'cult' ? 'text-emerald-450' : 'text-slate-400'}`}>
+                    <span className="text-[10px] text-slate-500 uppercase">{player.era}</span>
+                    <span className={`text-[11px] font-black ${player.rarity === 'legend' ? 'text-amber-400' : player.rarity === 'elite' ? 'text-purple-400' : player.rarity === 'cult' ? 'text-emerald-450' : 'text-slate-400'}`}>
                       {player.season}
                     </span>
                   </div>
@@ -285,64 +308,28 @@ export const ShareCardExport: React.FC<ShareCardExportProps> = ({
       {/* Narrative summary */}
       <div className="bg-slate-900/35 border border-slate-900 rounded-2xl p-6 mt-6 relative z-10 text-center">
         <p className="text-base font-semibold text-slate-350 leading-relaxed italic">
-          "{simResult.summary}"
+          &ldquo;{simResult.summary}&rdquo;
         </p>
         <p className="text-xs font-bold text-blue-400 uppercase tracking-widest mt-2.5">
           TACTICAL PLAYSTYLE: {simResult.playstyle}
         </p>
       </div>
 
-      {/* 5. MVP & Isolated Spotlight */}
-      <div className="grid grid-cols-2 gap-6 mt-6 relative z-10">
-        <div className="bg-slate-950/60 rounded-3xl p-5.5 border border-blue-500/10 flex flex-col justify-between h-[90px] leading-none">
-          <div>
-            <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest block mb-1">⭐ SEASON MVP</span>
-            <span className="text-2xl font-display font-extrabold text-white uppercase leading-tight truncate block">
-              {simResult.mvp.displayName}
-            </span>
-          </div>
-          <span className="text-xs text-slate-500 font-semibold uppercase tracking-wide">
-            {simResult.mvp.primaryPosition} • {simResult.mvp.rating} OVR • {simResult.mvp.club}
+      {/* 5. Season MVP */}
+      <div className="bg-slate-950/60 rounded-3xl px-7 py-5 border border-blue-500/10 mt-6 relative z-10 flex items-center justify-between gap-6 leading-none">
+        <div className="min-w-0">
+          <span className="inline-flex items-center gap-1.5 text-sm font-bold text-blue-400 uppercase tracking-widest mb-2">
+            <IconStar className="w-4 h-4 text-amber-400 shrink-0" filled />
+            <span>SEASON MVP</span>
+          </span>
+          <span className="text-3xl font-display font-extrabold text-white uppercase leading-tight truncate block">
+            {simResult.mvp.displayName}
           </span>
         </div>
-
-        <div className="bg-slate-950/60 rounded-3xl p-5.5 border border-rose-500/10 flex flex-col justify-between h-[90px] leading-none">
-          <div>
-            <span className="text-[10px] font-bold text-rose-455 uppercase tracking-widest block mb-1">⚠️ WEAK LINK</span>
-            <span className="text-2xl font-display font-extrabold text-white uppercase leading-tight truncate block">
-              {simResult.weakLink.displayName}
-            </span>
-          </div>
-          <span className="text-xs text-slate-500 font-semibold uppercase tracking-wide">
-            {simResult.weakLink.primaryPosition} • {simResult.weakLink.rating} OVR • {simResult.weakLink.club}
-          </span>
-        </div>
+        <span className="text-base text-slate-400 font-semibold uppercase tracking-wide shrink-0">
+          {simResult.mvp.primaryPosition} • {simResult.mvp.rating} OVR • {simResult.mvp.club}
+        </span>
       </div>
-
-      {/* Streaks stats if available */}
-      {streakStats && (
-        <div className="bg-slate-900/20 rounded-3xl p-6 border border-slate-900/60 mt-6 relative z-10 flex justify-between text-center gap-2">
-          <div className="flex-grow">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Runs Played</span>
-            <p className="text-2xl font-display font-black text-white mt-1">{streakStats.gamesPlayed}</p>
-          </div>
-          <div className="w-[1.5px] bg-slate-800" />
-          <div className="flex-grow">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Best League Record</span>
-            <p className="text-2xl font-display font-black text-blue-400 mt-1">{streakStats.bestPoints} pts</p>
-          </div>
-          <div className="w-[1.5px] bg-slate-800" />
-          <div className="flex-grow">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Completed Runs</span>
-            <p className="text-2xl font-display font-black text-amber-400 mt-1">{streakStats.dailyChallengesCompleted}</p>
-          </div>
-          <div className="w-[1.5px] bg-slate-800" />
-          <div className="flex-grow">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Streak</span>
-            <p className="text-2xl font-display font-black text-indigo-400 mt-1">⚡ {streakStats.currentDailyStreak} Days</p>
-          </div>
-        </div>
-      )}
 
       {/* 6. Footer / CTA watermark */}
       <div className="flex justify-between items-center border-t-2 border-slate-900 pt-8 mt-6 relative z-10">

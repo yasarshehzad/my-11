@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { players } from '../../../data/players';
 import { 
   FORMATION_SLOTS, 
@@ -47,6 +48,24 @@ interface SimStats {
 }
 
 export default function DebugBalancingPage() {
+  if (process.env.NODE_ENV === 'production') {
+    return (
+      <main style={{ padding: '48px 24px', maxWidth: '640px', margin: '0 auto', color: '#f3f4f6', fontFamily: 'system-ui, sans-serif', textAlign: 'center' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '12px' }}>Page Not Available</h1>
+        <p style={{ color: '#9ca3af', marginBottom: '24px' }}>
+          This internal balancing simulator is only enabled during local development.
+        </p>
+        <Link href="/" style={{ color: '#60a5fa', textDecoration: 'underline', fontWeight: '600' }}>
+          Return to Home
+        </Link>
+      </main>
+    );
+  }
+
+  return <DebugBalancingWorkbench />;
+}
+
+function DebugBalancingWorkbench() {
   const [isRunning, setIsRunning] = useState(false);
   const [simProgress, setSimProgress] = useState<number>(0);
   const [simTarget, setSimTarget] = useState<number>(0);
@@ -253,7 +272,19 @@ export default function DebugBalancingPage() {
         const p95 = winsArr[Math.floor(total * 0.95)];
         const p99 = winsArr[Math.floor(total * 0.99)];
 
-        const compiledFormationResults: any = {};
+        const compiledFormationResults: Record<
+          string,
+          {
+            runs: number;
+            avgWins: number;
+            medianWins: number;
+            avgOvr: number;
+            avgChem: number;
+            w30Plus: number;
+            w35Plus: number;
+            perfect: number;
+          }
+        > = {};
         formations.forEach((f) => {
           const rec = formationResults[f];
           rec.winsList.sort((a, b) => a - b);
@@ -328,7 +359,7 @@ export default function DebugBalancingPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <h1 style={{ fontSize: '28px', fontWeight: '800', margin: 0, color: '#f9fafb' }}>
-              ⚙️ MY-11 Game Balance & Monte Carlo QA
+              MY-11 Game Balance & Monte Carlo QA
             </h1>
             <p style={{ margin: '6px 0 0 0', color: '#9ca3af', fontSize: '14px' }}>
               Internal simulation dashboard for draft appearance distribution, formation fairness, and 38-game season engine verification.

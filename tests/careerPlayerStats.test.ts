@@ -117,11 +117,33 @@ describe('Player Statistics and Career History Engine', () => {
     expect(stats.competitions?.league.goals).toBe(2);
   });
 
-  it('generates consistent deterministic historical seasons for previous years', () => {
+  it('returns only real archived seasons and does not fabricate synthetic pre-career history', () => {
     const historical = generateHistoricalSeasons(dummyPlayer, 2026);
-    expect(historical.length).toBeGreaterThan(0);
-    expect(historical[0].seasonLabel).toBe('2025/26');
-    expect(historical[0].appearances).toBeGreaterThan(0);
+    expect(historical).toEqual([]);
+
+    const playerWithHistory: CareerPlayer = {
+      ...dummyPlayer,
+      historyStats: [
+        {
+          seasonLabel: '2026/27',
+          clubName: 'Merseyside Red',
+          appearances: 34,
+          starts: 30,
+          subAppearances: 4,
+          goals: 18,
+          assists: 6,
+          cleanSheets: 0,
+          yellowCards: 3,
+          redCards: 0,
+          avgRating: 7.6,
+          manOfTheMatch: 5,
+        },
+      ],
+    };
+    const archived = generateHistoricalSeasons(playerWithHistory, 2027);
+    expect(archived).toHaveLength(1);
+    expect(archived[0].seasonLabel).toBe('2026/27');
+    expect(archived[0].appearances).toBe(34);
   });
 
   it('aggregates complete stats and career totals', () => {

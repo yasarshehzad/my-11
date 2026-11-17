@@ -4,7 +4,7 @@
  * analytics provider (Google Analytics, Plausible, Mixpanel, etc.) in production.
  */
 
-export const trackEvent = (eventName: string, params?: Record<string, any>) => {
+export const trackEvent = (eventName: string, params?: Record<string, unknown>) => {
   if (process.env.NODE_ENV === 'development') {
     console.log(`[Analytics Event] ${eventName}`, params || '');
   }

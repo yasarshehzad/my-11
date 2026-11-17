@@ -19,11 +19,15 @@ import {
   generateSeasonNarrative 
 } from './matchStoryEngine';
 
+import { DAILY_CHALLENGES } from './dailyChallenges';
+
 export { 
   generateMatchStory, 
   generateSeasonHighlights, 
   generateSeasonNarrative 
 } from './matchStoryEngine';
+
+export { DAILY_CHALLENGES };
 
 // Formations and their coordinate positions on a mobile-first visual pitch
 // (x: 0-100 from left, y: 0-100 from top)
@@ -55,9 +59,9 @@ export const FORMATION_SLOTS: Record<FormationType, PitchSlot[]> = {
     { id: 'st2', label: 'ST', position: 'ST', x: 65, y: 16 },
   ],
   '3-5-2': [
-    { id: 'gk', label: 'GK', position: 'GK', x: 50, y: 82 },
+    { id: 'gk', label: 'GK', position: 'GK', x: 50, y: 85 },
     { id: 'cb1', label: 'CB', position: 'CB', x: 25, y: 66 },
-    { id: 'cb2', label: 'CB', position: 'CB', x: 50, y: 68 },
+    { id: 'cb2', label: 'CB', position: 'CB', x: 50, y: 67 },
     { id: 'cb3', label: 'CB', position: 'CB', x: 75, y: 66 },
     { id: 'lm', label: 'LM', position: 'LM', x: 12, y: 44 },
     { id: 'cdm1', label: 'CDM', position: 'CDM', x: 35, y: 50 },
@@ -76,9 +80,9 @@ export const FORMATION_SLOTS: Record<FormationType, PitchSlot[]> = {
     { id: 'cdm1', label: 'CDM', position: 'CDM', x: 35, y: 50 },
     { id: 'cdm2', label: 'CDM', position: 'CDM', x: 65, y: 50 },
     { id: 'lm', label: 'LM', position: 'LM', x: 15, y: 28 },
-    { id: 'cam', label: 'CAM', position: 'CAM', x: 50, y: 26 },
+    { id: 'cam', label: 'CAM', position: 'CAM', x: 50, y: 28 },
     { id: 'rm', label: 'RM', position: 'RM', x: 85, y: 28 },
-    { id: 'st', label: 'ST', position: 'ST', x: 50, y: 14 },
+    { id: 'st', label: 'ST', position: 'ST', x: 50, y: 11 },
   ],
 };
 
@@ -262,52 +266,6 @@ export const LEAGUE_OPPONENTS: Record<string, OpponentTeam[]> = {
 };
 
 export const OPPONENTS = LEAGUE_OPPONENTS.english;
-
-// Daily challenges templates rotating by day-of-week (0 = Sun, 1 = Mon, ..., 6 = Sat)
-export const DAILY_CHALLENGES: ChallengeTemplate[] = [
-  {
-    id: 'sunday_golden_era',
-    title: 'The Golden Era 🌟',
-    description: 'Win the league qualification (60+ pts) using ONLY players from the 2000s.',
-    rule: 'only_2000s',
-  },
-  {
-    id: 'monday_underdog',
-    title: 'Underdog Story 🛡️',
-    description: 'Finish respectably (50+ pts) using ONLY Common and Rare players.',
-    rule: 'underdog_xi',
-  },
-  {
-    id: 'tuesday_no_legends',
-    title: 'No Legends Allowed 🚫',
-    description: 'Win the league qualification (60+ pts) with absolutely zero Legends.',
-    rule: 'no_legends',
-  },
-  {
-    id: 'wednesday_defence',
-    title: 'The Great Wall 🧱',
-    description: 'Score 60+ pts and achieve a final team Defence rating of 88 or higher.',
-    rule: 'best_defence',
-  },
-  {
-    id: 'thursday_galactico',
-    title: 'Galáctico Blueprint ✨',
-    description: 'Win the league qualification (60+ pts) built around exactly 1 Legend player.',
-    rule: 'one_superstar',
-  },
-  {
-    id: 'friday_budget',
-    title: 'Budget Masterclass 🪙',
-    description: 'Draft a team where no player is rated 90 or above, and qualify (60+ pts).',
-    rule: 'under_90_rating',
-  },
-  {
-    id: 'saturday_modern',
-    title: 'Modern Dominance ⚡',
-    description: 'Draft a squad using ONLY players from the Modern era, and qualify (60+ pts).',
-    rule: 'only_modern',
-  },
-];
 
 /**
  * Seedable Pseudorandom Number Generator (LCG)
@@ -750,31 +708,31 @@ export function getDetailedChemistryLogs(
   // Nation connections
   Object.entries(nationCounts).forEach(([nation, count]) => {
     if (count >= 5) {
-      logs.push({ delta: 18, reason: `🏆 Elite Nation Block (${nation} x${count})`, type: 'positive' });
+      logs.push({ delta: 18, reason: `Elite Nation Block (${nation} x${count})`, type: 'positive' });
     } else if (count >= 3) {
-      logs.push({ delta: 11, reason: `🇧🇷 Strong Nation Core (${nation} x${count})`, type: 'positive' });
+      logs.push({ delta: 11, reason: `Strong Nation Core (${nation} x${count})`, type: 'positive' });
     } else if (count >= 2) {
-      logs.push({ delta: 4, reason: `🤝 Nation Connection (${nation} x${count})`, type: 'positive' });
+      logs.push({ delta: 4, reason: `Nation Connection (${nation} x${count})`, type: 'positive' });
     }
   });
 
   // Club connections
   Object.entries(clubCounts).forEach(([club, count]) => {
     if (count >= 4) {
-      logs.push({ delta: 21, reason: `👑 Club Dynasty (${club} x${count})`, type: 'positive' });
+      logs.push({ delta: 21, reason: `Club Dynasty (${club} x${count})`, type: 'positive' });
     } else if (count >= 3) {
-      logs.push({ delta: 14, reason: `✨ Strong Club Link (${club} x${count})`, type: 'positive' });
+      logs.push({ delta: 14, reason: `Strong Club Link (${club} x${count})`, type: 'positive' });
     } else if (count >= 2) {
-      logs.push({ delta: 7, reason: `🤝 Club Connection (${club} x${count})`, type: 'positive' });
+      logs.push({ delta: 7, reason: `Club Connection (${club} x${count})`, type: 'positive' });
     }
   });
 
   // Era connections
   Object.entries(eraCounts).forEach(([era, count]) => {
     if (count >= 5) {
-      logs.push({ delta: 10, reason: `⏳ Generation Link (${era} Era x${count})`, type: 'positive' });
+      logs.push({ delta: 10, reason: `Generation Link (${era} Era x${count})`, type: 'positive' });
     } else if (count >= 3) {
-      logs.push({ delta: 5, reason: `⏳ Minor Era Synergy (${era} Era x${count})`, type: 'positive' });
+      logs.push({ delta: 5, reason: `Minor Era Synergy (${era} Era x${count})`, type: 'positive' });
     }
   });
 
@@ -790,7 +748,7 @@ export function getDetailedChemistryLogs(
       } else {
         logs.push({
           delta: 8,
-          reason: `⚠️ ${player.displayName} out of position (${player.primaryPosition} at ${slot.label})`,
+          reason: `${player.displayName} out of position (${player.primaryPosition} at ${slot.label})`,
           type: 'negative',
         });
       }
@@ -802,17 +760,17 @@ export function getDetailedChemistryLogs(
     (p) => POSITION_DEPARTMENTS[p.primaryPosition] === 'ATT'
   ).length;
   if (attackerCount > 4) {
-    logs.push({ delta: 8, reason: '🚨 Tactical Imbalance (Too many attackers!)', type: 'negative' });
+    logs.push({ delta: 8, reason: 'Tactical Imbalance (Too many attackers!)', type: 'negative' });
   }
 
   // Tactical Disconnect: fragmented squad with >= 8 disparate clubs or >= 8 disparate nations
   const uniqueClubs = Object.keys(clubCounts).length;
   const uniqueNations = Object.keys(nationCounts).length;
   if (activePlayers.length >= 8 && uniqueClubs >= 8) {
-    logs.push({ delta: 6, reason: '⚠️ Fragmented Dressing Room (Mercenary squad with no club core)', type: 'negative' });
+    logs.push({ delta: 6, reason: 'Fragmented Dressing Room (Mercenary squad with no club core)', type: 'negative' });
   }
   if (activePlayers.length >= 8 && uniqueNations >= 8) {
-    logs.push({ delta: 4, reason: '⚠️ Communication Barrier (Disparate language/nationalities)', type: 'negative' });
+    logs.push({ delta: 4, reason: 'Communication Barrier (Disparate language/nationalities)', type: 'negative' });
   }
 
   // Midfield Balance
@@ -827,9 +785,9 @@ export function getDetailedChemistryLogs(
       (p) => p.technique >= 85 || p.primaryPosition === 'CAM' || p.creativity >= 85
     );
     if (hasDefensive && hasPlaymaker) {
-      logs.push({ delta: 8, reason: '⚡ Creative Midfield Balance', type: 'positive' });
+      logs.push({ delta: 8, reason: 'Creative Midfield Balance', type: 'positive' });
     } else {
-      logs.push({ delta: 5, reason: '⚠️ Imbalanced Midfield (Missing pivot or playmaker)', type: 'negative' });
+      logs.push({ delta: 5, reason: 'Imbalanced Midfield (Missing pivot or playmaker)', type: 'negative' });
     }
   }
 
@@ -946,13 +904,13 @@ export function getProjectedChemistry(
     else archetype = 'wildcard';
   }
 
-  let archetypeLabel = '⭐ STAR';
+  let archetypeLabel = 'STAR';
   let archetypeDetail = 'Elite Rating Anchor';
   if (archetype === 'star') {
-    archetypeLabel = '⭐ STAR';
+    archetypeLabel = 'STAR';
     archetypeDetail = candidate.rating >= 92 ? 'World-Class Superstar' : 'Primary Rating Anchor';
   } else if (archetype === 'system') {
-    archetypeLabel = '🔗 SYSTEM FIT';
+    archetypeLabel = 'SYSTEM FIT';
     if (linkedTeammates.some((t) => t.clubMatch)) {
       archetypeDetail = `+ ${candidate.club} Core Link`;
     } else if (linkedTeammates.some((t) => t.nationMatch)) {
@@ -969,7 +927,7 @@ export function getProjectedChemistry(
       archetypeDetail = 'Natural Position Fit';
     }
   } else {
-    archetypeLabel = '⚡ WILDCARD';
+    archetypeLabel = 'WILDCARD';
     if (candidate.specialTrait) {
       archetypeDetail = candidate.specialTrait;
     } else if (candidate.rarity === 'cult') {
@@ -1092,10 +1050,10 @@ export function getMysteryClues(
 
   const archLabel =
     archetypeHint === 'star'
-      ? '⭐ Star Caliber'
+      ? 'Star Caliber'
       : archetypeHint === 'system'
-      ? '🔗 System Fit'
-      : '⚡ Wildcard Specialist';
+      ? 'System Fit'
+      : 'Wildcard Specialist';
 
   const traitHint = candidate.specialTrait || candidate.playStyleTags?.[0] || 'Technical Contributor';
 
@@ -1228,7 +1186,7 @@ export function getLinksSpotlight(selectedPlayers: Player[]): { best: string; wo
 
       if (matchCount > bestScore) {
         bestScore = matchCount;
-        bestLinkDesc = `🤝 ${p1.displayName} & ${p2.displayName} (${sharedTags.join(' / ')})`;
+        bestLinkDesc = `${p1.displayName} & ${p2.displayName} (${sharedTags.join(' / ')})`;
       }
     }
   }
@@ -1252,7 +1210,7 @@ export function getLinksSpotlight(selectedPlayers: Player[]): { best: string; wo
   });
 
   const worstLinkDesc = worstPlayer
-    ? `⚠️ ${(worstPlayer as Player).displayName} (Isolated with minimal squad connections)`
+    ? `${(worstPlayer as Player).displayName} (Isolated with minimal squad connections)`
     : 'None';
 
   return {
@@ -1279,36 +1237,36 @@ export function getResultNarrative(wins: number, draws: number, losses: number, 
   const points = wins * 3 + draws;
 
   if (wins === 38) {
-    return '👑 The Immortals! 38 games. 38 victories. Perfection achieved. You have built arguably the greatest squad in football folklore.';
+    return 'The Immortals! 38 games. 38 victories. Perfection achieved. You have built arguably the greatest squad in football folklore.';
   }
   if (losses === 0) {
-    return '🏆 The Invincibles! Unbeaten across an entire 38-game campaign. Your tactical synergy and mental steel will echo through history.';
+    return 'The Invincibles! Unbeaten across an entire 38-game campaign. Your tactical synergy and mental steel will echo through history.';
   }
   if (points >= 95) {
-    return '🥇 Historic Champions! Over 95 points achieved with breathtaking football. Your home stadium was an impenetrable fortress.';
+    return 'Historic Champions! Over 95 points achieved with breathtaking football. Your home stadium was an impenetrable fortress.';
   }
   if (points >= 86) {
-    return '🥇 League Champions! A season built on tactical balance and decisive star quality. Champions of the realm!';
+    return 'League Champions! A season built on tactical balance and decisive star quality. Champions of the realm!';
   }
   if (wins >= 24 && stats.attack >= 88 && stats.defence < 80) {
-    return '🔥 Gegenpress Chaos! Your attack terrorised the league, but your backline kept every match edge-of-the-seat. Box office football every weekend!';
+    return 'Gegenpress Chaos! Your attack terrorised the league, but your backline kept every match edge-of-the-seat. Box office football every weekend!';
   }
   if (wins >= 20 && stats.defence >= 88 && stats.attack < 80) {
-    return '🧱 Defensive Masterclass! Clean sheets and 1-0 smash-and-grabs were your trademark. Opposing managers had nightmares facing your low block.';
+    return 'Defensive Masterclass! Clean sheets and 1-0 smash-and-grabs were your trademark. Opposing managers had nightmares facing your low block.';
   }
   if (stats.chemistry >= 88 && stats.overall < 84) {
-    return '🤝 Chemistry over individual superstars! Brilliant fluid football, though a nervous defence in clutch moments prevented a higher finish.';
+    return 'Chemistry over individual superstars! Brilliant fluid football, though a nervous defence in clutch moments prevented a higher finish.';
   }
   if (stats.overall >= 88 && stats.chemistry < 62) {
-    return '🚨 Galáctico Imbalance! Individual brilliance won key games, but tactical disconnects and dressing room friction cost crucial points.';
+    return 'Galáctico Imbalance! Individual brilliance won key games, but tactical disconnects and dressing room friction cost crucial points.';
   }
   if (points >= 65) {
-    return '🇪🇺 European Football secured! A fiercely competitive campaign securing top European qualification with style.';
+    return 'European Football secured! A fiercely competitive campaign securing top European qualification with style.';
   }
   if (points >= 45) {
-    return '🤝 Mid-Table Security. Solid passages of play interspersed with lapses of consistency. A solid foundation to build upon.';
+    return 'Mid-Table Security. Solid passages of play interspersed with lapses of consistency. A solid foundation to build upon.';
   }
-  return '😢 Relegated! Imbalanced squad construction and severe tactical vulnerabilities led to a difficult, bruising campaign. Back to the drawing board.';
+  return 'Relegated! Imbalanced squad construction and severe tactical vulnerabilities led to a difficult, bruising campaign. Back to the drawing board.';
 }
 
 /**
@@ -1319,21 +1277,21 @@ export function getPlaystyle(stats: SquadStats, selectedPlayers: Player[]): stri
   const avgPhys = selectedPlayers.reduce((acc, p) => acc + p.physical, 0) / Math.max(1, selectedPlayers.length);
 
   if (avgPhys >= 80 && avgPace >= 83) {
-    return 'Gegenpressing Chaos ⚡';
+    return 'Gegenpressing Chaos';
   }
   if (stats.midfield >= 86 && stats.chemistry >= 85) {
-    return 'Possession Machine ⚙️';
+    return 'Possession Machine';
   }
   if (avgPace >= 85 && stats.attack >= 85) {
-    return 'Counter-attacking Monsters 🚄';
+    return 'Counter-attacking Monsters';
   }
   if (stats.defence >= 86) {
-    return 'Defensive Wall 🧱';
+    return 'Defensive Wall';
   }
   if (stats.overall >= 88 && stats.chemistry < 65) {
-    return 'Galáctico Imbalance 💫';
+    return 'Galáctico Imbalance';
   }
-  return 'Balanced Contender ⚖️';
+  return 'Balanced Contender';
 }
 
 /**
@@ -1485,7 +1443,7 @@ export function simulateLeagueSeason(
     xG_opp = Math.max(0.10, xG_opp);
 
     let ourScore = sampleGoals(xG_us, rand);
-    let oppScore = sampleGoals(xG_opp, rand);
+    const oppScore = sampleGoals(xG_opp, rand);
 
     // Big Game Clutch Factor: in 1-goal margins or draws, high-leadership/big-game players can snatch winners
     const avgBigGame = selectedPlayers.reduce((acc, p) => acc + p.bigGame, 0) / Math.max(1, selectedPlayers.length);

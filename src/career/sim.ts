@@ -16,8 +16,8 @@ import { getClubById, getAllClubs, getActiveLeagueClubs } from './clubs';
 import {
   categorizePosition,
   getSquadOrderedByLineup,
-  isPlayerRegisteredForMatch,
   getBestStartingLineup,
+  resolveMatchdayLineup,
 } from './squad';
 import {
   simulateKnockoutCupFixture,
@@ -68,6 +68,7 @@ import {
   evaluateBoardUltimatumAndCarousel,
   evaluateMonthlyManagerAwardsAndOffers,
 } from './managerCareer';
+import { evaluateDressingRoomDynamics } from './inbox';
 
 /**
  * Simulates a single league fixture with realistic football scorelines, assists, and authentic club goalscorers.
@@ -434,6 +435,298 @@ export interface TimeSkipResult {
 }
 
 /**
+ * Recovers AI squad fitness according to rest days, filters out injured/suspended players,
+ * and rotates fatigued (<74 fitness) starters to the bench while preserving positional balance.
+ */
+export function selectRotatedAiMatchdaySquad(
+  clubSquad: CareerPlayer[],
+  daysSinceLastMatch: number = 7
+): { updatedFullSquad: CareerPlayer[]; matchdaySquad: CareerPlayer[] } {
+  const restBoost = daysSinceLastMatch >= 2 ? Math.min(22, daysSinceLastMatch * 4) : 0;
+  const recoveredSquad = clubSquad.map((p) => ({
+    ...p,
+    fitness: Math.min(100, (p.fitness ?? 100) + restBoost),
+  }));
+
+  const available = recoveredSquad.filter(
+    (p) => !p.injured && !(p.suspendedMatches && p.suspendedMatches > 0)
+  );
+  const pool = available.length >= 11 ? available : recoveredSquad;
+
+  const readinessScore = (p: CareerPlayer): number => {
+    const fit = p.fitness ?? 100;
+    const fatiguePenalty = fit < 68 ? 18 : fit < 74 ? 10 : fit < 82 ? 4 : 0;
+    return getEffectiveRating(p) - fatiguePenalty;
+  };
+
+  const gks = pool
+    .filter((p) => categorizePosition(p.position) === 'GK')
+    .sort((a, b) => readinessScore(b) - readinessScore(a));
+  const defs = pool
+    .filter((p) => categorizePosition(p.position) === 'DEF')
+    .sort((a, b) => readinessScore(b) - readinessScore(a));
+  const mids = pool
+    .filter((p) => categorizePosition(p.position) === 'MID')
+    .sort((a, b) => readinessScore(b) - readinessScore(a));
+  const fwds = pool
+    .filter((p) => categorizePosition(p.position) === 'FWD')
+    .sort((a, b) => readinessScore(b) - readinessScore(a));
+
+  const starters: CareerPlayer[] = [];
+  const usedIds = new Set<string>();
+  const addStarter = (p?: CareerPlayer) => {
+    if (p && !usedIds.has(p.id) && starters.length < 11) {
+      starters.push(p);
+      usedIds.add(p.id);
+    }
+  };
+
+  // Pick 1 GK, 4 DEF, 3 MID, 3 FWD (or best available backups)
+  addStarter(gks[0]);
+  defs.slice(0, 4).forEach(addStarter);
+  mids.slice(0, 3).forEach(addStarter);
+  fwds.slice(0, 3).forEach(addStarter);
+
+  if (starters.length < 11) {
+    const remainingOutfield = pool
+      .filter((p) => !usedIds.has(p.id) && categorizePosition(p.position) !== 'GK')
+      .sort((a, b) => readinessScore(b) - readinessScore(a));
+    for (const p of remainingOutfield) {
+      addStarter(p);
+    }
+  }
+  if (starters.length < 11) {
+    const remainingAny = pool
+      .filter((p) => !usedIds.has(p.id))
+      .sort((a, b) => readinessScore(b) - readinessScore(a));
+    for (const p of remainingAny) {
+      addStarter(p);
+    }
+  }
+
+  const bench = pool
+    .filter((p) => !usedIds.has(p.id))
+    .sort((a, b) => getEffectiveRating(b) - getEffectiveRating(a))
+    .slice(0, 9);
+
+  return {
+    updatedFullSquad: recoveredSquad,
+    matchdaySquad: [...starters, ...bench],
+  };
+}
+
+/**
+ * Applies post-match stamina drain, bench recovery, injury countdown, and card suspensions to an AI club squad.
+ */
+export function applyAiMatchdayImpact(
+  fullSquad: CareerPlayer[],
+  matchdaySquad: CareerPlayer[],
+  simmedFixture: LeagueFixture,
+  clubId: string
+): CareerPlayer[] {
+  const starters = new Set(matchdaySquad.slice(0, 11).map((p) => p.id));
+  const participating = new Set(
+    simmedFixture.participatingPlayerIds || matchdaySquad.slice(0, 13).map((p) => p.id)
+  );
+  const clubEvents = (simmedFixture.events || []).filter((e) => e.clubId === clubId);
+
+  return fullSquad.map((player) => {
+    const isStarter = starters.has(player.id);
+    const played = isStarter || participating.has(player.id);
+
+    if (played) {
+      const drain = isStarter ? 15 : 6;
+      const newFitness = Math.max(48, (player.fitness ?? 100) - drain);
+
+      const gotRed = clubEvents.some(
+        (ev) => ev.type === 'red_card' && (ev.playerName === player.name || ev.detail?.includes(player.name))
+      );
+      const gotYellow = clubEvents.some(
+        (ev) => ev.type === 'yellow_card' && (ev.playerName === player.name || ev.detail?.includes(player.name))
+      );
+
+      let yellowCardsTotal = player.yellowCardsTotal ?? 0;
+      let redCardsTotal = player.redCardsTotal ?? 0;
+      let suspendedMatches = player.suspendedMatches ?? 0;
+      let suspensionReason = player.suspensionReason;
+
+      if (gotRed) {
+        redCardsTotal += 1;
+        suspendedMatches = 1;
+        suspensionReason = 'Suspended (Red card)';
+      } else if (gotYellow) {
+        yellowCardsTotal += 1;
+        if (yellowCardsTotal % 5 === 0) {
+          suspendedMatches = 1;
+          suspensionReason = `Suspended (${yellowCardsTotal} yellow cards)`;
+        }
+      }
+
+      // Small match injury chance (~1.5% for AI starters)
+      let injured = player.injured;
+      let injuryWeeks = player.injuryWeeks;
+      if (isStarter && !injured && Math.random() < 0.015) {
+        injured = true;
+        injuryWeeks = Math.floor(Math.random() * 2) + 1;
+      }
+
+      return {
+        ...player,
+        fitness: newFitness,
+        yellowCardsTotal,
+        redCardsTotal,
+        suspendedMatches,
+        suspensionReason,
+        injured,
+        injuryWeeks,
+      };
+    }
+
+    // Rested / suspended / injured AI players recover fitness and count down bans/injuries
+    let injuryWeeks = player.injuryWeeks;
+    let injured = player.injured;
+    if (injured && typeof injuryWeeks === 'number') {
+      injuryWeeks = Math.max(0, injuryWeeks - 1);
+      if (injuryWeeks === 0) injured = false;
+    }
+
+    let suspendedMatches = player.suspendedMatches ?? 0;
+    let suspensionReason = player.suspensionReason;
+    if (suspendedMatches > 0) {
+      suspendedMatches = Math.max(0, suspendedMatches - 1);
+      if (suspendedMatches === 0) suspensionReason = undefined;
+    }
+
+    return {
+      ...player,
+      fitness: Math.min(100, (player.fitness ?? 100) + 12),
+      injured,
+      injuryWeeks,
+      suspendedMatches,
+      suspensionReason,
+    };
+  });
+}
+
+/**
+ * Resolves the user's active matchday squad while preserving their manually chosen lineup.
+ * Only injured, suspended, or (for league fixtures) unregistered starters are replaced.
+ */
+export function resolveActiveUserMatchdaySquad(
+  squad: CareerPlayer[],
+  save: Pick<CareerSaveFile, 'club' | 'lineup' | 'registeredPlayerIds' | 'season'>,
+  isLeagueMatch: boolean,
+  usePreferredEleven: boolean = true
+): CareerPlayer[] {
+  const activePool = squad.filter(
+    (p) => !(p.isOnLoan && p.loanOriginClubId === save.club.id)
+  );
+  if (usePreferredEleven && save.lineup?.starterIds && save.lineup.starterIds.length > 0) {
+    const resolved = resolveMatchdayLineup(
+      activePool,
+      save.lineup,
+      save.registeredPlayerIds,
+      save.season?.yearStart,
+      isLeagueMatch,
+      save.club.id
+    );
+    return getSquadOrderedByLineup(activePool, resolved);
+  }
+  if (isLeagueMatch) {
+    const best = getBestStartingLineup(
+      activePool,
+      save.lineup?.formation || '4-3-3',
+      save.registeredPlayerIds,
+      save.season?.yearStart
+    );
+    return getSquadOrderedByLineup(activePool, best);
+  }
+  return activePool;
+}
+
+/**
+ * Prepares a rotated AI matchday squad from save.aiClubSquads (initializing it on demand),
+ * recovering fitness based on elapsed days since currentDate.
+ */
+export function prepareSingleAiMatchdaySquad(
+  aiClubSquads: Record<string, CareerPlayer[]>,
+  club: Club,
+  databaseSeason?: CareerSaveFile['settings']['databaseSeason'],
+  daysSinceLastMatch: number = 7
+): { fullSquad: CareerPlayer[]; matchdaySquad: CareerPlayer[] } {
+  if (!aiClubSquads[club.id] || aiClubSquads[club.id].length === 0) {
+    aiClubSquads[club.id] = getAiClubMatchdaySquad(club, databaseSeason).squad;
+  }
+  const rotated = selectRotatedAiMatchdaySquad(aiClubSquads[club.id], daysSinceLastMatch);
+  aiClubSquads[club.id] = rotated.updatedFullSquad;
+  return { fullSquad: rotated.updatedFullSquad, matchdaySquad: rotated.matchdaySquad };
+}
+
+/**
+ * Simulates all remaining unplayed AI fixtures in a league round while updating persistent
+ * AI club squads (fatigue, yellow/red suspensions, injuries, rotation).
+ */
+export function simulateAiLeagueRoundWithSquads(
+  save: CareerSaveFile,
+  fixtures: LeagueFixture[],
+  round: number,
+  excludeFixtureId: string,
+  clubsMap: Map<string, Club>,
+  fallbackClubs: Club[],
+  userOpponentClub?: Club,
+  userOpponentSimmedFixture?: LeagueFixture,
+  userOpponentSquadInfo?: { fullSquad: CareerPlayer[]; matchdaySquad: CareerPlayer[] }
+): { updatedFixtures: LeagueFixture[]; updatedAiClubSquads: Record<string, CareerPlayer[]> } {
+  const aiClubSquads: Record<string, CareerPlayer[]> = {};
+  if (save.aiClubSquads) {
+    for (const [cid, sq] of Object.entries(save.aiClubSquads)) {
+      aiClubSquads[cid] = sq.map((p) => ({ ...p }));
+    }
+  }
+
+  if (userOpponentClub && userOpponentSimmedFixture && userOpponentSquadInfo) {
+    aiClubSquads[userOpponentClub.id] = applyAiMatchdayImpact(
+      userOpponentSquadInfo.fullSquad,
+      userOpponentSquadInfo.matchdaySquad,
+      userOpponentSimmedFixture,
+      userOpponentClub.id
+    );
+  }
+
+  const updatedFixtures = fixtures.map((f) => {
+    if (f.id === excludeFixtureId) return f;
+    if (f.round === round && !f.played) {
+      const h = clubsMap.get(f.homeClubId) || fallbackClubs[0];
+      const a = clubsMap.get(f.awayClubId) || fallbackClubs[1];
+      const homeAi = prepareSingleAiMatchdaySquad(aiClubSquads, h, save.settings?.databaseSeason);
+      const awayAi = prepareSingleAiMatchdaySquad(aiClubSquads, a, save.settings?.databaseSeason);
+      const simmed = simulateMatchFixture(f, h, a, homeAi.matchdaySquad, awayAi.matchdaySquad);
+      aiClubSquads[h.id] = applyAiMatchdayImpact(homeAi.fullSquad, homeAi.matchdaySquad, simmed, h.id);
+      aiClubSquads[a.id] = applyAiMatchdayImpact(awayAi.fullSquad, awayAi.matchdaySquad, simmed, a.id);
+      return simmed;
+    }
+    return f;
+  });
+
+  return { updatedFixtures, updatedAiClubSquads: aiClubSquads };
+}
+
+/**
+ * Applies background calendar progression (scouting, facility construction, feeder loans,
+ * monthly manager awards) when a single matchday advances season.currentDate.
+ */
+export function applySingleMatchdayProgression(
+  save: CareerSaveFile,
+  curIso: string
+): CareerSaveFile {
+  let updated = processDailyScoutingProgress(save, curIso);
+  updated = processDailyConstructionProgress(updated, curIso);
+  updated = processFeederLoanDevelopment(updated, curIso);
+  updated = evaluateMonthlyManagerAwardsAndOffers(updated, curIso);
+  return updated;
+}
+
+/**
  * Advances the career calendar time skip controller, simulating fixtures as dates progress.
  * Respects Smart Pause for user matches, deadline days, and season wrap-up.
  */
@@ -451,6 +744,14 @@ export function advanceTimeSkip(
   const finances = { ...(save.finances) };
   const userClubId = save.club.id;
   let userSquad = [...(save.squad || [])];
+
+  const aiClubSquads: Record<string, CareerPlayer[]> = {};
+  if (save.aiClubSquads) {
+    for (const [cid, sq] of Object.entries(save.aiClubSquads)) {
+      aiClubSquads[cid] = sq.map((p) => ({ ...p }));
+    }
+  }
+  const aiLastMatchDate: Record<string, string> = {};
 
   const usePreferred = options?.usePreferredEleven ?? save.settings.usePreferredElevenOnHoliday ?? true;
 
@@ -519,32 +820,8 @@ export function advanceTimeSkip(
   queue.sort((a, b) => new Date(a.fixture.date).getTime() - new Date(b.fixture.date).getTime());
 
   // Helper to get active lineup-ordered squad for user match simulation
-  // Helper to get active lineup-ordered squad for user match simulation
   const getActiveUserSquad = (isLeagueMatch: boolean) => {
-    const activePool = userSquad.filter(
-      (p) => !(p.isOnLoan && p.loanOriginClubId === save.club.id)
-    );
-    if (isLeagueMatch) {
-      // In league matches, unregistered seniors cannot participate in match simulation
-      const eligibleSquad = activePool.filter((p) =>
-        isPlayerRegisteredForMatch(p, activePool, save.registeredPlayerIds, save.season?.yearStart)
-      );
-      if (usePreferred && save.lineup && save.lineup.starterIds && save.lineup.starterIds.length > 0) {
-        const sanitizedLineup = getBestStartingLineup(
-          activePool,
-          save.lineup.formation || '4-3-3',
-          save.registeredPlayerIds,
-          save.season?.yearStart
-        );
-        return getSquadOrderedByLineup(activePool, sanitizedLineup);
-      }
-      return eligibleSquad.length >= 11 ? eligibleSquad : activePool;
-    }
-
-    if (usePreferred && save.lineup && save.lineup.starterIds && save.lineup.starterIds.length > 0) {
-      return getSquadOrderedByLineup(activePool, save.lineup);
-    }
-    return activePool;
+    return resolveActiveUserMatchdaySquad(userSquad, save, isLeagueMatch, usePreferred);
   };
 
   const summerDeadlineDay = `${save.season.yearStart}-09-01`;
@@ -630,38 +907,76 @@ export function advanceTimeSkip(
       break;
     }
 
-    // Simulate fixture
-    let simmedResult: { homeScore?: number; awayScore?: number } | undefined;
+    // Simulate fixture with persistent AI squad fatigue, suspensions, & rotation
+    let simmedResult: LeagueFixture | CupFixture | undefined;
     const activeSquad = getActiveUserSquad(item.type === 'league');
+
+    const prepareAiSquad = (club: Club): { fullSquad: CareerPlayer[]; matchdaySquad: CareerPlayer[] } => {
+      if (!aiClubSquads[club.id] || aiClubSquads[club.id].length === 0) {
+        aiClubSquads[club.id] = getAiClubMatchdaySquad(club, save.settings?.databaseSeason).squad;
+      }
+      const prevIso = aiLastMatchDate[club.id] || save.season.currentDate;
+      const daysSince = Math.max(
+        0,
+        Math.round((fixDate.getTime() - new Date(prevIso).getTime()) / (1000 * 60 * 60 * 24))
+      );
+      const rotated = selectRotatedAiMatchdaySquad(aiClubSquads[club.id], daysSince);
+      aiClubSquads[club.id] = rotated.updatedFullSquad;
+      return { fullSquad: rotated.updatedFullSquad, matchdaySquad: rotated.matchdaySquad };
+    };
 
     if (item.type === 'league') {
       const homeClub = getClubById(item.fixture.homeClubId) || getAllClubs()[0];
       const awayClub = getClubById(item.fixture.awayClubId) || getAllClubs()[1];
 
+      const homeAi = item.fixture.homeClubId !== userClubId ? prepareAiSquad(homeClub) : null;
+      const awayAi = item.fixture.awayClubId !== userClubId ? prepareAiSquad(awayClub) : null;
+
       const simmed = simulateMatchFixture(
         item.fixture,
         homeClub,
         awayClub,
-        item.fixture.homeClubId === userClubId ? activeSquad : save.aiClubSquads?.[item.fixture.homeClubId],
-        item.fixture.awayClubId === userClubId ? activeSquad : save.aiClubSquads?.[item.fixture.awayClubId]
+        item.fixture.homeClubId === userClubId ? activeSquad : homeAi?.matchdaySquad,
+        item.fixture.awayClubId === userClubId ? activeSquad : awayAi?.matchdaySquad
       );
 
       fixtures[item.index] = simmed;
       simmedResult = simmed;
+
+      if (homeAi) {
+        aiClubSquads[homeClub.id] = applyAiMatchdayImpact(homeAi.fullSquad, homeAi.matchdaySquad, simmed, homeClub.id);
+        aiLastMatchDate[homeClub.id] = fixIso;
+      }
+      if (awayAi) {
+        aiClubSquads[awayClub.id] = applyAiMatchdayImpact(awayAi.fullSquad, awayAi.matchdaySquad, simmed, awayClub.id);
+        aiLastMatchDate[awayClub.id] = fixIso;
+      }
     } else {
       const homeClub = findAnyClub(item.fixture.homeClubId) || getAllClubs()[0];
       const awayClub = findAnyClub(item.fixture.awayClubId) || getAllClubs()[1];
+
+      const homeAi = item.fixture.homeClubId !== userClubId ? prepareAiSquad(homeClub) : null;
+      const awayAi = item.fixture.awayClubId !== userClubId ? prepareAiSquad(awayClub) : null;
 
       const simmed = simulateKnockoutCupFixture(
         item.fixture,
         homeClub,
         awayClub,
-        item.fixture.homeClubId === userClubId ? activeSquad : save.aiClubSquads?.[item.fixture.homeClubId],
-        item.fixture.awayClubId === userClubId ? activeSquad : save.aiClubSquads?.[item.fixture.awayClubId]
+        item.fixture.homeClubId === userClubId ? activeSquad : homeAi?.matchdaySquad,
+        item.fixture.awayClubId === userClubId ? activeSquad : awayAi?.matchdaySquad
       );
 
       cups[item.tournamentId].fixtures[item.index] = simmed;
       simmedResult = simmed;
+
+      if (homeAi) {
+        aiClubSquads[homeClub.id] = applyAiMatchdayImpact(homeAi.fullSquad, homeAi.matchdaySquad, simmed, homeClub.id);
+        aiLastMatchDate[homeClub.id] = fixIso;
+      }
+      if (awayAi) {
+        aiClubSquads[awayClub.id] = applyAiMatchdayImpact(awayAi.fullSquad, awayAi.matchdaySquad, simmed, awayClub.id);
+        aiLastMatchDate[awayClub.id] = fixIso;
+      }
     }
 
     // If user club was involved in this simulated match, apply full post-match squad impact
@@ -1055,6 +1370,7 @@ export function advanceTimeSkip(
     incomingOffers,
     boardStatus: updatedBoardStatus,
     squad: userSquad,
+    aiClubSquads: Object.keys(aiClubSquads).length > 0 ? aiClubSquads : save.aiClubSquads,
     inbox: currentInbox,
   };
 
@@ -1070,6 +1386,7 @@ export function advanceTimeSkip(
       updatedSave,
       simulatedUserFixtures[simulatedUserFixtures.length - 1]
     );
+    updatedSave = evaluateDressingRoomDynamics(updatedSave, curIso);
   } else {
     updatedSave = evaluateBoardUltimatumAndCarousel(updatedSave);
   }

@@ -2,6 +2,7 @@ import React from 'react';
 import { Player, PitchSlot, DraftModifier } from '../types/game';
 import { getProjectedChemistry, getMysteryClues } from '../utils/gameLogic';
 import { PlayerCard } from './PlayerCard';
+import { IconClose, IconRefresh, IconSearch, IconSparkles } from './career/GameIcons';
 
 interface DraftOptionsProps {
   currentSlot: PitchSlot | undefined;
@@ -24,7 +25,6 @@ interface DraftOptionsProps {
   filteredPlayers: Player[];
   onSelectPlayer: (player: Player) => void;
   onRerollOptions: () => void;
-  onUndoPick: () => void;
   onCandidateHover?: (candidate: Player | null) => void;
   onSetDraftTab: (tab: 'recommended' | 'search') => void;
   onSetSearchQuery: (query: string) => void;
@@ -54,7 +54,6 @@ export function DraftOptions({
   filteredPlayers,
   onSelectPlayer,
   onRerollOptions,
-  onUndoPick,
   onCandidateHover,
   onSetDraftTab,
   onSetSearchQuery,
@@ -80,104 +79,69 @@ export function DraftOptions({
 
   return (
     <div className="flex flex-col gap-3.5 w-full">
-      {/* Header / Info bar with Rerolls */}
-      <div className="flex flex-col sm:flex-row justify-between items-center office-floating-card px-4 py-3 rounded-2xl shadow-sm gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold text-[var(--office-text-muted)] uppercase tracking-wider leading-none">
-            Choose Player for:{' '}
-            <span className="text-[#1d5eff] font-display font-black text-xs sm:text-sm">
-              {currentSlot?.label}
-            </span>
+      {/* Slot being filled + reroll */}
+      <div className="flex justify-between items-center gap-3 px-1">
+        <span className="text-[11px] font-bold text-[var(--office-text-muted)] uppercase tracking-wider leading-none inline-flex items-center gap-1.5 min-w-0">
+          {isMysteryRound && <IconSparkles className="w-3.5 h-3.5 text-purple-700 shrink-0" />}
+          <span className="truncate">
+            {isMysteryRound ? 'Mystery pick for' : 'Pick for'}{' '}
+            <span className="text-[#1d5eff] font-display font-black text-sm">{currentSlot?.label}</span>
           </span>
-          {isMysteryRound && (
-            <span className="text-[8.5px] px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 font-display font-black tracking-wider uppercase animate-pulse">
-              ❓ Mystery Round
-            </span>
-          )}
-        </div>
+        </span>
 
-        <div className="flex items-center gap-2.5 select-none">
-          {currentSlotIndex > 0 && (
-            <button
-              type="button"
-              onClick={onUndoPick}
-              title="Undo previous pick"
-              className="px-3 py-1.5 rounded-xl font-display font-black text-[9.5px] uppercase tracking-wider transition-all select-none office-subcard text-[var(--office-text-secondary)] hover:text-[var(--office-text-primary)] hover:bg-indigo-50/50 active:scale-95 cursor-pointer flex items-center gap-1 shadow-2xs"
-            >
-              <span>↩️</span> Undo
-            </button>
-          )}
-
-          {/* Reroll Interface */}
-          {!freeSearchEnabled && (
-            <div className="flex items-center gap-3 select-none">
-              {/* Reroll Tokens representation */}
-              <div className="flex gap-1.5" title={`${rerollsRemaining} rerolls left`}>
-                {Array.from({ length: 3 }).map((_, idx) => {
-                  const active = idx < rerollsRemaining;
-                  return (
-                    <span
-                      key={idx}
-                      className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                        active
-                          ? 'bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.6)] animate-pulse'
-                          : 'bg-slate-200 border border-slate-300'
-                      }`}
-                    />
-                  );
-                })}
-              </div>
-
-              <button
-                type="button"
-                onClick={onRerollOptions}
-                disabled={rerollsRemaining <= 0}
-                className={`px-3 py-1.5 rounded-xl font-display font-black text-[9.5px] uppercase tracking-wider transition-all select-none cursor-pointer ${
-                  rerollsRemaining > 0
-                    ? 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 active:scale-95 shadow-2xs'
-                    : 'office-subcard text-slate-400 cursor-not-allowed opacity-60'
-                }`}
-              >
-                🔄 Reroll ({rerollsRemaining})
-              </button>
-            </div>
-          )}
-        </div>
+        {!freeSearchEnabled && (
+          <button
+            type="button"
+            onClick={onRerollOptions}
+            disabled={rerollsRemaining <= 0}
+            aria-label={`Reroll choices, ${rerollsRemaining} left`}
+            className={`min-h-[40px] px-3 rounded-xl font-display font-black text-[11px] uppercase tracking-wider transition-all select-none inline-flex items-center gap-1.5 shrink-0 ${
+              rerollsRemaining > 0
+                ? 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 active:scale-95 cursor-pointer'
+                : 'office-subcard text-slate-400 cursor-not-allowed opacity-60'
+            }`}
+          >
+            <IconRefresh className="w-3.5 h-3.5" />
+            <span>Reroll ({rerollsRemaining})</span>
+          </button>
+        )}
       </div>
 
       {/* Tab Swapper */}
       {freeSearchEnabled && !isMysteryRound && (
-        <div className="flex office-subcard p-1 rounded-2xl w-full mb-1">
+        <div className="flex office-subcard p-1 rounded-2xl w-full">
           <button
             type="button"
             onClick={() => onSetDraftTab('recommended')}
-            className={`flex-grow py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
+            className={`flex-grow py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer text-center inline-flex items-center justify-center gap-1.5 ${
               draftTab === 'recommended'
                 ? 'office-action-btn-primary text-white shadow-md'
                 : 'text-[var(--office-text-secondary)] hover:text-[var(--office-text-primary)]'
             }`}
           >
-            🔎 Scout Picks
+            <IconSparkles className="w-3.5 h-3.5" />
+            <span>Scout Picks</span>
           </button>
           <button
             type="button"
             onClick={() => onSetDraftTab('search')}
-            className={`flex-grow py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer text-center ${
+            className={`flex-grow py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer text-center inline-flex items-center justify-center gap-1.5 ${
               draftTab === 'search'
                 ? 'office-action-btn-primary text-white shadow-md'
                 : 'text-[var(--office-text-secondary)] hover:text-[var(--office-text-primary)]'
             }`}
           >
-            🔍 Search Database
+            <IconSearch className="w-3.5 h-3.5" />
+            <span>Search</span>
           </button>
         </div>
       )}
 
       {/* Scout Recommended Picks */}
       {(draftTab === 'recommended' || isMysteryRound) && draftOptions && (
-        <div className="flex justify-start gap-4 overflow-x-auto pb-4 pt-1.5 snap-x scroll-px-4 scrollbar-thin px-2 w-full">
+        <div className="flex flex-col gap-2 w-full">
           {draftOptions.map((player, idx) => (
-            <div key={player.id} className="snap-start flex-shrink-0 animate-card-deal">
+            <div key={player.id} className="animate-card-deal motion-reduce:animate-none">
               <PlayerCard
                 player={player}
                 layout="large"
@@ -195,24 +159,27 @@ export function DraftOptions({
 
       {/* Search and filter options */}
       {draftTab === 'search' && (
-        <div className="flex flex-col gap-4 w-full animate-card-deal office-floating-card p-4 rounded-2xl shadow-sm">
+        <div className="flex flex-col gap-3 w-full animate-card-deal motion-reduce:animate-none">
           {/* Search Text Input */}
           <div className="relative w-full">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => onSetSearchQuery(e.target.value)}
-              placeholder="Search player name, club, season, nationality..."
+              placeholder="Name, club, season or nation" aria-label="Search players"
               className="w-full bg-white border border-slate-300 rounded-2xl py-3 pl-10 pr-10 text-xs text-[var(--office-text-primary)] placeholder-slate-400 focus:outline-none focus:border-[#1d5eff] focus:ring-2 focus:ring-blue-500/20 transition-all font-semibold"
             />
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+              <IconSearch className="w-3.5 h-3.5" />
+            </span>
             {searchQuery !== '' && (
               <button
                 type="button"
                 onClick={() => onSetSearchQuery('')}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[var(--office-text-primary)] text-xs cursor-pointer"
+                aria-label="Clear search"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-slate-400 hover:text-[var(--office-text-primary)] cursor-pointer"
               >
-                ✕
+                <IconClose className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
@@ -220,12 +187,12 @@ export function DraftOptions({
           {/* Filters Dropdown row */}
           <div className="grid grid-cols-2 gap-3">
             {/* Club filter option */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[8px] font-bold text-[var(--office-text-muted)] uppercase tracking-widest px-1">Club / Team</label>
+            <div>
               <select
+                aria-label="Filter by club"
                 value={selectedClub}
                 onChange={(e) => onSetSelectedClub(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-xl py-2 px-3 text-[10.5px] text-[var(--office-text-primary)] font-bold tracking-wide focus:outline-none focus:border-[#1d5eff] cursor-pointer"
+                className="w-full bg-white border border-slate-300 rounded-xl py-2.5 px-3 text-xs text-[var(--office-text-primary)] font-bold tracking-wide focus:outline-none focus:border-[#1d5eff] cursor-pointer"
               >
                 <option value="" className="text-[var(--office-text-primary)] bg-white">All Clubs</option>
                 {allClubs.map((club) => (
@@ -237,12 +204,12 @@ export function DraftOptions({
             </div>
 
             {/* Era filter option */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[8px] font-bold text-[var(--office-text-muted)] uppercase tracking-widest px-1">Era</label>
+            <div>
               <select
+                aria-label="Filter by era"
                 value={selectedEra}
                 onChange={(e) => onSetSelectedEra(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-xl py-2 px-3 text-[10.5px] text-[var(--office-text-primary)] font-bold tracking-wide focus:outline-none focus:border-[#1d5eff] cursor-pointer"
+                className="w-full bg-white border border-slate-300 rounded-xl py-2.5 px-3 text-xs text-[var(--office-text-primary)] font-bold tracking-wide focus:outline-none focus:border-[#1d5eff] cursor-pointer"
               >
                 <option value="" className="text-[var(--office-text-primary)] bg-white">All Eras</option>
                 {allEras.map((era) => {
@@ -263,11 +230,11 @@ export function DraftOptions({
           </div>
 
           {/* Position lock status toggle */}
-          <div className="flex items-center justify-between office-subcard px-3.5 py-2.5 rounded-xl leading-none">
-            <span className="text-[9.5px] font-bold text-[var(--office-text-secondary)] uppercase tracking-wider">
-              Position Filter: <span className="text-[#1d5eff] font-display font-black">{currentSlot?.position}</span>
+          <label className="flex items-center justify-between gap-3 min-h-[40px] px-1 cursor-pointer">
+            <span className="text-[11px] font-bold text-[var(--office-text-secondary)] uppercase tracking-wider">
+              Only <span className="text-[#1d5eff] font-display font-black">{currentSlot?.position}</span> players
             </span>
-            <label className="relative inline-flex items-center cursor-pointer">
+            <span className="relative inline-flex items-center">
               <input
                 type="checkbox"
                 checked={onlyMatchingPosition}
@@ -275,17 +242,17 @@ export function DraftOptions({
                 className="sr-only peer"
               />
               <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#1d5eff]"></div>
-            </label>
-          </div>
+            </span>
+          </label>
 
           {/* Search Results Display */}
           <div className="flex flex-col gap-1.5 mt-1 w-full">
-            <span className="text-[8.5px] font-bold text-[var(--office-text-muted)] uppercase tracking-widest px-1">
-              Matching Candidates ({filteredPlayers.length})
+            <span className="text-[10px] font-bold text-[var(--office-text-muted)] uppercase tracking-widest px-1">
+              {filteredPlayers.length} players
             </span>
             
             {filteredPlayers.length > 0 ? (
-              <div className="flex justify-start gap-4 overflow-x-auto pb-4 pt-1 snap-x scroll-px-4 scrollbar-thin px-2 w-full">
+              <div className="flex flex-col gap-2 w-full max-h-[60vh] overflow-y-auto pr-1">
                 {filteredPlayers.map((player) => {
                   const projected = getProjectedChemistry(
                     player,
@@ -294,7 +261,7 @@ export function DraftOptions({
                     slots
                   );
                   return (
-                    <div key={player.id} className="snap-start flex-shrink-0 animate-card-deal">
+                    <div key={player.id}>
                       <PlayerCard
                         player={player}
                         layout="large"
@@ -308,14 +275,9 @@ export function DraftOptions({
                 })}
               </div>
             ) : (
-              <div className="border border-dashed border-slate-200 rounded-3xl py-10 px-4 text-center">
-                <p className="text-[10px] text-[var(--office-text-muted)] uppercase font-black tracking-widest leading-relaxed">
-                  No matching players found
-                </p>
-                <p className="text-[9.5px] text-[var(--office-text-secondary)] mt-1.5 leading-normal font-semibold">
-                  Try loosening your filters or search keywords.
-                </p>
-              </div>
+              <p className="py-8 px-4 text-center text-xs text-[var(--office-text-secondary)] font-semibold">
+                No players match. Try loosening the filters.
+              </p>
             )}
           </div>
         </div>

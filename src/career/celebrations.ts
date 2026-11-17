@@ -7,7 +7,7 @@ import {
   ManagerMessage,
 } from './types';
 import { calculateStandings } from './table';
-import { getAllClubs } from './clubs';
+import { getActiveLeagueClubs } from './clubs';
 import { getCupWinner, isFriendlyTournament, isFriendlyFixture } from './cups';
 import { formatCareerCurrency } from './formatters';
 
@@ -138,7 +138,7 @@ export function detectCelebrationEvent(
             date: save.season.currentDate,
             sender: 'Board Chairman',
             senderRole: 'Club Executive Committee',
-            subject: `🏆 CONGRATULATIONS: ${tourney.name} Winners!`,
+            subject: `CONGRATULATIONS: ${tourney.name} Winners!`,
             body: `Dear Manager,\n\nThe Board is ecstatic following our triumph in the ${tourney.name} final. Winning major silverware is the ultimate testament to the team's relentless ambition and tactical masterclass.\n\nA celebratory prize bonus of ${formatCareerCurrency(tourney.prizeMoney)} has been credited to our accounts, and your standing with the board is at an all-time high.\n\nEnjoy this unforgettable milestone!\n\nYours faithfully,\nThe Board of Directors`,
             type: 'board',
             isRead: false,
@@ -209,7 +209,7 @@ export function detectCelebrationEvent(
             id: milestoneKey,
             category: 'knockout_advancement',
             title: `THROUGH TO THE ${nextRound.toUpperCase()}!`,
-            badge: '🎯',
+            badge: 'target',
             competitionName: tourney.name,
             stageName: fix.roundName,
             headline: `Victory in the ${fix.roundName}!`,
@@ -233,7 +233,7 @@ export function detectCelebrationEvent(
             date: save.season.currentDate,
             sender: 'Sporting Director',
             senderRole: 'Football Operations',
-            subject: `🎯 Cup Progression: Through to ${nextRound}!`,
+            subject: `Cup Progression: Through to ${nextRound}!`,
             body: `Boss,\n\nSuperb result in the ${fix.roundName} of the ${tourney.name}. The dressing room atmosphere is electric, and the board is very pleased with our progress into ${nextRound}.\n\nKeep this momentum going!\n\nSporting Director`,
             type: 'match_report',
             isRead: false,
@@ -264,7 +264,7 @@ export function detectCelebrationEvent(
 
   // 3. Check League Title (Premier League Champions)
   if (save.fixtures && save.fixtures.length > 0) {
-    const standings = calculateStandings(save.fixtures, getAllClubs());
+    const standings = calculateStandings(save.fixtures, getActiveLeagueClubs(save));
     const userStanding = standings.find((s) => s.clubId === userClubId);
     const secondStanding = standings.find((s) => s.clubId !== userClubId);
 
@@ -280,8 +280,8 @@ export function detectCelebrationEvent(
           const event: CelebrationEvent = {
             id: milestoneKey,
             category: 'title_win',
-            title: 'CHAMPIONS OF ENGLAND! 🏆',
-            badge: '👑',
+            title: 'CHAMPIONS OF ENGLAND!',
+            badge: 'crown',
             competitionName: 'English Top Flight',
             stageName: 'League Champions',
             headline: `Premier League Champions ${yearStart}/${yearStart + 1}!`,
@@ -307,7 +307,7 @@ export function detectCelebrationEvent(
             date: save.season.currentDate,
             sender: 'Club Owner & Board',
             senderRole: 'Executive Committee',
-            subject: '👑 CHAMPIONS OF ENGLAND: Legendary Triumph!',
+            subject: 'CHAMPIONS OF ENGLAND: Legendary Triumph!',
             body: `Dear Manager,\n\nWords cannot capture the pure ecstasy across the entire club today. You have guided ${userClubName} to the Premier League Title!\n\nA record championship merit payout of ${formatCareerCurrency(38_000_000)} has been awarded to the club finances. Your managerial legacy is forever cemented in club folklore.\n\nEnjoy every moment of this well-earned glory!\n\nYours faithfully,\nThe Board of Directors`,
             type: 'board',
             isRead: false,

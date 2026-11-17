@@ -2,19 +2,16 @@
 
 import React, { useState, useEffect, useMemo, useRef, useCallback, Suspense } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { loadCareerSave, saveCareerSave, deleteCareerSave, exportCareerSaveAsJson, isValidSlotId, ValidSlotId } from '../../../career/saves';
+import { loadCareerSave, saveCareerSave, deleteCareerSave, exportCareerSaveAsJson, hydrateCareerSaveVault, isValidSlotId, ValidSlotId } from '../../../career/saves';
+import { ensureCareerDatabaseLoaded, getCareerDatabaseLoadError } from '../../../career/databaseExpansion';
 import {
   CareerSaveFile,
   CareerSettings,
   LeagueFixture,
   Club,
-  DateFormatPreference,
   CurrencyPreference,
-  WageUnitPreference,
-  HeightUnitPreference,
-  WeightUnitPreference,
-  NumberFormatPreference,
   CupFixture,
   CupTournament,
   ManagerMessage,
@@ -27,39 +24,146 @@ import { validateSettings } from '../../../career/settings';
 import {
   formatCareerDate,
   formatCareerCurrency,
-  formatCareerWage,
 } from '../../../career/formatters';
 import { getSavedTheme, saveTheme } from '../../../utils/storage';
-import { SquadManagement } from '../../../components/career/SquadManagement';
-import { FixturesCalendar } from '../../../components/career/FixturesCalendar';
-import { LeagueTable } from '../../../components/career/LeagueTable';
-import { TournamentsHub } from '../../../components/career/TournamentsHub';
-import { TransferHub } from '../../../components/career/TransferHub';
+import { isSfxEnabled, toggleSfxEnabled, playUiTap } from '../../../utils/soundEffects';
+import { CareerErrorBoundary } from '../../../components/career/CareerErrorBoundary';
 import { OfficeDeadlineHeroTakeover } from '../../../components/career/OfficeDeadlineHeroTakeover';
-import { MatchDayModal } from '../../../components/career/MatchDayModal';
-import { MatchOverviewModal } from '../../../components/career/MatchOverviewModal';
-import { InstantMatchSummaryModal } from '../../../components/career/InstantMatchSummaryModal';
-import { InstantSimLoadingModal } from '../../../components/career/InstantSimLoadingModal';
-import { CelebrationModal } from '../../../components/career/CelebrationModal';
-import { PreseasonTourModal } from '../../../components/career/PreseasonTourModal';
-import { FixtureReleaseModal } from '../../../components/career/FixtureReleaseModal';
-import { ChampionsLeagueDrawModal } from '../../../components/career/ChampionsLeagueDrawModal';
-import { PlayerComparisonModal } from '../../../components/career/PlayerComparisonModal';
-import { SquadRegistrationModal } from '../../../components/career/SquadRegistrationModal';
+import {
+  IconCheck,
+  IconChevronDown,
+  IconBarChart,
+  IconTrophy,
+  IconSave,
+  IconMedkit,
+  IconMail,
+  IconClose,
+  IconAlert,
+  IconStar,
+  IconBolt,
+  IconArrowLeft,
+  IconHome,
+  IconCalendar,
+  IconSparkles,
+  IconSkipForward,
+  IconCrown,
+  IconMedal,
+  IconSprout,
+  IconRefresh,
+  IconTrendingUp,
+  IconBriefcase,
+  IconBuilding,
+  IconArrowRight,
+  IconDocument,
+  IconVolumeOn,
+  IconVolumeOff,
+} from '../../../components/career/GameIcons';
+
+function TabPanelFallback() {
+  return (
+    <div className="office-floating-card rounded-3xl p-8 text-center text-xs font-display font-bold uppercase tracking-wider text-slate-500">
+      Loading module...
+    </div>
+  );
+}
+
+const SquadManagement = dynamic(
+  () => import('../../../components/career/SquadManagement').then((m) => ({ default: m.SquadManagement })),
+  { ssr: false, loading: () => <TabPanelFallback /> }
+);
+const FixturesCalendar = dynamic(
+  () => import('../../../components/career/FixturesCalendar').then((m) => ({ default: m.FixturesCalendar })),
+  { ssr: false, loading: () => <TabPanelFallback /> }
+);
+const LeagueTable = dynamic(
+  () => import('../../../components/career/LeagueTable').then((m) => ({ default: m.LeagueTable })),
+  { ssr: false, loading: () => <TabPanelFallback /> }
+);
+const TournamentsHub = dynamic(
+  () => import('../../../components/career/TournamentsHub').then((m) => ({ default: m.TournamentsHub })),
+  { ssr: false, loading: () => <TabPanelFallback /> }
+);
+const TransferHub = dynamic(
+  () => import('../../../components/career/TransferHub').then((m) => ({ default: m.TransferHub })),
+  { ssr: false, loading: () => <TabPanelFallback /> }
+);
+const ClubLegacyView = dynamic(
+  () => import('../../../components/career/ClubLegacyView').then((m) => ({ default: m.ClubLegacyView })),
+  { ssr: false, loading: () => <TabPanelFallback /> }
+);
+const CareerSettingsTab = dynamic(
+  () => import('../../../components/career/CareerSettingsTab').then((m) => ({ default: m.CareerSettingsTab })),
+  { ssr: false, loading: () => <TabPanelFallback /> }
+);
+
+const MatchDayModal = dynamic(
+  () => import('../../../components/career/MatchDayModal').then((m) => ({ default: m.MatchDayModal })),
+  { ssr: false }
+);
+const MatchOverviewModal = dynamic(
+  () => import('../../../components/career/MatchOverviewModal').then((m) => ({ default: m.MatchOverviewModal })),
+  { ssr: false }
+);
+const InstantMatchSummaryModal = dynamic(
+  () => import('../../../components/career/InstantMatchSummaryModal').then((m) => ({ default: m.InstantMatchSummaryModal })),
+  { ssr: false }
+);
+const InstantSimLoadingModal = dynamic(
+  () => import('../../../components/career/InstantSimLoadingModal').then((m) => ({ default: m.InstantSimLoadingModal })),
+  { ssr: false }
+);
+const CelebrationModal = dynamic(
+  () => import('../../../components/career/CelebrationModal').then((m) => ({ default: m.CelebrationModal })),
+  { ssr: false }
+);
+const PreseasonTourModal = dynamic(
+  () => import('../../../components/career/PreseasonTourModal').then((m) => ({ default: m.PreseasonTourModal })),
+  { ssr: false }
+);
+const FixtureReleaseModal = dynamic(
+  () => import('../../../components/career/FixtureReleaseModal').then((m) => ({ default: m.FixtureReleaseModal })),
+  { ssr: false }
+);
+const ChampionsLeagueDrawModal = dynamic(
+  () => import('../../../components/career/ChampionsLeagueDrawModal').then((m) => ({ default: m.ChampionsLeagueDrawModal })),
+  { ssr: false }
+);
+const PlayerComparisonModal = dynamic(
+  () => import('../../../components/career/PlayerComparisonModal').then((m) => ({ default: m.PlayerComparisonModal })),
+  { ssr: false }
+);
+const SquadRegistrationModal = dynamic(
+  () => import('../../../components/career/SquadRegistrationModal').then((m) => ({ default: m.SquadRegistrationModal })),
+  { ssr: false }
+);
+
 import { isSeasonComplete, advanceToNextSeason, getSeasonReviewSummary, SeasonReviewSummary } from '../../../career/seasons';
 import {
   shouldShowPreseasonPrompt,
   applyPreseasonTourChoice,
   simulateAssistantPreseasonMatch,
 } from '../../../career/preseason';
-import { applyChampionsLeagueDraw } from '../../../career/championsLeague';
+import { applyChampionsLeagueDraw, LeaguePhaseOpponent } from '../../../career/championsLeague';
 import {
   applyMatchdayFinancials,
   processPayrollSettlement,
 } from '../../../career/finance';
 import { PreseasonTourId } from '../../../career/types';
 import { getNextClubFixture, getNextScheduledMatch, getPreviousPlayedMatch, isDateInInternationalBreak, ScheduledMatch } from '../../../career/calendar';
-import { simulateMatchFixture, advanceTimeSkip, TimeSkipTarget } from '../../../career/sim';
+import {
+  simulateMatchFixture,
+  advanceTimeSkip,
+  TimeSkipTarget,
+  resolveActiveUserMatchdaySquad,
+  prepareSingleAiMatchdaySquad,
+  simulateAiLeagueRoundWithSquads,
+  applySingleMatchdayProgression,
+} from '../../../career/sim';
+import {
+  getInjuryDurationReductionWeeks,
+  getFitnessRecoveryModifier,
+  getTrainingXpModifier,
+} from '../../../career/infrastructure';
 import { detectCelebrationEvent, CelebrationEvent } from '../../../career/celebrations';
 import {
   CUP_IDS,
@@ -77,16 +181,17 @@ import {
   classifyInboxMessage,
   getManagerialAlerts,
   markMessageResolved,
+  evaluateDressingRoomDynamics,
+  resolveDressingRoomConfrontation,
 } from '../../../career/inbox';
 import { calculateStandings } from '../../../career/table';
 import { formatCurrency } from '../../../career/finance';
-import { getSeniorPlayerCount, getSquadOrderedByLineup, getBestStartingLineup } from '../../../career/squad';
+import { getSeniorPlayerCount } from '../../../career/squad';
 import {
   evaluateBoardConfidence,
   isTransferDeadlineDay,
   initializeDeadlineDay,
   advanceDeadlineDayPhase,
-  getScoutingMarketPool,
 } from '../../../career/transfers';
 import { updatePlayerForm, applyInSeasonMatchProgression } from '../../../career/formAndProgression';
 import { applySimulatedMatchSquadImpact } from '../../../career/matchEngine';
@@ -97,6 +202,8 @@ import {
   evaluateBoardUltimatumAndCarousel,
   generateEmergencyReboundOffers,
 } from '../../../career/managerCareer';
+
+type CareerTab = 'overview' | 'squad' | 'fixtures' | 'transfers' | 'table' | 'cups' | 'legacy' | 'settings';
 
 function formatOrdinalRank(n: number): string {
   const s = ['th', 'st', 'nd', 'rd'];
@@ -597,14 +704,16 @@ function CareerPlayHubContent() {
     }
     return null;
   });
+  const [vaultReady, setVaultReady] = useState(false);
   const [theme] = useState<'dark' | 'light'>('light');
+  const [sfxEnabled, setSfxEnabled] = useState<boolean>(() => isSfxEnabled());
   const rawTab = searchParams.get('tab');
-  const initialTab = (rawTab && ['overview', 'squad', 'fixtures', 'table', 'cups', 'transfers', 'settings'].includes(rawTab))
-    ? (rawTab as 'overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings')
-    : 'overview';
-  const [activeTab, setActiveTab] = useState<'overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings'>(initialTab);
+  const validTabs: CareerTab[] = ['overview', 'squad', 'fixtures', 'table', 'cups', 'legacy', 'transfers', 'settings'];
+  const initialTab: CareerTab =
+    rawTab && validTabs.includes(rawTab as CareerTab) ? (rawTab as CareerTab) : 'overview';
+  const [activeTab, setActiveTab] = useState<CareerTab>(initialTab);
   const [squadInitialViewMode, setSquadInitialViewMode] = useState<'pitch' | 'list' | 'academy' | 'training' | 'tactics'>('pitch');
-  const [tabHistory, setTabHistory] = useState<('overview' | 'squad' | 'fixtures' | 'table' | 'cups' | 'transfers' | 'settings')[]>([]);
+  const [tabHistory, setTabHistory] = useState<CareerTab[]>([]);
   const [showExitConfirmModal, setShowExitConfirmModal] = useState(false);
   const [showBoardDossierModal, setShowBoardDossierModal] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -632,6 +741,7 @@ function CareerPlayHubContent() {
   const [simulating, setSimulating] = useState(false);
   const [pendingFastForward, setPendingFastForward] = useState<TimeSkipTarget | null>(null);
   const [fastForwardUsePreferredEleven, setFastForwardUsePreferredEleven] = useState(true);
+  const [seasonReviewOpenSection, setSeasonReviewOpenSection] = useState<'growth' | 'division' | null>(null);
   const [fastForwardHaltOnTransferMilestone, setFastForwardHaltOnTransferMilestone] = useState<'deadline' | 'window_open_or_close' | 'none'>('deadline');
   const [showSeasonReviewModal, setShowSeasonReviewModal] = useState(false);
   const [transferHubSubTab, setTransferHubSubTab] = useState<'market' | 'incoming' | 'contracts' | 'shortlist' | 'history' | 'board' | 'scouting' | 'infrastructure' | 'feeder' | 'media'>('market');
@@ -647,31 +757,51 @@ function CareerPlayHubContent() {
   const [showOfficeSeasonDrawer, setShowOfficeSeasonDrawer] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
+  const handleToggleSfx = useCallback(() => {
+    const next = toggleSfxEnabled();
+    setSfxEnabled(next);
+  }, []);
+
   // Auto-prompt pre-season tour selection or fixture release day
   useEffect(() => {
     if (!save) return;
-    if (shouldShowPreseasonPrompt(save)) {
-      setShowPreseasonModal(true);
-    } else if (
-      save.season.currentDate >= `${save.season.yearStart}-07-08` &&
-      !save.fixtureReleaseState?.released
-    ) {
-      setShowFixtureReleasePromptModal(true);
-    }
-  }, [save?.season?.currentDate, save?.preseasonState?.hasChosenTour, save?.fixtureReleaseState?.released]);
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
+      if (shouldShowPreseasonPrompt(save)) {
+        setShowPreseasonModal(true);
+      } else if (
+        save.season.currentDate >= `${save.season.yearStart}-07-08` &&
+        !save.fixtureReleaseState?.released
+      ) {
+        setShowFixtureReleasePromptModal(true);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [save]);
 
   useEffect(() => {
     if (
-      save &&
-      isTransferDeadlineDay(save.season.currentDate, save.season.yearStart) &&
-      !save.deadlineDayState?.isActive &&
-      save.deadlineDayState?.phase !== 'closed'
+      !save ||
+      !isTransferDeadlineDay(save.season.currentDate, save.season.yearStart) ||
+      save.deadlineDayState?.isActive ||
+      save.deadlineDayState?.phase === 'closed'
     ) {
+      return;
+    }
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
       const initialized = initializeDeadlineDay(save);
       saveCareerSave(initialized);
       setSave(initialized);
-    }
-  }, [save?.season?.currentDate, save?.season?.yearStart, save?.deadlineDayState?.isActive, save?.deadlineDayState?.phase]);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [save]);
 
   // Global Escape keyboard shortcut for modal navigation & accessibility
   useEffect(() => {
@@ -815,13 +945,14 @@ function CareerPlayHubContent() {
     }
   }, [activeTab, transferHubSubTab, scrollToTarget]);
 
-  const TAB_ORDER: ('overview' | 'squad' | 'fixtures' | 'transfers' | 'table' | 'cups' | 'settings')[] = useMemo(
-    () => ['overview', 'squad', 'fixtures', 'transfers', 'table', 'cups', 'settings'],
+  const TAB_ORDER: CareerTab[] = useMemo(
+    () => ['overview', 'squad', 'fixtures', 'transfers', 'table', 'cups', 'legacy', 'settings'],
     []
   );
 
-  const handleTabChange = useCallback((newTab: typeof activeTab, addToHistory: boolean = true) => {
+  const handleTabChange = useCallback((newTab: CareerTab, addToHistory: boolean = true) => {
     setIsMoreMenuOpen(false);
+    playUiTap();
     if (activeTab === newTab) {
       window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     } else {
@@ -957,20 +1088,6 @@ function CareerPlayHubContent() {
   // Squad 25-man registration modal state
   const [showRegistrationModal, setShowRegistrationModal] = useState<boolean>(false);
 
-  // Full market and shortlisted pools for comparison modal
-  const fullMarketPool = useMemo(() => {
-    if (!save) return [];
-    const dbSeason = save.settings?.databaseSeason || save.season?.databaseSeason || '2026/27';
-    const poolType = save.settings?.playerPool || 'modern';
-    return getScoutingMarketPool(save.squad, { playerPoolType: poolType, sortBy: 'value_desc' }, dbSeason, save.season?.yearStart || 2026);
-  }, [save?.squad, save?.settings?.playerPool, save?.settings?.databaseSeason, save?.season?.databaseSeason, save?.season?.yearStart]);
-
-  const shortlistedPool = useMemo(() => {
-    if (!save?.shortlistPlayerIds || save.shortlistPlayerIds.length === 0) return [];
-    const set = new Set(save.shortlistPlayerIds);
-    return fullMarketPool.filter((p) => set.has(p.id));
-  }, [save?.shortlistPlayerIds, fullMarketPool]);
-
   // Managerial alerts & Inbox derived states
   const allInbox = useMemo(() => {
     if (!save) return [];
@@ -1021,6 +1138,11 @@ function CareerPlayHubContent() {
       navigateToSection('transfers', 'board', 'job-offers-section');
     } else if (alert.actionType === 'respond_ultimatum') {
       navigateToSection('transfers', 'board', 'board-room-section');
+    } else if (alert.actionType === 'promise_game_time') {
+      setShowOfficeInboxModal(true);
+      if (alert.targetId) {
+        setExpandedMessageId(alert.targetId);
+      }
     } else if (alert.actionTab) {
       const targetSub = alert.actionTab === 'transfers' ? 'market' : undefined;
       navigateToSection(alert.actionTab as typeof activeTab, targetSub);
@@ -1074,6 +1196,8 @@ function CareerPlayHubContent() {
     return '';
   });
 
+  const [dbLoadError, setDbLoadError] = useState<string | null>(null);
+
   const [currentSlotId, setCurrentSlotId] = useState(slotId);
   if (currentSlotId !== slotId) {
     setCurrentSlotId(slotId);
@@ -1084,12 +1208,45 @@ function CareerPlayHubContent() {
   }
 
   useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      hydrateCareerSaveVault(),
+      ensureCareerDatabaseLoaded('all'),
+    ])
+      .then(([, dbLoaded]) => {
+        if (cancelled) return;
+        const loaded = loadCareerSave(slotId);
+        setSave(loaded);
+        setEditableSettings(loaded?.settings || null);
+        setEditingClubName(loaded?.club.customName || loaded?.club.defaultName || '');
+        if (!dbLoaded) {
+          setDbLoadError(getCareerDatabaseLoadError() || 'Expanded player database could not be fetched (offline or network error).');
+        } else {
+          setDbLoadError(null);
+        }
+        setVaultReady(true);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setDbLoadError(getCareerDatabaseLoadError() || 'Expanded player database could not be loaded.');
+          setVaultReady(true);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [slotId]);
+
+  useEffect(() => {
     saveTheme(theme);
 
-    // Auto-resolve any pending cup ties whose scheduled date has arrived
-    if (save && save.cups) {
+    if (!save || !save.cups) return;
+    let cancelled = false;
+
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
       const { updatedCups, trophiesAwarded } = autoResolvePendingCupFixtures(
-        save.cups,
+        save.cups!,
         save.season.currentDate,
         save.season.yearStart,
         save.club.id
@@ -1098,7 +1255,7 @@ function CareerPlayHubContent() {
       let hasChanges = trophiesAwarded.length > 0;
       if (!hasChanges) {
         for (const [k, v] of Object.entries(updatedCups)) {
-          const oldV = save.cups[k];
+          const oldV = save.cups![k];
           if (!oldV || oldV.currentRound !== v.currentRound || oldV.fixtures.some((f, idx) => f.played !== v.fixtures[idx]?.played)) {
             hasChanges = true;
             break;
@@ -1134,8 +1291,12 @@ function CareerPlayHubContent() {
         saveCareerSave(finalSave);
         setSave(finalSave);
       }
-    }
-  }, [checkAndTriggerCelebration]);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [checkAndTriggerCelebration, save, theme]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -1198,7 +1359,7 @@ function CareerPlayHubContent() {
     setEditingClubName(updated.club.customName || updated.club.defaultName);
   };
 
-  const allClubs = getClubsWithUserClub(save?.club, save?.activeLeagueClubIds);
+  const allClubs = getClubsWithUserClub(save?.club, save?.activeLeagueClubIds, save?.settings?.databaseSeason);
   const clubsMap = new Map<string, Club>(allClubs.map((c) => [c.id, c]));
   const nextScheduled = save ? getNextScheduledMatch(save) : null;
   const nextFixture = nextScheduled ? nextScheduled.fixture : null;
@@ -1231,50 +1392,44 @@ function CareerPlayHubContent() {
         const targetDate = nextScheduled ? formatCareerDate(nextScheduled.fixture.date, save?.settings.dateFormat || 'uk', 'long') : 'Next Scheduled Match';
         return {
           title: 'Advance to Next Match',
-          badge: '⏭️ Next Match',
+          badge: 'Next Match',
           targetDate,
-          description: `Automatically simulates all other fixtures in the calendar until your next scheduled matchday (${targetDate}). You will be brought to the dressing room ready for kickoff.`,
         };
       }
       case 'next_week': {
         return {
           title: 'Fast Forward +7 Days',
-          badge: '📅 +7 Days',
+          badge: '+7 Days',
           targetDate: '1 Week Forward',
-          description: 'Advances the game calendar by 7 days, simulating all league fixtures that fall within this window and recalculating the table standings.',
         };
       }
       case 'next_month': {
         return {
           title: 'Fast Forward +1 Month',
-          badge: '🗓️ +1 Month',
+          badge: '+1 Month',
           targetDate: '30 Days Forward',
-          description: 'Simulates approximately 30 calendar days of fixtures. Several matchday rounds will be played across the league. Check your squad fitness before proceeding.',
         };
       }
       case 'transfer_deadline': {
         return {
           title: 'Advance to Deadline Day',
-          badge: '⏳ Deadline Day',
+          badge: 'Deadline Day',
           targetDate: '1 Sep / 1 Feb',
-          description: 'Simulates until the critical transfer window deadline day, allowing you to review last-minute transfer offers and finalize signings.',
         };
       }
       case 'season_end': {
         return {
           title: 'Simulate to Season End',
-          badge: '🏁 Season End',
+          badge: 'Season End',
           targetDate: 'Round 38 (Finale)',
-          description: `Fast forwards all remaining league matches to conclude Season ${save?.season.seasonNumber || 1}. Final standings, awards, and board review will be finalized.`,
         };
       }
       case 'continue':
       default: {
         return {
           title: 'Advance Calendar',
-          badge: '▶️ Continue',
+          badge: 'Continue',
           targetDate: 'Day by Day',
-          description: 'Advances the game calendar forward to progress training, daily events, and upcoming fixtures.',
         };
       }
     }
@@ -1285,7 +1440,7 @@ function CareerPlayHubContent() {
 
     // 1. Guard against Deadline Day clock in progress
     if (save.deadlineDayState?.isActive && save.deadlineDayState.phase !== 'closed') {
-      showToast('⏱️ Transfer Deadline Day is in progress! Advance the deadline clock or finalize deals before simulating matches.');
+      showToast('Transfer Deadline Day is in progress! Advance the deadline clock or finalize deals before simulating matches.');
       return;
     }
 
@@ -1305,7 +1460,7 @@ function CareerPlayHubContent() {
       deadlineSave = initializeDeadlineDay(deadlineSave);
       saveCareerSave(deadlineSave);
       setSave(deadlineSave);
-      showToast('⏱️ Transfer Deadline Day has arrived! The summer window shuts tonight at 23:00 BST. Complete your transfer and squad registration business.');
+      showToast('Transfer Deadline Day has arrived! The summer window shuts tonight at 23:00 BST. Complete your transfer and squad registration business.');
       return;
     }
 
@@ -1321,7 +1476,7 @@ function CareerPlayHubContent() {
       deadlineSave = initializeDeadlineDay(deadlineSave);
       saveCareerSave(deadlineSave);
       setSave(deadlineSave);
-      showToast('⏱️ Transfer Deadline Day has arrived! The winter window shuts tonight at 23:00 BST.');
+      showToast('Transfer Deadline Day has arrived! The winter window shuts tonight at 23:00 BST.');
       return;
     }
 
@@ -1330,33 +1485,45 @@ function CareerPlayHubContent() {
     const isUserHome = nextScheduled.fixture.homeClubId === save.club.id;
     const isUserAway = nextScheduled.fixture.awayClubId === save.club.id;
 
-    // Sanitize squad for league matches: unregistered senior players cannot participate
-    const activeSquad = !nextScheduled.isCup
-      ? getSquadOrderedByLineup(
-          save.squad,
-          getBestStartingLineup(
-            save.squad,
-            save.lineup?.formation || '4-3-3',
-            save.registeredPlayerIds,
-            save.season?.yearStart
-          )
-        )
-      : (save.lineup && save.lineup.starterIds && save.lineup.starterIds.length > 0)
-      ? getSquadOrderedByLineup(save.squad, save.lineup)
-      : save.squad;
+    // Preserve user's chosen lineup; replace only injured, suspended, or (in league) unregistered starters
+    const activeSquad = resolveActiveUserMatchdaySquad(save.squad, save, !nextScheduled.isCup, true);
+    const injuryReduction = getInjuryDurationReductionWeeks(save);
+    const recoveryMod = getFitnessRecoveryModifier(save);
+    const xpMod = getTrainingXpModifier(save);
 
     if (nextScheduled.isCup && nextScheduled.cupId && save.cups && save.cups[nextScheduled.cupId]) {
       const cupTourney = save.cups[nextScheduled.cupId];
       const cupFix = nextScheduled.fixture as CupFixture;
       const homeClub = findAnyClub(cupFix.homeClubId) || allClubs[0];
       const awayClub = findAnyClub(cupFix.awayClubId) || allClubs[1];
+      const aiOpponentClub = isUserHome ? awayClub : homeClub;
+
+      const aiSnapshot: Record<string, CareerPlayer[]> = {};
+      if (save.aiClubSquads) {
+        for (const [cid, sq] of Object.entries(save.aiClubSquads)) {
+          aiSnapshot[cid] = sq.map((p) => ({ ...p }));
+        }
+      }
+      const daysSince = Math.max(
+        1,
+        Math.round(
+          (new Date(cupFix.date).getTime() - new Date(save.season.currentDate).getTime()) /
+            (1000 * 60 * 60 * 24)
+        )
+      );
+      const opponentAi = prepareSingleAiMatchdaySquad(
+        aiSnapshot,
+        aiOpponentClub,
+        save.settings?.databaseSeason,
+        daysSince
+      );
 
       const simmed = simulateKnockoutCupFixture(
         cupFix,
         homeClub,
         awayClub,
-        isUserHome ? activeSquad : undefined,
-        isUserAway ? activeSquad : undefined
+        isUserHome ? activeSquad : opponentAi.matchdaySquad,
+        isUserAway ? activeSquad : opponentAi.matchdaySquad
       );
 
       const updatedFixtures = cupTourney.fixtures.map((f) => (f.id === simmed.id ? simmed : f));
@@ -1397,19 +1564,24 @@ function CareerPlayHubContent() {
         simmed,
         save.club.id,
         save.settings,
-        save.trainingState?.teamFocus
+        save.trainingState?.teamFocus,
+        injuryReduction,
+        recoveryMod,
+        xpMod
       );
 
+      const nextCupDate = cupFix.date > save.season.currentDate ? cupFix.date : save.season.currentDate;
       let updatedSave: CareerSaveFile = {
         ...save,
         season: {
           ...save.season,
-          currentDate: cupFix.date > save.season.currentDate ? cupFix.date : save.season.currentDate,
+          currentDate: nextCupDate,
         },
         cups: updatedCups,
         trophies,
         finances,
         squad: updatedSquad,
+        aiClubSquads: Object.keys(aiSnapshot).length > 0 ? aiSnapshot : save.aiClubSquads,
         tactics: updateTacticalFamiliarity(
           save.tactics || getInitialClubTactics(save.squad),
           true,
@@ -1417,8 +1589,16 @@ function CareerPlayHubContent() {
         ),
       };
 
+      const isEurope =
+        nextScheduled.cupId === CUP_IDS.EURO_CHAMPIONS ||
+        nextScheduled.cupId === CUP_IDS.EURO_CHALLENGE ||
+        nextScheduled.cupId === CUP_IDS.EURO_PLATE;
+      updatedSave = applyMatchdayFinancials(updatedSave, cupFix, isUserHome, isEurope ? 'europe' : 'cup');
+      updatedSave = processPayrollSettlement(updatedSave, nextCupDate);
+      updatedSave = applySingleMatchdayProgression(updatedSave, nextCupDate);
       updatedSave = evaluateBoardUltimatumAndCarousel(updatedSave, simmed);
       updatedSave = generatePostMatchPressConference(updatedSave, simmed);
+      updatedSave = evaluateDressingRoomDynamics(updatedSave, updatedSave.season.currentDate);
 
       setInstantSimLoadingData({
         simmedFixture: simmed,
@@ -1435,26 +1615,51 @@ function CareerPlayHubContent() {
     const leagueFix = nextScheduled.fixture as LeagueFixture;
     const homeClub = clubsMap.get(leagueFix.homeClubId) || allClubs[0];
     const awayClub = clubsMap.get(leagueFix.awayClubId) || allClubs[1];
+    const opponentClub = isUserHome ? awayClub : homeClub;
+
+    const aiSnapshot: Record<string, CareerPlayer[]> = {};
+    if (save.aiClubSquads) {
+      for (const [cid, sq] of Object.entries(save.aiClubSquads)) {
+        aiSnapshot[cid] = sq.map((p) => ({ ...p }));
+      }
+    }
+    const daysSince = Math.max(
+      1,
+      Math.round(
+        (new Date(leagueFix.date).getTime() - new Date(save.season.currentDate).getTime()) /
+          (1000 * 60 * 60 * 24)
+      )
+    );
+    const opponentAi = prepareSingleAiMatchdaySquad(
+      aiSnapshot,
+      opponentClub,
+      save.settings?.databaseSeason,
+      daysSince
+    );
 
     const simmed = simulateMatchFixture(
       leagueFix,
       homeClub,
       awayClub,
-      isUserHome ? activeSquad : undefined,
-      !isUserHome ? activeSquad : undefined
+      isUserHome ? activeSquad : opponentAi.matchdaySquad,
+      !isUserHome ? activeSquad : opponentAi.matchdaySquad,
+      isUserHome ? save.tactics : undefined,
+      !isUserHome ? save.tactics : undefined
     );
 
-    const currentFixtures = save.fixtures || [];
-    const updatedFixtures = currentFixtures.map((f) => {
-      if (f.id === simmed.id) return simmed;
-      if (f.round === leagueFix.round && !f.played) {
-        const h = clubsMap.get(f.homeClubId) || allClubs[0];
-        const a = clubsMap.get(f.awayClubId) || allClubs[1];
-        return simulateMatchFixture(f, h, a);
-      }
-      return f;
-    });
-
+    const baseFixtures = (save.fixtures || []).map((f) => (f.id === simmed.id ? simmed : f));
+    const aiRoundRes = simulateAiLeagueRoundWithSquads(
+      save,
+      baseFixtures,
+      leagueFix.round,
+      simmed.id,
+      clubsMap,
+      allClubs,
+      opponentClub,
+      simmed,
+      opponentAi
+    );
+    const updatedFixtures = aiRoundRes.updatedFixtures;
     const updatedStandings = calculateStandings(updatedFixtures, allClubs);
 
     // Update player fitness, bench recovery, injury healing, morale, form, and youth development
@@ -1464,18 +1669,23 @@ function CareerPlayHubContent() {
       simmed,
       save.club.id,
       save.settings,
-      save.trainingState?.teamFocus
+      save.trainingState?.teamFocus,
+      injuryReduction,
+      recoveryMod,
+      xpMod
     );
 
+    const nextDate = leagueFix.date > save.season.currentDate ? leagueFix.date : save.season.currentDate;
     let updatedSave: CareerSaveFile = {
       ...save,
       season: {
         ...save.season,
-        currentDate: leagueFix.date > save.season.currentDate ? leagueFix.date : save.season.currentDate,
+        currentDate: nextDate,
       },
       fixtures: updatedFixtures,
       standings: updatedStandings,
       squad: updatedSquad,
+      aiClubSquads: aiRoundRes.updatedAiClubSquads,
       tactics: updateTacticalFamiliarity(
         save.tactics || getInitialClubTactics(save.squad),
         true,
@@ -1484,9 +1694,11 @@ function CareerPlayHubContent() {
     };
 
     updatedSave = applyMatchdayFinancials(updatedSave, leagueFix, isUserHome, 'league');
-    updatedSave = processPayrollSettlement(updatedSave, leagueFix.date);
+    updatedSave = processPayrollSettlement(updatedSave, nextDate);
+    updatedSave = applySingleMatchdayProgression(updatedSave, nextDate);
     updatedSave = evaluateBoardUltimatumAndCarousel(updatedSave, simmed);
     updatedSave = generatePostMatchPressConference(updatedSave, simmed);
+    updatedSave = evaluateDressingRoomDynamics(updatedSave, updatedSave.season.currentDate);
 
     setInstantSimLoadingData({
       simmedFixture: simmed,
@@ -1618,6 +1830,7 @@ function CareerPlayHubContent() {
         activeMatchFixture;
       enrichedSave = evaluateBoardUltimatumAndCarousel(enrichedSave, resolvedFixture);
       enrichedSave = generatePostMatchPressConference(enrichedSave, resolvedFixture);
+      enrichedSave = evaluateDressingRoomDynamics(enrichedSave, enrichedSave.season.currentDate);
     }
     const finalSave = checkAndTriggerCelebration(enrichedSave, activeMatchFixture || undefined);
     saveCareerSave(finalSave);
@@ -1651,7 +1864,7 @@ function CareerPlayHubContent() {
     showToast('Premier League fixtures released for the new season!');
   };
 
-  const handleFinishUclDraw = (drawnOpponents: any[]) => {
+  const handleFinishUclDraw = (drawnOpponents: LeaguePhaseOpponent[]) => {
     if (!save) return;
     const updated = applyChampionsLeagueDraw(save, drawnOpponents);
     saveCareerSave(updated);
@@ -1697,6 +1910,24 @@ function CareerPlayHubContent() {
       haltOnTransferMilestone: fastForwardHaltOnTransferMilestone,
     });
   };
+
+  if (!save && !vaultReady) {
+    return (
+      <div className="min-h-screen my11-canvas text-slate-900 font-sans flex flex-col p-6 justify-center items-center">
+        <main className="w-full max-w-md office-floating-card rounded-3xl p-8 border border-slate-200 shadow-2xl text-center space-y-4">
+          <div className="w-12 h-12 mx-auto rounded-2xl bg-[#09152b] text-white flex items-center justify-center font-mono font-bold text-xs shadow-sm">
+            MY-11
+          </div>
+          <h1 className="text-lg font-display font-black text-slate-900 uppercase tracking-tight">
+            Loading Manager Office...
+          </h1>
+          <p className="text-xs text-slate-600 font-medium leading-relaxed">
+            Syncing save vault and player database for {slotId.replace('_', ' ').toUpperCase()}.
+          </p>
+        </main>
+      </div>
+    );
+  }
 
   if (!save) {
     return (
@@ -1805,7 +2036,7 @@ function CareerPlayHubContent() {
           className="fixed top-18 left-1/2 -translate-x-1/2 z-50 bg-[#1E2024] border text-white px-4 py-2 rounded-xl font-display font-bold text-xs tracking-wide shadow-xl flex items-center gap-2 max-w-[92vw]"
           style={{ backgroundColor: '#1E2024', borderColor: '#D97706' }}
         >
-          <span className="text-amber-300 shrink-0">✓</span>
+          <IconCheck className="w-3.5 h-3.5 text-amber-300 shrink-0" />
           <span className="truncate">{toastMessage}</span>
         </aside>
       )}
@@ -1911,6 +2142,23 @@ function CareerPlayHubContent() {
               </div>
             </button>
 
+            {/* Sound Effects Toggle Button */}
+            <button
+              type="button"
+              data-office-ui="true"
+              onClick={handleToggleSfx}
+              title={sfxEnabled ? 'Mute Sound Effects' : 'Enable Sound Effects'}
+              aria-label={sfxEnabled ? 'Mute Sound Effects' : 'Enable Sound Effects'}
+              aria-pressed={!sfxEnabled}
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl flex items-center justify-center cursor-pointer transition-transform active:scale-95 shrink-0 bg-white border border-[#cbd5e1] shadow-2xs hover:border-[#1d5eff]/50"
+            >
+              {sfxEnabled ? (
+                <IconVolumeOn className="w-4 h-4 text-[#1d4ed8]" />
+              ) : (
+                <IconVolumeOff className="w-4 h-4 text-slate-400" />
+              )}
+            </button>
+
             {/* Inbox Envelope Icon Button */}
             <button
               type="button"
@@ -1937,7 +2185,8 @@ function CareerPlayHubContent() {
               onClick={() => handleTabChange('settings')}
               title="Career Settings"
               aria-label="Career Settings"
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl flex items-center justify-center cursor-pointer transition-transform active:scale-95 shrink-0 bg-white border border-[#cbd5e1] shadow-2xs hover:border-[#1d5eff]/50"
+              aria-current={activeTab === 'settings' ? 'page' : undefined}
+              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-2xl flex items-center justify-center cursor-pointer transition-transform active:scale-95 shrink-0 bg-white border shadow-2xs hover:border-[#1d5eff]/50 ${activeTab === 'settings' ? 'border-[#1d5eff]' : 'border-[#cbd5e1]'}`}
             >
               <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#334155]" fill="currentColor" aria-hidden="true">
                 <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
@@ -2016,100 +2265,94 @@ function CareerPlayHubContent() {
               onClick={() => setIsMoreMenuOpen((prev) => !prev)}
               aria-expanded={isMoreMenuOpen}
               aria-haspopup="true"
-              className={`${['table', 'cups', 'settings'].includes(activeTab) ? 'office-nav-tab-active' : 'office-nav-tab-inactive'} rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer relative`}
+              className={`${['table', 'cups', 'legacy'].includes(activeTab) ? 'office-nav-tab-active' : 'office-nav-tab-inactive'} rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer relative`}
             >
               <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
                 <circle cx="6" cy="12" r="2" />
                 <circle cx="12" cy="12" r="2" />
                 <circle cx="18" cy="12" r="2" />
               </svg>
-              <span className="text-xs font-extrabold tracking-tight leading-tight">
-                {['table', 'cups', 'settings'].includes(activeTab) ? 'More ▾' : 'More'}
+              <span className="text-xs font-extrabold tracking-tight leading-tight inline-flex items-center gap-0.5">
+                <span>{activeTab === 'table' ? 'Table' : activeTab === 'cups' ? 'Cups' : activeTab === 'legacy' ? 'Legacy' : 'More'}</span>
+                <IconChevronDown className={`w-3 h-3 shrink-0 ${isMoreMenuOpen ? 'rotate-180' : ''}`} />
               </span>
             </button>
           </nav>
-
-          {/* Persistent Subsection Switcher when inside More views (Table / Cups / Settings) */}
-          {['table', 'cups', 'settings'].includes(activeTab) && (
-            <nav
-              aria-label="More Subsections Switcher"
-              data-office-ui="true"
-              data-no-swipe="true"
-              className="office-floating-card rounded-2xl p-1 mt-2 grid grid-cols-3 gap-1 select-none shadow-xs text-xs"
-            >
-              {[
-                { id: 'table', label: 'Table', icon: '📊' },
-                { id: 'cups', label: 'Cups', icon: '🏆' },
-                { id: 'settings', label: 'Settings', icon: '⚙️' },
-              ].map((sub) => {
-                const isSubActive = activeTab === sub.id;
-                return (
-                  <button
-                    key={sub.id}
-                    type="button"
-                    data-office-ui="true"
-                    onClick={() => handleTabChange(sub.id as typeof activeTab)}
-                    className={`py-1.5 px-1.5 sm:px-2 rounded-xl font-display font-bold text-[11px] sm:text-xs uppercase tracking-wider flex items-center justify-center gap-1 transition-all cursor-pointer ${
-                      isSubActive
-                        ? 'office-nav-tab-active shadow-xs'
-                        : 'office-nav-tab-inactive hover:bg-[#F7F6F3]'
-                    }`}
-                  >
-                    <span className="text-xs">{sub.icon}</span>
-                    <span className="truncate">{sub.label}</span>
-                  </button>
-                );
-              })}
-            </nav>
-          )}
 
           {/* More Menu Popover */}
           {isMoreMenuOpen && (
             <div
               data-office-ui="true"
-              className="office-floating-card absolute right-0 top-full mt-1.5 z-40 w-60 rounded-2xl p-2 shadow-2xl space-y-1"
+              className="office-floating-card absolute right-0 top-full mt-1.5 z-40 w-52 rounded-2xl p-1.5 shadow-2xl"
               role="menu"
             >
               {[
-                { id: 'table', label: 'League Table', icon: '📊', desc: 'Standings, GD & form guide' },
-                { id: 'cups', label: 'Cups & Europe', icon: '🏆', desc: 'Domestic cups & continental silverware' },
-                { id: 'settings', label: 'Career Settings', icon: '⚙️', desc: 'Rules, formats & club naming' },
+                { id: 'table', label: 'League Table', icon: <IconBarChart className="w-4 h-4 text-blue-700 shrink-0" /> },
+                { id: 'cups', label: 'Cups & Europe', icon: <IconTrophy className="w-4 h-4 text-amber-600 shrink-0" /> },
+                { id: 'legacy', label: 'Club Legacy', icon: <IconMedal className="w-4 h-4 text-emerald-700 shrink-0" /> },
               ].map((item) => (
                 <button
                   key={item.id}
+                  type="button"
                   role="menuitem"
                   data-office-ui="true"
-                  onClick={() => handleTabChange(item.id as typeof activeTab)}
-                  className="office-subcard w-full p-2.5 rounded-xl text-left flex items-center gap-3 cursor-pointer"
+                  aria-current={activeTab === item.id ? 'page' : undefined}
+                  onClick={() => handleTabChange(item.id as CareerTab)}
+                  className={`w-full min-h-[44px] px-2.5 rounded-xl text-left flex items-center gap-2.5 cursor-pointer font-display font-bold text-[13px] text-[var(--office-text-primary)] ${
+                    activeTab === item.id ? 'bg-[#F7F6F3]' : 'hover:bg-[#F7F6F3]'
+                  }`}
                 >
-                  <span className="text-base">{item.icon}</span>
-                  <div className="min-w-0 flex-1">
-                    <div className="font-display font-bold text-xs text-[var(--office-text-primary)]">
-                      {item.label}
-                    </div>
-                    <div className="text-[10px] text-[var(--office-text-muted)] truncate">{item.desc}</div>
-                  </div>
+                  {item.icon}
+                  <span className="flex-1 truncate">{item.label}</span>
+                  {activeTab === item.id && <IconCheck className="w-3.5 h-3.5 shrink-0 text-emerald-700" />}
                 </button>
               ))}
 
               <div className="h-px bg-[var(--office-divider)] my-1" />
 
-              <div className="pt-1">
-                <button
-                  type="button"
-                  data-office-ui="true"
-                  onClick={() => {
-                    handleExport();
-                    setIsMoreMenuOpen(false);
-                  }}
-                  className="office-subcard w-full py-2 px-2.5 rounded-xl text-[11px] font-bold text-[var(--office-text-primary)] flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <span>💾 Backup Save</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                role="menuitem"
+                data-office-ui="true"
+                onClick={() => {
+                  handleExport();
+                  setIsMoreMenuOpen(false);
+                }}
+                className="w-full min-h-[44px] px-2.5 rounded-xl text-left flex items-center gap-2.5 cursor-pointer font-display font-bold text-[13px] text-[var(--office-text-primary)] hover:bg-[#F7F6F3]"
+              >
+                <IconSave className="w-4 h-4 text-slate-700 shrink-0" />
+                <span>Backup Save</span>
+              </button>
             </div>
           )}
         </div>
+
+        {dbLoadError && (
+          <div
+            role="alert"
+            className="mb-3 rounded-2xl bg-amber-50 border border-amber-300 px-3.5 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs text-amber-950 shadow-2xs"
+          >
+            <span className="font-semibold">
+              {dbLoadError} Transfer market and cup opponent pools may be incomplete until reloaded.
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                void ensureCareerDatabaseLoaded('all').then((loaded) => {
+                  if (loaded) {
+                    setDbLoadError(null);
+                    showToast('Expanded player database loaded.');
+                  } else {
+                    setDbLoadError(getCareerDatabaseLoadError() || 'Still unable to reach player database.');
+                  }
+                });
+              }}
+              className="px-2.5 py-1 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-display font-bold uppercase tracking-wider text-[10px] cursor-pointer shrink-0"
+            >
+              Retry
+            </button>
+          </div>
+        )}
 
         {/* Carousel Slide Container */}
         <div
@@ -2226,12 +2469,10 @@ function CareerPlayHubContent() {
                       data-office-ui="true"
                       aria-label={`Items for Review: ${reviewTotal}`}
                       onClick={() => {
-                        if (contractReviewPlayers.length > 0) {
-                          navigateToSection(
-                            'transfers',
-                            'contracts',
-                            `contract-player-${contractReviewPlayers[0].id}`
-                          );
+                        if (officeReviewCount > 0) {
+                          document
+                            .getElementById('managerial-alerts')
+                            ?.scrollIntoView({ block: 'center' });
                         } else {
                           setShowOfficeInboxModal(true);
                         }
@@ -2436,7 +2677,7 @@ function CareerPlayHubContent() {
                               deadlineSave = initializeDeadlineDay(deadlineSave);
                               saveCareerSave(deadlineSave);
                               setSave(deadlineSave);
-                              showToast('⏱️ Transfer Deadline Day has arrived! Complete negotiations before 23:00 BST.');
+                              showToast('Transfer Deadline Day has arrived! Complete negotiations before 23:00 BST.');
                               return;
                             }
                             if (save.season.currentDate < winterDeadline && fixDate >= winterDeadline) {
@@ -2444,7 +2685,7 @@ function CareerPlayHubContent() {
                               deadlineSave = initializeDeadlineDay(deadlineSave);
                               saveCareerSave(deadlineSave);
                               setSave(deadlineSave);
-                              showToast('⏱️ Winter Transfer Deadline Day has arrived!');
+                              showToast('Winter Transfer Deadline Day has arrived!');
                               return;
                             }
                             setActiveMatchFixture(nextScheduled.fixture);
@@ -2496,14 +2737,9 @@ function CareerPlayHubContent() {
                 className="office-reveal-3 rounded-2xl bg-white/90 backdrop-blur-md border border-slate-200/90 p-4 space-y-3 text-left shadow-xs"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <span className="text-xs font-extrabold uppercase tracking-wider text-[#1e40af]">
-                      Season {save.season.seasonNumber} Complete
-                    </span>
-                    <h3 className="text-base font-display font-black text-[var(--office-text-primary)]">
-                      All Campaign Fixtures Concluded
-                    </h3>
-                  </div>
+                  <h3 className="text-base font-display font-black text-[var(--office-text-primary)]">
+                    Season {save.season.seasonNumber} Complete
+                  </h3>
                   <button
                     type="button"
                     data-office-ui="true"
@@ -2533,7 +2769,7 @@ function CareerPlayHubContent() {
                       </svg>
                     </span>
                     <h2 className="font-display font-extrabold text-sm sm:text-[15px] text-[#0b1536] truncate">
-                      {officeReviewCount} Contract{officeReviewCount > 1 ? 's' : ''} to Review
+                      Expiring Contracts
                     </h2>
                   </div>
 
@@ -2543,7 +2779,7 @@ function CareerPlayHubContent() {
                     onClick={() => navigateToSection('transfers', 'contracts')}
                     className="text-[13.5px] sm:text-sm font-display font-extrabold text-[#0f534c] hover:text-[#0f766e] hover:underline flex items-center gap-0.5 cursor-pointer shrink-0 min-h-[32px] focus-visible:outline-2 focus-visible:outline-[#0f766e]"
                   >
-                    <span>View All ({save.squad.length})</span>
+                    <span>All contracts</span>
                     <span aria-hidden="true">&rsaquo;</span>
                   </button>
                 </div>
@@ -2606,22 +2842,20 @@ function CareerPlayHubContent() {
                   onClick={() => setShowOfficeSeasonDrawer((prev) => !prev)}
                   className="text-[13px] sm:text-sm font-display font-bold text-amber-800 hover:text-amber-950 inline-flex items-center gap-1 cursor-pointer min-h-[34px] px-1.5 py-0.5 rounded-lg hover:bg-amber-500/10 transition-colors focus-visible:outline-2 focus-visible:outline-[#D97706]"
                 >
-                  <span>Manage your season</span>
-                  <span aria-hidden="true" className="text-xs">
-                    {showOfficeSeasonDrawer ? '▴' : '▾'}
-                  </span>
+                  <span>Fast forward</span>
+                  <IconChevronDown className={`w-3.5 h-3.5 transition-transform ${showOfficeSeasonDrawer ? 'rotate-180' : ''}`} />
                 </button>
               </div>
 
               {/* Collapsible Fast-Forward / Calendar Strip */}
               {showOfficeSeasonDrawer && (
                 <div className="border-y border-slate-300/80 py-2.5 px-1 space-y-2">
-                  <div className="flex items-center justify-between text-xs font-extrabold text-[#1e293b]">
-                    <span>Fast Forward Calendar</span>
-                    {injuredCount > 0 && (
-                      <span className="text-[#b91c1c]">🏥 {injuredCount} Injured</span>
-                    )}
-                  </div>
+                  {injuredCount > 0 && (
+                    <div className="text-xs font-extrabold text-[#b91c1c] flex items-center gap-1">
+                      <IconMedkit className="w-3.5 h-3.5 shrink-0" />
+                      <span>{injuredCount} Injured</span>
+                    </div>
+                  )}
                   <div className="grid grid-cols-4 gap-1.5">
                     <button
                       type="button"
@@ -2665,7 +2899,7 @@ function CareerPlayHubContent() {
 
               {/* V11 Tactile Quick Actions Tray */}
               <div className="rounded-2xl bg-[#E8E6E1] border border-zinc-300/70 p-1 shadow-xs">
-                <div className="bg-white rounded-xl p-2 grid grid-cols-4 gap-2">
+                <div className="bg-white rounded-xl p-2 grid grid-cols-3 gap-2">
                   {/* Tactics */}
                   <button
                     type="button"
@@ -2688,26 +2922,6 @@ function CareerPlayHubContent() {
                     </div>
                     <span className="font-display font-bold text-xs text-zinc-900 leading-tight whitespace-nowrap">
                       Tactics
-                    </span>
-                  </button>
-
-                  {/* Calendar */}
-                  <button
-                    type="button"
-                    data-office-ui="true"
-                    onClick={() => {
-                      handleTabChange('fixtures');
-                      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-                    }}
-                    className="my11-tactile rounded-xl bg-[#F7F6F3] hover:bg-white border border-[#E2DFD9] hover:border-amber-400/80 py-2.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer min-h-[68px]"
-                  >
-                    <div className="w-9 h-9 rounded-lg bg-[#1E2024] text-white flex items-center justify-center shrink-0">
-                      <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
-                        <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm-12-8h5v5H7v-5z" />
-                      </svg>
-                    </div>
-                    <span className="font-display font-bold text-xs text-zinc-900 leading-tight whitespace-nowrap">
-                      Calendar
                     </span>
                   </button>
 
@@ -2756,7 +2970,6 @@ function CareerPlayHubContent() {
             {(() => {
               const infra = save.infrastructure;
               const cap = infra?.stadiumCapacity || save.club.stadiumCapacity || 35000;
-              const stadLvl = infra?.stadiumLevel || 1;
               const activeCount = (infra?.activeProjects || []).filter((p) => !p.completed).length;
 
               return (
@@ -2771,7 +2984,7 @@ function CareerPlayHubContent() {
                     onClick={() => {
                       navigateToSection('transfers', 'infrastructure', 'transfer-infrastructure-section');
                     }}
-                    className="w-full text-left rounded-2xl p-3.5 sm:p-4 flex items-center justify-between gap-3 shadow-sm hover:brightness-110 active:scale-[0.99] transition-all cursor-pointer group border border-zinc-800"
+                    className="w-full text-left rounded-2xl px-3.5 py-2.5 sm:px-4 flex items-center justify-between gap-3 shadow-sm hover:brightness-110 active:scale-[0.99] transition-all cursor-pointer group border border-zinc-800"
                     style={{
                       backgroundColor: '#1E2024',
                       borderBottom: '2px solid #D97706',
@@ -2784,10 +2997,10 @@ function CareerPlayHubContent() {
                       <div className="min-w-0 space-y-0.5">
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-300">
-                            Facilities &amp; Stadium Empire
+                            Facilities
                           </span>
                           {activeCount > 0 && (
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-400 text-zinc-950">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-400 text-zinc-950">
                               {activeCount} Upgrading
                             </span>
                           )}
@@ -2795,13 +3008,6 @@ function CareerPlayHubContent() {
                         <h4 className="font-display font-extrabold text-sm sm:text-base text-white truncate">
                           {save.club.stadiumName || 'Club Stadium'} • {cap.toLocaleString()} seats
                         </h4>
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-zinc-300 font-medium">
-                          <span>Stadium: Tier {stadLvl}</span>
-                          <span>•</span>
-                          <span>Training: Tier {infra?.trainingGroundLevel || 1}</span>
-                          <span>•</span>
-                          <span>Medical: Tier {infra?.medicalCenterLevel || 1}</span>
-                        </div>
                       </div>
                     </div>
 
@@ -2905,721 +3111,414 @@ function CareerPlayHubContent() {
               );
             })()}
 
-            {/* MANAGERIAL INBOX SLIDE-UP MODAL / SHEET (Opened via Envelope or View All) */}
-            {showOfficeInboxModal && (
-              <div
-                role="dialog"
-                aria-modal="true"
-                aria-label="Managerial Inbox"
-                className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in"
-                onClick={() => setShowOfficeInboxModal(false)}
-              >
-                <section
-                  id="managerial-inbox"
-                  data-office-ui="true"
-                  onClick={(e) => e.stopPropagation()}
-                  className="office-floating-card rounded-3xl p-4 sm:p-5 w-full max-w-lg max-h-[85vh] flex flex-col space-y-3.5 border border-indigo-100/80 shadow-2xl overflow-hidden"
-                >
-                  {/* Header Bar */}
-                  <div className="flex items-center justify-between gap-2 border-b border-[var(--office-divider)] pb-2.5 shrink-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">📬</span>
-                      <div>
-                        <h3 className="font-display font-extrabold text-sm text-[var(--office-text-primary)] flex items-center gap-2">
-                          <span>Managerial Inbox</span>
-                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-50 border border-indigo-200/60 text-[#1d5eff] font-bold">
-                            {allInbox.length}
-                          </span>
-                        </h3>
-                        <p className="text-[10px] text-[var(--office-text-muted)] font-medium">
-                          Official club notices, incoming offers &amp; board decisions
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {unreadInboxCount > 0 && (
-                        <button
-                          type="button"
-                          data-office-ui="true"
-                          onClick={handleMarkAllMessagesRead}
-                          className="text-[11px] font-bold text-[#1d5eff] hover:underline cursor-pointer"
-                        >
-                          ✓ Mark All Read
-                        </button>
-                      )}
-                      {allInbox.some((m) => m.isRead) && (
-                        <button
-                          type="button"
-                          data-office-ui="true"
-                          onClick={handleClearReadMessages}
-                          className="text-[11px] font-bold text-slate-500 hover:text-rose-600 transition-colors cursor-pointer"
-                          title="Archive read messages that require no further action"
-                        >
-                          🗑️ Clear Read
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        data-office-ui="true"
-                        onClick={() => setShowOfficeInboxModal(false)}
-                        className="office-subcard w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] transition-colors cursor-pointer"
-                      >
-                        ✕
-                      </button>
-                    </div>
+          </div>
+        )}
+
+        {/* MANAGERIAL INBOX SLIDE-UP MODAL / SHEET (Opened via Envelope or View All) */}
+        {showOfficeInboxModal && (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Managerial Inbox"
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in"
+            onClick={() => setShowOfficeInboxModal(false)}
+          >
+            <section
+              id="managerial-inbox"
+              data-office-ui="true"
+              onClick={(e) => e.stopPropagation()}
+              className="office-floating-card rounded-3xl p-4 sm:p-5 w-full max-w-lg max-h-[85vh] flex flex-col space-y-3.5 border border-indigo-100/80 shadow-2xl overflow-hidden"
+            >
+              {/* Header Bar */}
+              <div className="flex items-center justify-between gap-2 border-b border-[var(--office-divider)] pb-2.5 shrink-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-[#1d5eff] shrink-0">
+                    <IconMail className="w-4 h-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="font-display font-extrabold text-sm text-[var(--office-text-primary)] flex items-center gap-2">
+                      <span className="truncate">Managerial Inbox</span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-50 border border-indigo-200/60 text-[#1d5eff] font-bold shrink-0">
+                        {allInbox.length}
+                      </span>
+                    </h3>
                   </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {unreadInboxCount > 0 && (
+                    <button
+                      type="button"
+                      data-office-ui="true"
+                      onClick={handleMarkAllMessagesRead}
+                      className="text-xs font-bold text-[#1d5eff] hover:underline cursor-pointer inline-flex items-center gap-1 min-h-[36px] px-1"
+                    >
+                      <IconCheck className="w-3 h-3 shrink-0" />
+                      <span>Mark all read</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    data-office-ui="true"
+                    onClick={() => setShowOfficeInboxModal(false)}
+                    className="office-subcard w-9 h-9 rounded-full flex items-center justify-center text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] transition-colors cursor-pointer shrink-0"
+                    aria-label="Close managerial inbox"
+                  >
+                    <IconClose className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
 
-                  {/* Filter Pills */}
-                  <nav aria-label="Inbox Filters" data-no-swipe="true" className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none shrink-0">
-                    {[
-                      { id: 'all', label: 'All', count: allInbox.length },
-                      { id: 'action_required', label: 'Action Required', count: actionableAlerts.length },
-                      { id: 'unread', label: 'Unread', count: unreadInboxCount },
-                      { id: 'board', label: 'Board', count: allInbox.filter((m) => m.type === 'board').length },
-                      { id: 'transfer', label: 'Transfers', count: allInbox.filter((m) => m.type === 'transfer').length },
-                      { id: 'injury', label: 'Injuries & Medical', count: allInbox.filter((m) => m.type === 'injury').length },
-                      { id: 'match_report', label: 'Match Reports', count: allInbox.filter((m) => m.type === 'match_report').length },
-                    ].map((filter) => {
-                      const active = inboxFilter === filter.id;
-                      return (
-                        <button
-                          key={filter.id}
-                          type="button"
-                          data-office-ui="true"
-                          onClick={() => setInboxFilter(filter.id as typeof inboxFilter)}
-                          className={`py-1.5 px-3 rounded-xl text-[11px] font-display font-bold whitespace-nowrap cursor-pointer transition-all flex items-center gap-1.5 ${
-                            active
-                              ? 'office-nav-tab-active shadow-sm'
-                              : 'office-subcard text-[var(--office-text-secondary)] hover:text-[var(--office-text-primary)]'
-                          }`}
-                        >
-                          <span>{filter.label}</span>
-                          <span
-                            className={`text-[9px] px-1.5 py-0.2 rounded-full font-mono ${
-                              active
-                                ? 'bg-white/20 text-white'
-                                : 'bg-slate-100 text-[var(--office-text-muted)]'
-                            }`}
-                          >
-                            {filter.count}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </nav>
+              {/* Filters: three pills + one category select */}
+              <div data-no-swipe="true" className="flex items-center gap-1.5 shrink-0">
+                {[
+                  { id: 'all', label: 'All', count: allInbox.length },
+                  { id: 'unread', label: 'Unread', count: unreadInboxCount },
+                  { id: 'action_required', label: 'Action', count: actionableAlerts.length },
+                ].map((filter) => {
+                  const active = inboxFilter === filter.id;
+                  return (
+                    <button
+                      key={filter.id}
+                      type="button"
+                      data-office-ui="true"
+                      aria-pressed={active}
+                      onClick={() => setInboxFilter(filter.id as typeof inboxFilter)}
+                      className={`min-h-[36px] px-2.5 rounded-xl text-xs font-display font-bold whitespace-nowrap cursor-pointer flex items-center gap-1 ${
+                        active
+                          ? 'office-nav-tab-active shadow-sm'
+                          : 'office-subcard text-[var(--office-text-secondary)] hover:text-[var(--office-text-primary)]'
+                      }`}
+                    >
+                      <span>{filter.label}</span>
+                      <span className="font-mono text-[10px] opacity-80">{filter.count}</span>
+                    </button>
+                  );
+                })}
+                <select
+                  aria-label="Filter by message type"
+                  value={['board', 'transfer', 'injury', 'match_report'].includes(inboxFilter) ? inboxFilter : ''}
+                  onChange={(e) => setInboxFilter((e.target.value || 'all') as typeof inboxFilter)}
+                  className="ml-auto min-w-0 min-h-[36px] px-2 rounded-xl bg-white border border-slate-300 text-xs font-display font-bold text-[var(--office-text-primary)] cursor-pointer"
+                >
+                  <option value="">Type</option>
+                  <option value="board">Board</option>
+                  <option value="transfer">Transfers</option>
+                  <option value="injury">Medical</option>
+                  <option value="match_report">Match reports</option>
+                </select>
+              </div>
 
-                  {/* Messages Feed */}
-                  <div className="space-y-2.5 pr-1 flex-1 overflow-y-auto min-h-0 overscroll-contain touch-pan-y">
-                    {(() => {
-                      const filteredMessages = allInbox.filter((m) => {
-                        if (inboxFilter === 'all') return true;
-                        if (inboxFilter === 'action_required') {
-                          const cl = classifyInboxMessage(m, save);
-                          return cl.classification === 'action_required' && !cl.isResolved;
-                        }
-                        if (inboxFilter === 'unread') return !m.isRead;
-                        return m.type === inboxFilter;
-                      });
+              {/* Messages Feed */}
+              <div className="space-y-2.5 pr-1 flex-1 overflow-y-auto min-h-0 overscroll-contain touch-pan-y">
+                {(() => {
+                  const filteredMessages = allInbox.filter((m) => {
+                    if (inboxFilter === 'all') return true;
+                    if (inboxFilter === 'action_required') {
+                      const cl = classifyInboxMessage(m, save);
+                      return cl.classification === 'action_required' && !cl.isResolved;
+                    }
+                    if (inboxFilter === 'unread') return !m.isRead;
+                    return m.type === inboxFilter;
+                  });
 
-                      if (filteredMessages.length === 0) {
-                        return (
-                          <div className="office-subcard rounded-2xl p-8 text-center space-y-2 my-2">
-                            <span className="text-2xl block">📭</span>
-                            <h4 className="font-display font-extrabold text-xs text-[var(--office-text-primary)] uppercase tracking-wider">
-                              Inbox Clear
-                            </h4>
-                            <p className="text-[11px] text-[var(--office-text-muted)]">
-                              No messages found in this category. Your managerial desk is up to date.
-                            </p>
+                  if (filteredMessages.length === 0) {
+                    return (
+                      <p className="py-8 text-center text-xs font-semibold text-[var(--office-text-muted)]">
+                        No messages here.
+                      </p>
+                    );
+                  }
+
+                  return filteredMessages.map((msg) => {
+                    const isExpanded = expandedMessageId === msg.id;
+                    const { classification, isResolved, effectiveActionLabel, effectiveActionTab, effectiveActionType, targetId } =
+                      classifyInboxMessage(msg, save);
+
+                    const isActionRequired = classification === 'action_required' && !isResolved;
+                    const isImportant = classification === 'important';
+
+                    return (
+                      <article
+                        key={msg.id}
+                        data-office-ui="true"
+                        onClick={() => handleToggleMessageRead(msg.id)}
+                        className={`office-subcard rounded-2xl p-3.5 space-y-2 cursor-pointer text-left transition-all hover:bg-indigo-50/20 ${
+                          !msg.isRead
+                            ? 'border-l-4 border-l-[#1d5eff] bg-gradient-to-r from-indigo-50/30 via-white to-white'
+                            : ''
+                        }`}
+                      >
+                        {/* Card Header & Priority Tag */}
+                        <div className="flex items-center justify-between gap-2 text-[10.5px]">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            {!msg.isRead && (
+                              <span
+                                className="w-2 h-2 rounded-full bg-[#1d5eff] shrink-0 motion-safe:animate-pulse"
+                                title="Unread message"
+                              />
+                            )}
+                            <span className="font-display font-bold text-[var(--office-text-primary)] truncate">
+                              {msg.sender}
+                            </span>
                           </div>
-                        );
-                      }
 
-                      return filteredMessages.map((msg) => {
-                        const isExpanded = expandedMessageId === msg.id;
-                        const { classification, isResolved, effectiveActionLabel, effectiveActionTab, effectiveActionType, targetId } =
-                          classifyInboxMessage(msg, save);
-
-                        const isActionRequired = classification === 'action_required' && !isResolved;
-                        const isImportant = classification === 'important';
-
-                        return (
-                          <article
-                            key={msg.id}
-                            data-office-ui="true"
-                            onClick={() => handleToggleMessageRead(msg.id)}
-                            className={`office-subcard rounded-2xl p-3.5 space-y-2 cursor-pointer text-left transition-all hover:bg-indigo-50/20 ${
-                              !msg.isRead
-                                ? 'border-l-4 border-l-[#1d5eff] bg-gradient-to-r from-indigo-50/30 via-white to-white'
-                                : ''
-                            }`}
-                          >
-                            {/* Card Header & Priority Tag */}
-                            <div className="flex items-center justify-between gap-2 text-[10.5px]">
-                              <div className="flex items-center gap-1.5 min-w-0">
-                                {!msg.isRead && (
-                                  <span
-                                    className="w-2 h-2 rounded-full bg-[#1d5eff] shrink-0 animate-pulse"
-                                    title="Unread message"
-                                  />
-                                )}
-                                <span className="font-display font-bold text-[var(--office-text-primary)] truncate">
-                                  {msg.sender}
-                                </span>
-                              </div>
-
-                              <div className="flex items-center gap-2 shrink-0">
-                                {isActionRequired ? (
-                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1">
-                                    <span>⚠️</span> Action Required
-                                  </span>
-                                ) : isImportant ? (
-                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
-                                    <span>⭐</span> Important
-                                  </span>
-                                ) : (
-                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-blue-50 text-[#1d5eff] border border-blue-200 flex items-center gap-1">
-                                    <span>ℹ️</span> Info
-                                  </span>
-                                )}
-                                <span className="font-mono text-[var(--office-text-muted)] text-[10px]">
-                                  {formatOfficeShortDate(msg.date)}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Message Subject */}
-                            <div className="font-display font-bold text-xs text-[var(--office-text-primary)] leading-snug">
-                              {msg.subject}
-                            </div>
-
-                            {/* Body & Actions */}
-                            {isExpanded ? (
-                              <div className="pt-2 border-t border-[var(--office-divider)] space-y-2.5 animate-fade-in">
-                                <p className="text-[11px] text-[var(--office-text-secondary)] whitespace-pre-line leading-relaxed">
-                                  {msg.body}
-                                </p>
-                                {effectiveActionLabel && !isResolved && (
-                                  <button
-                                    type="button"
-                                    data-office-ui="true"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleToggleMessageRead(msg.id);
-                                      setShowOfficeInboxModal(false);
-                                      handleExecuteAlertAction({
-                                        actionTab: effectiveActionTab,
-                                        actionType: effectiveActionType,
-                                        targetId: targetId || msg.targetId,
-                                      });
-                                    }}
-                                    className="office-action-btn-primary w-full py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm cursor-pointer"
-                                  >
-                                    <span>{effectiveActionLabel}</span>
-                                    <span>&rarr;</span>
-                                  </button>
-                                )}
-                              </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {isActionRequired ? (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1">
+                                <IconAlert className="w-2.5 h-2.5 shrink-0" />
+                                <span>Action Required</span>
+                              </span>
+                            ) : isImportant ? (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
+                                <IconStar className="w-2.5 h-2.5 shrink-0" filled />
+                                <span>Important</span>
+                              </span>
                             ) : (
-                              <div className="space-y-1">
-                                <p className="text-[11px] text-[var(--office-text-muted)] truncate">
-                                  {msg.body.replace(/\n+/g, ' ')}
-                                </p>
-                                {isActionRequired && effectiveActionLabel && (
-                                  <div className="text-[10px] font-bold text-[#1d5eff] flex items-center gap-1 pt-0.5">
-                                    <span>⚡ {effectiveActionLabel}</span>
-                                    <span>&rsaquo;</span>
-                                  </div>
-                                )}
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-[#1d5eff] border border-blue-200 flex items-center gap-1">
+                                <IconDocument className="w-2.5 h-2.5 shrink-0" />
+                                <span>Info</span>
+                              </span>
+                            )}
+                            <span className="font-mono text-[var(--office-text-muted)] text-[10px]">
+                              {formatOfficeShortDate(msg.date)}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Message Subject */}
+                        <div className="font-display font-bold text-xs text-[var(--office-text-primary)] leading-snug">
+                          {msg.subject}
+                        </div>
+
+                        {/* Body & Actions */}
+                        {isExpanded ? (
+                          <div className="pt-2 border-t border-[var(--office-divider)] space-y-2.5 animate-fade-in">
+                            <p className="text-[11px] text-[var(--office-text-secondary)] whitespace-pre-line leading-relaxed">
+                              {msg.body}
+                            </p>
+                            {effectiveActionType === 'promise_game_time' && !isResolved && (targetId || msg.targetId) ? (
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                                <button
+                                  type="button"
+                                  data-office-ui="true"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const res = resolveDressingRoomConfrontation(
+                                      save,
+                                      targetId || msg.targetId || '',
+                                      'promise_starts',
+                                      msg.id
+                                    );
+                                    handleUpdateSave(res.updatedSave);
+                                    showToast(res.summary);
+                                  }}
+                                  className="office-action-btn-primary py-2 px-3 rounded-xl font-display font-black text-[10.5px] uppercase tracking-wider shadow-sm cursor-pointer"
+                                >
+                                  Promise 3/5 Starts
+                                </button>
+                                <button
+                                  type="button"
+                                  data-office-ui="true"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const res = resolveDressingRoomConfrontation(
+                                      save,
+                                      targetId || msg.targetId || '',
+                                      'explain_rotation',
+                                      msg.id
+                                    );
+                                    handleUpdateSave(res.updatedSave);
+                                    showToast(res.summary);
+                                  }}
+                                  className="py-2 px-3 rounded-xl bg-white border border-slate-300 hover:border-blue-400 text-slate-800 font-display font-bold text-[10.5px] uppercase tracking-wider cursor-pointer"
+                                >
+                                  Explain Rotation
+                                </button>
+                                <button
+                                  type="button"
+                                  data-office-ui="true"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const res = resolveDressingRoomConfrontation(
+                                      save,
+                                      targetId || msg.targetId || '',
+                                      'transfer_list',
+                                      msg.id
+                                    );
+                                    handleUpdateSave(res.updatedSave);
+                                    showToast(res.summary);
+                                  }}
+                                  className="py-2 px-3 rounded-xl bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 font-display font-bold text-[10.5px] uppercase tracking-wider cursor-pointer"
+                                >
+                                  Transfer List
+                                </button>
+                              </div>
+                            ) : effectiveActionLabel && !isResolved ? (
+                              <button
+                                type="button"
+                                data-office-ui="true"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleMessageRead(msg.id);
+                                  setShowOfficeInboxModal(false);
+                                  handleExecuteAlertAction({
+                                    actionTab: effectiveActionTab,
+                                    actionType: effectiveActionType,
+                                    targetId: targetId || msg.targetId,
+                                  });
+                                }}
+                                className="office-action-btn-primary w-full py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                              >
+                                <span>{effectiveActionLabel}</span>
+                                <span>&rarr;</span>
+                              </button>
+                            ) : null}
+                          </div>
+                        ) : (
+                          <div className="space-y-1">
+                            <p className="text-[11px] text-[var(--office-text-muted)] truncate">
+                              {msg.body.replace(/\n+/g, ' ')}
+                            </p>
+                            {isActionRequired && effectiveActionLabel && (
+                              <div className="text-[10px] font-bold text-[#1d5eff] flex items-center gap-1 pt-0.5">
+                                <IconBolt className="w-3 h-3 shrink-0" />
+                                <span>{effectiveActionLabel}</span>
+                                <span>&rsaquo;</span>
                               </div>
                             )}
-                          </article>
-                        );
-                      });
-                    })()}
-                  </div>
-                </section>
+                          </div>
+                        )}
+                      </article>
+                    );
+                  });
+                })()}
+                {allInbox.some((m) => m.isRead) && (
+                  <button
+                    type="button"
+                    data-office-ui="true"
+                    onClick={handleClearReadMessages}
+                    className="w-full min-h-[40px] text-xs font-bold text-slate-600 hover:text-rose-600 transition-colors cursor-pointer"
+                    title="Archive read messages that require no further action"
+                  >
+                    Clear read messages
+                  </button>
+                )}
               </div>
-            )}
+            </section>
           </div>
         )}
 
         {/* TAB 2: SQUAD */}
         {activeTab === 'squad' && (
-          <SquadManagement
-            save={save}
-            onUpdateSave={handleUpdateSave}
-            onOpenCompare={(pA, pB) => setComparisonState({ isOpen: true, playerA: pA, playerB: pB })}
-            onNotification={showToast}
-            initialViewMode={squadInitialViewMode}
-          />
+          <CareerErrorBoundary slotId={slotId} sectionLabel="Squad Management">
+            <SquadManagement
+              save={save}
+              onUpdateSave={handleUpdateSave}
+              onOpenCompare={(pA, pB) => setComparisonState({ isOpen: true, playerA: pA, playerB: pB })}
+              onNotification={showToast}
+              initialViewMode={squadInitialViewMode}
+            />
+          </CareerErrorBoundary>
         )}
 
         {/* TAB 3: FIXTURES */}
         {activeTab === 'fixtures' && (
-          <FixturesCalendar
-            save={save}
-            onUpdateSave={handleUpdateSave}
-            onNotification={showToast}
-            onNavigateOffice={() => handleTabChange('overview')}
-          />
+          <CareerErrorBoundary slotId={slotId} sectionLabel="Fixtures & Calendar">
+            <FixturesCalendar
+              save={save}
+              onUpdateSave={handleUpdateSave}
+              onNotification={showToast}
+              onNavigateOffice={() => handleTabChange('overview')}
+            />
+          </CareerErrorBoundary>
         )}
 
         {/* TAB 4: TABLE */}
         {activeTab === 'table' && (
-          <LeagueTable
-            standings={save.standings || []}
-            userClubId={save.club.id}
-            userClub={save.club}
-            fixtures={save.fixtures || []}
-            userSquad={save.squad}
-            seasonHistory={save.seasonHistory || []}
-            activeLeagueClubIds={save.activeLeagueClubIds}
-          />
+          <CareerErrorBoundary slotId={slotId} sectionLabel="League Table">
+            <LeagueTable
+              standings={save.standings || []}
+              userClubId={save.club.id}
+              userClub={save.club}
+              fixtures={save.fixtures || []}
+              userSquad={save.squad}
+              seasonHistory={save.seasonHistory || []}
+              activeLeagueClubIds={save.activeLeagueClubIds}
+            />
+          </CareerErrorBoundary>
         )}
 
         {/* TAB 5: CUPS & EUROPE */}
         {activeTab === 'cups' && (
-          <TournamentsHub
-            save={save}
-            onUpdateSave={handleUpdateSave}
-            onNotification={showToast}
-          />
+          <CareerErrorBoundary slotId={slotId} sectionLabel="Cups & Europe">
+            <TournamentsHub
+              save={save}
+              onUpdateSave={handleUpdateSave}
+              onNotification={showToast}
+            />
+          </CareerErrorBoundary>
         )}
 
         {/* TAB 6: TRANSFERS */}
         {activeTab === 'transfers' && (
-          <TransferHub
-            save={save}
-            onUpdateSave={handleUpdateSave}
-            onNotification={showToast}
-            initialSubTab={transferHubSubTab}
-            focusedOfferId={focusedOfferId}
-            onOpenCompare={(pA, pB) => setComparisonState({ isOpen: true, playerA: pA, playerB: pB })}
-          />
+          <CareerErrorBoundary slotId={slotId} sectionLabel="Transfer Hub">
+            <TransferHub
+              save={save}
+              onUpdateSave={handleUpdateSave}
+              onNotification={showToast}
+              initialSubTab={transferHubSubTab}
+              focusedOfferId={focusedOfferId}
+              onOpenCompare={(pA, pB) => setComparisonState({ isOpen: true, playerA: pA, playerB: pB })}
+            />
+          </CareerErrorBoundary>
         )}
 
-        {/* TAB 7: SETTINGS & EDITING */}
+        {/* TAB 7: CLUB LEGACY & TROPHY CABINET */}
+        {activeTab === 'legacy' && (
+          <CareerErrorBoundary slotId={slotId} sectionLabel="Club Legacy & Trophy Cabinet">
+            <ClubLegacyView
+              save={save}
+              onNavigateCups={() => handleTabChange('cups')}
+              onNavigateTable={() => handleTabChange('table')}
+            />
+          </CareerErrorBoundary>
+        )}
+
+        {/* TAB 8: SETTINGS & EDITING */}
         {activeTab === 'settings' && editableSettings && (
-          <div className="max-w-2xl mx-auto w-full space-y-4">
-            <header className="space-y-1">
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#1d5eff] font-display">
-                ⚙️ Career Settings &amp; Rules
-              </span>
-              <h3 className="text-xl sm:text-2xl font-display font-extrabold uppercase text-[var(--office-text-primary)] tracking-tight">
-                Career Save Settings
-              </h3>
-              <p className="text-xs text-[var(--office-text-muted)] font-medium">
-                {save.settings.locked
-                  ? 'This career has locked rules to protect save integrity and prevent mid-game difficulty changes.'
-                  : 'You can adjust mid-save settings, regional preferences, and rename your club below.'}
-              </p>
-            </header>
-
-            {/* Club Name Renaming */}
-            <section
-              data-office-ui="true"
-              className="office-floating-card rounded-3xl p-4 sm:p-5 space-y-3 border border-indigo-100/80 shadow-sm"
-            >
-              <div className="flex items-center justify-between">
-                <label className="block text-[10px] font-black text-[var(--office-text-muted)] uppercase tracking-wider">
-                  Club Display Name
-                </label>
-                <span className="text-[9px] text-[var(--office-text-muted)] font-mono">
-                  Default: {save.club.defaultName}
-                </span>
-              </div>
-              <div className="flex gap-2.5">
-                <input
-                  type="text"
-                  value={editingClubName}
-                  onChange={(e) => setEditingClubName(e.target.value)}
-                  placeholder={save.club.defaultName}
-                  className="flex-1 bg-white border border-slate-200/90 rounded-xl px-4 py-2.5 text-xs text-[var(--office-text-primary)] font-bold focus:outline-none focus:border-[#1d5eff] focus:ring-2 focus:ring-blue-100 shadow-2xs"
-                />
-                <button
-                  type="button"
-                  data-office-ui="true"
-                  onClick={() => setEditingClubName(save.club.defaultName)}
-                  className="office-subcard py-2.5 px-3.5 rounded-xl text-xs font-bold text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] hover:bg-slate-100 cursor-pointer"
-                  title="Reset to default club name"
-                >
-                  Reset
-                </button>
-              </div>
-              <p className="text-[10px] text-[var(--office-text-muted)]">
-                Custom club names are displayed across all matchdays, press tickers, and league tables.
-              </p>
-            </section>
-
-            {/* Regional & Display Preferences (Always Editable) */}
-            <section
-              data-office-ui="true"
-              className="office-floating-card rounded-3xl p-4 sm:p-5 space-y-4 border border-indigo-100/80 shadow-sm"
-            >
-              <div className="flex justify-between items-center border-b border-[var(--office-divider)] pb-3">
-                <div className="space-y-0.5">
-                  <h4 className="text-xs font-display font-bold uppercase tracking-wider text-[var(--office-text-primary)] flex items-center gap-1.5">
-                    <span>🌐</span> Regional &amp; Display Preferences
-                  </h4>
-                  <p className="text-[10px] text-[var(--office-text-muted)]">
-                    Football Manager-style units and formatting. Configurable mid-save on all difficulties.
-                  </p>
-                </div>
-                <span className="text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  Always Editable
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                {/* Date Format */}
-                <div className="office-subcard p-3 rounded-xl border border-indigo-50/80 bg-white/80 space-y-1.5 shadow-2xs">
-                  <label className="block text-[10px] font-bold text-[var(--office-text-muted)] uppercase tracking-wider">
-                    Date Format
-                  </label>
-                  <select
-                    value={editableSettings.dateFormat || 'uk'}
-                    onChange={(e) =>
-                      setEditableSettings({
-                        ...editableSettings,
-                        dateFormat: e.target.value as DateFormatPreference,
-                      })
-                    }
-                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-[var(--office-text-primary)] font-bold focus:outline-none focus:border-[#1d5eff]"
-                  >
-                    <option value="uk">UK (14/08/2026 - DD/MM/YYYY)</option>
-                    <option value="iso">ISO (2026-08-14 - YYYY-MM-DD)</option>
-                    <option value="us">US (08/14/2026 - MM/DD/YYYY)</option>
-                  </select>
-                </div>
-
-                {/* Currency */}
-                <div className="office-subcard p-3 rounded-xl border border-indigo-50/80 bg-white/80 space-y-1.5 shadow-2xs">
-                  <label className="block text-[10px] font-bold text-[var(--office-text-muted)] uppercase tracking-wider">
-                    Currency Unit
-                  </label>
-                  <select
-                    value={editableSettings.currency || 'GBP'}
-                    onChange={(e) =>
-                      setEditableSettings({
-                        ...editableSettings,
-                        currency: e.target.value as CurrencyPreference,
-                      })
-                    }
-                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-[var(--office-text-primary)] font-bold focus:outline-none focus:border-[#1d5eff]"
-                  >
-                    <option value="GBP">GBP (£ - British Pound)</option>
-                    <option value="EUR">EUR (€ - Euro)</option>
-                    <option value="USD">USD ($ - US Dollar)</option>
-                  </select>
-                </div>
-
-                {/* Wage Unit */}
-                <div className="office-subcard p-3 rounded-xl border border-indigo-50/80 bg-white/80 space-y-1.5 shadow-2xs">
-                  <label className="block text-[10px] font-bold text-[var(--office-text-muted)] uppercase tracking-wider">
-                    Wage Rate Frequency
-                  </label>
-                  <select
-                    value={editableSettings.wageUnit || 'weekly'}
-                    onChange={(e) =>
-                      setEditableSettings({
-                        ...editableSettings,
-                        wageUnit: e.target.value as WageUnitPreference,
-                      })
-                    }
-                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-[var(--office-text-primary)] font-bold focus:outline-none focus:border-[#1d5eff]"
-                  >
-                    <option value="weekly">Weekly (£/wk - FM Standard)</option>
-                    <option value="monthly">Monthly (£/mo)</option>
-                    <option value="annual">Annual (£/yr)</option>
-                  </select>
-                </div>
-
-                {/* Height Unit */}
-                <div className="office-subcard p-3 rounded-xl border border-indigo-50/80 bg-white/80 space-y-1.5 shadow-2xs">
-                  <label className="block text-[10px] font-bold text-[var(--office-text-muted)] uppercase tracking-wider">
-                    Height Unit
-                  </label>
-                  <select
-                    value={editableSettings.heightUnit || 'ft_in'}
-                    onChange={(e) =>
-                      setEditableSettings({
-                        ...editableSettings,
-                        heightUnit: e.target.value as HeightUnitPreference,
-                      })
-                    }
-                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-[var(--office-text-primary)] font-bold focus:outline-none focus:border-[#1d5eff]"
-                  >
-                    <option value="ft_in">Feet &amp; Inches (5&apos; 11&quot;)</option>
-                    <option value="cm">Centimetres (180 cm)</option>
-                    <option value="m">Metres (1.80 m)</option>
-                  </select>
-                </div>
-
-                {/* Weight Unit */}
-                <div className="office-subcard p-3 rounded-xl border border-indigo-50/80 bg-white/80 space-y-1.5 shadow-2xs">
-                  <label className="block text-[10px] font-bold text-[var(--office-text-muted)] uppercase tracking-wider">
-                    Weight Unit
-                  </label>
-                  <select
-                    value={editableSettings.weightUnit || 'kg'}
-                    onChange={(e) =>
-                      setEditableSettings({
-                        ...editableSettings,
-                        weightUnit: e.target.value as WeightUnitPreference,
-                      })
-                    }
-                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-[var(--office-text-primary)] font-bold focus:outline-none focus:border-[#1d5eff]"
-                  >
-                    <option value="kg">Kilograms (75 kg)</option>
-                    <option value="st_lbs">Stone &amp; Pounds (11st 11lbs)</option>
-                    <option value="lbs">Pounds (165 lbs)</option>
-                  </select>
-                </div>
-
-                {/* Number Format */}
-                <div className="office-subcard p-3 rounded-xl border border-indigo-50/80 bg-white/80 space-y-1.5 shadow-2xs">
-                  <label className="block text-[10px] font-bold text-[var(--office-text-muted)] uppercase tracking-wider">
-                    Number Formatting
-                  </label>
-                  <select
-                    value={editableSettings.numberFormat || 'comma'}
-                    onChange={(e) =>
-                      setEditableSettings({
-                        ...editableSettings,
-                        numberFormat: e.target.value as NumberFormatPreference,
-                      })
-                    }
-                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-[var(--office-text-primary)] font-bold focus:outline-none focus:border-[#1d5eff]"
-                  >
-                    <option value="comma">Standard Comma (1,000,000)</option>
-                    <option value="dot">Continental Dot (1.000.000)</option>
-                    <option value="space">Space Separator (1 000 000)</option>
-                  </select>
-                </div>
-              </div>
-            </section>
-
-            {/* Gameplay Rules Status */}
-            <section
-              data-office-ui="true"
-              className="office-floating-card rounded-3xl p-4 sm:p-5 space-y-4 border border-indigo-100/80 shadow-sm"
-            >
-              <div className="flex justify-between items-center border-b border-[var(--office-divider)] pb-3">
-                <div className="space-y-0.5">
-                  <h4 className="text-xs font-display font-bold uppercase tracking-wider text-[var(--office-text-primary)]">
-                    Gameplay Rules &amp; Save Integrity
-                  </h4>
-                  <p className="text-[10px] text-[var(--office-text-muted)]">
-                    Preset: <strong className="text-[var(--office-text-primary)] uppercase">{save.settings.preset}</strong>
-                  </p>
-                </div>
-                {save.settings.locked && (
-                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1">
-                    <span>🔒</span> Locked Save
-                  </span>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                {/* Board Sackings */}
-                <div className="flex justify-between items-center office-subcard p-3 rounded-xl border border-indigo-50/80 bg-white/80 shadow-2xs">
-                  <div>
-                    <div className="font-bold text-[var(--office-text-primary)] text-xs">Board Can Sack You</div>
-                    <div className="text-[10px] text-[var(--office-text-muted)]">Dismissed on prolonged poor form</div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={editableSettings.boardCanSack}
-                    disabled={save.settings.locked}
-                    onChange={(e) =>
-                      setEditableSettings({ ...editableSettings, boardCanSack: e.target.checked })
-                    }
-                    className="w-5 h-5 accent-[#1d5eff] cursor-pointer rounded"
-                  />
-                </div>
-
-                {/* Match Retry */}
-                <div className="flex justify-between items-center office-subcard p-3 rounded-xl border border-indigo-50/80 bg-white/80 shadow-2xs">
-                  <div>
-                    <div className="font-bold text-[var(--office-text-primary)] text-xs">Allow Match Retry</div>
-                    <div className="text-[10px] text-[var(--office-text-muted)]">Replay simulated matches</div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={editableSettings.retryMatch}
-                    disabled={save.settings.locked}
-                    onChange={(e) =>
-                      setEditableSettings({ ...editableSettings, retryMatch: e.target.checked })
-                    }
-                    className="w-5 h-5 accent-[#1d5eff] cursor-pointer rounded"
-                  />
-                </div>
-
-                {/* Homegrown Rule */}
-                <div className="flex justify-between items-center office-subcard p-3 rounded-xl border border-indigo-50/80 bg-white/80 shadow-2xs">
-                  <div>
-                    <div className="font-bold text-[var(--office-text-primary)] text-xs">Homegrown Rule</div>
-                    <div className="text-[10px] text-[var(--office-text-muted)]">8+ domestic trained players required</div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={editableSettings.homegrownRule}
-                    disabled={save.settings.locked}
-                    onChange={(e) =>
-                      setEditableSettings({ ...editableSettings, homegrownRule: e.target.checked })
-                    }
-                    className="w-5 h-5 accent-[#1d5eff] cursor-pointer rounded"
-                  />
-                </div>
-
-                {/* Financial Penalties */}
-                <div className="flex justify-between items-center office-subcard p-3 rounded-xl border border-indigo-50/80 bg-white/80 shadow-2xs">
-                  <div>
-                    <div className="font-bold text-[var(--office-text-primary)] text-xs">Financial Penalties</div>
-                    <div className="text-[10px] text-[var(--office-text-muted)]">Point deductions on severe debt</div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={editableSettings.financialPenalties}
-                    disabled={save.settings.locked}
-                    onChange={(e) =>
-                      setEditableSettings({
-                        ...editableSettings,
-                        financialPenalties: e.target.checked,
-                      })
-                    }
-                    className="w-5 h-5 accent-[#1d5eff] cursor-pointer rounded"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="button"
-                  data-office-ui="true"
-                  onClick={handleSaveSettings}
-                  className="office-action-btn-primary w-full py-3 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md cursor-pointer"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </section>
-
-            {/* Save Slot & Storage Management (Safe vs Destructive Actions) */}
-            <section
-              data-office-ui="true"
-              className="office-floating-card rounded-3xl p-4 sm:p-5 space-y-4 border border-indigo-100/80 shadow-sm"
-            >
-              <div className="border-b border-[var(--office-divider)] pb-2.5">
-                <h4 className="text-xs font-display font-bold uppercase tracking-wider text-[var(--office-text-primary)] flex items-center gap-1.5">
-                  <span>💾</span> Save Slot &amp; Backup Management
-                </h4>
-                <p className="text-[10px] text-[var(--office-text-muted)]">
-                  Active Save Slot: <strong className="text-[var(--office-text-primary)] font-mono">{slotId}</strong>
-                </p>
-              </div>
-
-              {/* Safe action: Backup */}
-              <div className="flex flex-col sm:flex-row gap-2.5">
-                <button
-                  type="button"
-                  data-office-ui="true"
-                  onClick={handleExport}
-                  className="office-subcard flex-1 py-2.5 px-4 rounded-xl font-display font-bold text-xs text-[var(--office-text-primary)] hover:bg-indigo-50/50 flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
-                >
-                  <span>💾 Backup Save (Export JSON)</span>
-                </button>
-              </div>
-
-              {/* Destructive Action: Reset Save */}
-              <div className="bg-rose-50/70 border border-rose-200/80 rounded-2xl p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-base text-rose-600">⚠️</span>
-                  <div className="min-w-0">
-                    <h5 className="font-display font-bold text-xs text-rose-800 uppercase tracking-wide">
-                      Danger Zone — Reset Career Save Slot
-                    </h5>
-                    <p className="text-[10px] text-rose-700 leading-relaxed">
-                      Permanently wipes all managerial records, transfers, and fixtures in <span className="font-mono font-bold">{slotId}</span>.
-                    </p>
-                  </div>
-                </div>
-
-                {!showResetConfirm ? (
-                  <button
-                    type="button"
-                    onClick={() => setShowResetConfirm(true)}
-                    className="py-2 px-3.5 rounded-xl border border-rose-300 bg-white text-rose-700 hover:bg-rose-100/60 font-display font-bold text-xs uppercase cursor-pointer transition-colors shadow-2xs"
-                  >
-                    Reset This Save Slot...
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-2 pt-1 flex-wrap">
-                    <button
-                      type="button"
-                      onClick={handleResetSaveSlot}
-                      className="py-2 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-display font-black text-xs uppercase cursor-pointer shadow-sm transition-colors"
-                    >
-                      Confirm Reset &amp; Wipe Slot
-                    </button>
-                    <button
-                      type="button"
-                      data-office-ui="true"
-                      onClick={() => setShowResetConfirm(false)}
-                      className="office-subcard py-2 px-3.5 rounded-xl text-xs font-bold text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                )}
-              </div>
-            </section>
-
-            {/* Exit Game / Return to Menu */}
-            <section
-              data-office-ui="true"
-              className="office-floating-card rounded-3xl p-4 sm:p-5 space-y-3 border border-slate-200/90 shadow-sm"
-            >
-              <div>
-                <h4 className="text-xs font-display font-bold uppercase tracking-wider text-[var(--office-text-primary)] flex items-center gap-1.5">
-                  <span>🚪</span> Exit Career &amp; Leave Game
-                </h4>
-                <p className="text-[10px] text-[var(--office-text-muted)] mt-0.5">
-                  Your season progress is saved automatically. Choose whether to return to your save slots or exit to the main title screen.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                <button
-                  type="button"
-                  data-office-ui="true"
-                  onClick={() => setShowExitConfirmModal(true)}
-                  className="py-2.5 px-4 rounded-xl border border-slate-300 hover:border-slate-400 bg-slate-100 hover:bg-slate-200 text-slate-800 font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all shadow-2xs"
-                >
-                  <span>💾 Exit Career Mode</span>
-                </button>
-                <Link
-                  href="/"
-                  className="py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md"
-                >
-                  <span>🏠 Exit to Main Menu</span>
-                </Link>
-              </div>
-            </section>
-          </div>
+          <CareerErrorBoundary slotId={slotId} sectionLabel="Career Settings">
+            <CareerSettingsTab
+              save={save}
+              slotId={slotId}
+              editableSettings={editableSettings}
+              editingClubName={editingClubName}
+              sfxEnabled={sfxEnabled}
+              onChangeEditableSettings={setEditableSettings}
+              onChangeEditingClubName={setEditingClubName}
+              onToggleSfx={handleToggleSfx}
+              onSaveSettings={handleSaveSettings}
+              onExport={handleExport}
+              onImportSaveSuccess={(importedSave) => handleUpdateSave(importedSave)}
+              onResetSaveSlot={handleResetSaveSlot}
+              onOpenExitModal={() => setShowExitConfirmModal(true)}
+              onNotify={showToast}
+            />
+          </CareerErrorBoundary>
         )}
         </div>
       </main>
 
       {/* Matchday Play/Sim Interactive Modal */}
       {activeMatchFixture && (
-        <MatchDayModal
-          fixture={activeMatchFixture}
-          save={save}
-          onClose={() => setActiveMatchFixture(null)}
-          onSaveMatchResult={handleMatchResultSaved}
-        />
+        <CareerErrorBoundary slotId={slotId} sectionLabel="Live Matchday" onResetView={() => setActiveMatchFixture(null)}>
+          <MatchDayModal
+            fixture={activeMatchFixture}
+            save={save}
+            onClose={() => setActiveMatchFixture(null)}
+            onSaveMatchResult={handleMatchResultSaved}
+            onUpdateSave={handleUpdateSave}
+          />
+        </CareerErrorBoundary>
       )}
 
       {/* Match Overview / Statistics / Pre-Match Dossier Modal */}
@@ -3709,9 +3608,9 @@ function CareerPlayHubContent() {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fade-in motion-reduce:animate-none"
         >
-          <div className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-7 max-w-lg w-full space-y-5 shadow-2xl text-left relative text-[#0b1536]">
+          <div className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-7 max-w-lg w-full space-y-5 shadow-2xl text-left relative text-[#0b1536] max-h-[90dvh] overflow-y-auto">
             <header className="space-y-1.5">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 bg-amber-50 border border-amber-300 px-2.5 py-0.5 rounded-full inline-block font-display">
@@ -3722,7 +3621,8 @@ function CareerPlayHubContent() {
                 </span>
               </div>
               <h3 className="text-xl sm:text-2xl font-display font-black text-[#0b1536] uppercase tracking-tight flex items-center gap-2">
-                <span>📅</span> Premier League Fixture Release Day!
+                <IconCalendar className="w-5 h-5 text-[#1d5eff] shrink-0" />
+                <span>Premier League Fixture Release Day!</span>
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                 The Premier League computer has officially finalized all 38 fixtures for the {save.season.yearStart}/{(save.season.yearStart + 1).toString().slice(-2)} season. Opening day, rival derbies, festive fixtures, and the final day are ready.
@@ -3749,7 +3649,8 @@ function CareerPlayHubContent() {
                 }}
                 className="office-action-btn-primary flex-1 py-3 px-4 rounded-xl text-white font-display font-black text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
               >
-                <span>🎉 Launch Live Reveal Ceremony</span>
+                <IconSparkles className="w-3.5 h-3.5 shrink-0" />
+                <span>Launch Live Reveal Ceremony</span>
               </button>
               <button
                 type="button"
@@ -3757,9 +3658,10 @@ function CareerPlayHubContent() {
                   setShowFixtureReleasePromptModal(false);
                   handleFinishFixtureRelease();
                 }}
-                className="office-subcard py-3 px-4 rounded-xl border border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-900 font-display font-bold text-xs uppercase transition-all cursor-pointer text-center shadow-2xs"
+                className="office-subcard py-3 px-4 rounded-xl border border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-900 font-display font-bold text-xs uppercase transition-all cursor-pointer text-center shadow-2xs inline-flex items-center justify-center gap-1.5"
               >
-                ⏩ Skip &amp; Unlock Calendar
+                <IconSkipForward className="w-3.5 h-3.5 shrink-0" />
+                <span>Skip &amp; Unlock Calendar</span>
               </button>
             </div>
           </div>
@@ -3790,144 +3692,153 @@ function CareerPlayHubContent() {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 motion-reduce:transition-none animate-fade-in"
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 motion-reduce:transition-none motion-reduce:animate-none animate-fade-in"
         >
-          <div className="office-floating-card bg-white border border-amber-300/80 rounded-3xl p-6 sm:p-7 max-w-xl w-full space-y-5 shadow-2xl text-left relative max-h-[90vh] overflow-y-auto text-[#0b1536]">
-            <div className="flex justify-between items-start">
-              <div className="space-y-1">
-                <span className="text-[10px] font-black uppercase text-amber-700 tracking-wider font-display">
-                  Official Season {save.season.seasonNumber} Review &amp; Board Summary
+          <div className="office-floating-card bg-white border border-amber-300/80 rounded-3xl p-5 sm:p-7 max-w-xl w-full space-y-4 shadow-2xl text-left relative max-h-[90dvh] overflow-y-auto text-[#0b1536]">
+            <div className="flex justify-between items-start gap-2">
+              <div className="space-y-1 min-w-0">
+                <span className="text-[11px] font-black uppercase text-amber-700 tracking-wider font-display">
+                  Season {save.season.seasonNumber} Review
                 </span>
-                <h3 className="text-2xl font-display font-black text-[#0b1536] uppercase tracking-tight">
-                  {seasonSummary.leagueTitle ? '👑 League Champions!' : `Finished Position #${seasonSummary.finalPosition}`}
+                <h3 className="text-xl sm:text-2xl font-display font-black text-[#0b1536] uppercase tracking-tight flex items-center gap-2">
+                  {seasonSummary.leagueTitle ? (
+                    <>
+                      <IconCrown className="w-5 h-5 text-amber-500 shrink-0" />
+                      <span>League Champions</span>
+                    </>
+                  ) : (
+                    <span>Finished {formatOrdinalRank(seasonSummary.finalPosition)}</span>
+                  )}
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setShowSeasonReviewModal(false)}
-                className="w-8 h-8 rounded-full office-subcard border border-slate-200 text-slate-500 hover:text-[#0b1536] flex items-center justify-center text-sm font-bold cursor-pointer transition-colors shadow-2xs"
+                className="w-10 h-10 rounded-full office-subcard border border-slate-200 text-slate-500 hover:text-[#0b1536] flex items-center justify-center cursor-pointer transition-colors shadow-2xs shrink-0"
                 aria-label="Close modal"
               >
-                ✕
+                <IconClose className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Campaign Accolades Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-              <div className="office-subcard border border-slate-200/80 rounded-2xl p-3 space-y-1 bg-slate-50/70 shadow-2xs">
-                <span className="text-[10px] font-bold text-slate-500 uppercase">League Finish</span>
-                <div className="font-display font-black text-base text-[#0b1536]">
-                  {seasonSummary.leagueTitle ? '🥇 1st Place' : `#${seasonSummary.finalPosition}`}
+            {/* Headline result: record, prize, silverware, Europe (each shown once) */}
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 border-y border-slate-200 py-3">
+              {userStanding && (
+                <div>
+                  <dt className="text-[11px] font-bold text-slate-500 uppercase">Record</dt>
+                  <dd className="font-display font-black text-base text-[#0b1536]">
+                    {userStanding.won}W {userStanding.drawn}D {userStanding.lost}L
+                    <span className="font-mono font-bold text-xs text-slate-600"> · {userStanding.points} pts</span>
+                  </dd>
                 </div>
-              </div>
-              <div className="office-subcard border border-slate-200/80 rounded-2xl p-3 space-y-1 bg-slate-50/70 shadow-2xs">
-                <span className="text-[10px] font-bold text-slate-500 uppercase">Silverware</span>
-                <div className="font-display font-black text-base text-amber-700">
-                  {seasonSummary.trophiesWon.length > 0 ? `${seasonSummary.trophiesWon.length} Trophies` : 'None'}
-                </div>
-              </div>
-              <div className="office-subcard border border-slate-200/80 rounded-2xl p-3 space-y-1 bg-slate-50/70 shadow-2xs">
-                <span className="text-[10px] font-bold text-slate-500 uppercase">Prize Money</span>
-                <div className="font-display font-black text-base text-blue-700">
+              )}
+              <div>
+                <dt className="text-[11px] font-bold text-slate-500 uppercase">Prize Money</dt>
+                <dd className="font-display font-black text-base text-emerald-700">
                   +{formatCareerCurrency(seasonSummary.prizeMoney, save.settings.currency)}
-                </div>
+                </dd>
               </div>
-              <div className="office-subcard border border-slate-200/80 rounded-2xl p-3 space-y-1 bg-slate-50/70 shadow-2xs">
-                <span className="text-[10px] font-bold text-slate-500 uppercase">Europe</span>
-                <div className="font-display font-bold text-xs text-blue-700 truncate" title={seasonSummary.europeanQualification}>
+              <div>
+                <dt className="text-[11px] font-bold text-slate-500 uppercase">Silverware</dt>
+                <dd className="font-display font-black text-base text-amber-700">
+                  {seasonSummary.trophiesWon.length > 0
+                    ? `${seasonSummary.trophiesWon.length} ${seasonSummary.trophiesWon.length === 1 ? 'Trophy' : 'Trophies'}`
+                    : 'None'}
+                </dd>
+              </div>
+              <div className="min-w-0">
+                <dt className="text-[11px] font-bold text-slate-500 uppercase">Europe</dt>
+                <dd className="font-display font-bold text-xs text-blue-700 leading-snug pt-1">
                   {seasonSummary.europeanQualification}
-                </div>
+                </dd>
               </div>
-            </div>
+            </dl>
 
-            {/* Financial War Chest Increase Breakdown */}
-            <div className="office-subcard bg-blue-50/60 border border-blue-200 rounded-2xl p-4 space-y-2">
-              <div className="text-[11px] font-display font-black text-blue-700 uppercase tracking-wider flex items-center gap-1.5">
-                <span>💰</span> End of Season Budget Increase
-              </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                The board of directors has credited your competition merit prize money to your war chest. Here is your updated financial war chest for Season {save.season.seasonNumber + 1}:
-              </p>
-              <div className="grid grid-cols-3 gap-2 pt-1 text-center font-mono">
-                <div className="bg-white border border-slate-200 p-2 rounded-xl shadow-2xs">
-                  <span className="text-[9px] uppercase text-slate-500 font-bold block">Current Budget</span>
-                  <span className="text-xs font-bold text-slate-800">{formatCareerCurrency(save.finances.transferBudget, save.settings.currency)}</span>
-                </div>
-                <div className="bg-emerald-50 border border-emerald-200 p-2 rounded-xl shadow-2xs">
-                  <span className="text-[9px] uppercase text-emerald-700 font-bold block">+ Prize Money</span>
-                  <span className="text-xs font-bold text-emerald-800">+{formatCareerCurrency(seasonSummary.prizeMoney, save.settings.currency)}</span>
-                </div>
-                <div className="bg-blue-50 border border-blue-200 p-2 rounded-xl shadow-2xs">
-                  <span className="text-[9px] uppercase text-blue-700 font-bold block">New Budget</span>
-                  <span className="text-xs font-bold text-blue-800">{formatCareerCurrency(save.finances.transferBudget + seasonSummary.prizeMoney, save.settings.currency)}</span>
-                </div>
-              </div>
-            </div>
+            <p className="text-xs text-slate-700">
+              Season {save.season.seasonNumber + 1} transfer budget:{' '}
+              <span className="font-mono font-bold text-[#0b1536]">
+                {formatCareerCurrency(save.finances.transferBudget + seasonSummary.prizeMoney, save.settings.currency)}
+              </span>
+            </p>
 
-            {/* Squad Progression & Veteran Aging Logs */}
-            <div className="office-subcard border border-slate-200 rounded-2xl p-4 space-y-2 bg-slate-50/70">
-              <div className="text-[10px] font-black uppercase text-blue-700 tracking-wider flex items-center gap-1.5 font-display">
-                <span>🌱</span> Squad Development &amp; Wonderkid Growth
-              </div>
-              <p className="text-[11px] text-slate-600 leading-relaxed">
-                Players age by 1 year. Under-23 wonderkids experience rapid attribute development, while veterans gradually decline. Summer fitness resets to 100%.
-              </p>
-              <div className="max-h-36 overflow-y-auto space-y-1 text-[11px] text-slate-700 divide-y divide-slate-200 pt-1">
-                {seasonSummary.progressionReport.logs.slice(0, 8).map((log, idx) => (
-                  <div key={idx} className="py-1">
-                    {log}
-                  </div>
-                ))}
-                {seasonSummary.progressionReport.logs.length > 8 && (
-                  <div className="text-[10px] text-slate-500 pt-1 font-bold">
-                    + {seasonSummary.progressionReport.logs.length - 8} more player development logs
+            {/* Secondary detail behind disclosures (collapsed by default) */}
+            <div className="divide-y divide-slate-200 border-y border-slate-200">
+              <div>
+                <button
+                  type="button"
+                  aria-expanded={seasonReviewOpenSection === 'growth'}
+                  onClick={() => setSeasonReviewOpenSection((prev) => (prev === 'growth' ? null : 'growth'))}
+                  className="w-full min-h-[44px] flex items-center justify-between gap-2 text-left cursor-pointer text-xs font-display font-black uppercase tracking-wider text-[#0b1536]"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <IconSprout className="w-3.5 h-3.5 text-blue-700 shrink-0" />
+                    <span>Player Development ({seasonSummary.progressionReport.logs.length})</span>
+                  </span>
+                  <IconChevronDown className={`w-4 h-4 shrink-0 ${seasonReviewOpenSection === 'growth' ? 'rotate-180' : ''}`} />
+                </button>
+                {seasonReviewOpenSection === 'growth' && (
+                  <div className="pb-3 space-y-1.5">
+                    <p className="text-[11px] text-slate-600">Everyone ages a year; fitness resets to 100%.</p>
+                    <ul className="text-xs text-slate-700 divide-y divide-slate-200">
+                      {seasonSummary.progressionReport.logs.map((log, idx) => (
+                        <li key={idx} className="py-1">
+                          {log}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 )}
               </div>
+
+              {(seasonSummary.promotedClubNames?.length || seasonSummary.relegatedClubNames?.length) ? (
+                <div>
+                  <button
+                    type="button"
+                    aria-expanded={seasonReviewOpenSection === 'division'}
+                    onClick={() => setSeasonReviewOpenSection((prev) => (prev === 'division' ? null : 'division'))}
+                    className="w-full min-h-[44px] flex items-center justify-between gap-2 text-left cursor-pointer text-xs font-display font-black uppercase tracking-wider text-[#0b1536]"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <IconRefresh className="w-3.5 h-3.5 text-[#1d5eff] shrink-0" />
+                      <span>Promoted &amp; Relegated</span>
+                    </span>
+                    <IconChevronDown className={`w-4 h-4 shrink-0 ${seasonReviewOpenSection === 'division' ? 'rotate-180' : ''}`} />
+                  </button>
+                  {seasonReviewOpenSection === 'division' && (
+                    <div className="pb-3 space-y-1.5 text-xs">
+                      {seasonSummary.promotedClubNames && seasonSummary.promotedClubNames.length > 0 && (
+                        <p className="flex items-start gap-1.5 text-emerald-900">
+                          <IconTrendingUp className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                          <span>
+                            <span className="font-bold">Up:</span> {seasonSummary.promotedClubNames.join(', ')}
+                          </span>
+                        </p>
+                      )}
+                      {seasonSummary.relegatedClubNames && seasonSummary.relegatedClubNames.length > 0 && (
+                        <p className="flex items-start gap-1.5 text-rose-900">
+                          <IconTrendingUp className="w-3.5 h-3.5 rotate-180 shrink-0 mt-0.5" />
+                          <span>
+                            <span className="font-bold">Down:</span> {seasonSummary.relegatedClubNames.join(', ')}
+                          </span>
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : null}
             </div>
 
-            {/* Division Promotion & Relegation Roster Updates */}
-            {(seasonSummary.promotedClubNames?.length || seasonSummary.relegatedClubNames?.length) ? (
-              <div className="office-subcard border border-slate-200 rounded-2xl p-4 space-y-2.5 bg-slate-50/70">
-                <div className="text-[10px] font-black uppercase text-slate-700 tracking-wider flex items-center justify-between font-display">
-                  <span className="flex items-center gap-1.5">
-                    <span>🔄</span> Top Flight Promotion &amp; Relegation
-                  </span>
-                  <span className="text-[10px] font-bold text-slate-500">Season {save.season.seasonNumber + 1} Roster</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                  {seasonSummary.promotedClubNames && seasonSummary.promotedClubNames.length > 0 && (
-                    <div className="bg-emerald-50/90 border border-emerald-200/90 rounded-xl p-2.5 space-y-1">
-                      <span className="text-[10px] font-display font-black uppercase tracking-wider text-emerald-800 flex items-center gap-1">
-                        <span>⬆️</span> Promoted to Top Flight
-                      </span>
-                      <p className="text-xs font-bold text-emerald-900">
-                        {seasonSummary.promotedClubNames.join(', ')}
-                      </p>
-                    </div>
-                  )}
-                  {seasonSummary.relegatedClubNames && seasonSummary.relegatedClubNames.length > 0 && (
-                    <div className="bg-rose-50/90 border border-rose-200/90 rounded-xl p-2.5 space-y-1">
-                      <span className="text-[10px] font-display font-black uppercase tracking-wider text-rose-800 flex items-center gap-1">
-                        <span>⬇️</span> Relegated from Top Flight
-                      </span>
-                      <p className="text-xs font-bold text-rose-900">
-                        {seasonSummary.relegatedClubNames.join(', ')}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : null}
-
             {/* Action Buttons */}
-            <div className="flex gap-3 pt-2">
+            <div className="flex gap-3">
               <button
+                type="button"
                 onClick={() => setShowSeasonReviewModal(false)}
                 className="office-subcard py-3 px-4 rounded-xl border border-slate-200 text-slate-700 hover:text-slate-900 text-xs font-bold transition-all cursor-pointer shadow-2xs"
               >
                 Close
               </button>
               <button
+                type="button"
                 onClick={() => {
                   setShowSeasonReviewModal(false);
                   handleAdvanceToNextSeasonAction();
@@ -3935,7 +3846,8 @@ function CareerPlayHubContent() {
                 disabled={simulating}
                 className="flex-1 py-3 px-5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
               >
-                <span>🚀 Kick Off Season {save.season.seasonNumber + 1} (Collect Prize Money)</span>
+                <IconArrowRight className="w-3.5 h-3.5 shrink-0" />
+                <span>Start Season {save.season.seasonNumber + 1}</span>
               </button>
             </div>
           </div>
@@ -3949,101 +3861,52 @@ function CareerPlayHubContent() {
           aria-modal="true"
           className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 motion-reduce:transition-none"
         >
-          <div className="office-floating-card bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 max-w-md w-full space-y-5 shadow-2xl text-left relative text-slate-900">
-            <div className="flex justify-between items-start">
-              <div className="space-y-1">
-                <span className="text-[10px] font-black uppercase text-blue-700 tracking-wider font-display">
-                  Calendar Fast Forward Confirmation
-                </span>
-                <h3 className="text-xl font-display font-black text-slate-900 uppercase tracking-tight">
-                  {getFastForwardDetails(pendingFastForward).title}
-                </h3>
-              </div>
+          <div className="office-floating-card bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 max-w-md w-full space-y-4 shadow-2xl text-left relative text-slate-900 max-h-[90dvh] overflow-y-auto">
+            <div className="flex justify-between items-start gap-2">
+              <h3 className="text-lg font-display font-black text-slate-900 uppercase tracking-tight">
+                {getFastForwardDetails(pendingFastForward).title}
+              </h3>
               <button
+                type="button"
                 onClick={() => setPendingFastForward(null)}
-                className="text-slate-500 hover:text-slate-900 p-1 rounded-lg text-sm cursor-pointer"
+                className="w-10 h-10 rounded-full office-subcard border border-slate-200 text-slate-500 hover:text-slate-900 flex items-center justify-center cursor-pointer shrink-0 transition-colors"
                 aria-label="Close modal"
               >
-                ✕
+                <IconClose className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 text-xs">
-              <div className="flex justify-between items-center text-[11px]">
-                <span className="text-slate-600 uppercase font-bold">Target Stop Date</span>
-                <span className="font-mono font-bold text-blue-700">
-                  {getFastForwardDetails(pendingFastForward).targetDate}
-                </span>
-              </div>
-              <p className="text-slate-700 leading-relaxed pt-1">
-                {getFastForwardDetails(pendingFastForward).description}
-              </p>
+            <p className="text-xs text-slate-700 leading-relaxed">
+              Simulates to{' '}
+              <span className="font-bold text-blue-700">{getFastForwardDetails(pendingFastForward).targetDate}</span>.
+              Results are permanent unless Match Retry is on.
+            </p>
+
+            <div className="divide-y divide-slate-200 border-y border-slate-200 text-xs font-bold text-slate-900">
+              <label className="flex items-center justify-between gap-3 min-h-[44px] cursor-pointer">
+                <span>Use preferred starting 11</span>
+                <input
+                  type="checkbox"
+                  checked={fastForwardUsePreferredEleven}
+                  onChange={(e) => setFastForwardUsePreferredEleven(e.target.checked)}
+                  className="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 cursor-pointer shrink-0"
+                />
+              </label>
+              <label className="flex items-center justify-between gap-3 min-h-[44px]">
+                <span>Pause for transfers</span>
+                <select
+                  value={fastForwardHaltOnTransferMilestone}
+                  onChange={(e) =>
+                    setFastForwardHaltOnTransferMilestone(e.target.value as typeof fastForwardHaltOnTransferMilestone)
+                  }
+                  className="min-w-0 min-h-[36px] px-2 rounded-lg bg-white border border-slate-300 text-xs font-bold text-slate-900 cursor-pointer"
+                >
+                  <option value="deadline">Deadline day</option>
+                  <option value="window_open_or_close">Window open + deadline</option>
+                  <option value="none">Never</option>
+                </select>
+              </label>
             </div>
-
-            <label className="flex items-start gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:border-blue-400 transition-colors">
-              <input
-                type="checkbox"
-                checked={fastForwardUsePreferredEleven}
-                onChange={(e) => setFastForwardUsePreferredEleven(e.target.checked)}
-                className="mt-0.5 w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
-              />
-              <div className="flex flex-col text-left">
-                <span className="text-xs font-bold text-slate-900">Use preferred starting 11</span>
-                <span className="text-[10px] text-slate-600">Deploy your chosen starting eleven lineup for all fixtures simulated while away</span>
-              </div>
-            </label>
-
-            {/* Transfer Window Milestone Halting Option */}
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-left">
-              <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                <span>Transfer Milestone Halting</span>
-              </span>
-              <p className="text-[10px] text-slate-600">
-                Choose when calendar fast-forward should automatically pause for transfer opportunities:
-              </p>
-              <div className="space-y-1.5 pt-0.5 text-xs">
-                <label className="flex items-center gap-2 cursor-pointer text-slate-700 hover:text-slate-900">
-                  <input
-                    type="radio"
-                    name="ffTransferHalt"
-                    value="deadline"
-                    checked={fastForwardHaltOnTransferMilestone === 'deadline'}
-                    onChange={() => setFastForwardHaltOnTransferMilestone('deadline')}
-                    className="text-blue-600 focus:ring-blue-500"
-                  />
-                  <span>Halt on Transfer Deadline Day (23:00 BST)</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer text-slate-700 hover:text-slate-900">
-                  <input
-                    type="radio"
-                    name="ffTransferHalt"
-                    value="window_open_or_close"
-                    checked={fastForwardHaltOnTransferMilestone === 'window_open_or_close'}
-                    onChange={() => setFastForwardHaltOnTransferMilestone('window_open_or_close')}
-                    className="text-blue-600 focus:ring-blue-500"
-                  />
-                  <span>Halt at Window Opening and Deadline Day</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer text-slate-700 hover:text-slate-900">
-                  <input
-                    type="radio"
-                    name="ffTransferHalt"
-                    value="none"
-                    checked={fastForwardHaltOnTransferMilestone === 'none'}
-                    onChange={() => setFastForwardHaltOnTransferMilestone('none')}
-                    className="text-blue-600 focus:ring-blue-500"
-                  />
-                  <span>Simulate continuously (do not halt)</span>
-                </label>
-              </div>
-            </div>
-
-            <aside aria-label="Caution note" className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900 flex items-center gap-2">
-              <span className="font-mono font-bold text-xs uppercase text-amber-800 shrink-0">Note:</span>
-              <span>
-                Simulated matches are permanent unless &quot;Allow Match Retry&quot; is active in your career settings.
-              </span>
-            </aside>
 
             <div className="flex gap-3 pt-1">
               <button
@@ -4063,7 +3926,7 @@ function CareerPlayHubContent() {
                 }}
                 className="flex-1 py-3 px-4 rounded-xl office-play-match-btn text-white font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer"
               >
-                Confirm &amp; Fast Forward
+                Fast Forward
               </button>
             </div>
           </div>
@@ -4076,10 +3939,12 @@ function CareerPlayHubContent() {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in"
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in motion-reduce:animate-none"
         >
-          <div className="office-floating-card bg-white border border-rose-300 rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-6 shadow-2xl text-center relative text-[#0b1536]">
-            <span className="text-5xl block">⚠️</span>
+          <div className="office-floating-card bg-white border border-rose-300 rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-6 shadow-2xl text-center relative text-[#0b1536] max-h-[90dvh] overflow-y-auto">
+            <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center mx-auto text-rose-600 shadow-2xs">
+              <IconAlert className="w-7 h-7" />
+            </div>
             <div className="space-y-1">
               <span className="text-[10px] font-black uppercase text-rose-700 tracking-wider font-display">
                 Board of Directors Executive Notice
@@ -4108,8 +3973,9 @@ function CareerPlayHubContent() {
 
               return (
                 <section aria-label="Sacking Carousel Offers" className="text-left space-y-2 border-t border-slate-200 pt-3">
-                  <div className="text-[10px] font-display font-black uppercase tracking-wider text-blue-700">
-                    💼 Sacking Carousel — Emergency Rebound Offers ({carouselOffers.length})
+                  <div className="text-[10px] font-display font-black uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
+                    <IconBriefcase className="w-3.5 h-3.5 shrink-0" />
+                    <span>Sacking Carousel — Emergency Rebound Offers ({carouselOffers.length})</span>
                   </div>
                   <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                     {carouselOffers.map((offer) => (
@@ -4174,6 +4040,7 @@ function CareerPlayHubContent() {
                 Accept Dismissal &amp; Resign
               </Link>
               <button
+                type="button"
                 onClick={() => {
                   const restoredSave: CareerSaveFile = {
                     ...save,
@@ -4200,13 +4067,13 @@ function CareerPlayHubContent() {
       {/* Reusable Player Comparison Modal */}
       {comparisonState.isOpen && comparisonState.playerA && save && (
         <PlayerComparisonModal
+          key={`${comparisonState.playerA.id}_${comparisonState.playerB?.id || 'auto'}`}
           isOpen={comparisonState.isOpen}
           onClose={() => setComparisonState({ isOpen: false, playerA: undefined, playerB: undefined })}
           playerA={comparisonState.playerA}
           playerB={comparisonState.playerB}
           squad={save.squad || []}
-          marketPlayers={fullMarketPool}
-          shortlistedPlayers={shortlistedPool}
+          shortlistPlayerIds={save.shortlistPlayerIds}
           finances={save.finances}
           seniorCount={seniorCount}
           registeredPlayerIds={save.registeredPlayerIds}
@@ -4215,7 +4082,7 @@ function CareerPlayHubContent() {
           onSwapSquadPlayers={(starterId: string, benchId: string) => {
             handleSwapLineup(starterId, benchId);
           }}
-          onSelectTransferTarget={(targetPlayer: MarketPlayer) => {
+          onSelectTransferTarget={() => {
             setComparisonState({ isOpen: false, playerA: undefined, playerB: undefined });
             navigateToSection('transfers', 'market', 'market-section');
           }}
@@ -4253,7 +4120,7 @@ function CareerPlayHubContent() {
           aria-modal="true"
           data-scrim="true"
           onClick={() => setShowExitConfirmModal(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none animate-fade-in motion-reduce:animate-none"
           style={{
             backgroundColor: 'rgba(11, 21, 54, 0.82)',
             backdropFilter: 'blur(12px)',
@@ -4265,8 +4132,8 @@ function CareerPlayHubContent() {
             onClick={(e) => e.stopPropagation()}
             className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 max-w-sm w-full space-y-4 shadow-2xl relative text-center text-[#0b1536]"
           >
-            <div className="w-12 h-12 rounded-2xl office-subcard border border-slate-200 text-2xl flex items-center justify-center mx-auto shadow-2xs">
-              🚪
+            <div className="w-12 h-12 rounded-2xl office-subcard border border-slate-200 text-slate-700 flex items-center justify-center mx-auto shadow-2xs">
+              <IconArrowLeft className="w-5 h-5" />
             </div>
             <div>
               <h3 className="font-display font-black text-[#0b1536] text-base uppercase tracking-tight">
@@ -4281,13 +4148,15 @@ function CareerPlayHubContent() {
                 href="/career"
                 className="w-full py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-md"
               >
-                <span>💾 Save Slots Screen</span>
+                <IconSave className="w-3.5 h-3.5" />
+                <span>Save Slots Screen</span>
               </Link>
               <Link
                 href="/"
                 className="w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-sm"
               >
-                <span>🏠 Main Title Screen</span>
+                <IconHome className="w-3.5 h-3.5" />
+                <span>Main Title Screen</span>
               </Link>
               <button
                 type="button"
@@ -4307,20 +4176,22 @@ function CareerPlayHubContent() {
           role="dialog"
           aria-modal="true"
           onClick={() => setShowBoardDossierModal(false)}
-          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 select-none animate-fade-in"
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 select-none animate-fade-in motion-reduce:animate-none"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 max-w-lg w-full space-y-4 shadow-2xl relative text-[#0b1536]"
+            className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 max-w-lg w-full space-y-4 shadow-2xl relative text-[#0b1536] max-h-[90dvh] overflow-y-auto"
           >
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">🏛️</span>
-                <div>
-                  <h3 className="font-display font-black text-sm uppercase tracking-wide text-[#0b1536]">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3 gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 text-[#1d5eff] flex items-center justify-center shrink-0">
+                  <IconBuilding className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-display font-black text-sm uppercase tracking-wide text-[#0b1536] truncate">
                     Boardroom Confidence Dossier
                   </h3>
-                  <span className="text-[10px] text-slate-500">
+                  <span className="text-[10px] text-slate-500 block truncate">
                     Comprehensive 1% granular club management evaluation
                   </span>
                 </div>
@@ -4328,9 +4199,10 @@ function CareerPlayHubContent() {
               <button
                 type="button"
                 onClick={() => setShowBoardDossierModal(false)}
-                className="w-8 h-8 rounded-full office-subcard border border-slate-200 text-slate-500 hover:text-[#0b1536] flex items-center justify-center text-sm font-bold cursor-pointer transition-colors shadow-2xs"
+                aria-label="Close modal"
+                className="w-9 h-9 rounded-full office-subcard border border-slate-200 text-slate-500 hover:text-[#0b1536] flex items-center justify-center cursor-pointer transition-colors shadow-2xs shrink-0"
               >
-                ✕
+                <IconClose className="w-4 h-4" />
               </button>
             </div>
 
@@ -4435,7 +4307,7 @@ function CareerPlayHubContent() {
             </div>
 
             {/* Actions */}
-            <div className="pt-2 flex items-center justify-between gap-2">
+            <div className="pt-2 flex items-center justify-between gap-2 flex-wrap">
               <button
                 type="button"
                 onClick={() => {
@@ -4446,8 +4318,9 @@ function CareerPlayHubContent() {
                 }}
                 className="office-subcard hover:border-[#1d5eff] text-slate-700 hover:text-[#1d5eff] font-display font-bold uppercase tracking-wider text-xs py-2 px-3 rounded-xl border border-slate-200 flex items-center gap-1.5 cursor-pointer shadow-2xs transition-colors"
               >
-                <span>🏛️ Full Boardroom &amp; Petitions</span>
-                <span>➔</span>
+                <IconBuilding className="w-3.5 h-3.5 shrink-0" />
+                <span>Full Boardroom &amp; Petitions</span>
+                <IconArrowRight className="w-3.5 h-3.5 shrink-0" />
               </button>
               <button
                 type="button"

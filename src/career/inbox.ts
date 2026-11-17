@@ -241,6 +241,19 @@ export function classifyInboxMessage(
     };
   }
 
+  // 6. Dressing Room Dynamics & Player Promises
+  if (message.type === 'dressing_room') {
+    const isConfrontation = message.actionType === 'promise_game_time' && !message.resolved;
+    return {
+      classification: isConfrontation ? 'action_required' : 'info',
+      isResolved: Boolean(message.resolved),
+      effectiveActionLabel: message.actionLabel || 'Address Player Concern',
+      effectiveActionTab: message.actionTab || 'overview',
+      effectiveActionType: message.actionType || 'promise_game_time',
+      targetId: message.targetId,
+    };
+  }
+
   // Default fallback
   const isUrgent = message.priority === 'urgent';
   return {
@@ -412,6 +425,27 @@ export function getManagerialAlerts(save: CareerSaveFile): ManagerialAlert[] {
     }
   }
 
+  // 8. Unresolved Dressing Room Confrontations (Action Required)
+  const dressingRoomMsgs = (save.inbox || []).filter(
+    (m) => m.type === 'dressing_room' && m.actionType === 'promise_game_time' && !m.resolved
+  );
+  for (const dm of dressingRoomMsgs.slice(0, 2)) {
+    alerts.push({
+      id: `alert_dressing_${dm.id}`,
+      messageId: dm.id,
+      title: dm.subject,
+      description: `${dm.sender} wants urgent clarification on playing time. Open Inbox to respond.`,
+      classification: 'action_required',
+      actionLabel: 'Address Concern',
+      actionTab: 'overview',
+      actionType: 'promise_game_time',
+      targetId: dm.id,
+      isResolved: false,
+      date: dm.date || currentDate,
+      badgeText: 'Dressing Room',
+    });
+  }
+
   // Sort alerts: Action Required first, then Important
   alerts.sort((a, b) => {
     if (a.classification === 'action_required' && b.classification !== 'action_required') return -1;
@@ -541,3 +575,235 @@ export function markAllMessagesRead(save: CareerSaveFile): CareerSaveFile {
     inbox: existing.map((m) => ({ ...m, isRead: true })),
   };
 }
+
+/**
+ * Evaluates squad benched streaks and active playing-time promises after matches,
+ * generating dressing room confrontations or promise outcome bulletins in the manager inbox.
+ */
+export function evaluateDressingRoomDynamics(
+  save: CareerSaveFile,
+  currentDate?: string
+): CareerSaveFile {
+  const dateIso = currentDate || save.season.currentDate || '2026-08-15';
+  const squad = save.squad || [];
+  let inbox = [...(save.inbox || [])];
+  let squadChanged = false;
+  let newConfrontationAdded = false;
+
+  const updatedSquad = squad.map((player) => {
+    const promise = player.playingTimePromise;
+    if (promise && (promise.status === 'fulfilled' || promise.status === 'broken')) {
+      const outcomeTag = promise.status === 'fulfilled' ? 'Promise Kept' : 'Broken Promise';
+      const alreadyNotified = inbox.some(
+        (m) =>
+          m.type === 'dressing_room' &&
+          m.targetId === player.id &&
+          m.subject.includes(outcomeTag) &&
+          m.date >= promise.promisedDate
+      );
+
+      if (!alreadyNotified) {
+        const msg: ManagerMessage =
+          promise.status === 'fulfilled'
+            ? {
+                id: `msg_promise_kept_${player.id}_${Date.now().toString(36)}`,
+                date: dateIso,
+                sender: player.name,
+                senderRole: `${player.position} (First-Team Squad)`,
+                subject: `Promise Kept: ${player.name} Thankful for Starts`,
+                body: `Boss,\n\nI appreciate you backing your word with ${promise.startsCompleted} starts over the recent run. My confidence is high and I'm ready to push on for the team.`,
+                type: 'dressing_room',
+                isRead: false,
+                priority: 'normal',
+                classification: 'info',
+                resolved: true,
+                actionLabel: 'Inspect Squad',
+                actionTab: 'squad',
+                actionType: 'open_squad',
+                targetId: player.id,
+              }
+            : {
+                id: `msg_promise_broken_${player.id}_${Date.now().toString(36)}`,
+                date: dateIso,
+                sender: player.name,
+                senderRole: `${player.position} (${(player.squadRole || 'important').toUpperCase()})`,
+                subject: `Broken Promise: ${player.name} Demands Transfer`,
+                body: `Boss,\n\nYou promised me ${promise.targetStarts} starts in 5 matches, yet I only received ${promise.startsCompleted}. I feel misled about my role here and want to explore a move away.`,
+                type: 'dressing_room',
+                isRead: false,
+                priority: 'urgent',
+                classification: 'important',
+                resolved: true,
+                actionLabel: 'Open Squad',
+                actionTab: 'squad',
+                actionType: 'open_squad',
+                targetId: player.id,
+              };
+        inbox = [msg, ...inbox];
+      }
+
+      if (promise.status === 'broken' && !player.transferListed) {
+        squadChanged = true;
+        return {
+          ...player,
+          transferListed: true,
+          askingPrice: Math.round(player.value * 0.9),
+          playingTimePromise: undefined,
+        };
+      }
+      if (promise.status === 'fulfilled') {
+        squadChanged = true;
+        return {
+          ...player,
+          playingTimePromise: undefined,
+        };
+      }
+      return player;
+    }
+
+    // Trigger at most one new playing-time confrontation per evaluation cycle
+    if (
+      !newConfrontationAdded &&
+      !player.injured &&
+      !(player.suspendedMatches && player.suspendedMatches > 0) &&
+      !player.isOnLoan &&
+      !player.isPreContractSigned &&
+      (!promise || promise.status !== 'active')
+    ) {
+      const role = player.squadRole || 'squad';
+      const streak = player.benchedStreak ?? 0;
+      const morale = player.morale ?? 85;
+      const qualifies =
+        (role === 'crucial' && streak >= 3 && morale < 78) ||
+        (role === 'important' && streak >= 4 && morale < 75);
+
+      if (qualifies) {
+        const hasPendingConfrontation = inbox.some(
+          (m) => m.type === 'dressing_room' && m.targetId === player.id && !m.resolved
+        );
+        if (!hasPendingConfrontation) {
+          const msg: ManagerMessage = {
+            id: `msg_dressing_${player.id}_${Date.now().toString(36)}`,
+            date: dateIso,
+            sender: player.name,
+            senderRole: `${player.position} (${role.toUpperCase()})`,
+            subject: `Playing Time Concern: ${player.name}`,
+            body: `Boss,\n\nI have been left out of the starting XI for ${streak} consecutive matches despite being 100% fit. As an ${role} player in this dressing room, I need clarity on my role going forward.`,
+            type: 'dressing_room',
+            isRead: false,
+            priority: 'urgent',
+            classification: 'action_required',
+            resolved: false,
+            actionLabel: 'Address Player Concern',
+            actionTab: 'overview',
+            actionType: 'promise_game_time',
+            targetId: player.id,
+          };
+          inbox = [msg, ...inbox];
+          newConfrontationAdded = true;
+        }
+      }
+    }
+
+    return player;
+  });
+
+  if (!squadChanged && inbox.length === (save.inbox || []).length) {
+    return save;
+  }
+
+  return {
+    ...save,
+    squad: squadChanged ? updatedSquad : save.squad,
+    inbox,
+  };
+}
+
+/**
+ * Resolves a player's playing-time confrontation from the managerial inbox.
+ */
+export function resolveDressingRoomConfrontation(
+  save: CareerSaveFile,
+  playerId: string,
+  decision: 'promise_starts' | 'explain_rotation' | 'transfer_list',
+  messageId?: string
+): { updatedSave: CareerSaveFile; summary: string } {
+  const player = (save.squad || []).find((p) => p.id === playerId);
+  if (!player) {
+    return {
+      updatedSave: save,
+      summary: 'Player is no longer at the club.',
+    };
+  }
+
+  const currentDate = save.season.currentDate || '2026-08-15';
+  let summary = '';
+
+  const updatedSquad = (save.squad || []).map((p) => {
+    if (p.id !== playerId) return p;
+
+    if (decision === 'promise_starts') {
+      summary = `Promised ${p.name} 3 starts in the next 5 matches (+12 morale).`;
+      return {
+        ...p,
+        morale: Math.min(100, (p.morale ?? 70) + 12),
+        benchedStreak: 0,
+        playingTimePromise: {
+          targetStarts: 3,
+          matchesRemaining: 5,
+          startsCompleted: 0,
+          promisedDate: currentDate,
+          status: 'active' as const,
+        },
+      };
+    }
+
+    if (decision === 'explain_rotation') {
+      const boardConfidence = save.boardStatus?.confidence ?? 70;
+      const accepted = boardConfidence >= 60 || Math.random() < 0.55;
+      if (accepted) {
+        summary = `${p.name} accepted your squad rotation explanation (+5 morale).`;
+        return {
+          ...p,
+          morale: Math.min(100, (p.morale ?? 70) + 5),
+          benchedStreak: 0,
+        };
+      }
+      summary = `${p.name} was unconvinced by your rotation explanation (-6 morale).`;
+      return {
+        ...p,
+        morale: Math.max(20, (p.morale ?? 70) - 6),
+      };
+    }
+
+    summary = `${p.name} accepted being placed on the transfer list.`;
+    return {
+      ...p,
+      transferListed: true,
+      askingPrice: p.askingPrice || Math.round(p.value * 0.9),
+      morale: Math.max(20, (p.morale ?? 70) - 8),
+      playingTimePromise: undefined,
+    };
+  });
+
+  const existingInbox = save.inbox && save.inbox.length > 0 ? save.inbox : getInitialInboxMessages(save);
+  const updatedInbox = existingInbox.map((m) => {
+    if (messageId && m.id === messageId) {
+      return { ...m, isRead: true, resolved: true };
+    }
+    if (m.type === 'dressing_room' && m.targetId === playerId && !m.resolved) {
+      return { ...m, isRead: true, resolved: true };
+    }
+    return m;
+  });
+
+  return {
+    updatedSave: {
+      ...save,
+      squad: updatedSquad,
+      inbox: updatedInbox,
+    },
+    summary,
+  };
+}
+

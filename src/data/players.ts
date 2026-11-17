@@ -3008,7 +3008,7 @@ function generatePlayersDatabase(): Player[] {
       );
 
       let primaryPosition = initialPos;
-      let naturalPositions = [...initialNaturals];
+      const naturalPositions = [...initialNaturals];
       let secondaryPositions = [...initialSecondaries];
 
       // Resolve club

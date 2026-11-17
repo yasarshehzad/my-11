@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   STADIUM_TIERS,
   TRAINING_GROUND_TIERS,
@@ -391,8 +391,10 @@ describe('Career Mode Infrastructure & Stadium Expansion Engine', () => {
       expect(boostedResult.pointsEarned).toBe(Math.round(baseResult.pointsEarned * 1.55));
 
       // Monthly squad training scaling
+      const randSpy = vi.spyOn(Math, 'random').mockReturnValue(0.5);
       const monthlyBase = applyMonthlySquadTraining([wonderkid], 1.0);
       const monthlyBoosted = applyMonthlySquadTraining([wonderkid], 1.55);
+      randSpy.mockRestore();
 
       const baseDev = (monthlyBase.updatedSquad[0].developmentProgress ?? 0) - (wonderkid.developmentProgress ?? 0);
       const boostedDev = (monthlyBoosted.updatedSquad[0].developmentProgress ?? 0) - (wonderkid.developmentProgress ?? 0);

@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { CelebrationEvent } from '../../career/celebrations';
 import { formatCareerCurrency } from '../../career/formatters';
+import { playTrophyFanfare } from '../../utils/soundEffects';
+import { CelebrationBadgeIcon, IconArrowRight, IconBuilding, IconTrophy } from './GameIcons';
 
 export interface CelebrationModalProps {
   event: CelebrationEvent;
@@ -11,15 +13,21 @@ export interface CelebrationModalProps {
   onNavigateTab?: (tab: 'table' | 'squad' | 'transfers' | 'fixtures' | 'cups' | 'overview') => void;
 }
 
+const emptySubscribe = () => () => {};
+
 export function CelebrationModal({
   event,
   onClose,
   onNavigateTab,
 }: CelebrationModalProps) {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
 
   useEffect(() => {
-    setMounted(true);
+    playTrophyFanfare();
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
@@ -38,11 +46,11 @@ export function CelebrationModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="celebration-title"
-      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 overflow-y-auto bg-slate-950/85 backdrop-blur-md animate-fadeIn"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 overflow-y-auto bg-slate-950/85 backdrop-blur-md animate-fadeIn motion-reduce:animate-none"
       onClick={onClose}
     >
       {/* Confetti particles */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden motion-reduce:hidden" aria-hidden="true">
         {[...Array(24)].map((_, i) => {
           const left = `${(i * 4.2 + 2) % 100}%`;
           const delay = `${(i * 0.15) % 2.5}s`;
@@ -85,8 +93,8 @@ export function CelebrationModal({
 
         {/* Top Floating Badge & Tag */}
         <div className="text-center space-y-2 pt-1">
-          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-tr from-amber-500/20 via-yellow-400/30 to-amber-500/10 border-2 border-amber-400/60 shadow-lg shadow-amber-500/20 text-3xl sm:text-4xl animate-bounce-short">
-            <span>{event.badge}</span>
+          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-tr from-amber-500/20 via-yellow-400/30 to-amber-500/10 border-2 border-amber-400/60 shadow-lg shadow-amber-500/20 text-amber-300 animate-bounce-short motion-reduce:animate-none">
+            <CelebrationBadgeIcon badge={event.badge} className="w-8 h-8 sm:w-10 sm:h-10" />
           </div>
 
           <div>
@@ -118,8 +126,9 @@ export function CelebrationModal({
             {event.rewards.trophyName && (
               <div className="text-center p-2 rounded-xl bg-slate-900/80 border border-slate-800/80">
                 <span className="text-xs block text-slate-400">Trophy</span>
-                <span className="font-display font-black text-amber-400 text-xs truncate block">
-                  🏆 Silverware
+                <span className="font-display font-black text-amber-400 text-xs inline-flex items-center justify-center gap-1 truncate max-w-full">
+                  <IconTrophy className="w-3.5 h-3.5 shrink-0" />
+                  <span>Silverware</span>
                 </span>
               </div>
             )}
@@ -147,9 +156,11 @@ export function CelebrationModal({
           aria-label="Board Statement"
           className="rounded-2xl p-4 bg-slate-950/80 border border-slate-800 space-y-2 celebration-quote-box"
         >
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
             <div className="flex items-center gap-2">
-              <span className="text-sm">🏛️</span>
+              <span className="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 flex items-center justify-center shrink-0">
+                <IconBuilding className="w-3.5 h-3.5" />
+              </span>
               <div>
                 <h3 className="font-display font-black text-xs uppercase tracking-wider text-slate-900 dark:text-white celebration-quote-sender">
                   {event.boardReaction.sender}
@@ -159,47 +170,10 @@ export function CelebrationModal({
                 </span>
               </div>
             </div>
-            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-              Official Note
-            </span>
           </div>
 
           <p className="text-xs text-slate-300 leading-relaxed italic border-l-2 border-amber-400/60 pl-3 pt-1 celebration-quote-text">
             &ldquo;{event.boardReaction.statement}&rdquo;
-          </p>
-        </section>
-
-        {/* Dressing Room / Star Player Reaction */}
-        <section
-          aria-label="Player Reaction"
-          className="rounded-2xl p-4 bg-slate-950/80 border border-slate-800 space-y-2 celebration-quote-box"
-        >
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-blue-500/20 border border-blue-500/40 flex items-center justify-center font-black text-blue-300 text-xs font-mono">
-                {event.playerReaction.player.rating}
-              </div>
-              <div>
-                <h3 className="font-display font-black text-xs uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5 celebration-quote-sender">
-                  <span>{event.playerReaction.player.name}</span>
-                  {event.playerReaction.player.isCaptain && (
-                    <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-amber-400 text-slate-950 font-black">
-                      CAPTAIN
-                    </span>
-                  )}
-                </h3>
-                <span className="text-[10px] text-slate-400 block font-mono">
-                  Dressing Room Leader • {event.playerReaction.player.position}
-                </span>
-              </div>
-            </div>
-            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
-              Reaction
-            </span>
-          </div>
-
-          <p className="text-xs text-slate-300 leading-relaxed italic border-l-2 border-blue-400/60 pl-3 pt-1 celebration-quote-text">
-            &ldquo;{event.playerReaction.quote}&rdquo;
           </p>
         </section>
 
@@ -210,20 +184,22 @@ export function CelebrationModal({
               type="button"
               onClick={() => {
                 onClose();
-                onNavigateTab(isTitleOrTrophy ? 'cups' : 'cups');
+                onNavigateTab(event.category === 'title_win' ? 'table' : 'cups');
               }}
-              className="office-subcard py-3 px-4 rounded-xl border border-slate-200 text-slate-700 hover:text-slate-900 text-xs font-display font-bold uppercase tracking-wider transition-colors cursor-pointer flex-1 text-center shadow-2xs"
+              className="office-subcard py-3 px-4 rounded-xl border border-slate-200 text-slate-700 hover:text-slate-900 text-xs font-display font-bold uppercase tracking-wider transition-colors cursor-pointer flex-1 inline-flex items-center justify-center gap-1.5 shadow-2xs"
             >
-              {event.category === 'title_win' ? 'View League Table ➔' : 'View Tournament Desk ➔'}
+              <span>{event.category === 'title_win' ? 'View League Table' : 'View Cups'}</span>
+              <IconArrowRight className="w-3.5 h-3.5" />
             </button>
           )}
 
           <button
             type="button"
             onClick={onClose}
-            className="py-3 px-5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/25 transition-all cursor-pointer flex-1 text-center"
+            className="py-3 px-5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/25 transition-all cursor-pointer flex-1 inline-flex items-center justify-center gap-1.5"
           >
-            Celebrate &amp; Continue ➔
+            <span>Celebrate &amp; Continue</span>
+            <IconArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>

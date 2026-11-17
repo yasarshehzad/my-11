@@ -5,6 +5,7 @@ import { ClubStanding, Club, LeagueFixture, CareerPlayer, SeasonHistoryRecord } 
 import { getQualificationZone } from '../../career/table';
 import { getEffectiveClubName, getClubsWithUserClub } from '../../career/clubs';
 import { getLeagueLeaderboards, LeagueLeaderboardEntry } from '../../career/playerStats';
+import { IconBall, IconShield, IconTarget } from './GameIcons';
 
 interface LeagueTableProps {
   standings: ClubStanding[];
@@ -16,7 +17,14 @@ interface LeagueTableProps {
   activeLeagueClubIds?: string[];
 }
 
-type TableSubTab = 'standings' | 'scorers' | 'assists' | 'clean_sheets' | 'history';
+type TableSubTab = 'standings' | 'scorers' | 'assists' | 'clean_sheets';
+
+const SUB_TABS: { id: TableSubTab; label: string }[] = [
+  { id: 'standings', label: 'Standings' },
+  { id: 'scorers', label: 'Goals' },
+  { id: 'assists', label: 'Assists' },
+  { id: 'clean_sheets', label: 'Clean Sheets' },
+];
 
 export function LeagueTable({
   standings,
@@ -24,7 +32,6 @@ export function LeagueTable({
   userClub,
   fixtures = [],
   userSquad = [],
-  seasonHistory = [],
   activeLeagueClubIds,
 }: LeagueTableProps) {
   const [activeSubTab, setActiveSubTab] = useState<TableSubTab>('standings');
@@ -39,22 +46,22 @@ export function LeagueTable({
   const getRankBadge = (rank: number) => {
     if (rank === 1) {
       return (
-        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] shadow-2xs">
-          🥇
+        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] shadow-2xs">
+          1
         </span>
       );
     }
     if (rank === 2) {
       return (
-        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-300 text-slate-950 font-black text-[11px] shadow-2xs">
-          🥈
+        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-300 text-slate-950 font-black text-[11px] shadow-2xs">
+          2
         </span>
       );
     }
     if (rank === 3) {
       return (
-        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-700 text-white font-black text-[11px] shadow-2xs">
-          🥉
+        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-700 text-white font-black text-[11px] shadow-2xs">
+          3
         </span>
       );
     }
@@ -64,97 +71,26 @@ export function LeagueTable({
   return (
     <section id="league-table-section" data-office-ui="true" aria-label="League Standings and Player Stats" className="space-y-3.5 scroll-mt-20 w-full">
       {/* Sub-tab Switcher: Standings vs Player Stats Leaderboards */}
-      <nav aria-label="League navigation" className="office-subcard p-1 sm:p-1.5 flex items-center gap-1 overflow-x-auto no-scrollbar shadow-xs rounded-2xl">
-        <button
-          type="button"
-          onClick={() => setActiveSubTab('standings')}
-          className={`flex-1 min-w-[105px] py-1.5 px-3 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
-            activeSubTab === 'standings'
-              ? 'office-nav-tab-active shadow-xs'
-              : 'office-nav-tab-inactive'
-          }`}
-        >
-          <span>🏆</span>
-          <span>Standings</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveSubTab('scorers')}
-          className={`flex-1 min-w-[105px] py-1.5 px-3 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
-            activeSubTab === 'scorers'
-              ? 'office-nav-tab-active shadow-xs'
-              : 'office-nav-tab-inactive'
-          }`}
-        >
-          <span>⚽</span>
-          <span>Goals</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveSubTab('assists')}
-          className={`flex-1 min-w-[105px] py-1.5 px-3 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
-            activeSubTab === 'assists'
-              ? 'office-nav-tab-active shadow-xs'
-              : 'office-nav-tab-inactive'
-          }`}
-        >
-          <span>🎯</span>
-          <span>Assists</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveSubTab('clean_sheets')}
-          className={`flex-1 min-w-[105px] py-1.5 px-3 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
-            activeSubTab === 'clean_sheets'
-              ? 'office-nav-tab-active shadow-xs'
-              : 'office-nav-tab-inactive'
-          }`}
-        >
-          <span>🧤</span>
-          <span>Clean Sheets</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveSubTab('history')}
-          className={`flex-1 min-w-[105px] py-1.5 px-3 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
-            activeSubTab === 'history'
-              ? 'office-nav-tab-active shadow-xs'
-              : 'office-nav-tab-inactive'
-          }`}
-        >
-          <span>📜</span>
-          <span>History</span>
-          {seasonHistory && seasonHistory.length > 0 && (
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-700 font-bold">
-              {seasonHistory.length}
-            </span>
-          )}
-        </button>
+      <nav aria-label="League navigation" className="office-subcard p-1 flex items-center gap-1 overflow-x-auto no-scrollbar shadow-xs rounded-2xl">
+        {SUB_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            aria-pressed={activeSubTab === tab.id}
+            onClick={() => setActiveSubTab(tab.id)}
+            className={`flex-1 min-h-[40px] py-2 px-2 rounded-xl text-[11px] font-display font-black uppercase tracking-wide transition-all text-center whitespace-nowrap cursor-pointer ${
+              activeSubTab === tab.id ? 'office-nav-tab-active shadow-xs' : 'office-nav-tab-inactive'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </nav>
 
-      {/* Informative Pre-Season State */}
       {isPreSeason && (
-        <div className="office-subcard rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3 text-xs shadow-xs border border-amber-300/70">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <span className="w-8 h-8 rounded-xl bg-[#1E2024] text-amber-300 flex items-center justify-center text-sm shadow-2xs shrink-0">
-              ⚡
-            </span>
-            <div className="min-w-0">
-              <span className="font-display font-black text-amber-800 uppercase tracking-wider block text-xs">
-                Pre-Season • Matchday 1 Pending
-              </span>
-              <span className="text-[11px] text-zinc-600 truncate block">
-                {activeSubTab === 'standings'
-                  ? 'All 20 clubs start level on 0 points. Play your opening league fixture in Office to kick off the table!'
-                  : 'Displaying season contenders. Statistics update automatically as matches are played.'}
-              </span>
-            </div>
-          </div>
-        </div>
+        <p className="px-1 text-[11px] font-bold text-amber-800">
+          Pre-season: {activeSubTab === 'standings' ? 'the table' : 'stats'} will update after Matchday 1.
+        </p>
       )}
 
       {/* VIEW 1: STANDINGS TABLE */}
@@ -239,7 +175,7 @@ export function LeagueTable({
                               {displayName}
                             </span>
                             {isUserClub && (
-                              <span className="text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-full bg-blue-600 text-white font-display leading-tight shadow-2xs">
+                              <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-full bg-blue-600 text-white font-display leading-tight shadow-2xs">
                                 YOU
                               </span>
                             )}
@@ -273,7 +209,7 @@ export function LeagueTable({
                             {row.form.map((res, i) => (
                               <span
                                 key={i}
-                                className={`w-4 h-4 rounded-full text-[8.5px] font-black font-display flex items-center justify-center leading-none shadow-2xs ${
+                                className={`w-4 h-4 rounded-full text-[10px] font-black font-display flex items-center justify-center leading-none shadow-2xs ${
                                   res === 'W'
                                     ? 'bg-emerald-600 text-white'
                                     : res === 'D'
@@ -326,9 +262,8 @@ export function LeagueTable({
       {activeSubTab === 'scorers' && (
         <LeaderboardCard
           title="Golden Boot Race"
-          subtitle="Top goalscorers across the league"
           statLabel="Goals"
-          statIcon="⚽"
+          statIcon={<IconBall className="w-4 h-4 text-blue-600" />}
           entries={leaderboards.topScorers}
           userClubId={userClubId}
           getRankBadge={getRankBadge}
@@ -340,9 +275,8 @@ export function LeagueTable({
       {activeSubTab === 'assists' && (
         <LeaderboardCard
           title="Playmaker Award"
-          subtitle="Assist leaders across all league fixtures"
           statLabel="Assists"
-          statIcon="🎯"
+          statIcon={<IconTarget className="w-4 h-4 text-amber-600" />}
           entries={leaderboards.topAssists}
           userClubId={userClubId}
           getRankBadge={getRankBadge}
@@ -354,9 +288,8 @@ export function LeagueTable({
       {activeSubTab === 'clean_sheets' && (
         <LeaderboardCard
           title="Golden Glove"
-          subtitle="Goalkeepers with the most clean sheets"
           statLabel="Clean Sheets"
-          statIcon="🧤"
+          statIcon={<IconShield className="w-4 h-4 text-emerald-600" />}
           entries={leaderboards.topCleanSheets}
           userClubId={userClubId}
           getRankBadge={getRankBadge}
@@ -364,213 +297,15 @@ export function LeagueTable({
         />
       )}
 
-      {/* VIEW 5: MULTI-SEASON HISTORY & HALL OF FAME */}
-      {activeSubTab === 'history' && (
-        <div className="space-y-3.5">
-          {/* Header Banner */}
-          <div className="office-subcard rounded-2xl p-3.5 sm:p-4 flex items-center justify-between gap-3 shadow-xs bg-gradient-to-r from-amber-50/60 via-white to-blue-50/40 border border-amber-200/80">
-            <div className="flex items-center gap-2.5">
-              <span className="w-9 h-9 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center text-lg shadow-2xs">
-                📜
-              </span>
-              <div>
-                <h3 className="font-display font-black text-sm text-[#0b1536] uppercase tracking-tight flex items-center gap-1.5">
-                  <span>Managerial Hall of Fame &amp; History</span>
-                </h3>
-                <p className="text-[11px] text-slate-500">
-                  Track your multi-season finishes, silverware, golden boots, and division promotions &amp; relegations.
-                </p>
-              </div>
-            </div>
-            <div className="text-right shrink-0">
-              <span className="text-[10px] font-black uppercase text-amber-700 block font-display">
-                Career Archive
-              </span>
-              <span className="text-xs font-mono font-bold text-slate-800">
-                {seasonHistory.length} {seasonHistory.length === 1 ? 'Season' : 'Seasons'}
-              </span>
-            </div>
-          </div>
-
-          {seasonHistory.length === 0 ? (
-            /* Empty state for Season 1 */
-            <div className="office-floating-card rounded-2xl p-8 text-center space-y-3 shadow-xs border border-slate-200/90 bg-white">
-              <div className="w-12 h-12 mx-auto rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-2xl shadow-2xs">
-                🏛️
-              </div>
-              <div className="space-y-1">
-                <h4 className="font-display font-black text-sm uppercase tracking-wide text-[#0b1536]">
-                  Inaugural Campaign Underway
-                </h4>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-                  Your club is competing in Season 1. Complete your 38 league matches to archive your first campaign records, silverware, golden boot winner, and dynamic promotion/relegation movements into your permanent Hall of Fame!
-                </p>
-              </div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-[11px] font-medium text-slate-600">
-                <span>⚽</span>
-                <span>
-                  Matches remaining this campaign:{' '}
-                  {Math.max(
-                    0,
-                    38 - (standings.find((s) => s.clubId === userClubId)?.played || 0)
-                  )}
-                </span>
-              </div>
-            </div>
-          ) : (
-            /* Multi-season history records */
-            <div className="space-y-3">
-              {/* Aggregate Career Stats Overview */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
-                <div className="office-subcard rounded-xl p-3 bg-white border border-slate-200 shadow-2xs space-y-0.5">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase">Seasons</span>
-                  <div className="font-display font-black text-base text-[#0b1536]">
-                    {seasonHistory.length}
-                  </div>
-                </div>
-                <div className="office-subcard rounded-xl p-3 bg-white border border-slate-200 shadow-2xs space-y-0.5">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase">Silverware</span>
-                  <div className="font-display font-black text-base text-amber-700">
-                    {seasonHistory.reduce((sum, s) => sum + s.trophiesWon.length, 0)} Won
-                  </div>
-                </div>
-                <div className="office-subcard rounded-xl p-3 bg-white border border-slate-200 shadow-2xs space-y-0.5">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase">Best Finish</span>
-                  <div className="font-display font-black text-base text-blue-700">
-                    {(() => {
-                      const best = Math.min(...seasonHistory.map((s) => s.finalPosition));
-                      return best === 1 ? '🥇 Champions' : `#${best}`;
-                    })()}
-                  </div>
-                </div>
-                <div className="office-subcard rounded-xl p-3 bg-white border border-slate-200 shadow-2xs space-y-0.5">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase">Total Points</span>
-                  <div className="font-display font-black text-base text-emerald-700">
-                    {seasonHistory.reduce((sum, s) => sum + s.points, 0)} Pts
-                  </div>
-                </div>
-              </div>
-
-              {/* Reverse Chronological Season Cards */}
-              <div className="space-y-3">
-                {[...seasonHistory].reverse().map((rec) => {
-                  const isTitle = rec.finalPosition === 1;
-                  return (
-                    <article
-                      key={`history_${rec.seasonNumber}_${rec.yearStart}`}
-                      className="office-floating-card rounded-2xl p-4 sm:p-5 border border-slate-200/90 bg-white shadow-xs space-y-3 text-left"
-                    >
-                      {/* Top Row: Season Label & Finish Badge */}
-                      <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-2.5">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-display font-black text-sm sm:text-base text-[#0b1536] uppercase tracking-tight">
-                              Season {rec.seasonNumber}
-                            </span>
-                            <span className="px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] font-mono font-bold text-slate-600">
-                              {rec.yearLabel}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-slate-500">{rec.clubName}</p>
-                        </div>
-                        <div className="text-right">
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200 shadow-2xs">
-                            <span className="text-xs">{isTitle ? '👑' : '🏁'}</span>
-                            <span className={`text-xs font-display font-black ${isTitle ? 'text-amber-700' : 'text-[#0b1536]'}`}>
-                              {isTitle ? 'Champions' : `Position #${rec.finalPosition}`}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Performance Numbers */}
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                        <div className="bg-slate-50/70 p-2.5 rounded-xl border border-slate-100">
-                          <span className="text-[10px] uppercase font-bold text-slate-500 block">Record</span>
-                          <span className="font-mono font-bold text-slate-800">
-                            {rec.won}W &bull; {rec.drawn}D &bull; {rec.lost}L
-                          </span>
-                        </div>
-                        <div className="bg-slate-50/70 p-2.5 rounded-xl border border-slate-100">
-                          <span className="text-[10px] uppercase font-bold text-slate-500 block">Goal Diff</span>
-                          <span className="font-mono font-bold text-slate-800">
-                            {rec.goalsFor - rec.goalsAgainst >= 0 ? `+${rec.goalsFor - rec.goalsAgainst}` : rec.goalsFor - rec.goalsAgainst} ({rec.goalsFor} - {rec.goalsAgainst})
-                          </span>
-                        </div>
-                        <div className="bg-blue-50/60 p-2.5 rounded-xl border border-blue-100">
-                          <span className="text-[10px] uppercase font-bold text-blue-700 block">Points</span>
-                          <span className="font-display font-black text-blue-800 text-sm">
-                            {rec.points} Pts
-                          </span>
-                        </div>
-                        <div className="bg-slate-50/70 p-2.5 rounded-xl border border-slate-100">
-                          <span className="text-[10px] uppercase font-bold text-slate-500 block">Europe</span>
-                          <span className="font-bold text-blue-700 text-xs truncate block" title={rec.europeanQualification}>
-                            {rec.europeanQualification || 'Domestic Focus'}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Silverware & Golden Boot Row */}
-                      <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-                        {rec.trophiesWon.length > 0 ? (
-                          rec.trophiesWon.map((t, tIdx) => (
-                            <span
-                              key={tIdx}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 font-bold text-[11px] shadow-2xs"
-                            >
-                              <span>🏆</span>
-                              <span>{t}</span>
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-[11px] text-slate-400 italic">
-                            No silverware lifted
-                          </span>
-                        )}
-
-                        {rec.topScorerName && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 font-bold text-[11px] shadow-2xs ml-auto">
-                            <span>⚽</span>
-                            <span>Golden Boot: {rec.topScorerName} ({rec.topScorerGoals || 0}G)</span>
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Division Changes: Promotion & Relegation */}
-                      {(rec.promotedClubNames?.length || rec.relegatedClubNames?.length) ? (
-                        <div className="border-t border-slate-100 pt-2.5 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
-                          {rec.promotedClubNames && rec.promotedClubNames.length > 0 && (
-                            <div className="flex items-center gap-1.5 text-emerald-800 bg-emerald-50/70 border border-emerald-200/80 px-2.5 py-1.5 rounded-xl">
-                              <span className="font-bold text-emerald-600">⬆️ Promoted:</span>
-                              <span className="truncate">{rec.promotedClubNames.join(', ')}</span>
-                            </div>
-                          )}
-                          {rec.relegatedClubNames && rec.relegatedClubNames.length > 0 && (
-                            <div className="flex items-center gap-1.5 text-rose-800 bg-rose-50/70 border border-rose-200/80 px-2.5 py-1.5 rounded-xl">
-                              <span className="font-bold text-rose-600">⬇️ Relegated:</span>
-                              <span className="truncate">{rec.relegatedClubNames.join(', ')}</span>
-                            </div>
-                          )}
-                        </div>
-                      ) : null}
-                    </article>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+      <p className="text-[11px] text-slate-500 text-center">Past seasons are listed in the Legacy tab.</p>
     </section>
   );
 }
 
 interface LeaderboardCardProps {
   title: string;
-  subtitle: string;
   statLabel: string;
-  statIcon: string;
+  statIcon: React.ReactNode;
   entries: LeagueLeaderboardEntry[];
   userClubId: string;
   getRankBadge: (rank: number) => React.ReactNode;
@@ -579,7 +314,6 @@ interface LeaderboardCardProps {
 
 function LeaderboardCard({
   title,
-  subtitle,
   statLabel,
   statIcon,
   entries,
@@ -597,20 +331,10 @@ function LeaderboardCard({
 
   return (
     <div className="space-y-3">
-      {/* Header Banner */}
-      <div className="office-subcard rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3 shadow-xs">
-        <div>
-          <h3 className="font-display font-black text-xs sm:text-sm text-[#0b1536] flex items-center gap-1.5">
-            <span>{statIcon}</span>
-            <span>{title}</span>
-          </h3>
-          <p className="text-[11px] text-slate-500 mt-0.5">{subtitle}</p>
-        </div>
-        <div className="text-right">
-          <span className="text-[10px] font-black uppercase text-slate-500 block font-display">Top Leaders</span>
-          <span className="text-xs font-mono font-bold text-blue-700">Official</span>
-        </div>
-      </div>
+      <h3 className="font-display font-black text-xs sm:text-sm text-[#0b1536] flex items-center gap-1.5 px-1">
+        {statIcon}
+        <span>{title}</span>
+      </h3>
 
       {/* Leaderboard Table */}
       <div className="office-floating-card rounded-2xl overflow-hidden shadow-xs border border-slate-200/90">
@@ -653,7 +377,7 @@ function LeaderboardCard({
                           {entry.playerName}
                         </span>
                         {isUser && (
-                          <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-full bg-blue-600 text-white font-display leading-tight shadow-2xs">
+                          <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-full bg-blue-600 text-white font-display leading-tight shadow-2xs">
                             YOU
                           </span>
                         )}

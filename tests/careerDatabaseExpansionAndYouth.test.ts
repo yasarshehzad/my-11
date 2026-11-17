@@ -129,8 +129,9 @@ describe('Phase 7: Career Database Expansion & Supplemental Players', () => {
     expect(ricoLewis24?.potential).toBe(88);
     expect(ricoLewis24?.age).toBe(19);
 
-    // Verify modern additions: Savinho at Man City, Leny Yoro & Joshua Zirkzee at Man United
-    const savinho26 = manBlueSupp26.find((p) => p.name === 'Savinho');
+    // Verify modern additions: Savinho at Spurs in 2026/27 (Man City in 2025/26), Leny Yoro & Joshua Zirkzee at Man United
+    const totSupp26 = getSupplementalPlayersForClub('north_london_white', '2026/27');
+    const savinho26 = totSupp26.find((p) => p.name === 'Savinho');
     expect(savinho26).toBeDefined();
     expect(savinho26?.rating).toBe(84);
 

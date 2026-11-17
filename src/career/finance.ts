@@ -405,7 +405,9 @@ export function applyMatchdayFinancials(
   const existingLedger: SeasonFinancialLedger =
     save.finances.seasonLedger || createInitialSeasonLedger();
 
-  const oppName = isUserHome ? (fixture as any).awayClubId || 'Opponent' : (fixture as any).homeClubId || 'Opponent';
+  const oppName = isUserHome
+    ? (fixture as Partial<LeagueFixture>).awayClubId || 'Opponent'
+    : (fixture as Partial<LeagueFixture>).homeClubId || 'Opponent';
   const date = fixture.date || save.season.currentDate;
 
   const newTransactions: FinancialTransaction[] = [];
@@ -510,7 +512,7 @@ export function applyTournamentPrizeBonus(
     category: 'prize_money',
     amount: prizeAmount,
     description: isWinner
-      ? `🏆 Champions Prize: ${competitionName} Winners Award!`
+      ? `Champions Prize: ${competitionName} Winners Award!`
       : `Tournament Merit Bonus: ${competitionName} (${roundName})`,
   };
 

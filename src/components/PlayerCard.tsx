@@ -1,6 +1,9 @@
 import React from 'react';
 import { Player } from '../types/game';
 import { ProjectedChemistryInfo, MysteryClues } from '../utils/gameLogic';
+import {
+  IconLock,
+} from './career/GameIcons';
 
 interface PlayerCardProps {
   player: Player;
@@ -28,12 +31,9 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   mysteryClues,
 }) => {
   const {
-    playerName,
     displayName,
     primaryPosition,
     rating,
-    attack,
-    midfield,
     defence,
     pace,
     technique,
@@ -42,12 +42,10 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     passing,
     dribbling,
     rarity,
-    era,
     club,
     nationality,
     season,
     specialTrait,
-    oneLineDescription,
   } = player;
 
   // Rarity styling mapping
@@ -196,267 +194,115 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
 
   const keyStats = getTopStats();
 
-  // LARGE LAYOUT (Used in draft selection)
+  // LARGE LAYOUT (Used in draft selection): a slim full-width row so three choices fit on a phone
   if (layout === 'large') {
-    const accessibleLabel = `${rating} rated ${primaryPosition}, ${displayName} for ${club} (${season}). ${
-      projectedInfo
-        ? `${projectedInfo.archetypeLabel}: ${projectedInfo.archetypeDetail}. Projected chemistry ${
-            projectedInfo.delta >= 0 ? '+' : ''
-          }${projectedInfo.delta} due to ${projectedInfo.topReason}.`
-        : ''
-    }`;
-
-    // Archetype badge styling
-    const archetypeStyle = {
-      star: 'bg-amber-500/15 border-amber-500/35 text-amber-400',
-      system: 'bg-blue-500/15 border-blue-500/35 text-blue-400',
-      wildcard: 'bg-cyan-500/15 border-cyan-500/35 text-cyan-400',
-    }[projectedInfo?.archetype || 'star'];
-
-    // Projected chemistry pill styling
     const delta = projectedInfo?.delta ?? 0;
-    const chemPillStyle =
-      delta > 0
-        ? 'bg-blue-500/20 text-blue-400 border-blue-500/40 shadow-[0_0_10px_rgba(59,130,246,0.2)]'
-        : delta < 0
-        ? 'bg-rose-500/20 text-rose-400 border-rose-500/40'
-        : 'bg-slate-900/80 text-slate-400 border-slate-800';
+    const chemText = `CHEM ${delta >= 0 ? `+${delta}` : delta}`;
+    const chemTone = delta > 0 ? 'text-emerald-700' : delta < 0 ? 'text-rose-700' : 'text-slate-600';
+    const selectedRing = selected ? 'ring-2 ring-blue-500 ring-offset-2' : '';
+    const hoverHandlers = {
+      onMouseEnter: () => onHover && onHover(true),
+      onMouseLeave: () => onHover && onHover(false),
+    };
 
     if (isMystery && mysteryClues) {
       return (
         <button
           type="button"
           onClick={onClick}
-          onMouseEnter={() => onHover && onHover(true)}
-          onMouseLeave={() => onHover && onHover(false)}
+          {...hoverHandlers}
           aria-label={`Mystery Option: Position ${mysteryClues.position}, ${mysteryClues.era} Era, Top Attribute ${mysteryClues.topAttribute.name} (${mysteryClues.topAttribute.tier}), ${mysteryClues.affiliationHint.label}, ${mysteryClues.rarityTier} tier`}
-          className={`w-full max-w-[245px] min-h-[395px] rounded-2xl border border-purple-500/40 bg-gradient-to-b from-purple-950/40 via-slate-950 to-slate-950 shadow-[0_0_15px_rgba(168,85,247,0.15)] card-shine flex flex-col p-4 text-left relative transition-all duration-300 transform hover:-translate-y-2 active:scale-95 cursor-pointer select-none overflow-hidden focus:outline-none focus:ring-2 focus:ring-purple-400 group ${
-            selected ? 'ring-2 ring-purple-400 ring-offset-4 ring-offset-slate-950 scale-102' : ''
-          }`}
+          className={`w-full rounded-2xl border border-purple-300 bg-purple-50 p-3 flex items-center gap-3 text-left transition-transform active:scale-[0.99] cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-purple-400 ${selectedRing}`}
         >
-          {/* Holographic light sheen */}
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-purple-500/10 via-transparent to-cyan-500/5 pointer-events-none" />
-
-          {/* 1. Header: Archetype & Dossier Label */}
-          <div className="w-full flex justify-between items-center mb-2.5 z-10 gap-1.5 leading-none">
-            <span className="px-2 py-0.5 rounded-full text-[8.5px] font-display font-black uppercase tracking-wider border border-purple-500/30 bg-purple-950/50 text-purple-300 shadow-sm">
+          <div className="w-11 shrink-0 flex flex-col items-center leading-none">
+            <IconLock className="w-5 h-5 text-purple-700" />
+            <span className="text-[10px] font-bold text-purple-800 uppercase font-display mt-1.5">
+              {mysteryClues.position}
+            </span>
+          </div>
+          <div className="flex-1 min-w-0 text-[11px] text-slate-700 font-medium leading-snug">
+            <h3 className="text-sm font-display font-black text-purple-900 uppercase tracking-tight truncate">
               {mysteryClues.archetypeHint}
-            </span>
-            <span className="text-[8px] font-extrabold uppercase tracking-wider text-purple-400 font-display">
-              ❓ CONCEALED
-            </span>
-          </div>
-
-          {/* 2. Mystery Position & Era */}
-          <div className="flex justify-between items-start w-full relative z-10">
-            <div className="flex flex-col items-start leading-none">
-              <span className="text-4xl font-display font-black tracking-tight text-purple-200">
-                ??
-              </span>
-              <span className="text-[10px] font-bold tracking-wider text-purple-300 bg-purple-950/80 border border-purple-800/40 px-1.5 py-0.5 rounded mt-1 uppercase font-display leading-none">
-                {mysteryClues.position}
-              </span>
-            </div>
-
-            <div className="flex flex-col items-end gap-1.5">
-              <span className="text-[8.5px] font-extrabold px-2 py-0.5 rounded border uppercase tracking-wider font-display leading-none bg-purple-950 text-purple-300 border-purple-700/50">
-                {mysteryClues.rarityTier}
-              </span>
-              <span className="text-[8px] font-bold text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 uppercase tracking-wider leading-none">
-                {mysteryClues.era} Era
-              </span>
-            </div>
-          </div>
-
-          {/* 3. Center Silhouette */}
-          <div className="my-auto py-3 flex flex-col items-center justify-center relative z-10 text-center">
-            <div className="w-14 h-14 rounded-full bg-purple-950/60 border border-purple-500/30 flex items-center justify-center mb-1.5 shadow-inner group-hover:scale-105 transition-transform">
-              <span className="text-2xl">🕵️</span>
-            </div>
-            <span className="text-xs font-display font-black text-purple-200 uppercase tracking-wider leading-none">
-              Identity Hidden
-            </span>
-            <span className="text-[9px] text-slate-400 mt-1 leading-tight font-medium">
-              Revealed upon selection
-            </span>
-          </div>
-
-          {/* 4. Honest Scouting Intel Clues */}
-          <div className="relative z-10 flex flex-col gap-1.5 bg-slate-950/80 border border-purple-900/30 rounded-xl p-2.5 text-[9.5px]">
-            <div className="flex justify-between items-center text-slate-300">
-              <span className="text-slate-400 font-semibold">⚡ Top Stat:</span>
-              <span className="font-display font-bold text-cyan-300">
-                {mysteryClues.topAttribute.name} ({mysteryClues.topAttribute.tier})
-              </span>
-            </div>
-            <div className="flex justify-between items-center text-slate-300">
-              <span className="text-slate-400 font-semibold">
-                {mysteryClues.affiliationHint.type === 'nation' ? '🌍 Country:' : '🛡️ Club:'}
-              </span>
-              <span className="font-display font-bold text-blue-400">
-                {mysteryClues.affiliationHint.label}
-              </span>
-            </div>
-            <div className="flex justify-between items-center text-slate-300">
-              <span className="text-slate-400 font-semibold">🎭 Trait:</span>
-              <span className="font-display font-bold text-amber-300 truncate max-w-[120px]">
-                {mysteryClues.traitHint}
-              </span>
-            </div>
-          </div>
-
-          {/* 5. Bottom Action Pill */}
-          <div className="relative z-10 mt-2.5">
-            <div className="w-full py-2 rounded-xl bg-purple-900/40 group-hover:bg-purple-800/60 border border-purple-500/30 group-hover:border-purple-400 text-purple-200 group-hover:text-white font-display font-black text-[9.5px] uppercase tracking-wider text-center transition-all">
-              Draft Blind ➔
-            </div>
+            </h3>
+            <p className="truncate">
+              {mysteryClues.rarityTier} • {mysteryClues.era} era • {mysteryClues.affiliationHint.label}
+            </p>
+            <p className="truncate">
+              Best at {mysteryClues.topAttribute.name} ({mysteryClues.topAttribute.tier}) • {mysteryClues.traitHint}
+            </p>
           </div>
         </button>
       );
     }
 
+    const accessibleLabel = `${rating} rated ${primaryPosition}, ${displayName} for ${club} (${season}), ${nationality}, ${rarityConfig.label}. ${
+      projectedInfo
+        ? `${projectedInfo.archetypeLabel}: ${projectedInfo.archetypeDetail}. Projected chemistry ${
+            delta >= 0 ? '+' : ''
+          }${delta} due to ${projectedInfo.topReason}.`
+        : ''
+    }`;
+
+    const fitLabel =
+      projectedInfo?.positionFit === 'natural'
+        ? 'Natural role'
+        : projectedInfo?.positionFit === 'secondary'
+        ? 'Secondary position'
+        : 'Out of role';
+    const iqLine = projectedInfo
+      ? [
+          fitLabel,
+          projectedInfo.linkedTeammates.length > 0
+            ? `links with ${projectedInfo.linkedTeammates[0].displayName}`
+            : '',
+          projectedInfo.tacticalRoleNote || '',
+        ]
+          .filter(Boolean)
+          .join(' • ')
+      : '';
+
     return (
       <button
+        type="button"
         onClick={onClick}
-        onMouseEnter={() => onHover && onHover(true)}
-        onMouseLeave={() => onHover && onHover(false)}
+        {...hoverHandlers}
         aria-label={accessibleLabel}
-        className={`w-full max-w-[245px] min-h-[395px] rounded-2xl border ${rarityConfig.border} ${rarityConfig.bg} ${rarityConfig.glow} card-shine flex flex-col p-4 text-left relative transition-all duration-300 transform hover:-translate-y-2 active:scale-95 ${
-          selected ? 'ring-2 ring-blue-500 ring-offset-4 ring-offset-slate-950 scale-102' : ''
-        } ${pulse ? 'animate-pulse' : ''} cursor-pointer select-none overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500`}
+        className={`w-full rounded-2xl border ${rarityConfig.border} ${rarityConfig.bg} p-3 flex items-center gap-3 text-left transition-transform active:scale-[0.99] ${selectedRing} ${
+          pulse ? 'motion-safe:animate-pulse' : ''
+        } cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-blue-500`}
       >
-        {/* Dynamic Card Overlay Light Effect */}
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none" />
-
-        {/* 1. Prospective Archetype & Strategic Badge Header */}
-        {projectedInfo && (
-          <div className="w-full flex justify-between items-center mb-2.5 z-10 gap-1.5 leading-none">
-            <span
-              className={`px-2 py-0.5 rounded-full text-[8.5px] font-display font-black uppercase tracking-wider border shadow-sm ${archetypeStyle}`}
-            >
-              {projectedInfo.archetypeLabel}
-            </span>
-            <span
-              className={`px-2 py-0.5 rounded-full text-[8.5px] font-display font-black uppercase tracking-wider border ${chemPillStyle}`}
-            >
-              CHEM {delta >= 0 ? `+${delta}` : delta}
-            </span>
-          </div>
-        )}
-
-        {/* 2. Top Header: Rating, Position, Rarity & Era Badge */}
-        <div className="flex justify-between items-start w-full relative z-10">
-          <div className="flex flex-col items-start leading-none">
-            <span className={`text-4xl font-display font-black tracking-tight ${rarityConfig.ratingText}`}>
-              {rating}
-            </span>
-            <span
-              className={`text-[10px] font-bold tracking-wider ${rarityConfig.textMuted} ${rarityConfig.subBg} border ${rarityConfig.subBorder} px-1.5 py-0.5 rounded mt-1 uppercase font-display leading-none`}
-            >
-              {primaryPosition}
-            </span>
-          </div>
-
-          <div className="flex flex-col items-end gap-1.5">
-            {/* Rarity Indicator */}
-            <span
-              className={`text-[8.5px] font-extrabold px-2 py-0.5 rounded border uppercase tracking-wider font-display leading-none ${rarityConfig.badge}`}
-            >
-              {rarityConfig.label}
-            </span>
-            {/* Era Badge */}
-            <span
-              className={`text-[8px] font-bold ${rarityConfig.textMuted} ${rarityConfig.subBg} px-1.5 py-0.5 rounded border ${rarityConfig.subBorder} uppercase tracking-wider leading-none`}
-            >
-              {era}
-            </span>
-          </div>
-        </div>
-
-        {/* 3. Player Name and Club/Season */}
-        <div className="mt-3.5 relative z-10">
-          <div className={`h-1 w-10 rounded bg-gradient-to-r ${rarityConfig.accent} mb-2`} />
-          <h3
-            className={`text-2xl font-display font-black leading-none ${rarityConfig.textPrimary} uppercase tracking-tight line-clamp-1`}
-          >
-            {displayName}
-          </h3>
-          <p className={`text-xs font-bold ${rarityConfig.textSecondary} mt-1 truncate leading-none uppercase tracking-wide`}>
-            {club} • {season}
-          </p>
-          <span className={`text-[9px] font-medium ${rarityConfig.textMuted} block truncate leading-none mt-1`}>
-            {playerName} • {nationality}
+        <div className="w-11 shrink-0 flex flex-col items-center leading-none">
+          <span className={`text-2xl font-display font-black tracking-tight ${rarityConfig.ratingText}`}>
+            {rating}
+          </span>
+          <span className={`text-[10px] font-bold ${rarityConfig.textMuted} uppercase font-display mt-1`}>
+            {primaryPosition}
           </span>
         </div>
 
-        {/* 4. Strategic Archetype Detail or Special Trait */}
-        <div className="mt-3 flex flex-col gap-1.5 relative z-10 flex-1 w-full">
+        <div className="flex-1 min-w-0">
+          <h3 className={`text-sm font-display font-black leading-tight ${rarityConfig.textPrimary} uppercase tracking-tight truncate`}>
+            {displayName}
+          </h3>
+          <p className={`text-[11px] font-semibold ${rarityConfig.textSecondary} truncate`}>
+            {club} • {season}
+          </p>
           {projectedInfo ? (
-            <div className={`${rarityConfig.subBg} border ${rarityConfig.subBorder} rounded-xl px-2.5 py-1.5 flex flex-col gap-0.5 leading-none`}>
-              <span className="text-[8.5px] font-black font-display tracking-wider uppercase text-blue-400">
-                {projectedInfo.archetypeDetail}
-              </span>
-              <span className="text-[8px] text-slate-400 font-semibold truncate">
-                {projectedInfo.topReason}
-              </span>
-            </div>
-          ) : specialTrait ? (
-            <div
-              className={`${rarityConfig.subBg} border ${rarityConfig.subBorder} rounded px-2.5 py-1 w-fit flex items-center leading-none`}
-            >
-              <span className="text-[9px] font-bold text-blue-400 font-display tracking-wider uppercase">
-                ✨ {specialTrait}
-              </span>
-            </div>
-          ) : null}
-
-          {/* Draft IQ Mode Enhanced Tactical Insights Banner */}
-          {draftIQActive && projectedInfo && (
-            <div className="bg-indigo-950/40 border border-indigo-500/30 rounded-xl p-2 flex flex-col gap-1 leading-none text-left">
-              <span className="text-[7.5px] font-black uppercase tracking-widest text-indigo-300">
-                🧠 Tactical Intel
-              </span>
-              <div className="text-[8px] text-slate-350 space-y-0.5 font-medium">
-                <p>
-                  • Fit: <span className="font-bold text-foreground">{projectedInfo.positionFit === 'natural' ? 'Natural Role (100%)' : projectedInfo.positionFit === 'secondary' ? 'Secondary Position' : 'Out of Role'}</span>
-                </p>
-                {projectedInfo.linkedTeammates.length > 0 && (
-                  <p className="truncate">
-                    • Link: <span className="font-bold text-blue-400">{projectedInfo.linkedTeammates[0].displayName} ({projectedInfo.linkedTeammates[0].reason})</span>
-                  </p>
-                )}
-                {projectedInfo.tacticalRoleNote && (
-                  <p>
-                    • Role: <span className="font-bold text-cyan-300">{projectedInfo.tacticalRoleNote}</span>
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {!draftIQActive && oneLineDescription && (
-            <p className={`text-[10px] ${rarityConfig.textSecondary} leading-relaxed italic line-clamp-2 mt-0.5`}>
-              “{oneLineDescription}”
+            <p className="text-[11px] font-semibold text-slate-600 truncate">
+              <span className={`font-display font-black ${chemTone}`}>{chemText}</span>
+              {' • '}
+              {draftIQActive ? iqLine : projectedInfo.topReason}
             </p>
-          )}
+          ) : specialTrait ? (
+            <p className={`text-[11px] font-semibold ${rarityConfig.textSecondary} truncate`}>{specialTrait}</p>
+          ) : null}
         </div>
 
-        {/* Divider line */}
-        <div className={`h-[1px] w-full ${rarityConfig.subBorder} my-2 relative z-10`} />
-
-        {/* 5. Three Key Stat Chips Row */}
-        <div className="flex justify-between items-center gap-2 relative z-10 w-full">
-          {keyStats.map((st, idx) => (
-            <div
-              key={idx}
-              className={`flex-1 ${rarityConfig.subBg} py-1.5 px-2 rounded-xl border ${rarityConfig.subBorder} flex flex-col items-center leading-none`}
-            >
-              <span className={`text-[8px] font-semibold ${rarityConfig.textMuted} uppercase tracking-wider`}>
-                {st.label}
-              </span>
-              <span className={`text-sm font-display font-black ${rarityConfig.textSecondary} mt-1`}>
-                {st.value}
-              </span>
+        <div className="flex gap-2 shrink-0">
+          {keyStats.map((st) => (
+            <div key={st.label} className="flex flex-col items-center leading-none w-7">
+              <span className={`text-[10px] font-semibold ${rarityConfig.textMuted} uppercase`}>{st.label}</span>
+              <span className={`text-sm font-display font-black ${rarityConfig.textSecondary} mt-1`}>{st.value}</span>
             </div>
           ))}
         </div>
@@ -469,7 +315,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     return (
       <div
         onClick={onClick}
-        className={`w-[68px] h-[100px] rounded-xl border ${rarityConfig.border} ${rarityConfig.bg} flex flex-col p-1.5 relative transition-all duration-300 transform active:scale-95 text-left select-none shadow-md overflow-hidden ${
+        className={`w-[62px] h-[60px] sm:w-[68px] sm:h-[84px] rounded-xl border ${rarityConfig.border} ${rarityConfig.bg} flex flex-col p-1 sm:p-1.5 relative transition-all duration-300 transform active:scale-95 text-left select-none shadow-md overflow-hidden ${
           onClick ? 'cursor-pointer hover:scale-[1.03] hover:brightness-105' : ''
         }`}
       >
@@ -479,7 +325,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
             {rating}
           </span>
           <span
-            className={`text-[8px] font-bold ${rarityConfig.textMuted} ${rarityConfig.subBg} border ${rarityConfig.subBorder} px-0.5 py-0.2 rounded uppercase`}
+            className={`text-[10px] font-bold ${rarityConfig.textMuted} uppercase`}
           >
             {primaryPosition}
           </span>
@@ -487,14 +333,14 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
 
         {/* Display Name */}
         <div className="flex-1 flex flex-col justify-end mt-1 mb-0.5 leading-none relative z-10">
-          <span className={`text-[9px] font-display font-extrabold ${rarityConfig.textPrimary} uppercase tracking-tight truncate`}>
+          <span className={`text-[10px] font-display font-extrabold ${rarityConfig.textPrimary} uppercase tracking-tight truncate`}>
             {displayName.split(' ').slice(0, -1).join(' ') || displayName}
           </span>
         </div>
 
         {/* Club and Season Tag at the bottom */}
         <div
-          className={`flex justify-between items-center text-[7px] ${rarityConfig.textMuted} border-t ${rarityConfig.subBorder} pt-0.5 mt-0.5 leading-none relative z-10`}
+          className={`flex justify-between items-center text-[10px] ${rarityConfig.textMuted} border-t ${rarityConfig.subBorder} pt-0.5 mt-0.5 leading-none relative z-10`}
         >
           <span className="truncate max-w-[30px] font-semibold">{getAbbreviation(club)}</span>
           <span
@@ -533,7 +379,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
               {displayName}
             </h4>
             <span
-              className={`text-[8.5px] font-bold px-1 py-0.2 ${rarityConfig.subBg} rounded border ${rarityConfig.subBorder} ${rarityConfig.textMuted} uppercase leading-none`}
+              className={`text-[10px] font-bold px-1 py-0.5 ${rarityConfig.subBg} rounded border ${rarityConfig.subBorder} ${rarityConfig.textMuted} uppercase leading-none`}
             >
               {primaryPosition}
             </span>
@@ -550,7 +396,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
             key={idx}
             className={`flex flex-col text-[10px] items-center px-1.5 py-0.5 ${rarityConfig.subBg} rounded border ${rarityConfig.subBorder} leading-none`}
           >
-            <span className={`${rarityConfig.textMuted} font-semibold uppercase text-[7px]`}>{st.label}</span>
+            <span className={`${rarityConfig.textMuted} font-semibold uppercase text-[10px]`}>{st.label}</span>
             <span className={`font-bold ${rarityConfig.textSecondary} mt-0.5`}>{st.value}</span>
           </div>
         ))}

@@ -103,7 +103,15 @@ describe('Draft Modifiers & Replayability V1', () => {
 
     it('safely handles legacy streak objects missing the new modifier fields', () => {
       // Simulate reading legacy stored streaks without the modifier keys
-      const legacyStreaks: any = {
+      const legacyStreaks: Pick<
+        StreakStats,
+        | 'gamesPlayed'
+        | 'bestPoints'
+        | 'perfectSeasons'
+        | 'dailyChallengesCompleted'
+        | 'currentDailyStreak'
+        | 'lastPlayedDate'
+      > = {
         gamesPlayed: 12,
         bestPoints: 95,
         perfectSeasons: 1,

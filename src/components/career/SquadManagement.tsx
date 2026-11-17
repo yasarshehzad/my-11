@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
+import dynamic from 'next/dynamic';
 import {
   CareerPlayer,
   CareerSaveFile,
@@ -20,6 +21,7 @@ import {
   calculateCaptaincyEffects,
   calculateDressingRoomHarmony,
   getInitialClubTactics,
+  pickDefaultSetPieceTakers,
 } from '../../career/tactics';
 import {
   validateSquad,
@@ -29,7 +31,6 @@ import {
   adaptLineupToFormation,
   SUPPORTED_CAREER_FORMATIONS,
   GeneralPositionGroup,
-  isHomegrownPlayer,
   getRegisteredSeniorPlayerIds,
   isPlayerRegisteredForMatch,
   MAX_SENIOR_SQUAD_SIZE,
@@ -40,78 +41,99 @@ import {
 import { SquadRegistrationModal } from './SquadRegistrationModal';
 
 import { formatCurrency, formatWage } from '../../career/finance';
-import {
-  formatCareerHeight,
-  formatCareerWeight,
-  getPlayerPhysicals,
-} from '../../career/formatters';
 import { generateYouthIntake, promoteYouthProspect, releaseYouthProspect } from '../../career/youthAcademy';
-import { EaFcCard } from './EaFcCard';
 import {
-  IconUser,
   IconBarChart,
-  IconBriefcase,
   IconSwap,
-  IconMegaphone,
   IconHandshake,
   IconAlert,
   IconTrophy,
   IconBolt,
+  IconTarget,
+  IconFlame,
+  IconShield,
+  IconSliders,
+  IconCheck,
+  IconClipboard,
+  IconUsers,
+  IconMedkit,
+  IconCard,
+  IconSnowflake,
+  IconStar,
+  IconSprout,
+  IconClock,
+  IconCrown,
+  IconSearch,
+  IconClose,
+  IconSparkles,
+  IconBall,
+  IconStadium,
+  IconDumbbell,
+  IconChevronDown,
+  IconChevronUp,
+  TacticalPhilosophyIcon,
 } from './GameIcons';
-import { getPlayerCompleteStats } from '../../career/playerStats';
 import {
   calculateFormRatingBonus,
-  calculateEaFcFaceStats,
   getEffectiveRating,
   applyWeeklySquadTraining,
   WeeklyTrainingResult,
 } from '../../career/formAndProgression';
-import {
-  setPlayerTransferStatus,
-  offerPlayerToClubs,
-  hireIntermediaryForPlayer,
-  releasePlayerContract,
-  executePlayerSale,
-} from '../../career/transfers';
+
+const SquadPlayerModal = dynamic(
+  () => import('./SquadPlayerModal').then((m) => m.SquadPlayerModal),
+  { ssr: false }
+);
+const emptySubscribe = () => () => {};
+
+function renderTrainingFocusIcon(id: TeamTrainingFocus, className = 'w-5 h-5') {
+  switch (id) {
+    case 'match_prep':
+      return <IconTarget className={`${className} text-emerald-700`} />;
+    case 'recovery':
+      return <IconMedkit className={`${className} text-teal-600`} />;
+    case 'attacking':
+      return <IconFlame className={`${className} text-amber-600`} />;
+    case 'defensive':
+      return <IconShield className={`${className} text-blue-700`} />;
+    case 'balanced':
+    default:
+      return <IconSliders className={`${className} text-slate-700`} />;
+  }
+}
 
 const TRAINING_FOCUS_OPTIONS: Array<{
   id: TeamTrainingFocus;
-  icon: string;
   title: string;
   description: string;
   buffs: string[];
 }> = [
   {
     id: 'match_prep',
-    icon: '🎯',
     title: 'Match Preparation',
     description: 'Tactical walkthroughs & opposition analysis. Highest sharpness for upcoming matches.',
     buffs: ['+1.2 ATT/MID/DEF', '+2 Composure', 'Protected Form'],
   },
   {
     id: 'recovery',
-    icon: '🔋',
     title: 'Rest & Recovery',
     description: 'Light hydrotherapy & recovery drills. Essential during mid-week congested schedules.',
     buffs: ['+15% Stamina Regen', '18% Slower Match Drain', '-40% Injury Chance'],
   },
   {
     id: 'attacking',
-    icon: '⚔️',
     title: 'Attacking Drills',
     description: 'Finishing, winger overlaps, and rapid box penetration to maximize goal output.',
     buffs: ['+2.2 ATT Power', '+10% Conversion', '+Winger/FWD XP'],
   },
   {
     id: 'defensive',
-    icon: '🛡️',
     title: 'Defensive Shape',
     description: 'Low block structure, aerial clearing, and coordinated offside traps.',
     buffs: ['+2.2 DEF Solidity', '-12% Opponent xG', '+Defender/GK XP'],
   },
   {
     id: 'balanced',
-    icon: '⚖️',
     title: 'Balanced Routine',
     description: 'Standard holistic football drills maintaining general squad readiness.',
     buffs: ['Standard Recovery', 'Even Development', 'Balanced Load'],
@@ -134,14 +156,16 @@ export function SquadManagement({
   initialViewMode = 'pitch',
 }: SquadManagementProps) {
   const [viewMode, setViewMode] = useState<'pitch' | 'list' | 'academy' | 'training' | 'tactics'>(initialViewMode);
-  const [rotationFeedback, setRotationFeedback] = useState<SquadRotationResult | null>(null);
-  const [trainingSessionResults, setTrainingSessionResults] = useState<WeeklyTrainingResult | null>(null);
-
-  useEffect(() => {
+  const [prevInitialViewMode, setPrevInitialViewMode] = useState(initialViewMode);
+  if (prevInitialViewMode !== initialViewMode) {
+    setPrevInitialViewMode(initialViewMode);
     if (initialViewMode) {
       setViewMode(initialViewMode);
     }
-  }, [initialViewMode]);
+  }
+  const [rotationFeedback, setRotationFeedback] = useState<SquadRotationResult | null>(null);
+  const [trainingSessionResults, setTrainingSessionResults] = useState<WeeklyTrainingResult | null>(null);
+
   const [filterGroup, setFilterGroup] = useState<'ALL' | GeneralPositionGroup>('ALL');
   const [selectedPlayer, setSelectedPlayer] = useState<CareerPlayer | null>(null);
   const [swapSourceId, setSwapSourceId] = useState<string | null>(null);
@@ -154,28 +178,15 @@ export function SquadManagement({
   const touchStartPosRef = React.useRef<{ x: number; y: number } | null>(null);
   const [academyToast, setAcademyToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [showRegistrationModal, setShowRegistrationModal] = useState<boolean>(false);
-  const [isMounted, setIsMounted] = useState<boolean>(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  // Outgoing transfer & player actions state
-  const [askingPriceInput, setAskingPriceInput] = useState<number>(0);
-  const [transferListedInput, setTransferListedInput] = useState<boolean>(false);
-  const [loanListedInput, setLoanListedInput] = useState<boolean>(false);
-  const [showReleaseModal, setShowReleaseModal] = useState<boolean>(false);
-  const [releaseActionType, setReleaseActionType] = useState<'mutual' | 'unilateral'>('mutual');
-  const [squadActionMessage, setSquadActionMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
-  const [playerModalTab, setPlayerModalTab] = useState<'profile' | 'attributes' | 'stats' | 'market'>('profile');
-  const playerModalCardRef = React.useRef<HTMLDivElement>(null);
-  const modalSwipeStartRef = React.useRef<{ x: number; y: number } | null>(null);
-
-  useEffect(() => {
-    if (selectedPlayer && playerModalCardRef.current) {
-      playerModalCardRef.current.scrollTop = 0;
-    }
-  }, [selectedPlayer?.id, playerModalTab]);
+  // Disclosures (all collapsed by default) and the philosophy being previewed before adoption
+  const [openPanels, setOpenPanels] = useState<Record<string, boolean>>({});
+  const togglePanel = (key: string) => setOpenPanels((prev) => ({ ...prev, [key]: !prev[key] }));
+  const [previewPhilosophy, setPreviewPhilosophy] = useState<TacticalPhilosophyType | null>(null);
+  const isMounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
 
   // Lock background scroll while any Squad modal is open (especially on mobile Safari)
   useEffect(() => {
@@ -190,88 +201,8 @@ export function SquadManagement({
     };
   }, [selectedPlayer, showRegistrationModal]);
 
-  const handleModalTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length !== 1) return;
-    modalSwipeStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-  };
-
-  const handleModalTouchEnd = (e: React.TouchEvent) => {
-    if (!modalSwipeStartRef.current || e.changedTouches.length !== 1) return;
-    const dx = e.changedTouches[0].clientX - modalSwipeStartRef.current.x;
-    const dy = e.changedTouches[0].clientY - modalSwipeStartRef.current.y;
-    modalSwipeStartRef.current = null;
-    if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.3) return;
-    const order: Array<'profile' | 'attributes' | 'stats' | 'market'> = ['profile', 'attributes', 'stats', 'market'];
-    const idx = order.indexOf(playerModalTab);
-    if (dx < 0 && idx < order.length - 1) setPlayerModalTab(order[idx + 1]);
-    if (dx > 0 && idx > 0) setPlayerModalTab(order[idx - 1]);
-  };
-
   const handleSelectPlayerWithActions = (player: CareerPlayer) => {
     setSelectedPlayer(player);
-    setPlayerModalTab('profile');
-    setAskingPriceInput(player.askingPrice || player.value);
-    setTransferListedInput(player.transferListed ?? false);
-    setLoanListedInput(player.loanListed ?? false);
-    setShowReleaseModal(false);
-    setSquadActionMessage(null);
-  };
-
-  const handleUpdateTransferStatus = () => {
-    if (!selectedPlayer) return;
-    const res = setPlayerTransferStatus(save, selectedPlayer.id, {
-      transferListed: transferListedInput,
-      askingPrice: askingPriceInput,
-      loanListed: loanListedInput,
-    });
-    onUpdateSave(res.updatedSave);
-    const updated = res.updatedSave.squad.find((p) => p.id === selectedPlayer.id);
-    if (updated) setSelectedPlayer(updated);
-    setSquadActionMessage({ text: 'Transfer listing updated successfully.', type: 'success' });
-    setTimeout(() => setSquadActionMessage(null), 3000);
-  };
-
-  const handleOfferToClubs = () => {
-    if (!selectedPlayer) return;
-    const res = offerPlayerToClubs(save, selectedPlayer.id, askingPriceInput);
-    if (res.success) {
-      onUpdateSave(res.updatedSave);
-      const updated = res.updatedSave.squad.find((p) => p.id === selectedPlayer.id);
-      if (updated) setSelectedPlayer(updated);
-      setSquadActionMessage({ text: res.message, type: 'success' });
-    } else {
-      setSquadActionMessage({ text: res.message, type: 'error' });
-    }
-  };
-
-  const handleHireIntermediary = () => {
-    if (!selectedPlayer) return;
-    const res = hireIntermediaryForPlayer(save, selectedPlayer.id, askingPriceInput);
-    if (res.success) {
-      onUpdateSave(res.updatedSave);
-      const updated = res.updatedSave.squad.find((p) => p.id === selectedPlayer.id);
-      if (updated) setSelectedPlayer(updated);
-      setSquadActionMessage({ text: res.message, type: 'success' });
-    } else {
-      setSquadActionMessage({ text: res.message, type: 'error' });
-    }
-  };
-
-  const handleConfirmRelease = () => {
-    if (!selectedPlayer) return;
-    const res = releasePlayerContract(save, selectedPlayer.id, releaseActionType);
-    if (!res.success) {
-      setSquadActionMessage({ text: res.error || 'Failed to release player.', type: 'error' });
-      return;
-    }
-    onUpdateSave(res.updatedSave);
-    setSelectedPlayer(null);
-    setShowReleaseModal(false);
-    setAcademyToast({
-      message: `Successfully released ${selectedPlayer.name}. Freed ${formatCurrency(res.wageFreed)}/wk in wages. Payout: ${formatCurrency(res.payout)}.`,
-      type: 'success',
-    });
-    setTimeout(() => setAcademyToast(null), 4000);
   };
 
   const squad = save.squad || [];
@@ -325,8 +256,6 @@ export function SquadManagement({
 
   // Tactical Philosophy & Captaincy Leadership state
   const currentTactics: ClubTactics = save.tactics || getInitialClubTactics(squad);
-  const captainPlayer = squad.find((p) => p.id === currentTactics.captainId) || null;
-  const viceCaptainPlayer = squad.find((p) => p.id === currentTactics.viceCaptainId) || null;
   const captaincyEffects = calculateCaptaincyEffects(squad, currentTactics.captainId, currentTactics.viceCaptainId);
   const dressingRoomHarmony = calculateDressingRoomHarmony(squad, currentTactics.captainId);
   const philosophyBonus = getPhilosophyDepartmentBonus(currentTactics, starters);
@@ -376,6 +305,30 @@ export function SquadManagement({
     const vc = squad.find((p) => p.id === viceCaptainId);
     if (onNotification && vc) {
       onNotification(`${vc.name} appointed as Vice-Captain.`);
+    }
+  };
+
+  const handleSetPieceTaker = (
+    role: 'penaltyTakerId' | 'freeKickTakerId' | 'cornerTakerId',
+    playerId: string
+  ) => {
+    const updatedTactics: ClubTactics = {
+      ...currentTactics,
+      [role]: playerId || undefined,
+    };
+    onUpdateSave({
+      ...save,
+      tactics: updatedTactics,
+    });
+    const player = squad.find((p) => p.id === playerId);
+    if (onNotification && player) {
+      const label =
+        role === 'penaltyTakerId'
+          ? 'Penalty Taker'
+          : role === 'freeKickTakerId'
+          ? 'Free Kick Taker'
+          : 'Corner Taker';
+      onNotification(`${player.name} designated as primary ${label}.`);
     }
   };
 
@@ -492,7 +445,7 @@ export function SquadManagement({
     setTrainingSessionResults(result);
     if (result.breakthroughs.length > 0) {
       onNotification?.(
-        `🎉 Training Breakthrough! ${result.breakthroughs.map((b) => `${b.player.name} (+1 OVR)`).join(', ')}`
+        `Training Breakthrough! ${result.breakthroughs.map((b) => `${b.player.name} (+1 OVR)`).join(', ')}`
       );
     } else {
       onNotification?.(
@@ -831,284 +784,211 @@ export function SquadManagement({
     return categorizePosition(p.position) === filterGroup;
   });
 
+  const seniorSquadCount = squad.filter((p) => p.age > U21_AGE_LIMIT).length;
+  const registeredSeniorCount = getRegisteredSeniorPlayerIds(squad, save.registeredPlayerIds).length;
+  const isOverRegistration = seniorSquadCount > MAX_SENIOR_SQUAD_SIZE;
+  const foreignSeniorCount = validation.nonHomegrownSeniorCount ?? 0;
+  const homegrownCompliant = foreignSeniorCount <= 17;
+
+  const viewTabs: Array<{
+    id: 'pitch' | 'list' | 'tactics' | 'academy' | 'training';
+    label: string;
+    badge: string;
+    alert?: boolean;
+    badgeTitle?: string;
+  }> = [
+    { id: 'pitch', label: 'Pitch', badge: '' },
+    { id: 'list', label: 'List', badge: '' },
+    { id: 'tactics', label: 'Tactics', badge: `${currentTactics.familiarity}%` },
+    { id: 'academy', label: 'Academy', badge: `${academy.length}` },
+    fatiguedStartersCount > 0
+      ? {
+          id: 'training',
+          label: 'Training',
+          badge: `${fatiguedStartersCount}`,
+          alert: true,
+          badgeTitle: `${fatiguedStartersCount} starter(s) fatigued`,
+        }
+      : { id: 'training', label: 'Training', badge: `${Object.keys(currentMentorships).length}/3` },
+  ];
+
   return (
     <div className="space-y-4">
-      {/* 1. Compact Squad Vitals & Registration Strip */}
-      <section className="office-floating-card bg-white rounded-2xl p-2.5 sm:p-3 border border-slate-200/90 shadow-sm space-y-2" aria-label="Squad vitals">
-        <div className="grid grid-cols-4 gap-1.5 sm:gap-2 text-center text-xs">
-          {/* XI & Squad OVR */}
-          <div className="office-subcard office-kpi-blue rounded-xl p-1.5 sm:p-2 flex flex-col justify-center min-h-[52px]">
-            <span className="text-[8.5px] uppercase font-bold text-slate-500 block truncate tracking-wider">XI OVR</span>
-            <span className="text-base sm:text-lg font-display font-black text-blue-600 block leading-tight my-0.5">
-              {startingXiAvg}
-            </span>
-            <span className="text-[7.5px] text-slate-400 font-medium block truncate" title={`Starting XI avg: ${startingXiAvg} OVR • Entire squad avg: ${validation.averageRating} OVR`}>
-              Squad {validation.averageRating}
-            </span>
-          </div>
-
-          {/* Roster Size */}
-          <div className="office-subcard rounded-xl p-1.5 sm:p-2 flex flex-col justify-center min-h-[52px]">
-            <span className="text-[8.5px] uppercase font-bold text-slate-500 block truncate tracking-wider">Roster</span>
-            <div className="flex items-baseline justify-center gap-0.5 leading-tight my-0.5">
-              <span className="text-base sm:text-lg font-display font-black text-[#0b1536]">
+      {/* 1. Squad vitals, formation controls and view tabs */}
+      <section className="office-floating-card bg-white rounded-2xl p-2.5 sm:p-3 border border-slate-200/90 shadow-sm space-y-2" aria-label="Squad vitals and controls">
+        <div className="flex items-center justify-between gap-2">
+          <dl className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 text-xs min-w-0">
+            <div className="flex items-baseline gap-1">
+              <dt className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">XI</dt>
+              <dd className="font-display font-black text-blue-600">{startingXiAvg}</dd>
+            </div>
+            <div className="flex items-baseline gap-1">
+              <dt className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Squad</dt>
+              <dd className="font-display font-black text-[#0b1536]">
                 {squad.length}
-              </span>
-              <span className="text-[9px] text-slate-400 font-mono">/35</span>
+                <span className="text-[10px] text-slate-400 font-mono">/35</span>
+              </dd>
             </div>
-            <span className="text-[7.5px] text-slate-400 font-medium block truncate">Total Pool</span>
-          </div>
-
-          {/* Homegrown */}
-          <div className="office-subcard rounded-xl p-1.5 sm:p-2 flex flex-col justify-center min-h-[52px]">
-            <span className="text-[8.5px] uppercase font-bold text-slate-500 block truncate tracking-wider">Homegrown</span>
-            <div className="flex items-center justify-center gap-1 leading-tight my-0.5">
-              <span className="text-base sm:text-lg font-display font-black text-blue-600">
+            <div className="flex items-baseline gap-1">
+              <dt className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">HG</dt>
+              <dd
+                className="font-display font-black text-blue-600 inline-flex items-center gap-0.5"
+                title={homegrownCompliant ? 'Within the 17 non-homegrown senior limit' : 'Over the 17 non-homegrown senior limit'}
+              >
                 {validation.homegrownCount}
-              </span>
-              <span className="text-[9px] font-bold text-slate-400">HG</span>
-              {(validation.nonHomegrownSeniorCount ?? 0) <= 17 ? (
-                <span className="text-[10px] font-bold text-emerald-600" title="Compliant with Premier League rules (max 17 foreign senior players allowed)">✓</span>
-              ) : (
-                <span className="text-[10px] text-rose-500 font-bold" title="Exceeds maximum 17 non-homegrown senior limit">⚠️</span>
-              )}
+                {homegrownCompliant ? (
+                  <IconCheck className="w-3 h-3 text-emerald-600 shrink-0" />
+                ) : (
+                  <IconAlert className="w-3 h-3 text-rose-500 shrink-0" />
+                )}
+              </dd>
             </div>
-            <span className="text-[7.5px] text-slate-400 font-medium block truncate">
-              {(validation.nonHomegrownSeniorCount ?? 0) <= 17 ? 'Compliant' : 'Over Limit'}
-            </span>
-          </div>
-
-          {/* Payroll */}
-          <div className="office-subcard office-kpi-mint rounded-xl p-1.5 sm:p-2 flex flex-col justify-center min-h-[52px]">
-            <span className="text-[8.5px] uppercase font-bold text-slate-500 block truncate tracking-wider">Wage Bill</span>
-            <span className="text-xs sm:text-sm font-display font-black text-emerald-700 block truncate leading-tight my-0.5">
-              {formatWage(validation.totalWagesWeekly)}
-            </span>
-            <span className="text-[7.5px] text-slate-400 font-medium block truncate">Weekly</span>
-          </div>
+            <div className="flex items-baseline gap-1">
+              <dt className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Wages</dt>
+              <dd className="font-display font-black text-emerald-700">{formatWage(validation.totalWagesWeekly)}</dd>
+            </div>
+          </dl>
+          <button
+            type="button"
+            aria-expanded={Boolean(openPanels.vitals)}
+            aria-controls="squad-vitals-more"
+            aria-label="More squad numbers"
+            onClick={() => togglePanel('vitals')}
+            className="w-10 h-10 -my-1 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 cursor-pointer shrink-0"
+          >
+            {openPanels.vitals ? <IconChevronUp className="w-4 h-4" /> : <IconChevronDown className="w-4 h-4" />}
+          </button>
         </div>
 
-        {/* 25-Man League Registration Quick Status (Single Compact Row) */}
-        {(() => {
-          const seniorCount = squad.filter((p) => p.age > U21_AGE_LIMIT).length;
-          const registeredIds = getRegisteredSeniorPlayerIds(squad, save.registeredPlayerIds);
-          const isOver = seniorCount > MAX_SENIOR_SQUAD_SIZE;
-          return (
-            <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2 text-xs">
-              <div className="flex items-center gap-1.5 min-w-0 truncate">
-                <span className="text-[10px] font-bold text-slate-600 truncate flex items-center gap-1">
-                  <span>📋</span> 25-Man PL Registration:
-                </span>
-                <span
-                  className={`text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full border shadow-2xs whitespace-nowrap ${
-                    isOver
-                      ? 'bg-amber-50 border-amber-300 text-amber-800'
-                      : 'bg-blue-50 border-blue-200 text-blue-700'
-                  }`}
-                >
-                  {registeredIds.length}/{MAX_SENIOR_SQUAD_SIZE} Registered
-                </span>
-                {isOver && (
-                  <span className="text-[9px] text-amber-700 font-bold whitespace-nowrap hidden xs:inline">
-                    ⚠️ {seniorCount - registeredIds.length} Unregistered
-                  </span>
-                )}
+        {openPanels.vitals && (
+          <dl id="squad-vitals-more" className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-[11px] pt-2 border-t border-slate-100">
+            {[
+              ['Squad average', `${validation.averageRating} OVR`],
+              ['Squad value', formatCurrency(validation.totalSquadValue)],
+              [
+                'Wage room',
+                `${formatWage(Math.max(0, save.finances.weeklyWageBudget - validation.totalWagesWeekly))} of ${formatWage(save.finances.weeklyWageBudget)}`,
+              ],
+              ['Senior players', `${validation.seniorCount}/25`],
+              ['U21 exempt', `${validation.u21Count}`],
+              ['Foreign seniors', `${foreignSeniorCount}/17`],
+              ...(isOverRegistration
+                ? [['Unregistered seniors', `${seniorSquadCount - registeredSeniorCount}`]]
+                : []),
+            ].map(([label, value]) => (
+              <div key={label} className="flex items-baseline justify-between gap-2 min-w-0">
+                <dt className="text-slate-500 truncate">{label}</dt>
+                <dd className="font-mono font-bold text-slate-800 whitespace-nowrap">{value}</dd>
               </div>
-
-              <button
-                type="button"
-                onClick={() => setShowRegistrationModal(true)}
-                className="py-1.5 px-3 rounded-xl bg-[#1E2024] hover:bg-zinc-800 text-white text-[10px] font-display font-bold uppercase tracking-wider shadow-2xs transition-all cursor-pointer flex items-center gap-1 active:scale-95 whitespace-nowrap shrink-0"
-              >
-                <span>Manage</span>
-                <span>›</span>
-              </button>
-            </div>
-          );
-        })()}
+            ))}
+          </dl>
+        )}
 
         {validation.errors.length > 0 && (
-          <div className="pt-1.5 border-t border-rose-100 flex items-center justify-between text-[10.5px] text-rose-600 bg-rose-50/50 p-1.5 rounded-lg">
-            <div className="flex items-center gap-1.5 truncate">
-              <span>⚠️</span>
-              <span className="font-bold truncate">{validation.errors[0]}</span>
-            </div>
+          <div className="flex items-center gap-1.5 text-[11px] text-rose-600 bg-rose-50/50 p-1.5 rounded-lg">
+            <IconAlert className="w-3.5 h-3.5 shrink-0" />
+            <span className="font-bold truncate">{validation.errors[0]}</span>
           </div>
         )}
-      </section>
 
-      {/* 2. Tactical Controls Bar: Formation, Auto Pick, View Mode */}
-      <section className="office-floating-card bg-white border border-slate-200/90 p-2 sm:p-2.5 rounded-2xl shadow-xs flex flex-wrap justify-between items-center gap-2">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <label className="text-[10px] font-black uppercase tracking-wider text-slate-500">Formation:</label>
-          <select
-            value={currentFormation}
-            onChange={(e) => handleFormationChange(e.target.value)}
-            className="bg-slate-50 border border-slate-300 rounded-xl px-2 py-1 text-xs font-display font-black text-[#0b1536] focus:outline-none focus:border-teal-500 cursor-pointer shadow-2xs"
-            aria-label="Formation select"
-          >
-            {(['4 at the back', '3 at the back', '5 at the back'] as const).map((cat) => (
-              <optgroup key={cat} label={cat} className="bg-white text-slate-700 font-bold">
-                {SUPPORTED_CAREER_FORMATIONS.filter((f) => f.category === cat).map((f) => (
-                  <option key={f.name} value={f.name} className="bg-white text-[#0b1536] font-medium">
-                    {f.name}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
+        <div className="pt-2 border-t border-slate-100 flex flex-wrap justify-between items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <select
+              value={currentFormation}
+              onChange={(e) => handleFormationChange(e.target.value)}
+              className="bg-slate-50 border border-slate-300 rounded-xl px-2 min-h-[40px] text-xs font-display font-black text-[#0b1536] focus:outline-none focus:border-teal-500 cursor-pointer shadow-2xs"
+              aria-label="Formation"
+            >
+              {(['4 at the back', '3 at the back', '5 at the back'] as const).map((cat) => (
+                <optgroup key={cat} label={cat} className="bg-white text-slate-700 font-bold">
+                  {SUPPORTED_CAREER_FORMATIONS.filter((f) => f.category === cat).map((f) => (
+                    <option key={f.name} value={f.name} className="bg-white text-[#0b1536] font-medium">
+                      {f.name}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
 
-          <button
-            onClick={handleAutoPick}
-            className="py-1 px-2.5 rounded-xl border border-teal-200 bg-teal-50/90 hover:bg-teal-100 text-teal-800 text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap min-h-[30px] shadow-2xs flex items-center gap-1 active:scale-95"
-            title="Automatically pick highest-rated team sheet"
-          >
-            <span>⚡</span>
-            <span>Auto-Pick</span>
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={handleAutoPick}
+              className="px-2.5 rounded-xl border border-teal-200 bg-teal-50/90 hover:bg-teal-100 text-teal-800 text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap min-h-[40px] shadow-2xs flex items-center gap-1 active:scale-95"
+              title="Automatically pick highest-rated team sheet"
+            >
+              <IconBolt className="w-3.5 h-3.5 shrink-0" />
+              <span>Auto-Pick</span>
+            </button>
 
-        <div className="grid grid-cols-5 sm:flex w-full sm:w-auto items-center gap-0.5 bg-[#F7F6F3] border border-[#E2DFD9] rounded-xl p-0.5">
-          <button
-            onClick={() => {
-              if (viewMode === 'pitch') {
-                window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-              } else {
-                setViewMode('pitch');
-                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-              }
-            }}
-            className={`py-1.5 px-1 sm:px-2.5 rounded-lg text-[10.5px] sm:text-xs font-display font-black uppercase transition-all cursor-pointer text-center ${
-              viewMode === 'pitch'
-                ? 'office-nav-tab-active shadow-xs'
-                : 'office-nav-tab-inactive'
-            }`}
-          >
-            Pitch
-          </button>
-          <button
-            onClick={() => {
-              if (viewMode === 'list') {
-                window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-              } else {
-                setViewMode('list');
-                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-              }
-            }}
-            className={`py-1.5 px-1 sm:px-2.5 rounded-lg text-[10.5px] sm:text-xs font-display font-black uppercase transition-all cursor-pointer text-center ${
-              viewMode === 'list'
-                ? 'office-nav-tab-active shadow-xs'
-                : 'office-nav-tab-inactive'
-            }`}
-          >
-            List
-          </button>
-          <button
-            onClick={() => {
-              if (viewMode === 'tactics') {
-                window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-              } else {
-                setViewMode('tactics');
-                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-              }
-            }}
-            className={`py-1.5 px-1 sm:px-2.5 rounded-lg text-[10.5px] sm:text-xs font-display font-black uppercase transition-all flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap ${
-              viewMode === 'tactics'
-                ? 'office-nav-tab-active shadow-xs'
-                : 'office-nav-tab-inactive'
-            }`}
-          >
-            <span>Tactics</span>
-            <span
-              className={`hidden sm:inline-flex text-[9.5px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
-                viewMode === 'tactics' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+            <button
+              type="button"
+              onClick={() => setShowRegistrationModal(true)}
+              aria-label={`25-man registration: ${registeredSeniorCount} of ${MAX_SENIOR_SQUAD_SIZE} registered. Manage`}
+              title={isOverRegistration ? `${seniorSquadCount - registeredSeniorCount} senior player(s) unregistered` : '25-man league registration'}
+              className={`px-2.5 rounded-xl border text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap min-h-[40px] shadow-2xs flex items-center gap-1 active:scale-95 ${
+                isOverRegistration
+                  ? 'bg-amber-50 border-amber-300 text-amber-800'
+                  : 'bg-blue-50 border-blue-200 text-blue-700'
               }`}
             >
-              {currentTactics.familiarity}%
-            </span>
-          </button>
-          <button
-            onClick={() => {
-              if (viewMode === 'academy') {
-                window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-              } else {
-                setViewMode('academy');
-                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-              }
-            }}
-            className={`py-1.5 px-1 sm:px-2.5 rounded-lg text-[10.5px] sm:text-xs font-display font-black uppercase transition-all flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap ${
-              viewMode === 'academy'
-                ? 'office-nav-tab-active shadow-xs'
-                : 'office-nav-tab-inactive'
-            }`}
-          >
-            <span>Academy</span>
-            <span className={`hidden sm:inline-flex text-[9.5px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
-              viewMode === 'academy' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
-            }`}>
-              {academy.length}
-            </span>
-          </button>
-          <button
-            onClick={() => {
-              if (viewMode === 'training') {
-                window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-              } else {
-                setViewMode('training');
-                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-              }
-            }}
-            className={`py-1.5 px-1 sm:px-2.5 rounded-lg text-[10.5px] sm:text-xs font-display font-black uppercase transition-all flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap ${
-              viewMode === 'training'
-                ? 'office-nav-tab-active shadow-xs'
-                : 'office-nav-tab-inactive'
-            }`}
-          >
-            <span>Training</span>
-            {fatiguedStartersCount > 0 ? (
-              <span
-                className={`hidden sm:inline-flex text-[9.5px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
-                  viewMode === 'training'
-                    ? 'bg-amber-400 text-slate-950'
-                    : 'bg-amber-100 text-amber-800'
-                }`}
-                title={`${fatiguedStartersCount} starter(s) fatigued`}
-              >
-                {fatiguedStartersCount}
+              {isOverRegistration ? (
+                <IconAlert className="w-3.5 h-3.5 shrink-0" />
+              ) : (
+                <IconClipboard className="w-3.5 h-3.5 shrink-0" />
+              )}
+              <span>
+                Registered {registeredSeniorCount}/{MAX_SENIOR_SQUAD_SIZE}
               </span>
-            ) : (
-              <span
-                className={`hidden sm:inline-flex text-[9.5px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
-                  viewMode === 'training'
-                    ? 'bg-white/20 text-white'
-                    : 'bg-slate-200 text-slate-700'
-                }`}
-              >
-                {Object.keys(currentMentorships).length}/3
-              </span>
-            )}
-          </button>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-5 sm:flex w-full sm:w-auto items-center gap-0.5 bg-[#F7F6F3] border border-[#E2DFD9] rounded-xl p-0.5">
+            {viewTabs.map((tab) => {
+              const isActive = viewMode === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  aria-pressed={isActive}
+                  onClick={() => {
+                    if (isActive) {
+                      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+                    } else {
+                      setViewMode(tab.id);
+                      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                    }
+                  }}
+                  className={`min-h-[40px] px-1 sm:px-2.5 rounded-lg text-[10.5px] sm:text-xs font-display font-black uppercase transition-all flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap ${
+                    isActive ? 'office-nav-tab-active shadow-xs' : 'office-nav-tab-inactive'
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  {tab.badge && (
+                    <span
+                      className={`hidden sm:inline-flex text-[10px] px-1.5 rounded-full font-mono font-bold ${
+                        tab.alert
+                          ? isActive
+                            ? 'bg-amber-400 text-slate-950'
+                            : 'bg-amber-100 text-amber-800'
+                          : isActive
+                          ? 'bg-white/20 text-white'
+                          : 'bg-slate-200 text-slate-700'
+                      }`}
+                      title={tab.badgeTitle}
+                    >
+                      {tab.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </section>
 
       {/* PITCH VIEW */}
       {viewMode === 'pitch' && (
         <section id="squad-pitch-section" className="space-y-3 scroll-mt-20">
-          {/* Virtual Pitch Status Strip (Compact) */}
-          <div className="office-subcard flex items-center justify-between px-3 py-1.5 rounded-xl text-xs shadow-xs">
-            <div className="flex items-center gap-2">
-              <span className="font-display font-black text-[11px] uppercase tracking-wider px-2.5 py-0.5 rounded-lg bg-[#1E2024] text-amber-300 border border-amber-500/30 shadow-xs">
-                {currentFormation}
-              </span>
-              <span className="text-[11px] font-bold text-zinc-700">
-                Starting XI
-              </span>
-            </div>
-            <span className="text-[10px] text-zinc-500 font-mono">
-              Tap or drag to swap
-            </span>
-          </div>
-
           {/* Double-Bezel Tactile Pitch Frame */}
           <div className="rounded-2xl bg-[#E8E6E1] border border-zinc-300/70 p-2 sm:p-3 shadow-xs">
             {/* Virtual Pitch Canvas with True-Circle SVG Markings */}
@@ -1173,25 +1053,26 @@ export function SquadManagement({
 
           {/* Bench Row (Substitutes) */}
           <div className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 space-y-3.5 shadow-md">
-            <div className="flex justify-between items-center gap-2">
-              <div className="flex items-center gap-2">
+            <div className="flex justify-between items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h4 className="text-xs font-display font-black uppercase tracking-wider text-[#0b1536] flex items-center gap-1.5">
-                  <span>💺</span>
+                  <IconUsers className="w-3.5 h-3.5 text-[#1d5eff] shrink-0" />
                   <span>Matchday Substitutes ({bench.length}/9)</span>
                 </h4>
                 {bench.length < 9 && (
                   <button
                     type="button"
                     onClick={handleAutoFillBench}
-                    className="py-1 px-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[10px] font-display font-black uppercase tracking-wider transition-colors cursor-pointer shadow-2xs"
+                    className="py-1 px-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[10px] font-display font-black uppercase tracking-wider transition-colors cursor-pointer shadow-2xs inline-flex items-center gap-1"
                     title="Automatically fill remaining bench spots with top reserves"
                   >
-                    ⚡ Auto-Fill Bench
+                    <IconBolt className="w-3 h-3 shrink-0" />
+                    <span>Auto-Fill Bench</span>
                   </button>
                 )}
               </div>
-              <span className="text-[10px] text-slate-500 font-medium hidden sm:inline">
-                Drag or tap to swap
+              <span className="text-[10px] text-slate-500 font-medium">
+                Hold and drag to swap
               </span>
             </div>
 
@@ -1246,7 +1127,7 @@ export function SquadManagement({
                             }`}
                             title={`Fit for selected ${selectedStarterSlot} position: ${benchFit}`}
                           >
-                            {benchFit === 'natural' ? '✓ NAT' : benchFit === 'competent' ? '~ SEC' : '✕ OOP'}
+                            {benchFit === 'natural' ? 'NAT' : benchFit === 'competent' ? 'SEC' : 'OOP'}
                           </span>
                         )}
                       </div>
@@ -1262,40 +1143,32 @@ export function SquadManagement({
                 );
               })}
 
-              {/* Render interactive empty bench slots up to 9 */}
-              {Array.from({ length: Math.max(0, 9 - bench.length) }).map((_, idx) => {
-                const isTarget = dragOverPlayerId === 'empty-bench';
-                return (
-                  <div
-                    key={`empty-bench-${idx}`}
-                    data-empty-bench-slot="true"
-                    onClick={handleEmptyBenchSlotClick}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      e.dataTransfer.dropEffect = 'move';
-                      if (dragOverPlayerId !== 'empty-bench') setDragOverPlayerId('empty-bench');
-                    }}
-                    onDragLeave={() => {
-                      if (dragOverPlayerId === 'empty-bench') setDragOverPlayerId(null);
-                    }}
-                    onDrop={handleDropOnEmptyBench}
-                    className={`office-subcard p-2.5 rounded-2xl border-2 border-dashed text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[76px] select-none ${
-                      isTarget || (swapSourceId && !benchIdsSet.has(swapSourceId))
-                        ? 'border-amber-400 bg-amber-50/70 text-amber-800 animate-pulse'
-                        : 'border-slate-300 bg-slate-50/70 text-slate-500 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50/50'
-                    }`}
-                    title="Empty Bench Slot — Click or drop player to add to bench"
-                  >
-                    <span className="text-base leading-none mb-1">➕</span>
-                    <span className="text-[10px] font-display font-black uppercase tracking-wider">
-                      Add Sub
-                    </span>
-                    <span className="text-[8.5px] text-slate-400">
-                      Slot {bench.length + idx + 1}
-                    </span>
-                  </div>
-                );
-              })}
+              {/* One slim target stands in for every empty bench slot */}
+              {bench.length < 9 && (
+                <button
+                  type="button"
+                  data-empty-bench-slot="true"
+                  onClick={handleEmptyBenchSlotClick}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    if (dragOverPlayerId !== 'empty-bench') setDragOverPlayerId('empty-bench');
+                  }}
+                  onDragLeave={() => {
+                    if (dragOverPlayerId === 'empty-bench') setDragOverPlayerId(null);
+                  }}
+                  onDrop={handleDropOnEmptyBench}
+                  className={`col-span-full min-h-[40px] px-3 rounded-xl border border-dashed cursor-pointer transition-all flex items-center justify-center gap-1.5 select-none text-[11px] font-display font-black uppercase tracking-wider ${
+                    dragOverPlayerId === 'empty-bench' || (swapSourceId && !benchIdsSet.has(swapSourceId))
+                      ? 'border-amber-400 bg-amber-50/70 text-amber-800 animate-pulse motion-reduce:animate-none'
+                      : 'border-slate-300 bg-slate-50/70 text-slate-500 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50/50'
+                  }`}
+                  title="Click or drop a player to add to the bench"
+                >
+                  <span aria-hidden="true">+</span>
+                  <span>Add sub</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -1303,7 +1176,7 @@ export function SquadManagement({
           {reserves.length > 0 && (
             <div className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 space-y-3.5 shadow-md">
               <h4 className="text-xs font-display font-black uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
-                <span>👥</span>
+                <IconUsers className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                 <span>Reserves ({reserves.length})</span>
               </h4>
               <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2.5">
@@ -1351,44 +1224,6 @@ export function SquadManagement({
             </div>
           )}
 
-          {/* Detailed Finances & Squad Registration Rules (Football First, Stats Second) */}
-          <section className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1" aria-label="Detailed squad statistics">
-            <div className="office-kpi-card office-kpi-blue rounded-2xl p-3 space-y-1">
-              <span className="text-[9px] uppercase font-bold text-slate-500 block tracking-wider">Total Squad Value</span>
-              <div className="text-sm sm:text-base font-display font-black text-blue-700 truncate">
-                {formatCurrency(validation.totalSquadValue)}
-              </div>
-              <div className="text-[9px] text-slate-500">Transfer Assets</div>
-            </div>
-
-            <div className="office-kpi-card office-kpi-mint rounded-2xl p-3 space-y-1">
-              <span className="text-[9px] uppercase font-bold text-slate-500 block tracking-wider">Wage Headroom</span>
-              <div className="text-sm sm:text-base font-display font-black text-emerald-700 truncate">
-                {formatWage(Math.max(0, save.finances.weeklyWageBudget - validation.totalWagesWeekly))}
-              </div>
-              <div className="text-[9px] text-slate-500">Limit: {formatWage(save.finances.weeklyWageBudget)}</div>
-            </div>
-
-            <div className="office-kpi-card office-kpi-lavender rounded-2xl p-3 space-y-1">
-              <span className="text-[9px] uppercase font-bold text-slate-500 block tracking-wider">Roster Registration</span>
-              <div className="text-sm sm:text-base font-display font-black text-purple-700 truncate">
-                {validation.seniorCount}/25 <span className="text-xs text-slate-500 font-normal">Senior</span>
-              </div>
-              <div className="text-[9px] text-slate-500">U21 Exempt: {validation.u21Count}</div>
-            </div>
-
-            <div className="office-kpi-card rounded-2xl p-3 space-y-1">
-              <span className="text-[9px] uppercase font-bold text-slate-500 block tracking-wider">Domestic Quota</span>
-              <div className="text-sm sm:text-base font-display font-black text-[#0b1536] truncate">
-                {validation.homegrownCount} <span className="text-xs text-slate-500 font-normal">HG</span>
-              </div>
-              <div className="text-[9px] text-slate-500">
-                {(validation.nonHomegrownSeniorCount ?? 0) <= 17
-                  ? `✓ Compliant (${validation.nonHomegrownSeniorCount ?? 0}/17 Foreign)`
-                  : `⚠️ ${validation.nonHomegrownSeniorCount ?? 0}/17 Foreign Over Limit`}
-              </div>
-            </div>
-          </section>
         </section>
       )}
 
@@ -1412,135 +1247,130 @@ export function SquadManagement({
             ))}
           </div>
 
-          {/* Player Table / Cards */}
+          {/* Player table: tap a row to manage the player */}
           <div className="rounded-2xl border border-[#D4D2CD] overflow-hidden bg-white shadow-xs">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead className="bg-[#1E2024] text-[10px] font-bold uppercase text-zinc-300 border-b-2 border-[#D97706] select-none">
                   <tr>
                     <th className="py-3 px-3 sm:px-4">Player</th>
-                    <th className="hidden md:table-cell py-3 px-3">Role</th>
                     <th className="py-3 px-2 sm:px-3 text-center">Pos</th>
                     <th className="py-3 px-2 sm:px-3 text-center">OVR</th>
                     <th className="hidden md:table-cell py-3 px-3 text-center">Form</th>
                     <th className="hidden sm:table-cell py-3 px-3 text-center">POT</th>
                     <th className="hidden lg:table-cell py-3 px-3 text-center">Age</th>
-                    <th className="hidden lg:table-cell py-3 px-3">Value</th>
-                    <th className="hidden lg:table-cell py-3 px-3">Wage</th>
-                    <th className="hidden lg:table-cell py-3 px-3 text-center">Contract</th>
-                    <th className="hidden lg:table-cell py-3 px-3 text-center">HG</th>
-                    <th className="py-3 px-3 sm:px-4 text-right">Actions</th>
+                    <th className="hidden lg:table-cell py-3 px-3">Value / Wage</th>
+                    <th className="py-3 px-3 sm:px-4 text-right">Assign</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-850/60">
                   {filteredSquad.map((player) => {
                     const isStarter = starterIdsSet.has(player.id);
                     const isBench = benchIdsSet.has(player.id);
-                    const roleLabel = isStarter ? 'Starter' : isBench ? 'Bench' : 'Reserve';
                     const bonus = calculateFormRatingBonus(player);
                     const effectiveRating = getEffectiveRating(player);
+                    const fitness = Math.round(player.fitness ?? 100);
+
+                    // Status badges in priority order; only the first two are shown inline.
+                    const badges: Array<{ label: string; title: string; className: string }> = [];
+                    if (player.injured) {
+                      badges.push({
+                        label: `Inj ${player.injuryWeeks ?? 1}w`,
+                        title: player.injuryDescription || 'Injured',
+                        className: 'bg-rose-950 text-rose-300 border-rose-800',
+                      });
+                    }
+                    if (player.suspendedMatches && player.suspendedMatches > 0) {
+                      badges.push({
+                        label: `Ban ${player.suspendedMatches}m`,
+                        title: player.suspensionReason || `Suspended (${player.suspendedMatches} match ban)`,
+                        className: 'bg-red-950 text-red-300 border-red-800',
+                      });
+                    }
+                    if (!isPlayerRegisteredForMatch(player, squad, save.registeredPlayerIds, save.season?.yearStart)) {
+                      badges.push({
+                        label: 'Unreg',
+                        title: 'Unregistered for matchdays',
+                        className: 'bg-amber-950 text-amber-300 border-amber-800',
+                      });
+                    }
+                    if (player.id === currentTactics.captainId) {
+                      badges.push({ label: 'C', title: 'Club Captain', className: 'bg-amber-400 text-slate-950 border-amber-500' });
+                    }
+                    if (player.id === currentTactics.viceCaptainId) {
+                      badges.push({ label: 'VC', title: 'Vice-Captain', className: 'bg-slate-300 text-slate-900 border-slate-400' });
+                    }
+                    if (player.transferListed) {
+                      badges.push({
+                        label: 'Listed',
+                        title: `Transfer listed, asking ${formatCurrency(player.askingPrice || player.value)}`,
+                        className: 'bg-amber-950/80 text-amber-300 border-amber-800/60',
+                      });
+                    }
+                    if (player.loanListed) {
+                      badges.push({ label: 'Loan', title: 'Loan listed', className: 'bg-blue-950/80 text-blue-300 border-blue-800/60' });
+                    }
+                    if (player.agentBrokeringActive) {
+                      badges.push({ label: 'Brokered', title: 'Agent brokering active', className: 'bg-purple-950/80 text-purple-300 border-purple-800/60' });
+                    }
+                    if (player.age <= 23) {
+                      badges.push({ label: 'U23', title: 'Under 23', className: 'bg-blue-50 text-blue-700 border-blue-200' });
+                    }
+                    const hiddenBadges = badges.slice(2);
 
                     return (
                       <tr
                         key={player.id}
                         id={`squad-player-${player.id}`}
-                        className="hover:bg-slate-850/40 transition-colors scroll-mt-20"
+                        onClick={() => handleSelectPlayerWithActions(player)}
+                        className="hover:bg-slate-50 transition-colors scroll-mt-20 cursor-pointer"
                       >
                         <td className="py-2.5 px-3 sm:px-4 font-bold text-slate-900">
                           <button
-                            onClick={() => handleSelectPlayerWithActions(player)}
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectPlayerWithActions(player);
+                            }}
                             className="hover:text-amber-700 text-left font-display font-black text-xs sm:text-sm flex items-center gap-1.5 flex-wrap cursor-pointer"
                           >
                             <span>{player.name}</span>
-                            {player.id === currentTactics.captainId && (
+                            {badges.slice(0, 2).map((b) => (
                               <span
-                                className="text-[9px] px-1.5 py-0.2 rounded bg-amber-400 text-slate-950 border border-amber-500 font-bold font-display"
-                                title="Club Captain (C)"
+                                key={b.label}
+                                className={`text-[10px] px-1.5 rounded border font-mono font-bold ${b.className}`}
+                                title={b.title}
                               >
-                                (C)
+                                {b.label}
                               </span>
-                            )}
-                            {player.id === currentTactics.viceCaptainId && (
+                            ))}
+                            {hiddenBadges.length > 0 && (
                               <span
-                                className="text-[9px] px-1.5 py-0.2 rounded bg-slate-300 text-slate-900 border border-slate-400 font-bold font-display"
-                                title="Vice-Captain (VC)"
+                                className="text-[10px] px-1 rounded border border-slate-300 bg-slate-100 text-slate-600 font-mono font-bold"
+                                title={hiddenBadges.map((b) => b.title).join(' • ')}
                               >
-                                (VC)
-                              </span>
-                            )}
-                            {player.age <= 23 && (
-                              <span className="text-[9px] px-1 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800/60 font-mono">
-                                U23
-                              </span>
-                            )}
-                            {player.transferListed && (
-                              <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-950/80 text-amber-300 border border-amber-800/60 font-mono font-bold" title={`Asking Price: ${formatCurrency(player.askingPrice || player.value)}`}>
-                                Listed
-                              </span>
-                            )}
-                            {player.loanListed && (
-                              <span className="text-[9px] px-1.5 py-0.2 rounded bg-blue-950/80 text-blue-300 border border-blue-800/60 font-mono font-bold">
-                                Loan
-                              </span>
-                            )}
-                            {player.agentBrokeringActive && (
-                              <span className="text-[9px] px-1.5 py-0.2 rounded bg-purple-950/80 text-purple-300 border border-purple-800/60 font-mono font-bold">
-                                Brokered
+                                +{hiddenBadges.length}
                               </span>
                             )}
                           </button>
                           <div className="text-[10px] text-slate-500 font-normal flex items-center gap-1.5 mt-0.5">
                             <span>{player.nationality}</span>
-                            <span className="md:hidden font-mono font-bold text-zinc-600">• {roleLabel}</span>
+                            {player.isHomegrown && <span title="Homegrown">• HG</span>}
                             <span
-                              className={`md:hidden font-mono font-bold ${
-                                (player.fitness ?? 100) >= 80
-                                  ? 'text-emerald-700'
-                                  : (player.fitness ?? 100) >= 65
-                                  ? 'text-amber-700'
-                                  : 'text-rose-700'
+                              className={`font-mono font-bold ${
+                                fitness >= 80 ? 'text-emerald-700' : fitness >= 65 ? 'text-amber-700' : 'text-rose-700'
                               }`}
+                              title="Fitness"
                             >
-                              {Math.round(player.fitness ?? 100)}%
+                              {fitness}%
                             </span>
-                          </div>
-                        </td>
-
-                        <td className="hidden md:table-cell py-3 px-3">
-                          <div className="flex items-center gap-1 flex-wrap">
-                            <span
-                              className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${
-                                isStarter
-                                  ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:border-blue-800/60 dark:text-blue-300'
-                                  : isBench
-                                  ? 'bg-blue-950/60 border-blue-800/60 text-blue-300'
-                                  : 'bg-slate-950 border-slate-800 text-slate-500'
-                              }`}
-                            >
-                              {roleLabel}
-                            </span>
-                            {!isPlayerRegisteredForMatch(player, squad, save.registeredPlayerIds, save.season?.yearStart) && (
-                              <span className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded bg-amber-950 text-amber-300 border border-amber-800">
-                                Unregistered
-                              </span>
-                            )}
-                            {player.injured && (
-                              <span className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded bg-rose-950 text-rose-300 border border-rose-800" title={player.injuryDescription || 'Injured'}>
-                                🚑 Injured ({player.injuryWeeks ?? 1}w)
-                              </span>
-                            )}
-                            {Boolean(player.suspendedMatches && player.suspendedMatches > 0) && (
-                              <span className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded bg-red-950 text-red-300 border border-red-800" title={player.suspensionReason || `Suspended (${player.suspendedMatches} match ban)`}>
-                                🟥 Suspended ({player.suspendedMatches}m)
-                              </span>
-                            )}
                           </div>
                         </td>
 
                         <td className="py-2.5 px-2 sm:px-3 text-center font-bold text-slate-700">
                           <div>{player.position}</div>
                           {player.naturalPositions && player.naturalPositions.filter((p) => p !== player.position).length > 0 && (
-                            <div className="text-[9px] font-semibold text-amber-700" title={`Natural in: ${player.naturalPositions.join(', ')}`}>
+                            <div className="text-[10px] font-semibold text-amber-700" title={`Natural in: ${player.naturalPositions.join(', ')}`}>
                               +{player.naturalPositions.filter((p) => p !== player.position).join('/')}
                             </div>
                           )}
@@ -1553,7 +1383,7 @@ export function SquadManagement({
                             </span>
                             {bonus !== 0 && (
                               <span
-                                className={`text-[9px] font-bold px-1 rounded ${
+                                className={`text-[10px] font-bold px-1 rounded ${
                                   bonus > 0 ? 'bg-amber-100 text-amber-900' : 'bg-rose-100 text-rose-900'
                                 }`}
                                 title={`Base: ${player.rating} (${bonus > 0 ? `+${bonus}` : bonus} OVR)`}
@@ -1563,46 +1393,50 @@ export function SquadManagement({
                             )}
                           </div>
                           {player.potential && (
-                            <div className="sm:hidden text-[9px] font-mono font-bold text-amber-700 mt-0.5">
+                            <div className="sm:hidden text-[10px] font-mono font-bold text-amber-700 mt-0.5">
                               POT {player.potential}
                             </div>
                           )}
                         </td>
 
                         <td className="hidden md:table-cell py-3 px-3 text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            {player.recentForm && player.recentForm.length > 0 ? (
-                              <div className="flex gap-0.5 items-center justify-center">
-                                {player.recentForm.slice(-3).map((r, i) => (
-                                  <span
-                                    key={i}
-                                    className={`text-[9px] font-mono font-bold px-1 rounded ${
-                                      r >= 7.8
-                                        ? 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
-                                        : r >= 6.4
-                                        ? 'bg-slate-800 text-slate-300'
-                                        : 'bg-rose-950 text-rose-300'
-                                    }`}
-                                  >
-                                    {r.toFixed(1)}
-                                  </span>
-                                ))}
-                                {bonus > 0 && <span className="text-[10px]" title="In-Form">🔥</span>}
-                                {bonus < 0 && <span className="text-[10px]" title="Slump">❄️</span>}
-                              </div>
-                            ) : (
-                              <span className="text-slate-400 font-mono text-[10px]">
-                                {player.form ? player.form.toFixed(1) : '7.0'}
-                              </span>
-                            )}
-                          </div>
+                          {player.recentForm && player.recentForm.length > 0 ? (
+                            <div className="flex gap-0.5 items-center justify-center">
+                              {player.recentForm.slice(-3).map((r, i) => (
+                                <span
+                                  key={i}
+                                  className={`text-[10px] font-mono font-bold px-1 rounded ${
+                                    r >= 7.8
+                                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+                                      : r >= 6.4
+                                      ? 'bg-slate-800 text-slate-300'
+                                      : 'bg-rose-950 text-rose-300'
+                                  }`}
+                                >
+                                  {r.toFixed(1)}
+                                </span>
+                              ))}
+                              {bonus > 0 && <IconFlame className="w-3 h-3 text-amber-500 shrink-0" aria-label="In-Form" />}
+                              {bonus < 0 && <IconSnowflake className="w-3 h-3 text-sky-500 shrink-0" aria-label="Slump" />}
+                            </div>
+                          ) : (
+                            <span className="text-slate-400 font-mono text-[10px]">
+                              {player.form ? player.form.toFixed(1) : '7.0'}
+                            </span>
+                          )}
                         </td>
 
                         <td className="hidden sm:table-cell py-3 px-3 text-center font-display font-bold text-xs text-amber-700">
-                          {player.potential ? `⭐ ${player.potential}` : '-'}
+                          {player.potential ? (
+                            <span className="inline-flex items-center justify-center gap-1">
+                              <IconStar className="w-3 h-3 text-amber-500 shrink-0" filled />
+                              <span>{player.potential}</span>
+                            </span>
+                          ) : '-'}
                           {player.age <= 23 && typeof player.developmentProgress === 'number' && player.developmentProgress > 0 && (
-                            <div className="text-[9px] font-mono text-emerald-700 font-semibold mt-0.5" title="In-season XP progress">
-                              🌱 {player.developmentProgress}%
+                            <div className="text-[10px] font-mono text-emerald-700 font-semibold mt-0.5 inline-flex items-center justify-center gap-0.5" title="In-season XP progress">
+                              <IconSprout className="w-2.5 h-2.5 shrink-0" />
+                              <span>{player.developmentProgress}%</span>
                             </div>
                           )}
                         </td>
@@ -1611,71 +1445,24 @@ export function SquadManagement({
                           {player.age}
                         </td>
 
-                        <td className="hidden lg:table-cell py-3 px-3 font-semibold text-slate-700">
-                          {formatCurrency(player.value)}
-                        </td>
-
-                        <td className="hidden lg:table-cell py-3 px-3 text-slate-500">
-                          {formatWage(player.wageWeekly)}
-                        </td>
-
-                        <td className="hidden lg:table-cell py-3 px-3 text-center text-slate-500">
-                          {player.contractYears}y
-                        </td>
-
-                        <td className="hidden lg:table-cell py-3 px-3 text-center">
-                          {player.isHomegrown ? (
-                            <span className="text-blue-600 dark:text-blue-400 font-bold" title="Homegrown">✓</span>
-                          ) : (
-                            <span className="text-slate-600">-</span>
-                          )}
-                        </td>
-
-
-                        <td className="py-2.5 px-2.5 sm:px-4 text-right">
-                          <div className="flex justify-end gap-1 sm:gap-1.5">
-                            <button
-                              onClick={() => handleRoleChange(player, 'starter')}
-                              disabled={isStarter}
-                              className={`hidden sm:inline-flex px-2 py-1 rounded text-[10px] font-bold ${
-                                isStarter
-                                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                                  : 'bg-[#1E2024] hover:bg-zinc-800 text-white cursor-pointer'
-                              }`}
-                            >
-                              XI
-                            </button>
-                            <button
-                              onClick={() => handleRoleChange(player, 'bench')}
-                              disabled={isBench}
-                              className={`hidden sm:inline-flex px-2 py-1 rounded text-[10px] font-bold ${
-                                isBench
-                                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                                  : 'bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 text-zinc-800 cursor-pointer'
-                              }`}
-                            >
-                              Sub
-                            </button>
-                            <button
-                              onClick={() => handleRoleChange(player, 'reserve')}
-                              disabled={!isStarter && !isBench}
-                              className={`hidden sm:inline-flex px-2 py-1 rounded text-[10px] font-bold ${
-                                !isStarter && !isBench
-                                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                                  : 'bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 text-zinc-700 cursor-pointer'
-                              }`}
-                            >
-                              Res
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleSelectPlayerWithActions(player)}
-                              className="px-2 py-1 rounded text-[10px] font-bold bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 hover:text-slate-900 cursor-pointer"
-                              title="Transfer status & contract management"
-                            >
-                              Manage
-                            </button>
+                        <td className="hidden lg:table-cell py-3 px-3">
+                          <div className="font-semibold text-slate-700">{formatCurrency(player.value)}</div>
+                          <div className="text-[10px] text-slate-500">
+                            {formatWage(player.wageWeekly)} • {player.contractYears}y
                           </div>
+                        </td>
+
+                        <td className="py-2 px-2.5 sm:px-4 text-right" onClick={(e) => e.stopPropagation()}>
+                          <select
+                            aria-label={`Assign ${player.name}`}
+                            value={isStarter ? 'starter' : isBench ? 'bench' : 'reserve'}
+                            onChange={(e) => handleRoleChange(player, e.target.value as 'starter' | 'bench' | 'reserve')}
+                            className="min-h-[40px] px-1.5 rounded-lg bg-zinc-100 border border-zinc-300 text-[11px] font-bold text-zinc-800 cursor-pointer focus:outline-none focus:border-teal-500"
+                          >
+                            <option value="starter">XI</option>
+                            <option value="bench">Sub</option>
+                            <option value="reserve">Reserve</option>
+                          </select>
                         </td>
                       </tr>
                     );
@@ -1689,413 +1476,420 @@ export function SquadManagement({
 
       {/* TACTICAL PHILOSOPHIES & MANAGERIAL DNA VIEW */}
       {viewMode === 'tactics' && (
-        <section id="squad-tactics-section" className="space-y-6 scroll-mt-20 animate-fade-in" aria-label="Tactical DNA & Managerial Identity">
-          {/* Hero Banner: V11 Charcoal Identity & Familiarity */}
-          <div className="rounded-2xl bg-[#E8E6E1] border border-zinc-300/70 p-1 shadow-xs overflow-hidden">
+        <section id="squad-tactics-section" className="space-y-6 scroll-mt-20 animate-fade-in motion-reduce:animate-none" aria-label="Tactical DNA & Managerial Identity">
+          {/* Active philosophy, familiarity and live synergy */}
+          <div className="rounded-2xl border border-zinc-300/70 shadow-xs overflow-hidden bg-white">
             <div
               data-force-white="true"
-              className="rounded-t-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              className="p-3 sm:p-4 flex items-center justify-between gap-3"
               style={{ backgroundColor: '#1E2024', borderBottom: '2px solid #D97706' }}
             >
-              <div className="space-y-1 text-left">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-2xl">{getTacticalPhilosophy(currentTactics.philosophy).icon}</span>
-                  <h3 className="text-lg sm:text-xl font-display font-black text-white uppercase tracking-tight">
-                    {getTacticalPhilosophy(currentTactics.philosophy).name}
-                  </h3>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-amber-500/20 text-amber-200 border border-amber-400/40">
-                    Active Philosophy
-                  </span>
-                </div>
-                <p className="text-xs text-zinc-300 font-medium max-w-2xl leading-relaxed">
-                  {getTacticalPhilosophy(currentTactics.philosophy).description}
-                </p>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-400/30 text-amber-300 flex items-center justify-center shrink-0">
+                  <TacticalPhilosophyIcon type={currentTactics.philosophy} className="w-4 h-4" />
+                </span>
+                <h3 className="text-base sm:text-lg font-display font-black text-white uppercase tracking-tight truncate">
+                  {getTacticalPhilosophy(currentTactics.philosophy).name}
+                </h3>
               </div>
 
-              {/* Tactical Familiarity Gauge */}
-              <div className="bg-zinc-900/90 p-3.5 rounded-xl border border-white/15 min-w-[210px] space-y-2 shrink-0">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="font-display font-bold uppercase text-zinc-300 tracking-wider">Familiarity</span>
-                  <span className="font-mono font-black text-sm text-amber-300">{currentTactics.familiarity}%</span>
+              <div className="w-32 sm:w-48 shrink-0 space-y-1" title="Familiarity (60% threshold)">
+                <div className="flex justify-between items-center text-[11px]">
+                  <span className="font-display font-bold uppercase text-zinc-300 tracking-wider">
+                    {currentTactics.familiarity >= 80 ? 'Fluent' : currentTactics.familiarity >= 60 ? 'Acclimated' : 'Adapting'}
+                  </span>
+                  <span className="font-mono font-black text-amber-300">{currentTactics.familiarity}%</span>
                 </div>
-                <div className="w-full bg-zinc-800 rounded-full h-2 overflow-hidden border border-white/10">
+                <div className="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-amber-400 to-emerald-400"
                     style={{ width: `${currentTactics.familiarity}%` }}
                   />
                 </div>
-                <div className="flex justify-between text-[10px] text-zinc-300 font-medium">
-                  <span>60% Threshold</span>
-                  <span>{currentTactics.familiarity >= 80 ? 'Fluent' : currentTactics.familiarity >= 60 ? 'Acclimated' : 'Adapting'}</span>
-                </div>
               </div>
             </div>
-            <div className="bg-white rounded-b-xl p-4 sm:p-5 space-y-4">
 
-            {/* Live Starting XI Synergy Status */}
-            <div className={`p-4 rounded-xl border transition-all ${
-              philosophyBonus.synergyActive
-                ? 'bg-[#ECFDF5] border-emerald-200'
-                : 'bg-[#FFFBEB] border-amber-200'
-            }`}>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{philosophyBonus.synergyActive ? '🔥' : '⏳'}</span>
-                  <div>
-                    <h4 className={`font-display font-black text-xs sm:text-sm uppercase tracking-wider ${
-                      philosophyBonus.synergyActive ? 'text-emerald-950' : 'text-amber-950'
-                    }`} style={{ color: philosophyBonus.synergyActive ? '#064E3B' : '#78350F' }}>
-                      Starting XI Tactical Synergy: {philosophyBonus.synergyActive ? 'Activated' : 'Building Requirements'}
-                    </h4>
-                    <p className="text-xs text-zinc-700 mt-0.5" style={{ color: '#3F3F46' }}>
-                      {philosophyBonus.description}
-                    </p>
-                  </div>
-                </div>
-
-                {philosophyBonus.synergyActive && (
-                  <div className="flex items-center gap-2 shrink-0">
-                    {philosophyBonus.attackBonus > 0 && (
-                      <span className="px-2 py-1 rounded-lg bg-emerald-600 text-white font-mono font-bold text-xs shadow-2xs">
-                        +{philosophyBonus.attackBonus} ATT
-                      </span>
-                    )}
-                    {philosophyBonus.midfieldBonus > 0 && (
-                      <span className="px-2 py-1 rounded-lg bg-blue-600 text-white font-mono font-bold text-xs shadow-2xs">
-                        +{philosophyBonus.midfieldBonus} MID
-                      </span>
-                    )}
-                    {philosophyBonus.defenceBonus > 0 && (
-                      <span className="px-2 py-1 rounded-lg bg-indigo-600 text-white font-mono font-bold text-xs shadow-2xs">
-                        +{philosophyBonus.defenceBonus} DEF
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-            </div>
-          </div>
-
-          {/* Tactical Philosophies Grid */}
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <h4 className="text-sm font-display font-black uppercase tracking-wider text-[#0b1536] flex items-center gap-1.5">
-                <span>🧠</span>
-                <span>Managerial Philosophies &amp; DNA Archetypes</span>
-              </h4>
-              <span className="text-xs text-slate-500 font-medium hidden sm:inline">
-                Click an archetype to establish club tactical identity
+            <div
+              className={`p-3 sm:p-4 flex flex-wrap items-center gap-x-3 gap-y-2 ${
+                philosophyBonus.synergyActive ? 'bg-[#ECFDF5]' : 'bg-[#FFFBEB]'
+              }`}
+            >
+              <span className={philosophyBonus.synergyActive ? 'text-emerald-700 shrink-0' : 'text-amber-700 shrink-0'}>
+                {philosophyBonus.synergyActive ? <IconFlame className="w-4 h-4" /> : <IconClock className="w-4 h-4" />}
               </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-              {(Object.keys(TACTICAL_PHILOSOPHIES) as TacticalPhilosophyType[]).map((type) => {
-                const config = TACTICAL_PHILOSOPHIES[type];
-                const isSelected = currentTactics.philosophy === type;
-
-                return (
-                  <article
-                    key={type}
-                    onClick={() => handleSelectPhilosophy(type)}
-                    className={`office-subcard p-4 sm:p-5 rounded-3xl transition-all cursor-pointer relative flex flex-col justify-between min-h-[260px] ${
-                      isSelected
-                        ? 'border-2 border-blue-600 bg-gradient-to-br from-blue-50/60 via-white to-indigo-50/40 shadow-md ring-2 ring-blue-500/20'
-                        : 'border border-slate-200/90 bg-white hover:border-blue-300 hover:shadow-xs'
-                    }`}
-                  >
-                    <div className="space-y-2.5">
-                      <div className="flex justify-between items-start gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl">{config.icon}</span>
-                          <div>
-                            <h5 className="font-display font-black text-sm sm:text-base text-[#0b1536] leading-tight">
-                              {config.name}
-                            </h5>
-                            <span className="text-[10px] text-slate-500 font-medium line-clamp-1">
-                              {config.tagline}
-                            </span>
-                          </div>
-                        </div>
-
-                        {isSelected ? (
-                          <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white font-display font-black text-[10px] uppercase tracking-wider shadow-2xs">
-                            Active
-                          </span>
-                        ) : (
-                          <button
-                            type="button"
-                            className="px-2 py-0.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-display font-black text-[10px] uppercase tracking-wider transition-colors"
-                          >
-                            Adopt
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Required Attributes */}
-                      <div className="bg-slate-50 p-2 rounded-xl border border-slate-150">
-                        <span className="text-[9px] uppercase font-bold text-slate-500 block mb-1">Squad Attributes Demanded:</span>
-                        <div className="flex flex-wrap gap-1">
-                          {config.primaryAttributes.map((attr, idx) => (
-                            <span key={idx} className="text-[10px] px-1.5 py-0.2 rounded bg-white text-slate-700 border border-slate-200 font-bold">
-                              {attr}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Matchup Traits */}
-                      <div className="space-y-1 text-xs">
-                        <div className="flex justify-between text-slate-600 text-[11px]">
-                          <span>Stamina Expenditure:</span>
-                          <span className={`font-mono font-bold ${
-                            config.staminaDrainMultiplier > 1.15
-                              ? 'text-rose-600'
-                              : config.staminaDrainMultiplier < 0.95
-                              ? 'text-emerald-600'
-                              : 'text-slate-700'
-                          }`}>
-                            {config.staminaDrainMultiplier}x {config.staminaDrainMultiplier > 1.15 ? '(Heavy drain)' : config.staminaDrainMultiplier < 0.95 ? '(Conserves)' : '(Standard)'}
-                          </span>
-                        </div>
-                        <div className="flex justify-between text-slate-600 text-[11px]">
-                          <span>Territorial Possession:</span>
-                          <span className="font-mono font-bold text-slate-700">
-                            {config.possessionBias > 0 ? `+${config.possessionBias}%` : config.possessionBias < 0 ? `${config.possessionBias}%` : 'Even'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Counter Dynamics Footer */}
-                    <div className="pt-3 border-t border-slate-100 mt-2 flex justify-between items-center text-[10px] text-slate-500">
-                      <span>🎯 Counters: <strong className="text-slate-700 capitalize">{config.effectiveAgainst.replace(/_/g, ' ')}</strong></span>
-                      <span>⚠️ Weak to: <strong className="text-slate-700 capitalize">{config.counteredBy.replace(/_/g, ' ')}</strong></span>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Captaincy & Leadership Desk */}
-          <div className="office-subcard p-5 sm:p-6 rounded-3xl space-y-4 shadow-sm border border-slate-200/90 bg-white">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">🏆</span>
-                <h4 className="text-base font-display font-black uppercase tracking-wider text-[#0b1536]">
-                  Club Captaincy &amp; Leadership Composure
-                </h4>
-              </div>
-              <span className="text-xs text-slate-500 font-medium hidden sm:inline">
-                Designated armband wearers inspire squad composure in late stages &amp; shootouts
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Captain Selection */}
-              <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-3">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-1.5">
-                    <span className="px-2 py-0.5 rounded bg-amber-400 text-slate-950 font-display font-black text-xs border border-amber-500 shadow-2xs">
-                      C
+              <p className="text-xs flex-1 min-w-[12rem]" style={{ color: '#3F3F46' }}>
+                <strong
+                  className="font-display font-black uppercase tracking-wider"
+                  style={{ color: philosophyBonus.synergyActive ? '#064E3B' : '#78350F' }}
+                >
+                  XI synergy {philosophyBonus.synergyActive ? 'active' : 'building'}.
+                </strong>{' '}
+                {philosophyBonus.description}
+              </p>
+              {philosophyBonus.synergyActive && (
+                <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+                  {philosophyBonus.attackBonus > 0 && (
+                    <span className="px-2 py-0.5 rounded-lg bg-emerald-600 text-white font-mono font-bold text-[11px]">
+                      +{philosophyBonus.attackBonus} ATT
                     </span>
-                    <span className="font-display font-black text-xs uppercase tracking-wider text-slate-700">
-                      Club Captain
+                  )}
+                  {philosophyBonus.midfieldBonus > 0 && (
+                    <span className="px-2 py-0.5 rounded-lg bg-blue-600 text-white font-mono font-bold text-[11px]">
+                      +{philosophyBonus.midfieldBonus} MID
                     </span>
-                  </div>
-                  {captainPlayer && (
-                    <span className="text-xs font-bold text-slate-500">
-                      {captainPlayer.position} • {captainPlayer.rating} OVR • Age {captainPlayer.age}
+                  )}
+                  {philosophyBonus.defenceBonus > 0 && (
+                    <span className="px-2 py-0.5 rounded-lg bg-indigo-600 text-white font-mono font-bold text-[11px]">
+                      +{philosophyBonus.defenceBonus} DEF
                     </span>
                   )}
                 </div>
+              )}
+            </div>
+          </div>
 
-                <select
-                  aria-label="Appoint Club Captain"
-                  value={currentTactics.captainId || ''}
-                  onChange={(e) => handleSetCaptain(e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-xs font-display font-bold text-[#0b1536] cursor-pointer focus:border-blue-500 focus:outline-hidden shadow-2xs"
-                >
-                  {squad.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} ({p.position}, {p.rating} OVR, Age {p.age})
-                    </option>
-                  ))}
-                </select>
+          {/* Philosophies: compact tiles, full detail for the one being viewed */}
+          {(() => {
+            const shownType = previewPhilosophy ?? currentTactics.philosophy;
+            const shown = TACTICAL_PHILOSOPHIES[shownType];
+            const shownIsActive = shownType === currentTactics.philosophy;
+            return (
+              <div className="space-y-2.5">
+                <h4 className="text-sm font-display font-black uppercase tracking-wider text-[#0b1536] flex items-center gap-1.5">
+                  <IconSliders className="w-4 h-4 text-[#1d5eff] shrink-0" />
+                  <span>Philosophy</span>
+                </h4>
 
-                {/* Captaincy Composure Aura */}
-                <div className="p-2.5 rounded-xl bg-white border border-slate-200 space-y-1.5">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-500 font-medium">Leadership Authority:</span>
-                    <span className="font-mono font-black text-blue-700">{captaincyEffects.leadershipScore} / 99</span>
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+                  {(Object.keys(TACTICAL_PHILOSOPHIES) as TacticalPhilosophyType[]).map((type) => {
+                    const config = TACTICAL_PHILOSOPHIES[type];
+                    const isActive = currentTactics.philosophy === type;
+                    const isShown = shownType === type;
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        aria-pressed={isShown}
+                        onClick={() => setPreviewPhilosophy(type)}
+                        className={`text-left p-2.5 rounded-xl border min-h-[52px] flex items-center gap-2 transition-all cursor-pointer ${
+                          isShown
+                            ? 'border-blue-600 bg-blue-50/60 ring-2 ring-blue-500/20'
+                            : 'border-slate-200/90 bg-white hover:border-blue-300'
+                        }`}
+                      >
+                        <span
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${
+                            isActive ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-100 text-slate-700 border-slate-200'
+                          }`}
+                        >
+                          <TacticalPhilosophyIcon type={type} className="w-3.5 h-3.5" />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block font-display font-black text-xs text-[#0b1536] leading-tight">{config.name}</span>
+                          <span className={`block text-[10px] line-clamp-1 ${isActive ? 'text-blue-700 font-bold uppercase' : 'text-slate-500'}`}>
+                            {isActive ? 'Active' : config.tagline}
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="office-subcard p-3.5 rounded-2xl border border-slate-200/90 bg-white space-y-2.5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h5 className="font-display font-black text-sm text-[#0b1536] leading-tight">{shown.name}</h5>
+                      <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">{shown.description}</p>
+                    </div>
+                    {shownIsActive ? (
+                      <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white font-display font-black text-[10px] uppercase tracking-wider shrink-0">
+                        Active
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleSelectPhilosophy(shownType);
+                          setPreviewPhilosophy(null);
+                        }}
+                        className="min-h-[40px] px-4 rounded-xl bg-[#1E2024] hover:bg-zinc-800 text-white font-display font-black text-xs uppercase tracking-wider cursor-pointer shrink-0"
+                      >
+                        Adopt
+                      </button>
+                    )}
                   </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-500 font-medium">Late-Match Composure Aura:</span>
-                    <span className={`font-mono font-black ${
+
+                  <div className="flex flex-wrap gap-1">
+                    {shown.primaryAttributes.map((attr, idx) => (
+                      <span key={idx} className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-bold">
+                        {attr}
+                      </span>
+                    ))}
+                  </div>
+
+                  <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] pt-2 border-t border-slate-100">
+                    <div className="flex justify-between gap-2">
+                      <dt className="text-slate-500">Stamina drain</dt>
+                      <dd
+                        className={`font-mono font-bold ${
+                          shown.staminaDrainMultiplier > 1.15
+                            ? 'text-rose-600'
+                            : shown.staminaDrainMultiplier < 0.95
+                            ? 'text-emerald-600'
+                            : 'text-slate-700'
+                        }`}
+                      >
+                        {shown.staminaDrainMultiplier}x
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <dt className="text-slate-500">Possession</dt>
+                      <dd className="font-mono font-bold text-slate-700">
+                        {shown.possessionBias > 0 ? `+${shown.possessionBias}%` : shown.possessionBias < 0 ? `${shown.possessionBias}%` : 'Even'}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <dt className="text-slate-500">Counters</dt>
+                      <dd className="font-bold text-slate-700 capitalize text-right">{shown.effectiveAgainst.replace(/_/g, ' ')}</dd>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <dt className="text-slate-500">Weak to</dt>
+                      <dd className="font-bold text-slate-700 capitalize text-right">{shown.counteredBy.replace(/_/g, ' ')}</dd>
+                    </div>
+                  </dl>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Captaincy and set-piece takers */}
+          {(() => {
+            const defaultTakers = pickDefaultSetPieceTakers(squad);
+            const outfieldCandidates = squad.filter(
+              (p) => categorizePosition(p.position) !== 'GK'
+            );
+            const sortedPenalty = [...outfieldCandidates].sort((a, b) => {
+              const fa = a.faceStats?.sho ?? a.rating;
+              const fb = b.faceStats?.sho ?? b.rating;
+              return fb + b.rating * 0.4 - (fa + a.rating * 0.4);
+            });
+            const sortedFreekick = [...outfieldCandidates].sort((a, b) => {
+              const fa = (a.faceStats?.sho ?? a.rating) * 0.6 + (a.faceStats?.pas ?? a.rating) * 0.4;
+              const fb = (b.faceStats?.sho ?? b.rating) * 0.6 + (b.faceStats?.pas ?? b.rating) * 0.4;
+              return fb - fa;
+            });
+            const sortedCorner = [...outfieldCandidates].sort((a, b) => {
+              const fa = (a.faceStats?.pas ?? a.rating) * 0.7 + (a.faceStats?.dri ?? a.rating) * 0.3;
+              const fb = (b.faceStats?.pas ?? b.rating) * 0.7 + (b.faceStats?.dri ?? b.rating) * 0.3;
+              return fb - fa;
+            });
+
+            const penaltyId = currentTactics.penaltyTakerId || defaultTakers.penaltyTakerId || '';
+            const fkId = currentTactics.freeKickTakerId || defaultTakers.freeKickTakerId || '';
+            const cornerId = currentTactics.cornerTakerId || defaultTakers.cornerTakerId || '';
+
+            const rowClass = 'flex items-center gap-2';
+            const labelClass = 'w-24 shrink-0 text-[11px] font-display font-black uppercase tracking-wider text-slate-600';
+            const selectClass =
+              'flex-1 min-w-0 min-h-[40px] px-2.5 rounded-xl bg-white border border-slate-300 text-xs font-display font-bold text-[#0b1536] cursor-pointer focus:border-blue-500 focus:outline-hidden';
+
+            return (
+              <div className="office-subcard p-4 rounded-2xl space-y-3 shadow-sm border border-slate-200/90 bg-white">
+                <h4 className="text-sm font-display font-black uppercase tracking-wider text-[#0b1536] flex items-center gap-1.5">
+                  <IconTrophy className="w-4 h-4 text-amber-500 shrink-0" />
+                  <span>Captain &amp; Set Pieces</span>
+                </h4>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+                  <label className={rowClass}>
+                    <span className={labelClass}>Captain</span>
+                    <select
+                      aria-label="Appoint Club Captain"
+                      value={currentTactics.captainId || ''}
+                      onChange={(e) => handleSetCaptain(e.target.value)}
+                      className={selectClass}
+                    >
+                      {squad.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} ({p.position}, {p.rating} OVR, Age {p.age})
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className={rowClass}>
+                    <span className={labelClass}>Vice-captain</span>
+                    <select
+                      aria-label="Appoint Vice-Captain"
+                      value={currentTactics.viceCaptainId || ''}
+                      onChange={(e) => handleSetViceCaptain(e.target.value)}
+                      className={selectClass}
+                    >
+                      <option value="">None Designated</option>
+                      {squad
+                        .filter((p) => p.id !== currentTactics.captainId)
+                        .map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name} ({p.position}, {p.rating} OVR, Age {p.age})
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+
+                  <label className={rowClass}>
+                    <span className={labelClass}>Penalties</span>
+                    <select
+                      aria-label="Designate Penalty Taker"
+                      value={penaltyId}
+                      onChange={(e) => handleSetPieceTaker('penaltyTakerId', e.target.value)}
+                      className={selectClass}
+                    >
+                      {sortedPenalty.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} ({p.position} • SHO {p.faceStats?.sho ?? p.rating})
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className={rowClass}>
+                    <span className={labelClass}>Free kicks</span>
+                    <select
+                      aria-label="Designate Free Kick Taker"
+                      value={fkId}
+                      onChange={(e) => handleSetPieceTaker('freeKickTakerId', e.target.value)}
+                      className={selectClass}
+                    >
+                      {sortedFreekick.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} ({p.position} • SHO {p.faceStats?.sho ?? p.rating} / PAS {p.faceStats?.pas ?? p.rating})
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className={rowClass}>
+                    <span className={labelClass}>Corners</span>
+                    <select
+                      aria-label="Designate Corner Taker"
+                      value={cornerId}
+                      onChange={(e) => handleSetPieceTaker('cornerTakerId', e.target.value)}
+                      className={selectClass}
+                    >
+                      {sortedCorner.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} ({p.position} • PAS {p.faceStats?.pas ?? p.rating})
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <p className="text-[11px] text-slate-600 pt-2 border-t border-slate-100">
+                  Leadership <strong className="font-mono text-blue-700">{captaincyEffects.leadershipScore}/99</strong>
+                  {' • '}Late composure{' '}
+                  <strong
+                    className={`font-mono ${
                       captaincyEffects.composureBonus > 0
                         ? 'text-emerald-600'
                         : captaincyEffects.composureBonus < 0
                         ? 'text-rose-600'
                         : 'text-slate-600'
-                    }`}>
-                      {captaincyEffects.composureBonus > 0 ? `+${captaincyEffects.composureBonus}%` : `${captaincyEffects.composureBonus}%`}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-600 leading-snug pt-1 border-t border-slate-100">
-                    {captaincyEffects.rallyEffect}
-                  </p>
-                </div>
+                    }`}
+                  >
+                    {captaincyEffects.composureBonus > 0 ? `+${captaincyEffects.composureBonus}%` : `${captaincyEffects.composureBonus}%`}
+                  </strong>
+                  {' • '}
+                  {captaincyEffects.rallyEffect}
+                </p>
               </div>
+            );
+          })()}
 
-              {/* Vice-Captain Selection */}
-              <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-3">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-1.5">
-                    <span className="px-2 py-0.5 rounded bg-slate-300 text-slate-900 font-display font-black text-xs border border-slate-400 shadow-2xs">
-                      VC
-                    </span>
-                    <span className="font-display font-black text-xs uppercase tracking-wider text-slate-700">
-                      Vice-Captain
-                    </span>
-                  </div>
-                  {viceCaptainPlayer && (
-                    <span className="text-xs font-bold text-slate-500">
-                      {viceCaptainPlayer.position} • {viceCaptainPlayer.rating} OVR • Age {viceCaptainPlayer.age}
-                    </span>
-                  )}
-                </div>
-
-                <select
-                  aria-label="Appoint Vice-Captain"
-                  value={currentTactics.viceCaptainId || ''}
-                  onChange={(e) => handleSetViceCaptain(e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-xs font-display font-bold text-[#0b1536] cursor-pointer focus:border-blue-500 focus:outline-hidden shadow-2xs"
+          {/* Dressing room harmony, hierarchy behind a disclosure */}
+          <div className="office-subcard rounded-2xl shadow-sm border border-slate-200/90 bg-white">
+            {renderDisclosureHeader(
+              'hierarchy',
+              'squad-hierarchy-panel',
+              <IconHandshake className="w-4 h-4 text-[#1d5eff] shrink-0" />,
+              'Dressing Room',
+              <>
+                <span className="font-mono font-black text-blue-700">{dressingRoomHarmony.harmonyIndex}%</span>
+                <span
+                  className={`px-1.5 py-0.5 rounded-md text-[10px] font-black uppercase font-display ${
+                    dressingRoomHarmony.status === 'ecstatic'
+                      ? 'bg-emerald-600 text-white'
+                      : dressingRoomHarmony.status === 'united'
+                      ? 'bg-blue-600 text-white'
+                      : dressingRoomHarmony.status === 'content'
+                      ? 'bg-slate-700 text-white'
+                      : 'bg-rose-600 text-white'
+                  }`}
                 >
-                  <option value="">None Designated</option>
-                  {squad
-                    .filter((p) => p.id !== currentTactics.captainId)
-                    .map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} ({p.position}, {p.rating} OVR, Age {p.age})
-                      </option>
-                    ))}
-                </select>
-
-                <div className="p-2.5 rounded-xl bg-white border border-slate-200 text-[11px] text-slate-600 leading-relaxed">
-                  The vice-captain assumes leadership composure duties if the captain is substituted, injured, or sent off mid-match. Appoint a respected midfield or defensive anchor.
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Dressing Room Dynamics & Harmony */}
-          <div className="office-subcard p-5 sm:p-6 rounded-3xl space-y-4 shadow-sm border border-slate-200/90 bg-white">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">🤝</span>
-                <div>
-                  <h4 className="text-base font-display font-black uppercase tracking-wider text-[#0b1536]">
-                    Dressing Room Harmony &amp; Social Hierarchy
-                  </h4>
-                  <span className="text-xs text-slate-500 font-medium">
-                    Player satisfaction, morale cohesion, and squad influence tiers
-                  </span>
-                </div>
-              </div>
-
-              {/* Harmony Status Pill */}
-              <div className="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
-                <span className="text-xs font-bold text-slate-600">Harmony Index:</span>
-                <span className="font-mono font-black text-sm text-blue-700">{dressingRoomHarmony.harmonyIndex}%</span>
-                <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase font-display ${
-                  dressingRoomHarmony.status === 'ecstatic'
-                    ? 'bg-emerald-600 text-white'
-                    : dressingRoomHarmony.status === 'united'
-                    ? 'bg-blue-600 text-white'
-                    : dressingRoomHarmony.status === 'content'
-                    ? 'bg-slate-700 text-white'
-                    : 'bg-rose-600 text-white'
-                }`}>
                   {dressingRoomHarmony.statusLabel}
                 </span>
-              </div>
-            </div>
+              </>
+            )}
 
-            {/* Hierarchy Columns */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {/* Leaders */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="font-display font-black uppercase text-slate-700 flex items-center gap-1">
-                    <span>👑</span>
-                    <span>Team Leaders ({dressingRoomHarmony.leaders.length})</span>
-                  </span>
-                  <span className="text-[10px] text-slate-400">Primary Voice</span>
+            {openPanels.hierarchy && (
+              <div id="squad-hierarchy-panel" className="grid grid-cols-1 md:grid-cols-3 gap-x-5 gap-y-3 px-3.5 pb-3.5">
+                <div>
+                  <h5 className="text-[11px] font-display font-black uppercase text-slate-700 flex items-center gap-1 pb-1 border-b border-slate-200">
+                    <IconCrown className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                    <span>Leaders ({dressingRoomHarmony.leaders.length})</span>
+                  </h5>
+                  <ul className="divide-y divide-slate-100 max-h-48 overflow-y-auto">
+                    {dressingRoomHarmony.leaders.map((p) => (
+                      <li key={p.id} className="py-1.5 flex justify-between items-center gap-2 text-xs">
+                        <span className="flex items-center gap-1.5 min-w-0">
+                          {p.id === currentTactics.captainId && (
+                            <span className="px-1 rounded bg-amber-400 text-slate-950 font-black text-[10px]">C</span>
+                          )}
+                          <span className="font-bold text-[#0b1536] truncate">{p.name}</span>
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-500 shrink-0">{p.rating} OVR • {p.morale ?? 85}%</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                  {dressingRoomHarmony.leaders.map((p) => (
-                    <div key={p.id} className="p-2 rounded-xl bg-white border border-slate-200/90 flex justify-between items-center text-xs">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        {p.id === currentTactics.captainId && (
-                          <span className="px-1 py-0.2 rounded bg-amber-400 text-slate-950 font-black text-[8px]">C</span>
-                        )}
-                        <span className="font-bold text-[#0b1536] truncate">{p.name}</span>
-                      </div>
-                      <span className="text-[10px] font-mono text-slate-500 shrink-0">{p.rating} OVR • {p.morale ?? 85}% Morale</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
 
-              {/* Influential Core */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="font-display font-black uppercase text-slate-700 flex items-center gap-1">
-                    <span>⭐</span>
+                <div>
+                  <h5 className="text-[11px] font-display font-black uppercase text-slate-700 flex items-center gap-1 pb-1 border-b border-slate-200">
+                    <IconStar className="w-3.5 h-3.5 text-blue-600 shrink-0" filled />
                     <span>Influential Core ({dressingRoomHarmony.influential.length})</span>
-                  </span>
-                  <span className="text-[10px] text-slate-400">First-Team Regulars</span>
+                  </h5>
+                  <ul className="divide-y divide-slate-100 max-h-48 overflow-y-auto">
+                    {dressingRoomHarmony.influential.slice(0, 7).map((p) => (
+                      <li key={p.id} className="py-1.5 flex justify-between items-center gap-2 text-xs">
+                        <span className="font-bold text-[#0b1536] truncate">{p.name}</span>
+                        <span className="text-[10px] font-mono text-slate-500 shrink-0">{p.position} • {p.morale ?? 85}%</span>
+                      </li>
+                    ))}
+                    {dressingRoomHarmony.influential.length > 7 && (
+                      <li className="py-1.5 text-[10px] text-slate-500">+{dressingRoomHarmony.influential.length - 7} more</li>
+                    )}
+                  </ul>
                 </div>
-                <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                  {dressingRoomHarmony.influential.slice(0, 7).map((p) => (
-                    <div key={p.id} className="p-2 rounded-xl bg-white border border-slate-200/90 flex justify-between items-center text-xs">
-                      <span className="font-bold text-[#0b1536] truncate">{p.name}</span>
-                      <span className="text-[10px] font-mono text-slate-500 shrink-0">{p.position} • {p.morale ?? 85}%</span>
-                    </div>
-                  ))}
-                  {dressingRoomHarmony.influential.length > 7 && (
-                    <div className="text-[10px] text-center text-slate-500 font-medium pt-1">
-                      +{dressingRoomHarmony.influential.length - 7} other core players
-                    </div>
-                  )}
-                </div>
-              </div>
 
-              {/* Fringe Players */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="font-display font-black uppercase text-slate-700 flex items-center gap-1">
-                    <span>👥</span>
+                <div>
+                  <h5 className="text-[11px] font-display font-black uppercase text-slate-700 flex items-center gap-1 pb-1 border-b border-slate-200">
+                    <IconUsers className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                     <span>Fringe &amp; Youth ({dressingRoomHarmony.fringe.length})</span>
-                  </span>
-                  <span className="text-[10px] text-slate-400">Rotation &amp; Development</span>
-                </div>
-                <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                  {dressingRoomHarmony.fringe.slice(0, 7).map((p) => (
-                    <div key={p.id} className="p-2 rounded-xl bg-white border border-slate-200/90 flex justify-between items-center text-xs">
-                      <span className="font-medium text-[#0b1536] truncate">{p.name}</span>
-                      <span className="text-[10px] font-mono text-slate-500 shrink-0">{p.age}y • {p.morale ?? 85}%</span>
-                    </div>
-                  ))}
-                  {dressingRoomHarmony.fringe.length > 7 && (
-                    <div className="text-[10px] text-center text-slate-500 font-medium pt-1">
-                      +{dressingRoomHarmony.fringe.length - 7} other squad players
-                    </div>
-                  )}
+                  </h5>
+                  <ul className="divide-y divide-slate-100 max-h-48 overflow-y-auto">
+                    {dressingRoomHarmony.fringe.slice(0, 7).map((p) => (
+                      <li key={p.id} className="py-1.5 flex justify-between items-center gap-2 text-xs">
+                        <span className="font-medium text-[#0b1536] truncate">{p.name}</span>
+                        <span className="text-[10px] font-mono text-slate-500 shrink-0">{p.age}y • {p.morale ?? 85}%</span>
+                      </li>
+                    ))}
+                    {dressingRoomHarmony.fringe.length > 7 && (
+                      <li className="py-1.5 text-[10px] text-slate-500">+{dressingRoomHarmony.fringe.length - 7} more</li>
+                    )}
+                  </ul>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </section>
       )}
@@ -2105,13 +1899,13 @@ export function SquadManagement({
           <div className="office-floating-card rounded-3xl p-5 sm:p-6 border border-blue-200/80 bg-gradient-to-r from-blue-50/80 via-white to-indigo-50/40 shadow-sm relative overflow-hidden flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="space-y-1 z-10">
               <div className="flex items-center gap-2">
-                <span className="text-xl">🌟</span>
+                <IconSparkles className="w-5 h-5 text-[#1d5eff] shrink-0" />
                 <h3 className="text-lg font-display font-black text-slate-900 uppercase tracking-tight">
                   Youth Academy &amp; Wonderkid Pipeline
                 </h3>
               </div>
-              <p className="text-xs text-slate-600 font-medium max-w-xl">
-                Scout and nurture homegrown prodigies. Under-21 prospects are exempt from the 25-man senior squad cap and gain rapid development (+1 to +3 OVR annually) towards their wonderkid ceiling. Total club capacity: {squad.length}/35.
+              <p className="text-xs text-slate-600 font-medium">
+                U21 prospects are exempt from the 25-man cap and grow +1 to +3 OVR a year.
               </p>
             </div>
 
@@ -2120,7 +1914,7 @@ export function SquadManagement({
                 onClick={handleGenerateIntake}
                 className="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-display font-black uppercase tracking-wider transition-all shadow-md shadow-blue-500/20 flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
               >
-                <span>🔍</span>
+                <IconSearch className="w-3.5 h-3.5 shrink-0" />
                 <span>Scout New Intake</span>
               </button>
             </div>
@@ -2129,20 +1923,29 @@ export function SquadManagement({
           {academyToast && (
             <div
               role="alert"
-              className={`p-3.5 rounded-2xl border text-xs font-bold flex items-center justify-between ${
+              className={`p-3.5 rounded-2xl border text-xs font-bold flex items-center justify-between gap-2 ${
                 academyToast.type === 'success'
                   ? 'bg-blue-50 text-blue-700 border-blue-200'
                   : 'bg-rose-50 border-rose-200 text-rose-700'
               }`}
             >
               <span>{academyToast.message}</span>
-              <button onClick={() => setAcademyToast(null)} className="text-xs opacity-70 hover:opacity-100 cursor-pointer">✕</button>
+              <button
+                type="button"
+                onClick={() => setAcademyToast(null)}
+                className="w-7 h-7 rounded-full flex items-center justify-center opacity-70 hover:opacity-100 cursor-pointer shrink-0"
+                aria-label="Dismiss notification"
+              >
+                <IconClose className="w-3.5 h-3.5" />
+              </button>
             </div>
           )}
 
           {academy.length === 0 ? (
             <div className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-12 text-center space-y-4 shadow-sm">
-              <span className="text-4xl block">🌱</span>
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto">
+                <IconSprout className="w-6 h-6" />
+              </div>
               <h4 className="text-base font-display font-black text-slate-900 uppercase">
                 No Prospects Currently in Academy
               </h4>
@@ -2195,7 +1998,7 @@ export function SquadManagement({
                             </span>
                             <span className="text-[10px] text-slate-400">•</span>
                             <span
-                              className={`text-[10px] font-display font-black px-1.5 py-0.5 rounded ${
+                              className={`text-[10px] font-display font-black px-1.5 py-0.5 rounded inline-flex items-center gap-1 ${
                                 isWonderkid
                                   ? 'bg-amber-100 text-amber-900 border border-amber-300'
                                   : isHighPotential
@@ -2203,31 +2006,28 @@ export function SquadManagement({
                                   : 'bg-blue-50 text-blue-700 border border-blue-200'
                               }`}
                             >
-                              ⭐ POT: {prospect.potential}
+                              <IconStar className="w-2.5 h-2.5 shrink-0" filled />
+                              <span>POT: {prospect.potential}</span>
                             </span>
                           </div>
                         </div>
                         {isWonderkid && (
-                          <span className="text-xs" title="Wonderkid Talent">✨</span>
+                          <span title="Wonderkid Talent" className="text-amber-500 shrink-0">
+                            <IconSparkles className="w-4 h-4" />
+                          </span>
                         )}
                       </div>
 
                       {/* Valuation & Wage */}
-                      <div className="grid grid-cols-2 gap-2 text-[11px] py-1 bg-slate-50/90 rounded-xl px-2.5 border border-slate-200/80">
-                        <div>
-                          <span className="text-[9px] uppercase font-bold text-slate-500 block">Valuation</span>
-                          <span className="font-semibold text-slate-800">{formatCurrency(prospect.value)}</span>
-                        </div>
-                        <div>
-                          <span className="text-[9px] uppercase font-bold text-slate-500 block">Wage Demand</span>
-                          <span className="font-semibold text-slate-800">{formatWage(prospect.wageWeekly)}</span>
-                        </div>
-                      </div>
+                      <p className="text-[11px] text-slate-600">
+                        Value <span className="font-semibold text-slate-800">{formatCurrency(prospect.value)}</span>
+                        {' • '}Wage <span className="font-semibold text-slate-800">{formatWage(prospect.wageWeekly)}</span>
+                      </p>
 
                       {/* Scout Report Note */}
-                      <div className="text-[11px] text-slate-600 italic bg-slate-50 p-2.5 rounded-xl border border-slate-200/70 leading-relaxed">
+                      <p className="text-[11px] text-slate-600 italic leading-relaxed">
                         &ldquo;{prospect.scoutReport}&rdquo;
-                      </div>
+                      </p>
                     </div>
 
                     {/* Action Buttons */}
@@ -2243,7 +2043,6 @@ export function SquadManagement({
                         title={squad.length >= 35 ? 'Club squad is at full capacity (35/35)' : 'Promote to First Team'}
                       >
                         <span>Promote</span>
-                        <span className="text-[10px]">({squad.length}/35)</span>
                       </button>
 
                       <button
@@ -2264,31 +2063,23 @@ export function SquadManagement({
 
       {/* TRAINING & PERFORMANCE LAB VIEW */}
       {viewMode === 'training' && (
-        <section id="squad-training-section" className="space-y-4 scroll-mt-20 animate-fade-in" aria-label="Training Ground & Performance Lab">
-          {/* Top Hero Card */}
-          <div className="office-subcard p-4 sm:p-5 rounded-3xl space-y-4 shadow-sm border border-slate-200/90 bg-gradient-to-br from-white via-slate-50/50 to-emerald-50/30">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">🏃</span>
-                  <h3 className="text-lg sm:text-xl font-display font-black text-slate-900 uppercase tracking-tight">
-                    Training Ground & Performance Lab
-                  </h3>
-                </div>
-                <p className="text-xs text-slate-600 font-medium max-w-xl">
-                  Calibrate your weekly squad training focus and assign dedicated specialist mentorship drills to accelerate your U23 prodigies toward their wonderkid potential ceiling.
-                </p>
-              </div>
+        <section id="squad-training-section" className="space-y-4 scroll-mt-20 animate-fade-in motion-reduce:animate-none" aria-label="Training Ground & Performance Lab">
+          {/* Actions and session feedback */}
+          <div className="office-subcard p-3 sm:p-4 rounded-2xl space-y-3 shadow-sm border border-slate-200/90 bg-white">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <h3 className="text-base font-display font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
+                <IconDumbbell className="w-5 h-5 text-emerald-700 shrink-0" />
+                <span>Training</span>
+              </h3>
 
-              {/* Action Buttons: Auto-Pick Fit XI + Run Drills */}
               <div className="flex items-center gap-2 flex-wrap">
                 <button
                   type="button"
                   onClick={handleAutoRotateLineup}
-                  className="py-2 px-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-sm transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+                  className="min-h-[40px] px-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-sm transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
                   title="Automatically replace fatigued starters with fit bench players"
                 >
-                  <span>⚡</span>
+                  <IconBolt className="w-3.5 h-3.5 shrink-0" />
                   <span>Auto-Pick Fit XI</span>
                   {fatiguedStartersCount > 0 && (
                     <span className="bg-slate-950 text-amber-300 text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold">
@@ -2300,1175 +2091,264 @@ export function SquadManagement({
                 <button
                   type="button"
                   onClick={handleRunTrainingSession}
-                  className="py-2 px-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-display font-black text-xs uppercase tracking-wider shadow-sm transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
-                  title="Run weekly training session"
+                  className="min-h-[40px] px-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-display font-black text-xs uppercase tracking-wider shadow-sm transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
                 >
-                  <span>⚽</span>
+                  <IconBall className="w-3.5 h-3.5 shrink-0" />
                   <span>Run Weekly Drills</span>
                 </button>
               </div>
             </div>
 
-            {/* Rotation Toast Alert */}
             {rotationFeedback && (
-              <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-2 animate-fade-in">
+              <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-2 animate-fade-in motion-reduce:animate-none">
                 <div className="flex items-center gap-2">
-                  <span className="text-base">⚡</span>
-                  <div>
-                    {rotationFeedback.rotatedCount === 0 ? (
-                      <span className="font-semibold">Starting XI is in peak condition! No fatigued players require rotation.</span>
-                    ) : (
-                      <span>
-                        <strong className="font-bold">Smart Rotation Applied:</strong> {rotationFeedback.swaps.map(s => `${s.freshPlayer.name} on for ${s.fatiguedPlayer.name} (${s.position})`).join(', ')}
-                      </span>
-                    )}
-                  </div>
+                  <IconBolt className="w-4 h-4 text-amber-600 shrink-0" />
+                  {rotationFeedback.rotatedCount === 0 ? (
+                    <span className="font-semibold">Starting XI is fit. No rotation needed.</span>
+                  ) : (
+                    <span>
+                      <strong className="font-bold">Rotated:</strong> {rotationFeedback.swaps.map(s => `${s.freshPlayer.name} on for ${s.fatiguedPlayer.name} (${s.position})`).join(', ')}
+                    </span>
+                  )}
                 </div>
                 <button
                   type="button"
                   onClick={() => setRotationFeedback(null)}
-                  className="text-xs font-bold opacity-60 hover:opacity-100 cursor-pointer"
+                  className="w-7 h-7 rounded-full flex items-center justify-center opacity-60 hover:opacity-100 cursor-pointer shrink-0"
+                  aria-label="Dismiss alert"
                 >
-                  ✕
+                  <IconClose className="w-3.5 h-3.5" />
                 </button>
               </div>
             )}
 
-            {/* Training Session Breakthrough Toast */}
             {trainingSessionResults && (
-              <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center justify-between gap-2 animate-fade-in">
+              <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center justify-between gap-2 animate-fade-in motion-reduce:animate-none">
                 <div className="flex items-center gap-2">
-                  <span className="text-base">🎉</span>
-                  <div>
-                    {trainingSessionResults.breakthroughs.length > 0 ? (
-                      <div>
-                        <strong className="font-bold">Breakthrough!</strong>{' '}
-                        {trainingSessionResults.breakthroughs.map(b => `${b.player.name} +1 OVR (${b.newRating})`).join(' • ')}
-                      </div>
-                    ) : (
-                      <span>
-                        Weekly training complete. All squad members sharpened. {trainingSessionResults.staminaRecoveredTotal > 0 && `(+${trainingSessionResults.staminaRecoveredTotal}% squad stamina recovered)`}
-                      </span>
-                    )}
-                  </div>
+                  <IconSparkles className="w-4 h-4 text-emerald-600 shrink-0" />
+                  {trainingSessionResults.breakthroughs.length > 0 ? (
+                    <span>
+                      <strong className="font-bold">Breakthrough!</strong>{' '}
+                      {trainingSessionResults.breakthroughs.map(b => `${b.player.name} +1 OVR (${b.newRating})`).join(' • ')}
+                    </span>
+                  ) : (
+                    <span>
+                      Weekly training complete.{' '}
+                      {trainingSessionResults.staminaRecoveredTotal > 0 && `+${trainingSessionResults.staminaRecoveredTotal}% squad stamina recovered.`}
+                    </span>
+                  )}
                 </div>
                 <button
                   type="button"
                   onClick={() => setTrainingSessionResults(null)}
-                  className="text-xs font-bold opacity-60 hover:opacity-100 cursor-pointer"
+                  className="w-7 h-7 rounded-full flex items-center justify-center opacity-60 hover:opacity-100 cursor-pointer shrink-0"
+                  aria-label="Dismiss alert"
                 >
-                  ✕
+                  <IconClose className="w-3.5 h-3.5" />
                 </button>
               </div>
             )}
           </div>
 
-          {/* Section 1: Weekly Team Focus */}
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-display font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                <span>📋</span>
-                <span>Team Weekly Focus</span>
-              </h4>
-              <span className="text-[11px] font-mono text-slate-500">
-                Active: <strong className="text-emerald-700 capitalize">{currentTeamFocus.replace('_', ' ')}</strong>
-              </span>
-            </div>
+          {/* Weekly team focus: tiles, with detail for the active one only */}
+          <div className="space-y-2">
+            <h4 className="text-xs font-display font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+              <IconClipboard className="w-3.5 h-3.5 text-[#1d5eff] shrink-0" />
+              <span>Team Weekly Focus</span>
+            </h4>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
               {TRAINING_FOCUS_OPTIONS.map((opt) => {
                 const isActive = currentTeamFocus === opt.id;
                 return (
                   <button
                     key={opt.id}
                     type="button"
+                    aria-pressed={isActive}
                     onClick={() => handleSetTeamTrainingFocus(opt.id)}
-                    className={`text-left p-3.5 rounded-2xl border transition-all cursor-pointer relative flex flex-col justify-between gap-2 ${
+                    className={`text-left min-h-[44px] px-2.5 py-1.5 rounded-xl border transition-all cursor-pointer flex items-center gap-2 ${
                       isActive
-                        ? 'bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-400 shadow-xs ring-2 ring-emerald-500/20'
-                        : 'bg-white border-slate-200/90 hover:border-slate-300 hover:bg-slate-50/50 shadow-2xs'
+                        ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-500/20'
+                        : 'bg-white border-slate-200/90 hover:border-slate-300 hover:bg-slate-50/50'
                     }`}
                   >
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-2xl">{opt.icon}</span>
-                        {isActive && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-display font-black bg-emerald-600 text-white uppercase tracking-wider">
-                            ACTIVE
-                          </span>
-                        )}
-                      </div>
-                      <div className="font-display font-black text-xs text-slate-900 uppercase tracking-tight">
-                        {opt.title}
-                      </div>
-                      <p className="text-[11px] text-slate-500 leading-snug">
-                        {opt.description}
-                      </p>
-                    </div>
-
-                    <div className="pt-2 border-t border-slate-100 flex flex-wrap gap-1">
-                      {opt.buffs.map((b, idx) => (
-                        <span key={idx} className="text-[9.5px] px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-700 font-mono font-semibold">
-                          {b}
-                        </span>
-                      ))}
-                    </div>
+                    {renderTrainingFocusIcon(opt.id, 'w-4 h-4 shrink-0')}
+                    <span className="font-display font-black text-[11px] text-slate-900 uppercase tracking-tight leading-tight">
+                      {opt.title}
+                    </span>
                   </button>
                 );
               })}
             </div>
+
+            {TRAINING_FOCUS_OPTIONS.filter((opt) => opt.id === currentTeamFocus).map((opt) => (
+              <div key={opt.id} className="space-y-1.5">
+                <p className="text-[11px] text-slate-600 leading-snug">{opt.description}</p>
+                <div className="flex flex-wrap gap-1">
+                  {opt.buffs.map((b, idx) => (
+                    <span key={idx} className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-700 font-mono font-semibold">
+                      {b}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
 
-          {/* Section 2: Individual Wonderkid Mentorship (U23) */}
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <h4 className="text-xs font-display font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                  <span>⭐</span>
-                  <span>Wonderkid Specialist Mentorship (U23)</span>
-                </h4>
-                <p className="text-[11px] text-slate-500">
-                  Assign up to 3 young talents to 1-on-1 coaching with first-team veterans. Mentored players gain +22 XP weekly toward an in-season +1 OVR leap.
-                </p>
-              </div>
-              <span className="text-[11px] font-mono px-2 py-1 rounded-full bg-slate-100 text-slate-700 font-bold border border-slate-200">
-                {Object.keys(currentMentorships).length} / 3 Slots
+          {/* U23 mentorship (collapsed by default) */}
+          <div className="office-subcard rounded-2xl border border-slate-200/90 bg-white shadow-xs">
+            {renderDisclosureHeader(
+              'mentorship',
+              'training-mentorship-panel',
+              <IconStar className="w-3.5 h-3.5 text-amber-500 shrink-0" filled />,
+              'U23 Mentorship',
+              <span className="font-mono truncate">
+                {Object.keys(currentMentorships).length}/3 slots • {u23Players.length} eligible
               </span>
-            </div>
+            )}
 
-            {u23Players.length === 0 ? (
-              <div className="p-8 text-center bg-white border border-slate-200 rounded-2xl text-xs text-slate-500">
-                No Under-23 players currently in the senior squad. Promote youth prospects from the Academy tab to begin specialist development.
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {u23Players.map((player) => {
-                  const assignedDrill = currentMentorships[player.id];
-                  const progress = player.developmentProgress ?? 0;
-                  const potential = player.potential ?? (player.rating + 4);
-                  const isMaxed = player.rating >= potential;
+            {openPanels.mentorship && (
+              <div id="training-mentorship-panel" className="px-3.5 pb-3.5">
+                {u23Players.length === 0 ? (
+                  <p className="text-xs text-slate-500">No Under-23 players in the senior squad. Promote prospects from the Academy tab.</p>
+                ) : (
+                  <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-5 divide-y divide-slate-100 md:divide-y-0 md:gap-y-3">
+                    {u23Players.map((player) => {
+                      const assignedDrill = currentMentorships[player.id];
+                      const progress = player.developmentProgress ?? 0;
+                      const potential = player.potential ?? (player.rating + 4);
+                      const isMaxed = player.rating >= potential;
 
-                  return (
-                    <article
-                      key={player.id}
-                      className={`p-3.5 rounded-2xl border transition-all space-y-3 ${
-                        assignedDrill
-                          ? 'bg-gradient-to-br from-white via-indigo-50/20 to-teal-50/30 border-teal-300 shadow-xs'
-                          : 'bg-white border-slate-200/90 shadow-2xs'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2.5">
-                          <span className="w-8 h-8 rounded-xl bg-slate-900 text-white font-mono font-bold text-xs flex items-center justify-center shadow-xs">
-                            {player.rating}
-                          </span>
-                          <div>
-                            <div className="font-display font-black text-xs text-slate-900">
-                              {player.name}
+                      return (
+                        <li key={player.id} className="py-2.5 md:py-0 space-y-1.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="w-8 h-8 rounded-xl bg-slate-900 text-white font-mono font-bold text-xs flex items-center justify-center shrink-0">
+                                {player.rating}
+                              </span>
+                              <div className="min-w-0">
+                                <div className="font-display font-black text-xs text-slate-900 truncate">{player.name}</div>
+                                <div className="text-[11px] text-slate-500 font-mono">
+                                  {player.position} • {player.age} • Pot <span className="font-bold text-emerald-700">{potential}</span>
+                                </div>
+                              </div>
                             </div>
-                            <div className="text-[11px] text-slate-500 font-mono">
-                              {player.position} • Age {player.age} • Pot: <span className="font-bold text-emerald-700">{potential}</span>
-                            </div>
+                            <span className="text-[10px] font-mono font-bold text-slate-600 shrink-0" title="Development XP">
+                              {progress}% XP
+                            </span>
                           </div>
-                        </div>
 
-                        {assignedDrill ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-mono font-bold bg-teal-100 text-teal-800 border border-teal-200">
-                            MENTORED
-                          </span>
-                        ) : null}
-                      </div>
+                          <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-300 ${
+                                assignedDrill ? 'bg-gradient-to-r from-teal-500 to-emerald-500' : 'bg-slate-400'
+                              }`}
+                              style={{ width: `${Math.min(100, Math.max(4, progress))}%` }}
+                            />
+                          </div>
 
-                      {/* XP Progress Bar */}
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-[10px] font-mono text-slate-500">
-                          <span>Development XP</span>
-                          <span className="font-bold text-slate-700">{progress}%</span>
-                        </div>
-                        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200">
-                          <div
-                            className={`h-full rounded-full transition-all duration-300 ${
-                              assignedDrill
-                                ? 'bg-gradient-to-r from-teal-500 to-emerald-500'
-                                : 'bg-slate-400'
+                          <select
+                            aria-label={`Mentorship drill for ${player.name}`}
+                            value={assignedDrill || 'none'}
+                            onChange={(e) => handleAssignMentorship(player.id, e.target.value as MentorshipDrill | 'none')}
+                            disabled={isMaxed}
+                            className={`w-full min-h-[40px] px-2.5 rounded-xl border text-xs font-semibold text-slate-800 cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-teal-500 ${
+                              assignedDrill ? 'border-teal-300 bg-teal-50/50' : 'border-slate-200 bg-slate-50/70'
                             }`}
-                            style={{ width: `${Math.min(100, Math.max(4, progress))}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Mentorship Drill Dropdown */}
-                      <div className="pt-1">
-                        <label htmlFor={`drill-select-${player.id}`} className="sr-only">Assign Drill</label>
-                        <select
-                          id={`drill-select-${player.id}`}
-                          value={assignedDrill || 'none'}
-                          onChange={(e) => handleAssignMentorship(player.id, e.target.value as MentorshipDrill | 'none')}
-                          disabled={isMaxed}
-                          className="w-full py-1.5 px-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-white text-xs font-semibold text-slate-800 transition-all cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-teal-500"
-                        >
-                          <option value="none">Standard Training (+8 XP/wk)</option>
-                          <option value="finishing">🎯 Finishing Masterclass (+22 XP, SHO)</option>
-                          <option value="playmaking">🪄 Playmaking & Vision (+22 XP, PAS/DRI)</option>
-                          <option value="explosiveness">⚡ Explosiveness & Pace (+22 XP, PAC/PHY)</option>
-                          <option value="defending">🛡️ Defensive Positioning (+22 XP, DEF)</option>
-                          {player.position === 'GK' && (
-                            <option value="goalkeeping">🧤 Goalkeeping Reflexes (+22 XP, GK)</option>
-                          )}
-                        </select>
-                      </div>
-                    </article>
-                  );
-                })}
+                          >
+                            <option value="none">Standard Training (+8 XP/wk)</option>
+                            <option value="finishing">Finishing Masterclass (+22 XP, SHO)</option>
+                            <option value="playmaking">Playmaking &amp; Vision (+22 XP, PAS/DRI)</option>
+                            <option value="explosiveness">Explosiveness &amp; Pace (+22 XP, PAC/PHY)</option>
+                            <option value="defending">Defensive Positioning (+22 XP, DEF)</option>
+                            {player.position === 'GK' && (
+                              <option value="goalkeeping">Goalkeeping Reflexes (+22 XP, GK)</option>
+                            )}
+                          </select>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
               </div>
             )}
           </div>
 
-          {/* Section 3: Training Units Overview */}
-          <div className="office-subcard p-4 rounded-3xl border border-slate-200/90 bg-white space-y-3 shadow-xs">
-            <h4 className="text-xs font-display font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-              <span>🏟️</span>
-              <span>Training Ground Units</span>
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              {/* Attacking Unit */}
-              <div className="p-3 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-2">
-                <div className="flex items-center justify-between text-xs font-display font-bold text-slate-800">
-                  <span className="flex items-center gap-1"><span>⚡</span> Attacking Unit</span>
-                  <span className="font-mono text-[11px] text-slate-500">{attackingPlayers.length}</span>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {attackingPlayers.slice(0, 8).map(p => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => handleSelectPlayerWithActions(p)}
-                      className="text-[10px] px-1.5 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 hover:border-teal-400 font-semibold cursor-pointer"
-                    >
-                      {p.name.split(' ').pop()} ({p.fitness}%)
-                    </button>
-                  ))}
-                </div>
-              </div>
+          {/* Training ground units (collapsed by default) */}
+          <div className="office-subcard rounded-2xl border border-slate-200/90 bg-white shadow-xs">
+            {renderDisclosureHeader(
+              'units',
+              'training-units-panel',
+              <IconStadium className="w-3.5 h-3.5 text-[#1d5eff] shrink-0" />,
+              'Training Units',
+              <span className="font-mono truncate">
+                ATT {attackingPlayers.length} • MID {midfieldPlayers.length} • DEF {defensivePlayers.length} • Physio {recoveringPlayers.length}
+              </span>
+            )}
 
-              {/* Midfield Unit */}
-              <div className="p-3 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-2">
-                <div className="flex items-center justify-between text-xs font-display font-bold text-slate-800">
-                  <span className="flex items-center gap-1"><span>🪄</span> Midfield Unit</span>
-                  <span className="font-mono text-[11px] text-slate-500">{midfieldPlayers.length}</span>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {midfieldPlayers.slice(0, 8).map(p => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => handleSelectPlayerWithActions(p)}
-                      className="text-[10px] px-1.5 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 hover:border-teal-400 font-semibold cursor-pointer"
-                    >
-                      {p.name.split(' ').pop()} ({p.fitness}%)
-                    </button>
-                  ))}
-                </div>
+            {openPanels.units && (
+              <div id="training-units-panel" className="px-3.5 pb-3.5 divide-y divide-slate-100">
+                {[
+                  { key: 'att', label: 'Attacking', icon: <IconBolt className="w-3.5 h-3.5 text-amber-600 shrink-0" />, players: attackingPlayers.slice(0, 8), total: attackingPlayers.length },
+                  { key: 'mid', label: 'Midfield', icon: <IconTarget className="w-3.5 h-3.5 text-blue-600 shrink-0" />, players: midfieldPlayers.slice(0, 8), total: midfieldPlayers.length },
+                  { key: 'def', label: 'Defensive', icon: <IconShield className="w-3.5 h-3.5 text-indigo-600 shrink-0" />, players: defensivePlayers.slice(0, 8), total: defensivePlayers.length },
+                  { key: 'rec', label: 'Recovery & Physio', icon: <IconMedkit className="w-3.5 h-3.5 text-rose-600 shrink-0" />, players: recoveringPlayers, total: recoveringPlayers.length },
+                ].map((unit) => (
+                  <div key={unit.key} className="py-2 space-y-1.5">
+                    <div className="flex items-center justify-between text-xs font-display font-bold text-slate-800">
+                      <span className="flex items-center gap-1.5">
+                        {unit.icon}
+                        <span>{unit.label}</span>
+                      </span>
+                      <span className="font-mono text-[11px] text-slate-500">{unit.total}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {unit.players.length === 0 ? (
+                        <span className="text-[11px] text-slate-400">None</span>
+                      ) : (
+                        unit.players.map((p) => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => handleSelectPlayerWithActions(p)}
+                            className={`text-[11px] px-1.5 py-1 rounded-md bg-white border font-semibold cursor-pointer ${
+                              unit.key === 'rec'
+                                ? 'border-amber-300 text-amber-800'
+                                : 'border-slate-200 text-slate-700 hover:border-teal-400'
+                            }`}
+                          >
+                            {p.name.split(' ').pop()} ({unit.key === 'rec' && p.injured ? `${p.injuryWeeks}w` : `${p.fitness}%`})
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-
-              {/* Defensive Unit */}
-              <div className="p-3 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-2">
-                <div className="flex items-center justify-between text-xs font-display font-bold text-slate-800">
-                  <span className="flex items-center gap-1"><span>🛡️</span> Defensive Unit</span>
-                  <span className="font-mono text-[11px] text-slate-500">{defensivePlayers.length}</span>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {defensivePlayers.slice(0, 8).map(p => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => handleSelectPlayerWithActions(p)}
-                      className="text-[10px] px-1.5 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 hover:border-teal-400 font-semibold cursor-pointer"
-                    >
-                      {p.name.split(' ').pop()} ({p.fitness}%)
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Recovery Unit */}
-              <div className="p-3 rounded-2xl bg-amber-50/50 border border-amber-200/60 space-y-2">
-                <div className="flex items-center justify-between text-xs font-display font-bold text-amber-900">
-                  <span className="flex items-center gap-1"><span>🩹</span> Recovery & Physio</span>
-                  <span className="font-mono text-[11px] text-amber-700">{recoveringPlayers.length}</span>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {recoveringPlayers.length === 0 ? (
-                    <span className="text-[10px] text-slate-400 italic">No players in recovery</span>
-                  ) : (
-                    recoveringPlayers.map(p => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => handleSelectPlayerWithActions(p)}
-                        className="text-[10px] px-1.5 py-0.5 rounded-md bg-white border border-amber-300 text-amber-800 font-semibold cursor-pointer"
-                      >
-                        {p.name.split(' ').pop()} ({p.injured ? `${p.injuryWeeks}w` : `${p.fitness}%`})
-                      </button>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </section>
       )}
 
       {/* PLAYER DETAIL MODAL */}
-      {selectedPlayer && isMounted && createPortal(
-            <div
-              role="dialog"
-              aria-modal="true"
-              data-scrim="true"
-              onClick={() => setSelectedPlayer(null)}
-              className="fixed inset-0 z-50 overflow-y-auto flex items-end sm:items-center justify-center p-0 sm:p-6 select-none animate-fade-in"
-              style={{
-                backgroundColor: 'rgba(11, 21, 54, 0.82)',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-              }}
-            >
-              <div
-                onClick={(e) => e.stopPropagation()}
-                onTouchStart={handleModalTouchStart}
-                onTouchEnd={handleModalTouchEnd}
-                className="office-floating-card my11-mobile-sheet bg-white border border-slate-200/90 rounded-t-3xl sm:rounded-3xl max-w-md w-full shadow-2xl relative h-[85dvh] sm:h-[670px] max-h-[90dvh] sm:max-h-[88vh] flex flex-col overflow-hidden text-[#0b1536]"
-              >
-                {/* Compact Sticky Top Header */}
-                <div className="shrink-0 flex items-center justify-between gap-2 px-4 pt-4 pb-3 border-b border-[#E2DFD9] bg-white">
-                  <div className="min-w-0">
-                    <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-700">
-                      {selectedPlayer.position} • {getEffectiveRating(selectedPlayer)} OVR • {Math.round(selectedPlayer.fitness ?? 100)}% Fit
-                    </div>
-                    <h3 className="text-base font-display font-black text-zinc-900 truncate">
-                      {selectedPlayer.name}
-                    </h3>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedPlayer(null)}
-                    className="w-9 h-9 rounded-full bg-[#F7F6F3] hover:bg-zinc-200 border border-[#E2DFD9] text-zinc-700 hover:text-zinc-950 flex items-center justify-center font-bold text-sm transition-colors cursor-pointer shrink-0"
-                    aria-label="Close player profile"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                {/* Scrollable Body (Swipe left/right between Profile / Stats / Market) */}
-                <div
-                  ref={playerModalCardRef}
-                  className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5 space-y-3.5 scrollbar-none"
-                >
-
-                {playerModalTab === 'profile' ? (
-                  <div className="min-h-full flex flex-col justify-between gap-3">
-                    <div className="space-y-3">
-                    {/* Authentic EA FC Card */}
-                    <EaFcCard
-                      player={selectedPlayer}
-                      size="standard"
-                      showFormHistory={false}
-                      showProgressionBar={false}
-                    />
-
-                {/* Disciplinary & Availability Status */}
-                {Boolean(selectedPlayer.suspendedMatches && selectedPlayer.suspendedMatches > 0) ? (
-                  <div className="bg-red-50 border border-red-200 text-red-900 p-2.5 rounded-2xl text-xs font-semibold flex items-center justify-between shadow-2xs">
-                    <div className="flex items-center gap-1.5">
-                      <span>🟥</span>
-                      <span><strong>Suspended:</strong> {selectedPlayer.suspensionReason || `${selectedPlayer.suspendedMatches} match ban remaining`}</span>
-                    </div>
-                    <span className="font-mono text-[10px] text-red-700 font-bold">
-                      {selectedPlayer.yellowCardsTotal ?? 0} 🟨 / {selectedPlayer.redCardsTotal ?? 0} 🟥
-                    </span>
-                  </div>
-                ) : (selectedPlayer.yellowCardsTotal && selectedPlayer.yellowCardsTotal > 0) ? (
-                  <div className="bg-amber-50/80 border border-amber-200 text-amber-900 p-2 rounded-2xl text-[11px] font-medium flex items-center justify-between shadow-2xs">
-                    <span>🟨 Discipline: <strong>{selectedPlayer.yellowCardsTotal}</strong> yellow cards</span>
-                    <span className="text-[10px] font-mono text-amber-700 font-bold">
-                      {5 - (selectedPlayer.yellowCardsTotal % 5)} bookings until ban
-                    </span>
-                  </div>
-                ) : null}
-
-                {/* Financial and Contract details */}
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="office-subcard p-2.5 rounded-2xl border border-slate-200/90 shadow-2xs">
-                    <div className="text-[9px] uppercase font-bold text-slate-500">Market Value</div>
-                    <div className="text-sm font-display font-black text-[#0b1536] mt-0.5">
-                      {formatCurrency(selectedPlayer.value, save.settings?.currency, save.settings?.numberFormat)}
-                    </div>
-                  </div>
-                  <div className="office-subcard p-2.5 rounded-2xl border border-slate-200/90 shadow-2xs">
-                    <div className="text-[9px] uppercase font-bold text-slate-500">Wage &amp; Contract</div>
-                    <div className="text-sm font-display font-bold text-slate-700 mt-0.5">
-                      {formatWage(selectedPlayer.wageWeekly, save.settings?.wageUnit, save.settings?.currency, save.settings?.numberFormat)} ({selectedPlayer.contractYears}y)
-                    </div>
-                  </div>
-                </div>
-
-                {/* Physical Attributes (FM Style) */}
-                {(() => {
-                  const phys = getPlayerPhysicals(selectedPlayer);
-                  return (
-                    <div className="grid grid-cols-3 gap-2 office-subcard p-2.5 rounded-2xl border border-slate-200/90 text-center text-xs shadow-2xs">
-                      <div>
-                        <div className="text-[9px] uppercase font-bold text-slate-500">Height</div>
-                        <div className="font-display font-black text-[#0b1536] text-xs mt-0.5">
-                          {formatCareerHeight(phys.heightCm, save.settings?.heightUnit)}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-[9px] uppercase font-bold text-slate-500">Weight</div>
-                        <div className="font-display font-black text-[#0b1536] text-xs mt-0.5">
-                          {formatCareerWeight(phys.weightKg, save.settings?.weightUnit)}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-[9px] uppercase font-bold text-slate-500">Foot</div>
-                        <div className="font-display font-black text-blue-600 text-xs mt-0.5">
-                          {phys.preferredFoot}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {/* Quick Season Stats Ribbon */}
-                {(() => {
-                  const pStats = getPlayerCompleteStats(selectedPlayer, save);
-                  return (
-                    <div
-                      onClick={() => setPlayerModalTab('stats')}
-                      className="bg-blue-50 hover:bg-blue-100 border border-blue-200 dark:bg-blue-950/20 dark:hover:bg-blue-950/40 dark:border-blue-500/30 rounded-xl p-2.5 flex items-center justify-between text-xs cursor-pointer transition-colors shadow-sm group"
-                      title="Click to view full statistical dossier & historical career records"
-                    >
-                      <div className="flex items-center gap-2.5 sm:gap-3 font-mono text-[11px] text-blue-700 dark:text-blue-300">
-                        <span><strong>{pStats.currentSeason.goals}</strong> G</span>
-                        <span><strong>{pStats.currentSeason.assists}</strong> A</span>
-                        <span><strong>{pStats.currentSeason.appearances}</strong> Apps</span>
-                        <span><strong>{pStats.currentSeason.appearances > 0 ? pStats.currentSeason.averageRating : '–'}</strong> Avg</span>
-                      </div>
-                      <span className="text-[10px] font-display font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
-                        Stats →
-                      </span>
-                    </div>
-                  );
-                })()}
-                    </div>
-
-                {/* Action Row */}
-                <div className="flex gap-2 pt-1">
-                  {onOpenCompare && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const p = selectedPlayer;
-                        setSelectedPlayer(null);
-                        onOpenCompare(p);
-                      }}
-                      className="py-2.5 px-3 rounded-xl border border-blue-200 dark:border-blue-500/40 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-950/70 text-blue-700 dark:text-blue-300 font-display font-black text-xs uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5"
-                      title="Compare player with squad rivals or transfer targets"
-                    >
-                      <IconBarChart className="w-3.5 h-3.5" />
-                      <span>Compare</span>
-                    </button>
-                  )}
-                  <button
-                    onClick={() => {
-                      setSwapSourceId(selectedPlayer.id);
-                      setSelectedPlayer(null);
-                    }}
-                    className="flex-1 py-2.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-display font-black text-xs uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5"
-                  >
-                    <IconSwap className="w-3.5 h-3.5" />
-                    <span>Swap on Pitch</span>
-                  </button>
-                </div>
-              </div>
-            ) : playerModalTab === 'attributes' ? (
-              /* DETAILED ATTRIBUTES & SQUAD ROLE ASSESSMENT TAB */
-              (() => {
-                const fs = calculateEaFcFaceStats(selectedPlayer);
-                const statItems = fs.isGoalkeeper
-                  ? [
-                      { label: 'Diving', val: fs.pac, key: 'DIV' },
-                      { label: 'Handling', val: fs.sho, key: 'HAN' },
-                      { label: 'Kicking', val: fs.pas, key: 'KIC' },
-                      { label: 'Reflexes', val: fs.dri, key: 'REF' },
-                      { label: 'Speed', val: fs.def, key: 'SPD' },
-                      { label: 'Positioning', val: fs.phy, key: 'POS' },
-                    ]
-                  : [
-                      { label: 'Pace', val: fs.pac, key: 'PAC' },
-                      { label: 'Shooting', val: fs.sho, key: 'SHO' },
-                      { label: 'Passing', val: fs.pas, key: 'PAS' },
-                      { label: 'Dribbling', val: fs.dri, key: 'DRI' },
-                      { label: 'Defending', val: fs.def, key: 'DEF' },
-                      { label: 'Physicality', val: fs.phy, key: 'PHY' },
-                    ];
-                const peakAge = 27;
-
-                return (
-                  <div className="min-h-full flex flex-col justify-between gap-3 text-xs">
-                    <div className="rounded-2xl p-3.5 space-y-3 bg-slate-50 border border-slate-200">
-                      <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-700 tracking-wider">
-                        <span>Detailed Attribute Ratings</span>
-                        <span className="font-mono text-slate-500">{fs.isGoalkeeper ? 'Goalkeeper Matrix' : 'Outfield Matrix'}</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2.5">
-                        {statItems.map((item) => (
-                          <div key={item.key} className="space-y-1.5 bg-white p-2.5 rounded-xl border border-slate-200/80">
-                            <div className="flex justify-between items-center text-xs">
-                              <span className="font-bold text-slate-700 text-[11px]">{item.label}</span>
-                              <span className="font-mono font-black text-slate-950 text-xs">{item.val}</span>
-                            </div>
-                            <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                              <div
-                                className={`h-full rounded-full ${
-                                  item.val >= 88
-                                    ? 'bg-amber-500'
-                                    : item.val >= 80
-                                    ? 'bg-blue-600'
-                                    : item.val >= 70
-                                    ? 'bg-emerald-500'
-                                    : 'bg-slate-400'
-                                }`}
-                                style={{ width: `${Math.min(100, (item.val / 99) * 100)}%` }}
-                              />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Squad Role & Development Assessment */}
-                    <div className="rounded-2xl p-3.5 bg-slate-50 border border-slate-200 space-y-2.5">
-                      <div className="text-[10px] font-black uppercase text-slate-700 tracking-wider">
-                        Squad Role &amp; Development Assessment
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="bg-white p-2.5 rounded-xl border border-slate-200/80">
-                          <span className="text-[9px] uppercase font-bold text-slate-500 block">Natural Positions</span>
-                          <span className="font-display font-black text-slate-900 text-xs mt-0.5 block">
-                            {(selectedPlayer.naturalPositions || [selectedPlayer.position]).join(', ')}
-                          </span>
-                        </div>
-                        <div className="bg-white p-2.5 rounded-xl border border-slate-200/80">
-                          <span className="text-[9px] uppercase font-bold text-slate-500 block">Development Stage</span>
-                          <span className="font-display font-black text-slate-900 text-xs mt-0.5 block">
-                            {selectedPlayer.age} yrs ({selectedPlayer.age < peakAge ? 'Developing' : selectedPlayer.age <= peakAge + 2 ? 'Prime' : 'Veteran'})
-                          </span>
-                        </div>
-                        <div className="bg-white p-2.5 rounded-xl border border-slate-200/80">
-                          <span className="text-[9px] uppercase font-bold text-slate-500 block">Homegrown Status</span>
-                          <span className="font-display font-black text-slate-900 text-xs mt-0.5 block">
-                            {isHomegrownPlayer(selectedPlayer) ? 'Homegrown Eligible' : 'Non-Homegrown'}
-                          </span>
-                        </div>
-                        <div className="bg-white p-2.5 rounded-xl border border-slate-200/80">
-                          <span className="text-[9px] uppercase font-bold text-slate-500 block">Potential / Morale</span>
-                          <span className="font-display font-black text-blue-700 text-xs mt-0.5 block">
-                            POT {selectedPlayer.potential ?? selectedPlayer.rating} • {Math.round(selectedPlayer.morale ?? 80)}%
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()
-            ) : playerModalTab === 'stats' ? (
-              /* STATS & HISTORICAL CAREER DOSSIER TAB */
-              (() => {
-                const pStats = getPlayerCompleteStats(selectedPlayer, save);
-                const isGkOrDef = ['GK', 'CB', 'LB', 'RB', 'LWB', 'RWB', 'DEF'].includes(selectedPlayer.position?.toUpperCase() || '');
-
-                return (
-                  <div className="min-h-full flex flex-col justify-between gap-3 text-xs">
-                    <div className="space-y-3">
-                    {/* Current Season Header */}
-                    <div className="bg-gradient-to-r from-blue-50 via-white to-indigo-50/40 border border-blue-200/80 rounded-2xl p-3 flex items-center justify-between gap-2 shadow-2xs">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <IconBarChart className="w-4 h-4 text-blue-700 shrink-0" />
-                        <div className="min-w-0">
-                          <span className="text-[10px] font-black uppercase text-blue-700 tracking-wider font-display block">
-                            Season {save.season?.seasonNumber || 1} • {pStats.currentSeason.seasonLabel}
-                          </span>
-                          <span className="text-xs font-bold text-slate-900 truncate block">
-                            {selectedPlayer.name} ({selectedPlayer.position})
-                          </span>
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 border border-blue-200 font-bold shrink-0">
-                        {pStats.currentSeason.competition}
-                      </span>
-                    </div>
-
-                    {/* Current Season Key Metrics Grid */}
-                    <div className="grid grid-cols-4 gap-1.5 text-center">
-                      <div className="bg-slate-50 border border-slate-200 p-2 rounded-xl">
-                        <span className="text-[9px] uppercase font-bold text-slate-500 block">Apps</span>
-                        <span className="font-display font-black text-slate-900 text-base">
-                          {pStats.currentSeason.appearances}
-                        </span>
-                        <span className="text-[8px] text-slate-500 block">({pStats.currentSeason.starts} starts)</span>
-                      </div>
-                      <div className="bg-slate-50 border border-slate-200 p-2 rounded-xl">
-                        <span className="text-[9px] uppercase font-bold text-slate-500 block">Goals</span>
-                        <span className="font-display font-black text-blue-700 text-base">
-                          {pStats.currentSeason.goals}
-                        </span>
-                        <span className="text-[8px] text-slate-500 block">Scored</span>
-                      </div>
-                      <div className="bg-slate-50 border border-slate-200 p-2 rounded-xl">
-                        <span className="text-[9px] uppercase font-bold text-slate-500 block">Assists</span>
-                        <span className="font-display font-black text-blue-600 text-base">
-                          {pStats.currentSeason.assists}
-                        </span>
-                        <span className="text-[8px] text-slate-500 block">Created</span>
-                      </div>
-                      <div className="bg-slate-50 border border-slate-200 p-2 rounded-xl">
-                        <span className="text-[9px] uppercase font-bold text-slate-500 block">
-                          {isGkOrDef ? 'Clean Sh' : 'Rating'}
-                        </span>
-                        <span className="font-display font-black text-amber-700 text-base">
-                          {isGkOrDef ? pStats.currentSeason.cleanSheets : (pStats.currentSeason.appearances > 0 ? pStats.currentSeason.averageRating : '–')}
-                        </span>
-                        <span className="text-[8px] text-slate-500 block">
-                          {isGkOrDef ? 'Shutouts' : 'Avg OVR'}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Secondary Disciplinary & Accolades */}
-                    <div className="grid grid-cols-3 gap-2 bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-center text-xs">
-                      <div>
-                        <span className="text-[9px] uppercase font-bold text-slate-500 block">Cards</span>
-                        <span className="font-mono font-bold text-xs mt-0.5 inline-flex items-center gap-1.5">
-                          <span className="text-amber-700 font-extrabold">{pStats.currentSeason.yellowCards} YC</span>
-                          <span className="text-rose-700 font-extrabold">{pStats.currentSeason.redCards} RC</span>
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[9px] uppercase font-bold text-slate-500 block">Man of Match</span>
-                        <span className="font-display font-black text-amber-700 text-xs mt-0.5 inline-flex items-center gap-1">
-                          <IconTrophy className="w-3 h-3" />
-                          <span>{pStats.currentSeason.manOfTheMatch} Awards</span>
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[9px] uppercase font-bold text-slate-500 block">Avg Match Rating</span>
-                        <span className="font-mono font-black text-blue-700 text-xs mt-0.5 block">
-                          {pStats.currentSeason.appearances > 0 ? `${pStats.currentSeason.averageRating} / 10` : '–'}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Previous Seasons Career History Table */}
-                    <div className="space-y-1.5 pt-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-display font-black text-slate-800 uppercase tracking-wider text-[11px]">
-                          Career History &amp; Previous Seasons
-                        </span>
-                        <span className="text-[9px] font-mono text-slate-500">
-                          {pStats.careerTotals.appearances} Total Career Apps
-                        </span>
-                      </div>
-
-                      <div className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-2xs">
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left text-[11px]">
-                            <thead className="bg-slate-100 text-[9px] font-bold uppercase text-slate-600 border-b border-slate-200 sticky top-0">
-                              <tr>
-                                <th className="py-2 px-2.5">Season</th>
-                                <th className="py-2 px-2">Club</th>
-                                <th className="py-2 px-1.5 text-center">App</th>
-                                <th className="py-2 px-1.5 text-center">G</th>
-                                <th className="py-2 px-1.5 text-center">A</th>
-                                <th className="py-2 px-1.5 text-center">{isGkOrDef ? 'CS' : 'G+A'}</th>
-                                <th className="py-2 px-2 text-right">Avg</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
-                              {/* Current season row */}
-                              <tr className="bg-blue-50/70 text-blue-900 font-bold">
-                                <td className="py-1.5 px-2.5 font-mono">{pStats.currentSeason.seasonLabel}</td>
-                                <td className="py-1.5 px-2 truncate max-w-[90px]">{pStats.currentSeason.clubName}</td>
-                                <td className="py-1.5 px-1.5 text-center font-mono">{pStats.currentSeason.appearances}</td>
-                                <td className="py-1.5 px-1.5 text-center font-mono">{pStats.currentSeason.goals}</td>
-                                <td className="py-1.5 px-1.5 text-center font-mono">{pStats.currentSeason.assists}</td>
-                                <td className="py-1.5 px-1.5 text-center font-mono">
-                                  {isGkOrDef ? pStats.currentSeason.cleanSheets : pStats.currentSeason.goals + pStats.currentSeason.assists}
-                                </td>
-                                <td className="py-1.5 px-2 text-right font-mono font-black text-blue-700">
-                                  {pStats.currentSeason.appearances > 0 ? pStats.currentSeason.averageRating : '–'}
-                                </td>
-                              </tr>
-
-                              {/* Previous seasons rows (only seasons actually played in this career) */}
-                              {pStats.previousSeasons.map((prev) => (
-                                <tr key={prev.seasonLabel} className="text-slate-700 hover:bg-slate-50">
-                                  <td className="py-1.5 px-2.5 font-mono text-slate-500">{prev.seasonLabel}</td>
-                                  <td className="py-1.5 px-2 truncate max-w-[90px]">{prev.clubName}</td>
-                                  <td className="py-1.5 px-1.5 text-center font-mono">{prev.appearances}</td>
-                                  <td className="py-1.5 px-1.5 text-center font-mono font-bold text-slate-900">{prev.goals}</td>
-                                  <td className="py-1.5 px-1.5 text-center font-mono">{prev.assists}</td>
-                                  <td className="py-1.5 px-1.5 text-center font-mono">
-                                    {isGkOrDef ? prev.cleanSheets : prev.goals + prev.assists}
-                                  </td>
-                                  <td className="py-1.5 px-2 text-right font-mono font-bold text-blue-700">
-                                    {prev.appearances > 0 ? prev.averageRating : '–'}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                            <tfoot className="bg-slate-50 text-slate-900 font-bold border-t border-slate-200 text-[10px]">
-                              <tr>
-                                <td colSpan={2} className="py-2 px-2.5 font-display uppercase tracking-wider text-amber-700">
-                                  Career Totals
-                                </td>
-                                <td className="py-2 px-1.5 text-center font-mono">{pStats.careerTotals.appearances}</td>
-                                <td className="py-2 px-1.5 text-center font-mono text-blue-700">{pStats.careerTotals.goals}</td>
-                                <td className="py-2 px-1.5 text-center font-mono text-blue-600">{pStats.careerTotals.assists}</td>
-                                <td className="py-2 px-1.5 text-center font-mono">
-                                  {isGkOrDef ? pStats.careerTotals.cleanSheets : pStats.careerTotals.goals + pStats.careerTotals.assists}
-                                </td>
-                                <td className="py-2 px-2 text-right font-mono text-amber-700">
-                                  {pStats.careerTotals.appearances > 0 ? pStats.careerTotals.averageRating : '–'}
-                                </td>
-                              </tr>
-                            </tfoot>
-                          </table>
-                        </div>
-                        {pStats.previousSeasons.length === 0 && (
-                          <p className="px-3 py-2 text-[10px] text-slate-500 bg-slate-50/70 border-t border-slate-100">
-                            Completed seasons are recorded here automatically as your career progresses.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    </div>
-                  </div>
-                );
-              })()
-            ) : (
-              <div className="min-h-full flex flex-col justify-between gap-3 text-xs">
-                <div className="space-y-3">
-                {/* Feedback Alert */}
-                {squadActionMessage && (
-                  <div
-                    className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-between ${
-                      squadActionMessage.type === 'success'
-                        ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/70 dark:border-blue-500/50 dark:text-blue-300'
-                        : 'bg-rose-950/70 border-rose-500/50 text-rose-300'
-                    }`}
-                  >
-                    <span>{squadActionMessage.text}</span>
-                    <button
-                      type="button"
-                      onClick={() => setSquadActionMessage(null)}
-                      className="opacity-70 hover:opacity-100 text-xs ml-2 cursor-pointer"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                )}
-
-                {/* Player Status Summary */}
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between">
-                  <div>
-                    <h4 className="font-display font-black text-slate-900 text-sm uppercase">{selectedPlayer.name}</h4>
-                    <span className="text-[10px] text-slate-600 font-mono">
-                      Valuation: {formatCurrency(selectedPlayer.value)} • {selectedPlayer.position}
-                    </span>
-                  </div>
-                  <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${
-                    selectedPlayer.transferListed
-                      ? 'bg-amber-50 text-amber-800 border-amber-300'
-                      : 'bg-slate-100 text-slate-700 border-slate-300'
-                  }`}>
-                    {selectedPlayer.transferListed ? 'Transfer Listed' : 'Squad Asset'}
-                  </span>
-                </div>
-
-                {/* Status Toggles */}
-                <div className="grid grid-cols-2 gap-2">
-                  <label className="flex items-center gap-2 p-2 rounded-xl bg-white border border-slate-300 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={transferListedInput}
-                      onChange={(e) => setTransferListedInput(e.target.checked)}
-                      className="accent-blue-600 rounded"
-                    />
-                    <span className="text-[11px] font-bold text-slate-800">Transfer Listed</span>
-                  </label>
-
-                  <label className="flex items-center gap-2 p-2 rounded-xl bg-white border border-slate-300 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={loanListedInput}
-                      onChange={(e) => setLoanListedInput(e.target.checked)}
-                      className="accent-blue-500 rounded"
-                    />
-                    <span className="text-[11px] font-bold text-slate-800">Available for Loan</span>
-                  </label>
-                </div>
-
-                {/* Asking Price Controls */}
-                <div className="space-y-1.5 bg-slate-50 border border-slate-200/80 p-2.5 rounded-xl">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] uppercase font-bold text-slate-500">Asking Price</span>
-                    <span className="font-display font-black text-blue-700 text-sm">
-                      {formatCurrency(askingPriceInput)}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-4 gap-1 text-[9px] font-bold">
-                    <button
-                      type="button"
-                      onClick={() => setAskingPriceInput(Math.max(100_000, askingPriceInput - 1_000_000))}
-                      className="py-1 rounded bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer shadow-2xs"
-                    >
-                      -£1M
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setAskingPriceInput(Math.max(100_000, askingPriceInput - 250_000))}
-                      className="py-1 rounded bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer shadow-2xs"
-                    >
-                      -£250k
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setAskingPriceInput(askingPriceInput + 500_000)}
-                      className="py-1 rounded bg-white border border-slate-200 hover:bg-slate-50 text-blue-700 cursor-pointer shadow-2xs"
-                    >
-                      +£500k
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setAskingPriceInput(askingPriceInput + 1_000_000)}
-                      className="py-1 rounded bg-white border border-slate-200 hover:bg-slate-50 text-blue-700 cursor-pointer shadow-2xs"
-                    >
-                      +£1M
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-1 text-[9px] font-bold pt-0.5">
-                    <button
-                      type="button"
-                      onClick={() => setAskingPriceInput(Math.max(100_000, Math.round((selectedPlayer.value * 0.85) / 100_000) * 100_000))}
-                      className="py-1 rounded bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer shadow-2xs"
-                    >
-                      85% Quick Sale
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setAskingPriceInput(selectedPlayer.value)}
-                      className="py-1 rounded bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer shadow-2xs"
-                    >
-                      100% Fair Value
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setAskingPriceInput(Math.round((selectedPlayer.value * 1.2) / 100_000) * 100_000)}
-                      className="py-1 rounded bg-white border border-slate-200 hover:bg-slate-50 text-blue-700 cursor-pointer shadow-2xs"
-                    >
-                      120% Premium
-                    </button>
-                  </div>
-
-                  <div className="flex justify-between items-center pt-1 text-[10px]">
-                    <span className="text-slate-500">
-                      Valuation: {formatCurrency(selectedPlayer.value)}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={handleUpdateTransferStatus}
-                      className="px-2.5 py-1 rounded bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold hover:from-blue-500 hover:to-indigo-500 shadow-sm shadow-blue-500/20 cursor-pointer active:scale-95"
-                    >
-                      Save Status
-                    </button>
-                  </div>
-                </div>
-
-                {/* Active Incoming Bids for this Player */}
-                {(() => {
-                  const playerBids = (save.incomingOffers || []).filter(
-                    (o) => o.playerId === selectedPlayer.id && o.status === 'pending'
-                  );
-                  if (playerBids.length === 0) return null;
-                  return (
-                    <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-2.5 space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-display font-black uppercase tracking-wider text-emerald-900">
-                          📩 Active Incoming Bids ({playerBids.length})
-                        </span>
-                        {selectedPlayer.agentBrokeringActive && (
-                          <span className="text-[9px] font-bold text-purple-700 bg-purple-100 border border-purple-200 px-1.5 py-0.5 rounded">
-                            5% Broker Fee
-                          </span>
-                        )}
-                      </div>
-                      {playerBids.map((bid) => (
-                        <div
-                          key={bid.id}
-                          className="flex items-center justify-between gap-2 bg-white border border-emerald-200/80 rounded-lg px-2.5 py-1.5"
-                        >
-                          <div className="min-w-0">
-                            <div className="font-display font-black text-xs text-slate-900 truncate">
-                              {bid.buyingClubName}
-                            </div>
-                            <div className="text-[10px] font-mono font-bold text-emerald-700">
-                              {formatCurrency(bid.offeredFee)}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1 shrink-0">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const res = executePlayerSale(
-                                  save,
-                                  bid.playerId,
-                                  bid.offeredFee,
-                                  bid.buyingClubName,
-                                  bid.sellOnPercent
-                                );
-                                if (res.success) {
-                                  const cleanedOffers = (res.updatedSave.incomingOffers || []).filter(
-                                    (o) => o.id !== bid.id && o.playerId !== bid.playerId
-                                  );
-                                  onUpdateSave({ ...res.updatedSave, incomingOffers: cleanedOffers });
-                                  setSelectedPlayer(null);
-                                  setAcademyToast({
-                                    message: `Sold ${selectedPlayer.name} to ${bid.buyingClubName} for ${formatCurrency(bid.offeredFee)}.`,
-                                    type: 'success',
-                                  });
-                                } else {
-                                  setSquadActionMessage({ text: res.error || 'Could not complete sale.', type: 'error' });
-                                }
-                              }}
-                              className="px-2 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-display font-black text-[10px] uppercase cursor-pointer"
-                            >
-                              Accept
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const updatedOffers = (save.incomingOffers || []).map((o) =>
-                                  o.id === bid.id ? { ...o, status: 'rejected' as const } : o
-                                );
-                                onUpdateSave({ ...save, incomingOffers: updatedOffers });
-                                setSquadActionMessage({ text: `Rejected ${bid.buyingClubName}'s offer.`, type: 'success' });
-                              }}
-                              className="px-2 py-1 rounded bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 font-display font-bold text-[10px] uppercase cursor-pointer"
-                            >
-                              Reject
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })()}
-
-                {/* Market Operations Buttons */}
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={handleOfferToClubs}
-                    className="p-2.5 rounded-xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100/70 text-blue-900 font-display font-bold text-xs uppercase tracking-wider text-left transition-all cursor-pointer flex items-center justify-between gap-1 shadow-2xs active:scale-95"
-                  >
-                    <div>
-                      <div className="font-black text-slate-900 flex items-center gap-1.5">
-                        <IconMegaphone className="w-3.5 h-3.5 text-blue-700 shrink-0" />
-                        <span>Offer to Clubs</span>
-                      </div>
-                      <div className="text-[9.5px] text-slate-500 font-normal">
-                        Circulate worldwide
-                      </div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleHireIntermediary}
-                    className="p-2.5 rounded-xl border border-purple-200 bg-purple-50/70 hover:bg-purple-100/70 text-purple-900 font-display font-bold text-xs uppercase tracking-wider text-left transition-all cursor-pointer flex items-center justify-between gap-1 shadow-2xs active:scale-95"
-                  >
-                    <div>
-                      <div className="font-black text-slate-900 flex items-center gap-1.5">
-                        <IconHandshake className="w-3.5 h-3.5 text-purple-700 shrink-0" />
-                        <span>Intermediary</span>
-                      </div>
-                      <div className="text-[9.5px] text-slate-500 font-normal">
-                        Broker firm bids (5%)
-                      </div>
-                    </div>
-                  </button>
-                </div>
-
-                {/* Free Release Trigger */}
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => setShowReleaseModal(!showReleaseModal)}
-                    className="w-full py-2 px-3 rounded-xl border border-rose-200 hover:border-rose-300 bg-rose-50/70 hover:bg-rose-100/70 text-rose-800 font-display font-bold text-[11px] uppercase tracking-wider text-center transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95 shadow-2xs"
-                  >
-                    <IconAlert className="w-3.5 h-3.5 text-rose-700 shrink-0" />
-                    <span>Release Player on Free Transfer</span>
-                  </button>
-                </div>
-
-                {/* Release Confirmation & Payout Calculation */}
-                {showReleaseModal && (
-                  <div className="bg-rose-50 border border-rose-200 p-3 rounded-xl space-y-2 text-slate-800">
-                    <p className="text-[11px] text-slate-700 leading-relaxed">
-                      Releasing <strong className="text-slate-900">{selectedPlayer.name}</strong> will remove him from your squad and free up <strong className="text-emerald-700">+{formatWage(selectedPlayer.wageWeekly)}/wk</strong> in wages.
-                    </p>
-
-                    {(() => {
-                      const remainingWeeks = Math.max(1, (selectedPlayer.contractYears ?? 2) * 52);
-                      const fullLiability = remainingWeeks * selectedPlayer.wageWeekly;
-                      const mutualPayout = Math.round(fullLiability * 0.60);
-
-                      return (
-                        <div className="space-y-2">
-                          <div className="grid grid-cols-2 gap-2 text-xs">
-                            <label
-                              onClick={() => setReleaseActionType('mutual')}
-                              className={`p-2 rounded-xl border cursor-pointer transition-all ${
-                                releaseActionType === 'mutual'
-                                  ? 'bg-amber-50 border-amber-400 text-amber-900'
-                                  : 'bg-white border-slate-300 text-slate-700'
-                              }`}
-                            >
-                              <span className="text-[9.5px] font-black uppercase block">Mutual Settlement</span>
-                              <span className="font-display font-black text-xs text-slate-900 block mt-0.5">
-                                {formatCurrency(mutualPayout)}
-                              </span>
-                            </label>
-
-                            <label
-                              onClick={() => setReleaseActionType('unilateral')}
-                              className={`p-2 rounded-xl border cursor-pointer transition-all ${
-                                releaseActionType === 'unilateral'
-                                  ? 'bg-rose-50 border-rose-400 text-rose-900'
-                                  : 'bg-white border-slate-300 text-slate-700'
-                              }`}
-                            >
-                              <span className="text-[9.5px] font-black uppercase block">Unilateral Buyout</span>
-                              <span className="font-display font-black text-xs text-slate-900 block mt-0.5">
-                                {formatCurrency(fullLiability)}
-                              </span>
-                            </label>
-                          </div>
-
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={() => setShowReleaseModal(false)}
-                              className="py-1.5 px-3 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 font-bold text-xs uppercase cursor-pointer"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              type="button"
-                              onClick={handleConfirmRelease}
-                              className="flex-1 py-1.5 px-3 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-display font-black text-xs uppercase tracking-wider cursor-pointer"
-                            >
-                              Confirm Termination
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </div>
-                )}
-
-                {/* Market Tab Bottom Controls */}
-                </div>
-                <div className="flex gap-2 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => setPlayerModalTab('profile')}
-                    className="flex-1 py-2 rounded-xl border border-[#E2DFD9] bg-[#F7F6F3] hover:bg-zinc-200/70 text-zinc-900 font-display font-bold text-xs uppercase tracking-wider cursor-pointer"
-                  >
-                    ← Back to Profile
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedPlayer(null)}
-                    className="py-2 px-4 rounded-xl border border-[#E2DFD9] bg-white hover:bg-[#F7F6F3] text-zinc-700 text-xs font-bold cursor-pointer"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            )}
-                </div>
-
-                {/* Bottom Thumb-Zone Tab Switcher (Swipeable or Tap) */}
-                <div className="shrink-0 border-t border-[#E2DFD9] bg-[#F7F6F3] p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-                  <div className="grid grid-cols-4 gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setPlayerModalTab('profile')}
-                      className={`py-2 px-1 rounded-xl text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate flex items-center justify-center gap-1 ${
-                        playerModalTab === 'profile'
-                          ? 'office-nav-tab-active shadow-sm'
-                          : 'bg-white border border-[#E2DFD9] text-zinc-700'
-                      }`}
-                    >
-                      <IconUser className="w-3.5 h-3.5 shrink-0" />
-                      <span>Profile</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPlayerModalTab('attributes')}
-                      className={`py-2 px-1 rounded-xl text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate flex items-center justify-center gap-1 ${
-                        playerModalTab === 'attributes'
-                          ? 'office-nav-tab-active shadow-sm'
-                          : 'bg-white border border-[#E2DFD9] text-zinc-700'
-                      }`}
-                    >
-                      <IconBolt className="w-3.5 h-3.5 shrink-0" />
-                      <span>Attrs</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPlayerModalTab('stats')}
-                      className={`py-2 px-1 rounded-xl text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate flex items-center justify-center gap-1 ${
-                        playerModalTab === 'stats'
-                          ? 'office-nav-tab-active shadow-sm'
-                          : 'bg-white border border-[#E2DFD9] text-zinc-700'
-                      }`}
-                    >
-                      <IconBarChart className="w-3.5 h-3.5 shrink-0" />
-                      <span>Stats</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPlayerModalTab('market')}
-                      className={`py-2 px-1 rounded-xl text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate flex items-center justify-center gap-1 ${
-                        playerModalTab === 'market'
-                          ? 'office-nav-tab-active shadow-sm'
-                          : 'bg-white border border-[#E2DFD9] text-zinc-700'
-                      }`}
-                    >
-                      <IconBriefcase className="w-3.5 h-3.5 shrink-0" />
-                      <span>Market</span>
-                    </button>
-                  </div>
-                </div>
-          </div>
-        </div>,
-        document.body
+      {selectedPlayer && (
+        <SquadPlayerModal
+          key={selectedPlayer.id}
+          player={selectedPlayer}
+          save={save}
+          onClose={() => setSelectedPlayer(null)}
+          onUpdateSave={onUpdateSave}
+          onPlayerUpdated={setSelectedPlayer}
+          onSwapOnPitch={(playerId) => {
+            setSwapSourceId(playerId);
+            setSelectedPlayer(null);
+          }}
+          onOpenCompare={onOpenCompare}
+          onToast={(toast) => {
+            setAcademyToast(toast);
+            setTimeout(() => setAcademyToast(null), 4000);
+          }}
+        />
       )}
 
       {/* 25-Man League Squad Registration Modal */}
@@ -3494,25 +2374,22 @@ export function SquadManagement({
         <aside
           role="region"
           aria-label="Active player swap"
-          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-lg office-floating-card bg-white/95 border-2 border-amber-400 rounded-3xl p-3 sm:p-3.5 shadow-2xl backdrop-blur-md flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-4"
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-lg office-floating-card bg-white/95 border-2 border-amber-400 rounded-3xl p-3 sm:p-3.5 shadow-2xl backdrop-blur-md flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-4 motion-reduce:animate-none"
         >
           {(() => {
             const p = squad.find((sp) => sp.id === swapSourceId);
             return (
               <>
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-9 h-9 rounded-2xl bg-amber-50 border border-amber-300 flex items-center justify-center text-amber-700 font-bold shrink-0 text-sm shadow-2xs">
-                    🔄
+                  <div className="w-9 h-9 rounded-2xl bg-amber-50 border border-amber-300 flex items-center justify-center text-amber-700 font-bold shrink-0 shadow-2xs">
+                    <IconSwap className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
                     <div className="text-[10px] font-black uppercase text-amber-700 tracking-wider font-display truncate">
-                      Swapping Active
+                      Tap a player or bench slot to swap
                     </div>
                     <div className="text-xs sm:text-sm font-display font-black text-[#0b1536] truncate">
                       {p?.name} <span className="text-slate-500 text-[11px] font-medium">({p?.position} • {p?.rating} OVR)</span>
-                    </div>
-                    <div className="text-[9.5px] text-slate-500 truncate">
-                      Tap or drop on any pitch player or bench slot
                     </div>
                   </div>
                 </div>
@@ -3522,10 +2399,11 @@ export function SquadManagement({
                     <button
                       type="button"
                       onClick={() => onOpenCompare(p)}
-                      className="py-1.5 px-3 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 text-xs font-bold cursor-pointer transition-colors shadow-2xs"
+                      className="py-1.5 px-3 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 text-xs font-bold cursor-pointer transition-colors shadow-2xs inline-flex items-center gap-1"
                       title="Compare with squad rivals"
                     >
-                      📊 Compare
+                      <IconBarChart className="w-3.5 h-3.5 shrink-0" />
+                      <span>Compare</span>
                     </button>
                   )}
                   <button
@@ -3571,14 +2449,14 @@ export function SquadManagement({
       {/* Reserve Picker Modal for Empty Bench Slots */}
       {showReservePickerModal && isMounted && createPortal(
             <div
-              className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in"
+              className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in motion-reduce:animate-none"
               onClick={() => setShowReservePickerModal(false)}
             >
           <div
-            className="office-floating-card my11-mobile-sheet bg-white border border-slate-200/90 rounded-t-3xl sm:rounded-3xl max-w-md w-full p-4 sm:p-5 shadow-2xl space-y-4 max-h-[85vh] flex flex-col text-slate-900"
+            className="office-floating-card my11-mobile-sheet bg-white border border-slate-200/90 rounded-t-3xl sm:rounded-3xl max-w-md w-full p-4 sm:p-5 shadow-2xl space-y-4 max-h-[85dvh] flex flex-col text-slate-900"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 gap-2">
               <div>
                 <h3 className="text-sm font-display font-black uppercase tracking-wider text-slate-900">
                   Add Substitute to Bench
@@ -3590,10 +2468,10 @@ export function SquadManagement({
               <button
                 type="button"
                 onClick={() => setShowReservePickerModal(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-xs font-bold cursor-pointer transition-colors"
+                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center cursor-pointer transition-colors shrink-0"
                 aria-label="Close"
               >
-                ✕
+                <IconClose className="w-4 h-4" />
               </button>
             </div>
 
@@ -3659,6 +2537,34 @@ export function SquadManagement({
     </div>
   );
 
+  function renderDisclosureHeader(
+    key: string,
+    panelId: string,
+    icon: React.ReactNode,
+    title: string,
+    summary: React.ReactNode
+  ) {
+    const isOpen = Boolean(openPanels[key]);
+    return (
+      <button
+        type="button"
+        aria-expanded={isOpen}
+        aria-controls={panelId}
+        onClick={() => togglePanel(key)}
+        className="w-full min-h-[44px] px-3.5 py-2 flex items-center justify-between gap-2 text-left cursor-pointer"
+      >
+        <span className="flex items-center gap-1.5 shrink-0">
+          {icon}
+          <span className="text-xs font-display font-black uppercase tracking-wider text-[#0b1536]">{title}</span>
+        </span>
+        <span className="flex items-center gap-1.5 min-w-0 text-[11px] text-slate-500">
+          {summary}
+          {isOpen ? <IconChevronUp className="w-4 h-4 shrink-0" /> : <IconChevronDown className="w-4 h-4 shrink-0" />}
+        </span>
+      </button>
+    );
+  }
+
   function renderPitchSlot(
     slotPos: string,
     player: CareerPlayer | undefined,
@@ -3693,22 +2599,22 @@ export function SquadManagement({
           }}
           className={`my11-pitch-empty-slot ${slotWidthClass} p-2 text-center cursor-pointer flex flex-col items-center justify-center min-h-[66px] select-none transition-all ${
             prospectiveFit === 'natural'
-              ? 'border-emerald-400 ring-2 ring-emerald-400 bg-emerald-500/25 text-emerald-100 animate-pulse'
+              ? 'border-emerald-400 ring-2 ring-emerald-400 bg-emerald-500/25 text-emerald-100 animate-pulse motion-reduce:animate-none'
               : prospectiveFit === 'competent'
-              ? 'border-amber-400 ring-2 ring-amber-400 bg-amber-500/25 text-amber-100 animate-pulse'
+              ? 'border-amber-400 ring-2 ring-amber-400 bg-amber-500/25 text-amber-100 animate-pulse motion-reduce:animate-none'
               : prospectiveFit === 'out_of_position'
               ? 'border-rose-400 ring-2 ring-rose-400 bg-rose-500/20 text-rose-200'
               : swapSourceId
-              ? 'border-amber-400 bg-amber-500/20 text-amber-200 animate-pulse'
+              ? 'border-amber-400 bg-amber-500/20 text-amber-200 animate-pulse motion-reduce:animate-none'
               : ''
           }`}
           title={`${slotPos} (Empty) - Click or drop to assign`}
         >
-          <span className="text-xs leading-none mb-0.5">➕</span>
+          <span className="text-sm font-display font-black leading-none mb-0.5">+</span>
           <span className="text-[10px] font-display font-black uppercase tracking-wider">{slotPos}</span>
           {prospectiveFit && (
             <span
-              className={`text-[7.5px] font-black uppercase px-1 py-0.2 rounded mt-0.5 border shadow-2xs font-display ${
+              className={`text-[10px] leading-tight font-black uppercase px-1 rounded mt-0.5 border shadow-2xs font-display ${
                 prospectiveFit === 'natural'
                   ? 'bg-emerald-600 text-white border-emerald-400'
                   : prospectiveFit === 'competent'
@@ -3716,7 +2622,7 @@ export function SquadManagement({
                   : 'bg-rose-600 text-white border-rose-400'
               }`}
             >
-              {prospectiveFit === 'natural' ? '✓ NAT' : prospectiveFit === 'competent' ? '~ SEC' : '✕ OOP'}
+              {prospectiveFit === 'natural' ? 'NAT' : prospectiveFit === 'competent' ? 'SEC' : 'OOP'}
             </span>
           )}
         </div>
@@ -3738,12 +2644,10 @@ export function SquadManagement({
         ? 'my11-badge-strong'
         : 'my11-badge-modest';
 
-    const fitBadgeClass =
-      fit === 'natural'
-        ? 'bg-blue-50 text-blue-700 border-blue-200/80'
-        : fit === 'competent'
-        ? 'bg-amber-50 text-amber-800 border-amber-300'
-        : 'bg-rose-50 text-rose-800 border-rose-300';
+    const fitDotClass =
+      fit === 'natural' ? 'bg-emerald-500' : fit === 'competent' ? 'bg-amber-500' : 'bg-rose-500';
+    const fitness = Math.round(player.fitness ?? 100);
+    const isSuspended = Boolean(player.suspendedMatches && player.suspendedMatches > 0);
 
     return (
       <div
@@ -3762,7 +2666,7 @@ export function SquadManagement({
         title={`${player.name} (${player.position}) • Role: ${slotPos} (${
           fit === 'natural' ? 'Natural 100%' : fit === 'competent' ? 'Secondary 98%' : 'Out of Position 86%'
         }) • ${effectiveRating} OVR • Drag or click to swap`}
-        aria-label={`${player.name}, position ${player.position}, rating ${effectiveRating}`}
+        aria-label={`${player.name}, position ${player.position}, rating ${effectiveRating}${player.injured ? ', injured' : ''}${isSuspended ? ', suspended' : ''}`}
         className={`my11-pitch-player-card ${slotWidthClass} p-1.5 sm:p-2 cursor-grab active:cursor-grabbing text-center scroll-mt-20 transition-all overflow-hidden ${
           isDragTarget
             ? 'my11-pitch-player-card-target'
@@ -3781,36 +2685,48 @@ export function SquadManagement({
             : 'ring-1 ring-emerald-500/40'
         }`}
       >
-        <div className="flex justify-between items-center text-[8.5px] font-black leading-none mb-1 gap-0.5">
-          <span className={`px-1 py-0.5 rounded font-display uppercase tracking-tight text-[8px] border shrink-0 ${fitBadgeClass}`}>
-            {slotPos}
-          </span>
-          <div className="flex items-center gap-0.5 shrink-0">
+        <div className="flex justify-between items-center leading-none mb-1 gap-0.5">
+          <div className="flex items-center gap-0.5 min-w-0 overflow-hidden">
+            <span
+              className={`w-2 h-2 rounded-full shrink-0 ${fitDotClass}`}
+              role="img"
+              aria-label={fit === 'natural' ? 'Natural position' : fit === 'competent' ? 'Secondary position' : 'Out of position'}
+            />
             {player.id === currentTactics.captainId && (
-              <span
-                className="px-1 py-0.2 rounded font-display font-black text-[7.5px] bg-amber-400 text-slate-950 border border-amber-500"
-                title="Club Captain (C)"
-              >
+              <span className="px-1 rounded font-display font-black text-[10px] leading-[14px] bg-amber-400 text-slate-950" title="Club Captain">
                 C
               </span>
             )}
             {player.id === currentTactics.viceCaptainId && (
-              <span
-                className="px-1 py-0.2 rounded font-display font-black text-[7.5px] bg-slate-300 text-slate-900 border border-slate-400"
-                title="Vice-Captain (VC)"
-              >
+              <span className="px-0.5 rounded font-display font-black text-[10px] leading-[14px] bg-slate-300 text-slate-900" title="Vice-Captain">
                 VC
               </span>
             )}
-            <span className={`px-1 py-0.5 rounded-md font-display font-black text-[10px] ${ratingBadgeClass}`}>
-              {effectiveRating}
-            </span>
+            {player.injured && (
+              <span role="img" aria-label="Injured" title={player.injuryDescription || 'Injured'} className="shrink-0">
+                <IconMedkit className="w-3 h-3 text-rose-600" />
+              </span>
+            )}
+            {isSuspended && (
+              <span
+                role="img"
+                aria-label="Suspended"
+                title={player.suspensionReason || `Suspended (${player.suspendedMatches} match ban)`}
+                className="shrink-0"
+              >
+                <IconCard tone="rose" className="w-3 h-3" />
+              </span>
+            )}
           </div>
+          <span className={`px-1 py-0.5 rounded-md font-display font-black text-[10px] shrink-0 ${ratingBadgeClass}`}>
+            {effectiveRating}
+          </span>
         </div>
 
+        {/* Swap preview: how the moving player would fit this slot */}
         {prospectiveFit && (
           <div
-            className={`text-[7.5px] font-black font-display uppercase px-1 py-0.2 rounded border mb-0.5 ${
+            className={`text-[10px] leading-tight font-black font-display uppercase px-1 rounded border mb-0.5 ${
               prospectiveFit === 'natural'
                 ? 'bg-emerald-600 text-white border-emerald-400 shadow-2xs'
                 : prospectiveFit === 'competent'
@@ -3818,61 +2734,35 @@ export function SquadManagement({
                 : 'bg-rose-600 text-white border-rose-400 shadow-2xs'
             }`}
           >
-            Swap: {prospectiveFit === 'natural' ? '✓ NAT' : prospectiveFit === 'competent' ? '~ SEC' : '✕ OOP'}
+            {prospectiveFit === 'natural' ? 'NAT' : prospectiveFit === 'competent' ? 'SEC' : 'OOP'}
           </div>
         )}
 
-        <div
-          className="text-[9.5px] sm:text-[10.5px] font-display font-black text-[#0b1536] leading-[1.12] mt-0.5 line-clamp-2 break-words min-h-[22px] flex items-center justify-center text-center px-0.5"
-          title={player.name}
-        >
+        <div className="text-[10px] sm:text-[10.5px] font-display font-black text-[#0b1536] leading-[1.12] line-clamp-2 break-words min-h-[22px] flex items-center justify-center text-center px-0.5">
           {player.name}
         </div>
-        <div className="text-[8px] text-zinc-600 font-semibold truncate mt-0.5 flex items-center justify-center gap-1">
-          <span>{player.position}</span>
-          {fit !== 'natural' && (
-            <span
-              className={`text-[7px] font-black px-1 rounded ${
-                fit === 'competent' ? 'bg-amber-100 text-amber-900' : 'bg-rose-100 text-rose-900'
-              }`}
-            >
-              {fit === 'competent' ? 'SEC' : 'OOP'}
+
+        {/* Form, fitness and role detail only on the selected card */}
+        {isSwapping && (
+          <div className="text-[10px] text-zinc-600 font-semibold mt-0.5 flex items-center justify-center gap-1 flex-wrap">
+            <span>{player.position}</span>
+            {fit !== 'natural' && (
+              <span className={`font-black px-1 rounded ${fit === 'competent' ? 'bg-amber-100 text-amber-900' : 'bg-rose-100 text-rose-900'}`}>
+                {fit === 'competent' ? 'SEC' : 'OOP'}
+              </span>
+            )}
+            <span className={`font-mono font-bold ${fitness >= 80 ? 'text-emerald-700' : fitness >= 65 ? 'text-amber-700' : 'text-rose-700'}`}>
+              {fitness}%
             </span>
-          )}
-          <span
-            className={`font-mono font-bold text-[8px] ${
-              (player.fitness ?? 100) >= 80
-                ? 'text-emerald-700'
-                : (player.fitness ?? 100) >= 65
-                ? 'text-amber-700'
-                : 'text-rose-700'
-            }`}
-          >
-            {Math.round(player.fitness ?? 100)}%
-          </span>
-          {bonus > 0 && <span title={`In-Form (+${bonus})`}>🔥</span>}
-          {bonus < 0 && <span title={`Slump (${bonus})`}>❄️</span>}
-          {player.injured && (
-            <span className="text-[7px] font-black px-1 rounded bg-rose-600 text-white" title={player.injuryDescription || 'Injured'}>
-              INJ
-            </span>
-          )}
-          {Boolean(player.suspendedMatches && player.suspendedMatches > 0) && (
-            <span className="text-[7px] font-black px-1 rounded bg-red-700 text-white" title={player.suspensionReason || `Suspended (${player.suspendedMatches} match ban)`}>
-              SUSP
-            </span>
-          )}
-        </div>
-        <div className="w-full h-1 rounded-full bg-zinc-200 overflow-hidden mt-1" title={`Fitness: ${Math.round(player.fitness ?? 100)}%`}>
+            {bonus > 0 && <IconFlame className="w-2.5 h-2.5 text-amber-500 shrink-0" aria-label={`In-Form (+${bonus})`} />}
+            {bonus < 0 && <IconSnowflake className="w-2.5 h-2.5 text-sky-500 shrink-0" aria-label={`Slump (${bonus})`} />}
+          </div>
+        )}
+
+        <div className="w-full h-1 rounded-full bg-zinc-200 overflow-hidden mt-1" title={`Fitness: ${fitness}%`}>
           <div
-            className={`h-full rounded-full ${
-              (player.fitness ?? 100) >= 80
-                ? 'bg-emerald-500'
-                : (player.fitness ?? 100) >= 65
-                ? 'bg-amber-500'
-                : 'bg-rose-500'
-            }`}
-            style={{ width: `${Math.max(5, Math.min(100, Math.round(player.fitness ?? 100)))}%` }}
+            className={`h-full rounded-full ${fitness >= 80 ? 'bg-emerald-500' : fitness >= 65 ? 'bg-amber-500' : 'bg-rose-500'}`}
+            style={{ width: `${Math.max(5, Math.min(100, fitness))}%` }}
           />
         </div>
       </div>

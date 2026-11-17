@@ -10,7 +10,9 @@ import {
   CampaignHistoryEntry,
   PersonalBests,
   CampaignPlayerSnapshot,
-  ChallengeTarget
+  ChallengeTarget,
+  H2HSquadChallenge,
+  H2HShowdownResult
 } from '../types/game';
 import { 
   FORMATION_SLOTS, 
@@ -24,7 +26,11 @@ import {
   getProjectedChemistry
 } from '../utils/gameLogic';
 import { players } from '../data/players';
-import { parseChallengeFromUrl } from '../utils/challengeUrl';
+import {
+  parseChallengeFromUrl,
+  parseH2HChallengeFromUrl,
+  simulateH2HSquadShowdown,
+} from '../utils/challengeUrl';
 import { 
   logGameStarted, 
   logFormationSelected, 
@@ -112,6 +118,9 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
   const [personalBests, setPersonalBests] = useState<PersonalBests>({});
   const [targetToBeat, setTargetToBeat] = useState<ChallengeTarget | null>(null);
   const [incomingChallenge, setIncomingChallenge] = useState<ChallengeTarget | null>(null);
+  const [incomingH2HChallenge, setIncomingH2HChallenge] = useState<H2HSquadChallenge | null>(null);
+  const [activeH2HChallenge, setActiveH2HChallenge] = useState<H2HSquadChallenge | null>(null);
+  const [h2hShowdown, setH2HShowdown] = useState<H2HShowdownResult | null>(null);
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
 
   const [dailyStatus, setDailyStatus] = useState<DailyChallengeStatus>({
@@ -141,8 +150,12 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
 
   // Safe DOM transition helper
   const transitionDOM = useCallback((updateFn: () => void) => {
-    if (typeof document !== 'undefined' && (document as any).startViewTransition) {
-      (document as any).startViewTransition(updateFn);
+    const docWithTransition =
+      typeof document !== 'undefined'
+        ? (document as Document & { startViewTransition?: (cb: () => void) => void })
+        : null;
+    if (docWithTransition?.startViewTransition) {
+      docWithTransition.startViewTransition(updateFn);
     } else {
       updateFn();
     }
@@ -152,46 +165,58 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
   // INITIAL LOAD
   // ==========================================
   useEffect(() => {
-    // 1. Get today's local date YYYY-MM-DD
-    const today = new Date();
-    const YYYY = today.getFullYear();
-    const MM = String(today.getMonth() + 1).padStart(2, '0');
-    const DD = String(today.getDate()).padStart(2, '0');
-    const dateStr = `${YYYY}-${MM}-${DD}`;
-    setTodayDateStr(dateStr);
+    let cancelled = false;
+    Promise.resolve().then(() => {
+      if (cancelled) return;
+      // 1. Get today's local date YYYY-MM-DD
+      const today = new Date();
+      const YYYY = today.getFullYear();
+      const MM = String(today.getMonth() + 1).padStart(2, '0');
+      const DD = String(today.getDate()).padStart(2, '0');
+      const dateStr = `${YYYY}-${MM}-${DD}`;
+      setTodayDateStr(dateStr);
 
-    // 2. Set today's challenge
-    const day = today.getDay(); // 0 = Sun, ..., 6 = Sat
-    setTodayChallenge(DAILY_CHALLENGES[day]);
+      // 2. Set today's challenge
+      const day = today.getDay(); // 0 = Sun, ..., 6 = Sat
+      setTodayChallenge(DAILY_CHALLENGES[day]);
 
-    // 3. Load stats, streaks, history, personal bests and daily status via storage utility
-    setStreakStats(getSavedStreaks());
-    setCampaignHistory(getSavedCampaignHistory());
-    setPersonalBests(getSavedPersonalBests());
-    setDailyStatus(getDailyChallengeStatus(dateStr));
+      // 3. Load stats, streaks, history, personal bests and daily status via storage utility
+      setStreakStats(getSavedStreaks());
+      setCampaignHistory(getSavedCampaignHistory());
+      setPersonalBests(getSavedPersonalBests());
+      setDailyStatus(getDailyChallengeStatus(dateStr));
 
-    // 4. Select a random legend for showcase
-    const legends = players.filter((p) => p.isLegendaryPlayer || p.rarity === 'legend');
-    if (legends.length > 0) {
-      const randomIndex = Math.floor(Math.random() * legends.length);
-      setShowcasePlayer(legends[randomIndex]);
-    }
-
-    // 5. Parse incoming URL challenge if present
-    if (typeof window !== 'undefined' && window.location.search) {
-      const parsed = parseChallengeFromUrl(window.location.search);
-      if (parsed) {
-        setIncomingChallenge(parsed);
-        logChallengeLinkOpened(parsed.targetWins, parsed.targetPoints);
+      // 4. Select a random legend for showcase
+      const legends = players.filter((p) => p.isLegendaryPlayer || p.rarity === 'legend');
+      if (legends.length > 0) {
+        const randomIndex = Math.floor(Math.random() * legends.length);
+        setShowcasePlayer(legends[randomIndex]);
       }
-    }
 
-    // 6. Check first-run onboarding status
-    const onboardingDone = getOnboardingCompleted();
-    if (!onboardingDone) {
-      setShowOnboarding(true);
-      logOnboardingStarted();
-    }
+      // 5. Parse incoming URL challenge & H2H battle if present
+      if (typeof window !== 'undefined' && window.location.search) {
+        const parsed = parseChallengeFromUrl(window.location.search);
+        if (parsed) {
+          setIncomingChallenge(parsed);
+          logChallengeLinkOpened(parsed.targetWins, parsed.targetPoints);
+        }
+        const parsedH2H = parseH2HChallengeFromUrl(window.location.search);
+        if (parsedH2H) {
+          setIncomingH2HChallenge(parsedH2H);
+          setActiveH2HChallenge(parsedH2H);
+        }
+      }
+
+      // 6. Check first-run onboarding status
+      const onboardingDone = getOnboardingCompleted();
+      if (!onboardingDone) {
+        setShowOnboarding(true);
+        logOnboardingStarted();
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Reset scroll to top on screen/phase transitions
@@ -202,13 +227,15 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
   }, [phase]);
 
   // Reset search filters when target slot changes
-  useEffect(() => {
+  const [prevSlotIndex, setPrevSlotIndex] = useState<number>(currentSlotIndex);
+  if (currentSlotIndex !== prevSlotIndex) {
+    setPrevSlotIndex(currentSlotIndex);
     setSearchQuery('');
     setSelectedClub('');
     setSelectedEra('');
     setOnlyMatchingPosition(true);
     setDraftTab('recommended');
-  }, [currentSlotIndex]);
+  }
 
   // Unique list of clubs and eras for dropdown filters
   const allClubs = useMemo(() => {
@@ -700,23 +727,46 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
     // 4. Personal Bests evaluation (skips Daily Challenges)
     const { updatedBests, brokenRecords } = checkAndApplyPersonalBests(historyEntry, personalBests);
     setPersonalBests(updatedBests);
-    if (brokenRecords.length > 0) {
-      simResult.newPersonalBests = brokenRecords;
-    }
 
     // 5. Target To Beat evaluation
+    let nextBeatTargetResult: SimulationResult['beatTargetResult'] | undefined;
     if (targetToBeat) {
-      const isBeaten = simResult.wins > targetToBeat.targetWins;
+      const targetBeaten = simResult.wins > targetToBeat.targetWins;
       const isMatched = simResult.wins === targetToBeat.targetWins;
-      simResult.beatTargetResult = {
+      nextBeatTargetResult = {
         targetWins: targetToBeat.targetWins,
-        beaten: isBeaten,
+        beaten: targetBeaten,
         matched: isMatched,
       };
-      logChallengeCompleted(targetToBeat.targetWins, simResult.wins, isBeaten);
-      if (isBeaten) {
+      logChallengeCompleted(targetToBeat.targetWins, simResult.wins, targetBeaten);
+      if (targetBeaten) {
         logChallengeBeaten(targetToBeat.targetWins, simResult.wins);
       }
+    }
+
+    if (brokenRecords.length > 0 || nextBeatTargetResult) {
+      setSimResult((prev) =>
+        prev
+          ? {
+              ...prev,
+              ...(brokenRecords.length > 0 ? { newPersonalBests: brokenRecords } : {}),
+              ...(nextBeatTargetResult ? { beatTargetResult: nextBeatTargetResult } : {}),
+            }
+          : prev
+      );
+    }
+
+    // 5b. H2H Friend Battle evaluation (2-legged showdown against shared XI)
+    if (activeH2HChallenge) {
+      const showdown = simulateH2HSquadShowdown(
+        selectedPlayers,
+        formation,
+        stats,
+        activeH2HChallenge
+      );
+      setH2HShowdown(showdown);
+    } else {
+      setH2HShowdown(null);
     }
 
     // 6. Streak & Lifetime statistics
@@ -769,6 +819,7 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
     streakStats,
     personalBests,
     targetToBeat,
+    activeH2HChallenge,
     todayDateStr,
     dailyStatus.beaten,
     draftModifier,
@@ -838,6 +889,35 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
 
   const handleDismissChallenge = useCallback(() => {
     setIncomingChallenge(null);
+  }, []);
+
+  const handleAcceptH2HChallenge = useCallback((h2h: H2HSquadChallenge) => {
+    setActiveH2HChallenge(h2h);
+    setIncomingH2HChallenge(null);
+    setH2HShowdown(null);
+    if (h2h.draftMode) {
+      setDraftModifierState(h2h.draftMode);
+    }
+    if (h2h.leagueId) {
+      setSelectedLeague(h2h.leagueId);
+    }
+    setIsDailyChallenge(false);
+    setSelectedPlayers(Array(11).fill(null));
+    setCurrentSlotIndex(0);
+    setDraftOptions(null);
+    setRerollsRemaining(3);
+    setStats({ attack: 0, midfield: 0, defence: 0, chemistry: 0, overall: 0 });
+    setSimResult(null);
+    setFormation(null);
+    transitionDOM(() => {
+      setPhase('formation');
+    });
+  }, [transitionDOM]);
+
+  const handleDismissH2HChallenge = useCallback(() => {
+    setIncomingH2HChallenge(null);
+    setActiveH2HChallenge(null);
+    setH2HShowdown(null);
   }, []);
 
   const handleTryToBeat = useCallback((entry: CampaignHistoryEntry) => {
@@ -927,6 +1007,9 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
     personalBests,
     targetToBeat,
     incomingChallenge,
+    incomingH2HChallenge,
+    activeH2HChallenge,
+    h2hShowdown,
     showOnboarding,
 
     // Handlers
@@ -950,6 +1033,8 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
     handleClearHistory,
     handleAcceptChallenge,
     handleDismissChallenge,
+    handleAcceptH2HChallenge,
+    handleDismissH2HChallenge,
     handleSkipOnboarding,
     handleCompleteOnboarding,
   };

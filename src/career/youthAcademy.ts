@@ -165,21 +165,21 @@ export function applySeasonalPlayerProgression(squad: CareerPlayer[]): Progressi
       const maxGrowth = player.potential ? Math.max(0, player.potential - player.rating) : 3;
       ratingDelta = Math.min(maxGrowth, Math.floor(Math.random() * 3) + 1); // +1 to +3
       if (ratingDelta > 0) {
-        logs.push(`📈 ${player.name} (${player.position}) developed rapidly: +${ratingDelta} OVR (now ${player.rating + ratingDelta})`);
+        logs.push(`${player.name} (${player.position}) developed rapidly: +${ratingDelta} OVR (now ${player.rating + ratingDelta})`);
       }
     } else if (age <= 28) {
       if (Math.random() < 0.25) {
         ratingDelta = 1;
-        logs.push(`⭐ ${player.name} reached prime form: +1 OVR (now ${player.rating + 1})`);
+        logs.push(`${player.name} reached prime form: +1 OVR (now ${player.rating + 1})`);
       }
     } else if (age <= 31) {
       if (Math.random() < 0.35) {
         ratingDelta = -1;
-        logs.push(`📉 ${player.name} experienced physical decline: -1 OVR (now ${player.rating - 1})`);
+        logs.push(`${player.name} experienced physical decline: -1 OVR (now ${player.rating - 1})`);
       }
     } else {
       ratingDelta = -(Math.floor(Math.random() * 2) + 1); // -1 to -2
-      logs.push(`📉 Veteran ${player.name} attributes declining with age: ${ratingDelta} OVR (now ${player.rating + ratingDelta})`);
+      logs.push(`Veteran ${player.name} attributes declining with age: ${ratingDelta} OVR (now ${player.rating + ratingDelta})`);
     }
 
     const newRating = Math.max(60, Math.min(99, player.rating + ratingDelta));
@@ -197,4 +197,130 @@ export function applySeasonalPlayerProgression(squad: CareerPlayer[]): Progressi
   });
 
   return { updatedSquad, logs };
+}
+
+const REGEN_FIRST_BY_NATION: Record<string, string[]> = {
+  England: ['Jude', 'Cole', 'Bukayo', 'Kieran', 'Declan', 'Ethan', 'Myles', 'Harvey'],
+  Spain: ['Lamine', 'Gavi', 'Pedri', 'Pau', 'Nico', 'Marc', 'Iker', 'Hugo'],
+  France: ['Warren', 'Désiré', 'Lény', 'Rayan', 'Mathys', 'Bradley', 'Théo', 'Lucas'],
+  Germany: ['Florian', 'Jamal', 'Aleksandar', 'Tom', 'Maximilian', 'Noah', 'Paul', 'Lukas'],
+  Brazil: ['Estêvão', 'Endrick', 'Vitor', 'Gabriel', 'Matheus', 'João', 'Kauã', 'Pedro'],
+  Argentina: ['Franco', 'Claudio', 'Valentín', 'Thiago', 'Nicolás', 'Alejandro', 'Mateo', 'Julián'],
+  Italy: ['Francesco', 'Giorgio', 'Matteo', 'Lorenzo', 'Niccolò', 'Riccardo', 'Simone', 'Luca'],
+  Portugal: ['João', 'Rodrigo', 'Geovany', 'Martim', 'Gonçalo', 'Diogo', 'Tiago', 'Rafael'],
+  Netherlands: ['Jorrel', 'Xavi', 'Kenneth', 'Micky', 'Ryan', 'Tijjani', 'Sem', 'Denzel'],
+};
+
+const REGEN_LAST_BY_NATION: Record<string, string[]> = {
+  England: ['Bellingham', 'Palmer', 'Wharton', 'Mainoo', 'Lewis', 'Nwaneri', 'Gray', 'Rogers'],
+  Spain: ['Yamal', 'Cubarsí', 'Bernal', 'Gutiérrez', 'Barrios', 'Fermín', 'Navarro', 'Soler'],
+  France: ['Zaïre-Emery', 'Doué', 'Yoro', 'Cherki', 'Tel', 'Barcola', 'Mendes', 'Chevalier'],
+  Germany: ['Wirtz', 'Bischof', 'Pavlović', 'Beier', 'Urbig', 'Kimmich', 'Brandt', 'Wanner'],
+  Brazil: ['Willian', 'Roque', 'Reis', 'Moscardo', 'Cunha', 'Gomes', 'Santos', 'Henrique'],
+  Argentina: ['Mastantuono', 'Echeverri', 'Carboni', 'Almada', 'Paz', 'Garnacho', 'Fernández', 'Barco'],
+  Italy: ['Camarda', 'Scalvini', 'Ruggeri', 'Colombo', 'Pisilli', 'Calafiori', 'Pafundi', 'Casadei'],
+  Portugal: ['Neves', 'Mora', 'Quenda', 'Fernandes', 'Inácio', 'Costa', 'Silva', 'Mendes'],
+  Netherlands: ['Hato', 'Simons', 'Taylor', 'Timber', 'Gravenberch', 'Reijnders', 'Steijn', 'Brobbey'],
+};
+
+function generateWorldRegenName(nationality: string): string {
+  const firstPool = REGEN_FIRST_BY_NATION[nationality] || FIRST_NAMES;
+  const lastPool = REGEN_LAST_BY_NATION[nationality] || LAST_NAMES;
+  const first = firstPool[Math.floor(Math.random() * firstPool.length)];
+  const last = lastPool[Math.floor(Math.random() * lastPool.length)];
+  return `${first} ${last}`;
+}
+
+export interface WorldRegenOutcome {
+  survivingSquad: CareerPlayer[];
+  retiredPlayers: CareerPlayer[];
+  academyRegens: YouthProspect[];
+  squadRegens: CareerPlayer[];
+}
+
+/**
+ * Retires aging veterans (35+ with high age probability, certain at 37+) and generates
+ * matching-nationality & matching-position high-potential World Regens.
+ */
+export function processVeteranRetirementsAndRegens(
+  squad: CareerPlayer[],
+  clubName: string,
+  clubId: string,
+  yearStart: number,
+  options?: { placeInSquadDirectly?: boolean; minSquadSize?: number }
+): WorldRegenOutcome {
+  const minSquadSize = options?.minSquadSize ?? 16;
+  const survivingSquad: CareerPlayer[] = [];
+  const retiredPlayers: CareerPlayer[] = [];
+  const academyRegens: YouthProspect[] = [];
+  const squadRegens: CareerPlayer[] = [];
+
+  for (let i = 0; i < squad.length; i++) {
+    const p = squad[i];
+    const remainingPool = squad.length - retiredPlayers.length;
+    const shouldRetire =
+      remainingPool > minSquadSize &&
+      (p.age >= 37 || (p.age === 36 && Math.random() < 0.7) || (p.age === 35 && Math.random() < 0.35));
+
+    if (!shouldRetire) {
+      survivingSquad.push(p);
+      continue;
+    }
+
+    retiredPlayers.push(p);
+    const nat = p.nationality && p.nationality !== 'International' ? p.nationality : 'England';
+    const regenAge = 16 + Math.floor(Math.random() * 3);
+    const regenRating = 67 + Math.floor(Math.random() * 8); // 67-74
+    const regenPotential = Math.min(94, Math.max(83, Math.round(p.rating + (Math.random() * 4 - 1))));
+    const regenName = generateWorldRegenName(nat);
+    const regenValue = calculatePlayerValue(regenRating, regenAge, p.position);
+    const regenWage = Math.max(3_500, calculateWeeklyWage(regenRating, regenValue));
+    const regenId = `regen_${clubId}_${yearStart}_${retiredPlayers.length}_${Math.random().toString(36).slice(2, 6)}`;
+
+    if (options?.placeInSquadDirectly) {
+      squadRegens.push({
+        id: regenId,
+        cardId: `${regenId}_card`,
+        name: regenName,
+        rating: regenRating,
+        position: p.position,
+        naturalPositions: p.naturalPositions && p.naturalPositions.length > 0 ? p.naturalPositions : [p.position],
+        age: regenAge,
+        dateOfBirth: `${yearStart - regenAge}-05-15`,
+        value: regenValue,
+        wageWeekly: regenWage,
+        contractYears: 4,
+        fitness: 100,
+        morale: 88,
+        form: 7.0,
+        injured: false,
+        isHomegrown: isHomegrownPlayer({ nationality: nat }),
+        club: clubName,
+        nationality: nat,
+        potential: regenPotential,
+        squadRole: 'prospect',
+      });
+    } else {
+      academyRegens.push({
+        id: regenId,
+        name: regenName,
+        age: regenAge,
+        position: p.position,
+        rating: regenRating,
+        potential: regenPotential,
+        nationality: nat,
+        isHomegrown: isHomegrownPlayer({ nationality: nat }),
+        scoutReport: `World Regen inheriting the tactical DNA of retiring ${p.name} (${p.position}, ${p.rating} OVR).`,
+        wageWeekly: regenWage,
+        value: regenValue,
+      });
+    }
+  }
+
+  return {
+    survivingSquad: [...survivingSquad, ...squadRegens],
+    retiredPlayers,
+    academyRegens,
+    squadRegens,
+  };
 }

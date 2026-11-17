@@ -323,7 +323,7 @@ describe('25-Man Squad Registration & Verification Suite', () => {
     });
 
     // Strip registeredPlayerIds to simulate legacy save
-    delete (legacySave as any).registeredPlayerIds;
+    delete (legacySave as { registeredPlayerIds?: string[] }).registeredPlayerIds;
 
     // getRegisteredSeniorPlayerIds gracefully creates a registration list
     const fallbackRegistered = getRegisteredSeniorPlayerIds(legacySave.squad, undefined, 2026);

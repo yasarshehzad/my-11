@@ -5,10 +5,12 @@
   "scripts": {
     "dev": "next dev",
     "test": "vitest run",
+    "export:data": "node scripts/export-static-data.js",
     "validate:data": "node scripts/validate-players.js",
-    "build": "node scripts/validate-players.js && next build --webpack",
-    "verify": "npm test && node scripts/validate-players.js && npm run build",
+    "build": "node scripts/export-static-data.js && node scripts/validate-players.js && next build --webpack && node scripts/stamp-sw-version.js",
+    "verify": "npm test && npm run typecheck && npm run lint -- --quiet && node scripts/validate-players.js && npm run build",
     "start": "next start",
+    "typecheck": "tsc -p tsconfig.src.json --noEmit",
     "lint": "eslint"
   },
   "dependencies": {

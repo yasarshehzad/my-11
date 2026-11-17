@@ -21,7 +21,7 @@ export const PRESEASON_TOUR_OPTIONS: PreseasonTourOption[] = [
     prizeMoney: 4_500_000,
     commercialBoost: 1_200_000,
     fitnessBonusDescription: '+£4.5M Commercial Funds • High Match Fitness • Global Media Spotlight',
-    badgeEmoji: '🇺🇸',
+    badgeEmoji: 'US',
     opponents: [
       { clubId: 'madrid_royal', name: 'Madrid Royal', tier: 'elite', country: 'Spain' },
       { clubId: 'bavarian_munich', name: 'Bavarian Munich', tier: 'elite', country: 'Germany' },
@@ -37,7 +37,7 @@ export const PRESEASON_TOUR_OPTIONS: PreseasonTourOption[] = [
     prizeMoney: 3_500_000,
     commercialBoost: 800_000,
     fitnessBonusDescription: '+£3.5M Commercial Funds • Tactical Synergy Boost • Rapid Fanbase Growth',
-    badgeEmoji: '🇯🇵',
+    badgeEmoji: 'JP',
     opponents: [
       { clubId: 'paris_red_blue', name: 'Paris Red & Blue', tier: 'elite', country: 'France' },
       { clubId: 'dortmund_yellow', name: 'Dortmund Yellow', tier: 'upper', country: 'Germany' },
@@ -53,7 +53,7 @@ export const PRESEASON_TOUR_OPTIONS: PreseasonTourOption[] = [
     prizeMoney: 2_000_000,
     commercialBoost: 400_000,
     fitnessBonusDescription: '+£2.0M Funds • +15% Stamina & Injury Resilience in Early Season',
-    badgeEmoji: '🇦🇹',
+    badgeEmoji: 'AT',
     opponents: [
       { clubId: 'ajax_amsterdam', name: 'Amsterdam Red & White', tier: 'upper', country: 'Netherlands' },
       { clubId: 'lisbon_eagles', name: 'Lisbon Eagles', tier: 'upper', country: 'Portugal' },

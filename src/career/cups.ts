@@ -158,7 +158,9 @@ export function initializeSeasonCups(
   previousCupWinners?: Record<string, string>,
   activeLeagueClubs?: Club[]
 ): Record<string, CupTournament> {
-  const englishClubs = activeLeagueClubs && activeLeagueClubs.length > 0 ? activeLeagueClubs : getAllClubs();
+  const fallbackSeason = yearStart === 2024 ? '2024/25' : yearStart === 2025 ? '2025/26' : '2026/27';
+  const englishClubs =
+    activeLeagueClubs && activeLeagueClubs.length > 0 ? activeLeagueClubs : getAllClubs(fallbackSeason);
 
   // 1. Season Opener Shield (Single Match in early August at Wembley)
   let shieldHomeClubId: string;

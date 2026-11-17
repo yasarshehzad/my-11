@@ -12,6 +12,16 @@ import {
   isSeniorPlayer,
 } from '../../career/squad';
 import { formatCurrency, formatWage } from '../../career/finance';
+import {
+  IconClipboard,
+  IconClose,
+  IconCheck,
+  IconAlert,
+  IconBolt,
+  IconSprout,
+  IconChevronDown,
+  IconSave,
+} from './GameIcons';
 
 interface SquadRegistrationModalProps {
   isOpen: boolean;
@@ -53,12 +63,13 @@ export function SquadRegistrationModal({
   const [searchTerm, setSearchTerm] = useState('');
   const [showU21List, setShowU21List] = useState(false);
 
-  // Sync selection when opened
-  React.useEffect(() => {
-    if (isOpen) {
-      setSelectedIds(new Set(getRegisteredSeniorPlayerIds(squad, registeredPlayerIds, seasonYearStart)));
-    }
-  }, [isOpen, squad, registeredPlayerIds, seasonYearStart]);
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  if (isOpen && !prevIsOpen) {
+    setPrevIsOpen(true);
+    setSelectedIds(new Set(getRegisteredSeniorPlayerIds(squad, registeredPlayerIds, seasonYearStart)));
+  } else if (!isOpen && prevIsOpen) {
+    setPrevIsOpen(false);
+  }
 
   if (!isOpen) return null;
 
@@ -135,125 +146,75 @@ export function SquadRegistrationModal({
     >
       <div className="office-floating-card bg-white border border-slate-200/90 w-full max-w-2xl rounded-t-3xl sm:rounded-3xl max-h-[92vh] sm:max-h-[88vh] flex flex-col shadow-2xl overflow-hidden text-[#0b1536]">
         {/* MODAL HEADER */}
-        <header className="p-3.5 sm:p-4 border-b border-slate-100 flex items-center justify-between gap-2 shrink-0 bg-slate-50/80">
-          <div className="space-y-0.5 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-display">
-                Premier League Squad Rules
-              </span>
-              <span className="text-[10px] text-slate-500 font-mono">
-                {seniors.length} Seniors in Club
-              </span>
-            </div>
+        <header className="px-3.5 sm:px-4 py-3 border-b border-slate-100 flex items-center justify-between gap-2 shrink-0 bg-slate-50/80">
+          <div className="min-w-0">
             <h2 id="registration-modal-title" className="text-sm sm:text-base font-display font-black text-[#0b1536] uppercase tracking-tight truncate flex items-center gap-1.5">
-              <span>📋</span>
-              <span>25-Man Senior Squad Registration</span>
+              <IconClipboard className="w-4 h-4 text-blue-600 shrink-0" />
+              <span className="truncate">Squad Registration</span>
             </h2>
+            {/* Counts, inline */}
+            <p className="mt-0.5 text-[11px] font-medium text-slate-500 flex flex-wrap items-center gap-x-2.5 gap-y-0.5">
+              <span className={isOverLimit ? 'text-rose-700 font-bold' : ''}>
+                <span className="font-display font-black text-[#0b1536]">{selectedCount}</span>/{MAX_SENIOR_SQUAD_SIZE} registered
+              </span>
+              <span>
+                <span className="font-display font-black text-blue-600">{registeredHomegrownCount}</span> homegrown
+              </span>
+              <span className={`inline-flex items-center gap-1 ${isNonHomegrownOverLimit ? 'text-rose-700 font-bold' : ''}`}>
+                {isNonHomegrownOverLimit && <IconAlert className="w-3 h-3 shrink-0" />}
+                <span>
+                  <span className="font-display font-black text-[#0b1536]">{registeredNonHomegrownCount}</span>/{MAX_SENIOR_NON_HOMEGROWN} foreign
+                </span>
+              </span>
+            </p>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full border border-slate-200 bg-white hover:bg-slate-100 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors text-base font-bold cursor-pointer shrink-0 shadow-2xs"
+            className="w-10 h-10 rounded-full border border-slate-200 bg-white hover:bg-slate-100 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors cursor-pointer shrink-0 shadow-2xs"
             aria-label="Close squad registration"
           >
-            ×
+            <IconClose className="w-4 h-4" />
           </button>
         </header>
 
-        {/* STATUS BAR KPIs */}
-        <div className="p-3 sm:p-4 border-b border-slate-100 bg-slate-50/50 grid grid-cols-3 gap-2 text-xs">
-          {/* Senior Slots Counter */}
-          <div className={`office-subcard p-2.5 rounded-2xl border flex flex-col justify-between ${
-            isOverLimit
-              ? 'bg-rose-50 border-rose-300 text-rose-800'
-              : selectedCount === MAX_SENIOR_SQUAD_SIZE
-              ? 'office-kpi-mint'
-              : 'office-kpi-blue'
-          }`}>
-            <span className="text-[9px] uppercase font-bold text-slate-500 block tracking-wider">Senior Registered</span>
-            <div className="flex items-baseline gap-1 mt-0.5">
-              <span className="font-display font-black text-xl text-[#0b1536]">{selectedCount}</span>
-              <span className="font-mono text-slate-500 text-xs">/ {MAX_SENIOR_SQUAD_SIZE}</span>
-            </div>
-            <span className="text-[8.5px] font-medium opacity-85 mt-0.5">
-              {selectedCount === MAX_SENIOR_SQUAD_SIZE
-                ? 'Full 25-Man Quota'
-                : `${MAX_SENIOR_SQUAD_SIZE - selectedCount} Slots Open`}
-            </span>
-          </div>
-
-          {/* Homegrown / Foreign Ratio */}
-          <div className={`office-subcard p-2.5 rounded-2xl border flex flex-col justify-between ${
-            isNonHomegrownOverLimit
-              ? 'bg-rose-50 border-rose-300 text-rose-800'
-              : ''
-          }`}>
-            <span className="text-[9px] uppercase font-bold text-slate-500 block tracking-wider">Homegrown / Foreign</span>
-            <div className="flex items-baseline gap-1 mt-0.5">
-              <span className="font-display font-black text-lg text-blue-600">{registeredHomegrownCount}</span>
-              <span className="text-[10px] text-slate-400 font-bold">HG •</span>
-              <span className="font-display font-black text-lg text-[#0b1536]">{registeredNonHomegrownCount}</span>
-              <span className="text-[10px] text-slate-500 font-mono">/ 17 max</span>
-            </div>
-            <span className="text-[8.5px] font-medium text-slate-500 mt-0.5 truncate">
-              {registeredNonHomegrownCount <= MAX_SENIOR_NON_HOMEGROWN
-                ? '✓ Compliant (Max 17 Foreign)'
-                : '⚠️ Exceeds 17 Foreign Limit'}
-            </span>
-          </div>
-
-          {/* U21 Exempt */}
-          <div className="office-subcard office-kpi-lavender p-2.5 rounded-2xl border flex flex-col justify-between">
-            <span className="text-[9px] uppercase font-bold text-purple-700 block tracking-wider">U21 Prospects</span>
-            <div className="flex items-baseline gap-1 mt-0.5">
-              <span className="font-display font-black text-xl text-purple-800">{u21Players.length}</span>
-              <span className="text-[10px] text-purple-600 font-bold">Exempt</span>
-            </div>
-            <span className="text-[8.5px] font-medium text-purple-700 mt-0.5 truncate">
-              ✓ Eligible automatically
-            </span>
-          </div>
+        {/* SEARCH + QUICK ACTIONS */}
+        <div className="px-3 sm:px-4 pt-2 flex items-center gap-1.5 text-xs shrink-0">
+          <input
+            type="text"
+            aria-label="Search senior players"
+            placeholder="Search players"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1 min-w-0 h-10 bg-slate-50 border border-slate-200 rounded-xl px-3 text-xs text-[#0b1536] placeholder-slate-400 focus:outline-none focus:border-blue-500 font-medium"
+          />
+          <button
+            type="button"
+            onClick={handleAutoRegisterTop25}
+            className="h-10 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-display font-black text-[11px] uppercase cursor-pointer transition-all active:scale-95 motion-reduce:transform-none inline-flex items-center gap-1 shrink-0"
+          >
+            <IconBolt className="w-3 h-3 shrink-0" />
+            <span>Top 25</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleClear}
+            className="h-10 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 font-display font-black text-[11px] uppercase cursor-pointer transition-all active:scale-95 motion-reduce:transform-none shrink-0"
+          >
+            Clear
+          </button>
         </div>
 
-        {/* QUICK ACTIONS & SEARCH BAR */}
-        <div className="px-3 sm:px-4 py-2.5 border-b border-slate-100 bg-white flex flex-wrap items-center justify-between gap-2 text-xs">
-          <div className="flex items-center gap-1.5 flex-1 min-w-[200px]">
-            <input
-              type="text"
-              placeholder="Search senior players..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-[#0b1536] placeholder-slate-400 focus:outline-none focus:border-blue-500 shadow-2xs font-medium"
-            />
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={handleAutoRegisterTop25}
-              className="py-1.5 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-display font-black text-[10.5px] uppercase cursor-pointer shadow-2xs transition-all active:scale-95"
-            >
-              ⚡ Auto Top 25
-            </button>
-            <button
-              type="button"
-              onClick={handleClear}
-              className="py-1.5 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 font-display font-black text-[10.5px] uppercase cursor-pointer shadow-2xs transition-all active:scale-95"
-            >
-              Clear
-            </button>
-          </div>
-        </div>
-
-        {/* POSITION FILTER PILLS */}
-        <nav aria-label="Senior Position Filters" data-no-swipe="true" className="px-3 sm:px-4 py-2 border-b border-slate-100 flex gap-1.5 overflow-x-auto scrollbar-none text-xs bg-slate-50/50">
+        {/* POSITION FILTER + U21 DISCLOSURE */}
+        <nav aria-label="Senior Position Filters" data-no-swipe="true" className="px-3 sm:px-4 py-2 border-b border-slate-100 flex gap-1 overflow-x-auto scrollbar-none text-xs shrink-0">
           {(['ALL', 'GK', 'DEF', 'MID', 'FWD'] as const).map((cat) => (
             <button
               key={cat}
               type="button"
+              aria-pressed={filterPos === cat}
               onClick={() => setFilterPos(cat)}
-              className={`py-1 px-3 rounded-xl font-display font-black text-[10.5px] uppercase cursor-pointer transition-all ${
+              className={`h-9 px-2.5 rounded-xl font-display font-black text-[11px] uppercase cursor-pointer transition-all shrink-0 ${
                 filterPos === cat
                   ? 'office-nav-tab-active shadow-sm'
                   : 'office-nav-tab-inactive'
@@ -264,50 +225,39 @@ export function SquadRegistrationModal({
           ))}
           <button
             type="button"
+            aria-expanded={showU21List}
             onClick={() => setShowU21List((prev) => !prev)}
-            className={`py-1 px-3 rounded-xl font-display font-black text-[10.5px] uppercase cursor-pointer ml-auto transition-all flex items-center gap-1.5 ${
+            className={`h-9 px-2.5 rounded-xl font-display font-black text-[11px] uppercase cursor-pointer ml-auto transition-all flex items-center gap-1 shrink-0 ${
               showU21List
                 ? 'office-nav-tab-active shadow-sm'
                 : 'office-nav-tab-inactive'
             }`}
           >
-            <span>👶 U21 Exempt ({u21Players.length})</span>
-            <span>{showU21List ? '▲' : '▼'}</span>
+            <IconSprout className="w-3 h-3 shrink-0" />
+            <span>U21 ({u21Players.length})</span>
+            <IconChevronDown className={`w-3 h-3 transition-transform motion-reduce:transition-none ${showU21List ? 'rotate-180' : ''}`} />
           </button>
         </nav>
 
         {/* SCROLLABLE PLAYER LIST */}
         <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 scrollbar-thin">
-          {/* U21 Collapsible Banner if toggled */}
+          {/* U21 list (disclosure) */}
           {showU21List && (
-            <div className="p-3 rounded-2xl bg-blue-50/80 border border-blue-200 space-y-2 mb-3">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-display font-black text-blue-800 uppercase tracking-wider text-[11px]">
-                  👶 Under-21 Squad Players (Exempt from 25-man limit)
-                </span>
-                <span className="text-[10px] text-blue-600 font-mono font-bold">
-                  All {u21Players.length} automatically eligible
-                </span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                {u21Players.map((p) => (
-                  <div
-                    key={p.id}
-                    className="p-2 px-2.5 rounded-xl bg-white border border-blue-200 flex items-center justify-between text-xs shadow-2xs"
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="w-6 h-6 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center font-display font-black text-[10px] text-blue-700 shrink-0">
-                        {p.rating}
-                      </span>
-                      <span className="font-display font-bold text-[#0b1536] truncate text-[11px]">{p.name}</span>
-                      <span className="text-[9.5px] text-slate-500 font-medium">{p.position} • {p.age}y</span>
-                    </div>
-                    <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200 shrink-0">
-                      Eligible ✓
-                    </span>
-                  </div>
-                ))}
-              </div>
+            <div className="px-3 py-2 rounded-2xl bg-blue-50/80 border border-blue-200 mb-3">
+              <p className="text-[11px] font-medium text-blue-800">
+                Under-21s need no registration and are always eligible.
+              </p>
+              {u21Players.length > 0 && (
+                <ul className="mt-1.5 grid grid-cols-1 sm:grid-cols-2 gap-x-4 divide-y divide-blue-200/70 sm:divide-y-0">
+                  {u21Players.map((p) => (
+                    <li key={p.id} className="py-1.5 flex items-center gap-2 text-xs min-w-0">
+                      <span className="w-6 font-display font-black text-blue-700 shrink-0">{p.rating}</span>
+                      <span className="font-display font-bold text-[#0b1536] truncate">{p.name}</span>
+                      <span className="text-[11px] text-slate-500 font-medium shrink-0 ml-auto">{p.position} • {p.age}y</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           )}
 
@@ -347,30 +297,30 @@ export function SquadRegistrationModal({
                     </span>
 
                     <div className="min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="font-display font-black text-xs sm:text-sm text-[#0b1536] truncate max-w-[150px] sm:max-w-[220px]">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="font-display font-black text-xs sm:text-sm text-[#0b1536] truncate">
                           {player.name}
                         </span>
-                        {isHg ? (
-                          <span className="text-[8.5px] font-black uppercase text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.2 rounded-md shrink-0">
-                            HG
-                          </span>
-                        ) : (
-                          <span className="text-[8.5px] font-bold uppercase text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.2 rounded-md shrink-0">
-                            Foreign
-                          </span>
-                        )}
+                        <span
+                          className={`text-[10px] font-black uppercase px-1.5 rounded-md border shrink-0 ${
+                            isHg
+                              ? 'text-blue-700 bg-blue-50 border-blue-200'
+                              : 'text-slate-600 bg-slate-100 border-slate-200'
+                          }`}
+                        >
+                          {isHg ? 'HG' : 'Foreign'}
+                        </span>
                       </div>
-                      <div className="text-[10px] text-slate-500 font-medium flex items-center gap-1 mt-0.5 truncate">
-                        <span className="text-blue-700 font-bold">{player.position}</span>
+                      <div className="text-[11px] text-slate-500 font-medium flex items-center gap-1 mt-0.5 min-w-0">
+                        <span className="text-blue-700 font-bold shrink-0">{player.position}</span>
                         <span>•</span>
-                        <span>{player.age}y</span>
+                        <span className="shrink-0">{player.age}y</span>
                         <span>•</span>
-                        <span>{player.nationality}</span>
-                        <span>•</span>
-                        <span className="font-mono text-slate-700">{formatCurrency(player.value)}</span>
-                        <span>•</span>
-                        <span className="font-mono text-slate-500">{formatWage(player.wageWeekly)}</span>
+                        <span className="truncate">{player.nationality}</span>
+                        <span className="hidden sm:inline">•</span>
+                        <span className="hidden sm:inline font-mono text-slate-700 shrink-0">{formatCurrency(player.value)}</span>
+                        <span className="hidden sm:inline">•</span>
+                        <span className="hidden sm:inline font-mono text-slate-500 shrink-0">{formatWage(player.wageWeekly)}</span>
                       </div>
                     </div>
                   </div>
@@ -383,7 +333,7 @@ export function SquadRegistrationModal({
                         togglePlayer(player.id);
                       }}
                       disabled={atCapacity}
-                      className={`py-1.5 px-3 rounded-xl font-display font-black text-[11px] uppercase tracking-wider transition-all cursor-pointer shadow-2xs active:scale-95 ${
+                      className={`min-h-10 px-3 rounded-xl font-display font-black text-[11px] uppercase tracking-wider transition-all cursor-pointer shadow-2xs active:scale-95 motion-reduce:transform-none inline-flex items-center gap-1 ${
                         isSelected
                           ? 'office-nav-tab-active shadow-xs text-white'
                           : atCapacity
@@ -391,7 +341,16 @@ export function SquadRegistrationModal({
                           : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-300'
                       }`}
                     >
-                      {isSelected ? '✓ Registered' : atCapacity ? 'Limit (25/25)' : '+ Register'}
+                      {isSelected ? (
+                        <>
+                          <IconCheck className="w-3 h-3 shrink-0" />
+                          <span>Registered</span>
+                        </>
+                      ) : atCapacity ? (
+                        'Full'
+                      ) : (
+                        'Register'
+                      )}
                     </button>
                   </div>
                 </div>
@@ -401,11 +360,11 @@ export function SquadRegistrationModal({
         </div>
 
         {/* MODAL FOOTER */}
-        <footer className="p-3.5 sm:p-4 border-t border-slate-100 bg-white flex items-center justify-between gap-2.5 shrink-0 pb-safe sm:pb-4">
+        <footer className="p-3.5 sm:p-4 border-t border-slate-100 bg-white flex flex-wrap items-center justify-between gap-2.5 shrink-0 pb-safe sm:pb-4">
           <button
             type="button"
             onClick={onClose}
-            className="py-2.5 px-4 rounded-xl border border-slate-200 hover:bg-slate-100 bg-white text-slate-700 font-display font-bold text-xs uppercase cursor-pointer transition-colors shadow-2xs"
+            className="min-h-10 px-4 rounded-xl border border-slate-200 hover:bg-slate-100 bg-white text-slate-700 font-display font-bold text-xs uppercase cursor-pointer transition-colors shadow-2xs"
           >
             Cancel
           </button>
@@ -414,12 +373,12 @@ export function SquadRegistrationModal({
             type="button"
             onClick={handleSave}
             disabled={isOverLimit}
-            className={`my11-btn-gradient py-2.5 px-5 rounded-xl font-display font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 ${
+            className={`my11-btn-gradient min-h-10 px-5 rounded-xl font-display font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 motion-reduce:transform-none ${
               isOverLimit ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
-            <span>💾</span>
-            <span>Confirm 25-Man Registration ({selectedCount}/25)</span>
+            <IconSave className="w-3.5 h-3.5 shrink-0" />
+            <span>Confirm Registration</span>
           </button>
         </footer>
       </div>

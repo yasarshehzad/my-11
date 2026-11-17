@@ -140,7 +140,7 @@ export function initializeDeadlineDay(save: CareerSaveFile): CareerSaveFile {
     date: deadlineDate,
     sender: 'Transfer Window Operations',
     senderRole: 'Premier League Registration',
-    subject: `🚨 Transfer Deadline Day Clock Started (09:00 BST)`,
+    subject: `Transfer Deadline Day Clock Started (09:00 BST)`,
     body: `Boss,\n\nThe clock is officially ticking. Today is Transfer Deadline Day. The window slams shut at 23:00 BST tonight.\n\nClubs across Europe are scrambling to complete deals. Expect panic bids, volatile valuations, and rapid negotiations throughout the morning, afternoon, evening, and the dramatic final hour.\n\nMonitor your Incoming Offers and Deadline Day Ticker closely.`,
     type: 'transfer',
     isRead: false,
@@ -199,7 +199,7 @@ export function advanceDeadlineDayPhase(save: CareerSaveFile): {
     });
 
     const closedNews = [
-      `23:00 BST • 🚨 WINDOW CLOSED! The transfer deadline buzzer has sounded. No further registrations permitted!`,
+      `23:00 BST • WINDOW CLOSED! The transfer deadline buzzer has sounded. No further registrations permitted!`,
       ...aiSimClosed.headlines.map((h) => `23:00 BST • ${h}`),
       `23:05 BST • Premier League & UEFA confirm all submitted deal sheets are now under formal ratification.`,
       ...currentState.breakingNews,
@@ -266,7 +266,7 @@ export function advanceDeadlineDayPhase(save: CareerSaveFile): {
   });
 
   const formattedHeadlines = aiSim.headlines.map(
-    (h) => `${next.timeString} • 🚨 ${h}`
+    (h) => `${next.timeString} • ${h}`
   );
 
   const newBreakingNews = [
@@ -301,7 +301,7 @@ export function advanceDeadlineDayPhase(save: CareerSaveFile): {
     date: save.season.currentDate,
     sender: 'Director of Football',
     senderRole: 'Recruitment Committee',
-    subject: `⏱️ Deadline Clock: ${phaseLabel}`,
+    subject: `Deadline Clock: ${phaseLabel}`,
     body: `Boss,\n\nThe Deadline Day clock has ticked forward to ${next.timeString}.\n\nTime is running out for clubs to solve squad shortages. Bids are flying in with panic premiums. Review incoming offers before the window slams shut!`,
     type: 'transfer',
     isRead: false,
@@ -402,18 +402,29 @@ export function getScoutingMarketPool(
 
   const ageDelta = Math.max(0, seasonYear - 2026);
 
+  const normalizeMarketNameKey = (name: string): string => {
+    const clean = (name || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+    if (clean === 'rodri hernandez') return 'rodri';
+    return clean;
+  };
+
   const safeSquad = Array.isArray(userSquad) ? userSquad : [];
   const userPlayerIds = new Set(safeSquad.map((p) => p.id));
   const userPlayerNames = new Set(
-    safeSquad.map((p) => (p.name || '').toLowerCase()).filter(Boolean)
+    safeSquad.map((p) => normalizeMarketNameKey(p.name || '')).filter(Boolean)
   );
 
   // 0. Build authoritative 2026/27 current-club lookup from supplemental PL + Continental pools
   const supplementalPlayers = getAllSupplementalPlayers(effectiveSeason, seasonYear);
   const currentClubByName = new Map<string, string>();
   for (const supp of supplementalPlayers) {
-    if (supp.name && supp.club) {
-      currentClubByName.set(supp.name.toLowerCase(), supp.club);
+    const key = normalizeMarketNameKey(supp.name || '');
+    if (key && supp.club && !currentClubByName.has(key)) {
+      currentClubByName.set(key, supp.club);
     }
   }
 
@@ -440,9 +451,12 @@ export function getScoutingMarketPool(
     const rawName = (base.playerName || base.displayName || base.id)
       .replace(/\s+\d{2}\/\d{2}$/, '')
       .trim();
-    const lowerName = rawName.toLowerCase();
+    const lowerName = normalizeMarketNameKey(rawName);
 
     if (userPlayerIds.has(base.id) || userPlayerNames.has(lowerName)) {
+      continue;
+    }
+    if (lowerName === 'rodri' && currentClubByName.has('rodri')) {
       continue;
     }
 
@@ -543,9 +557,11 @@ export function getScoutingMarketPool(
       'son heung-min': 'LAFC',
       'luka modric': 'AC Milan',
     };
+    const normalizedCleanName = normalizeMarketNameKey(cleanPlayerName);
     const resolvedBaseClub = isLegend
       ? baseClub
-      : (currentClubByName.get(cleanPlayerName.toLowerCase()) ||
+      : (currentClubByName.get(normalizedCleanName) ||
+         clubOverrideMap[normalizedCleanName] ||
          clubOverrideMap[cleanPlayerName.toLowerCase()] ||
          baseClub);
 
@@ -597,7 +613,7 @@ export function getScoutingMarketPool(
 
   // 2. Include supplemental database expansion players (modern current season)
   for (const supp of supplementalPlayers) {
-    const lowerName = supp.name.toLowerCase();
+    const lowerName = normalizeMarketNameKey(supp.name);
     if (
       userPlayerIds.has(supp.id) ||
       userPlayerNames.has(lowerName) ||
@@ -1465,7 +1481,7 @@ export function generateIncomingAiBids(save: CareerSaveFile): IncomingTransferOf
     : 1;
 
   let currentOffers = [...existingOffers];
-  let pool = [...availableToBidOn];
+  const pool = [...availableToBidOn];
 
   for (let i = 0; i < bidsToGenerate && pool.length > 0; i++) {
     const pickedIdx = Math.floor(Math.random() * pool.length);
@@ -1495,13 +1511,13 @@ export function generateIncomingAiBids(save: CareerSaveFile): IncomingTransferOf
     const baseValue = pickedPlayer.askingPrice ? pickedPlayer.askingPrice : pickedPlayer.value;
     const offeredFee = Math.round((baseValue * multiplier) / 100_000) * 100_000;
 
-    const buyerTier = (buyer as any).tier || 'mid';
+    const buyerTier = ('tier' in buyer ? buyer.tier : undefined) || 'mid';
     const baseTierCeiling = buyerTier === 'elite' ? 1.45 : buyerTier === 'upper' ? 1.30 : buyerTier === 'mid' ? 1.18 : 1.08;
     const tierCeiling = isDeadlineDay ? baseTierCeiling + 0.25 : baseTierCeiling;
     const buyerCeilingFee = Math.round((pickedPlayer.value * tierCeiling) / 100_000) * 100_000;
 
     const initialMessage = isPanic
-      ? `🚨 [DEADLINE PANIC BID] ${buyer.defaultName} lodged a desperate late-window bid with a +${panicMarkup}% premium to sign ${pickedPlayer.name}!`
+      ? `[DEADLINE PANIC BID] ${buyer.defaultName} lodged a desperate late-window bid with a +${panicMarkup}% premium to sign ${pickedPlayer.name}!`
       : `Initial bid of ${formatCurrency(offeredFee)} submitted by ${buyer.defaultName}.`;
 
     const newOffer: IncomingTransferOffer = {
@@ -1675,7 +1691,13 @@ export function negotiateIncomingOffer(
   const buyingClub =
     getAllClubs().find((c) => c.id === offer.buyingClubId) ||
     CONTINENTAL_EUROPEAN_CLUBS.find((c) => c.id === offer.buyingClubId);
-  const buyerTier = ((buyingClub as any)?.tier as 'elite' | 'upper' | 'mid' | 'lower') || 'mid';
+  const buyerTier =
+    ((buyingClub && 'tier' in buyingClub ? buyingClub.tier : undefined) as
+      | 'elite'
+      | 'upper'
+      | 'mid'
+      | 'lower'
+      | undefined) || 'mid';
   const ballpark = getNegotiationBallpark(offer, player, buyerTier);
 
   const patience = (offer.patienceRemaining ?? 3) - 1;
@@ -2811,7 +2833,7 @@ export function evaluateBoardFinancialPetition(
   let updatedLedger = existingLedger;
   let updatedTx = save.finances.transactions || [];
 
-  let updatedFinances = {
+  const updatedFinances = {
     ...save.finances,
     boardPetitionsHistory: [petitionRecord, ...(save.finances.boardPetitionsHistory || [])],
   };
@@ -2861,7 +2883,7 @@ export function evaluateBoardFinancialPetition(
     (outcome === 'approved' || outcome === 'compromised') &&
     updatedSave.deadlineDayState?.isActive
   ) {
-    const breakingTicker = `${updatedSave.deadlineDayState.timeString} • 🚨 BREAKING: Board of Directors at ${save.club.defaultName} release emergency ${formatCurrency(amountGranted)} transfer funds for late pursuit!`;
+    const breakingTicker = `${updatedSave.deadlineDayState.timeString} • BREAKING: Board of Directors at ${save.club.defaultName} release emergency ${formatCurrency(amountGranted)} transfer funds for late pursuit!`;
     updatedSave.deadlineDayState = {
       ...updatedSave.deadlineDayState,
       breakingNews: [breakingTicker, ...(updatedSave.deadlineDayState.breakingNews || [])].slice(0, 10),
@@ -2871,10 +2893,10 @@ export function evaluateBoardFinancialPetition(
   // Dispatch official Board of Directors inbox resolution letter
   const inboxSubject =
     outcome === 'approved'
-      ? `🏛️ Board Resolution: Funding Approved (${grantType === 'wage' ? formatWage(amountGranted) : formatCurrency(amountGranted)})`
+      ? `Board Resolution: Funding Approved (${grantType === 'wage' ? formatWage(amountGranted) : formatCurrency(amountGranted)})`
       : outcome === 'compromised'
-      ? `🏛️ Board Resolution: Compromise Funding Granted (${grantType === 'wage' ? formatWage(amountGranted) : formatCurrency(amountGranted)})`
-      : `🏛️ Board Resolution: Financial Petition Declined`;
+      ? `Board Resolution: Compromise Funding Granted (${grantType === 'wage' ? formatWage(amountGranted) : formatCurrency(amountGranted)})`
+      : `Board Resolution: Financial Petition Declined`;
 
   updatedSave = addInboxMessage(updatedSave, {
     date: save.season.currentDate,
@@ -3072,7 +3094,7 @@ export function simulateAiToAiTransfers(
       date: txDate,
       sender: 'Transfer Market Intelligence',
       senderRole: 'Chief Scout Dossier',
-      subject: `🚨 Blockbuster Deal: ${topDeal.playerName} signs for ${topDeal.toClubName} (${topFeeFormatted})`,
+      subject: `Blockbuster Deal: ${topDeal.playerName} signs for ${topDeal.toClubName} (${topFeeFormatted})`,
       body: `Manager,\n\nOur European scouting network reports a major confirmed transfer in the market.\n\n${topDeal.toClubName} have finalized the marquee signing of ${topDeal.playerName} (${topDeal.position} • ${topDeal.rating} OVR) from ${topDeal.fromClubName} for a verified package of ${topFeeFormatted}.\n\nThis move reshapes the competitive balance in the league. Inspect the updated World Transfer Feed to monitor rivals' squad developments.`,
       type: 'transfer',
       isRead: false,
@@ -3308,9 +3330,22 @@ export function executeBosmanPreContract(
   const preContract: PreContractAgreement = {
     id: `pre_${targetPlayer.id}_${Date.now()}`,
     playerId: targetPlayer.id,
+    cardId: targetPlayer.cardId,
     playerName: targetPlayer.name,
     rating: targetPlayer.rating,
     position: targetPlayer.position,
+    naturalPositions: targetPlayer.naturalPositions,
+    secondaryPositions: targetPlayer.secondaryPositions,
+    age: targetPlayer.age,
+    dateOfBirth: targetPlayer.dateOfBirth,
+    nationality: targetPlayer.nationality,
+    potential: Math.max(targetPlayer.rating, targetPlayer.rating + (targetPlayer.age <= 23 ? 5 : 2)),
+    faceStats: targetPlayer.faceStats,
+    preferredFoot: targetPlayer.preferredFoot,
+    heightCm: targetPlayer.heightCm,
+    weightKg: targetPlayer.weightKg,
+    isHomegrown: targetPlayer.isHomegrown,
+    squadRole: targetPlayer.rating >= 85 ? 'crucial' : targetPlayer.rating >= 80 ? 'important' : 'squad',
     originClub: targetPlayer.club,
     wageWeekly: wage,
     contractYears,

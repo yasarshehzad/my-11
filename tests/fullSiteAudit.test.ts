@@ -248,7 +248,7 @@ describe('Comprehensive Full-Site & Element-by-Element Audit', () => {
     it('executes player signing and updates finances and squad records', () => {
       const club = getAllClubs()[0];
       const settings = getPresetSettings('casual');
-      let save = createNewCareerSave({
+      const save = createNewCareerSave({
         slotId: '1',
         club,
         manager: { name: 'Manager', nationality: 'England' },
@@ -281,7 +281,7 @@ describe('Comprehensive Full-Site & Element-by-Element Audit', () => {
     it('renews expiring contracts accurately', () => {
       const club = getAllClubs()[0];
       const settings = getPresetSettings('casual');
-      let save = createNewCareerSave({
+      const save = createNewCareerSave({
         slotId: '1',
         club,
         manager: { name: 'Manager', nationality: 'England' },

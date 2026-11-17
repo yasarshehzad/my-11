@@ -25,7 +25,7 @@ export const AVAILABLE_FEEDER_CLUBS: FeederClubProfile[] = [
     specialties: ['Technical Dribbling', 'Inverted Wingers'],
     primaryColor: '#C8102E',
     secondaryColor: '#046A38',
-    crestEmoji: '🇵🇹',
+    crestEmoji: 'PT',
     description:
       'Premier Portuguese finishing academy renowned for turning raw attackers into two-footed technical specialists.',
   },
@@ -41,7 +41,7 @@ export const AVAILABLE_FEEDER_CLUBS: FeederClubProfile[] = [
     specialties: ['Positional Play', 'Progressive Passing'],
     primaryColor: '#FF6C00',
     secondaryColor: '#111827',
-    crestEmoji: '🇳🇱',
+    crestEmoji: 'NL',
     description:
       'High-tempo Dutch development club guaranteeing starting minutes in an aggressive 4-3-3 possession model.',
   },
@@ -57,7 +57,7 @@ export const AVAILABLE_FEEDER_CLUBS: FeederClubProfile[] = [
     specialties: ['Box-to-Box Pressing', 'Work Permit Fast-Track'],
     primaryColor: '#FDB913',
     secondaryColor: '#1D1D1B',
-    crestEmoji: '🇧🇪',
+    crestEmoji: 'BE',
     description:
       'Cost-effective Belgian bridge club offering immediate senior adaptation for European and South American prospects.',
   },
@@ -73,7 +73,7 @@ export const AVAILABLE_FEEDER_CLUBS: FeederClubProfile[] = [
     specialties: ['Gegenpress Sprint', 'Vertical Transitions'],
     primaryColor: '#DD0741',
     secondaryColor: '#FFFFFF',
-    crestEmoji: '🇦🇹',
+    crestEmoji: 'AT',
     description:
       'Relentless Alpine pressing laboratory where teenagers log intense 90-minute match loads every week.',
   },
@@ -89,7 +89,7 @@ export const AVAILABLE_FEEDER_CLUBS: FeederClubProfile[] = [
     specialties: ['Flair & 1v1 Finishing', 'Wonderkid Incubator'],
     primaryColor: '#009C3B',
     secondaryColor: '#FFDF00',
-    crestEmoji: '🇧🇷',
+    crestEmoji: 'BR',
     description:
       'Vibrant Brazilian talent factory delivering elite offensive creativity and explosive market value appreciation.',
   },
@@ -105,7 +105,7 @@ export const AVAILABLE_FEEDER_CLUBS: FeederClubProfile[] = [
     specialties: ['Defensive Grit', 'Enganche Playmakers'],
     primaryColor: '#74ACDF',
     secondaryColor: '#0F172A',
-    crestEmoji: '🇦🇷',
+    crestEmoji: 'AR',
     description:
       'Fiercely competitive Argentine nursery that tempers young defenders and creative midfielders under pressure.',
   },
@@ -121,7 +121,7 @@ export const AVAILABLE_FEEDER_CLUBS: FeederClubProfile[] = [
     specialties: ['Agility & Discipline', 'First-Touch Tempo'],
     primaryColor: '#00205B',
     secondaryColor: '#E60012',
-    crestEmoji: '🇯🇵',
+    crestEmoji: 'JP',
     description:
       'Precision-focused Japanese partner ideal for developing disciplined full-backs, keepers, and technical passers.',
   },
@@ -137,7 +137,7 @@ export const AVAILABLE_FEEDER_CLUBS: FeederClubProfile[] = [
     specialties: ['Physical Robustness', 'First-Team Readiness'],
     primaryColor: '#00529B',
     secondaryColor: '#FFFFFF',
-    crestEmoji: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+    crestEmoji: 'EN',
     description:
       'Relentless 46-game English Championship battleground that prepares upper-tier academy graduates for top-flight starts.',
   },
@@ -508,7 +508,7 @@ export function recallPlayerFromFeederClub(
     sender: 'Global Loan & Affiliate Director',
     senderRole: 'First-Team Integration',
     subject: `Loan Recall Complete: ${loan.playerName} (+${loan.ovrGained} OVR)`,
-    body: `${loan.playerName} has been recalled from ${loan.feederClubName} and is available for selection immediately.\n\nFeeder Loan Summary:\n- Appearances: ${loan.appearances}\n- Goals / Assists: ${loan.goals}G / ${loan.assists}A\n- Overall Growth: ${loan.ratingAtDeparture} → ${loan.currentRating} OVR (+${loan.ovrGained})`,
+    body: `${loan.playerName} has been recalled from ${loan.feederClubName} and is available for selection immediately.\n\nFeeder Loan Summary:\n- Appearances: ${loan.appearances}\n- Goals / Assists: ${loan.goals}G / ${loan.assists}A\n- Overall Growth: ${loan.ratingAtDeparture} -> ${loan.currentRating} OVR (+${loan.ovrGained})`,
     type: 'transfer',
     isRead: false,
     priority: 'normal',
@@ -545,7 +545,7 @@ export function processFeederLoanDevelopment(
     return save;
   }
 
-  let updatedSquad = [...save.squad];
+  const updatedSquad = [...save.squad];
   const breakthroughNotices: Array<{
     playerName: string;
     feederClubName: string;

@@ -26,7 +26,7 @@ describe('Icons & Legends Audit', () => {
     // 2. Erling Haaland verification
     const haalandAll = allPool.find((p) => p.name === 'Erling Haaland');
     expect(haalandAll).toBeDefined();
-    expect(haalandAll?.club).toBe('Manchester City');
+    expect(haalandAll?.club).toBe('Manchester Blue');
     expect(haalandAll?.isLegend).toBe(false);
     expect(haalandAll?.rarity).not.toBe('Legend');
     expect(haalandAll?.rarity).not.toBe('legend');

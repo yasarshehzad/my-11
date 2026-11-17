@@ -215,6 +215,50 @@ export interface ChallengeTarget {
   runId?: string;
 }
 
+export interface H2HSquadChallenge {
+  managerName: string;
+  clubName: string;
+  formation: FormationType;
+  leagueId?: string;
+  draftMode?: DraftModifier;
+  playerIds: string[];
+  overall: number;
+  chemistry: number;
+  seasonWins?: number;
+  seasonPoints?: number;
+}
+
+export interface H2HLegResult {
+  leg: 1 | 2;
+  venue: 'home' | 'away';
+  userGoals: number;
+  challengerGoals: number;
+  userScorers: string[];
+  challengerScorers: string[];
+}
+
+export interface H2HShowdownResult {
+  challenger: H2HSquadChallenge;
+  challengerPlayers: Player[];
+  challengerStats: {
+    attack: number;
+    midfield: number;
+    defence: number;
+    chemistry: number;
+    overall: number;
+  };
+  legs: [H2HLegResult, H2HLegResult];
+  userAggregateGoals: number;
+  challengerAggregateGoals: number;
+  winner: 'user' | 'challenger' | 'draw';
+  decidedByPenalties?: boolean;
+  userPenalties?: number;
+  challengerPenalties?: number;
+  motmName: string;
+  motmSide: 'user' | 'challenger';
+  summary: string;
+}
+
 export interface StreakStats {
   gamesPlayed: number;
   bestPoints: number;

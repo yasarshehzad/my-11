@@ -7,7 +7,7 @@ import {
   PlayerCompetitionStats,
   Club,
 } from './types';
-import { getEffectiveClubName, getAllClubs } from './clubs';
+import { getEffectiveClubName, getAllKnownClubs } from './clubs';
 import { getAiClubMatchdaySquad } from './squadGenerator';
 
 /**
@@ -411,7 +411,7 @@ export function getLeagueLeaderboards(
   topAssists: LeagueLeaderboardEntry[];
   topCleanSheets: LeagueLeaderboardEntry[];
 } {
-  const clubs = getAllClubs();
+  const clubs = getAllKnownClubs();
   const clubsMap = new Map<string, Club>(clubs.map((c) => [c.id, c]));
 
   const goalCounts = new Map<string, { count: number; clubId: string; apps: number }>();
@@ -511,7 +511,10 @@ export function getLeagueLeaderboards(
     return Array.from(map.entries())
       .map(([name, data]) => {
         const club = clubsMap.get(data.clubId);
-        const resolvedClubName = club?.defaultName || (club as any)?.name || (data.clubId === userClubId ? 'My Club' : data.clubId.toUpperCase());
+        const resolvedClubName =
+          club?.defaultName ||
+          (club as { name?: string } | undefined)?.name ||
+          (data.clubId === userClubId ? 'My Club' : data.clubId.toUpperCase());
         return {
           rank: 1,
           playerName: name,
