@@ -289,53 +289,39 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     );
   }
 
-  // COMPACT LAYOUT (Used for pitch slots when a player is drafted)
+  // COMPACT LAYOUT (Used for pitch slots when a player is drafted): a rating disc with the name on the grass.
   if (layout === 'compact') {
+    // Card names carry the season ("Yaya Toure 18/19"); the pitch label shows the surname only.
+    const nameParts = displayName.replace(/\s+\d{2}\/\d{2}$/, '').trim().split(/\s+/);
+    const shortName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : nameParts[0];
+    // Inline colours: the global stylesheet remaps several Tailwind colour utilities.
+    const ringColour: Record<string, string> = {
+      legend: '#fbbf24',
+      elite: '#c4b5fd',
+      rare: '#7dd3fc',
+      cult: '#6ee7b7',
+    };
+    const labelShadow = { textShadow: '0 1px 2px rgba(0,0,0,0.55)' };
     return (
       <div
         onClick={onClick}
-        className={`w-[62px] h-[64px] sm:w-[68px] sm:h-[84px] rounded-xl border ${rarityConfig.border} ${rarityConfig.bg} flex flex-col p-1 sm:p-1.5 relative transition-transform duration-300 transform active:scale-95 text-left select-none shadow-sm overflow-hidden ${
-          onClick ? 'cursor-pointer' : ''
-        }`}
+        className={`w-[62px] sm:w-[78px] flex flex-col items-center text-center select-none ${onClick ? 'cursor-pointer' : ''}`}
       >
-        {/* Rating and Position */}
-        <div className="flex justify-between items-start leading-none relative z-10">
-          <span className={`text-xs leading-none font-semibold font-display ${rarityConfig.text}`}>
-            {rating}
-          </span>
-          <span
-            className={`text-2xs leading-none font-semibold ${rarityConfig.textMuted}`}
-          >
-            {primaryPosition}
-          </span>
-        </div>
-
-        {/* Display Name */}
-        <div className="flex-1 flex flex-col justify-end mt-1 mb-0.5 leading-none relative z-10">
-          <span className={`text-2xs leading-tight font-display font-semibold ${rarityConfig.textPrimary} truncate`}>
-            {displayName.split(' ').slice(0, -1).join(' ') || displayName}
-          </span>
-        </div>
-
-        {/* Club and Season Tag at the bottom */}
-        <div
-          className={`flex justify-between items-center text-2xs leading-none ${rarityConfig.textMuted} border-t ${rarityConfig.subBorder} pt-0.5 mt-0.5 relative z-10`}
+        <span
+          className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white text-[#14321f] font-display font-bold text-sm sm:text-base tabular-nums flex items-center justify-center"
+          style={{ boxShadow: `0 0 0 3px ${ringColour[rarity] || 'rgba(255,255,255,0.55)'}, 0 1px 3px rgba(0,0,0,0.35)` }}
         >
-          <span className="truncate max-w-[30px] font-semibold">{getAbbreviation(club)}</span>
-          <span
-            className={`${
-              rarity === 'legend'
-                ? 'text-amber-500 font-bold dark:text-amber-400'
-                : rarity === 'elite'
-                ? 'text-purple-600 dark:text-purple-400'
-                : rarity === 'cult'
-                ? 'text-emerald-600 dark:text-emerald-400'
-                : rarityConfig.text
-            }`}
-          >
-            {season.split('/')[0].substring(2)}
-          </span>
-        </div>
+          {rating}
+        </span>
+        <span className="mt-1 max-w-full truncate text-2xs sm:text-xs font-semibold text-white leading-tight" style={labelShadow}>
+          {shortName}
+        </span>
+        <span
+          className="max-w-full truncate text-2xs font-medium leading-tight"
+          style={{ ...labelShadow, color: 'rgba(255,255,255,0.88)' }}
+        >
+          {primaryPosition} · {getAbbreviation(club)} {season.split('/')[0].substring(2)}
+        </span>
       </div>
     );
   }

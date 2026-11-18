@@ -2352,7 +2352,7 @@ export function TransferHub({
                     <p className="text-[var(--ink-secondary)] leading-snug tabular-nums">
                       Base {base}
                       {boardPillars.length > 0 ? `, ${fromPillars - base >= 0 ? '+' : ''}${fromPillars - base} from the readings above` : ''}
-                      {other !== 0 ? `, ${other > 0 ? '+' : ''}${other} from the early-season minimum, press, cups and awards` : ''}
+                      {other !== 0 ? `, ${other > 0 ? '+' : ''}${other} from the early-season minimum and anything since the last re-score` : ''}
                       {' = '}
                       <strong className="font-semibold text-[var(--ink-primary)]">{boardStatus.confidence}%</strong>
                     </p>
@@ -2368,8 +2368,9 @@ export function TransferHub({
                         <li>Wages: +3 to -4 for staying inside the wage budget.</li>
                         <li>It cannot drop below {base} until three league matches have been played.</li>
                         <li>
-                          Until the next re-score: press answers up to 3 either way, cup tie won +3, cup trophy +15, manager of
-                          the month +4, turning down a job offer +4, surviving an ultimatum +14. Winning the league sets it to 100.
+                          Goodwill: press answers up to 3 either way, cup tie won +3, cup trophy +15, manager of the month +4,
+                          turning down a job offer +4, surviving an ultimatum +14. Goodwill is kept at the next re-score (20 at
+                          most either way) and fades by 1 point per league match. Winning the league sets confidence to 100.
                         </li>
                       </ul>
                     </details>

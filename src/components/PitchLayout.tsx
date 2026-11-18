@@ -146,7 +146,7 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
 
   return (
     <div
-      className="w-full relative aspect-[1/1.3] sm:aspect-[1/1.22] rounded-xl overflow-hidden bg-gradient-to-b from-pitch-green to-pitch-green-light border border-emerald-900/40 shadow-sm select-none"
+      className="w-full relative aspect-[1/1.3] sm:aspect-[1/1.22] my11-broadcast-pitch overflow-hidden select-none"
       onClick={(e) => {
         // If clicking outside players, clear selection
         if ((e.target as HTMLElement).tagName === 'DIV' && selectedSlotIndex !== null) {
@@ -173,36 +173,18 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
         </ol>
       </div>
 
-      {/* 1. Tactical Pitch Lines overlay */}
-      <div className="absolute inset-0 p-4 opacity-75 pointer-events-none" aria-hidden="true">
-        <div className="w-full h-full border-2 border-emerald-500/10 rounded-xl relative">
-          {/* Halfway Line */}
-          <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-emerald-500/10 transform -translate-y-1/2" />
-          
-          {/* Center Circle */}
-          <div className="absolute top-1/2 left-1/2 w-24 h-24 border-2 border-emerald-500/10 rounded-full transform -translate-x-1/2 -translate-y-1/2" />
-          <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-emerald-500/15 rounded-full transform -translate-x-1/2 -translate-y-1/2" />
-          
-          {/* Penalty Box Top */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-20 border-b-2 border-x-2 border-emerald-500/10" />
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-8 border-b-2 border-x-2 border-emerald-500/10" />
-          
-          {/* Penalty Box Bottom */}
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-48 h-20 border-t-2 border-x-2 border-emerald-500/10" />
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-24 h-8 border-t-2 border-x-2 border-emerald-500/10" />
-          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 w-12 h-6 border-t-2 border-x-2 border-emerald-500/5 rounded-t-full" />
-        </div>
-      </div>
-
-      {/* 2. Pitch grass striping effect */}
-      <div className="absolute inset-0 flex flex-col pointer-events-none opacity-25" aria-hidden="true">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div
-            key={i}
-            className={`flex-1 w-full ${i % 2 === 0 ? 'bg-emerald-950/20' : 'bg-transparent'}`}
-          />
-        ))}
-      </div>
+      {/* 1. Pitch markings */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 130" preserveAspectRatio="none" aria-hidden="true">
+        <g fill="none" stroke="rgba(255,255,255,0.38)" strokeWidth="0.5" vectorEffect="non-scaling-stroke">
+          <rect x="4" y="4" width="92" height="122" rx="1" />
+          <line x1="4" y1="65" x2="96" y2="65" />
+          <ellipse cx="50" cy="65" rx="11" ry="11" />
+          <rect x="27" y="4" width="46" height="19" />
+          <rect x="39" y="4" width="22" height="7" />
+          <rect x="27" y="107" width="46" height="19" />
+          <rect x="39" y="119" width="22" height="7" />
+        </g>
+      </svg>
 
       {/* 3. Subtle Connecting Chemistry SVG Lines (Only visible on focus/hover/post-pick) */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none z-15" aria-hidden="true">
@@ -300,7 +282,7 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
             {player ? (
               // Player card is drafted for this slot
               <div
-                className="relative cursor-pointer group rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                className="relative cursor-pointer group rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 role="button"
                 tabIndex={0}
                 aria-label={accessibleLabel}
@@ -321,7 +303,7 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
                 {/* Subtle link badge on player card when they have active connections */}
                 {linkCount > 0 && (
                   <span
-                    className={`absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-full text-2xs font-semibold font-display shadow-sm border leading-none transition-transform inline-flex items-center gap-0.5 ${
+                    className={`absolute -top-2 -right-1 px-1.5 py-0.5 rounded-full text-2xs font-semibold font-display shadow-sm border leading-none transition-transform inline-flex items-center gap-0.5 ${
                       isLinkedToFocused || isFocused
                         ? 'bg-[#1d5eff] text-white border-blue-400 scale-110'
                         : 'bg-white text-[#1d5eff] border-blue-200'
@@ -339,20 +321,26 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
                 type="button"
                 onClick={() => handleSlotClick(index)}
                 aria-label={accessibleLabel}
-                className={`w-[62px] h-[64px] sm:w-[68px] sm:h-[84px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition-[transform,color,background-color,border-color] duration-300 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 cursor-pointer ${
-                  isActive
-                    ? 'border-[#1d5eff] bg-blue-50/80 text-[#1d5eff] scale-105 ring-2 ring-blue-500/30 motion-safe:animate-pulse font-semibold'
-                    : 'border-slate-300/80 bg-white/60 text-slate-500 hover:border-indigo-300 hover:bg-white/90 hover:text-slate-800 font-bold'
-                }`}
+                className="w-[62px] sm:w-[78px] flex flex-col items-center cursor-pointer focus:outline-none group"
               >
-                <span className="text-2xs sm:text-xs font-semibold font-display">
+                <span
+                  className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 border-dashed flex items-center justify-center text-2xs sm:text-xs font-semibold font-display transition-colors group-focus-visible:ring-2 group-focus-visible:ring-white ${
+                    isActive ? 'motion-safe:animate-pulse' : ''
+                  }`}
+                  style={
+                    isActive
+                      ? { borderColor: '#ffffff', backgroundColor: '#ffffff', color: '#14321f' }
+                      : { borderColor: 'rgba(255,255,255,0.6)', backgroundColor: 'rgba(255,255,255,0.12)', color: '#ffffff' }
+                  }
+                >
                   {slot.label}
                 </span>
-                
-                {/* Active marker indicator */}
-                {isActive && (
-                  <span className="absolute bottom-1.5 w-1.5 h-1.5 rounded-full bg-[#1d5eff]" />
-                )}
+                <span
+                  className="mt-1 text-2xs font-semibold leading-tight"
+                  style={{ color: '#ffffff', textShadow: '0 1px 2px rgba(0,0,0,0.55)', visibility: isActive ? 'visible' : 'hidden' }}
+                >
+                  Next pick
+                </span>
               </button>
             )}
           </div>

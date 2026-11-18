@@ -4,6 +4,7 @@ import { calculatePositionFit } from '../../career/squad';
 /** Every role on the pitch: percent from the left touchline, percent from the attacking end. */
 const POSITION_SPOTS: Array<{ pos: string; x: number; y: number }> = [
   { pos: 'ST', x: 50, y: 11 },
+  { pos: 'CF', x: 50, y: 21 },
   { pos: 'LW', x: 15, y: 20 },
   { pos: 'RW', x: 85, y: 20 },
   { pos: 'CAM', x: 50, y: 31 },

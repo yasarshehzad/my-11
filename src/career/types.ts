@@ -657,6 +657,12 @@ export interface BoardStatus {
   leagueContext?: string;
   formContext?: string;
   financialContext?: string;
+  /** Confidence the league, form and finance readings give on their own, at the last evaluation. */
+  formulaScore?: number;
+  /** Points carried from press conferences, cups, awards and board decisions (-20 to 20). */
+  goodwill?: number;
+  /** League matches played when goodwill was last faded. */
+  goodwillAtMatch?: number;
   /** Most recent confidence changes, newest first (capped). Recorded by the career hub when confidence moves. */
   confidenceLog?: BoardConfidenceChange[];
 }

@@ -496,6 +496,41 @@ describe('Career Mode Phase 6: Transfers, Scouting & Contracts', () => {
       expect(status.expectation).toContain('Top 4');
       expect(['secure', 'stable']).toContain(status.status);
     });
+
+    it('keeps a bonus given since the last evaluation instead of wiping it', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+
+      const first = evaluateBoardConfidence(save);
+      expect(first.goodwill).toBe(0);
+
+      // A cup tie win adds 3 on top of the stored board status.
+      const boosted = { ...save, boardStatus: { ...first, confidence: Math.min(100, first.confidence + 3) } };
+      const second = evaluateBoardConfidence(boosted);
+      expect(second.goodwill).toBe(Math.min(100, first.confidence + 3) - first.confidence);
+      expect(second.confidence).toBe(Math.min(100, first.confidence + 3));
+      expect(second.pillars?.some((p) => p.title === 'Goodwill')).toBe(second.goodwill !== 0);
+
+      // Evaluating again without any change does not stack or drop it.
+      const third = evaluateBoardConfidence({ ...boosted, boardStatus: second });
+      expect(third.confidence).toBe(second.confidence);
+    });
+
+    it('caps carried goodwill at 20 points either way', () => {
+      const save = createNewCareerSave({
+        slotId: 'slot_1',
+        manager: { name: 'Manager', nationality: 'England' },
+        club: testClub,
+        settings: getPresetSettings('easy'),
+      });
+      const first = evaluateBoardConfidence(save);
+      const slumped = evaluateBoardConfidence({ ...save, boardStatus: { ...first, confidence: 1 } });
+      expect(slumped.goodwill).toBe(-20);
+    });
   });
 
   describe('Formation Adaptation & Lineup Starter Preservation', () => {

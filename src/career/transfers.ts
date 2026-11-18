@@ -2565,17 +2565,47 @@ export function evaluateBoardConfidence(save: CareerSaveFile): BoardStatus {
     positive: finScore >= 0,
   });
 
-  // If sackings disabled in settings, board confidence never drops below safe threshold
-  if (!save.settings.boardCanSack) {
-    confidence = Math.max(65, confidence);
+  // Floors and limits: no-sack saves never drop below 65, and the first 3 matches are a grace period.
+  const applyLimits = (value: number): number => {
+    let limited = value;
+    if (!save.settings.boardCanSack) limited = Math.max(65, limited);
+    if (matchesPlayed < 3) limited = Math.max(72, limited);
+    return Math.max(1, Math.min(100, Math.round(limited)));
+  };
+
+  // What the readings above give on their own, before any goodwill.
+  const formulaScore = applyLimits(confidence);
+
+  // 5. Goodwill: bonuses and penalties from press conferences, cups, awards and board decisions.
+  // Whatever moved confidence away from the formula since the last evaluation is carried forward,
+  // then fades by 1 point per league match so it does not last forever.
+  const prevBoard = save.boardStatus;
+  let goodwill = 0;
+  if (prevBoard) {
+    goodwill =
+      typeof prevBoard.formulaScore === 'number'
+        ? prevBoard.confidence - prevBoard.formulaScore
+        : prevBoard.goodwill ?? 0;
+    const lastMatch = prevBoard.goodwillAtMatch ?? matchesPlayed;
+    if (matchesPlayed > lastMatch) {
+      const fade = matchesPlayed - lastMatch;
+      goodwill = goodwill > 0 ? Math.max(0, goodwill - fade) : Math.min(0, goodwill + fade);
+    } else if (matchesPlayed < lastMatch) {
+      // New season: half of it carries over.
+      goodwill = Math.trunc(goodwill / 2);
+    }
+    goodwill = Math.max(-20, Math.min(20, Math.round(goodwill)));
+  }
+  if (goodwill !== 0) {
+    pillars.push({
+      title: 'Goodwill',
+      score: goodwill,
+      description: `${goodwill > 0 ? 'Credit' : 'Damage'} from press conferences, cups, awards and board decisions. Fades by 1 point per league match.`,
+      positive: goodwill > 0,
+    });
   }
 
-  // Early season grace period (first 3 matches)
-  if (matchesPlayed < 3) {
-    confidence = Math.max(72, confidence);
-  }
-
-  confidence = Math.max(1, Math.min(100, Math.round(confidence)));
+  confidence = applyLimits(confidence + goodwill);
 
   let status: BoardStatus['status'] = 'secure';
   if (confidence >= 80) {
@@ -2596,6 +2626,9 @@ export function evaluateBoardConfidence(save: CareerSaveFile): BoardStatus {
     status,
     warningsCount: status === 'critical' ? 2 : status === 'under_pressure' ? 1 : 0,
     pillars,
+    formulaScore,
+    goodwill,
+    goodwillAtMatch: matchesPlayed,
     leagueContext: rankDesc,
     formContext: `${recent5.length > 0 ? `${formScore >= 0 ? '+' : ''}${formScore}% form impact` : 'Season commencing'}`,
     financialContext: finDesc,
