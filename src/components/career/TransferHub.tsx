@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import {
   CareerSaveFile,
@@ -87,7 +87,7 @@ import {
   FacilityIcon,
   RegionBadge,
 } from './GameIcons';
-import { Button, Eyebrow, SectionHeader, Tag } from '../ui';
+import { Button, Eyebrow, SectionHeader, StatRow, Tag } from '../ui';
 import { calculateEaFcFaceStats } from '../../career/formAndProgression';
 import { playDealAccepted } from '../../utils/soundEffects';
 
@@ -160,6 +160,8 @@ interface TransferHubProps {
 }
 
 const PAGE_SIZE = 12;
+// Continuous scroll: how many market results load at a time
+const SCROLL_BATCH = 24;
 
 function renderTransactionCategoryIcon(category: string, isIncome: boolean) {
   const cls = `w-4 h-4 shrink-0 ${isIncome ? 'text-emerald-600' : 'text-rose-600'}`;
@@ -310,6 +312,8 @@ export function TransferHub({
   const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState<boolean>(false);
   const [expandedTargetId, setExpandedTargetId] = useState<string | null>(null);
   const [openFacilityPerks, setOpenFacilityPerks] = useState<FacilityType | null>(null);
+  // One open disclosure at a time across the affiliate, scout report and press rows (prefixed keys)
+  const [openDetailKey, setOpenDetailKey] = useState<string | null>(null);
 
   const availableClubs = useMemo(() => {
     const clubs = new Set<string>();
@@ -467,6 +471,44 @@ export function TransferHub({
     return marketPlayers.slice(start, start + PAGE_SIZE);
   }, [marketPlayers, validPage]);
 
+  // Market list mode: fixed pages (default) or continuous scroll, remembered on the save
+  const marketListMode: 'pages' | 'scroll' = save.uiPreferences?.marketListMode === 'scroll' ? 'scroll' : 'pages';
+  const handleSetMarketListMode = (mode: 'pages' | 'scroll') => {
+    if (mode === marketListMode) return;
+    setScrollCount(SCROLL_BATCH);
+    onUpdateSave({ ...save, uiPreferences: { ...save.uiPreferences, marketListMode: mode } });
+  };
+  const [scrollCount, setScrollCount] = useState<number>(SCROLL_BATCH);
+  // Any change to search, filters, sort order or sub-tab starts the scroll list again from the top batch
+  const scrollResetKey = JSON.stringify([subTab, { ...filters, maxPrice: affordableOnly }]);
+  const [prevScrollResetKey, setPrevScrollResetKey] = useState(scrollResetKey);
+  if (prevScrollResetKey !== scrollResetKey) {
+    setPrevScrollResetKey(scrollResetKey);
+    setScrollCount(SCROLL_BATCH);
+  }
+  const scrollShownCount = Math.min(scrollCount, marketPlayers.length);
+  const visibleMarketPlayers = useMemo(
+    () => (marketListMode === 'scroll' ? marketPlayers.slice(0, scrollCount) : paginatedPlayers),
+    [marketListMode, marketPlayers, scrollCount, paginatedPlayers]
+  );
+  const hasMoreToScroll = marketListMode === 'scroll' && subTab === 'market' && scrollCount < marketPlayers.length;
+  const scrollSentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!hasMoreToScroll) return;
+    const node = scrollSentinelRef.current;
+    if (!node || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setScrollCount((c) => c + SCROLL_BATCH);
+        }
+      },
+      { rootMargin: '0px 0px 600px 0px' }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasMoreToScroll, scrollCount]);
+
   const shortlistIdsSet = useMemo(
     () => new Set(save.shortlistPlayerIds || []),
     [save.shortlistPlayerIds]
@@ -487,6 +529,12 @@ export function TransferHub({
   const boardStatus = useMemo(
     () => save.boardStatus || evaluateBoardConfidence(save),
     [save]
+  );
+
+  // The readings behind the confidence score; re-derived when the stored status has none (e.g. after a new-season reset)
+  const boardPillars = useMemo(
+    () => boardStatus.pillars ?? evaluateBoardConfidence(save).pillars ?? [],
+    [boardStatus, save]
   );
 
   const financialHealth = useMemo(() => calculateClubFinancialHealth(save), [save]);
@@ -1518,11 +1566,55 @@ export function TransferHub({
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
-                {paginatedPlayers.map(renderTargetCard)}
+              <div className="flex items-center justify-between gap-3 px-1 text-xs">
+                <span className="text-[var(--ink-secondary)] tabular-nums">
+                  {marketPlayers.length.toLocaleString()} {marketPlayers.length === 1 ? 'player' : 'players'}
+                </span>
+                <div
+                  role="group"
+                  aria-label="List layout"
+                  className="inline-flex rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] p-0.5"
+                >
+                  {(['pages', 'scroll'] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      aria-pressed={marketListMode === mode}
+                      title={mode === 'pages' ? 'Show 12 players per page' : 'Keep loading players as you scroll'}
+                      onClick={() => handleSetMarketListMode(mode)}
+                      className={`min-h-10 px-3 rounded-md text-xs font-semibold cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                        marketListMode === mode
+                          ? 'bg-[var(--surface-elevated)] text-[var(--ink-primary)]'
+                          : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
+                      }`}
+                    >
+                      {mode === 'pages' ? 'Pages' : 'Scroll'}
+                    </button>
+                  ))}
+                </div>
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+                {visibleMarketPlayers.map(renderTargetCard)}
+              </div>
+
+              {/* Continuous scroll: sentinel, count and a manual fallback */}
+              {marketListMode === 'scroll' && (
+                <div className="flex flex-col items-center gap-2 pt-3 border-t border-[var(--border-subtle)] text-xs">
+                  {hasMoreToScroll && <div ref={scrollSentinelRef} aria-hidden="true" className="h-px w-full" />}
+                  <p className="text-[var(--ink-secondary)] tabular-nums" role="status">
+                    Showing {scrollShownCount.toLocaleString()} of {marketPlayers.length.toLocaleString()}
+                  </p>
+                  {hasMoreToScroll && (
+                    <Button variant="secondary" onClick={() => setScrollCount((c) => c + SCROLL_BATCH)}>
+                      Load more
+                    </Button>
+                  )}
+                </div>
+              )}
+
               {/* Pagination Controls */}
+              {marketListMode === 'pages' && (
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-200 text-xs">
                 <span className="text-slate-500 font-medium">
                   {Math.min(marketPlayers.length, (validPage - 1) * PAGE_SIZE + 1)}–{Math.min(marketPlayers.length, validPage * PAGE_SIZE)} of{' '}
@@ -1549,6 +1641,7 @@ export function TransferHub({
                   </Button>
                 </div>
               </div>
+              )}
             </div>
           )}
         </section>
@@ -2066,50 +2159,78 @@ export function TransferHub({
 
           {boardView === 'board' && (
             <>
-              {/* Confidence + governance facts in one card */}
-              <div className="office-floating-card p-3.5 sm:p-4 text-xs">
-                <div className="flex items-baseline justify-between gap-2 pb-2">
-                  <span className="font-display font-semibold text-slate-900 text-sm">Board confidence</span>
-                  <span
-                    className={`text-xl font-display font-bold ${
-                      boardStatus.confidence >= 75
-                        ? 'text-emerald-600'
-                        : boardStatus.confidence >= 50
-                        ? 'text-amber-600'
-                        : 'text-rose-600'
-                    }`}
-                  >
-                    {boardStatus.confidence}%
-                  </span>
-                </div>
-                <dl className="divide-y divide-slate-100 border-t border-slate-100">
-                  <div className="flex justify-between gap-3 py-1.5">
-                    <dt className="text-slate-500">Objective</dt>
-                    <dd className="font-bold text-slate-900 text-right">{boardStatus.expectation}</dd>
-                  </div>
-                  <div className="flex justify-between gap-3 py-1.5">
-                    <dt className="text-slate-500">Job security</dt>
-                    <dd
-                      className={`font-bold first-letter:uppercase text-right ${
-                        boardStatus.status === 'secure'
-                          ? 'text-emerald-700'
-                          : boardStatus.status === 'stable'
-                          ? 'text-slate-900'
-                          : 'text-rose-700'
-                      }`}
+              {/* 1. Where you stand */}
+              {(() => {
+                const c = boardStatus.confidence;
+                const mood = c >= 75 ? 'Delighted' : c >= 60 ? 'Satisfied' : c >= 45 ? 'Cautious' : 'Under pressure';
+                const tone = c >= 60 ? 'text-emerald-700' : c >= 45 ? 'text-amber-700' : 'text-rose-700';
+                const barTone = c >= 60 ? 'bg-emerald-600' : c >= 45 ? 'bg-amber-500' : 'bg-rose-600';
+                const securityWords: Record<typeof boardStatus.status, string> = {
+                  secure: 'Secure',
+                  stable: 'Stable',
+                  under_pressure: 'Under pressure',
+                  critical: 'Critical',
+                  sacked: 'Dismissed',
+                };
+                return (
+                  <section className="office-floating-card p-3.5 sm:p-4 space-y-2.5 text-xs">
+                    <SectionHeader as="h4" title="Where you stand" />
+                    <div>
+                      <p className="flex items-baseline gap-2">
+                        <span className={`text-3xl font-display font-bold tabular-nums ${tone}`}>{c}%</span>
+                        <span className="text-sm font-semibold text-[var(--ink-primary)]">{mood}</span>
+                      </p>
+                      <p className="text-[var(--ink-muted)]">Board confidence</p>
+                    </div>
+                    <div
+                      className="h-1.5 w-full rounded-full bg-[var(--surface-elevated)] overflow-hidden"
+                      role="progressbar"
+                      aria-valuenow={c}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label="Board confidence"
                     >
-                      {boardStatus.status.replace('_', ' ')}
-                      {!save.settings.boardCanSack && <span className="text-slate-500 font-normal normal-case"> (safe job mode)</span>}
-                    </dd>
-                  </div>
-                  <div className="flex justify-between gap-3 py-1.5">
-                    <dt className="text-slate-500">Warnings</dt>
-                    <dd className={`tabular-nums font-bold ${boardStatus.warningsCount > 0 ? 'text-rose-700' : 'text-slate-900'}`}>
-                      {boardStatus.warningsCount}/3
-                    </dd>
-                  </div>
-                </dl>
-              </div>
+                      <div className={`h-full rounded-full ${barTone}`} style={{ width: `${Math.max(2, Math.min(100, c))}%` }} />
+                    </div>
+                    <div className="divide-y divide-[var(--border-subtle)] border-t border-[var(--border-subtle)]">
+                      <StatRow
+                        className="text-xs"
+                        label="Job security"
+                        value={
+                          <span
+                            className={
+                              boardStatus.status === 'secure'
+                                ? 'text-emerald-700'
+                                : boardStatus.status === 'stable'
+                                ? ''
+                                : 'text-rose-700'
+                            }
+                          >
+                            {securityWords[boardStatus.status]}
+                            {!save.settings.boardCanSack && (
+                              <span className="font-normal text-[var(--ink-muted)]"> (safe job mode)</span>
+                            )}
+                          </span>
+                        }
+                      />
+                      <StatRow
+                        className="text-xs"
+                        label="Warnings"
+                        value={
+                          <span className={boardStatus.warningsCount > 0 ? 'text-rose-700' : ''}>
+                            {boardStatus.warningsCount} of 3
+                          </span>
+                        }
+                      />
+                    </div>
+                    <p className="text-[var(--ink-secondary)] leading-snug">
+                      {save.settings.boardCanSack
+                        ? 'The board gives one warning when confidence is below 60% and a second below 35%. The third is dismissal: confidence under 15% after 10 league matches, or a failed ultimatum. An ultimatum is set when confidence falls below 38% after four league matches: take 5 points from the next 3 or go.'
+                        : 'The board gives one warning when confidence is below 60% and a second below 35%. Safe job mode is on, so there is no third: you cannot be dismissed, and the board will not score you below 65%.'}
+                    </p>
+                  </section>
+                );
+              })()}
 
               {/* Active 3-match board ultimatum */}
               {save.managerCareer?.activeUltimatum?.status === 'active' && (
@@ -2132,7 +2253,256 @@ export function TransferHub({
                 </section>
               )}
 
-              {/* Manager standing, tenures, job offers */}
+
+              {/* 2. What the board expects */}
+              {(() => {
+                const ordinal = (n: number) => {
+                  const v = n % 100;
+                  const suffix = v >= 11 && v <= 13 ? 'th' : n % 10 === 1 ? 'st' : n % 10 === 2 ? 'nd' : n % 10 === 3 ? 'rd' : 'th';
+                  return `${n}${suffix}`;
+                };
+                // Same league target the board evaluation uses for each club tier
+                const targetRank =
+                  save.club.tier === 'elite' ? 4 : save.club.tier === 'upper' ? 7 : save.club.tier === 'mid' ? 12 : save.club.tier === 'lower' ? 17 : 10;
+                const standings = save.standings || [];
+                const rankIdx = standings.findIndex((row) => row.clubId === save.club.id);
+                const standing = rankIdx >= 0 ? standings[rankIdx] : null;
+                const rank = rankIdx + 1;
+                const gap = targetRank - rank;
+
+                const cupLines = Object.values(save.cups || {})
+                  .filter((cup) => !cup.isFriendly)
+                  .map((cup) => {
+                    const mine = cup.fixtures
+                      .filter((f) => !f.isFriendly && (f.homeClubId === save.club.id || f.awayClubId === save.club.id))
+                      .slice()
+                      .sort((x, y) => (x.date || '').localeCompare(y.date || ''));
+                    if (cup.isCompleted && cup.winnerClubId === save.club.id) return { name: cup.name, text: 'Won' };
+                    if (cup.isCompleted && cup.runnerUpClubId === save.club.id) return { name: cup.name, text: 'Runners-up' };
+                    const next = mine.find((f) => !f.played);
+                    if (next) return { name: cup.name, text: `Next: ${next.roundName}` };
+                    const last = mine[mine.length - 1];
+                    if (last) return { name: cup.name, text: `Last played: ${last.roundName}` };
+                    return null;
+                  })
+                  .filter((line): line is { name: string; text: string } => line !== null);
+
+                return (
+                  <section className="office-floating-card p-3.5 sm:p-4 space-y-1.5 text-xs">
+                    <SectionHeader as="h4" title="What the board expects" />
+                    <div className="divide-y divide-[var(--border-subtle)]">
+                      <StatRow
+                        className="text-xs"
+                        label="Objective"
+                        value={`Finish ${ordinal(targetRank)} or higher`}
+                      />
+                      <StatRow
+                        className="text-xs"
+                        label="League"
+                        value={
+                          !standing || standing.played === 0 ? (
+                            'No league matches played yet'
+                          ) : (
+                            <span className={gap >= 0 ? 'text-emerald-700' : 'text-rose-700'}>
+                              {ordinal(rank)} after {standing.played},{' '}
+                              {gap > 0
+                                ? `${gap} ${gap === 1 ? 'place' : 'places'} above target`
+                                : gap === 0
+                                ? 'on target'
+                                : `${-gap} ${gap === -1 ? 'place' : 'places'} below target`}
+                            </span>
+                          )
+                        }
+                      />
+                      {cupLines.map((line) => (
+                        <StatRow key={line.name} className="text-xs" label={line.name} value={line.text} />
+                      ))}
+                    </div>
+                    <p className="text-[var(--ink-secondary)] leading-snug">
+                      The objective is judged on league position. Cup results are not part of it, but winning a cup tie or a trophy lifts confidence.
+                    </p>
+                  </section>
+                );
+              })()}
+
+              {/* 3. How confidence is worked out */}
+              {(() => {
+                const pillarLabels: Record<string, string> = {
+                  'League Performance': 'League position',
+                  'Goal Difference & Dominance': 'Goal difference',
+                  'Recent Match Form': 'Recent form',
+                  'Financial Control': 'Wage control',
+                };
+                const base = 72;
+                const fromPillars = base + boardPillars.reduce((sum, pillar) => sum + pillar.score, 0);
+                const other = boardStatus.confidence - fromPillars;
+                return (
+                  <section className="office-floating-card p-3.5 sm:p-4 space-y-1.5 text-xs">
+                    <SectionHeader as="h4" title="How confidence is worked out" />
+                    <ul className="divide-y divide-[var(--border-subtle)]">
+                      {boardPillars.map((pillar) => (
+                        <li key={pillar.title} className="py-2 space-y-0.5">
+                          <div className="flex items-baseline justify-between gap-3">
+                            <span className="font-semibold text-[var(--ink-primary)]">
+                              {pillarLabels[pillar.title] || pillar.title}
+                            </span>
+                            <span
+                              className={`shrink-0 font-semibold tabular-nums ${
+                                pillar.score > 0 ? 'text-emerald-700' : pillar.score < 0 ? 'text-rose-700' : 'text-[var(--ink-muted)]'
+                              }`}
+                            >
+                              {pillar.score > 0
+                                ? `+${pillar.score} · Helping`
+                                : pillar.score < 0
+                                ? `${pillar.score} · Hurting`
+                                : 'No effect'}
+                            </span>
+                          </div>
+                          <p className="text-[var(--ink-secondary)] leading-snug">{pillar.description.replace(/!/g, '.')}</p>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="text-[var(--ink-secondary)] leading-snug tabular-nums">
+                      Base {base}
+                      {boardPillars.length > 0 ? `, ${fromPillars - base >= 0 ? '+' : ''}${fromPillars - base} from the readings above` : ''}
+                      {other !== 0 ? `, ${other > 0 ? '+' : ''}${other} from the early-season minimum, press, cups and awards` : ''}
+                      {' = '}
+                      <strong className="font-semibold text-[var(--ink-primary)]">{boardStatus.confidence}%</strong>
+                    </p>
+                    <details className="pt-1">
+                      <summary className="cursor-pointer min-h-10 flex items-center font-semibold text-blue-700">
+                        The exact scoring
+                      </summary>
+                      <ul className="list-disc pl-4 space-y-1 text-[var(--ink-secondary)] leading-snug">
+                        <li>The board re-scores you from {base} each time the calendar moves on.</li>
+                        <li>League: 2.5 points for every place above or below the target.</li>
+                        <li>Goal difference: up to 6 either way.</li>
+                        <li>Form: +1 per win and -1 per defeat in your last five matches.</li>
+                        <li>Wages: +3 to -4 for staying inside the wage budget.</li>
+                        <li>It cannot drop below {base} until three league matches have been played.</li>
+                        <li>
+                          Until the next re-score: press answers up to 3 either way, cup tie won +3, cup trophy +15, manager of
+                          the month +4, turning down a job offer +4, surviving an ultimatum +14. Winning the league sets it to 100.
+                        </li>
+                      </ul>
+                    </details>
+                  </section>
+                );
+              })()}
+
+              {/* 4. Recent changes */}
+              <section className="office-floating-card p-3.5 sm:p-4 space-y-1.5 text-xs">
+                <SectionHeader as="h4" title="Recent changes" />
+                {(save.boardStatus?.confidenceLog || []).length === 0 ? (
+                  <p className="text-[var(--ink-secondary)]">
+                    No changes yet. Confidence moves after matches, press conferences and board reviews.
+                  </p>
+                ) : (
+                  <ul className="divide-y divide-[var(--border-subtle)]">
+                    {(save.boardStatus?.confidenceLog || []).slice(0, 6).map((change, idx) => (
+                      <li key={`${change.date}_${idx}`} className="py-2 flex items-baseline gap-3">
+                        <span className="flex-1 min-w-0">
+                          <span className="block text-[var(--ink-primary)]">{change.reason}</span>
+                          <span className="block text-[var(--ink-muted)] tabular-nums">
+                            {formatCareerDate(change.date, save.settings.dateFormat)} · now {change.confidence}%
+                          </span>
+                        </span>
+                        <span
+                          className={`shrink-0 font-semibold tabular-nums ${
+                            change.delta > 0 ? 'text-emerald-700' : 'text-rose-700'
+                          }`}
+                        >
+                          {change.delta > 0 ? `+${change.delta}` : change.delta}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+
+              {/* 5. Your requests: board petitions, one row each */}
+              <section className="office-floating-card p-3.5 sm:p-4 space-y-1 text-xs">
+                <SectionHeader as="h4" title="Your requests" />
+                {(() => {
+                  const isDeadline = Boolean(
+                    save.deadlineDayState?.isActive || isTransferDeadlineDay(save.season.currentDate, save.season.yearStart)
+                  );
+                  const injuredCount = save.squad.filter((p) => p.injured).length;
+                  const petitions: {
+                    type: BoardPetitionType;
+                    title: string;
+                    note: string;
+                    detail: string;
+                    icon: React.ReactNode;
+                    enabled: boolean;
+                  }[] = [
+                    {
+                      type: 'general_transfer_funds',
+                      title: 'Transfer budget top-up',
+                      note: `Budget ${formatCurrency(save.finances.transferBudget)}`,
+                      detail: 'Full grant from 65% confidence, part from 50%. Half comes out of the club balance.',
+                      icon: <IconTrendingUp className="w-4 h-4 text-blue-600" />,
+                      enabled: true,
+                    },
+                    {
+                      type: 'wage_budget_increase',
+                      title: 'Wage budget increase',
+                      note: `Payroll ${formatWage(save.finances.currentWeeklyWages)} of ${formatWage(save.finances.weeklyWageBudget)}`,
+                      detail:
+                        'About 10% more. Full from 55% confidence, part from 45%. Costs nothing.',
+                      icon: <IconBriefcase className="w-4 h-4 text-[var(--ink-secondary)]" />,
+                      enabled: true,
+                    },
+                    {
+                      type: 'injury_crisis',
+                      title: 'Injury cover grant',
+                      note: injuredCount > 0 ? `${injuredCount} injured` : 'No injuries',
+                      detail:
+                        'Funds to replace an injured player. Full cover from 50% confidence. Half comes out of the club balance.',
+                      icon: <IconMedkit className="w-4 h-4 text-rose-600" />,
+                      enabled: injuredCount > 0,
+                    },
+                    {
+                      type: 'deadline_day_marquee',
+                      title: 'Deadline day warchest',
+                      note: isDeadline ? 'Available today' : 'Deadline day only',
+                      detail:
+                        'Full grant from 68% confidence, part from 48%. Half comes out of the club balance.',
+                      icon: <IconClock className="w-4 h-4 text-amber-600" />,
+                      enabled: isDeadline,
+                    },
+                  ];
+                  return (
+                    <>
+                      <ul className="divide-y divide-[var(--border-subtle)]">
+                        {petitions.map((p) => (
+                          <li key={p.type} className="py-2 flex items-start gap-2.5">
+                            <span className="shrink-0 mt-0.5">{p.icon}</span>
+                            <span className="flex-1 min-w-0 space-y-0.5">
+                              <span className="font-semibold text-[var(--ink-primary)] block">{p.title}</span>
+                              <span className="text-[var(--ink-muted)] block tabular-nums">{p.note}</span>
+                              <span className="text-[var(--ink-secondary)] block leading-snug">{p.detail}</span>
+                            </span>
+                            <Button variant="secondary"
+                              onClick={() => handleOpenPetitionModal(p.type)}
+                              disabled={!p.enabled}
+                              className="shrink-0 px-3 text-xs"
+                            >
+                              Petition
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="text-[var(--ink-secondary)] leading-snug pt-1">
+                        A refusal costs nothing and does not change confidence. Once a request is granted, the same request is
+                        refused for the next 30 days (the deadline day warchest: once per deadline day).
+                      </p>
+                    </>
+                  );
+                })()}
+              </section>
+
+              {/* 6. Your standing and job offers */}
               {(() => {
                 const mc = save.managerCareer || getInitialManagerCareer(save.club, save.season.currentDate);
                 const pendingJobOffers = (mc.jobOffers || []).filter((o) => o.status === 'pending');
@@ -2142,7 +2512,7 @@ export function TransferHub({
                     <section id="manager-career-section" className="office-floating-card p-3.5 sm:p-4 space-y-2.5 text-xs scroll-mt-20">
                       <SectionHeader
                         as="h4"
-                        title="Manager standing"
+                        title="Your standing"
                         action={
                           <span className="text-xs text-[var(--ink-secondary)] tabular-nums">
                             Rep {mc.reputation}/100 &bull; {formatCurrency(mc.weeklySalary)}/wk
@@ -2261,72 +2631,6 @@ export function TransferHub({
                 );
               })()}
 
-              {/* Board petitions: one row each */}
-              <section className="office-floating-card p-3.5 sm:p-4 space-y-1">
-                <SectionHeader as="h4" title="Board petitions" />
-                {(() => {
-                  const isDeadline = Boolean(
-                    save.deadlineDayState?.isActive || isTransferDeadlineDay(save.season.currentDate, save.season.yearStart)
-                  );
-                  const injuredCount = save.squad.filter((p) => p.injured).length;
-                  const petitions: {
-                    type: BoardPetitionType;
-                    title: string;
-                    note: string;
-                    icon: React.ReactNode;
-                    enabled: boolean;
-                  }[] = [
-                    {
-                      type: 'general_transfer_funds',
-                      title: 'Transfer budget top-up',
-                      note: 'From club reserves',
-                      icon: <IconTrendingUp className="w-4 h-4 text-blue-600" />,
-                      enabled: true,
-                    },
-                    {
-                      type: 'wage_budget_increase',
-                      title: 'Wage budget increase',
-                      note: `Payroll ${formatWage(save.finances.currentWeeklyWages)}`,
-                      icon: <IconBriefcase className="w-4 h-4 text-slate-700" />,
-                      enabled: true,
-                    },
-                    {
-                      type: 'injury_crisis',
-                      title: 'Injury cover grant',
-                      note: injuredCount > 0 ? `${injuredCount} injured` : 'No injuries',
-                      icon: <IconMedkit className="w-4 h-4 text-rose-600" />,
-                      enabled: injuredCount > 0,
-                    },
-                    {
-                      type: 'deadline_day_marquee',
-                      title: 'Deadline day warchest',
-                      note: isDeadline ? 'Available today' : 'Deadline day only',
-                      icon: <IconClock className="w-4 h-4 text-amber-600" />,
-                      enabled: isDeadline,
-                    },
-                  ];
-                  return (
-                    <ul className="divide-y divide-slate-100">
-                      {petitions.map((p) => (
-                        <li key={p.type} className="py-1.5 flex items-center gap-2.5">
-                          <span className="shrink-0">{p.icon}</span>
-                          <span className="flex-1 min-w-0">
-                            <span className="text-xs font-bold text-slate-900 block">{p.title}</span>
-                            <span className="text-xs text-slate-500 block truncate">{p.note}</span>
-                          </span>
-                          <Button variant="secondary"
-                            onClick={() => handleOpenPetitionModal(p.type)}
-                            disabled={!p.enabled}
-                            className="shrink-0"
-                          >
-                            Petition
-                          </Button>
-                        </li>
-                      ))}
-                    </ul>
-                  );
-                })()}
-              </section>
             </>
           )}
 
@@ -2765,25 +3069,45 @@ export function TransferHub({
                                   </div>
                                 </div>
 
-                                <p className="text-xs text-slate-600 leading-snug line-clamp-2">
-                                  {prospect.scoutNotes}
-                                </p>
-
-                                {/* Pros & Cons Tags */}
-                                <div className="space-y-1">
-                                  {prospect.pros.slice(0, 1).map((pro, idx) => (
-                                    <div key={idx} className="text-xs text-emerald-700 font-semibold flex items-center gap-1">
-                                      <IconCheck className="w-3 h-3 text-emerald-600 shrink-0" />
-                                      <span className="truncate">{pro}</span>
+                                <button
+                                  type="button"
+                                  aria-expanded={openDetailKey === `prospect:${dossier.id}:${prospect.playerId}`}
+                                  aria-controls={`prospect-notes-${dossier.id}-${prospect.playerId}`}
+                                  onClick={() =>
+                                    setOpenDetailKey(
+                                      openDetailKey === `prospect:${dossier.id}:${prospect.playerId}`
+                                        ? null
+                                        : `prospect:${dossier.id}:${prospect.playerId}`
+                                    )
+                                  }
+                                  className="w-full min-h-10 flex items-center justify-between gap-2 text-left text-xs font-medium text-[var(--ink-secondary)] cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                                >
+                                  <span>Scout notes</span>
+                                  {openDetailKey === `prospect:${dossier.id}:${prospect.playerId}` ? (
+                                    <IconChevronUp className="w-3.5 h-3.5 text-[var(--ink-muted)] shrink-0" />
+                                  ) : (
+                                    <IconChevronDown className="w-3.5 h-3.5 text-[var(--ink-muted)] shrink-0" />
+                                  )}
+                                </button>
+                                {openDetailKey === `prospect:${dossier.id}:${prospect.playerId}` && (
+                                  <div id={`prospect-notes-${dossier.id}-${prospect.playerId}`} className="space-y-1.5">
+                                    <p className="text-xs text-[var(--ink-secondary)] leading-snug">{prospect.scoutNotes}</p>
+                                    <div className="space-y-1">
+                                      {prospect.pros.map((pro, idx) => (
+                                        <div key={idx} className="text-xs text-emerald-700 flex items-start gap-1">
+                                          <IconCheck className="w-3 h-3 text-emerald-600 shrink-0 mt-0.5" />
+                                          <span>{pro}</span>
+                                        </div>
+                                      ))}
+                                      {prospect.cons.map((con, idx) => (
+                                        <div key={idx} className="text-xs text-rose-700 flex items-start gap-1">
+                                          <IconClose className="w-3 h-3 text-rose-600 shrink-0 mt-0.5" />
+                                          <span>{con}</span>
+                                        </div>
+                                      ))}
                                     </div>
-                                  ))}
-                                  {prospect.cons.slice(0, 1).map((con, idx) => (
-                                    <div key={idx} className="text-xs text-rose-600 font-medium flex items-center gap-1">
-                                      <IconClose className="w-3 h-3 text-rose-500 shrink-0" />
-                                      <span className="truncate">{con}</span>
-                                    </div>
-                                  ))}
-                                </div>
+                                  </div>
+                                )}
 
                                 <div className="pt-2 border-t border-slate-200/80 flex justify-between items-center text-xs tabular-nums">
                                   <span className="text-slate-500">Val: <strong className="text-slate-800">{formatCurrency(prospect.estimatedValue)}</strong></span>
@@ -2885,7 +3209,7 @@ export function TransferHub({
                       <li key={project.id} className="py-2 space-y-1">
                         <div className="flex items-baseline justify-between gap-2">
                           <span className="font-bold text-slate-900 min-w-0 truncate">
-                            {project.facilityName} (Tier {project.targetLevel})
+                            {project.facilityName}, level {project.targetLevel}
                           </span>
                           <span className="tabular-nums font-bold text-amber-900 shrink-0">{daysLeft} days left</span>
                         </div>
@@ -2910,125 +3234,168 @@ export function TransferHub({
             );
           })()}
 
-          {/* 4 facilities */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {(['stadium', 'trainingGround', 'medicalCenter', 'scoutingHub'] as FacilityType[]).map((type) => {
-              const meta = FACILITY_METADATA[type];
-              const currentLvl = getCurrentFacilityLevel(save.infrastructure, type);
-              const tiers = FACILITY_TIERS_BY_TYPE[type];
-              const currentTierConfig = tiers[currentLvl];
-              const nextLvl = currentLvl + 1;
-              const nextTierConfig = currentLvl < 5 ? tiers[nextLvl] : null;
+          {/* 4 facilities: one compact row each, detail behind the row (one open at a time) */}
+          <div className="office-floating-card rounded-xl px-3.5 sm:px-4 border border-[var(--border-subtle)] bg-[var(--surface-card)] text-xs">
+            <ul className="divide-y divide-[var(--border-subtle)]">
+              {(['stadium', 'trainingGround', 'medicalCenter', 'scoutingHub'] as FacilityType[]).map((type) => {
+                const meta = FACILITY_METADATA[type];
+                const currentLvl = getCurrentFacilityLevel(save.infrastructure, type);
+                const tiers = FACILITY_TIERS_BY_TYPE[type];
+                const currentTierConfig = tiers[currentLvl];
+                const nextLvl = currentLvl + 1;
+                const nextTierConfig = currentLvl < 5 ? tiers[nextLvl] : null;
 
-              const activeProject = (save.infrastructure?.activeProjects || []).find(
-                (p) => p.facilityType === type && !p.completed
-              );
+                const activeProject = (save.infrastructure?.activeProjects || []).find(
+                  (p) => p.facilityType === type && !p.completed
+                );
+                const daysLeft = activeProject
+                  ? Math.max(
+                      1,
+                      Math.ceil(
+                        Math.max(
+                          0,
+                          new Date(activeProject.completionDate).getTime() - new Date(save.season.currentDate).getTime()
+                        ) /
+                          (1000 * 60 * 60 * 24)
+                      )
+                    )
+                  : 0;
 
-              const canAfford = nextTierConfig ? save.finances.transferBudget >= nextTierConfig.cost : false;
-              const perksOpen = openFacilityPerks === type;
-              const liveEffect =
-                type === 'stadium'
-                  ? `${getEffectiveStadiumCapacity(save).toLocaleString()} seats, ${getGateReceiptMultiplier(save)}x gate receipts`
-                  : type === 'trainingGround'
-                  ? `+${Math.round((getTrainingXpModifier(save) - 1) * 100)}% training XP`
-                  : type === 'medicalCenter'
-                  ? `-${Math.round((1 - getInjuryRiskModifier(save)) * 100)}% injury risk`
-                  : `${getMaxScoutingMissions(save)} scouting missions`;
+                const canAfford = nextTierConfig ? save.finances.transferBudget >= nextTierConfig.cost : false;
+                const shortfall = nextTierConfig ? Math.max(0, nextTierConfig.cost - save.finances.transferBudget) : 0;
+                const detailOpen = openFacilityPerks === type;
+                const liveEffect =
+                  type === 'stadium'
+                    ? `${getEffectiveStadiumCapacity(save).toLocaleString()} seats, ${getGateReceiptMultiplier(save)}x gate receipts`
+                    : type === 'trainingGround'
+                    ? `+${Math.round((getTrainingXpModifier(save) - 1) * 100)}% training XP`
+                    : type === 'medicalCenter'
+                    ? `-${Math.round((1 - getInjuryRiskModifier(save)) * 100)}% injury risk`
+                    : `${getMaxScoutingMissions(save)} scouting missions`;
 
-              return (
-                <article
-                  key={type}
-                  className="office-floating-card rounded-xl p-3.5 sm:p-4 border border-slate-200/90 bg-white shadow-xs space-y-2.5 text-xs"
-                >
-                  <header className="flex items-center gap-2.5">
-                    <FacilityIcon type={type} className="w-5 h-5 text-slate-700 shrink-0" />
-                    <h4 className="font-display font-semibold text-sm text-slate-900 leading-tight flex-1 min-w-0">
-                      {meta.name}
-                    </h4>
-                    <span className="text-xs text-[var(--ink-muted)] shrink-0 tabular-nums">Tier {currentLvl}/5</span>
-                  </header>
-
-                  <div className="flex items-center gap-1.5 w-full" aria-hidden="true">
-                    {[1, 2, 3, 4, 5].map((lvl) => (
-                      <div
-                        key={lvl}
-                        className={`h-1.5 flex-1 rounded-full ${
-                          activeProject && lvl === activeProject.targetLevel
-                            ? 'bg-amber-400'
-                            : lvl <= currentLvl
-                            ? 'bg-emerald-600'
-                            : 'bg-slate-200'
-                        }`}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Current tier: one line, full perk list behind a disclosure */}
-                  <button
-                    type="button"
-                    aria-expanded={perksOpen}
-                    aria-controls={`facility-perks-${type}`}
-                    onClick={() => setOpenFacilityPerks(perksOpen ? null : type)}
-                    className="w-full min-h-10 flex items-center justify-between gap-2 text-left cursor-pointer"
-                  >
-                    <span className="min-w-0">
-                      <span className="font-bold text-slate-900">{currentTierConfig?.name}</span>
-                      <span className="text-slate-600"> &bull; {liveEffect}</span>
-                    </span>
-                    {perksOpen ? (
-                      <IconChevronUp className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                    ) : (
-                      <IconChevronDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                    )}
-                  </button>
-                  {perksOpen && (
-                    <ul id={`facility-perks-${type}`} className="divide-y divide-[var(--border-subtle)] text-[var(--ink-secondary)]">
-                      {(currentTierConfig?.benefits || []).map((benefit, idx) => (
-                        <li key={idx} className="py-1">{benefit}</li>
-                      ))}
-                    </ul>
-                  )}
-
-                  {/* Next tier is the call to action */}
-                  {activeProject ? (
-                    <p className="border-t border-[var(--border-subtle)] pt-2.5 font-medium text-amber-800">
-                      Tier {activeProject.targetLevel} under construction, ready {activeProject.completionDate}
-                    </p>
-                  ) : nextTierConfig ? (
-                    <div className="border-t border-slate-100 pt-2.5 space-y-2">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <span className="font-semibold text-[var(--ink-primary)]">Next: {nextTierConfig.name}</span>
-                        <span className="text-[var(--ink-muted)] shrink-0 tabular-nums">{nextTierConfig.constructionDays} days</span>
-                      </div>
-                      <ul className="divide-y divide-[var(--border-subtle)] text-[var(--ink-secondary)]">
-                        {nextTierConfig.benefits.map((b, idx) => (
-                          <li key={idx} className="py-1">{b}</li>
-                        ))}
-                      </ul>
-                      <Button variant="secondary" fullWidth
-                        disabled={!canAfford}
-                        onClick={() => {
-                          const res = commissionFacilityUpgrade(save, type);
-                          if (res.success) {
-                            onUpdateSave(res.updatedSave);
-                            if (onNotification) {
-                              onNotification(`Commissioned expansion of ${meta.name} (Tier ${nextLvl}).`);
-                            }
-                          } else if (res.error && onNotification) {
-                            onNotification(res.error);
-                          }
-                        }}
+                return (
+                  <li key={type} className="py-2.5">
+                    <div className="flex items-start gap-2.5">
+                      <button
+                        type="button"
+                        aria-expanded={detailOpen}
+                        aria-controls={`facility-perks-${type}`}
+                        onClick={() => setOpenFacilityPerks(detailOpen ? null : type)}
+                        className="flex-1 min-w-0 min-h-10 flex items-start gap-2.5 text-left cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                       >
-                        <span>{canAfford ? `Upgrade to Tier ${nextLvl}` : 'Cannot afford'}</span>
-                        <span className="tabular-nums">{formatCurrency(nextTierConfig.cost)}</span>
-                      </Button>
+                        <FacilityIcon type={type} className="w-5 h-5 text-[var(--ink-secondary)] shrink-0 mt-0.5" />
+                        <span className="flex-1 min-w-0 space-y-1">
+                          <span className="block font-display font-semibold text-sm leading-snug text-[var(--ink-primary)]">
+                            {meta.name}
+                          </span>
+                          <span className="flex items-center gap-2 text-[var(--ink-secondary)] tabular-nums">
+                            <span className="shrink-0">Level {currentLvl} of 5</span>
+                            <span className="flex items-center gap-0.5 w-16 shrink-0" aria-hidden="true">
+                              {[1, 2, 3, 4, 5].map((lvl) => (
+                                <span
+                                  key={lvl}
+                                  className={`h-1.5 flex-1 rounded-full ${
+                                    activeProject && lvl === activeProject.targetLevel
+                                      ? 'bg-amber-400'
+                                      : lvl <= currentLvl
+                                      ? 'bg-emerald-600'
+                                      : 'bg-[var(--surface-elevated)]'
+                                  }`}
+                                />
+                              ))}
+                            </span>
+                          </span>
+                          <span className="block text-[var(--ink-primary)]">{liveEffect}</span>
+                        </span>
+                        {detailOpen ? (
+                          <IconChevronUp className="w-3.5 h-3.5 text-[var(--ink-muted)] shrink-0 mt-1" />
+                        ) : (
+                          <IconChevronDown className="w-3.5 h-3.5 text-[var(--ink-muted)] shrink-0 mt-1" />
+                        )}
+                      </button>
+
+                      <div className="shrink-0 flex flex-col items-end gap-1 max-w-[9.5rem]">
+                        {activeProject ? (
+                          <span className="min-h-10 flex flex-col items-end justify-center text-right font-medium text-amber-800 tabular-nums">
+                            <span>Building level {activeProject.targetLevel}</span>
+                            <span>{daysLeft} {daysLeft === 1 ? 'day' : 'days'} left</span>
+                          </span>
+                        ) : nextTierConfig ? (
+                          <>
+                            <Button
+                              variant="secondary"
+                              className="px-3 text-xs tabular-nums whitespace-nowrap"
+                              disabled={!canAfford}
+                              aria-label={`Upgrade ${meta.name} to level ${nextLvl} for ${formatCurrency(nextTierConfig.cost)}`}
+                              onClick={() => {
+                                const res = commissionFacilityUpgrade(save, type);
+                                if (res.success) {
+                                  onUpdateSave(res.updatedSave);
+                                  if (onNotification) {
+                                    onNotification(`Commissioned expansion of ${meta.name} (level ${nextLvl}).`);
+                                  }
+                                } else if (res.error && onNotification) {
+                                  onNotification(res.error);
+                                }
+                              }}
+                            >
+                              Upgrade · {formatCurrency(nextTierConfig.cost)}
+                            </Button>
+                            {!canAfford && (
+                              <span className="text-right text-amber-800 tabular-nums">
+                                {formatCurrency(shortfall)} short
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="min-h-10 flex items-center text-[var(--ink-muted)]">Max level</span>
+                        )}
+                      </div>
                     </div>
-                  ) : (
-                    <p className="border-t border-[var(--border-subtle)] pt-2.5 text-[var(--ink-muted)]">Maximum tier reached</p>
-                  )}
-                </article>
-              );
-            })}
+
+                    {detailOpen && (
+                      <div id={`facility-perks-${type}`} className="mt-2 ml-7 space-y-3 text-[var(--ink-secondary)]">
+                        <div>
+                          <p className="font-semibold text-[var(--ink-primary)]">Now: {currentTierConfig?.name}</p>
+                          <ul className="mt-1 space-y-0.5 list-disc pl-4">
+                            {(currentTierConfig?.benefits || []).map((benefit, idx) => (
+                              <li key={idx}>{benefit}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        {nextTierConfig ? (
+                          <div>
+                            <p className="font-semibold text-[var(--ink-primary)]">
+                              Level {nextLvl} adds: {nextTierConfig.name}
+                            </p>
+                            <ul className="mt-1 space-y-0.5 list-disc pl-4">
+                              {nextTierConfig.benefits.map((b, idx) => (
+                                <li key={idx}>{b}</li>
+                              ))}
+                            </ul>
+                            <p className="mt-2 tabular-nums">
+                              {activeProject ? (
+                                <>
+                                  Under construction, ready{' '}
+                                  {formatCareerDate(activeProject.completionDate, save.settings.dateFormat)}.
+                                </>
+                              ) : (
+                                <>
+                                  Cost {formatCurrency(nextTierConfig.cost)} from the transfer budget · Build time{' '}
+                                  {nextTierConfig.constructionDays} days
+                                </>
+                              )}
+                            </p>
+                          </div>
+                        ) : (
+                          <p>This facility is at its highest level.</p>
+                        )}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
           </div>
 
           {/* Completed Construction History Ledger */}
@@ -3194,46 +3561,46 @@ export function TransferHub({
               </section>
             )}
 
-            {/* Global Partner Club Catalog */}
-            <section className="space-y-3">
-              <h4 className="font-display font-semibold text-sm tracking-tight text-slate-900">
-                Partner clubs
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Partner club catalog: one row each, specialties and background behind the row */}
+            <section className="office-floating-card rounded-xl px-3.5 sm:px-4 pt-3.5 pb-1 border border-[var(--border-subtle)] bg-[var(--surface-card)] text-xs">
+              <SectionHeader as="h4" title="Partner clubs" />
+              <ul className="divide-y divide-[var(--border-subtle)]">
                 {AVAILABLE_FEEDER_CLUBS.map((club) => {
                   const isPartnered = partneredIds.has(club.id);
+                  const detailKey = `affiliate:${club.id}`;
+                  const detailOpen = openDetailKey === detailKey;
                   return (
-                    <article
-                      key={club.id}
-                      className={`office-floating-card rounded-xl p-3.5 space-y-2 border ${
-                        isPartnered ? 'border-emerald-300 bg-emerald-50/20' : 'border-slate-200/90 bg-white'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2.5 min-w-0">
+                    <li key={club.id} className="py-2.5">
+                      <div className="flex items-start gap-2.5">
+                        <button
+                          type="button"
+                          aria-expanded={detailOpen}
+                          aria-controls={`affiliate-detail-${club.id}`}
+                          onClick={() => setOpenDetailKey(detailOpen ? null : detailKey)}
+                          className="flex-1 min-w-0 min-h-10 flex items-start gap-2.5 text-left cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                        >
                           <RegionBadge code={club.crestEmoji} />
-                          <div className="min-w-0">
-                            <h5 className="font-display font-semibold text-sm text-slate-900 truncate">
-                              {club.name}
-                            </h5>
-                            <div className="text-xs tabular-nums text-slate-500">
-                              {club.leagueName} • Tier {club.tierStrength}
-                            </div>
-                          </div>
-                        </div>
-                        <span className="text-xs text-[var(--ink-secondary)] tabular-nums shrink-0">
-                          {club.developmentMultiplier.toFixed(2)}x XP
-                        </span>
-                      </div>
-
-                      <p className="text-xs text-slate-600">{club.specialties.join(' • ')}</p>
-
-                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
-                        <span className="text-xs tabular-nums font-bold text-slate-700">
-                          Fee: {formatCurrency(club.annualPartnershipFee)}/yr
-                        </span>
+                          <span className="flex-1 min-w-0 space-y-0.5">
+                            <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                              <span className="font-display font-semibold text-sm leading-snug text-[var(--ink-primary)]">
+                                {club.name}
+                              </span>
+                              {isPartnered && <Tag tone="success">Partner</Tag>}
+                            </span>
+                            <span className="block text-[var(--ink-secondary)] tabular-nums">
+                              {club.developmentMultiplier.toFixed(2)}x XP · {formatCurrency(club.annualPartnershipFee)}/yr
+                            </span>
+                          </span>
+                          {detailOpen ? (
+                            <IconChevronUp className="w-3.5 h-3.5 text-[var(--ink-muted)] shrink-0 mt-1" />
+                          ) : (
+                            <IconChevronDown className="w-3.5 h-3.5 text-[var(--ink-muted)] shrink-0 mt-1" />
+                          )}
+                        </button>
                         {isPartnered ? (
-                          <Button variant="danger"
+                          <Button
+                            variant="danger"
+                            className="shrink-0 px-3 text-xs"
                             onClick={() => {
                               const res = terminateFeederPartnership(save, club.id);
                               if (res.success) {
@@ -3245,7 +3612,9 @@ export function TransferHub({
                             Terminate link
                           </Button>
                         ) : (
-                          <Button variant="secondary"
+                          <Button
+                            variant="secondary"
+                            className="shrink-0 px-3 text-xs"
                             onClick={() => {
                               const res = establishFeederPartnership(save, club.id);
                               if (res.success) {
@@ -3260,10 +3629,23 @@ export function TransferHub({
                           </Button>
                         )}
                       </div>
-                    </article>
+                      {detailOpen && (
+                        <div id={`affiliate-detail-${club.id}`} className="mt-2 ml-8 space-y-1 text-[var(--ink-secondary)]">
+                          <p className="tabular-nums">
+                            {club.leagueName} · Tier {club.tierStrength}
+                          </p>
+                          <p>{club.specialties.join(' · ')}</p>
+                          {club.description && <p>{club.description}</p>}
+                          <p>
+                            The fee comes out of the transfer budget when you sign.
+                            {isPartnered ? ' Ending the link recalls any players on loan there.' : ''}
+                          </p>
+                        </div>
+                      )}
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
             </section>
           </section>
         );
@@ -3317,48 +3699,69 @@ export function TransferHub({
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {activeConf.options.map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => {
-                        const res = answerPressConference(save, opt.id);
-                        if (res.success) {
-                          onUpdateSave(res.updatedSave);
-                          onNotification?.(
-                            res.headline
-                              ? `${res.headline.impactSummary}`
-                              : 'Press briefing delivered.'
-                          );
-                        } else if (res.error) {
-                          onNotification?.(res.error);
-                        }
-                      }}
-                      className="text-left office-subcard p-4 rounded-xl border border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50/30 space-y-2 cursor-pointer transition-all motion-reduce:transition-none"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-display font-semibold text-xs text-blue-700">
-                          {opt.label}
-                        </span>
-                        <span className="text-xs text-[var(--ink-muted)] inline-block first-letter:uppercase shrink-0">
-                          {opt.tone.replace(/_/g, ' ')}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-700 italic leading-relaxed">{opt.quote}</p>
-                      <div className="flex flex-wrap gap-2 text-xs tabular-nums text-slate-500 pt-1">
-                        <span>Morale {opt.moraleDelta >= 0 ? `+${opt.moraleDelta}` : opt.moraleDelta}</span>
-                        <span>• Board {opt.boardConfidenceDelta >= 0 ? `+${opt.boardConfidenceDelta}` : opt.boardConfidenceDelta}%</span>
-                        <span>• Media {opt.mediaRelationDelta >= 0 ? `+${opt.mediaRelationDelta}` : opt.mediaRelationDelta}</span>
-                        {opt.mindGamesEffect && (
-                          <span className="text-indigo-700 font-bold">
-                            • +{opt.mindGamesEffect.attackBonus}% mind games
-                          </span>
+                {/* One row per answer: effects at rest, the full quote behind the row */}
+                <ul className="divide-y divide-[var(--border-subtle)] text-xs">
+                  {activeConf.options.map((opt) => {
+                    const detailKey = `press:${opt.id}`;
+                    const detailOpen = openDetailKey === detailKey;
+                    return (
+                      <li key={opt.id} className="py-2.5">
+                        <div className="flex items-start gap-2.5">
+                          <button
+                            type="button"
+                            aria-expanded={detailOpen}
+                            aria-controls={`press-option-${opt.id}`}
+                            onClick={() => setOpenDetailKey(detailOpen ? null : detailKey)}
+                            className="flex-1 min-w-0 min-h-10 flex items-start gap-2 text-left cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                          >
+                            <span className="flex-1 min-w-0 space-y-0.5">
+                              <span className="block font-display font-semibold text-sm leading-snug text-[var(--ink-primary)]">
+                                {opt.label}
+                              </span>
+                              <span className="block text-[var(--ink-secondary)] tabular-nums">
+                                Morale {opt.moraleDelta >= 0 ? `+${opt.moraleDelta}` : opt.moraleDelta} · Board{' '}
+                                {opt.boardConfidenceDelta >= 0 ? `+${opt.boardConfidenceDelta}` : opt.boardConfidenceDelta}% · Media{' '}
+                                {opt.mediaRelationDelta >= 0 ? `+${opt.mediaRelationDelta}` : opt.mediaRelationDelta}
+                                {opt.mindGamesEffect && <> · +{opt.mindGamesEffect.attackBonus}% mind games</>}
+                              </span>
+                            </span>
+                            {detailOpen ? (
+                              <IconChevronUp className="w-3.5 h-3.5 text-[var(--ink-muted)] shrink-0 mt-1" />
+                            ) : (
+                              <IconChevronDown className="w-3.5 h-3.5 text-[var(--ink-muted)] shrink-0 mt-1" />
+                            )}
+                          </button>
+                          <Button
+                            variant="secondary"
+                            className="shrink-0 px-3 text-xs"
+                            aria-label={`Answer: ${opt.label}`}
+                            onClick={() => {
+                              const res = answerPressConference(save, opt.id);
+                              if (res.success) {
+                                onUpdateSave(res.updatedSave);
+                                onNotification?.(
+                                  res.headline
+                                    ? `${res.headline.impactSummary}`
+                                    : 'Press briefing delivered.'
+                                );
+                              } else if (res.error) {
+                                onNotification?.(res.error);
+                              }
+                            }}
+                          >
+                            Answer
+                          </Button>
+                        </div>
+                        {detailOpen && (
+                          <div id={`press-option-${opt.id}`} className="mt-1.5 space-y-1 text-[var(--ink-secondary)]">
+                            <p className="first-letter:uppercase">Tone: {opt.tone.replace(/_/g, ' ')}</p>
+                            <p className="leading-relaxed">&ldquo;{opt.quote}&rdquo;</p>
+                          </div>
                         )}
-                      </div>
-                    </button>
-                  ))}
-                </div>
+                      </li>
+                    );
+                  })}
+                </ul>
               </section>
             )}
 
@@ -3370,22 +3773,43 @@ export function TransferHub({
                   No headlines yet.
                 </p>
               ) : (
-                <div className="divide-y divide-slate-100">
-                  {press.mediaHistory.map((item) => (
-                    <article key={item.id} className="py-2.5 space-y-1">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="text-xs tabular-nums font-bold text-blue-700">
-                          {item.outlet} • {formatCareerDate(item.date, save.settings.dateFormat)}
-                        </span>
-                        <span className="text-xs font-medium text-emerald-700">
-                          {item.impactSummary}
-                        </span>
-                      </div>
-                      <h5 className="font-display font-semibold text-sm text-slate-900">{item.headline}</h5>
-                      <p className="text-xs text-slate-600 italic">{item.quote}</p>
-                    </article>
-                  ))}
-                </div>
+                <ul className="divide-y divide-[var(--border-subtle)]">
+                  {press.mediaHistory.map((item) => {
+                    const detailKey = `headline:${item.id}`;
+                    const detailOpen = openDetailKey === detailKey;
+                    return (
+                      <li key={item.id}>
+                        <button
+                          type="button"
+                          aria-expanded={detailOpen}
+                          aria-controls={`headline-detail-${item.id}`}
+                          onClick={() => setOpenDetailKey(detailOpen ? null : detailKey)}
+                          className="w-full min-h-10 py-2 flex items-start gap-2 text-left cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                        >
+                          <span className="flex-1 min-w-0 space-y-0.5">
+                            <span className="block font-display font-semibold text-sm leading-snug text-[var(--ink-primary)]">
+                              {item.headline}
+                            </span>
+                            <span className="block text-xs text-[var(--ink-secondary)] tabular-nums">
+                              {formatCareerDate(item.date, save.settings.dateFormat)} · {item.impactSummary}
+                            </span>
+                          </span>
+                          {detailOpen ? (
+                            <IconChevronUp className="w-3.5 h-3.5 text-[var(--ink-muted)] shrink-0 mt-1" />
+                          ) : (
+                            <IconChevronDown className="w-3.5 h-3.5 text-[var(--ink-muted)] shrink-0 mt-1" />
+                          )}
+                        </button>
+                        {detailOpen && (
+                          <div id={`headline-detail-${item.id}`} className="pb-2 space-y-1 text-xs text-[var(--ink-secondary)]">
+                            <p>{item.outlet}</p>
+                            <p className="leading-relaxed">{item.quote}</p>
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
               )}
             </section>
           </section>

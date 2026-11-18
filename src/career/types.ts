@@ -657,6 +657,19 @@ export interface BoardStatus {
   leagueContext?: string;
   formContext?: string;
   financialContext?: string;
+  /** Most recent confidence changes, newest first (capped). Recorded by the career hub when confidence moves. */
+  confidenceLog?: BoardConfidenceChange[];
+}
+
+export interface BoardConfidenceChange {
+  /** In-game date (YYYY-MM-DD) the change happened on. */
+  date: string;
+  /** Change in percentage points; never 0. */
+  delta: number;
+  /** Confidence after the change. */
+  confidence: number;
+  /** Short plain reason, e.g. "Won 2-0 v Madrid Royal". */
+  reason: string;
 }
 
 export interface PlayerVersionVariant {
@@ -824,6 +837,11 @@ export interface CareerSaveFile {
   preContracts?: PreContractAgreement[];
   youthAcademy?: YouthProspect[];
   boardStatus?: BoardStatus;
+  /** Display choices that belong to this save rather than to game rules. */
+  uiPreferences?: {
+    /** Transfer market list: fixed pages, or keep loading as the player scrolls. Default 'pages'. */
+    marketListMode?: 'pages' | 'scroll';
+  };
   trainingState?: TrainingProgramState;
   phase: 'preseason' | 'transfer_window' | 'regular_season' | 'season_review';
   inbox?: ManagerMessage[];

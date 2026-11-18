@@ -13,6 +13,7 @@ import {
   Club,
   CurrencyPreference,
   CupFixture,
+  BoardConfidenceChange,
   CupTournament,
   ManagerMessage,
   MarketPlayer,
@@ -679,6 +680,121 @@ function OfficeStadiumSceneSvg() {
   );
 }
 
+/** Board confidence log: how many recent changes are kept on the save. */
+const BOARD_CONFIDENCE_LOG_LIMIT = 12;
+
+/** Played fixtures involving the user's club, league and cups, keyed so ids cannot clash across competitions. */
+function getUserPlayedFixtures(save: CareerSaveFile): Map<string, LeagueFixture | CupFixture> {
+  const userClubId = save.club.id;
+  const played = new Map<string, LeagueFixture | CupFixture>();
+  for (const f of save.fixtures || []) {
+    if (f.played && (f.homeClubId === userClubId || f.awayClubId === userClubId)) played.set(`league:${f.id}`, f);
+  }
+  for (const [cupId, tourney] of Object.entries(save.cups || {})) {
+    for (const f of tourney.fixtures) {
+      if (f.played && (f.homeClubId === userClubId || f.awayClubId === userClubId)) played.set(`${cupId}:${f.id}`, f);
+    }
+  }
+  return played;
+}
+
+/**
+ * Infers a short plain reason for a board confidence change from what else changed between two
+ * versions of the same save. Pure; the first matching case wins, so add new cases in priority order.
+ */
+function inferBoardConfidenceReason(prev: CareerSaveFile, next: CareerSaveFile): string {
+  // 1. A match involving the user's club was played.
+  const prevPlayed = getUserPlayedFixtures(prev);
+  const nextPlayed = getUserPlayedFixtures(next);
+  if (nextPlayed.size > prevPlayed.size) {
+    let latest: LeagueFixture | CupFixture | null = null;
+    for (const [key, f] of nextPlayed) {
+      if (!prevPlayed.has(key) && (!latest || f.date >= latest.date)) latest = f;
+    }
+    if (latest && latest.homeScore !== undefined && latest.awayScore !== undefined) {
+      const userIsHome = latest.homeClubId === next.club.id;
+      const goalsFor = userIsHome ? latest.homeScore : latest.awayScore;
+      const goalsAgainst = userIsHome ? latest.awayScore : latest.homeScore;
+      const opponentId = userIsHome ? latest.awayClubId : latest.homeClubId;
+      const opponent = findAnyClub(opponentId);
+      const opponentName = opponent ? getEffectiveClubName(opponent, next.club) : 'opponent';
+      let verb = goalsFor > goalsAgainst ? 'Won' : goalsFor < goalsAgainst ? 'Lost' : 'Drew';
+      let suffix = '';
+      if (goalsFor === goalsAgainst && latest.penalties) {
+        const pensFor = userIsHome ? latest.penalties.homePenalties : latest.penalties.awayPenalties;
+        const pensAgainst = userIsHome ? latest.penalties.awayPenalties : latest.penalties.homePenalties;
+        if (pensFor !== pensAgainst) {
+          verb = pensFor > pensAgainst ? 'Won' : 'Lost';
+          suffix = ' on penalties';
+        }
+      }
+      return `${verb} ${goalsFor}-${goalsAgainst} v ${opponentName}${suffix}`;
+    }
+    return 'Match result';
+  }
+
+  // 2. A press conference was answered (the active conference flips to answered).
+  const prevConference = prev.pressState?.activeConference;
+  const nextConference = next.pressState?.activeConference;
+  if (nextConference?.answered && !(prevConference?.id === nextConference.id && prevConference.answered)) {
+    return 'Press conference';
+  }
+
+  // 3. A trophy was added (trophy list, or a trophy/title celebration key).
+  const prevMilestones = new Set(prev.celebratedMilestones || []);
+  const newTrophyMilestone = (next.celebratedMilestones || []).some(
+    (key) => !prevMilestones.has(key) && /_cup_trophy_|_league_champions/.test(key)
+  );
+  if ((next.trophies?.length ?? 0) > (prev.trophies?.length ?? 0) || newTrophyMilestone) {
+    return 'Trophy won';
+  }
+
+  // 4. A new season started.
+  if (next.season.seasonNumber !== prev.season.seasonNumber) return 'End-of-season review';
+
+  // 5. A request was put to the board.
+  if ((next.finances.boardPetitionsHistory?.length ?? 0) > (prev.finances.boardPetitionsHistory?.length ?? 0)) {
+    return 'Board request';
+  }
+
+  return 'Board review';
+}
+
+/**
+ * Returns the save to store: `next` itself when nothing needs recording, otherwise a copy whose
+ * boardStatus.confidenceLog has the change prepended (newest first, capped). Never mutates `next`.
+ * The log is carried over from `prev` when game code rebuilt boardStatus without it.
+ */
+function withBoardConfidenceLog(prev: CareerSaveFile | null, next: CareerSaveFile): CareerSaveFile {
+  const prevBoard = prev?.boardStatus;
+  const nextBoard = next.boardStatus;
+  if (!prev || !prevBoard || !nextBoard) return next;
+  // A different career (import, slot switch) or a new club is a fresh start, not a change.
+  if (prev.id !== next.id || prev.createdAt !== next.createdAt || prev.club.id !== next.club.id) return next;
+
+  const baseLog = nextBoard.confidenceLog ?? prevBoard.confidenceLog;
+  const confidence = Math.round(nextBoard.confidence);
+  const delta = confidence - Math.round(prevBoard.confidence);
+  if (!Number.isFinite(delta) || delta === 0) {
+    if (baseLog === nextBoard.confidenceLog) return next;
+    return { ...next, boardStatus: { ...nextBoard, confidenceLog: baseLog } };
+  }
+
+  const entry: BoardConfidenceChange = {
+    date: next.season.currentDate,
+    delta,
+    confidence,
+    reason: inferBoardConfidenceReason(prev, next),
+  };
+  return {
+    ...next,
+    boardStatus: {
+      ...nextBoard,
+      confidenceLog: [entry, ...(baseLog || [])].slice(0, BOARD_CONFIDENCE_LOG_LIMIT),
+    },
+  };
+}
+
 function CareerPlayHubContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -702,7 +818,6 @@ function CareerPlayHubContent() {
   const [squadInitialViewMode, setSquadInitialViewMode] = useState<'pitch' | 'list' | 'academy' | 'training' | 'tactics'>('pitch');
   const [tabHistory, setTabHistory] = useState<CareerTab[]>([]);
   const [showExitConfirmModal, setShowExitConfirmModal] = useState(false);
-  const [showBoardDossierModal, setShowBoardDossierModal] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [dismissedSackedModal, setDismissedSackedModal] = useState(false);
   const [activeMatchFixture, setActiveMatchFixture] = useState<LeagueFixture | CupFixture | null>(null);
@@ -749,6 +864,22 @@ function CareerPlayHubContent() {
     setSfxEnabled(next);
   }, []);
 
+  // Latest save handed to storage. State can lag when several updates land in one tick,
+  // so confidence changes are measured against this ref, not the render's `save`.
+  const latestSaveRef = useRef<CareerSaveFile | null>(save);
+  useEffect(() => {
+    latestSaveRef.current = save;
+  }, [save]);
+
+  /** Single write path: records any board confidence change, then persists and sets state. */
+  const commitSave = useCallback((next: CareerSaveFile): CareerSaveFile => {
+    const logged = withBoardConfidenceLog(latestSaveRef.current, next);
+    latestSaveRef.current = logged;
+    saveCareerSave(logged);
+    setSave(logged);
+    return logged;
+  }, []);
+
   // Auto-prompt pre-season tour selection or fixture release day
   useEffect(() => {
     if (!save) return;
@@ -782,13 +913,12 @@ function CareerPlayHubContent() {
     void Promise.resolve().then(() => {
       if (cancelled) return;
       const initialized = initializeDeadlineDay(save);
-      saveCareerSave(initialized);
-      setSave(initialized);
+      commitSave(initialized);
     });
     return () => {
       cancelled = true;
     };
-  }, [save]);
+  }, [commitSave, save]);
 
   // Global Escape keyboard shortcut for modal navigation & accessibility
   useEffect(() => {
@@ -802,8 +932,6 @@ function CareerPlayHubContent() {
           setPendingFastForward(null);
         } else if (instantSimResultModal) {
           setInstantSimResultModal(null);
-        } else if (showBoardDossierModal) {
-          setShowBoardDossierModal(false);
         } else if (showExitConfirmModal) {
           setShowExitConfirmModal(false);
         } else if (activeCelebration) {
@@ -832,7 +960,6 @@ function CareerPlayHubContent() {
     matchOverviewModal,
     pendingFastForward,
     instantSimResultModal,
-    showBoardDossierModal,
     showExitConfirmModal,
     activeCelebration,
     showSeasonReviewModal,
@@ -847,13 +974,12 @@ function CareerPlayHubContent() {
   const checkAndTriggerCelebration = useCallback((saveCandidate: CareerSaveFile, fixture?: LeagueFixture | CupFixture) => {
     const celebration = detectCelebrationEvent(saveCandidate, fixture);
     if (celebration) {
-      saveCareerSave(celebration.updatedSave);
-      setSave(celebration.updatedSave);
+      commitSave(celebration.updatedSave);
       setActiveCelebration(celebration.event);
       return celebration.updatedSave;
     }
     return saveCandidate;
-  }, []);
+  }, [commitSave]);
 
   // Scroll management & targeted deep-linking ref
   const pendingScrollTargetRef = useRef<{
@@ -1275,15 +1401,14 @@ function CareerPlayHubContent() {
           finances,
         };
         const finalSave = checkAndTriggerCelebration(updatedSave);
-        saveCareerSave(finalSave);
-        setSave(finalSave);
+        commitSave(finalSave);
       }
     });
 
     return () => {
       cancelled = true;
     };
-  }, [checkAndTriggerCelebration, save, theme]);
+  }, [checkAndTriggerCelebration, commitSave, save, theme]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -1328,8 +1453,7 @@ function CareerPlayHubContent() {
       settings: updatedSettings,
     };
 
-    saveCareerSave(updated);
-    setSave(updated);
+    commitSave(updated);
     setEditableSettings(updatedSettings);
     showToast('Settings saved.');
   };
@@ -1340,8 +1464,8 @@ function CareerPlayHubContent() {
   };
 
   const handleUpdateSave = (updated: CareerSaveFile) => {
-    saveCareerSave(updated);
-    setSave(updated);
+    // Every save update passes through commitSave, which records board confidence changes.
+    commitSave(updated);
     setEditableSettings(updated.settings);
     setEditingClubName(updated.club.customName || updated.club.defaultName);
   };
@@ -1445,8 +1569,7 @@ function CareerPlayHubContent() {
         },
       };
       deadlineSave = initializeDeadlineDay(deadlineSave);
-      saveCareerSave(deadlineSave);
-      setSave(deadlineSave);
+      commitSave(deadlineSave);
       showToast('Transfer deadline day has arrived. The summer window shuts tonight at 23:00 BST. Complete your transfer and squad registration business.');
       return;
     }
@@ -1461,8 +1584,7 @@ function CareerPlayHubContent() {
         },
       };
       deadlineSave = initializeDeadlineDay(deadlineSave);
-      saveCareerSave(deadlineSave);
-      setSave(deadlineSave);
+      commitSave(deadlineSave);
       showToast('Transfer deadline day has arrived. The winter window shuts tonight at 23:00 BST.');
       return;
     }
@@ -1723,8 +1845,7 @@ function CareerPlayHubContent() {
       squad: updatedSquad,
     };
 
-    saveCareerSave(updatedSave);
-    setSave(updatedSave);
+    commitSave(updatedSave);
     setSimulating(false);
     showToast(`Fast-forwarded past ${intlBreak.name}. Squad returned to training.`);
   };
@@ -1733,8 +1854,7 @@ function CareerPlayHubContent() {
     if (!save) return;
     setSimulating(true);
     const { updatedSave } = advanceToNextSeason(save);
-    saveCareerSave(updatedSave);
-    setSave(updatedSave);
+    commitSave(updatedSave);
     setSimulating(false);
     showToast(`Welcome to season ${updatedSave.season.seasonNumber}. Summer transfer window open.`);
   };
@@ -1789,8 +1909,7 @@ function CareerPlayHubContent() {
     setSimulating(true);
     const res = advanceTimeSkip(save, target, options);
     const finalSave = checkAndTriggerCelebration(res.updatedSave);
-    saveCareerSave(finalSave);
-    setSave(finalSave);
+    commitSave(finalSave);
     setSimulating(false);
 
     if (res.pausedReason) {
@@ -1820,8 +1939,7 @@ function CareerPlayHubContent() {
       enrichedSave = evaluateDressingRoomDynamics(enrichedSave, enrichedSave.season.currentDate);
     }
     const finalSave = checkAndTriggerCelebration(enrichedSave, activeMatchFixture || undefined);
-    saveCareerSave(finalSave);
-    setSave(finalSave);
+    commitSave(finalSave);
     setActiveMatchFixture(null);
     showToast('Match completed and results saved. Press conference open in the media desk.');
   };
@@ -1829,8 +1947,7 @@ function CareerPlayHubContent() {
   const handleChoosePreseasonTour = (tourId: PreseasonTourId, delegateToAssistant: boolean) => {
     if (!save) return;
     const updated = applyPreseasonTourChoice(save, tourId, delegateToAssistant);
-    saveCareerSave(updated);
-    setSave(updated);
+    commitSave(updated);
     setShowPreseasonModal(false);
     showToast(`Pre-season tour selected: ${tourId === 'usa' ? 'USA' : tourId.charAt(0).toUpperCase() + tourId.slice(1)}. 3 friendlies scheduled.`);
   };
@@ -1845,8 +1962,7 @@ function CareerPlayHubContent() {
         hasSeenCeremony: true,
       },
     };
-    saveCareerSave(updated);
-    setSave(updated);
+    commitSave(updated);
     setShowFixtureReleaseModal(false);
     showToast('Premier League fixtures released for the new season.');
   };
@@ -1854,8 +1970,7 @@ function CareerPlayHubContent() {
   const handleFinishUclDraw = (drawnOpponents: LeaguePhaseOpponent[]) => {
     if (!save) return;
     const updated = applyChampionsLeagueDraw(save, drawnOpponents);
-    saveCareerSave(updated);
-    setSave(updated);
+    commitSave(updated);
     setShowUclDrawModal(false);
     showToast('UEFA Champions League league phase draw concluded. Fixtures scheduled.');
   };
@@ -1864,8 +1979,7 @@ function CareerPlayHubContent() {
     if (!save) return;
     setSimulating(true);
     const updated = simulateAssistantPreseasonMatch(save, fixtureId);
-    saveCareerSave(updated);
-    setSave(updated);
+    commitSave(updated);
     setSimulating(false);
     showToast('Assistant manager simulated the pre-season friendly. Check inbox for the match report.');
   };
@@ -2065,8 +2179,9 @@ function CareerPlayHubContent() {
             <button
               type="button"
               data-office-ui="true"
-              onClick={() => setShowBoardDossierModal(true)}
-              title="View board confidence"
+              onClick={() => navigateToSection('transfers', 'board', 'board-room-section')}
+              title="Open the boardroom"
+              aria-label={`Board confidence ${boardConfidence}%, ${boardSentimentLabel}. Open the boardroom`}
               className="min-h-9 px-1.5 rounded-lg text-left text-xs font-medium leading-tight text-[var(--ink-secondary)] hover:bg-[var(--surface-subcard)] hover:text-[var(--ink-primary)] cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             >
               <span className="block min-[430px]:inline whitespace-nowrap">Board {boardConfidence}%</span>
@@ -2570,16 +2685,14 @@ function CareerPlayHubContent() {
                             if (save.season.currentDate < summerDeadline && fixDate >= summerDeadline) {
                               let deadlineSave = { ...save, season: { ...save.season, currentDate: summerDeadline } };
                               deadlineSave = initializeDeadlineDay(deadlineSave);
-                              saveCareerSave(deadlineSave);
-                              setSave(deadlineSave);
+                              commitSave(deadlineSave);
                               showToast('Transfer deadline day has arrived. Complete negotiations before 23:00 BST.');
                               return;
                             }
                             if (save.season.currentDate < winterDeadline && fixDate >= winterDeadline) {
                               let deadlineSave = { ...save, season: { ...save.season, currentDate: winterDeadline } };
                               deadlineSave = initializeDeadlineDay(deadlineSave);
-                              saveCareerSave(deadlineSave);
-                              setSave(deadlineSave);
+                              commitSave(deadlineSave);
                               showToast('Winter transfer deadline day has arrived.');
                               return;
                             }
@@ -3413,8 +3526,7 @@ function CareerPlayHubContent() {
           onComplete={() => {
             const { updatedSave, simmedFixture } = instantSimLoadingData;
             const finalSave = checkAndTriggerCelebration(updatedSave, simmedFixture);
-            saveCareerSave(finalSave);
-            setSave(finalSave);
+            commitSave(finalSave);
             setSimulating(false);
             setInstantSimLoadingData(null);
             setInstantSimResultModal(simmedFixture);
@@ -4000,141 +4112,6 @@ function CareerPlayHubContent() {
                 fullWidth
               >
                 Keep playing
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* BOARDROOM CONFIDENCE DOSSIER MODAL */}
-      {showBoardDossierModal && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          onClick={() => setShowBoardDossierModal(false)}
-          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 select-none animate-fade-in motion-reduce:animate-none"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="office-floating-card border border-[var(--border-subtle)] rounded-xl p-5 sm:p-6 max-w-lg w-full space-y-4 shadow-sm relative text-left text-[var(--ink-primary)] max-h-[90dvh] overflow-y-auto"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <h3 className="font-display font-semibold text-lg text-[var(--ink-primary)]">
-                  Board confidence
-                </h3>
-                <p className="text-sm text-[var(--ink-secondary)]">
-                  How the board rates your management.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowBoardDossierModal(false)}
-                aria-label="Close modal"
-                className="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--ink-secondary)] hover:bg-[var(--surface-subcard)] hover:text-[var(--ink-primary)] transition-colors cursor-pointer shrink-0"
-              >
-                <IconClose className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Overall Score Banner */}
-            <div className="border-y border-[var(--border-subtle)] py-3 grid grid-cols-2 gap-4">
-              <div className="min-w-0">
-                <span className="text-xs font-medium text-[var(--ink-muted)] block">Current standing</span>
-                <div className="font-display font-semibold text-lg leading-snug">
-                  <span className={boardConfidence >= 65 ? 'text-emerald-700' : boardConfidence >= 45 ? 'text-amber-700' : 'text-rose-700'}>
-                    {boardSentimentLabel}
-                  </span>
-                  <span className="font-sans font-normal text-sm text-[var(--ink-muted)] tabular-nums"> · {boardConfidence}%</span>
-                </div>
-              </div>
-              <div className="min-w-0">
-                <span className="text-xs font-medium text-[var(--ink-muted)] block">Season objective</span>
-                <span className="text-sm font-semibold text-[var(--ink-primary)] leading-snug">
-                  {boardStatus.expectation || (save.club.tier === 'elite' ? 'Win title' : save.club.tier === 'upper' ? 'European qualification' : 'Avoid relegation')}
-                </span>
-              </div>
-            </div>
-
-            {/* 4 Pillars Breakdown */}
-            <div className="space-y-2">
-              <SectionHeader as="h4" title="Evaluation breakdown" />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                {(boardStatus.pillars || [
-                  {
-                    title: 'League expectation',
-                    score: Math.min(100, Math.max(10, boardConfidence + 2)),
-                    description: boardStatus.leagueContext || 'Tracking aligned with board league target.',
-                    positive: boardConfidence >= 50
-                  },
-                  {
-                    title: 'Recent form',
-                    score: Math.min(100, Math.max(10, boardConfidence - 3)),
-                    description: boardStatus.formContext || 'Recent match results evaluated by directors.',
-                    positive: boardConfidence >= 55
-                  },
-                  {
-                    title: 'Financial discipline',
-                    score: Math.min(100, Math.max(10, boardConfidence + 5)),
-                    description: boardStatus.financialContext || 'Wage bill and net transfer spending sustainable.',
-                    positive: true
-                  },
-                  {
-                    title: 'Squad & goal difference',
-                    score: boardConfidence,
-                    description: 'Roster depth and scoring efficiency meets benchmarks.',
-                    positive: boardConfidence >= 45
-                  }
-                ]).map((pillar, idx) => (
-                  <div key={idx} className="office-subcard p-3 rounded-lg space-y-1.5">
-                    <div className="flex items-baseline justify-between gap-2 text-sm">
-                      <span className="text-[var(--ink-primary)] font-semibold">{pillar.title}</span>
-                      <span className={`font-semibold tabular-nums ${pillar.positive ? 'text-emerald-700' : 'text-rose-700'}`}>
-                        {pillar.score}%
-                      </span>
-                    </div>
-                    <div className="w-full h-1.5 bg-[var(--surface-elevated)] rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all ${
-                          pillar.positive ? 'bg-emerald-600' : pillar.score >= 45 ? 'bg-amber-500' : 'bg-rose-600'
-                        }`}
-                        style={{
-                          width: `${
-                            pillar.positive && pillar.score <= 25
-                              ? Math.min(100, Math.max(35, pillar.score * 8))
-                              : Math.min(100, Math.max(10, pillar.score))
-                          }%`,
-                        }}
-                      />
-                    </div>
-                    <p className="text-xs text-[var(--ink-secondary)] leading-snug">
-                      {pillar.description}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="pt-2 flex items-center justify-between gap-2 flex-wrap">
-              <Button
-                type="button"
-                onClick={() => {
-                  setShowBoardDossierModal(false);
-                  setTransferHubSubTab('board');
-                  handleTabChange('transfers');
-                  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-                }}
-                variant="secondary"
-              >
-                Full boardroom &amp; petitions
-              </Button>
-              <Button
-                type="button"
-                onClick={() => setShowBoardDossierModal(false)}
-                variant="ghost"
-              >
-                Close
               </Button>
             </div>
           </div>
