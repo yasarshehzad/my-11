@@ -352,6 +352,83 @@ export interface CareerFormationConfig {
   lines: number[][]; // Row arrays from top (attack) to bottom (GK), containing slot indices from left to right
 }
 
+export interface FormationSlotCoordinate {
+  slotIndex: number;
+  position: string;
+  /** Percent from the left touchline (0-100). */
+  x: number;
+  /** Percent from the opponent's goal line (0 = attacking end, 100 = own goal line). */
+  y: number;
+}
+
+/** How deep each role sits, as a percent from the attacking end of the pitch. */
+const POSITION_DEPTH: Record<string, number> = {
+  ST: 12,
+  CF: 16,
+  LW: 21,
+  RW: 21,
+  CAM: 34,
+  LM: 45,
+  RM: 45,
+  CM: 49,
+  CDM: 62,
+  LWB: 63,
+  RWB: 63,
+  LB: 74,
+  RB: 74,
+  CB: 78,
+  GK: 92,
+};
+
+const LEFT_WIDE_POSITIONS = new Set(['LB', 'LWB', 'LM', 'LW']);
+const RIGHT_WIDE_POSITIONS = new Set(['RB', 'RWB', 'RM', 'RW']);
+
+/** Left-to-right spread for a line of n players. */
+const LINE_SPREAD: Record<number, number[]> = {
+  1: [50],
+  2: [34, 66],
+  3: [22, 50, 78],
+  4: [12, 37, 63, 88],
+  5: [10, 30, 50, 70, 90],
+};
+
+/**
+ * Where each slot of a formation sits on the pitch.
+ * Horizontal placement follows the slot's order in its line; depth follows the
+ * role, so a CDM sits behind a CM and a CAM ahead of one even when the formation
+ * lists them in the same line. Wide roles are pushed to the touchline.
+ */
+export function getFormationLayout(formation: CareerFormationConfig): FormationSlotCoordinate[] {
+  const coords: FormationSlotCoordinate[] = [];
+  formation.lines.forEach((line) => {
+    const spread = LINE_SPREAD[line.length] || line.map((_, i) => ((i + 0.5) / line.length) * 100);
+    line.forEach((slotIndex, i) => {
+      const position = (formation.slots[slotIndex] || '').toUpperCase();
+      let x = spread[i];
+      // Central midfielders stay inside the wide channels so they never sit under a winger
+      if (['CM', 'CDM', 'CAM'].includes(position)) x = Math.max(28, Math.min(72, x));
+      if (LEFT_WIDE_POSITIONS.has(position)) x = Math.min(x, position === 'LW' ? 16 : 12);
+      if (RIGHT_WIDE_POSITIONS.has(position)) x = Math.max(x, position === 'RW' ? 84 : 88);
+      coords.push({ slotIndex, position, x, y: POSITION_DEPTH[position] ?? 50 });
+    });
+  });
+
+  // Two central players in one line must not collide with a single central player
+  // in the neighbouring role band (e.g. two CMs ahead of one CDM): widen the pair.
+  coords.forEach((a) => {
+    coords.forEach((b) => {
+      if (a === b || a.position === 'GK' || b.position === 'GK') return;
+      const dy = Math.abs(a.y - b.y);
+      const dx = Math.abs(a.x - b.x);
+      if (dy < 15 && dx > 0 && dx < 19 && b.x === 50) {
+        a.x = a.x < 50 ? 50 - 19 : 50 + 19;
+      }
+    });
+  });
+
+  return coords.sort((a, b) => a.slotIndex - b.slotIndex);
+}
+
 export const SUPPORTED_CAREER_FORMATIONS: CareerFormationConfig[] = [
   // --- 4 AT THE BACK ---
   {
@@ -606,6 +683,32 @@ export const SUPPORTED_CAREER_FORMATIONS: CareerFormationConfig[] = [
   },
 ];
 
+/**
+ * How many rating points an auto-picked player gives up when used in a role that is
+ * only a secondary fit. Bigger gaps between the two roles cost more, so the picker
+ * does not put a striker on the wing or a right-back at left wing-back just because
+ * he is one point better than the natural option.
+ */
+export function getSecondaryRolePenalty(primaryPos: string, slotPos: string): number {
+  const primary = primaryPos.toUpperCase();
+  const target = slotPos.toUpperCase();
+  const side = (pos: string) => (pos.startsWith('L') ? 'L' : pos.startsWith('R') ? 'R' : 'C');
+  let penalty = 2;
+  // Wrong flank
+  if (side(primary) !== 'C' && side(target) !== 'C' && side(primary) !== side(target)) penalty += 2;
+  // Attacking midfielder asked to hold, or the reverse
+  if ((primary === 'CAM' && target === 'CDM') || (primary === 'CDM' && target === 'CAM')) penalty += 2;
+  // Central striker out wide, or winger through the middle
+  const central = ['ST', 'CF'];
+  const wide = ['LW', 'RW'];
+  if ((central.includes(primary) && wide.includes(target)) || (wide.includes(primary) && central.includes(target))) {
+    penalty += 1.5;
+  }
+  // Number ten up front, or striker dropping into the hole
+  if ((primary === 'CAM' && central.includes(target)) || (central.includes(primary) && target === 'CAM')) penalty += 1;
+  return penalty;
+}
+
 export function getBestStartingLineup(
   squad: CareerPlayer[],
   formationName: string = '4-3-3',
@@ -656,12 +759,13 @@ export function getBestStartingLineup(
 
   // Score candidate for outfield slot:
   // - Natural fit: player.rating
-  // - Competent fit: player.rating - 0.5 (Competent player with 1+ higher rating beats natural player)
+  // - Competent fit: player.rating minus a role penalty of 2-4 (see getSecondaryRolePenalty), so a
+  //   natural player is preferred unless the stand-in is clearly better
   // - Out of position: player.rating - 25
   const getSlotScore = (player: CareerPlayer, slotPos: string): number => {
     const fit = calculatePositionFit(player, slotPos);
     if (fit === 'natural') return player.rating;
-    if (fit === 'competent') return player.rating - 0.5;
+    if (fit === 'competent') return player.rating - getSecondaryRolePenalty(player.position, slotPos);
     return player.rating - 25;
   };
 

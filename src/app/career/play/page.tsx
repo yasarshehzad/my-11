@@ -2367,17 +2367,17 @@ function CareerPlayHubContent() {
                       <span className="block text-xs font-medium text-[var(--ink-muted)]">League</span>
                       <div className="flex items-baseline gap-1.5">
                         <span className="font-display font-semibold text-lg text-[var(--ink-primary)] leading-tight tabular-nums">
-                          {formatOrdinalRank(userRank)}
+                          {(userStanding?.played || 0) > 0 ? formatOrdinalRank(userRank) : '–'}
                         </span>
                         <span className="text-xs text-[var(--ink-secondary)] whitespace-nowrap tabular-nums">
                           {userStanding?.points || 0} pts
                         </span>
                       </div>
+                      {recentFormResults.length === 0 && (
+                        <div className="text-xs text-[var(--ink-secondary)]">No matches yet</div>
+                      )}
                       <div className="flex items-center gap-[3px] mt-0.5" aria-label="Recent 5 match form">
-                        {(recentFormResults.length > 0
-                          ? recentFormResults.slice(-5)
-                          : (['W', 'W', 'D', 'W', 'W'] as const)
-                        ).map((res, idx) => (
+                        {recentFormResults.slice(-5).map((res, idx) => (
                           <span
                             key={idx}
                             data-force-white="true"
@@ -4043,13 +4043,7 @@ function CareerPlayHubContent() {
                 <span className="text-xs font-medium text-[var(--ink-muted)] block">Current standing</span>
                 <div className="font-display font-semibold text-lg leading-snug">
                   <span className={boardConfidence >= 65 ? 'text-emerald-700' : boardConfidence >= 45 ? 'text-amber-700' : 'text-rose-700'}>
-                    {boardConfidence >= 75
-                      ? 'Delighted'
-                      : boardConfidence >= 60
-                      ? 'Content'
-                      : boardConfidence >= 45
-                      ? 'Under scrutiny'
-                      : 'Precarious'}
+                    {boardSentimentLabel}
                   </span>
                   <span className="font-sans font-normal text-sm text-[var(--ink-muted)] tabular-nums"> · {boardConfidence}%</span>
                 </div>

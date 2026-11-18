@@ -30,6 +30,7 @@ import {
   getBestStartingLineup,
   adaptLineupToFormation,
   SUPPORTED_CAREER_FORMATIONS,
+  getFormationLayout,
   GeneralPositionGroup,
   getRegisteredSeniorPlayerIds,
   isPlayerRegisteredForMatch,
@@ -334,8 +335,19 @@ export function SquadManagement({
       ...save,
       lineup: updatedLineup,
     });
+    const newConfig = SUPPORTED_CAREER_FORMATIONS.find((f) => f.name === newFormation);
+    if (newConfig) {
+      const misplaced = updatedLineup.starterIds.filter((id, idx) => {
+        const p = squad.find((sp) => sp.id === id);
+        return p ? calculatePositionFit(p, newConfig.slots[idx]) === 'out_of_position' : false;
+      }).length;
+      if (misplaced > 0) {
+        onNotification?.(
+          `${misplaced} ${misplaced === 1 ? 'player is' : 'players are'} out of position in ${newFormation}. Swap them or use Auto-pick.`
+        );
+      }
+    }
   };
-
 
   const handleAutoPick = () => {
     const updatedLineup = getBestStartingLineup(squad, currentFormation, save.registeredPlayerIds, save.season?.yearStart);
@@ -970,62 +982,51 @@ export function SquadManagement({
         <section id="squad-pitch-section" className="space-y-3 scroll-mt-20">
           {/* Double-Bezel Tactile Pitch Frame */}
           <div className="rounded-xl bg-[#E8E6E1] border border-zinc-300/70 p-2 sm:p-3 shadow-xs">
-            {/* Virtual Pitch Canvas with True-Circle SVG Markings */}
-            <div className="my11-broadcast-pitch p-2 sm:p-4 w-full aspect-[440/520] max-h-[680px] mx-auto flex flex-col justify-between relative select-none">
+            {/* Pitch: markings drawn to the same proportions as the frame, players placed by coordinate */}
+            <div className="my11-broadcast-pitch w-full max-w-[470px] aspect-[440/632] mx-auto relative select-none">
               <svg
                 className="absolute inset-0 w-full h-full pointer-events-none"
-                viewBox="0 0 440 520"
-                preserveAspectRatio="xMidYMid meet"
+                viewBox="0 0 440 632"
                 aria-hidden="true"
               >
                 <defs>
-                  <clipPath id="live-top-d-clip"><rect x="0" y="102" width="440" height="418" /></clipPath>
-                  <clipPath id="live-bot-d-clip"><rect x="0" y="0" width="440" height="418" /></clipPath>
+                  <clipPath id="live-top-d-clip"><rect x="0" y="114" width="440" height="518" /></clipPath>
+                  <clipPath id="live-bot-d-clip"><rect x="0" y="0" width="440" height="518" /></clipPath>
                 </defs>
-                {/* Goal Nets */}
-                <rect x="188" y="8" width="64" height="10" rx="1.5" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.42)" strokeWidth="1.3" />
-                <rect x="188" y="502" width="64" height="10" rx="1.5" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.42)" strokeWidth="1.3" />
-                {/* Touchline Boundary */}
-                <rect x="20" y="18" width="400" height="484" rx="3" fill="none" stroke="rgba(255,255,255,0.44)" strokeWidth="1.6" />
-                {/* Corner Arcs */}
-                <path d="M 20 28 A 10 10 0 0 0 30 18" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.4" />
-                <path d="M 410 18 A 10 10 0 0 0 420 28" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.4" />
-                <path d="M 20 492 A 10 10 0 0 1 30 502" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.4" />
-                <path d="M 410 502 A 10 10 0 0 1 420 492" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.4" />
-                {/* Halfway Line & True Center Circle */}
-                <line x1="20" y1="260" x2="420" y2="260" stroke="rgba(255,255,255,0.42)" strokeWidth="1.5" />
-                <circle cx="220" cy="260" r="50" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.5" />
-                <circle cx="220" cy="260" r="3" fill="rgba(255,255,255,0.68)" />
-                {/* Top Penalty Box & True Circular D */}
-                <rect x="110" y="18" width="220" height="84" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.5" />
-                <rect x="166" y="18" width="108" height="28" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.4" />
-                <circle cx="220" cy="76" r="2.5" fill="rgba(255,255,255,0.68)" />
-                <circle cx="220" cy="76" r="42" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.5" clipPath="url(#live-top-d-clip)" />
-                {/* Bottom Penalty Box & True Circular D */}
-                <rect x="110" y="418" width="220" height="84" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.5" />
-                <rect x="166" y="474" width="108" height="28" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.4" />
-                <circle cx="220" cy="444" r="2.5" fill="rgba(255,255,255,0.68)" />
-                <circle cx="220" cy="444" r="42" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.5" clipPath="url(#live-bot-d-clip)" />
+                <g fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.5">
+                  <rect x="188" y="8" width="64" height="10" rx="1.5" />
+                  <rect x="188" y="614" width="64" height="10" rx="1.5" />
+                  <rect x="20" y="18" width="400" height="596" rx="3" />
+                  <line x1="20" y1="316" x2="420" y2="316" />
+                  <circle cx="220" cy="316" r="50" />
+                  <rect x="110" y="18" width="220" height="96" />
+                  <rect x="166" y="18" width="108" height="32" />
+                  <circle cx="220" cy="84" r="46" clipPath="url(#live-top-d-clip)" />
+                  <rect x="110" y="518" width="220" height="96" />
+                  <rect x="166" y="582" width="108" height="32" />
+                  <circle cx="220" cy="548" r="46" clipPath="url(#live-bot-d-clip)" />
+                </g>
+                <g fill="rgba(255,255,255,0.68)">
+                  <circle cx="220" cy="316" r="3" />
+                  <circle cx="220" cy="84" r="2.5" />
+                  <circle cx="220" cy="548" r="2.5" />
+                </g>
               </svg>
 
-              {/* Starting XI Placed in Dedicated Tactical Lines */}
-              <div
-                key={currentFormation}
-                className="relative z-10 w-full flex flex-col justify-between h-full py-3 sm:py-5 gap-1.5 sm:gap-3 my11-pitch-settle"
-              >
-                {activeFormationConfig.lines.map((lineIndices, rowIndex) => (
-                  <div
-                    key={rowIndex}
-                    className="flex justify-around items-center w-full px-0.5 sm:px-2 gap-1 sm:gap-2"
-                  >
-                    {lineIndices.map((slotIndex) => {
-                      const slotPos = activeFormationConfig.slots[slotIndex];
-                      const playerId = lineup.starterIds[slotIndex];
-                      const player = squad.find((p) => p.id === playerId);
-                      return renderPitchSlot(slotPos, player, playerId, lineIndices.length);
-                    })}
-                  </div>
-                ))}
+              <div key={currentFormation} className="absolute inset-0 z-10 my11-pitch-settle">
+                {getFormationLayout(activeFormationConfig).map((slot) => {
+                  const playerId = lineup.starterIds[slot.slotIndex];
+                  const player = squad.find((p) => p.id === playerId);
+                  return (
+                    <div
+                      key={slot.slotIndex}
+                      className="absolute -translate-x-1/2 -translate-y-1/2"
+                      style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
+                    >
+                      {renderPitchSlot(activeFormationConfig.slots[slot.slotIndex], player)}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -2395,28 +2396,22 @@ export function SquadManagement({
     );
   }
 
-  function renderPitchSlot(
-    slotPos: string,
-    player: CareerPlayer | undefined,
-    playerId: string | undefined,
-    colCount: number = 4
-  ) {
-    const slotWidthClass =
-      colCount >= 5
-        ? 'flex-1 max-w-[66px] min-w-0 sm:w-20 md:w-24'
-        : 'w-[76px] min-w-0 sm:w-22 md:w-24';
-    const activeMovingPlayer = swapSourceId
-      ? squad.find((p) => p.id === swapSourceId)
-      : draggedPlayer;
+  function renderPitchSlot(slotPos: string, player: CareerPlayer | undefined) {
+    const activeMovingPlayer = swapSourceId ? squad.find((p) => p.id === swapSourceId) : draggedPlayer;
     const prospectiveFit =
       activeMovingPlayer && activeMovingPlayer.id !== player?.id
         ? calculatePositionFit(activeMovingPlayer, slotPos)
         : null;
+    const fitRing = (level: 'natural' | 'competent' | 'out_of_position') =>
+      level === 'natural' ? 'ring-emerald-300' : level === 'competent' ? 'ring-amber-400' : 'ring-rose-500';
+    const fitWord = (level: 'natural' | 'competent' | 'out_of_position') =>
+      level === 'natural' ? 'Natural' : level === 'competent' ? 'Secondary' : 'Poor fit';
+    const labelShadow = { textShadow: '0 1px 2px rgba(0,0,0,0.55)' };
 
     if (!player) {
       return (
-        <div
-          key={slotPos}
+        <button
+          type="button"
           onClick={() => {
             if (swapSourceId) {
               const sourcePlayer = squad.find((p) => p.id === swapSourceId);
@@ -2427,35 +2422,21 @@ export function SquadManagement({
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
           }}
-          className={`my11-pitch-empty-slot ${slotWidthClass} p-2 text-center cursor-pointer flex flex-col items-center justify-center min-h-[66px] select-none transition-all ${
-            prospectiveFit === 'natural'
-              ? 'border-emerald-400 ring-2 ring-emerald-400 bg-emerald-500/25 text-emerald-100 animate-pulse motion-reduce:animate-none'
-              : prospectiveFit === 'competent'
-              ? 'border-amber-400 ring-2 ring-amber-400 bg-amber-500/25 text-amber-100 animate-pulse motion-reduce:animate-none'
-              : prospectiveFit === 'out_of_position'
-              ? 'border-rose-400 ring-2 ring-rose-400 bg-rose-500/20 text-rose-200'
-              : swapSourceId
-              ? 'border-amber-400 bg-amber-500/20 text-amber-200 animate-pulse motion-reduce:animate-none'
-              : ''
-          }`}
-          title={`${slotPos} (empty) - click or drop to assign`}
+          className="w-[64px] sm:w-[84px] flex flex-col items-center text-center cursor-pointer select-none"
+          title={`${slotPos} (empty): click or drop a player to assign`}
+          aria-label={`${slotPos}, empty slot`}
         >
-          <span className="text-sm font-display font-semibold leading-none mb-0.5">+</span>
-          <span className="text-xs font-display font-semibold">{slotPos}</span>
-          {prospectiveFit && (
-            <span
-              className={`text-2xs font-semibold px-1 rounded mt-0.5 border shadow-2xs font-display ${
-                prospectiveFit === 'natural'
-                  ? 'bg-emerald-600 text-white border-emerald-400'
-                  : prospectiveFit === 'competent'
-                  ? 'bg-amber-600 text-white border-amber-400'
-                  : 'bg-rose-600 text-white border-rose-400'
-              }`}
-            >
-              {prospectiveFit === 'natural' ? 'NAT' : prospectiveFit === 'competent' ? 'SEC' : 'OOP'}
-            </span>
-          )}
-        </div>
+          <span
+            className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full border border-dashed border-white/70 bg-white/10 text-white text-base font-semibold flex items-center justify-center ${
+              prospectiveFit ? `ring-2 ${fitRing(prospectiveFit)}` : ''
+            }`}
+          >
+            +
+          </span>
+          <span className="mt-1 text-2xs font-semibold text-white" style={labelShadow}>
+            {prospectiveFit ? fitWord(prospectiveFit) : slotPos}
+          </span>
+        </button>
       );
     }
 
@@ -2464,26 +2445,27 @@ export function SquadManagement({
     const isDragTarget = dragOverPlayerId === player.id;
     const bonus = calculateFormRatingBonus(player);
     const effectiveRating = getEffectiveRating(player);
-
-    const ratingBadgeClass =
-      effectiveRating >= 90
-        ? 'my11-badge-superstar'
-        : effectiveRating >= 84
-        ? 'my11-badge-elite'
-        : effectiveRating >= 78
-        ? 'my11-badge-strong'
-        : 'my11-badge-modest';
-
-    const fitDotClass =
-      fit === 'natural' ? 'bg-emerald-500' : fit === 'competent' ? 'bg-amber-500' : 'bg-rose-500';
     const fitness = Math.round(player.fitness ?? 100);
     const isSuspended = Boolean(player.suspendedMatches && player.suspendedMatches > 0);
+    const isCaptain = player.id === currentTactics.captainId;
+    const isViceCaptain = player.id === currentTactics.viceCaptainId;
+    const nameParts = player.name.trim().split(/\s+/);
+    const shortName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : player.name;
+
+    const discRing = isDragTarget
+      ? 'ring-4 ring-blue-500'
+      : isSwapping
+      ? 'ring-4 ring-amber-400'
+      : prospectiveFit
+      ? `ring-[3px] ${fitRing(prospectiveFit)}`
+      : `ring-[3px] ${fitRing(fit)}`;
 
     return (
       <div
-        key={player.id}
         id={`squad-player-pitch-${player.id}`}
         data-player-id={player.id}
+        role="button"
+        tabIndex={0}
         draggable={true}
         onDragStart={(e) => handleDragStart(e, player)}
         onDragOver={(e) => handleDragOver(e, player.id)}
@@ -2493,108 +2475,72 @@ export function SquadManagement({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onClick={() => handlePlayerClick(player)}
-        title={`${player.name} (${player.position}) · Role: ${slotPos} (${
-          fit === 'natural' ? 'Natural 100%' : fit === 'competent' ? 'Secondary 98%' : 'Out of position 86%'
-        }) · ${effectiveRating} OVR · Drag or click to swap`}
-        aria-label={`${player.name}, position ${player.position}, rating ${effectiveRating}${player.injured ? ', injured' : ''}${isSuspended ? ', suspended' : ''}`}
-        className={`my11-pitch-player-card ${slotWidthClass} p-1.5 sm:p-2 cursor-grab active:cursor-grabbing text-center scroll-mt-20 transition-all overflow-hidden ${
-          isDragTarget
-            ? 'my11-pitch-player-card-target'
-            : isSwapping
-            ? 'my11-pitch-player-card-swapping'
-            : prospectiveFit === 'natural'
-            ? 'ring-2 ring-emerald-500 bg-emerald-50/70 shadow-sm scale-102'
-            : prospectiveFit === 'competent'
-            ? 'ring-2 ring-amber-400 bg-amber-50/70 shadow-sm scale-102'
-            : prospectiveFit === 'out_of_position'
-            ? 'ring-2 ring-rose-500 bg-rose-50/70 shadow-sm'
-            : fit === 'out_of_position'
-            ? 'ring-2 ring-rose-500/90'
-            : fit === 'competent'
-            ? 'ring-1.5 ring-amber-400/90'
-            : 'ring-1 ring-emerald-500/40'
-        }`}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handlePlayerClick(player);
+          }
+        }}
+        title={`${player.name} (${player.position}) · Playing ${slotPos}: ${fitWord(fit).toLowerCase()} · ${effectiveRating} OVR · ${fitness}% fit · Drag or click to swap`}
+        aria-label={`${player.name}, playing ${slotPos}, ${fitWord(fit).toLowerCase()}, rating ${effectiveRating}${isCaptain ? ', captain' : ''}${isViceCaptain ? ', vice-captain' : ''}${player.injured ? ', injured' : ''}${isSuspended ? ', suspended' : ''}`}
+        className="w-[64px] sm:w-[84px] flex flex-col items-center text-center cursor-grab active:cursor-grabbing select-none scroll-mt-20 focus-visible:outline-none"
       >
-        <div className="flex justify-between items-center mb-1 gap-0.5">
-          <div className="flex items-center gap-0.5 min-w-0 overflow-hidden">
+        <span
+          className={`relative w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white text-[#14321f] font-display font-bold text-sm sm:text-base tabular-nums flex items-center justify-center shadow-sm ${discRing}`}
+        >
+          {effectiveRating}
+          {(isCaptain || isViceCaptain) && (
             <span
-              className={`w-2 h-2 rounded-full shrink-0 ${fitDotClass}`}
-              role="img"
-              aria-label={fit === 'natural' ? 'Natural position' : fit === 'competent' ? 'Secondary position' : 'Out of position'}
-            />
-            {player.id === currentTactics.captainId && (
-              <span className="px-1 rounded font-display font-semibold text-2xs leading-[14px] bg-amber-400 text-slate-950" title="Club captain">
-                C
-              </span>
-            )}
-            {player.id === currentTactics.viceCaptainId && (
-              <span className="px-0.5 rounded font-display font-semibold text-2xs leading-[14px] bg-slate-300 text-slate-900" title="Vice-captain">
-                VC
-              </span>
-            )}
-            {player.injured && (
-              <span role="img" aria-label="Injured" title={player.injuryDescription || 'Injured'} className="shrink-0">
-                <IconMedkit className="w-3 h-3 text-rose-600" />
-              </span>
-            )}
-            {isSuspended && (
-              <span
-                role="img"
-                aria-label="Suspended"
-                title={player.suspensionReason || `Suspended (${player.suspendedMatches} match ban)`}
-                className="shrink-0"
-              >
-                <IconCard tone="rose" className="w-3 h-3" />
-              </span>
-            )}
-          </div>
-          <span className={`px-1 py-0.5 rounded-md font-display font-semibold text-xs shrink-0 ${ratingBadgeClass}`}>
-            {effectiveRating}
-          </span>
-        </div>
-
-        {/* Swap preview: how the moving player would fit this slot */}
-        {prospectiveFit && (
-          <div
-            className={`text-2xs font-semibold font-display px-1 rounded border mb-0.5 ${
-              prospectiveFit === 'natural'
-                ? 'bg-emerald-600 text-white border-emerald-400 shadow-2xs'
-                : prospectiveFit === 'competent'
-                ? 'bg-amber-500 text-white border-amber-400 shadow-2xs'
-                : 'bg-rose-600 text-white border-rose-400 shadow-2xs'
-            }`}
-          >
-            {prospectiveFit === 'natural' ? 'NAT' : prospectiveFit === 'competent' ? 'SEC' : 'OOP'}
-          </div>
-        )}
-
-        <div className="text-2xs sm:text-xs font-display font-semibold text-[#0b1536] leading-tight line-clamp-2 break-words min-h-[28px] flex items-center justify-center text-center px-0.5">
-          {player.name}
-        </div>
-
-        {/* Form, fitness and role detail only on the selected card */}
-        {isSwapping && (
-          <div className="text-2xs text-zinc-600 font-semibold mt-0.5 flex items-center justify-center gap-1 flex-wrap">
-            <span>{player.position}</span>
-            {fit !== 'natural' && (
-              <span className={`font-semibold px-1 rounded ${fit === 'competent' ? 'bg-amber-100 text-amber-900' : 'bg-rose-100 text-rose-900'}`}>
-                {fit === 'competent' ? 'SEC' : 'OOP'}
-              </span>
-            )}
-            <span className={`tabular-nums font-bold ${fitness >= 80 ? 'text-emerald-700' : fitness >= 65 ? 'text-amber-700' : 'text-rose-700'}`}>
-              {fitness}%
+              className={`absolute -top-1 -right-1.5 w-4 h-4 rounded-full text-2xs leading-4 font-bold ${
+                isCaptain ? 'bg-amber-400 text-zinc-900' : 'bg-zinc-200 text-zinc-800'
+              }`}
+              title={isCaptain ? 'Captain' : 'Vice-captain'}
+            >
+              {isCaptain ? 'C' : 'V'}
             </span>
-            {bonus > 0 && <IconFlame className="w-2.5 h-2.5 text-amber-500 shrink-0" aria-label={`In form (+${bonus})`} />}
-            {bonus < 0 && <IconSnowflake className="w-2.5 h-2.5 text-sky-500 shrink-0" aria-label={`Slump (${bonus})`} />}
-          </div>
-        )}
+          )}
+          {(player.injured || isSuspended) && (
+            <span
+              className="absolute -bottom-1 -right-1.5 w-4 h-4 rounded-full bg-white flex items-center justify-center shadow-sm"
+              title={
+                player.injured
+                  ? player.injuryDescription || 'Injured'
+                  : player.suspensionReason || `Suspended (${player.suspendedMatches} match ban)`
+              }
+            >
+              {player.injured ? (
+                <IconMedkit className="w-3 h-3 text-rose-600" />
+              ) : (
+                <IconCard tone="rose" className="w-3 h-3" />
+              )}
+            </span>
+          )}
+        </span>
 
-        <div className="w-full h-1 rounded-full bg-zinc-200 overflow-hidden mt-1" title={`Fitness: ${fitness}%`}>
-          <div
-            className={`h-full rounded-full ${fitness >= 80 ? 'bg-emerald-500' : fitness >= 65 ? 'bg-amber-500' : 'bg-rose-500'}`}
-            style={{ width: `${Math.max(5, Math.min(100, fitness))}%` }}
-          />
-        </div>
+        <span className="mt-1 max-w-full truncate text-2xs sm:text-xs font-semibold text-white leading-tight" style={labelShadow}>
+          {shortName}
+        </span>
+
+        {prospectiveFit ? (
+          <span className="text-2xs font-semibold text-white leading-tight whitespace-nowrap" style={labelShadow}>
+            {fitWord(prospectiveFit)}
+          </span>
+        ) : isSwapping ? (
+          <span className="text-2xs font-semibold text-white leading-tight flex items-center gap-1" style={labelShadow}>
+            <span>
+              {player.position} · {fitness}%
+            </span>
+            {bonus > 0 && <IconFlame className="w-2.5 h-2.5 text-amber-300 shrink-0" aria-label={`In form (+${bonus})`} />}
+            {bonus < 0 && <IconSnowflake className="w-2.5 h-2.5 text-sky-200 shrink-0" aria-label={`Slump (${bonus})`} />}
+          </span>
+        ) : (
+          <span className="mt-1 w-8 h-[3px] rounded-full bg-black/30 overflow-hidden" title={`Fitness: ${fitness}%`}>
+            <span
+              className={`block h-full rounded-full ${fitness >= 80 ? 'bg-emerald-300' : fitness >= 65 ? 'bg-amber-300' : 'bg-rose-400'}`}
+              style={{ width: `${Math.max(5, Math.min(100, fitness))}%` }}
+            />
+          </span>
+        )}
       </div>
     );
   }

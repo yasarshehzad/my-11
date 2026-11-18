@@ -53,7 +53,6 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
     competitionTitle: string;
     roundTitle: string;
   } | null>(null);
-  const [showSeasonReviewModal, setShowSeasonReviewModal] = useState(false);
   const [showFixtureReleaseCeremonyModal, setShowFixtureReleaseCeremonyModal] = useState(false);
 
   const fixtures = save.fixtures || [];
@@ -75,7 +74,6 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
   const handleAdvanceSeason = () => {
     const { updatedSave } = advanceToNextSeason(save);
     onUpdateSave(updatedSave);
-    setShowSeasonReviewModal(false);
     if (onNotification) {
       onNotification(
         `Season ${updatedSave.season.seasonNumber} has started. The summer transfer window is open.`
@@ -201,8 +199,13 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
               </p>
             </div>
 
-            <Button variant="primary" className="w-full sm:w-auto" onClick={() => setShowSeasonReviewModal(true)}>
-              Review and advance to season {save.season.seasonNumber + 1}
+            {/* The season review lives on the Office tab; without that route, advance directly. */}
+            <Button
+              variant="primary"
+              className="w-full sm:w-auto"
+              onClick={() => (onNavigateOffice ? onNavigateOffice() : handleAdvanceSeason())}
+            >
+              {onNavigateOffice ? 'Review season in Office' : `Advance to season ${save.season.seasonNumber + 1}`}
             </Button>
           </div>
         </section>
