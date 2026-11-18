@@ -1,7 +1,7 @@
 import React from 'react';
 import { ChallengeTemplate } from '../types/game';
 import { DailyChallengeStatus } from '../utils/storage';
-import { Button, Eyebrow } from '@/components/ui';
+import { Button, Eyebrow, SectionHeader } from '@/components/ui';
 
 interface DailyChallengeBannerProps {
   todayChallenge: ChallengeTemplate | null;
@@ -24,13 +24,7 @@ export function DailyChallengeBanner({
     <div className="w-full max-w-[340px] rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 text-left relative animate-card-deal motion-reduce:animate-none">
       <Eyebrow>Today&apos;s challenge</Eyebrow>
 
-      <h3 className="text-lg font-display font-semibold text-[var(--ink-primary)] mt-1 leading-tight">
-        {todayChallenge.title}
-      </h3>
-
-      <p className="text-sm text-[var(--ink-secondary)] leading-relaxed mt-2">
-        {todayChallenge.description}
-      </p>
+      <SectionHeader title={todayChallenge.title} description={todayChallenge.description} className="mt-1" />
 
       {dailyStatus.completed && (
         <p className="mt-4 pt-3 border-t border-[var(--border-subtle)] text-sm text-[var(--ink-secondary)] flex justify-between items-center gap-2">
@@ -43,7 +37,7 @@ export function DailyChallengeBanner({
         </p>
       )}
 
-      <Button variant="primary" fullWidth onClick={onPlay} className="mt-4 min-h-11">
+      <Button variant="primary" fullWidth onClick={onPlay} className="mt-4">
         {dailyStatus.completed ? 'Play again' : 'Play'}
       </Button>
     </div>

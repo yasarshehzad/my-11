@@ -228,16 +228,16 @@ export function InstantMatchSummaryModal({
 
         {/* Post-match actions */}
         <nav aria-label="Post-match actions" className="space-y-2">
-          <Button variant="primary" fullWidth className="min-h-11" data-office-ui="true" onClick={onClose}>
+          <Button variant="primary" fullWidth data-office-ui="true" onClick={onClose}>
             Continue
           </Button>
 
           <div className="flex gap-2">
-            <Button variant="secondary" className="flex-1 px-2" data-office-ui="true" onClick={onViewDetailedDossier}>
+            <Button variant="secondary" className="flex-1" data-office-ui="true" onClick={onViewDetailedDossier}>
               Full stats
             </Button>
             {onAttendPressConference && (
-              <Button variant="secondary" className="flex-1 px-2" data-office-ui="true" onClick={onAttendPressConference}>
+              <Button variant="secondary" className="flex-1" data-office-ui="true" onClick={onAttendPressConference}>
                 Press conference
               </Button>
             )}
@@ -245,20 +245,12 @@ export function InstantMatchSummaryModal({
 
           <div className="flex items-center justify-center gap-1 text-xs text-[var(--ink-muted)]">
             <span>More:</span>
-            <button
-              type="button"
-              onClick={() => handleNavigate('table')}
-              className="min-h-10 px-2 font-medium text-blue-700 underline underline-offset-2 cursor-pointer"
-            >
+            <Button variant="ghost" size="sm" onClick={() => handleNavigate('table')}>
               Table
-            </button>
-            <button
-              type="button"
-              onClick={() => handleNavigate('squad')}
-              className="min-h-10 px-2 font-medium text-blue-700 underline underline-offset-2 cursor-pointer"
-            >
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => handleNavigate('squad')}>
               Squad
-            </button>
+            </Button>
           </div>
         </nav>
       </div>

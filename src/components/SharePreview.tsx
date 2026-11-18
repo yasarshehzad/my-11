@@ -213,7 +213,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
       {generating && (
         <div className="fixed inset-0 bg-black/70 z-50 flex flex-col items-center justify-center">
           <div className="w-10 h-10 rounded-full border-4 border-white/80 border-t-transparent motion-safe:animate-spin mb-4" />
-          <h3 className="text-lg font-display font-semibold text-white">Creating image...</h3>
+          <h3 className="text-lg font-display font-semibold text-white">Creating image…</h3>
         </div>
       )}
 
@@ -270,7 +270,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
       )}
 
       {/* Primary action */}
-      <Button variant="primary" fullWidth onClick={handleCopyChallengeLink} className="min-h-11">
+      <Button variant="primary" fullWidth onClick={handleCopyChallengeLink}>
         Copy challenge link
       </Button>
 

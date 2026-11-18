@@ -5,10 +5,7 @@ import { CareerSaveFile, CareerPlayer } from '../../career/types';
 import { getEffectiveClubName, ALL_CAREER_CLUBS, getClubsWithUserClub } from '../../career/clubs';
 import { formatCareerCurrency } from '../../career/formatters';
 import { IconTrophy } from './GameIcons';
-import { SectionHeader } from '../ui';
-
-const LINK_BUTTON_CLASS =
-  'min-h-10 px-2 -my-2 text-sm font-medium text-[#1d5eff] underline underline-offset-4 cursor-pointer';
+import { Button, SectionHeader } from '../ui';
 
 interface ClubLegacyViewProps {
   save: CareerSaveFile;
@@ -217,7 +214,7 @@ export function ClubLegacyView({
       <section className="office-floating-card rounded-xl">
         <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-1 text-left min-w-0">
-            <h2 className="text-xl font-display font-bold text-[var(--ink-primary)] truncate">
+            <h2 className="text-xl font-display font-semibold text-[var(--ink-primary)] truncate">
               {clubName}
             </h2>
             <p className="text-sm text-[var(--ink-secondary)]">
@@ -245,9 +242,9 @@ export function ClubLegacyView({
           className="border-b border-[var(--border-subtle)] pb-2.5"
           action={
             onNavigateCups && (
-              <button type="button" onClick={onNavigateCups} className={LINK_BUTTON_CLASS}>
+              <Button variant="ghost" size="sm" className="-my-1" onClick={onNavigateCups}>
                 Cup brackets
-              </button>
+              </Button>
             )
           }
         />
@@ -292,9 +289,9 @@ export function ClubLegacyView({
           className="border-b border-[var(--border-subtle)] pb-2.5"
           action={
             onNavigateTable && (
-              <button type="button" onClick={onNavigateTable} className={LINK_BUTTON_CLASS}>
+              <Button variant="ghost" size="sm" className="-my-1" onClick={onNavigateTable}>
                 League table
-              </button>
+              </Button>
             )
           }
         />

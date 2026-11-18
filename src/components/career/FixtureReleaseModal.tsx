@@ -128,7 +128,7 @@ export function FixtureReleaseModal({
             </span>
           </div>
 
-          <div className="flex flex-col items-center justify-center px-1.5 sm:px-2 shrink-0 max-w-[110px]">
+          <div className="flex flex-col items-center justify-center px-1.5 sm:px-2 shrink-0 max-w-28">
             <span className="text-sm font-medium text-[var(--ink-muted)]">v</span>
             <span className="text-xs text-[var(--ink-muted)] max-w-full text-center leading-snug">
               {isHome ? (actualClub.stadiumName || 'Home stadium') : (opp?.stadiumName || 'Away stadium')}
@@ -214,7 +214,7 @@ export function FixtureReleaseModal({
             {steps.map((_, i) => (
               <span
                 key={i}
-                className={`h-2 rounded-full transition-all ${
+                className={`h-2 rounded-full transition-[width] ${
                   i === currentStep ? 'w-5 bg-[var(--ink-primary)]' : 'w-2 bg-[var(--border-crisp)]'
                 }`}
               />

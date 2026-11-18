@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import { SimulationResult, MatchSimResult } from '../types/game';
-import { Button } from '@/components/ui';
+import { Button, SectionHeader } from '@/components/ui';
 import {
   IconBolt,
   IconFlame,
@@ -198,26 +198,26 @@ export function SimulationScreen({
 
   return (
     <main
-      aria-label="Season Simulation"
+      aria-label="Season simulation"
       className={`flex flex-col items-center min-h-[80vh] w-full max-w-md mx-auto px-4 sm:px-6 py-4 gap-4 overflow-hidden ${
         simIndex === 38 ? 'pb-24' : ''
       }`}
     >
       {/* Header & Mode Switcher */}
       <header className="w-full flex items-center justify-between gap-2">
-        <h2 className="text-xl font-display font-bold text-[var(--ink-primary)]">
+        <h2 className="text-xl font-display font-semibold text-[var(--ink-primary)]">
           Match {simIndex}/38
         </h2>
 
         {onSetSimMode && (
-          <div className="inline-flex items-center gap-0.5 bg-[var(--surface-subcard)] p-0.5 rounded-lg border border-[var(--border-subtle)]" role="group" aria-label="Simulation pace">
+          <div className="inline-flex items-center gap-1 bg-[var(--surface-subcard)] p-1 rounded-lg border border-[var(--border-subtle)]" role="group" aria-label="Simulation pace">
             {(['chapters', 'continuous'] as const).map((m) => (
               <button
                 key={m}
                 type="button"
                 aria-pressed={simMode === m}
                 onClick={() => onSetSimMode(m)}
-                className={`min-h-9 px-3 rounded-md text-xs font-semibold border transition-colors cursor-pointer ${
+                className={`min-h-10 px-3 rounded-md border text-xs font-semibold transition-colors cursor-pointer inline-flex items-center justify-center ${
                   simMode === m
                     ? 'bg-[var(--surface-card)] text-[var(--ink-primary)] border-[var(--border-crisp)]'
                     : 'border-transparent text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
@@ -231,7 +231,7 @@ export function SimulationScreen({
       </header>
 
       {/* Standings + season track (the single progress indicator) */}
-      <section aria-label="Live Standings" className="w-full office-floating-card p-4 flex flex-col gap-3">
+      <section aria-label="Live standings" className="w-full office-floating-card p-4 flex flex-col gap-3">
         <div className="flex items-end justify-between gap-3">
           <div className="leading-none">
             <span className="text-3xl font-display font-bold text-[var(--ink-primary)] tabular-nums">{livePoints}</span>
@@ -252,7 +252,7 @@ export function SimulationScreen({
           </div>
         </div>
 
-        <div aria-label="Season Fixtures Tracker" className="flex flex-col gap-2 pt-3 border-t border-[var(--office-divider)] select-none">
+        <div aria-label="Season fixtures tracker" className="flex flex-col gap-2 pt-3 border-t border-[var(--office-divider)] select-none">
           {SEASON_CHAPTERS.map((ch) => {
             const chapterMatchesCount = ch.endMatch - ch.startMatch + 1;
             const isCompleted = simIndex >= ch.endMatch;
@@ -307,19 +307,19 @@ export function SimulationScreen({
       {isChapterPaused && chapterReview && (
         <article
           role="dialog"
-          aria-label="Chapter Milestone Summary"
+          aria-label="Chapter milestone summary"
           className="w-full office-floating-card rounded-xl p-4 space-y-3 motion-safe:animate-fade-in select-none"
         >
-          <div>
-            <h3 className="font-display font-semibold text-base text-[var(--ink-primary)]">
-              Chapter {chapterReview.chapter.id} done
-            </h3>
-            <p className="text-sm text-[var(--ink-secondary)] mt-0.5 tabular-nums">
-              {chapterReview.wins}W {chapterReview.draws}D {chapterReview.losses}L · {chapterReview.pts} pts · goals{' '}
-              {chapterReview.gf}:{chapterReview.ga}
-            </p>
-          </div>
-          <Button variant="primary" fullWidth onClick={onAdvanceChapter} className="min-h-11">
+          <SectionHeader
+            title={`Chapter ${chapterReview.chapter.id} done`}
+            description={
+              <span className="tabular-nums">
+                {chapterReview.wins}W {chapterReview.draws}D {chapterReview.losses}L · {chapterReview.pts} pts · goals{' '}
+                {chapterReview.gf}:{chapterReview.ga}
+              </span>
+            }
+          />
+          <Button variant="primary" fullWidth onClick={onAdvanceChapter}>
             <span className="truncate">Next: {chapterReview.nextChapter.title.replace(/^The /, 'the ')}</span>
             <IconArrowRight className="w-3.5 h-3.5 shrink-0" />
           </Button>
@@ -327,7 +327,7 @@ export function SimulationScreen({
       )}
 
       {/* Live match feed */}
-      <section aria-label="Live Match Feed" className="w-full flex-1 flex flex-col overflow-hidden max-h-[240px]">
+      <section aria-label="Live match feed" className="w-full flex-1 flex flex-col overflow-hidden max-h-[240px]">
         {liveMoment && (
           <div
             aria-live="polite"
@@ -388,7 +388,7 @@ export function SimulationScreen({
             })
           ) : (
             <p className="py-8 text-center text-sm text-[var(--ink-muted)]">
-              Awaiting kick-off...
+              Awaiting kick-off…
             </p>
           )}
         </div>
@@ -404,7 +404,7 @@ export function SimulationScreen({
 
       {simIndex === 38 && (
         <div className="fixed bottom-0 left-0 right-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom,16px))] bg-[var(--surface-ground)] border-t border-[var(--border-subtle)] md:relative md:bg-transparent md:border-0 md:p-0 z-40 flex justify-center">
-          <Button variant="primary" onClick={onProceedToResults} className="w-full max-w-sm min-h-12">
+          <Button variant="primary" onClick={onProceedToResults} className="w-full max-w-sm">
             <span>See results</span>
             <IconArrowRight className="w-4 h-4 shrink-0" />
           </Button>

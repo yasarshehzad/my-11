@@ -23,7 +23,7 @@ import {
   IconChevronUp,
   IconPlay,
 } from './GameIcons';
-import { Button, Tag } from '../ui';
+import { Button, SectionHeader, Tag } from '../ui';
 
 interface TournamentsHubProps {
   save: CareerSaveFile;
@@ -111,7 +111,7 @@ export function TournamentsHub({
       {/* Tournament Selection Bar with Scroll Affordances */}
       <div className="relative">
         <nav
-          aria-label="Cup Tournaments Selector"
+          aria-label="Cup tournaments selector"
           data-no-swipe="true"
           className="flex items-center gap-4 px-1 border-b border-[var(--border-subtle)] overflow-x-auto no-scrollbar overscroll-x-contain touch-pan-x"
         >
@@ -202,14 +202,15 @@ export function TournamentsHub({
 
                   return (
                     <div key={roundName} className="space-y-2">
-                      <div className="flex items-baseline justify-between border-b border-[var(--border-subtle)] pb-1 px-1 gap-2">
-                        <h3 className="text-sm font-display font-semibold text-[var(--ink-primary)] min-w-0 truncate">
-                          {roundName}
-                        </h3>
-                        <span className="text-xs text-[var(--ink-muted)] tabular-nums shrink-0">
-                          {roundFixtures.filter((f) => f.played).length} of {roundFixtures.length} played
-                        </span>
-                      </div>
+                      <SectionHeader
+                        title={roundName}
+                        className="border-b border-[var(--border-subtle)] pb-1 px-1"
+                        action={
+                          <span className="text-xs text-[var(--ink-muted)] tabular-nums">
+                            {roundFixtures.filter((f) => f.played).length} of {roundFixtures.length} played
+                          </span>
+                        }
+                      />
 
                       {/* Draw pending (shown once on the first undrawn round) */}
                       {!currentTournament.drawCompleted && currentTournament.drawDate && roundIndex === 0 && (

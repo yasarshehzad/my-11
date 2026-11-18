@@ -10,7 +10,7 @@ import { createNewCareerSave, hydrateCareerSaveVault, listSaveSlots, ValidSlotId
 import { ensureCareerDatabaseLoaded } from '../career/databaseExpansion';
 import { validateSettings } from '../career/settings';
 import { formatCareerCurrency } from '../career/formatters';
-import { Button, Eyebrow, StatRow } from '@/components/ui';
+import { Button, SectionHeader, StatRow } from '@/components/ui';
 import {
   IconClock,
   IconCheck,
@@ -255,7 +255,6 @@ export function SeasonResults({
   const modeName =
     simResult.draftModifier === 'quick' ? 'Quick draft' : simResult.draftModifier === 'mystery' ? 'Mystery draft' : 'Classic draft';
   const slipUps = 38 - simResult.wins;
-  const sectionLabel = 'text-sm font-semibold text-[var(--ink-primary)]';
   const listCard = 'rounded-xl bg-[var(--surface-card)] border border-[var(--border-subtle)] px-4 divide-y divide-[var(--border-subtle)]';
   const outcomeSquare = {
     W: 'bg-emerald-600 text-white',
@@ -282,7 +281,7 @@ export function SeasonResults({
 
       {/* Results Header */}
       <div className="text-center relative z-10">
-        <h2 className="text-2xl font-display font-bold text-[var(--ink-primary)]">
+        <h2 className="text-2xl font-display font-semibold text-[var(--ink-primary)]">
           Season complete
         </h2>
         <p className="text-sm text-[var(--ink-secondary)] mt-1">
@@ -425,11 +424,11 @@ export function SeasonResults({
 
       {/* Actions (visible on every tab) */}
       <div className="grid grid-cols-2 gap-2 relative z-10">
-        <Button variant="primary" onClick={onStartDraft} className="min-h-11">
+        <Button variant="primary" onClick={onStartDraft}>
           <IconRefresh className="w-4 h-4 shrink-0" />
           <span>New draft</span>
         </Button>
-        <Button variant="secondary" onClick={() => setShowShare(true)} className="min-h-11">
+        <Button variant="secondary" onClick={() => setShowShare(true)}>
           Share or challenge
         </Button>
         <Button variant="secondary" onClick={onRandomDraft}>
@@ -451,10 +450,10 @@ export function SeasonResults({
             aria-selected={tab === t.id}
             aria-controls="results-tabpanel"
             onClick={() => setTab(t.id)}
-            className={`flex-1 min-h-10 px-1 rounded-md cursor-pointer transition-colors ${
+            className={`flex-1 min-h-10 px-1 rounded-md border transition-colors cursor-pointer inline-flex items-center justify-center ${
               tab === t.id
-                ? 'bg-[var(--surface-elevated)] text-[var(--ink-primary)]'
-                : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
+                ? 'bg-[var(--surface-card)] text-[var(--ink-primary)] border-[var(--border-crisp)]'
+                : 'border-transparent text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
             }`}
           >
             {t.label}
@@ -468,10 +467,10 @@ export function SeasonResults({
             {/* Condensed season review */}
             {story && (
               <div className="office-floating-card rounded-xl p-4 space-y-2">
-                <div>
-                  <h3 className="text-base font-display font-semibold text-[var(--ink-primary)]">{toSentenceCase(story.title)}</h3>
-                  <Eyebrow>{toSentenceCase(story.longestStreak.description)}</Eyebrow>
-                </div>
+                <SectionHeader
+                  title={toSentenceCase(story.title)}
+                  description={toSentenceCase(story.longestStreak.description)}
+                />
                 <p className="text-sm text-[var(--ink-secondary)] leading-relaxed flex items-start gap-1.5">
                   <IconCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-1" />
                   <span>{story.whyItWorked}</span>
@@ -508,7 +507,7 @@ export function SeasonResults({
               <StatRow label="MVP" value={simResult.mvp.displayName} className="py-2.5" />
               {simResult.topScorer && (
                 <StatRow
-                  label="Golden Boot"
+                  label="Golden boot"
                   value={`${simResult.topScorer.player.displayName} · ${simResult.topScorer.goals}`}
                   className="py-2.5"
                 />
@@ -521,7 +520,7 @@ export function SeasonResults({
             {/* Key match highlights */}
             {highlights.length > 0 && (
               <div className="flex flex-col gap-1.5">
-                <h3 className={`${sectionLabel} px-1`}>Key matches</h3>
+                <SectionHeader title="Key matches" className="px-1" />
                 <div className={listCard}>
                   {shownHighlights.map((hl, i) => (
                     <div key={i} className="py-2.5 text-left">
@@ -585,7 +584,7 @@ export function SeasonResults({
             )}
 
             <div className="flex flex-col gap-1.5">
-              <h3 className={`${sectionLabel} px-1`}>All 38 matches</h3>
+              <SectionHeader title="All 38 matches" className="px-1" />
               <div className={listCard}>
                 {simResult.matches.map((match, idx) => {
                   const people = [
@@ -643,7 +642,7 @@ export function SeasonResults({
               <button
                 type="button"
                 onClick={() => setShowShare(false)}
-                className="w-10 h-10 rounded-lg text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] cursor-pointer transition-colors shrink-0"
                 aria-label="Close share"
               >
                 <IconClose className="w-4 h-4" />
@@ -689,7 +688,7 @@ export function SeasonResults({
               <button
                 type="button"
                 onClick={() => setShowExportModal(false)}
-                className="w-10 h-10 rounded-lg text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] cursor-pointer transition-colors shrink-0"
                 aria-label="Close modal"
               >
                 <IconClose className="w-4 h-4" />
@@ -740,7 +739,7 @@ export function SeasonResults({
                 id="target-club-select"
                 value={selectedClubId}
                 onChange={(e) => setSelectedClubId(e.target.value)}
-                className="w-full min-h-10 px-3 py-2 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] text-sm text-[var(--ink-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                className="w-full min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
                 {getAllClubs().map((club) => (
                   <option key={club.id} value={club.id}>
@@ -763,7 +762,7 @@ export function SeasonResults({
                   onChange={(e) => setManagerName(e.target.value)}
                   placeholder="Manager"
                   maxLength={30}
-                  className="w-full min-h-10 px-3 py-2 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] text-sm text-[var(--ink-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
@@ -778,7 +777,7 @@ export function SeasonResults({
                   onChange={(e) => setManagerNationality(e.target.value)}
                   placeholder="England"
                   maxLength={30}
-                  className="w-full min-h-10 px-3 py-2 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] text-sm text-[var(--ink-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
@@ -820,7 +819,7 @@ export function SeasonResults({
                 {isExporting ? (
                   <>
                     <IconClock className="w-3.5 h-3.5 shrink-0" />
-                    <span>Starting...</span>
+                    <span>Starting…</span>
                   </>
                 ) : (
                   <>

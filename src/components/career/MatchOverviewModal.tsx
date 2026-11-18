@@ -13,7 +13,7 @@ import { findAnyClub, CUP_IDS } from '../../career/cups';
 import { formatCareerDate } from '../../career/formatters';
 import { getAiClubMatchdaySquad } from '../../career/squadGenerator';
 import { IconClose, IconStar } from './GameIcons';
-import { Button, Eyebrow, Tag } from '@/components/ui';
+import { Button, Eyebrow, StatRow, Tag } from '@/components/ui';
 
 export interface MatchOverviewModalProps {
   type: 'result' | 'preview';
@@ -424,11 +424,11 @@ export function MatchOverviewModal({
                   </div>
                   <div className="w-full h-2 bg-[var(--surface-elevated)] rounded-full overflow-hidden flex">
                     <div
-                      className="h-full bg-[#1d5eff] transition-all duration-500"
+                      className="h-full bg-[#1d5eff] transition-[width] duration-500"
                       style={{ width: `${stats.homePossession}%` }}
                     />
                     <div
-                      className="h-full bg-[#7c3aed] transition-all duration-500"
+                      className="h-full bg-[#7c3aed] transition-[width] duration-500"
                       style={{ width: `${stats.awayPossession}%` }}
                     />
                   </div>
@@ -472,21 +472,13 @@ export function MatchOverviewModal({
 
               <div className="grid grid-cols-2 gap-3 text-xs divide-x divide-[var(--border-subtle)]">
                 {/* Home Club Standing */}
-                <div className="space-y-1.5 pr-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-[var(--ink-secondary)]">Position</span>
-                    <span className="font-semibold text-[var(--ink-primary)] tabular-nums">#{homeRank || '-'}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-[var(--ink-secondary)]">Points</span>
-                    <span className="font-medium text-[var(--ink-primary)] tabular-nums">{homeStanding?.points ?? 0} pts</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-[var(--ink-secondary)]">Goal diff</span>
-                    <span className="font-medium text-[var(--ink-primary)] tabular-nums">
-                      {(homeStanding?.goalDifference ?? 0) > 0 ? `+${homeStanding?.goalDifference}` : homeStanding?.goalDifference ?? 0}
-                    </span>
-                  </div>
+                <div className="pr-2">
+                  <StatRow label="Position" value={`#${homeRank || '-'}`} />
+                  <StatRow label="Points" value={`${homeStanding?.points ?? 0} pts`} />
+                  <StatRow
+                    label="Goal diff"
+                    value={(homeStanding?.goalDifference ?? 0) > 0 ? `+${homeStanding?.goalDifference}` : homeStanding?.goalDifference ?? 0}
+                  />
                   <div className="pt-1">
                     <span className="text-xs text-[var(--ink-secondary)] block mb-1">Form</span>
                     <div className="flex gap-1">
@@ -505,21 +497,13 @@ export function MatchOverviewModal({
                 </div>
 
                 {/* Away Club Standing */}
-                <div className="space-y-1.5 pl-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-[var(--ink-secondary)]">Position</span>
-                    <span className="font-semibold text-[var(--ink-primary)] tabular-nums">#{awayRank || '-'}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-[var(--ink-secondary)]">Points</span>
-                    <span className="font-medium text-[var(--ink-primary)] tabular-nums">{awayStanding?.points ?? 0} pts</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-[var(--ink-secondary)]">Goal diff</span>
-                    <span className="font-medium text-[var(--ink-primary)] tabular-nums">
-                      {(awayStanding?.goalDifference ?? 0) > 0 ? `+${awayStanding?.goalDifference}` : awayStanding?.goalDifference ?? 0}
-                    </span>
-                  </div>
+                <div className="pl-3">
+                  <StatRow label="Position" value={`#${awayRank || '-'}`} />
+                  <StatRow label="Points" value={`${awayStanding?.points ?? 0} pts`} />
+                  <StatRow
+                    label="Goal diff"
+                    value={(awayStanding?.goalDifference ?? 0) > 0 ? `+${awayStanding?.goalDifference}` : awayStanding?.goalDifference ?? 0}
+                  />
                   <div className="pt-1">
                     <span className="text-xs text-[var(--ink-secondary)] block mb-1">Form</span>
                     <div className="flex gap-1">
@@ -556,7 +540,6 @@ export function MatchOverviewModal({
               <div className="grid grid-cols-2 gap-2 pt-1 pb-0.5">
                 <Button
                   variant="primary"
-                  className="min-h-11 px-3"
                   data-office-ui="true"
                   onClick={() => {
                     onClose();
@@ -567,7 +550,6 @@ export function MatchOverviewModal({
                 </Button>
                 <Button
                   variant="secondary"
-                  className="min-h-11 px-3"
                   data-office-ui="true"
                   onClick={() => {
                     onClose();

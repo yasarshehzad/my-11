@@ -14,7 +14,7 @@ import {
   calculatePositionFit,
 } from '../../career/playerComparison';
 import { formatCurrency, formatWage } from '../../career/finance';
-import { Button } from '@/components/ui';
+import { Button, SectionHeader } from '@/components/ui';
 import {
   IconCheck,
   IconAlert,
@@ -359,7 +359,7 @@ export function PlayerComparisonModal({
         {/* SCROLLABLE COMPARISON BODY */}
         <div className="flex-1 overflow-y-auto p-3.5 sm:p-5 space-y-5 scrollbar-thin">
           {/* Slim two-player header; tap a player to change them */}
-          <section aria-label="Compared Players" className="grid grid-cols-2 gap-2 sm:gap-4">
+          <section aria-label="Compared players" className="grid grid-cols-2 gap-2 sm:gap-4">
             {sides.map(({ slot, p }) => (
               <button
                 key={slot}
@@ -388,7 +388,7 @@ export function PlayerComparisonModal({
           </section>
 
           {/* Stats as plain comparison rows */}
-          <section aria-label="Attribute Comparison">
+          <section aria-label="Attribute comparison">
             <div className="divide-y divide-[var(--border-subtle)] border-y border-[var(--border-subtle)]">
               {attributes.map((attr) => {
                 const isAWinner = attr.winner === 'playerA';
@@ -429,11 +429,8 @@ export function PlayerComparisonModal({
           </section>
 
           {/* Verdict */}
-          <section aria-label="Tactical Verdict" className="space-y-2.5">
-            <div className="space-y-1">
-              <h4 className="font-display font-semibold text-sm text-[var(--ink-primary)]">{verdict.headline}</h4>
-              <p className="text-xs text-[var(--ink-secondary)] leading-relaxed">{verdict.summary}</p>
-            </div>
+          <section aria-label="Tactical verdict" className="space-y-2.5">
+            <SectionHeader as="h4" title={verdict.headline} description={verdict.summary} />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               {([
@@ -487,17 +484,15 @@ export function PlayerComparisonModal({
                 </p>
               )}
               {onNavigateOfficeBudget && (
-                <button
-                  type="button"
+                <Button
                   onClick={() => {
                     onClose();
                     onNavigateOfficeBudget();
                   }}
-                  className="min-h-10 text-xs font-semibold text-amber-800 underline hover:text-amber-950 cursor-pointer inline-flex items-center gap-1"
                 >
                   <span>Adjust wage budget</span>
                   <IconArrowRight className="w-3 h-3" />
-                </button>
+                </Button>
               )}
             </div>
           )}
@@ -605,13 +600,13 @@ export function PlayerComparisonModal({
         <div className="fixed inset-0 z-60 flex items-center justify-center p-2 sm:p-3 bg-slate-950/40 backdrop-blur-sm animate-in fade-in">
           <div className="office-floating-card bg-[var(--surface-card)] border border-[var(--border-subtle)] w-full max-w-xl rounded-xl shadow-sm flex flex-col max-h-[85vh] overflow-hidden">
             <div className="px-3 py-2 border-b border-[var(--border-subtle)] flex items-center justify-between gap-2">
-              <h3 className="font-display font-semibold text-sm text-[var(--ink-primary)]">
+              <h3 className="font-display font-semibold text-base text-[var(--ink-primary)]">
                 Choose player {switchingSlot}
               </h3>
               <button
                 type="button"
                 onClick={() => setSwitchingSlot(null)}
-                className="w-10 h-10 rounded-full bg-[var(--surface-card)] hover:bg-[var(--surface-subcard)] border border-[var(--border-subtle)] text-[var(--ink-secondary)] flex items-center justify-center cursor-pointer shrink-0"
+                className="w-10 h-10 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)] hover:bg-[var(--surface-subcard)] text-[var(--ink-secondary)] flex items-center justify-center transition-colors cursor-pointer shrink-0"
                 aria-label="Close player selector"
               >
                 <IconClose className="w-4 h-4" />
@@ -648,7 +643,7 @@ export function PlayerComparisonModal({
                   placeholder="Search name, club, nation"
                   value={pickerSearch}
                   onChange={(e) => setPickerSearch(e.target.value)}
-                  className="flex-1 min-w-0 h-10 bg-[var(--surface-card)] border border-[var(--border-subtle)] rounded-lg px-2.5 text-sm text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:border-blue-500"
+                  className="flex-1 min-w-0 min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:border-blue-500"
                 />
                 <Button
                   aria-expanded={showPickerFilters}
@@ -666,7 +661,7 @@ export function PlayerComparisonModal({
                     aria-label="Position"
                     value={pickerPosFilter}
                     onChange={(e) => setPickerPosFilter(e.target.value)}
-                    className="w-full h-10 bg-[var(--surface-card)] border border-[var(--border-subtle)] text-[var(--ink-primary)] rounded-lg px-1.5 text-xs font-medium"
+                    className="w-full min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] focus:outline-none focus:border-blue-500"
                   >
                     <option value="all">All positions</option>
                     <option value="same">{targetPosition} only</option>
@@ -685,7 +680,7 @@ export function PlayerComparisonModal({
                     aria-label="League"
                     value={pickerLeague}
                     onChange={(e) => setPickerLeague(e.target.value as 'ALL' | 'pl' | 'continental' | 'legends')}
-                    className="w-full h-10 bg-[var(--surface-card)] border border-[var(--border-subtle)] text-[var(--ink-primary)] rounded-lg px-1.5 text-xs font-medium"
+                    className="w-full min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] focus:outline-none focus:border-blue-500"
                   >
                     <option value="ALL">All leagues</option>
                     <option value="pl">Premier League</option>
@@ -696,7 +691,7 @@ export function PlayerComparisonModal({
                     aria-label="Club"
                     value={pickerClub}
                     onChange={(e) => setPickerClub(e.target.value)}
-                    className="w-full h-10 bg-[var(--surface-card)] border border-[var(--border-subtle)] text-[var(--ink-primary)] rounded-lg px-1.5 text-xs font-medium truncate"
+                    className="w-full min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] truncate focus:outline-none focus:border-blue-500"
                   >
                     <option value="ALL">All clubs</option>
                     {availableClubs.map((club) => (
@@ -709,7 +704,7 @@ export function PlayerComparisonModal({
                     aria-label="Sort order"
                     value={pickerSort}
                     onChange={(e) => setPickerSort(e.target.value as 'value_desc' | 'rating_desc' | 'age_asc' | 'name_asc')}
-                    className="w-full h-10 bg-[var(--surface-card)] border border-[var(--border-subtle)] text-[var(--ink-primary)] rounded-lg px-1.5 text-xs font-medium"
+                    className="w-full min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] focus:outline-none focus:border-blue-500"
                   >
                     <option value="value_desc">Sort: value</option>
                     <option value="rating_desc">Sort: rating</option>
@@ -725,8 +720,8 @@ export function PlayerComparisonModal({
               {pickerList.length === 0 ? (
                 <div className="text-center py-8 text-xs text-[var(--ink-muted)] space-y-1">
                   <p>No players match.</p>
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
                     onClick={() => {
                       setPickerSearch('');
                       setPickerLeague('ALL');
@@ -734,10 +729,9 @@ export function PlayerComparisonModal({
                       setPickerNationality('ALL');
                       setPickerPosFilter('all');
                     }}
-                    className="min-h-10 text-xs text-blue-700 underline font-semibold cursor-pointer"
                   >
                     Reset filters
-                  </button>
+                  </Button>
                 </div>
               ) : (
                 pickerList.map((p) => {

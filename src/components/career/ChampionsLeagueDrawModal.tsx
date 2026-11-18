@@ -149,13 +149,12 @@ export function ChampionsLeagueDrawModal({
         {/* Footer */}
         <footer className="border-t border-[var(--border-subtle)] p-4 sm:p-5 flex flex-col sm:flex-row sm:justify-end">
           {isFinished ? (
-            <Button variant="primary" className="min-h-11" onClick={handleDone}>
+            <Button variant="primary" onClick={handleDone}>
               Confirm fixtures
             </Button>
           ) : (
             <Button
               variant="primary"
-              className="min-h-11"
               onClick={() => setActivePotIndex((i) => Math.min(pots.length - 1, i + 1))}
             >
               Draw pot {currentPot + 1}

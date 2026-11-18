@@ -11,7 +11,7 @@ import { DailyChallengeStatus } from '../utils/storage';
 import { hydrateCareerSaveVault, listSaveSlots, readRawCareerSave } from '../career/saveVault';
 import { CareerSaveFile, SaveSlotMeta } from '../career/types';
 import { IconArrowRight } from './career/GameIcons';
-import { Button, Eyebrow } from './ui';
+import { Button, Eyebrow, SectionHeader } from './ui';
 
 export interface HomeScreenProps {
   streakStats: StreakStats;
@@ -115,7 +115,7 @@ export function HomeScreen({
       {/* Incoming Friend H2H Squad Battle Banner */}
       {incomingH2HChallenge && (
         <section
-          aria-label="Incoming H2H Squad Battle"
+          aria-label="Incoming head-to-head squad battle"
           className="rounded-xl bg-[var(--surface-card)] border border-[var(--border-crisp)]"
         >
           <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -147,7 +147,7 @@ export function HomeScreen({
       {/* Incoming Friend Challenge Banner */}
       {incomingChallenge && (
         <section
-          aria-label="Incoming Challenge"
+          aria-label="Incoming challenge"
           className="rounded-xl bg-[var(--surface-card)] border border-[var(--border-crisp)]"
         >
           <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -175,7 +175,7 @@ export function HomeScreen({
 
       {/* Career Mode: one card, one primary action, one link to all saves */}
       <section
-        aria-label="Career Mode"
+        aria-label="Career mode"
         data-force-white="true"
         className="relative overflow-hidden rounded-xl min-h-[220px] sm:min-h-[280px] flex flex-col justify-end p-5 sm:p-7"
         style={{ backgroundColor: '#18181B' }}
@@ -197,7 +197,7 @@ export function HomeScreen({
           {activeCareerSave && activeSlotId ? (
             <>
               <p className="text-xs font-medium text-white">Career mode</p>
-              <h1 className="text-2xl sm:text-3xl font-display font-bold leading-tight text-white">
+              <h1 className="text-2xl sm:text-3xl font-display font-semibold leading-tight text-white">
                 {activeCareerSave.clubName}
               </h1>
               <p className="text-sm text-white leading-relaxed">
@@ -208,7 +208,7 @@ export function HomeScreen({
             </>
           ) : (
             <>
-              <h1 className="text-2xl sm:text-3xl font-display font-bold leading-tight text-white">
+              <h1 className="text-2xl sm:text-3xl font-display font-semibold leading-tight text-white">
                 Career mode
               </h1>
               <p className="text-sm text-white leading-relaxed">
@@ -245,23 +245,24 @@ export function HomeScreen({
       </section>
 
       {/* Draft Mode */}
-      <section aria-label="Draft Mode" className="rounded-xl bg-[var(--surface-card)] border border-[var(--border-crisp)] text-left">
+      <section aria-label="Draft mode" className="rounded-xl bg-[var(--surface-card)] border border-[var(--border-crisp)] text-left">
         <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1 min-w-0">
-            <h2 className="text-base font-display font-semibold text-[var(--ink-primary)]">
-              Draft mode
-              {streakStats.currentDailyStreak > 0 && (
-                <span className="font-sans font-normal text-sm text-[var(--ink-muted)]">
-                  {' '}· Daily streak: {streakStats.currentDailyStreak} {streakStats.currentDailyStreak === 1 ? 'day' : 'days'}
-                </span>
-              )}
-            </h2>
-            <p className="text-sm text-[var(--ink-secondary)]">
-              {todayChallenge
+          <SectionHeader
+            as="h2"
+            className="min-w-0"
+            title="Draft mode"
+            meta={
+              streakStats.currentDailyStreak > 0
+                ? `Daily streak: ${streakStats.currentDailyStreak} ${streakStats.currentDailyStreak === 1 ? 'day' : 'days'}`
+                : undefined
+            }
+            description={
+              todayChallenge
                 ? `Draft 11 players in minutes, or try today’s challenge: ${todayChallenge.title}.`
-                : 'Draft 11 players and simulate a 38-match season in minutes.'}
-            </p>
-          </div>
+                : 'Draft 11 players and simulate a 38-match season in minutes.'
+            }
+          />
+
 
           <div className="flex flex-wrap items-center gap-2 shrink-0">
             <Button variant="secondary" onClick={onStartDraft}>

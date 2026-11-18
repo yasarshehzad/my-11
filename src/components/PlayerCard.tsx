@@ -294,7 +294,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     return (
       <div
         onClick={onClick}
-        className={`w-[62px] h-[64px] sm:w-[68px] sm:h-[84px] rounded-xl border ${rarityConfig.border} ${rarityConfig.bg} flex flex-col p-1 sm:p-1.5 relative transition-all duration-300 transform active:scale-95 text-left select-none shadow-sm overflow-hidden ${
+        className={`w-[62px] h-[64px] sm:w-[68px] sm:h-[84px] rounded-xl border ${rarityConfig.border} ${rarityConfig.bg} flex flex-col p-1 sm:p-1.5 relative transition-transform duration-300 transform active:scale-95 text-left select-none shadow-sm overflow-hidden ${
           onClick ? 'cursor-pointer' : ''
         }`}
       >
@@ -352,7 +352,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <h4 className={`text-sm font-bold ${rarityConfig.textPrimary} truncate font-display leading-tight`}>
+            <h4 className={`text-sm font-semibold ${rarityConfig.textPrimary} truncate font-display leading-tight`}>
               {displayName}
             </h4>
             <span className={`text-xs font-medium ${rarityConfig.textMuted} shrink-0`}>

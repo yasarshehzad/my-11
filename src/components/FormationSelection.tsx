@@ -64,7 +64,7 @@ export function FormationSelection({
       role="switch"
       aria-checked={on}
       onClick={onToggle}
-      className="w-full min-h-[44px] py-2 flex items-center justify-between gap-3 text-left cursor-pointer"
+      className="w-full min-h-11 py-2 flex items-center justify-between gap-3 text-left cursor-pointer"
     >
       <span className="min-w-0">
         <span className="block text-sm font-medium text-[var(--ink-primary)]">
@@ -88,7 +88,7 @@ export function FormationSelection({
   return (
     <div className="flex flex-col items-center justify-center px-2 sm:px-4 py-3 sm:py-5 w-full max-w-xl mx-auto overflow-hidden">
       <div className="office-floating-card w-full rounded-xl p-4 sm:p-6 space-y-4">
-        <h2 className="text-xl font-display font-bold text-[var(--ink-primary)]">
+        <h2 className="text-xl font-display font-semibold text-[var(--ink-primary)]">
           Draft setup
         </h2>
 
@@ -181,7 +181,7 @@ export function FormationSelection({
             switchRow('Free search', 'Pick any player from the database', freeSearchEnabled, onToggleFreeSearch)}
         </div>
 
-        <Button variant="primary" fullWidth onClick={onConfirmTactics} disabled={!formation} className="min-h-12">
+        <Button variant="primary" fullWidth onClick={onConfirmTactics} disabled={!formation}>
           <span>{formation ? 'Start draft' : 'Choose a formation'}</span>
           {formation && <IconArrowRight className="w-4 h-4 shrink-0" />}
         </Button>

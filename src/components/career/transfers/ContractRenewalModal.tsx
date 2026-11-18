@@ -7,7 +7,7 @@ import { formatCurrency, formatWage } from '../../../career/finance';
 import { playDealAccepted } from '../../../utils/soundEffects';
 import { EaFcCard } from '../EaFcCard';
 import { IconAlert, IconClose } from '../GameIcons';
-import { Button, Eyebrow } from '@/components/ui';
+import { Button, Eyebrow, SectionHeader, StatRow } from '@/components/ui';
 
 function roleLabel(role: string): string {
   return role.charAt(0).toUpperCase() + role.slice(1);
@@ -93,7 +93,7 @@ export function ContractRenewalModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-9 h-9 rounded-full hover:bg-[var(--surface-subcard)] text-[var(--ink-secondary)] flex items-center justify-center transition-colors cursor-pointer shrink-0"
+            className="w-10 h-10 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)] hover:bg-[var(--surface-subcard)] text-[var(--ink-secondary)] flex items-center justify-center transition-colors cursor-pointer shrink-0"
             title="Close modal"
             aria-label="Close modal"
           >
@@ -110,7 +110,7 @@ export function ContractRenewalModal({
 
         {/* Agent demands */}
         <div className="text-xs">
-          <h4 className="text-sm font-display font-semibold text-[var(--ink-primary)] mb-1.5">Agent demands</h4>
+          <SectionHeader as="h4" title="Agent demands" className="mb-1.5" />
           <dl className="grid grid-cols-2 gap-x-4 gap-y-1">
             {[
               ['Wage', formatWage(preferred.preferredWageWeekly)],
@@ -161,7 +161,7 @@ export function ContractRenewalModal({
                   onClick={() => setRenewYears(yrs)}
                   aria-pressed={renewYears === yrs}
                   aria-label={`${yrs} ${yrs === 1 ? 'year' : 'years'}`}
-                  className={`min-h-[40px] rounded-lg text-sm font-semibold transition-colors cursor-pointer ${
+                  className={`min-h-10 rounded-lg text-sm font-semibold transition-colors cursor-pointer ${
                     renewYears === yrs
                       ? 'bg-blue-600 text-white border border-blue-600'
                       : 'bg-[var(--surface-card)] border border-[var(--border-crisp)] text-[var(--ink-secondary)] hover:bg-[var(--surface-subcard)]'
@@ -183,7 +183,7 @@ export function ContractRenewalModal({
                   type="button"
                   onClick={() => setRenewSquadRole(role)}
                   aria-pressed={renewSquadRole === role}
-                  className={`min-h-[40px] px-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                  className={`min-h-10 px-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                     renewSquadRole === role
                       ? 'bg-blue-600 text-white border border-blue-600'
                       : 'bg-[var(--surface-card)] border border-[var(--border-crisp)] text-[var(--ink-secondary)] hover:bg-[var(--surface-subcard)]'
@@ -210,7 +210,7 @@ export function ContractRenewalModal({
                   const raw = e.target.value.replace(/[^0-9]/g, '');
                   setRenewSigningBonus(raw ? Number(raw) : 0);
                 }}
-                className="w-full min-h-10 bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg px-3 py-2 text-[var(--ink-primary)] tabular-nums text-sm focus:outline-none focus:border-blue-500"
+                className="w-full min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] tabular-nums focus:outline-none focus:border-blue-500"
               />
             </div>
             <div className="space-y-1">
@@ -228,24 +228,26 @@ export function ContractRenewalModal({
                   setRenewReleaseClause(val > 0 ? val : undefined);
                 }}
                 placeholder="None"
-                className="w-full min-h-10 bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg px-3 py-2 text-[var(--ink-primary)] tabular-nums text-sm focus:outline-none focus:border-blue-500"
+                className="w-full min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] tabular-nums focus:outline-none focus:border-blue-500"
               />
             </div>
           </div>
         </div>
 
         {/* Cost */}
-        <div className="border-t border-[var(--border-subtle)] pt-2.5 space-y-1.5 text-xs">
-          <div className="flex justify-between items-center gap-2 text-[var(--ink-secondary)] font-medium">
-            <span>Wage change</span>
-            <span className={wageDelta >= 0 ? 'text-amber-600' : 'text-emerald-600'}>
-              {wageDelta >= 0 ? `+${formatWage(wageDelta)}` : `-${formatWage(Math.abs(wageDelta))}`}
-            </span>
-          </div>
-          <div className="flex justify-between items-center gap-2 text-[var(--ink-secondary)] font-medium">
-            <span>Bonus from transfer budget</span>
-            <span className="text-rose-600">-{formatCurrency(renewSigningBonus)}</span>
-          </div>
+        <div className="border-t border-[var(--border-subtle)] pt-1 space-y-1 text-xs">
+          <StatRow
+            label="Wage change"
+            value={
+              <span className={wageDelta >= 0 ? 'text-amber-700' : 'text-emerald-700'}>
+                {wageDelta >= 0 ? `+${formatWage(wageDelta)}` : `-${formatWage(Math.abs(wageDelta))}`}
+              </span>
+            }
+          />
+          <StatRow
+            label="Bonus from transfer budget"
+            value={<span className="text-rose-700">-{formatCurrency(renewSigningBonus)}</span>}
+          />
           {!hasBudget && (
             <p className="text-rose-700 text-xs font-medium flex items-center gap-2">
               <IconAlert className="w-4 h-4 shrink-0" />
@@ -267,14 +269,14 @@ export function ContractRenewalModal({
         )}
 
         <div className="flex gap-2 pt-2">
-          <Button variant="secondary" onClick={onClose} className="min-h-11">
+          <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
           <Button
             variant="primary"
             onClick={handleConfirmRenewal}
             disabled={renewSigningBonus > save.finances.transferBudget}
-            className="flex-1 min-h-11"
+            className="flex-1"
           >
             Sign extension
           </Button>

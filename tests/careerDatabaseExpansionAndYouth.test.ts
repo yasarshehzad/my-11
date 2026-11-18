@@ -111,7 +111,7 @@ describe('Phase 7: Career Database Expansion & Supplemental Players', () => {
     const manBlueSupp26 = getSupplementalPlayersForClub('man_blue', '2026/27');
     const ricoLewis26 = manBlueSupp26.find((p) => p.name === 'Rico Lewis');
     expect(ricoLewis26?.position).toBe('RB');
-    expect(ricoLewis26?.rating).toBe(81);
+    expect(ricoLewis26?.rating).toBe(78); // 2026/27 ratings are calibrated to real-world game ratings
     expect(ricoLewis26?.potential).toBe(89);
     expect(ricoLewis26?.age).toBe(21);
 
@@ -133,7 +133,7 @@ describe('Phase 7: Career Database Expansion & Supplemental Players', () => {
     const totSupp26 = getSupplementalPlayersForClub('north_london_white', '2026/27');
     const savinho26 = totSupp26.find((p) => p.name === 'Savinho');
     expect(savinho26).toBeDefined();
-    expect(savinho26?.rating).toBe(84);
+    expect(savinho26?.rating).toBe(81);
 
     const manRedSupp26 = getSupplementalPlayersForClub('man_red', '2026/27');
     const yoro26 = manRedSupp26.find((p) => p.name === 'Leny Yoro');
@@ -142,7 +142,7 @@ describe('Phase 7: Career Database Expansion & Supplemental Players', () => {
 
     const zirkzee26 = manRedSupp26.find((p) => p.name === 'Joshua Zirkzee');
     expect(zirkzee26).toBeDefined();
-    expect(zirkzee26?.rating).toBe(81);
+    expect(zirkzee26?.rating).toBe(78);
   });
 
   it('provides getAllSupplementalPlayers returning converted players for all three seasons', () => {

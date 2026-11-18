@@ -22,7 +22,7 @@ import {
   IconMessage,
   IconUser,
 } from '../GameIcons';
-import { Button } from '@/components/ui';
+import { Button, StatRow } from '@/components/ui';
 
 interface IncomingOfferModalProps {
   offer: IncomingTransferOffer;
@@ -143,15 +143,15 @@ export function IncomingOfferModal({
   const zoneText =
     sentiment?.zone === 'fair' ? 'text-emerald-800' : sentiment?.zone === 'ambitious' ? 'text-amber-800' : 'text-rose-800';
   const stepBtn =
-    'min-h-[40px] rounded-lg bg-[var(--surface-card)] border border-[var(--border-crisp)] hover:bg-[var(--surface-subcard)] cursor-pointer text-xs font-semibold';
+    'min-h-10 rounded-lg bg-[var(--surface-card)] border border-[var(--border-crisp)] hover:bg-[var(--surface-subcard)] cursor-pointer text-xs font-semibold';
   const optionBtn = (active: boolean) =>
-    `min-h-[40px] rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+    `min-h-10 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
       active
         ? 'bg-blue-600 text-white border border-blue-600'
         : 'bg-[var(--surface-card)] border border-[var(--border-crisp)] text-[var(--ink-secondary)] hover:bg-[var(--surface-subcard)]'
     }`;
   const disclosureBtn =
-    'w-full min-h-[40px] flex items-center justify-between gap-2 text-left text-xs font-semibold text-[var(--ink-primary)] cursor-pointer';
+    'w-full min-h-10 flex items-center justify-between gap-2 text-left text-xs font-semibold text-[var(--ink-primary)] cursor-pointer';
   const milestoneFees = [0, 1_000_000, 2_500_000, 5_000_000];
 
   return (
@@ -178,14 +178,14 @@ export function IncomingOfferModal({
           onClick={onClose}
           aria-label="Close modal"
           title="Close modal"
-          className="absolute top-4 right-4 w-9 h-9 rounded-full hover:bg-[var(--surface-subcard)] text-[var(--ink-secondary)] flex items-center justify-center transition-colors cursor-pointer z-20"
+          className="absolute top-3 right-3 z-20 w-10 h-10 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)] hover:bg-[var(--surface-subcard)] text-[var(--ink-secondary)] flex items-center justify-center transition-colors cursor-pointer shrink-0"
         >
           <IconClose className="w-4 h-4" />
         </button>
 
         {/* Header */}
         <div className="shrink-0 px-5 sm:px-6 pt-5 pb-3 pr-14 space-y-0.5">
-          <h3 className="text-xl font-display font-bold text-[var(--ink-primary)] tracking-tight truncate">
+          <h3 className="text-lg font-display font-semibold text-[var(--ink-primary)] truncate">
             {offer.playerName}
           </h3>
           <p className="text-xs text-[var(--ink-secondary)]">
@@ -254,21 +254,13 @@ export function IncomingOfferModal({
             </div>
 
             <div className="flex flex-wrap justify-between gap-x-3 text-xs">
-              <button
-                type="button"
-                onClick={() => setCounterFeeInput(offer.offeredFee)}
-                className="min-h-[32px] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] underline cursor-pointer"
-              >
+              <Button variant="ghost" size="sm" onClick={() => setCounterFeeInput(offer.offeredFee)}>
                 Reset to bid
-              </button>
+              </Button>
               {ballpark && (
-                <button
-                  type="button"
-                  onClick={() => setCounterFeeInput(ballpark.recommendedCounter)}
-                  className="min-h-[32px] text-blue-600 hover:text-blue-700 underline cursor-pointer"
-                >
+                <Button variant="ghost" size="sm" onClick={() => setCounterFeeInput(ballpark.recommendedCounter)}>
                   Use recommended ({formatCurrency(ballpark.recommendedCounter)})
-                </button>
+                </Button>
               )}
             </div>
 
@@ -288,10 +280,11 @@ export function IncomingOfferModal({
             )}
 
             {addOnTotal > 0 && (
-              <div className="flex justify-between items-baseline gap-2 text-xs border-t border-[var(--border-subtle)] pt-2">
-                <span className="text-[var(--ink-secondary)] font-medium">Total with add-ons</span>
-                <span className="tabular-nums text-blue-600 font-semibold">{formatCurrency(counterFeeInput + addOnTotal)}</span>
-              </div>
+              <StatRow
+                label="Total with add-ons"
+                value={formatCurrency(counterFeeInput + addOnTotal)}
+                className="border-t border-[var(--border-subtle)]"
+              />
             )}
           </div>
 
@@ -369,7 +362,7 @@ export function IncomingOfferModal({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="min-h-[40px] text-[var(--ink-primary)] font-medium text-xs flex items-center gap-2 cursor-pointer">
+                  <label className="min-h-10 text-[var(--ink-primary)] font-medium text-xs flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={includeBuyBack}
@@ -497,7 +490,7 @@ export function IncomingOfferModal({
           )}
 
           <div className="flex gap-2">
-            <Button variant="secondary" onClick={() => onRejectOffer(offer.id)} className="min-h-12 px-3.5">
+            <Button variant="secondary" onClick={() => onRejectOffer(offer.id)} className="min-h-12">
               Reject
             </Button>
 

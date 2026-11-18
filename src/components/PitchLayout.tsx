@@ -287,7 +287,7 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
           <div
             key={slot.id}
             style={positionStyle}
-            className={`absolute z-20 transition-all duration-300 ${
+            className={`absolute z-20 transition-transform duration-300 ${
               isFocused
                 ? 'scale-110 z-30'
                 : isLinkedToFocused
@@ -339,7 +339,7 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
                 type="button"
                 onClick={() => handleSlotClick(index)}
                 aria-label={accessibleLabel}
-                className={`w-[62px] h-[64px] sm:w-[68px] sm:h-[84px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition-all duration-300 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 cursor-pointer ${
+                className={`w-[62px] h-[64px] sm:w-[68px] sm:h-[84px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition-[transform,color,background-color,border-color] duration-300 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 cursor-pointer ${
                   isActive
                     ? 'border-[#1d5eff] bg-blue-50/80 text-[#1d5eff] scale-105 ring-2 ring-blue-500/30 motion-safe:animate-pulse font-semibold'
                     : 'border-slate-300/80 bg-white/60 text-slate-500 hover:border-indigo-300 hover:bg-white/90 hover:text-slate-800 font-bold'

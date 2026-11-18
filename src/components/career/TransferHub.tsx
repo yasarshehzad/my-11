@@ -163,6 +163,32 @@ const PAGE_SIZE = 12;
 // Continuous scroll: how many market results load at a time
 const SCROLL_BATCH = 24;
 
+// One look per raw control in this file (tabs, chips, segments, fields, icon buttons)
+const FIELD_CLS =
+  'min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20';
+const chipCls = (on: boolean, tall = false) =>
+  `${tall ? 'min-h-10 px-3' : 'min-h-8 px-2.5'} rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 cursor-pointer transition-colors border inline-flex items-center justify-center gap-1.5 ${
+    on
+      ? 'office-nav-tab-active'
+      : 'bg-[var(--surface-card)] border-[var(--border-crisp)] text-[var(--ink-secondary)] hover:bg-[var(--surface-subcard)]'
+  }`;
+const SEGMENT_GROUP_CLS = 'rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] p-0.5 gap-0.5';
+const segmentCls = (on: boolean) =>
+  `min-h-10 px-3 rounded-md text-xs font-semibold cursor-pointer transition-colors inline-flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+    on
+      ? 'bg-[var(--surface-elevated)] text-[var(--ink-primary)]'
+      : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
+  }`;
+const tabCls = (on: boolean) =>
+  `min-h-10 px-2.5 -mb-px text-xs font-semibold whitespace-nowrap cursor-pointer flex items-center gap-1.5 border-b-2 transition-colors ${
+    on
+      ? 'border-[var(--ink-primary)] text-[var(--ink-primary)]'
+      : 'border-transparent text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
+  }`;
+const ICON_BTN_CLS =
+  'w-10 h-10 rounded-lg inline-flex items-center justify-center shrink-0 cursor-pointer text-[var(--ink-muted)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500';
+const ITEM_TITLE_CLS = 'font-display font-semibold text-sm text-[var(--ink-primary)]';
+
 function renderTransactionCategoryIcon(category: string, isIncome: boolean) {
   const cls = `w-4 h-4 shrink-0 ${isIncome ? 'text-emerald-600' : 'text-rose-600'}`;
   switch (category) {
@@ -761,9 +787,9 @@ export function TransferHub({
       updatedSave = renewalRes.updatedSave;
       onUpdateSave(updatedSave);
       if (renewalRes.renewedCount > 0) {
-        onNotification?.(`Sporting Director finalized ${renewalRes.renewedCount} contract extensions immediately.`);
+        onNotification?.(`Sporting director finalized ${renewalRes.renewedCount} contract extensions immediately.`);
       } else {
-        onNotification?.('Sporting Director delegated to handle key contract renewals automatically.');
+        onNotification?.('Sporting director delegated to handle key contract renewals automatically.');
       }
     } else {
       onUpdateSave(updatedSave);
@@ -774,11 +800,11 @@ export function TransferHub({
   const handleRunSportingDirectorBatchRenewals = () => {
     const res = processSportingDirectorRenewals(save, { force: true });
     if (res.renewedCount === 0) {
-      onNotification?.('Sporting Director: all squad contracts are currently secured (no expiring deals under 1 yr).');
+      onNotification?.('Sporting director: all squad contracts are currently secured (no expiring deals under 1 yr).');
       return;
     }
     onUpdateSave(res.updatedSave);
-    onNotification?.(`Sporting Director finalized ${res.renewedCount} contract extensions.`);
+    onNotification?.(`Sporting director finalized ${res.renewedCount} contract extensions.`);
   };
 
   const handleStartRenewal = (player: CareerPlayer) => {
@@ -959,7 +985,7 @@ export function TransferHub({
             type="button"
             onClick={() => setProfilePlayer(player)}
             title={`View ${player.name} profile`}
-            className="group flex items-center gap-2 flex-1 min-w-0 text-left cursor-pointer rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="group flex items-center gap-2 flex-1 min-w-0 text-left cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             <span
               className={`w-9 h-9 rounded-xl flex items-center justify-center font-display font-semibold text-xs shrink-0 shadow-sm ${badgeClass}`}
@@ -1006,7 +1032,7 @@ export function TransferHub({
             aria-expanded={isExpanded}
             aria-label={`${isExpanded ? 'Hide' : 'Show'} stats and options for ${player.name}`}
             onClick={() => setExpandedTargetId(isExpanded ? null : player.id)}
-            className="w-8 min-h-10 rounded-xl flex items-center justify-center shrink-0 cursor-pointer text-slate-500 hover:text-slate-900 hover:bg-slate-100 relative"
+            className={`${ICON_BTN_CLS} relative`}
           >
             {isExpanded ? <IconChevronUp className="w-4 h-4" /> : <IconChevronDown className="w-4 h-4" />}
             {isShortlisted && !isExpanded && (
@@ -1045,28 +1071,20 @@ export function TransferHub({
                   .join(' • ')}
               </p>
               <div className="flex gap-1.5">
-                <button
-                  type="button"
+                <Button
+                  size="sm"
                   aria-pressed={isShortlisted}
                   onClick={() => handleToggleShortlist(player.id)}
-                  className={`flex-1 min-h-9 px-2 rounded-xl text-xs font-display font-bold cursor-pointer inline-flex items-center justify-center gap-1 border ${
-                    isShortlisted
-                      ? 'bg-amber-100 text-amber-700 border-amber-300'
-                      : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
-                  }`}
+                  className="flex-1"
                 >
-                  <IconStar className="w-3.5 h-3.5" filled={isShortlisted} />
+                  <IconStar className={`w-3.5 h-3.5 ${isShortlisted ? 'text-amber-500' : ''}`} filled={isShortlisted} />
                   <span>{isShortlisted ? 'Shortlisted' : 'Shortlist'}</span>
-                </button>
+                </Button>
                 {onOpenCompare && (
-                  <button
-                    type="button"
-                    onClick={() => onOpenCompare(player)}
-                    className="flex-1 min-h-9 px-2 rounded-xl text-xs font-display font-bold cursor-pointer inline-flex items-center justify-center gap-1 bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200"
-                  >
+                  <Button size="sm" onClick={() => onOpenCompare(player)} className="flex-1">
                     <IconBarChart className="w-3.5 h-3.5" />
                     <span>Compare</span>
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>
@@ -1090,7 +1108,7 @@ export function TransferHub({
               aria-expanded={warRoomOpen}
               aria-controls="deadline-war-room"
               onClick={() => setWarRoomOpen(!warRoomOpen)}
-              className="flex-1 min-w-0 min-h-10 flex items-center gap-2 text-left cursor-pointer"
+              className="flex-1 min-w-0 min-h-10 flex items-center gap-2 text-left cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             >
               <IconClock className="w-4 h-4 shrink-0 text-amber-700" />
               <span className="min-w-0 truncate font-bold text-amber-950">
@@ -1295,11 +1313,7 @@ export function TransferHub({
                       type="button"
                       aria-current={isSelected ? 'page' : undefined}
                       onClick={() => goTo(tab.id)}
-                      className={`min-h-10 px-2.5 -mb-px text-xs font-semibold whitespace-nowrap cursor-pointer flex items-center gap-1.5 border-b-2 transition-colors ${
-                        isSelected
-                          ? 'border-[var(--ink-primary)] text-[var(--ink-primary)]'
-                          : 'border-transparent text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
-                      }`}
+                      className={tabCls(isSelected)}
                     >
                       <span>{tab.label}</span>
                       {tab.badge !== undefined && <span className={badgeCls}>{tab.badge}</span>}
@@ -1330,7 +1344,7 @@ export function TransferHub({
                   }}
                   placeholder="Search player, club, nationality"
                   aria-label="Search players"
-                  className="w-full min-h-10 bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-8 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-semibold"
+                  className={`${FIELD_CLS} w-full pl-8 pr-10`}
                 />
                 {searchTerm && (
                   <button
@@ -1340,7 +1354,7 @@ export function TransferHub({
                       setCurrentPage(1);
                     }}
                     aria-label="Clear search"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-2 cursor-pointer inline-flex items-center justify-center"
+                    className={`${ICON_BTN_CLS} absolute right-0 top-1/2 -translate-y-1/2`}
                   >
                     <IconClose className="w-3.5 h-3.5" />
                   </button>
@@ -1350,18 +1364,14 @@ export function TransferHub({
               <button
                 type="button"
                 onClick={() => setIsAdvancedFiltersOpen(!isAdvancedFiltersOpen)}
-                className={`min-h-10 px-3 rounded-xl text-xs font-display font-semibold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 border ${
-                  isAdvancedFiltersOpen || activeFilterCount > 0
-                    ? 'office-nav-tab-active shadow-sm border-slate-900'
-                    : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                }`}
+                className={chipCls(isAdvancedFiltersOpen || activeFilterCount > 0, true)}
                 aria-expanded={isAdvancedFiltersOpen}
                 aria-controls="market-filter-drawer"
               >
                 <IconSliders className="w-3.5 h-3.5" />
                 <span>Filters</span>
                 {activeFilterCount > 0 && (
-                  <span className="bg-amber-400 !text-slate-950 text-xs font-semibold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center">
+                  <span className="bg-amber-400 !text-slate-950 text-xs font-semibold rounded-full min-w-5 h-5 px-1 flex items-center justify-center tabular-nums">
                     {activeFilterCount}
                   </span>
                 )}
@@ -1379,7 +1389,7 @@ export function TransferHub({
                     setCurrentPage(1);
                   }}
                   aria-label="Player era"
-                  className="min-h-8 shrink-0 bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-1.5 text-xs font-display font-bold focus:outline-none focus:border-blue-500"
+                  className={`${FIELD_CLS} shrink-0`}
                 >
                   <option value="all">All eras</option>
                   <option value="modern">Modern</option>
@@ -1395,13 +1405,9 @@ export function TransferHub({
                     setSelectedPosCategory(cat);
                     setCurrentPage(1);
                   }}
-                  className={`min-h-8 px-2.5 rounded-lg text-xs font-display font-semibold shrink-0 cursor-pointer transition-colors border ${
-                    selectedPosCategory === cat
-                      ? 'office-nav-tab-active'
-                      : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                  }`}
+                  className={chipCls(selectedPosCategory === cat)}
                 >
-                                    {cat === 'ALL' ? 'All' : cat}
+                  {cat === 'ALL' ? 'All' : cat}
                 </button>
               ))}
               <span aria-hidden="true" className="h-5 w-px bg-slate-200 shrink-0" />
@@ -1428,11 +1434,7 @@ export function TransferHub({
                     chip.toggle();
                     setCurrentPage(1);
                   }}
-                  className={`min-h-8 px-2.5 rounded-lg text-xs font-display font-bold whitespace-nowrap shrink-0 cursor-pointer transition-colors border ${
-                    chip.on
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                  }`}
+                  className={chipCls(chip.on)}
                 >
                   {chip.label}
                 </button>
@@ -1525,14 +1527,14 @@ export function TransferHub({
                   },
                 ].map((field) => (
                   <label key={field.label} className="space-y-0.5 min-w-0">
-                    <span className="text-xs font-bold text-slate-500 block">{field.label}</span>
+                    <span className="text-xs font-medium text-[var(--ink-muted)] block">{field.label}</span>
                     <select
                       value={field.value}
                       onChange={(e) => {
                         field.set(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="w-full min-h-9 bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-2 text-xs font-display font-bold truncate focus:outline-none focus:border-blue-500"
+                      className={`${FIELD_CLS} w-full truncate`}
                     >
                       {field.options.map(([value, text]) => (
                         <option key={value} value={value}>
@@ -1573,7 +1575,7 @@ export function TransferHub({
                 <div
                   role="group"
                   aria-label="List layout"
-                  className="inline-flex rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] p-0.5"
+                  className={`inline-flex ${SEGMENT_GROUP_CLS}`}
                 >
                   {(['pages', 'scroll'] as const).map((mode) => (
                     <button
@@ -1582,11 +1584,7 @@ export function TransferHub({
                       aria-pressed={marketListMode === mode}
                       title={mode === 'pages' ? 'Show 12 players per page' : 'Keep loading players as you scroll'}
                       onClick={() => handleSetMarketListMode(mode)}
-                      className={`min-h-10 px-3 rounded-md text-xs font-semibold cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
-                        marketListMode === mode
-                          ? 'bg-[var(--surface-elevated)] text-[var(--ink-primary)]'
-                          : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
-                      }`}
+                      className={segmentCls(marketListMode === mode)}
                     >
                       {mode === 'pages' ? 'Pages' : 'Scroll'}
                     </button>
@@ -1666,7 +1664,7 @@ export function TransferHub({
                   <article
                     key={offer.id}
                     id={`incoming-offer-${offer.id}`}
-                    className={`office-floating-card rounded-xl p-4 sm:p-4.5 space-y-3.5 border transition-all scroll-mt-20 ${
+                    className={`office-floating-card rounded-xl p-4 sm:p-4.5 space-y-3.5 border transition-colors scroll-mt-20 ${
                       isAccepted
                         ? 'bg-emerald-50/40 border-emerald-300 shadow-xs'
                         : isRejected
@@ -1696,9 +1694,7 @@ export function TransferHub({
                           )}
                         </div>
 
-                        <h4 className="font-display font-semibold text-base text-slate-900 pt-0.5">
-                          {offer.playerName}
-                        </h4>
+                        <h4 className={`${ITEM_TITLE_CLS} pt-0.5`}>{offer.playerName}</h4>
                         <p className="text-xs text-slate-500">
                           {offer.position} • {offer.rating} OVR • Valuation: <span className="text-slate-900 tabular-nums font-bold">{formatCurrency(squadPlayer?.value || offer.offeredFee)}</span>
                         </p>
@@ -1747,7 +1743,7 @@ export function TransferHub({
                     </p>
 
                     {offer.lastFeedback && (
-                      <p className="text-xs text-slate-600 italic">&ldquo;{offer.lastFeedback}&rdquo;</p>
+                      <p className="text-xs text-[var(--ink-secondary)]">&ldquo;{offer.lastFeedback}&rdquo;</p>
                     )}
 
                     <div className="flex flex-wrap gap-2 pt-1">
@@ -1797,12 +1793,14 @@ export function TransferHub({
                   type="button"
                   aria-pressed={pressed}
                   onClick={() => setContractsFilter(f.id as typeof contractsFilter)}
-                  className={`min-h-12 px-2 py-1.5 rounded-xl border text-center cursor-pointer transition-colors ${
-                    pressed ? 'bg-white border-slate-900 shadow-sm' : 'bg-slate-50 border-slate-200 hover:bg-white'
+                  className={`min-h-12 px-2 py-1.5 rounded-lg border text-center cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                    pressed
+                      ? 'bg-[var(--surface-elevated)] border-[var(--ink-primary)]'
+                      : 'bg-[var(--surface-card)] border-[var(--border-crisp)] hover:bg-[var(--surface-subcard)]'
                   }`}
                 >
                   <span className={`text-base font-display font-semibold block leading-tight ${f.tone}`}>{f.count}</span>
-                  <span className="text-xs font-bold text-slate-500 block">{f.label}</span>
+                  <span className="text-xs font-medium text-[var(--ink-muted)] block">{f.label}</span>
                 </button>
               );
             })}
@@ -1875,7 +1873,7 @@ export function TransferHub({
                     <article
                       key={player.id}
                       id={`contract-player-${player.id}`}
-                      className={`office-floating-card p-4 rounded-xl border transition-all space-y-3 scroll-mt-20 bg-white shadow-xs ${
+                      className={`office-floating-card p-4 rounded-xl border space-y-3 scroll-mt-20 bg-white shadow-xs ${
                         isCritical
                           ? 'border-rose-300'
                           : 'border-[var(--border-subtle)]'
@@ -1887,9 +1885,7 @@ export function TransferHub({
                             {player.rating}
                           </span>
                           <div className="min-w-0">
-                            <h4 className="font-display font-semibold text-sm text-slate-900 truncate">
-                              {player.name}
-                            </h4>
+                            <h4 className={`${ITEM_TITLE_CLS} truncate`}>{player.name}</h4>
                             <div className="text-xs text-slate-500 truncate">
                               {player.position} • {player.age} yrs • {player.nationality}
                             </div>
@@ -1978,16 +1974,12 @@ export function TransferHub({
       {subTab === 'history' && (
         <section id="history-section" className="space-y-4 scroll-mt-20">
           <header>
-            <div className="flex flex-wrap items-center gap-2">
+            <div role="group" aria-label="Transfer history" className={`inline-flex ${SEGMENT_GROUP_CLS}`}>
               <button
                 type="button"
                 aria-pressed={historyView === 'my_club'}
                 onClick={() => setHistoryView('my_club')}
-                className={`min-h-10 px-3 rounded-lg text-xs font-semibold transition-colors cursor-pointer inline-flex items-center gap-1.5 ${
-                  historyView === 'my_club'
-                    ? 'office-nav-tab-active'
-                    : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
-                }`}
+                className={segmentCls(historyView === 'my_club')}
               >
                 <IconShield className="w-3.5 h-3.5" />
                 <span>My club ({save.transfersHistory?.length || 0})</span>
@@ -1996,11 +1988,7 @@ export function TransferHub({
                 type="button"
                 aria-pressed={historyView === 'world'}
                 onClick={() => setHistoryView('world')}
-                className={`min-h-10 px-3 rounded-lg text-xs font-semibold transition-colors cursor-pointer inline-flex items-center gap-1.5 ${
-                  historyView === 'world'
-                    ? 'office-nav-tab-active'
-                    : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
-                }`}
+                className={segmentCls(historyView === 'world')}
               >
                 <IconGlobe className="w-3.5 h-3.5" />
                 <span>World ({save.worldTransfersHistory?.length || 0})</span>
@@ -2148,9 +2136,7 @@ export function TransferHub({
                 type="button"
                 aria-pressed={boardView === view}
                 onClick={() => setBoardView(view)}
-                className={`min-h-10 px-2.5 -mb-px text-xs font-semibold whitespace-nowrap cursor-pointer border-b-2 transition-colors ${
-                  boardView === view ? 'border-[var(--ink-primary)] text-[var(--ink-primary)]' : 'border-transparent text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
-                }`}
+                className={tabCls(boardView === view)}
               >
                 {view === 'board' ? 'Board' : 'Finances'}
               </button>
@@ -2235,16 +2221,17 @@ export function TransferHub({
               {/* Active 3-match board ultimatum */}
               {save.managerCareer?.activeUltimatum?.status === 'active' && (
                 <section
-                  aria-label="Board Ultimatum"
+                  aria-label="Board ultimatum"
                   className="office-floating-card p-3.5 border border-rose-300 bg-rose-50/70 flex flex-wrap items-center justify-between gap-2"
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <IconAlert className="w-5 h-5 text-rose-600 shrink-0" />
                     <div className="min-w-0">
-                      <h4 className="font-display font-semibold text-xs sm:text-sm tracking-tight text-rose-800">
-                        Board ultimatum
-                      </h4>
-                      <p className="text-xs text-rose-700">{save.managerCareer.activeUltimatum.reason}</p>
+                      <SectionHeader
+                        as="h4"
+                        title="Board ultimatum"
+                        description={save.managerCareer.activeUltimatum.reason}
+                      />
                     </div>
                   </div>
                   <Tag tone="danger">
@@ -2483,10 +2470,11 @@ export function TransferHub({
                               <span className="text-[var(--ink-muted)] block tabular-nums">{p.note}</span>
                               <span className="text-[var(--ink-secondary)] block leading-snug">{p.detail}</span>
                             </span>
-                            <Button variant="secondary"
+                            <Button
+                              size="sm"
                               onClick={() => handleOpenPetitionModal(p.type)}
                               disabled={!p.enabled}
-                              className="shrink-0 px-3 text-xs"
+                              className="shrink-0"
                             >
                               Petition
                             </Button>
@@ -2575,7 +2563,7 @@ export function TransferHub({
                                 <div className="flex items-center gap-2 min-w-0">
                                   <span className="w-3 h-8 rounded-full shrink-0" style={{ backgroundColor: offer.primaryColor }} />
                                   <div className="min-w-0">
-                                    <h5 className="font-display font-semibold text-sm text-slate-900 truncate">{offer.clubName}</h5>
+                                    <h5 className={`${ITEM_TITLE_CLS} truncate`}>{offer.clubName}</h5>
                                     <div className="text-xs tabular-nums text-slate-500">
                                       {offer.clubTier} tier &bull; Rep {offer.clubReputation}
                                     </div>
@@ -2690,15 +2678,15 @@ export function TransferHub({
                       { label: 'Max transfers', value: budgetBounds.maxTransferBudget },
                       { label: 'Reset', value: save.finances.transferBudget },
                     ].map((preset) => (
-                      <button
+                      <Button
                         key={preset.label}
-                        type="button"
+                        size="sm"
+                        variant={preset.label === 'Reset' ? 'ghost' : 'secondary'}
                         onClick={() => setAllocatedTransferBudget(preset.value)}
                         disabled={preset.label === 'Reset' && allocatedTransferBudget === save.finances.transferBudget}
-                        className="min-h-9 px-2 rounded-lg bg-white hover:bg-slate-100 text-slate-700 tabular-nums text-xs font-bold border border-slate-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         {preset.label}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                   <Button variant="primary"
@@ -2749,7 +2737,7 @@ export function TransferHub({
                   </div>
                   <div className="relative w-full h-3 bg-slate-200 rounded-full overflow-hidden">
                     <div
-                      className={`h-full transition-all duration-500 motion-reduce:transition-none ${
+                      className={`h-full transition-[width] duration-500 motion-reduce:transition-none ${
                         financialHealth.wageToTurnoverRatio <= 60
                           ? 'bg-emerald-500'
                           : financialHealth.wageToTurnoverRatio <= 75
@@ -2773,7 +2761,7 @@ export function TransferHub({
                     {
                       title: 'Revenue',
                       sign: '',
-                      valueTone: 'text-slate-900',
+                      valueTone: '',
                       rows: [
                         ['Gate receipts', ledger.gateReceipts],
                         ['TV & broadcast', ledger.tvBroadcast],
@@ -2796,25 +2784,32 @@ export function TransferHub({
                   ].map((group) => (
                     <div key={group.title}>
                       <h5 className="text-xs font-semibold text-[var(--ink-secondary)]">{group.title}</h5>
-                      <dl className="divide-y divide-slate-100">
+                      <div className="divide-y divide-[var(--border-subtle)]">
                         {group.rows.map(([label, amount]) => (
-                          <div key={label} className="flex justify-between gap-2 py-1">
-                            <dt className="text-slate-600">{label}</dt>
-                            <dd className={`tabular-nums font-bold ${group.valueTone}`}>
-                              {group.sign}{formatCurrency(amount)}
-                            </dd>
-                          </div>
+                          <StatRow
+                            key={label}
+                            className="text-xs"
+                            label={label}
+                            value={
+                              <span className={group.valueTone}>
+                                {group.sign}{formatCurrency(amount)}
+                              </span>
+                            }
+                          />
                         ))}
-                      </dl>
+                      </div>
                     </div>
                   ))}
                 </div>
-                <div className="flex justify-between gap-2 border-t border-slate-100 pt-2">
-                  <span className="font-bold text-slate-800">Projected season-end balance</span>
-                  <span className={`tabular-nums font-bold ${financialHealth.projectedEndBalance >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
-                    {formatCurrency(financialHealth.projectedEndBalance)}
-                  </span>
-                </div>
+                <StatRow
+                  className="text-xs border-t border-[var(--border-subtle)]"
+                  label="Projected season-end balance"
+                  value={
+                    <span className={financialHealth.projectedEndBalance >= 0 ? 'text-emerald-700' : 'text-rose-700'}>
+                      {formatCurrency(financialHealth.projectedEndBalance)}
+                    </span>
+                  }
+                />
               </section>
 
               {/* Transaction ledger: latest 5, rest on demand */}
@@ -2850,7 +2845,7 @@ export function TransferHub({
                         aria-expanded={ledgerShowAll}
                         aria-controls="finance-ledger-rows"
                         onClick={() => setLedgerShowAll(!ledgerShowAll)}
-                        className="w-full min-h-10 text-xs font-bold text-blue-700 hover:text-blue-900 cursor-pointer inline-flex items-center justify-center gap-1"
+                        className="w-full min-h-10 text-xs font-semibold text-blue-700 hover:text-blue-900 cursor-pointer inline-flex items-center justify-center gap-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                       >
                         <span>{ledgerShowAll ? 'Show fewer' : `Show all (${Math.min(15, transactions.length)})`}</span>
                         {ledgerShowAll ? <IconChevronUp className="w-3 h-3" /> : <IconChevronDown className="w-3 h-3" />}
@@ -2866,7 +2861,7 @@ export function TransferHub({
 
       {/* SUB-VIEW 7: GLOBAL SCOUTING NETWORK */}
       {subTab === 'scouting' && (
-        <section id="transfer-scouting-section" className="space-y-3 scroll-mt-20 animate-fade-in motion-reduce:animate-none" aria-label="Global Scouting Network">
+        <section id="transfer-scouting-section" className="space-y-3 scroll-mt-20 animate-fade-in motion-reduce:animate-none" aria-label="Global scouting network">
           {/* Scouting feedback */}
           {scoutingFeedback && (
             <div
@@ -2882,7 +2877,7 @@ export function TransferHub({
                 type="button"
                 onClick={() => setScoutingFeedback(null)}
                 aria-label="Dismiss scouting feedback"
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-700 hover:bg-black/5 cursor-pointer shrink-0"
+                className={ICON_BTN_CLS}
               >
                 <IconClose className="w-3.5 h-3.5" />
               </button>
@@ -2894,10 +2889,11 @@ export function TransferHub({
             const active = (save.scoutingState?.activeMissions || []).filter((m) => !m.completed);
             return (
               <div className="office-floating-card p-3.5 sm:p-4 text-xs">
-                <h4 className="text-sm font-display font-semibold tracking-tight text-[#0b1536] flex items-center justify-between gap-2">
-                  <span>Scouts in the field</span>
-                  <span className="tabular-nums text-slate-500 text-xs">{active.length}/3</span>
-                </h4>
+                <SectionHeader
+                  as="h4"
+                  title="Scouts in the field"
+                  meta={<span className="tabular-nums">{active.length}/3</span>}
+                />
                 {active.length === 0 ? (
                   <p className="text-slate-500 pt-1">None deployed.</p>
                 ) : (
@@ -2927,9 +2923,7 @@ export function TransferHub({
 
           {/* Mission Dispatch */}
           <div className="office-floating-card p-3.5 sm:p-4 space-y-3 bg-white">
-            <h4 className="text-sm font-display font-semibold tracking-tight text-[#0b1536]">
-              Send a scout
-            </h4>
+            <SectionHeader as="h4" title="Send a scout" />
 
             {/* Region Selector */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
@@ -2947,17 +2941,17 @@ export function TransferHub({
                     disabled={isUnderway}
                     aria-pressed={isSelected}
                     onClick={() => setSelectedScoutingRegion(regId)}
-                    className={`p-2.5 rounded-xl text-left transition-colors border cursor-pointer space-y-1 ${
+                    className={`p-2.5 rounded-lg text-left transition-colors border space-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                       isUnderway
-                        ? 'opacity-60 bg-slate-100 border-slate-200 cursor-not-allowed'
+                        ? 'opacity-60 bg-[var(--surface-subcard)] border-[var(--border-subtle)] cursor-not-allowed'
                         : isSelected
-                        ? 'border-blue-600 bg-blue-50/60 ring-2 ring-blue-500/20'
-                        : 'border-slate-200/90 bg-white hover:border-blue-300'
+                        ? 'cursor-pointer bg-[var(--surface-elevated)] border-[var(--ink-primary)]'
+                        : 'cursor-pointer bg-[var(--surface-card)] border-[var(--border-crisp)] hover:bg-[var(--surface-subcard)]'
                     }`}
                   >
                     <span className="flex items-center gap-1.5">
                       <RegionBadge code={config.flag} />
-                      <span className="font-display font-semibold text-xs text-[#0b1536] leading-tight">{config.name}</span>
+                      <span className="font-display font-semibold text-xs text-[var(--ink-primary)] leading-tight">{config.name}</span>
                     </span>
                     <span className="text-xs tabular-nums text-slate-600 block">
                       {isUnderway ? 'Deployed' : `${formatCurrency(config.cost)} • ${config.durationDays} days`}
@@ -2971,9 +2965,7 @@ export function TransferHub({
             {/* Target Profile Chips & Action */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100">
               <div className="space-y-1">
-                <span className="text-xs font-bold text-slate-500 block">
-                  Looking for
-                </span>
+                <span className="text-xs font-medium text-[var(--ink-muted)] block">Looking for</span>
                 <div className="flex flex-wrap gap-1.5">
                   {[
                     { id: 'wonderkid', label: 'Wonderkids (U21)' },
@@ -2988,11 +2980,7 @@ export function TransferHub({
                         key={p.id}
                         onClick={() => setSelectedScoutingProfile(p.id as ScoutingTargetProfile)}
                         aria-pressed={isSelected}
-                        className={`px-2.5 min-h-9 rounded-xl text-xs font-display font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                          isSelected
-                            ? 'bg-blue-600 text-white shadow-2xs'
-                            : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                        }`}
+                        className={chipCls(isSelected)}
                       >
                         {renderScoutingProfileIcon(p.id)}
                         <span>{p.label}</span>
@@ -3032,9 +3020,7 @@ export function TransferHub({
                         <div className="flex items-center gap-2">
                           <RegionBadge code={regConfig?.flag} />
                           <div>
-                            <h5 className="font-display font-semibold text-sm text-[#0b1536]">
-                              {regConfig?.name || dossier.region}
-                            </h5>
+                            <h5 className={ITEM_TITLE_CLS}>{regConfig?.name || dossier.region}</h5>
                             <span className="text-xs text-slate-500 font-medium">
                               <span className="inline-block first-letter:uppercase">{dossier.targetProfile.replace(/_/g, ' ')}</span> • {dossier.scoutName} • {formatCareerDate(dossier.date, save.settings.dateFormat)}
                             </span>
@@ -3056,9 +3042,7 @@ export function TransferHub({
                               <div className="space-y-2">
                                 <div className="flex justify-between items-start gap-1">
                                   <div>
-                                    <h6 className="font-display font-semibold text-sm text-[#0b1536] leading-tight">
-                                      {prospect.name}
-                                    </h6>
+                                    <h6 className={`${ITEM_TITLE_CLS} leading-tight`}>{prospect.name}</h6>
                                     <span className="text-xs text-slate-500 font-medium">
                                       {prospect.position} • Age {prospect.age} • {prospect.club}
                                     </span>
@@ -3117,24 +3101,10 @@ export function TransferHub({
 
                               {/* Actions */}
                               <div className="grid grid-cols-2 gap-1.5 pt-1">
-                                <button
-                                  type="button"
-                                  onClick={() => handleToggleShortlist(prospect.playerId)}
-                                  className={`min-h-10 px-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer border inline-flex items-center justify-center gap-1 ${
-                                    isShortlisted
-                                      ? 'bg-amber-100 text-amber-900 border-amber-300'
-                                      : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
-                                  }`}
-                                >
-                                  {isShortlisted ? (
-                                    <>
-                                      <IconStar className="w-3 h-3" filled />
-                                      <span>Shortlisted</span>
-                                    </>
-                                  ) : (
-                                    <span>+ Shortlist</span>
-                                  )}
-                                </button>
+                                <Button onClick={() => handleToggleShortlist(prospect.playerId)}>
+                                  <IconStar className={`w-3.5 h-3.5 ${isShortlisted ? 'text-amber-500' : ''}`} filled={isShortlisted} />
+                                  <span>{isShortlisted ? 'Shortlisted' : 'Shortlist'}</span>
+                                </Button>
 
                                 <Button variant="secondary"
                                   onClick={() => {
@@ -3222,7 +3192,7 @@ export function TransferHub({
                           aria-label={`${project.facilityName} construction progress`}
                         >
                           <div
-                            className="bg-amber-500 h-2 rounded-full transition-all duration-500 motion-reduce:transition-none"
+                            className="bg-amber-500 h-2 rounded-full transition-[width] duration-500 motion-reduce:transition-none"
                             style={{ width: `${progressPct}%` }}
                           />
                         </div>
@@ -3323,8 +3293,8 @@ export function TransferHub({
                         ) : nextTierConfig ? (
                           <>
                             <Button
-                              variant="secondary"
-                              className="px-3 text-xs tabular-nums whitespace-nowrap"
+                              size="sm"
+                              className="tabular-nums whitespace-nowrap"
                               disabled={!canAfford}
                               aria-label={`Upgrade ${meta.name} to level ${nextLvl} for ${formatCurrency(nextTierConfig.cost)}`}
                               onClick={() => {
@@ -3429,7 +3399,7 @@ export function TransferHub({
         const weeklySaved = network.activeLoans.reduce((s, l) => s + (l.weeklyWageRelieved || 0), 0);
 
         return (
-          <section id="transfer-feeder-section" className="space-y-3 scroll-mt-20" aria-label="Continental Feeder Club Network">
+          <section id="transfer-feeder-section" className="space-y-3 scroll-mt-20" aria-label="Continental feeder club network">
             <p className="text-xs text-slate-600 tabular-nums px-1">
               <span className="font-bold text-slate-900">{network.partnerships.length}/{maxSlots}</span> affiliates &bull;{' '}
               <span className="font-bold text-slate-900">{network.activeLoans.length}</span> on loan &bull;{' '}
@@ -3446,14 +3416,14 @@ export function TransferHub({
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
                   <div className="space-y-1">
-                    <label htmlFor="feeder-club-select" className="text-xs font-bold text-slate-500 block">
+                    <label htmlFor="feeder-club-select" className="text-xs font-medium text-[var(--ink-muted)] block">
                       Partner club
                     </label>
                     <select
                       id="feeder-club-select"
                       value={activePartnerClubId}
                       onChange={(e) => setSelectedFeederClubId(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800"
+                      className={`${FIELD_CLS} w-full`}
                     >
                       {network.partnerships.map((p) => {
                         const prof = AVAILABLE_FEEDER_CLUBS.find((c) => c.id === p.feederClubId);
@@ -3467,14 +3437,14 @@ export function TransferHub({
                   </div>
 
                   <div className="space-y-1">
-                    <label htmlFor="feeder-player-select" className="text-xs font-bold text-slate-500 block">
+                    <label htmlFor="feeder-player-select" className="text-xs font-medium text-[var(--ink-muted)] block">
                       Player
                     </label>
                     <select
                       id="feeder-player-select"
                       value={activePlayerId}
                       onChange={(e) => setSelectedLoaneePlayerId(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800"
+                      className={`${FIELD_CLS} w-full`}
                     >
                       {eligibleLoanees.map((pl) => (
                         <option key={pl.id} value={pl.id}>
@@ -3511,7 +3481,7 @@ export function TransferHub({
                     <article key={loan.id} className="py-2.5 space-y-2">
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <h5 className="font-display font-semibold text-sm text-slate-900">
+                          <h5 className={ITEM_TITLE_CLS}>
                             {loan.playerName}{' '}
                             <span className="text-xs tabular-nums text-blue-600">({loan.position})</span>
                           </h5>
@@ -3533,7 +3503,7 @@ export function TransferHub({
                         </div>
                         <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
                           <div
-                            className="h-full bg-blue-600 transition-all motion-reduce:transition-none"
+                            className="h-full bg-blue-600 transition-[width] motion-reduce:transition-none"
                             style={{ width: `${Math.min(100, loan.xpAccumulated)}%` }}
                           />
                         </div>
@@ -3600,7 +3570,8 @@ export function TransferHub({
                         {isPartnered ? (
                           <Button
                             variant="danger"
-                            className="shrink-0 px-3 text-xs"
+                            size="sm"
+                            className="shrink-0"
                             onClick={() => {
                               const res = terminateFeederPartnership(save, club.id);
                               if (res.success) {
@@ -3613,8 +3584,8 @@ export function TransferHub({
                           </Button>
                         ) : (
                           <Button
-                            variant="secondary"
-                            className="shrink-0 px-3 text-xs"
+                            size="sm"
+                            className="shrink-0"
                             onClick={() => {
                               const res = establishFeederPartnership(save, club.id);
                               if (res.success) {
@@ -3657,12 +3628,17 @@ export function TransferHub({
         const activeConf = press.activeConference;
 
         return (
-          <section id="transfer-media-section" className="space-y-3 scroll-mt-20" aria-label="Press Room and Media Mind Games">
+          <section id="transfer-media-section" className="space-y-3 scroll-mt-20" aria-label="Press room and media mind games">
             <header className="office-floating-card rounded-xl p-3.5 sm:p-4 border border-slate-200/90 space-y-2.5 text-xs">
-              <div className="flex items-baseline justify-between gap-2">
-                <h3 className="text-sm font-display font-semibold text-slate-900 tracking-tight">Media standing</h3>
-                <span className="tabular-nums font-semibold text-blue-700">{press.mediaRelationshipScore}/100</span>
-              </div>
+              <SectionHeader
+                as="h3"
+                title="Media standing"
+                action={
+                  <span className="tabular-nums font-semibold text-[var(--ink-primary)]">
+                    {press.mediaRelationshipScore}/100
+                  </span>
+                }
+              />
               {press.mindGamesBuffNextMatch && (
                 <p className="text-indigo-800 font-bold">Next match: {press.mindGamesBuffNextMatch.description}</p>
               )}
@@ -3688,7 +3664,7 @@ export function TransferHub({
                     <span className="text-xs tabular-nums font-bold text-indigo-700">
                       {activeConf.outlet} • {activeConf.journalistName}
                     </span>
-                    <h4 className="font-display font-semibold text-base text-slate-900 mt-1">
+                    <h4 className="font-display font-semibold text-base text-[var(--ink-primary)] mt-1">
                       &ldquo;{activeConf.question}&rdquo;
                     </h4>
                   </div>
@@ -3732,8 +3708,7 @@ export function TransferHub({
                             )}
                           </button>
                           <Button
-                            variant="secondary"
-                            className="shrink-0 px-3 text-xs"
+                            className="shrink-0"
                             aria-label={`Answer: ${opt.label}`}
                             onClick={() => {
                               const res = answerPressConference(save, opt.id);
@@ -3851,14 +3826,14 @@ export function TransferHub({
             <header className="flex justify-between items-center border-b border-slate-100 pb-3 gap-2">
               <div className="min-w-0">
                 <Eyebrow>Loan out</Eyebrow>
-                <h3 className="text-lg font-display font-semibold text-slate-900 truncate">
+                <h3 className="text-lg font-display font-semibold text-[var(--ink-primary)] truncate">
                   {loaningOutPlayer.name}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setLoaningOutPlayer(null)}
-                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                className={ICON_BTN_CLS}
                 title="Close modal"
                 aria-label="Close modal"
               >
@@ -3881,7 +3856,7 @@ export function TransferHub({
                 <select
                   value={loanOutDestinationClub}
                   onChange={(e) => setLoanOutDestinationClub(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-3 py-2 text-xs font-display font-bold focus:outline-none focus:border-cyan-500"
+                  className={`${FIELD_CLS} w-full`}
                 >
                   {availableClubs
                     .filter((c) => c !== (save.club.customName || save.club.defaultName))
@@ -3898,17 +3873,14 @@ export function TransferHub({
                   <span>Wages paid by them</span>
                   <span className="tabular-nums text-cyan-600">{loanOutWagePercent}%</span>
                 </div>
-                <div className="grid grid-cols-3 gap-2">
+                <div className={`grid grid-cols-3 ${SEGMENT_GROUP_CLS}`}>
                   {[50, 75, 100].map((pct) => (
                     <button
                       key={pct}
                       type="button"
+                      aria-pressed={loanOutWagePercent === pct}
                       onClick={() => setLoanOutWagePercent(pct)}
-                      className={`py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        loanOutWagePercent === pct
-                          ? 'bg-cyan-600 text-white font-semibold shadow-xs'
-                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                      }`}
+                      className={`${segmentCls(loanOutWagePercent === pct)} tabular-nums`}
                     >
                       {pct}%
                     </button>
@@ -3961,14 +3933,14 @@ export function TransferHub({
             <header className="flex justify-between items-center border-b border-slate-100 pb-3 gap-2">
               <div className="min-w-0">
                 <Eyebrow>{negotiatingPlayer.isLegend ? 'Icon bid' : 'Make an offer'}</Eyebrow>
-                <h3 className="text-lg font-display font-semibold text-slate-900 truncate">
+                <h3 className="text-lg font-display font-semibold text-[var(--ink-primary)] truncate">
                   {negotiatingPlayer.name}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setNegotiatingPlayer(null)}
-                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                className={ICON_BTN_CLS}
                 title="Close modal"
                 aria-label="Close modal"
               >
@@ -3984,22 +3956,19 @@ export function TransferHub({
               const isLoan = Boolean(negotiatingPlayer.loanListed);
 
               return (
-                <div className="flex flex-wrap gap-1 p-1 bg-[var(--surface-subcard)] rounded-lg border border-[var(--border-subtle)]">
+                <div className={`flex flex-wrap ${SEGMENT_GROUP_CLS}`}>
                   {!isFA && (
                     <button
                       type="button"
                       onClick={() => setDealType('buy')}
-                      className={`flex-1 py-1.5 px-2 rounded-xl font-display font-semibold text-xs transition-all cursor-pointer ${
-                        dealType === 'buy'
-                          ? 'bg-white text-blue-600 shadow-xs'
-                          : 'text-slate-600 hover:text-slate-900'
-                      }`}
+                      aria-pressed={dealType === 'buy'}
+                      className={`flex-1 ${segmentCls(dealType === 'buy')}`}
                     >
                       Permanent
                     </button>
                   )}
                   {isFA && (
-                    <p className="flex-1 py-1.5 px-2 text-xs font-medium text-center text-[var(--ink-secondary)]">Free agent (no fee)</p>
+                    <p className="flex-1 min-h-10 px-3 flex items-center justify-center text-xs font-medium text-[var(--ink-secondary)]">Free agent (no fee)</p>
                   )}
                   {isExp && !isFA && (
                     <button
@@ -4007,13 +3976,8 @@ export function TransferHub({
                       disabled={!canBosmanNow}
                       onClick={() => canBosmanNow && setDealType('pre_contract')}
                       title={canBosmanNow ? 'Approach for free Bosman pre-contract' : 'Bosman approaches open January 1 (6 months before expiry)'}
-                      className={`flex-1 py-1.5 px-2 rounded-xl font-display font-semibold text-xs transition-all inline-flex items-center justify-center gap-1 ${
-                        !canBosmanNow
-                          ? 'text-slate-400 bg-slate-200/60 cursor-not-allowed'
-                          : dealType === 'pre_contract'
-                          ? 'bg-white text-amber-600 shadow-xs font-semibold cursor-pointer'
-                          : 'text-slate-600 hover:text-slate-900 cursor-pointer'
-                      }`}
+                      aria-pressed={dealType === 'pre_contract'}
+                      className={`flex-1 ${segmentCls(dealType === 'pre_contract')}`}
                     >
                       <IconClock className="w-3 h-3 shrink-0" />
                       <span>{canBosmanNow ? 'Bosman (£0)' : 'Bosman (Jan 1)'}</span>
@@ -4023,11 +3987,8 @@ export function TransferHub({
                     <button
                       type="button"
                       onClick={() => setDealType('loan')}
-                      className={`flex-1 py-1.5 px-2 rounded-xl font-display font-semibold text-xs transition-all cursor-pointer inline-flex items-center justify-center gap-1 ${
-                        dealType === 'loan'
-                          ? 'bg-white text-cyan-600 shadow-xs font-semibold'
-                          : 'text-slate-600 hover:text-slate-900'
-                      }`}
+                      aria-pressed={dealType === 'loan'}
+                      className={`flex-1 ${segmentCls(dealType === 'loan')}`}
                     >
                       <IconHandshake className="w-3 h-3 shrink-0" />
                       <span>Season loan</span>
@@ -4229,17 +4190,14 @@ export function TransferHub({
                   {/* Contract Length */}
                   <div className="space-y-1.5">
                     <span className="block text-slate-700 font-bold">Contract length</span>
-                    <div className="grid grid-cols-5 gap-2">
+                    <div className={`grid grid-cols-5 ${SEGMENT_GROUP_CLS}`}>
                       {[1, 2, 3, 4, 5].map((yrs) => (
                         <button
                           key={yrs}
                           type="button"
+                          aria-pressed={offeredContractYears === yrs}
                           onClick={() => setOfferedContractYears(yrs)}
-                          className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                            offeredContractYears === yrs
-                              ? 'bg-blue-600 text-white font-semibold shadow-sm'
-                              : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs'
-                          }`}
+                          className={`${segmentCls(offeredContractYears === yrs)} tabular-nums`}
                         >
                           {yrs}y
                         </button>
@@ -4250,17 +4208,14 @@ export function TransferHub({
                   {/* Promised Squad Role */}
                   <div className="space-y-1.5">
                     <span className="block text-slate-700 font-bold">Squad role</span>
-                    <div className="grid grid-cols-3 gap-1.5">
+                    <div className={`grid grid-cols-3 ${SEGMENT_GROUP_CLS}`}>
                       {(['crucial', 'important', 'squad', 'sporadic', 'prospect'] as SquadRole[]).map((role) => (
                         <button
                           key={role}
                           type="button"
+                          aria-pressed={offeredSquadRole === role}
                           onClick={() => setOfferedSquadRole(role)}
-                          className={`min-h-9 px-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer capitalize ${
-                            offeredSquadRole === role
-                              ? 'bg-blue-600 text-white font-semibold shadow-sm'
-                              : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs'
-                          }`}
+                          className={`${segmentCls(offeredSquadRole === role)} capitalize`}
                         >
                           {role}
                         </button>
@@ -4283,7 +4238,7 @@ export function TransferHub({
                           const raw = e.target.value.replace(/[^0-9]/g, '');
                           setOfferedSigningBonus(raw ? Number(raw) : 0);
                         }}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 tabular-nums text-xs focus:outline-none focus:border-blue-500 shadow-xs"
+                        className={`${FIELD_CLS} w-full tabular-nums`}
                       />
                     </div>
                     <div className="space-y-1">
@@ -4301,7 +4256,7 @@ export function TransferHub({
                           setOfferedReleaseClause(val > 0 ? val : undefined);
                         }}
                         placeholder="None"
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 tabular-nums text-xs focus:outline-none focus:border-blue-500 shadow-xs"
+                        className={`${FIELD_CLS} w-full tabular-nums`}
                       />
                     </div>
                   </div>
@@ -4499,14 +4454,14 @@ export function TransferHub({
           aria-modal="true"
           data-scrim="true"
           data-office-ui="true"
-          aria-label="Board Financial Petition"
+          aria-label="Board financial petition"
           className="fixed inset-0 bg-slate-950/40 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
         >
           <div className="office-floating-card rounded-xl max-w-lg w-full max-h-[90dvh] overflow-y-auto scrollbar-none p-5 sm:p-6 space-y-4 shadow-sm relative my-auto border border-white/80">
             <header className="flex justify-between items-center gap-3 border-b border-slate-100 pb-3">
               <div className="min-w-0">
                 <Eyebrow>Board petition</Eyebrow>
-                <h3 className="text-lg font-display font-semibold text-slate-900">
+                <h3 className="text-lg font-display font-semibold text-[var(--ink-primary)]">
                   {selectedPetitionType === 'deadline_day_marquee'
                     ? 'Emergency deadline day warchest'
                     : selectedPetitionType === 'injury_crisis'
@@ -4523,7 +4478,7 @@ export function TransferHub({
                   setPetitionResult(null);
                 }}
                 aria-label="Close petition modal"
-                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
+                className={ICON_BTN_CLS}
               >
                 <IconClose className="w-4 h-4" />
               </button>
@@ -4564,7 +4519,7 @@ export function TransferHub({
                       placeholder="e.g. a striker"
                       value={petitionTargetPlayer}
                       onChange={(e) => setPetitionTargetPlayer(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-blue-500 font-sans shadow-xs"
+                      className={`${FIELD_CLS} w-full`}
                     />
                   </div>
                 )}
@@ -4577,7 +4532,7 @@ export function TransferHub({
                     <select
                       value={petitionInjuredPlayerId}
                       onChange={(e) => setPetitionInjuredPlayerId(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-blue-500 font-sans shadow-xs"
+                      className={`${FIELD_CLS} w-full`}
                     >
                       {save.squad.filter((p) => p.injured).map((p) => (
                         <option key={p.id} value={p.id}>
@@ -4597,7 +4552,7 @@ export function TransferHub({
                     placeholder="Why the board should agree"
                     value={petitionJustification}
                     onChange={(e) => setPetitionJustification(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-900 focus:outline-none focus:border-blue-500 font-sans resize-none shadow-xs"
+                    className={`${FIELD_CLS} w-full py-2 resize-none`}
                   />
                 </div>
 
@@ -4616,7 +4571,7 @@ export function TransferHub({
                     {petitionSubmitting ? (
                       <>
                         <span className="inline-block w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full motion-safe:animate-spin" />
-                        <span>Board deliberating...</span>
+                        <span>Board deliberating…</span>
                       </>
                     ) : (
                       <>

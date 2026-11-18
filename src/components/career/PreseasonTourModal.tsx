@@ -118,7 +118,7 @@ export function PreseasonTourModal({
         <footer className="border-t border-[var(--border-subtle)] p-4 sm:p-5 flex justify-end">
           <Button
             variant="primary"
-            className="w-full sm:w-auto min-h-11"
+            className="w-full sm:w-auto"
             onClick={() => onSelectTour(selectedTourId, delegateToAssistant)}
           >
             Confirm {currentOption.title}

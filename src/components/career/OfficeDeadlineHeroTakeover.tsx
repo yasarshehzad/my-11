@@ -183,21 +183,19 @@ export function OfficeDeadlineHeroTakeover({
     { id: 'deadline', label: 'Final hour', time: '22:00' },
   ];
   const currentStepIdx = scheduleSteps.findIndex((s) => s.id === currentPhase);
-  const countLink =
-    'min-h-[40px] inline-flex items-baseline gap-1 text-sm font-medium text-[var(--ink-secondary)] hover:underline cursor-pointer';
   const fieldClass =
-    'w-full p-2.5 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] text-[var(--ink-primary)] text-sm focus:outline-blue-500';
+    'w-full min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] py-2 focus:outline-blue-500';
 
   return (
     <section
-      aria-label="Transfer Deadline Day"
+      aria-label="Transfer deadline day"
       data-office-ui="true"
       className="office-floating-card office-reveal-3 rounded-xl overflow-hidden relative select-none border border-[var(--border-subtle)] bg-[var(--surface-card)]"
     >
       <div className="p-3.5 sm:p-4 space-y-2">
         {/* Headline + time left */}
         <header className="flex items-center justify-between gap-2">
-          <h2 className="text-lg sm:text-xl font-display font-bold text-[var(--ink-primary)] tracking-tight min-w-0 truncate">
+          <h2 className="text-lg sm:text-xl font-display font-semibold text-[var(--ink-primary)] min-w-0 truncate">
             Deadline day <span className="font-semibold text-[var(--ink-secondary)]">· {meta.title}</span>
           </h2>
           <Tag tone="warning" className="shrink-0">
@@ -209,15 +207,13 @@ export function OfficeDeadlineHeroTakeover({
         </header>
 
         {/* Counts */}
-        <div className="flex flex-wrap items-center gap-x-5">
-          <button type="button" onClick={() => onNavigateToTransfers('incoming')} className={countLink}>
-            <span className="font-semibold text-base text-[var(--ink-primary)]">{pendingOffers.length}</span>
-            <span>incoming {pendingOffers.length === 1 ? 'bid' : 'bids'} &rsaquo;</span>
-          </button>
-          <button type="button" onClick={() => onNavigateToTransfers('shortlist')} className={countLink}>
-            <span className="font-semibold text-base text-[var(--ink-primary)]">{shortlistCount}</span>
-            <span>shortlisted &rsaquo;</span>
-          </button>
+        <div className="flex flex-wrap items-center -mx-4">
+          <Button variant="ghost" onClick={() => onNavigateToTransfers('incoming')}>
+            {pendingOffers.length} incoming {pendingOffers.length === 1 ? 'bid' : 'bids'} &rsaquo;
+          </Button>
+          <Button variant="ghost" onClick={() => onNavigateToTransfers('shortlist')}>
+            {shortlistCount} shortlisted &rsaquo;
+          </Button>
         </div>
 
         {urgentDecisionCount > 0 && (
@@ -229,7 +225,7 @@ export function OfficeDeadlineHeroTakeover({
               </span>
             </span>
             {onReviewUrgentDecisions && (
-              <Button variant="secondary" size="sm" onClick={onReviewUrgentDecisions} className="shrink-0 min-h-10">
+              <Button variant="secondary" onClick={onReviewUrgentDecisions} className="shrink-0">
                 Review &rsaquo;
               </Button>
             )}
@@ -242,7 +238,6 @@ export function OfficeDeadlineHeroTakeover({
           fullWidth
           data-office-ui="true"
           onClick={onAdvanceDeadlinePhase}
-          className="min-h-12 text-base"
         >
           <span className="whitespace-nowrap">Continue</span>
           <span className="text-sm font-medium truncate">
@@ -257,12 +252,11 @@ export function OfficeDeadlineHeroTakeover({
             variant="secondary"
             data-office-ui="true"
             onClick={() => onNavigateToTransfers('market')}
-            className="min-h-11 px-2.5"
           >
             <IconSearch className="w-3.5 h-3.5 text-[var(--ink-secondary)] shrink-0" />
             <span>Transfer market</span>
           </Button>
-          <Button variant="secondary" data-office-ui="true" onClick={handleOpenBoardModal} className="min-h-11 px-2.5">
+          <Button variant="secondary" data-office-ui="true" onClick={handleOpenBoardModal}>
             <IconBuilding className="w-3.5 h-3.5 text-[var(--ink-secondary)] shrink-0" />
             <span>Board funds</span>
           </Button>
@@ -275,7 +269,7 @@ export function OfficeDeadlineHeroTakeover({
             aria-expanded={scheduleOpen}
             aria-controls="deadline-day-schedule"
             onClick={() => setScheduleOpen((o) => !o)}
-            className="w-full min-h-[40px] flex items-center justify-between gap-2 text-xs font-semibold text-[var(--ink-secondary)] cursor-pointer"
+            className="w-full min-h-11 flex items-center justify-between gap-2 text-left text-sm font-semibold text-[var(--ink-primary)] cursor-pointer"
           >
             <span>{nextScheduled ? 'Schedule and next match' : 'Schedule'}</span>
             {scheduleOpen ? <IconChevronUp className="w-4 h-4" /> : <IconChevronDown className="w-4 h-4" />}
@@ -305,22 +299,17 @@ export function OfficeDeadlineHeroTakeover({
                   <span className="min-w-0 font-medium">
                     Matchday paused · {formatOfficeFixtureDate(nextScheduled.fixture.date)}
                   </span>
-                  <span className="flex items-center gap-3 shrink-0">
+                  <span className="flex items-center gap-1 shrink-0">
                     {onOpenMatchOverview && (
-                      <button
-                        type="button"
-                        onClick={() => onOpenMatchOverview(nextScheduled.fixture)}
-                        className="min-h-[40px] text-blue-700 font-semibold hover:underline cursor-pointer"
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => onOpenMatchOverview(nextScheduled.fixture)}>
                         Dossier &rsaquo;
-                      </button>
+                      </Button>
                     )}
                     {onPlayMatch && (
                       <Button
                         variant="secondary"
                         size="sm"
                         onClick={() => onPlayMatch(nextScheduled.fixture)}
-                        className="min-h-10"
                         title="Prepare and play match if scheduled for today"
                       >
                         Play
@@ -360,7 +349,7 @@ export function OfficeDeadlineHeroTakeover({
               <button
                 type="button"
                 onClick={() => setBoardModalOpen(false)}
-                className="w-9 h-9 rounded-full hover:bg-[var(--surface-subcard)] text-[var(--ink-secondary)] flex items-center justify-center cursor-pointer shrink-0"
+                className="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--ink-secondary)] hover:bg-[var(--surface-subcard)] hover:text-[var(--ink-primary)] transition-colors cursor-pointer shrink-0"
                 aria-label="Close"
               >
                 <IconClose className="w-4 h-4" />

@@ -15,11 +15,12 @@ import { players } from '../../data/players';
 import { ensurePlayerBiosLoaded } from '../../career/playerBioDatabase';
 import { parseH2HChallengeFromUrl, parseChallengeFromUrl } from '../../utils/challengeUrl';
 import { IconArrowLeft } from '@/components/career/GameIcons';
+import { Button } from '@/components/ui';
 
 function ScreenFallback() {
   return (
     <div className="office-floating-card rounded-xl p-8 text-center text-sm text-[var(--ink-muted)]">
-      Loading view...
+      Loading view…
     </div>
   );
 }
@@ -147,15 +148,10 @@ function DraftPageContent() {
       {/* Draft Mode Floating MY-11 Header */}
       <header className="office-floating-card w-full max-w-5xl mx-auto rounded-xl p-3 sm:p-4 mb-4 flex items-center justify-between gap-2">
         <div className="flex items-center gap-3 min-w-0">
-          <button
-            type="button"
-            onClick={handleReturnHome}
-            title="Return to home"
-            className="min-h-10 px-3 rounded-lg bg-[var(--surface-card)] border border-[var(--border-crisp)] text-sm font-semibold text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
-          >
+          <Button variant="secondary" onClick={handleReturnHome} title="Return to home" className="shrink-0">
             <IconArrowLeft className="w-3.5 h-3.5 shrink-0" />
             <span>Home</span>
-          </button>
+          </Button>
           <span className="min-w-0 text-sm text-[var(--ink-secondary)]">
             <span className="font-semibold text-[var(--ink-primary)]">Draft</span>
             {game.streakStats.currentDailyStreak > 0 && (
@@ -177,6 +173,7 @@ function DraftPageContent() {
 
           {/* History Screen Trigger Button */}
           <button
+            type="button"
             onClick={() => {
               if (game.phase === 'history') {
                 game.handleStartDraft();
@@ -186,7 +183,7 @@ function DraftPageContent() {
             }}
             aria-label="View squad history and personal bests"
             title="View squad history and personal bests"
-            className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] cursor-pointer transition-colors"
+            className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] cursor-pointer transition-colors shrink-0"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 8v4l3 3" />
@@ -196,10 +193,11 @@ function DraftPageContent() {
 
           {/* Help Tutorial Trigger Button */}
           <button
+            type="button"
             onClick={() => setShowTutorial(true)}
             aria-label="How to play and game guides"
             title="How to play and game guides"
-            className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] cursor-pointer transition-colors"
+            className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] cursor-pointer transition-colors shrink-0"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="9" />
@@ -222,13 +220,9 @@ function DraftPageContent() {
                 {game.activeH2HChallenge.clubName} · {game.activeH2HChallenge.formation} · {game.activeH2HChallenge.overall} OVR
               </div>
             </div>
-            <button
-              type="button"
-              onClick={game.handleDismissH2HChallenge}
-              className="min-h-8 px-3 rounded-lg bg-[var(--surface-card)] border border-[var(--border-crisp)] text-xs font-semibold text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] cursor-pointer shrink-0"
-            >
+            <Button variant="secondary" size="sm" onClick={game.handleDismissH2HChallenge} className="shrink-0">
               Cancel
-            </button>
+            </Button>
           </div>
         )}
 
@@ -381,7 +375,7 @@ export default function DraftPage() {
     <Suspense
       fallback={
         <div className="min-h-screen my11-canvas text-[var(--office-text-primary)] flex items-center justify-center font-display font-semibold text-sm">
-          Loading draft mode...
+          Loading draft mode…
         </div>
       }
     >

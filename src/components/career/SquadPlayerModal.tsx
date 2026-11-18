@@ -24,7 +24,7 @@ import { EaFcCard } from './EaFcCard';
 import { PositionMap } from './PositionMap';
 import { ContractRenewalModal } from './transfers/ContractRenewalModal';
 import { getInitialClubTactics } from '../../career/tactics';
-import { Button, Eyebrow, Tag } from '@/components/ui';
+import { Button, Eyebrow, SectionHeader, StatRow, Tag } from '@/components/ui';
 import {
   IconBarChart,
   IconSwap,
@@ -258,7 +258,7 @@ export function SquadPlayerModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-10 h-10 rounded-full bg-[var(--surface-card)] hover:bg-[var(--surface-subcard)] border border-[var(--border-subtle)] text-[var(--ink-secondary)] flex items-center justify-center transition-colors cursor-pointer shrink-0"
+            className="w-10 h-10 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)] hover:bg-[var(--surface-subcard)] text-[var(--ink-secondary)] flex items-center justify-center transition-colors cursor-pointer shrink-0"
             aria-label="Close player profile"
           >
             <IconClose className="w-4 h-4" />
@@ -414,7 +414,7 @@ export function SquadPlayerModal({
               return (
                 <div className="space-y-5 text-xs">
                   <section className="space-y-2">
-                    <h4 className="text-sm font-display font-semibold text-[var(--ink-primary)]">Positions</h4>
+                    <SectionHeader as="h4" title="Positions" />
                     <PositionMap player={player} />
                   </section>
                   <div className="grid grid-cols-2 gap-x-5 gap-y-3.5">
@@ -442,14 +442,11 @@ export function SquadPlayerModal({
                     ))}
                   </div>
 
-                  <dl className="divide-y divide-[var(--border-subtle)] border-t border-[var(--border-subtle)]">
+                  <div className="divide-y divide-[var(--border-subtle)] border-t border-[var(--border-subtle)]">
                     {roleRows.map(([label, value]) => (
-                      <div key={label} className="flex justify-between items-baseline gap-3 py-2.5">
-                        <dt className="text-[var(--ink-secondary)]">{label}</dt>
-                        <dd className="font-semibold text-[var(--ink-primary)] text-right">{value}</dd>
-                      </div>
+                      <StatRow key={label} label={label} value={value} />
                     ))}
-                  </dl>
+                  </div>
                 </div>
               );
             })()
@@ -468,12 +465,11 @@ export function SquadPlayerModal({
               return (
                 <div className="space-y-4 text-xs">
                   {/* Current season */}
-                  <div className="flex items-center justify-between gap-2">
-                    <h4 className="text-sm font-display font-semibold text-[var(--ink-primary)] truncate min-w-0">
-                      Season {save.season?.seasonNumber || 1} · {cur.seasonLabel}
-                    </h4>
-                    <span className="text-xs text-[var(--ink-muted)] shrink-0">{cur.competition}</span>
-                  </div>
+                  <SectionHeader
+                    as="h4"
+                    title={<>Season {save.season?.seasonNumber || 1} · {cur.seasonLabel}</>}
+                    action={<span className="text-xs text-[var(--ink-muted)]">{cur.competition}</span>}
+                  />
 
                   <dl className="grid grid-cols-4 gap-2 text-center">
                     {headline.map(([label, value]) => (
@@ -501,9 +497,7 @@ export function SquadPlayerModal({
 
                   {/* Career history */}
                   <div className="space-y-1.5">
-                    <h4 className="font-display font-semibold text-[var(--ink-primary)] text-sm">
-                      Career history
-                    </h4>
+                    <SectionHeader as="h4" title="Career history" />
                     <table className="w-full text-left text-xs border-t border-[var(--border-subtle)]">
                       <thead className="text-2xs font-medium text-[var(--ink-muted)] border-b border-[var(--border-subtle)]">
                         <tr>
@@ -688,14 +682,16 @@ export function SquadPlayerModal({
                 if (playerBids.length === 0) return null;
                 return (
                   <div className="pt-3 border-t border-[var(--border-subtle)]">
-                    <div className="flex items-baseline justify-between gap-2">
-                      <h4 className="text-sm font-display font-semibold text-[var(--ink-primary)]">
-                        Bids <span className="font-sans font-normal text-[var(--ink-muted)]">{playerBids.length}</span>
-                      </h4>
-                      {player.agentBrokeringActive && (
-                        <span className="text-xs text-[var(--ink-muted)]">5% broker fee</span>
-                      )}
-                    </div>
+                    <SectionHeader
+                      as="h4"
+                      title="Bids"
+                      meta={playerBids.length}
+                      action={
+                        player.agentBrokeringActive ? (
+                          <span className="text-xs text-[var(--ink-muted)]">5% broker fee</span>
+                        ) : undefined
+                      }
+                    />
                     <div className="divide-y divide-[var(--border-subtle)]">
                       {playerBids.map((bid) => (
                         <div key={bid.id} className="flex items-center justify-between gap-2 py-2">

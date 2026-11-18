@@ -142,7 +142,7 @@ export default function DraftedXIGame() {
             <path d="M9 12l2 2 4-4" stroke="#047857" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           <div className="text-left">
-            <div className="text-base sm:text-lg font-display font-semibold tracking-tight text-[var(--ink-primary)]">
+            <div className="text-base sm:text-lg font-display font-semibold text-[var(--ink-primary)]">
               MY-11
             </div>
             <div className="text-xs text-[var(--ink-muted)]">
@@ -156,7 +156,7 @@ export default function DraftedXIGame() {
           <button
             type="button"
             onClick={() => router.push('/draft?phase=history')}
-            aria-label="View Squad History & Personal Bests"
+            aria-label="View squad history and personal bests"
             title="Squad history and personal bests"
             className="w-10 h-10 rounded-lg flex items-center justify-center border border-[var(--border-crisp)] bg-[var(--surface-card)] hover:bg-[var(--surface-subcard)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] cursor-pointer transition-colors"
           >
@@ -170,7 +170,7 @@ export default function DraftedXIGame() {
           <button
             type="button"
             onClick={handleOpenHelpModal}
-            aria-label="How to Play & Game Guides"
+            aria-label="How to play and game guides"
             title="How to play"
             className="w-10 h-10 rounded-lg flex items-center justify-center border border-[var(--border-crisp)] bg-[var(--surface-card)] hover:bg-[var(--surface-subcard)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] cursor-pointer transition-colors"
           >

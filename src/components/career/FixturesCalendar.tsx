@@ -217,10 +217,10 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
           {!isReleaseDateReached ? (
             /* BEFORE RELEASE DAY (July 1 - July 7) */
             <div className="office-floating-card rounded-xl p-5 space-y-3 text-left">
-              <h3 className="text-base font-display font-semibold text-[var(--ink-primary)]">
-                Fixtures released on 8 July {save.season.yearStart}
-              </h3>
-              <p className="text-sm text-[var(--ink-secondary)]">Advance through pre-season from the Office.</p>
+              <SectionHeader
+                title={<>Fixtures released on 8 July {save.season.yearStart}</>}
+                description="Advance through pre-season from the Office."
+              />
               {onNavigateOffice && (
                 <Button variant="primary" onClick={onNavigateOffice}>
                   <span>Go to Office</span>
@@ -262,14 +262,15 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
           {/* Pre-Season Tour Friendlies (if scheduled in July) */}
           {preseasonCup && preseasonCup.fixtures && preseasonCup.fixtures.length > 0 && (
             <div className="office-floating-card rounded-xl p-3.5 sm:p-4 space-y-1">
-              <div className="flex items-baseline justify-between gap-2">
-                <h4 className="font-display font-semibold text-sm text-[var(--ink-primary)] truncate">
-                  {preseasonCup.name} · Friendlies
-                </h4>
-                <span className="text-xs text-[var(--ink-muted)] tabular-nums whitespace-nowrap shrink-0">
-                  {preseasonCup.fixtures.filter((f) => f.played).length} of {preseasonCup.fixtures.length} played
-                </span>
-              </div>
+              <SectionHeader
+                as="h4"
+                title={<>{preseasonCup.name} · Friendlies</>}
+                action={
+                  <span className="text-xs text-[var(--ink-muted)] tabular-nums whitespace-nowrap">
+                    {preseasonCup.fixtures.filter((f) => f.played).length} of {preseasonCup.fixtures.length} played
+                  </span>
+                }
+              />
 
               <div className="divide-y divide-[var(--border-subtle)]">
                 {preseasonCup.fixtures.map((fix) => {
@@ -345,8 +346,8 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
                   onChange={(e) =>
                     setSelectedRound(e.target.value === 'all' ? 'all' : parseInt(e.target.value))
                   }
-                  className="min-h-9 bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg px-2 text-xs text-[var(--ink-primary)] focus:outline-none focus:border-blue-500 font-medium cursor-pointer"
-                  aria-label="Filter by Matchday Round"
+                  className="min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] cursor-pointer focus:outline-none focus:border-blue-500"
+                  aria-label="Filter by matchday"
                 >
                   <option value="all">All rounds</option>
                   {Array.from({ length: 38 }, (_, i) => i + 1).map((r) => (
@@ -360,7 +361,7 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
               <select
                 value={filterScope}
                 onChange={(e) => setFilterScope(e.target.value === 'all' ? 'all' : 'my_club')}
-                className="min-h-9 bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg px-2 text-xs text-[var(--ink-primary)] focus:outline-none focus:border-blue-500 font-medium cursor-pointer"
+                className="min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] cursor-pointer focus:outline-none focus:border-blue-500"
                 aria-label="Show fixtures for"
               >
                 <option value="my_club">My club</option>
@@ -407,8 +408,6 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
                 const isExpanded = expandedFixtureIds.has(fixture.id);
                 const openOverview = () =>
                   setMatchOverviewModal({ type: isPlayed ? 'result' : 'preview', fixture });
-                const trailingActionClass =
-                  'inline-flex items-center gap-1 min-h-8 px-2 -mr-2 text-blue-700 hover:text-blue-800 font-medium text-xs cursor-pointer';
 
                 return (
                   <article
@@ -486,19 +485,20 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
                       </div>
 
                       {hasScorers ? (
-                        <button
-                          type="button"
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => toggleFixtureExpanded(fixture.id)}
                           aria-expanded={isExpanded}
-                          className={`${trailingActionClass} shrink-0`}
+                          className="shrink-0 -mr-2"
                         >
                           <span>Details</span>
                           <IconChevronDown className={`w-3.5 h-3.5 ${isExpanded ? 'rotate-180' : ''}`} />
-                        </button>
+                        </Button>
                       ) : isPlayed || isUpcoming ? (
-                        <button type="button" onClick={openOverview} className={`${trailingActionClass} shrink-0`}>
+                        <Button variant="ghost" size="sm" onClick={openOverview} className="shrink-0 -mr-2">
                           {isPlayed ? 'Stats' : 'Dossier'}
-                        </button>
+                        </Button>
                       ) : null}
                     </div>
 
@@ -512,9 +512,9 @@ export function FixturesCalendar({ save, onUpdateSave, onNotification, onNavigat
                             </span>
                           ))}
                         </div>
-                        <button type="button" onClick={openOverview} className={trailingActionClass.replace(' -mr-2', ' -ml-2')}>
+                        <Button variant="ghost" size="sm" onClick={openOverview} className="-ml-2">
                           Full match stats
-                        </button>
+                        </Button>
                       </div>
                     )}
                   </article>

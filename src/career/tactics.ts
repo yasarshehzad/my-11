@@ -479,20 +479,27 @@ export function pickDefaultSetPieceTakers(squad: CareerPlayer[]): {
   const pool = outfield.length > 0 ? outfield : squad;
   if (pool.length === 0) return {};
 
+  // Players without detailed stats get an estimate from their overall and position,
+  // so a top-rated centre-back is not picked to take penalties and corners.
+  const estimate = (p: CareerPlayer, stat: 'sho' | 'pas' | 'dri'): number => {
+    const known = p.faceStats?.[stat];
+    if (typeof known === 'number') return known;
+    const pos = p.position.toUpperCase();
+    const offsets: Record<'sho' | 'pas' | 'dri', Record<string, number>> = {
+      sho: { ST: 3, CF: 3, LW: 0, RW: 0, CAM: 0, LM: -3, RM: -3, CM: -5, CDM: -12, LB: -16, RB: -16, LWB: -15, RWB: -15, CB: -22 },
+      pas: { CAM: 3, CM: 3, CDM: 1, LM: 0, RM: 0, LW: -1, RW: -1, LB: -3, RB: -3, LWB: -3, RWB: -3, CF: -3, ST: -7, CB: -9 },
+      dri: { LW: 3, RW: 3, CAM: 3, LM: 2, RM: 2, CF: 1, CM: 0, ST: -1, LWB: -3, RWB: -3, LB: -5, RB: -5, CDM: -5, CB: -15 },
+    };
+    return p.rating + (offsets[stat][pos] ?? -5);
+  };
   const scorePen = (p: CareerPlayer) => {
-    const sho = p.faceStats?.sho ?? p.rating;
-    const pas = p.faceStats?.pas ?? p.rating;
-    return sho * 0.6 + p.rating * 0.35 + pas * 0.05;
+    return estimate(p, 'sho') * 0.6 + p.rating * 0.35 + estimate(p, 'pas') * 0.05;
   };
   const scoreFk = (p: CareerPlayer) => {
-    const sho = p.faceStats?.sho ?? p.rating;
-    const pas = p.faceStats?.pas ?? p.rating;
-    return sho * 0.5 + pas * 0.4 + p.rating * 0.1;
+    return estimate(p, 'sho') * 0.5 + estimate(p, 'pas') * 0.4 + p.rating * 0.1;
   };
   const scoreCorner = (p: CareerPlayer) => {
-    const pas = p.faceStats?.pas ?? p.rating;
-    const dri = p.faceStats?.dri ?? p.rating;
-    return pas * 0.65 + dri * 0.25 + p.rating * 0.1;
+    return estimate(p, 'pas') * 0.65 + estimate(p, 'dri') * 0.25 + p.rating * 0.1;
   };
 
   const penaltyTaker = [...pool].sort((a, b) => scorePen(b) - scorePen(a))[0];

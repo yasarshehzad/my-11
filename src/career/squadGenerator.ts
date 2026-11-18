@@ -217,7 +217,7 @@ export function generateClubSquad(club: Club, season: DatabaseSeason = '2026/27'
 
       const cleanName = clubCard.displayName.replace(/\s+\d{2}\/\d{2}$/, '');
       const age = slot.role === 'starter' ? 24 + (counter % 7) : 20 + (counter % 12);
-      const rating = Math.min(96, Math.max(70, clubCard.rating));
+      const rating = Math.min(96, Math.max(50, clubCard.rating));
       const value = calculatePlayerValue(rating, age, slot.pos);
       const wageWeekly = calculateWeeklyWage(rating, value);
       const potential = Math.max(rating, rating + (age <= 21 ? 6 : age <= 24 ? 3 : 0));

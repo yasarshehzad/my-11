@@ -178,7 +178,7 @@ export function SquadRegistrationModal({
             placeholder="Search players"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 min-w-0 h-10 bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg px-3 text-sm text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:border-blue-500"
+            className="flex-1 min-w-0 min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:border-blue-500"
           />
           <Button onClick={handleAutoRegisterTop25} className="shrink-0">
             Top 25
@@ -189,14 +189,14 @@ export function SquadRegistrationModal({
         </div>
 
         {/* POSITION FILTER + U21 DISCLOSURE */}
-        <nav aria-label="Senior Position Filters" data-no-swipe="true" className="px-3 sm:px-4 py-2 border-b border-[var(--border-subtle)] flex gap-1 overflow-x-auto scrollbar-none text-xs shrink-0">
+        <nav aria-label="Senior position filters" data-no-swipe="true" className="px-3 sm:px-4 py-2 border-b border-[var(--border-subtle)] flex gap-1 overflow-x-auto scrollbar-none text-xs shrink-0">
           {(['ALL', 'GK', 'DEF', 'MID', 'FWD'] as const).map((cat) => (
             <button
               key={cat}
               type="button"
               aria-pressed={filterPos === cat}
               onClick={() => setFilterPos(cat)}
-              className={`h-9 px-2.5 rounded-lg font-semibold text-xs cursor-pointer transition-colors shrink-0 ${
+              className={`min-h-10 px-2.5 rounded-lg font-semibold text-xs cursor-pointer transition-colors shrink-0 ${
                 filterPos === cat ? 'office-nav-tab-active' : 'office-nav-tab-inactive'
               }`}
             >
@@ -207,7 +207,7 @@ export function SquadRegistrationModal({
             type="button"
             aria-expanded={showU21List}
             onClick={() => setShowU21List((prev) => !prev)}
-            className={`h-9 px-2.5 rounded-lg font-semibold text-xs cursor-pointer ml-auto transition-colors flex items-center gap-1 shrink-0 ${
+            className={`min-h-10 px-2.5 rounded-lg font-semibold text-xs cursor-pointer ml-auto transition-colors flex items-center gap-1 shrink-0 ${
               showU21List ? 'office-nav-tab-active' : 'office-nav-tab-inactive'
             }`}
           >
@@ -301,6 +301,7 @@ export function SquadRegistrationModal({
                         togglePlayer(player.id);
                       }}
                       disabled={atCapacity}
+                      aria-pressed={isSelected}
                       className={`min-h-10 px-3 rounded-lg font-semibold text-xs transition-colors cursor-pointer inline-flex items-center gap-1 border ${
                         isSelected
                           ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
@@ -333,7 +334,7 @@ export function SquadRegistrationModal({
             Cancel
           </Button>
 
-          <Button variant="primary" onClick={handleSave} disabled={isOverLimit} className="px-5">
+          <Button variant="primary" onClick={handleSave} disabled={isOverLimit}>
             Confirm registration
           </Button>
         </footer>

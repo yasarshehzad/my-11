@@ -89,7 +89,7 @@ export function CareerSettingsTab({
     'office-floating-card rounded-xl p-4 sm:p-5 space-y-3 border border-[var(--border-subtle)] bg-[var(--surface-card)]';
   const fieldLabelClass = 'block text-xs font-medium text-[var(--ink-secondary)] mb-1';
   const selectClass =
-    'w-full min-h-[40px] bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg px-2.5 text-sm text-[var(--ink-primary)] focus:outline-none focus:border-[#1d5eff]';
+    'w-full min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] focus:outline-none focus:border-[#1d5eff] focus:ring-2 focus:ring-blue-100';
 
   const ruleToggles: { key: 'boardCanSack' | 'retryMatch' | 'homegrownRule' | 'financialPenalties'; label: string; hint?: string }[] = [
     { key: 'boardCanSack', label: 'Board can sack you' },
@@ -100,7 +100,7 @@ export function CareerSettingsTab({
 
   return (
     <div className="max-w-2xl mx-auto w-full space-y-4">
-      <h3 className="text-xl sm:text-2xl font-display font-bold text-[var(--ink-primary)] tracking-tight">
+      <h3 className="text-xl sm:text-2xl font-display font-semibold text-[var(--ink-primary)]">
         Career settings
       </h3>
 
@@ -117,7 +117,7 @@ export function CareerSettingsTab({
               value={editingClubName}
               onChange={(e) => onChangeEditingClubName(e.target.value)}
               placeholder={save.club.defaultName}
-              className="flex-1 min-w-0 min-h-[40px] bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg px-3 text-sm text-[var(--ink-primary)] focus:outline-none focus:border-[#1d5eff] focus:ring-2 focus:ring-blue-100"
+              className="flex-1 min-w-0 min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] focus:outline-none focus:border-[#1d5eff] focus:ring-2 focus:ring-blue-100"
             />
             <Button
               variant="secondary"
@@ -146,7 +146,7 @@ export function CareerSettingsTab({
             aria-checked={sfxEnabled}
             aria-label="Sound effects"
             onClick={onToggleSfx}
-            className={`min-h-[40px] min-w-16 px-3.5 rounded-lg font-semibold text-sm shrink-0 transition-colors cursor-pointer border ${
+            className={`min-h-10 min-w-16 px-4 rounded-lg font-semibold text-sm shrink-0 transition-colors cursor-pointer border ${
               sfxEnabled
                 ? 'bg-[#1d5eff] text-white border-[#1d5eff]'
                 : 'bg-[var(--surface-card)] text-[var(--ink-secondary)] border-[var(--border-crisp)] hover:text-[var(--ink-primary)]'
@@ -274,7 +274,7 @@ export function CareerSettingsTab({
           {ruleToggles.map((rule) => (
             <label
               key={rule.key}
-              className={`flex justify-between items-center gap-3 min-h-[44px] py-1.5 ${
+              className={`flex justify-between items-center gap-3 min-h-11 py-1.5 ${
                 save.settings.locked ? 'opacity-70' : 'cursor-pointer'
               }`}
             >
@@ -330,14 +330,10 @@ export function CareerSettingsTab({
           </Button>
 
           {!showResetConfirm ? (
-            <button
-              type="button"
-              onClick={() => setShowResetConfirm(true)}
-              className="min-h-[40px] px-2 text-rose-700 hover:text-rose-800 hover:underline font-medium text-sm cursor-pointer inline-flex items-center gap-1.5"
-            >
+            <Button variant="danger" onClick={() => setShowResetConfirm(true)}>
               <IconAlert className="w-3.5 h-3.5 shrink-0" />
-              <span>Reset save slot...</span>
-            </button>
+              <span>Reset save slot…</span>
+            </Button>
           ) : (
             <div className="w-full bg-rose-50 rounded-lg p-3 space-y-2">
               <p className="text-sm font-medium text-rose-800">
@@ -358,7 +354,7 @@ export function CareerSettingsTab({
 
       {/* Page-level save: covers club name, units and rules */}
       <div className="sticky bottom-2 z-20">
-        <Button variant="primary" fullWidth data-office-ui="true" onClick={onSaveSettings} className="min-h-12">
+        <Button variant="primary" fullWidth data-office-ui="true" onClick={onSaveSettings}>
           Save changes
         </Button>
       </div>

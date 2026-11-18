@@ -54,7 +54,7 @@ export function LeagueTable({
   );
 
   return (
-    <section id="league-table-section" data-office-ui="true" aria-label="League Standings and Player Stats" className="space-y-3.5 scroll-mt-20 w-full">
+    <section id="league-table-section" data-office-ui="true" aria-label="League standings and player stats" className="space-y-3.5 scroll-mt-20 w-full">
       {/* Sub-tab Switcher: Standings vs Player Stats Leaderboards */}
       <nav aria-label="League navigation" className="flex items-center gap-4 px-1 border-b border-[var(--border-subtle)] overflow-x-auto no-scrollbar">
         {SUB_TABS.map((tab) => (

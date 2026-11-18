@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { IconClose } from './career/GameIcons';
-import { Button } from '@/components/ui';
+import { Button, SectionHeader } from '@/components/ui';
 
 interface GuideStep {
   title: string;
@@ -123,7 +123,7 @@ export function HowToPlayModal({
             type="button"
             onClick={() => onClose(false)}
             aria-label="Close modal"
-            className="w-10 h-10 rounded-lg text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] flex items-center justify-center transition-colors cursor-pointer shrink-0"
+            className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] cursor-pointer transition-colors shrink-0"
           >
             <IconClose className="w-4 h-4" />
           </button>
@@ -136,10 +136,10 @@ export function HowToPlayModal({
               type="button"
               onClick={() => setActiveTab('draft')}
               aria-pressed={activeTab === 'draft'}
-              className={`flex-1 min-h-10 px-3 rounded-md flex items-center justify-center transition-colors cursor-pointer ${
+              className={`flex-1 min-h-10 px-3 rounded-md border transition-colors cursor-pointer inline-flex items-center justify-center ${
                 activeTab === 'draft'
-                  ? 'bg-[var(--surface-elevated)] text-[var(--ink-primary)]'
-                  : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
+                  ? 'bg-[var(--surface-card)] text-[var(--ink-primary)] border-[var(--border-crisp)]'
+                  : 'border-transparent text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
               }`}
             >
               Draft mode
@@ -148,10 +148,10 @@ export function HowToPlayModal({
               type="button"
               onClick={() => setActiveTab('career')}
               aria-pressed={activeTab === 'career'}
-              className={`flex-1 min-h-10 px-3 rounded-md flex items-center justify-center transition-colors cursor-pointer ${
+              className={`flex-1 min-h-10 px-3 rounded-md border transition-colors cursor-pointer inline-flex items-center justify-center ${
                 activeTab === 'career'
-                  ? 'bg-[var(--surface-elevated)] text-[var(--ink-primary)]'
-                  : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
+                  ? 'bg-[var(--surface-card)] text-[var(--ink-primary)] border-[var(--border-crisp)]'
+                  : 'border-transparent text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
               }`}
             >
               Career mode
@@ -166,10 +166,7 @@ export function HowToPlayModal({
               <span className="w-4 shrink-0 text-sm font-display font-semibold text-[var(--ink-muted)] tabular-nums">
                 {i + 1}
               </span>
-              <div className="min-w-0">
-                <h4 className="text-sm font-semibold text-[var(--ink-primary)]">{step.title}</h4>
-                <p className="text-sm text-[var(--ink-secondary)] leading-relaxed mt-0.5">{step.body}</p>
-              </div>
+              <SectionHeader as="h4" title={step.title} description={step.body} className="min-w-0" />
             </li>
           ))}
         </ol>
@@ -190,7 +187,7 @@ export function HowToPlayModal({
             </label>
           )}
 
-          <Button variant="primary" fullWidth onClick={handleAction} className="min-h-12">
+          <Button variant="primary" fullWidth onClick={handleAction}>
             {mode === 'all'
               ? 'Got it'
               : activeTab === 'draft'

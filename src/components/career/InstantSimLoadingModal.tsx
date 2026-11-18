@@ -58,9 +58,9 @@ export function InstantSimLoadingModal({
   }, [durationMs, onComplete]);
 
   const phases = [
-    { text: 'Simulating tactical matchups and early pressure...', minute: `${matchMinute}'` },
-    { text: 'Analysing shot quality, key passes and defensive duels...', minute: `${matchMinute}'` },
-    { text: 'Final whistle. Calculating match stats and player ratings...', minute: 'FT' },
+    { text: 'Simulating tactical matchups and early pressure…', minute: `${matchMinute}'` },
+    { text: 'Analysing shot quality, key passes and defensive duels…', minute: `${matchMinute}'` },
+    { text: 'Final whistle. Calculating match stats and player ratings…', minute: 'FT' },
   ];
 
   const currentPhase = phases[phaseIndex] || phases[0];
@@ -83,7 +83,7 @@ export function InstantSimLoadingModal({
       >
         <header className="space-y-1 border-b border-[var(--border-subtle)] pb-4">
           <Eyebrow>Simulating matchday</Eyebrow>
-          <h2 className="text-sm sm:text-base font-display font-semibold text-[var(--ink-primary)] tracking-tight">
+          <h2 className="text-sm sm:text-base font-display font-semibold text-[var(--ink-primary)]">
             {competitionTitle} · {roundTitle}
           </h2>
         </header>
@@ -159,7 +159,7 @@ export function InstantSimLoadingModal({
         <section className="space-y-3">
           <div className="w-full h-2 bg-[var(--surface-elevated)] rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#1d5eff] rounded-full transition-all duration-300 ease-out motion-reduce:transition-none"
+              className="h-full bg-[#1d5eff] rounded-full transition-[width] duration-300 ease-out motion-reduce:transition-none"
               style={{ width: `${progress}%` }}
             />
           </div>

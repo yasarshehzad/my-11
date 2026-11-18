@@ -16,7 +16,7 @@ import {
   IconStar,
   IconUser,
 } from '../GameIcons';
-import { Button, Eyebrow, Tag } from '@/components/ui';
+import { Button, Eyebrow, StatRow, Tag } from '@/components/ui';
 
 function capitalise(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
@@ -131,7 +131,7 @@ export function ScoutingDossierModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-9 h-9 rounded-full hover:bg-[var(--surface-subcard)] text-[var(--ink-secondary)] flex items-center justify-center transition-colors cursor-pointer shrink-0"
+            className="w-10 h-10 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)] hover:bg-[var(--surface-subcard)] text-[var(--ink-secondary)] flex items-center justify-center transition-colors cursor-pointer shrink-0"
             title="Close profile"
             aria-label="Close modal"
           >
@@ -240,7 +240,7 @@ export function ScoutingDossierModal({
                 ))}
               </div>
 
-              <dl className="border-t border-[var(--border-subtle)] pt-3 space-y-2 text-xs">
+              <div className="border-t border-[var(--border-subtle)] pt-1.5">
                 {[
                   ['Positions', (player.naturalPositions || [player.position]).join(', ')],
                   [
@@ -250,12 +250,9 @@ export function ScoutingDossierModal({
                   ['Homegrown', player.isHomegrown ? 'Yes' : 'No'],
                   ['Rarity', capitalise(player.rarity || 'Standard')],
                 ].map(([label, value]) => (
-                  <div key={label} className="flex items-baseline justify-between gap-3">
-                    <dt className="text-[var(--ink-secondary)] shrink-0">{label}</dt>
-                    <dd className="font-medium text-[var(--ink-primary)] text-right">{value}</dd>
-                  </div>
+                  <StatRow key={label} label={label} value={value} />
                 ))}
-              </dl>
+              </div>
             </div>
           )}
 
@@ -277,7 +274,7 @@ export function ScoutingDossierModal({
                   </div>
                 </div>
 
-                <dl className="border-t border-[var(--border-subtle)] pt-3 space-y-2 text-xs">
+                <div className="border-t border-[var(--border-subtle)] pt-1.5">
                   {[
                     ['Desired term', `${pref.preferredContractYears} ${pref.preferredContractYears === 1 ? 'year' : 'years'}`],
                     ['Expected role', capitalise(pref.expectedSquadRole)],
@@ -296,12 +293,9 @@ export function ScoutingDossierModal({
                         : 'Standard transfer bid',
                     ],
                   ].map(([label, value]) => (
-                    <div key={label} className="flex items-baseline justify-between gap-3">
-                      <dt className="text-[var(--ink-secondary)] shrink-0">{label}</dt>
-                      <dd className="font-medium text-[var(--ink-primary)] text-right tabular-nums">{value}</dd>
-                    </div>
+                    <StatRow key={label} label={label} value={value} />
                   ))}
-                </dl>
+                </div>
               </div>
 
               {windowIsOpen ? (
@@ -313,13 +307,12 @@ export function ScoutingDossierModal({
                     onStartNegotiation(player);
                   }}
                   disabled={isSquadFull}
-                  className="min-h-11"
                 >
                   <IconBriefcase className="w-3.5 h-3.5" />
                   <span>{isSquadFull ? 'Squad full' : isLegend ? 'Negotiate deal' : 'Make offer'}</span>
                 </Button>
               ) : (
-                <Button variant="secondary" fullWidth disabled className="min-h-11 select-none">
+                <Button variant="secondary" fullWidth disabled className="select-none">
                   <IconLock className="w-3.5 h-3.5" />
                   <span>Bids locked until window opens</span>
                 </Button>
@@ -346,10 +339,9 @@ export function ScoutingDossierModal({
                 key={t.id}
                 type="button"
                 onClick={() => setProfileTab(t.id)}
-                className={`min-h-11 px-2 rounded-lg text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
-                  active
-                    ? 'office-nav-tab-active font-semibold'
-                    : 'font-medium text-[var(--ink-secondary)] border border-transparent hover:bg-[var(--surface-subcard)] hover:text-[var(--ink-primary)]'
+                aria-pressed={active}
+                className={`min-h-10 px-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
+                  active ? 'office-nav-tab-active' : 'office-nav-tab-inactive'
                 }`}
               >
                 {t.icon}

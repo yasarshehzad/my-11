@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { IconArrowRight } from './career/GameIcons';
-import { Button, Eyebrow } from '@/components/ui';
+import { Button, Eyebrow, SectionHeader } from '@/components/ui';
 
 interface DraftOnboardingGuideProps {
   currentSlotIndex?: number;
@@ -48,12 +48,7 @@ export function DraftOnboardingGuide({
       <div className="flex justify-between items-start gap-3">
         <div className="flex-1 min-w-0">
           <Eyebrow>Step {Math.min(Math.max(activeStep, 1), 3)} of 3</Eyebrow>
-          <h3 className="text-sm font-display font-semibold text-[var(--ink-primary)]">
-            {step.title}
-          </h3>
-          <p className="text-sm text-[var(--ink-secondary)] mt-0.5 leading-snug">
-            {step.description}
-          </p>
+          <SectionHeader title={step.title} description={step.description} />
         </div>
       </div>
 

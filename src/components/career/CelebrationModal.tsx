@@ -59,7 +59,7 @@ export function CelebrationModal({
           </Eyebrow>
           <h2
             id="celebration-title"
-            className="text-xl sm:text-2xl font-display font-bold tracking-tight text-[var(--ink-primary)]"
+            className="text-xl sm:text-2xl font-display font-semibold text-[var(--ink-primary)]"
           >
             {event.title}
           </h2>
@@ -90,7 +90,7 @@ export function CelebrationModal({
         )}
 
         {/* Board message */}
-        <section aria-label="Board Statement" className="space-y-2">
+        <section aria-label="Board statement" className="space-y-2">
           <div>
             <h3 className="font-display font-semibold text-sm text-[var(--ink-primary)]">
               {event.boardReaction.sender}

@@ -69,7 +69,7 @@ export function HistoryScreen({
     const gd = activeEntry.goalsFor - activeEntry.goalsAgainst;
 
     return (
-      <section aria-label="Campaign Run Details" className="flex flex-col gap-5 px-4 sm:px-6 py-6 w-full max-w-lg mx-auto min-h-[90vh]">
+      <section aria-label="Campaign run details" className="flex flex-col gap-5 px-4 sm:px-6 py-6 w-full max-w-lg mx-auto min-h-[90vh]">
         {/* Navigation */}
         <div className="flex items-center w-full">
           <Button variant="secondary" onClick={() => setActiveEntry(null)}>
@@ -83,7 +83,7 @@ export function HistoryScreen({
             {formatDate(activeEntry.completedAt)} · {getModeLabel(activeEntry.draftMode)} · {activeEntry.formation}
           </Eyebrow>
 
-          <h2 className="text-xl font-display font-bold text-[var(--ink-primary)] mt-1">
+          <h2 className="text-xl font-display font-semibold text-[var(--ink-primary)] mt-1">
             {activeEntry.titleHonour ? formatHonour(activeEntry.titleHonour) : `Finished #${activeEntry.leaguePosition}`}
           </h2>
 
@@ -111,7 +111,7 @@ export function HistoryScreen({
         </div>
 
         {/* Try to beat this */}
-        <Button variant="primary" fullWidth onClick={() => onTryToBeat(activeEntry)} className="min-h-12">
+        <Button variant="primary" fullWidth onClick={() => onTryToBeat(activeEntry)}>
           <IconTarget className="w-4 h-4 shrink-0" /> Try to beat this ({activeEntry.wins} wins)
         </Button>
 
@@ -131,7 +131,7 @@ export function HistoryScreen({
 
   // LIST VIEW
   return (
-    <section aria-label="Campaign History and Records" className="flex flex-col gap-5 px-4 sm:px-6 py-6 w-full max-w-lg mx-auto min-h-[90vh]">
+    <section aria-label="Campaign history and records" className="flex flex-col gap-5 px-4 sm:px-6 py-6 w-full max-w-lg mx-auto min-h-[90vh]">
       {/* Header */}
       <div className="flex justify-between items-center w-full gap-2">
         <Button variant="secondary" onClick={onBackToHome} className="shrink-0">
@@ -191,10 +191,10 @@ export function HistoryScreen({
             type="button"
             aria-pressed={selectedFilter === mode}
             onClick={() => setSelectedFilter(mode)}
-            className={`min-h-10 px-2 rounded-md transition-colors cursor-pointer whitespace-nowrap flex-1 text-center ${
+            className={`flex-1 min-h-10 px-2 rounded-md border transition-colors cursor-pointer whitespace-nowrap inline-flex items-center justify-center ${
               selectedFilter === mode
-                ? 'bg-[var(--surface-elevated)] text-[var(--ink-primary)]'
-                : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
+                ? 'bg-[var(--surface-card)] text-[var(--ink-primary)] border-[var(--border-crisp)]'
+                : 'border-transparent text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
             }`}
           >
             {MODE_LABELS[mode]}

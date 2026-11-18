@@ -24,7 +24,7 @@ import {
 } from '../../../career/types';
 import { saveTheme } from '../../../utils/storage';
 import { IconArrowLeft, IconArrowRight, IconCheck, IconChevronDown, IconChevronUp } from '../../../components/career/GameIcons';
-import { Button, Eyebrow } from '../../../components/ui';
+import { Button, Eyebrow, SectionHeader } from '../../../components/ui';
 
 const NATIONALITIES = [
   'England', 'Scotland', 'Wales', 'Northern Ireland', 'Republic of Ireland',
@@ -70,7 +70,7 @@ const CUSTOM_TOGGLES: {
 ];
 
 const INLINE_SELECT_CLASS =
-  'max-w-[60%] bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg px-2 py-2 text-xs text-[var(--ink-primary)] font-medium cursor-pointer';
+  'max-w-[60%] min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] cursor-pointer';
 
 const TIER_LABELS: Record<'all' | ClubTier, string> = {
   all: 'All',
@@ -81,7 +81,7 @@ const TIER_LABELS: Record<'all' | ClubTier, string> = {
 };
 
 const FIELD_CLASS =
-  'w-full bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg px-3.5 py-2.5 text-sm text-[var(--ink-primary)] focus:outline-none focus:border-blue-600';
+  'w-full min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] focus:outline-none focus:border-blue-600';
 
 function slotName(slotId: string): string {
   return `Slot ${slotId.replace('slot_', '')}`;
@@ -363,7 +363,7 @@ function SetupWizardContent() {
           <section className="office-floating-card max-w-md mx-auto w-full space-y-5 rounded-xl p-6 sm:p-8">
             <header className="space-y-1 border-b border-[var(--border-subtle)] pb-4">
               <Eyebrow>Step 1 of 3</Eyebrow>
-              <h2 className="text-xl font-display font-bold text-[var(--ink-primary)]">
+              <h2 className="text-xl font-display font-semibold text-[var(--ink-primary)]">
                 Manager profile
               </h2>
               <p className="text-sm text-[var(--ink-secondary)]">
@@ -404,7 +404,7 @@ function SetupWizardContent() {
             </div>
 
             <div className="pt-2">
-              <Button variant="primary" fullWidth className="min-h-11" onClick={() => goToStep(2)}>
+              <Button variant="primary" fullWidth onClick={() => goToStep(2)}>
                 <span>Continue to club selection</span>
                 <IconArrowRight className="w-4 h-4" />
               </Button>
@@ -417,7 +417,7 @@ function SetupWizardContent() {
           <section className={`w-full space-y-4 pb-28 ${stepDir === 'forward' ? 'my11-step-forward' : 'my11-step-back'}`}>
             <header className="space-y-1 px-1">
               <Eyebrow>Step 2 of 3</Eyebrow>
-              <h2 className="text-xl font-display font-bold text-[var(--ink-primary)]">
+              <h2 className="text-xl font-display font-semibold text-[var(--ink-primary)]">
                 Choose your club
               </h2>
               <p className="text-sm text-[var(--ink-secondary)]">20 top-flight clubs, {databaseSeason} season.</p>
@@ -453,7 +453,7 @@ function SetupWizardContent() {
                     onChange={(e) => setClubSearch(e.target.value)}
                     placeholder="Search clubs"
                     aria-label="Search clubs"
-                    className="w-full min-h-9 bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg px-3 py-1.5 text-sm text-[var(--ink-primary)] focus:outline-none focus:border-blue-600"
+                    className="w-full min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] focus:outline-none focus:border-blue-600"
                   />
                 </div>
                 <div className="flex items-center gap-2">
@@ -464,7 +464,7 @@ function SetupWizardContent() {
                     id="club-sort-select"
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as ClubSortOption)}
-                    className="flex-1 min-w-0 min-h-9 bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg px-2.5 py-1.5 text-xs text-[var(--ink-primary)] font-medium cursor-pointer focus:outline-none focus:border-blue-600"
+                    className="flex-1 min-w-0 min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] cursor-pointer focus:outline-none focus:border-blue-600"
                   >
                     <option value="name_asc">Name (A to Z)</option>
                     <option value="name_desc">Name (Z to A)</option>
@@ -483,16 +483,15 @@ function SetupWizardContent() {
                 <p className="text-sm font-semibold text-[var(--ink-primary)]">
                   {clubSearch.trim() ? <>No clubs match &ldquo;{clubSearch}&rdquo;</> : 'No clubs in this tier'}
                 </p>
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
                   onClick={() => {
                     setClubSearch('');
                     setTierFilter('all');
                   }}
-                  className="min-h-10 text-sm font-semibold text-blue-700 hover:underline cursor-pointer"
                 >
                   Reset filters
-                </button>
+                </Button>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5">
@@ -567,10 +566,10 @@ function SetupWizardContent() {
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
-                <Button variant="secondary" className="px-3" onClick={() => goToStep(1)}>
+                <Button variant="secondary" onClick={() => goToStep(1)}>
                   Back
                 </Button>
-                <Button variant="primary" className="px-3" onClick={() => goToStep(3)}>
+                <Button variant="primary" onClick={() => goToStep(3)}>
                   <span>Next: rules</span>
                   <IconArrowRight className="w-4 h-4" />
                 </Button>
@@ -584,7 +583,7 @@ function SetupWizardContent() {
           <section className={`max-w-3xl mx-auto w-full space-y-5 pb-8 ${stepDir === 'forward' ? 'my11-step-forward' : 'my11-step-back'}`}>
             <header className="space-y-1 px-1">
               <Eyebrow>Step 3 of 3</Eyebrow>
-              <h2 className="text-xl font-display font-bold text-[var(--ink-primary)]">
+              <h2 className="text-xl font-display font-semibold text-[var(--ink-primary)]">
                 Difficulty and rules
               </h2>
             </header>
@@ -609,7 +608,7 @@ function SetupWizardContent() {
                   value={customClubNames[selectedClub.id] ?? ''}
                   onChange={(e) => handleClubRename(selectedClub.id, e.target.value)}
                   placeholder={selectedClub.defaultName}
-                  className="flex-1 min-w-0 min-h-10 bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg px-3 py-2 text-sm text-[var(--ink-primary)] focus:outline-none focus:border-blue-600"
+                  className="flex-1 min-w-0 min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] focus:outline-none focus:border-blue-600"
                 />
               </div>
             </div>
@@ -652,9 +651,7 @@ function SetupWizardContent() {
             {/* Custom rules: only when Custom is selected */}
             {preset === 'custom' && (
               <div className="office-floating-card rounded-xl px-4 py-2">
-                <h3 className="text-sm font-display font-semibold text-[var(--ink-primary)] py-2.5">
-                  Custom rules
-                </h3>
+                <SectionHeader title="Custom rules" className="py-2.5" />
                 <div className="divide-y divide-[var(--border-subtle)] text-sm border-t border-[var(--border-subtle)]">
                   {CUSTOM_TOGGLES.map((toggle) => (
                     <label key={toggle.key} className="flex justify-between items-center gap-3 py-3 min-h-[44px] cursor-pointer">
@@ -859,17 +856,17 @@ function SetupWizardContent() {
 
             {/* Actions */}
             <div className="flex justify-between items-center pt-2 gap-3">
-              <Button variant="secondary" className="min-h-11" onClick={() => goToStep(2)}>
+              <Button variant="secondary" onClick={() => goToStep(2)}>
                 Back
               </Button>
               <Button
                 variant="primary"
-                className="flex-1 min-w-0 min-h-11 whitespace-nowrap"
+                className="flex-1 min-w-0 whitespace-nowrap"
                 onClick={handleStartCareer}
                 disabled={isStartingCareer}
               >
                 <span className="truncate">
-                  {isStartingCareer ? 'Starting...' : `Start career at ${effectiveSelectedName}`}
+                  {isStartingCareer ? 'Starting…' : `Start career at ${effectiveSelectedName}`}
                 </span>
                 <IconArrowRight className="w-4 h-4 shrink-0" />
               </Button>
@@ -886,7 +883,7 @@ export default function CareerSetupPage() {
     <Suspense
       fallback={
         <div className="min-h-screen bg-[var(--surface-ground)] text-[var(--ink-primary)] flex items-center justify-center font-display font-semibold text-sm">
-          Loading setup...
+          Loading setup…
         </div>
       }
     >

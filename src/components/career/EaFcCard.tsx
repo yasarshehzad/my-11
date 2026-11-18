@@ -159,14 +159,14 @@ export function EaFcCard({
 
       {/* Player identity */}
       <div className="mt-3 pb-3 border-b border-[var(--border-subtle)]">
-        <h4 className="text-lg sm:text-xl font-display font-bold truncate">{player.name}</h4>
+        <h4 className="text-lg font-display font-semibold text-[var(--ink-primary)] truncate">{player.name}</h4>
         <p className="text-xs text-[var(--ink-secondary)] truncate">
           Age {player.age} · {getCleanClubName(player.club)}
         </p>
       </div>
 
       {/* Six face stats: label and value side by side, two columns */}
-      <section aria-label="EA FC Face Attributes" className="mt-3">
+      <section aria-label="EA FC face attributes" className="mt-3">
         <dl className="grid grid-cols-2 gap-x-6 gap-y-1.5">
           {statsList.map((st) => (
             <div key={st.label} className="flex items-baseline gap-2">

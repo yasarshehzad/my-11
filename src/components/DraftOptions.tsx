@@ -108,7 +108,7 @@ export function DraftOptions({
             type="button"
             onClick={() => onSetDraftTab('recommended')}
             aria-pressed={draftTab === 'recommended'}
-            className={`flex-1 min-h-10 px-4 rounded-md font-semibold text-sm transition-colors cursor-pointer text-center inline-flex items-center justify-center gap-1.5 border ${
+            className={`flex-1 min-h-10 px-3 rounded-md border text-sm font-semibold transition-colors cursor-pointer inline-flex items-center justify-center gap-1.5 ${
               draftTab === 'recommended'
                 ? 'bg-[var(--surface-card)] text-[var(--ink-primary)] border-[var(--border-crisp)]'
                 : 'border-transparent text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
@@ -120,7 +120,7 @@ export function DraftOptions({
             type="button"
             onClick={() => onSetDraftTab('search')}
             aria-pressed={draftTab === 'search'}
-            className={`flex-1 min-h-10 px-4 rounded-md font-semibold text-sm transition-colors cursor-pointer text-center inline-flex items-center justify-center gap-1.5 border ${
+            className={`flex-1 min-h-10 px-3 rounded-md border text-sm font-semibold transition-colors cursor-pointer inline-flex items-center justify-center gap-1.5 ${
               draftTab === 'search'
                 ? 'bg-[var(--surface-card)] text-[var(--ink-primary)] border-[var(--border-crisp)]'
                 : 'border-transparent text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
@@ -162,7 +162,7 @@ export function DraftOptions({
               value={searchQuery}
               onChange={(e) => onSetSearchQuery(e.target.value)}
               placeholder="Name, club, season or nation" aria-label="Search players"
-              className="w-full bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg py-2.5 pl-10 pr-10 text-sm text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:border-[#1d5eff] focus:ring-2 focus:ring-blue-500/20 transition-colors"
+              className="w-full min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500 pl-10 pr-10 placeholder:text-[var(--ink-muted)]"
             />
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--ink-muted)] pointer-events-none">
               <IconSearch className="w-3.5 h-3.5" />
@@ -172,7 +172,7 @@ export function DraftOptions({
                 type="button"
                 onClick={() => onSetSearchQuery('')}
                 aria-label="Clear search"
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-[var(--ink-muted)] hover:text-[var(--ink-primary)] cursor-pointer"
+                className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] cursor-pointer transition-colors"
               >
                 <IconClose className="w-3.5 h-3.5" />
               </button>
@@ -187,7 +187,7 @@ export function DraftOptions({
                 aria-label="Filter by club"
                 value={selectedClub}
                 onChange={(e) => onSetSelectedClub(e.target.value)}
-                className="w-full min-h-10 bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg py-2 px-3 text-sm text-[var(--ink-primary)] focus:outline-none focus:border-[#1d5eff] cursor-pointer"
+                className="w-full min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
                 <option value="" className="text-[var(--office-text-primary)] bg-white">All clubs</option>
                 {allClubs.map((club) => (
@@ -204,7 +204,7 @@ export function DraftOptions({
                 aria-label="Filter by era"
                 value={selectedEra}
                 onChange={(e) => onSetSelectedEra(e.target.value)}
-                className="w-full min-h-10 bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg py-2 px-3 text-sm text-[var(--ink-primary)] focus:outline-none focus:border-[#1d5eff] cursor-pointer"
+                className="w-full min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
                 <option value="" className="text-[var(--office-text-primary)] bg-white">All eras</option>
                 {allEras.map((era) => {
@@ -225,7 +225,7 @@ export function DraftOptions({
           </div>
 
           {/* Position lock status toggle */}
-          <label className="flex items-center justify-between gap-3 min-h-[40px] px-1 cursor-pointer">
+          <label className="flex items-center justify-between gap-3 min-h-10 px-1 cursor-pointer">
             <span className="text-sm text-[var(--ink-secondary)]">
               Only <span className="text-[var(--ink-primary)] font-semibold">{currentSlot?.position}</span> players
             </span>
@@ -236,7 +236,7 @@ export function DraftOptions({
                 onChange={(e) => onSetOnlyMatchingPosition(e.target.checked)}
                 className="sr-only peer"
               />
-              <div className="w-9 h-5 bg-[var(--border-crisp)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[var(--border-crisp)] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#1d5eff]"></div>
+              <div className="w-11 h-6 bg-[var(--border-crisp)] rounded-full transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-blue-500 peer-focus-visible:ring-offset-1 peer-checked:bg-[#1d5eff] peer-checked:after:translate-x-5 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:shadow-sm after:h-5 after:w-5 after:transition-transform"></div>
             </span>
           </label>
 

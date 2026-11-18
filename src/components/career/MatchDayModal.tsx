@@ -69,7 +69,7 @@ import {
   getInitialClubTactics,
   getClubTacticalProfile,
 } from '../../career/tactics';
-import { Button, Tag } from '@/components/ui';
+import { Button, SectionHeader, Tag } from '@/components/ui';
 import {
   IconClose,
   IconAlert,
@@ -891,7 +891,7 @@ export function MatchDayModal({
           </p>
 
           {matchState === 'prematch' && (
-            <Button variant="ghost" className="shrink-0 px-2" data-office-ui="true" onClick={onClose}>
+            <Button variant="ghost" className="shrink-0" data-office-ui="true" onClick={onClose}>
               <IconClose className="w-3.5 h-3.5" />
               <span>Exit</span>
             </Button>
@@ -1006,21 +1006,23 @@ export function MatchDayModal({
 
             {/* Tactics: formation, mentality, pressing, style */}
             <div className="office-subcard p-3.5 rounded-xl space-y-2.5">
-              <div className="flex justify-between items-center gap-2">
-                <h3 className="text-sm font-display font-semibold text-[var(--ink-primary)]">Tactics</h3>
-                <select
-                  aria-label="Formation"
-                  value={formation}
-                  onChange={(e) => handleFormationChange(e.target.value)}
-                  className="min-h-10 text-sm font-medium text-[var(--ink-primary)] bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg px-2 cursor-pointer"
-                >
-                  {SUPPORTED_CAREER_FORMATIONS.map((f) => (
-                    <option key={f.name} value={f.name}>
-                      {f.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <SectionHeader
+                title="Tactics"
+                action={
+                  <select
+                    aria-label="Formation"
+                    value={formation}
+                    onChange={(e) => handleFormationChange(e.target.value)}
+                    className="min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] cursor-pointer"
+                  >
+                    {SUPPORTED_CAREER_FORMATIONS.map((f) => (
+                      <option key={f.name} value={f.name}>
+                        {f.name}
+                      </option>
+                    ))}
+                  </select>
+                }
+              />
 
               <div className="grid grid-cols-3 gap-1.5" role="group" aria-label="Mentality">
                 {(['defensive', 'balanced', 'attacking'] as const).map((m) => (
@@ -1043,7 +1045,7 @@ export function MatchDayModal({
                   <select
                     value={pressing}
                     onChange={(e) => setPressing(e.target.value as PressingIntensity)}
-                    className="w-full min-h-10 text-sm text-[var(--ink-primary)] bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg px-2"
+                    className="w-full min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)]"
                   >
                     <option value="low_block">Low block (saves stamina)</option>
                     <option value="balanced">Balanced</option>
@@ -1055,7 +1057,7 @@ export function MatchDayModal({
                   <select
                     value={style}
                     onChange={(e) => setStyle(e.target.value as AttackingStyle)}
-                    className="w-full min-h-10 text-sm text-[var(--ink-primary)] bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg px-2"
+                    className="w-full min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)]"
                   >
                     <option value="patient">Patient possession</option>
                     <option value="mixed">Mixed</option>
@@ -1082,7 +1084,7 @@ export function MatchDayModal({
                   <IconChevronDown className={`w-3.5 h-3.5 shrink-0 text-[var(--ink-muted)] ${showLineup ? 'rotate-180' : ''}`} />
                 </button>
                 {fatiguedStarters.length > 0 && (
-                  <Button variant="secondary" className="shrink-0 px-2.5 text-xs" data-office-ui="true" onClick={handleRotateFatigued}>
+                  <Button variant="secondary" size="sm" className="shrink-0" data-office-ui="true" onClick={handleRotateFatigued}>
                     Rotate {fatiguedStarters.length} tired
                   </Button>
                 )}
@@ -1145,7 +1147,6 @@ export function MatchDayModal({
               <Button
                 variant="primary"
                 fullWidth
-                className="min-h-12"
                 data-office-ui="true"
                 onClick={handleKickOff}
                 disabled={hasIneligiblePlayers}
@@ -1213,16 +1214,16 @@ export function MatchDayModal({
                 </div>
                 <div className="w-full h-3 bg-[var(--surface-elevated)] rounded-full overflow-hidden flex relative border border-[var(--border-subtle)]">
                   <div
-                    className="h-full bg-emerald-500 transition-all duration-300"
+                    className="h-full bg-emerald-500 transition-[width] duration-300"
                     style={{ width: `${Math.max(10, Math.min(90, 50 - session.momentum / 2))}%` }}
                   />
                   <div
-                    className="h-full bg-indigo-500 transition-all duration-300"
+                    className="h-full bg-indigo-500 transition-[width] duration-300"
                     style={{ width: `${Math.max(10, Math.min(90, 50 + session.momentum / 2))}%` }}
                   />
                   {/* Ball Marker */}
                   <div
-                    className="absolute top-0 bottom-0 w-2.5 bg-[var(--surface-card)] border border-[var(--ink-primary)] rounded-full transition-all duration-300"
+                    className="absolute top-0 bottom-0 w-2.5 bg-[var(--surface-card)] border border-[var(--ink-primary)] rounded-full transition-[left] duration-300"
                     style={{
                       left: `calc(${Math.max(4, Math.min(96, 50 + session.momentum / 2))}% - 5px)`,
                     }}
@@ -1460,14 +1461,15 @@ export function MatchDayModal({
                             <span className="font-semibold text-[var(--ink-primary)]">{selectedPitchState.player.name}</span>
                             <span className="text-[var(--ink-muted)]"> · pick who comes on</span>
                           </span>
-                          <button
-                            type="button"
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="shrink-0"
                             data-office-ui="true"
                             onClick={() => setSelectedPitchPlayerId(null)}
-                            className="shrink-0 min-h-10 px-2 rounded-lg text-xs font-medium text-blue-700 underline underline-offset-2 cursor-pointer"
                           >
                             Change
-                          </button>
+                          </Button>
                         </div>
                         <div className="grid grid-cols-2 gap-x-2">
                           {userBenchStates.map((s) => (
@@ -1558,7 +1560,7 @@ export function MatchDayModal({
             {/* Half-time team talk */}
             {matchState === 'halftime' && (
               <section className="office-subcard p-4 rounded-xl space-y-3">
-                <h4 className="font-display font-semibold text-sm text-[var(--ink-primary)]">Team talk</h4>
+                <SectionHeader as="h4" title="Team talk" />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-sm">
                   {TEAM_TALKS.map((talk) => (
                     <button
@@ -1576,7 +1578,7 @@ export function MatchDayModal({
                 {teamTalkFeedback && (
                   <p className="text-xs text-[var(--ink-secondary)]">{teamTalkFeedback}</p>
                 )}
-                <Button variant="primary" fullWidth className="min-h-11" data-office-ui="true" onClick={handleStartSecondHalf}>
+                <Button variant="primary" fullWidth data-office-ui="true" onClick={handleStartSecondHalf}>
                   Start 2nd half
                 </Button>
               </section>
@@ -1591,7 +1593,7 @@ export function MatchDayModal({
                 <p className="text-sm text-[var(--ink-secondary)]">
                   30 more minutes. Each side gets 1 extra substitution.
                 </p>
-                <Button variant="primary" fullWidth className="min-h-11" data-office-ui="true" onClick={handleStartExtraTime}>
+                <Button variant="primary" fullWidth data-office-ui="true" onClick={handleStartExtraTime}>
                   Start extra time
                 </Button>
               </div>
@@ -1643,7 +1645,7 @@ export function MatchDayModal({
                 <>
                   <Button
                     variant="primary"
-                    className="flex-1 min-h-11"
+                    className="flex-1"
                     data-office-ui="true"
                     onClick={() => setShootoutKickIndex((prev) => Math.min(shootoutData.kicks.length, prev + 1))}
                   >
@@ -1651,7 +1653,6 @@ export function MatchDayModal({
                   </Button>
                   <Button
                     variant="secondary"
-                    className="min-h-11"
                     data-office-ui="true"
                     onClick={() => setShootoutKickIndex(shootoutData.kicks.length)}
                   >
@@ -1662,7 +1663,6 @@ export function MatchDayModal({
                 <Button
                   variant="primary"
                   fullWidth
-                  className="min-h-11"
                   data-office-ui="true"
                   onClick={() => {
                     const finalized = finalizeLiveMatchSession({
@@ -1820,7 +1820,7 @@ export function MatchDayModal({
             {/* Actions */}
             <div className="flex items-center gap-2.5 pt-1">
               {save.settings.retryMatch ? (
-                <Button variant="secondary" className="min-h-11" data-office-ui="true" onClick={handleRetryMatch}>
+                <Button variant="secondary" data-office-ui="true" onClick={handleRetryMatch}>
                   <IconRefresh className="w-3.5 h-3.5" />
                   <span>Replay</span>
                 </Button>
@@ -1834,7 +1834,7 @@ export function MatchDayModal({
                 </div>
               )}
 
-              <Button variant="primary" className="flex-1 min-h-11" data-office-ui="true" onClick={handleFinalizeMatch}>
+              <Button variant="primary" className="flex-1" data-office-ui="true" onClick={handleFinalizeMatch}>
                 Confirm result
               </Button>
             </div>

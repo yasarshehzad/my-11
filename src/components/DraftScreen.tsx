@@ -231,12 +231,12 @@ export function DraftScreen({
       <div className="h-2 flex-1 bg-[var(--surface-elevated)] rounded-full overflow-hidden">
         <div
           style={{ width: `${(timeLeft / ROUND_SECONDS) * 100}%` }}
-          className={`h-full transition-all duration-1000 ease-linear rounded-full ${
+          className={`h-full transition-[width] duration-1000 ease-linear rounded-full ${
             timeLeft <= 3 ? 'bg-rose-500' : timeLeft <= 5 ? 'bg-amber-500' : 'bg-blue-600'
           }`}
         />
       </div>
-      <span className={`font-display font-semibold text-base tracking-tight shrink-0 tabular-nums ${
+      <span className={`font-display font-semibold text-base shrink-0 tabular-nums ${
         timeLeft <= 3 ? 'text-rose-600' : timeLeft <= 5 ? 'text-amber-700' : 'text-blue-600'
       }`}>
         0:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}
@@ -333,7 +333,7 @@ export function DraftScreen({
             title={sfxEnabled ? 'Mute sound effects' : 'Enable sound effects'}
             aria-label={sfxEnabled ? 'Mute sound effects' : 'Enable sound effects'}
             aria-pressed={!sfxEnabled}
-            className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] cursor-pointer transition-colors"
+            className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] cursor-pointer transition-colors shrink-0"
           >
             {sfxEnabled ? <IconVolumeOn className="w-4 h-4" /> : <IconVolumeOff className="w-4 h-4 text-[var(--ink-muted)]" />}
           </button>
@@ -384,7 +384,7 @@ export function DraftScreen({
           <div className="office-floating-card rounded-xl p-6 w-full max-w-sm max-h-[90dvh] overflow-y-auto scrollbar-none flex flex-col items-center gap-4 text-center relative">
             <div className="relative z-10 flex flex-col items-center">
               <Eyebrow>Mystery pick</Eyebrow>
-              <h3 id="mystery-reveal-title" className="text-xl font-display font-bold text-[var(--ink-primary)]">
+              <h3 id="mystery-reveal-title" className="text-xl font-display font-semibold text-[var(--ink-primary)]">
                 You drafted
               </h3>
             </div>
@@ -404,7 +404,7 @@ export function DraftScreen({
               fullWidth
               onClick={handleConfirmMysteryReveal}
               autoFocus
-              className="min-h-12 relative z-10"
+              className="relative z-10"
             >
               <span>Add to squad</span>
               <IconArrowRight className="w-3.5 h-3.5 shrink-0" />
@@ -422,7 +422,7 @@ export function DraftScreen({
               playKickoffWhistle();
               onStartSimulation();
             }}
-            className="w-full max-w-sm min-h-12 shadow-sm"
+            className="w-full max-w-sm"
           >
             <span>Start simulation</span>
             <IconArrowRight className="w-4 h-4 shrink-0" />

@@ -291,7 +291,8 @@ describe('Career Mode 2.0: Global Scouting Network & Talent Expeditions', () => 
 
     const topProspect = dossier.prospects[0];
     expect(topProspect.name).toBeTruthy();
-    expect(topProspect.rating).toBeGreaterThan(60);
+    // Calibrated 2026/27 ratings put academy-level players in the 50s
+    expect(topProspect.rating).toBeGreaterThanOrEqual(50);
     expect(topProspect.potential).toBeGreaterThanOrEqual(topProspect.rating);
     expect(topProspect.scoutNotes).toBeTruthy();
     expect(topProspect.recommendedAction).toBeDefined();

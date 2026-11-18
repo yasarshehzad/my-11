@@ -1000,7 +1000,7 @@ function CareerPlayHubContent() {
       const el = document.getElementById(targetId);
       if (el) {
         el.scrollIntoView({ behavior, block });
-        el.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'ring-offset-slate-950', 'transition-all');
+        el.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'ring-offset-slate-950', 'transition-shadow');
         setTimeout(() => {
           el.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'ring-offset-slate-950');
         }, 2500);
@@ -2032,7 +2032,7 @@ function CareerPlayHubContent() {
     return (
       <div className="min-h-screen my11-canvas text-[var(--ink-primary)] font-sans flex flex-col p-6 justify-center items-center">
         <main className="w-full max-w-md office-floating-card rounded-xl p-8 border border-[var(--border-subtle)] text-center space-y-4">
-          <h1 className="text-xl font-display font-bold text-[var(--ink-primary)]">
+          <h1 className="text-xl font-display font-semibold text-[var(--ink-primary)]">
             No save found in {slotId.replace('_', ' ')}
           </h1>
           <p className="text-sm text-[var(--ink-secondary)] leading-relaxed">
@@ -2154,10 +2154,10 @@ function CareerPlayHubContent() {
               onClick={handleLogoClick}
               data-office-ui="true"
               title={activeTab !== 'overview' ? 'Return to career office' : 'Exit career mode'}
-              aria-label={activeTab !== 'overview' ? 'Return to Career Office' : 'Exit Career Mode'}
+              aria-label={activeTab !== 'overview' ? 'Return to career office' : 'Exit career mode'}
               className="flex items-center justify-center shrink-0 cursor-pointer min-h-9 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             >
-              <span className="font-display font-semibold text-sm sm:text-lg tracking-tighter leading-none text-[var(--office-text-primary)]">
+              <span className="font-display font-semibold text-sm sm:text-lg text-[var(--office-text-primary)]">
                 MY-11
               </span>
             </button>
@@ -2205,7 +2205,7 @@ function CareerPlayHubContent() {
               data-office-ui="true"
               onClick={handleToggleSfx}
               title={sfxEnabled ? 'Mute sound effects' : 'Enable sound effects'}
-              aria-label={sfxEnabled ? 'Mute Sound Effects' : 'Enable Sound Effects'}
+              aria-label={sfxEnabled ? 'Mute sound effects' : 'Enable sound effects'}
               aria-pressed={!sfxEnabled}
               className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer shrink-0 text-[var(--ink-secondary)] hover:bg-[var(--surface-subcard)] hover:text-[var(--ink-primary)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             >
@@ -2222,14 +2222,14 @@ function CareerPlayHubContent() {
               data-office-ui="true"
               onClick={() => setShowOfficeInboxModal(true)}
               title="Open inbox"
-              aria-label="Open Managerial Inbox"
+              aria-label="Open managerial inbox"
               className="relative w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer shrink-0 text-[var(--ink-secondary)] hover:bg-[var(--surface-subcard)] hover:text-[var(--ink-primary)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             >
               <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor" aria-hidden="true">
                 <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4.2-8 5-8-5V6l8 5 8-5v2.2z" />
               </svg>
               {headerBadgeCount > 0 && (
-                <span data-force-white="true" className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#dc2626] text-white font-semibold text-2xs flex items-center justify-center">
+                <span data-force-white="true" className="absolute -top-0.5 -right-0.5 min-w-4.5 h-4.5 px-1 rounded-full bg-[#dc2626] text-white font-semibold text-2xs flex items-center justify-center">
                   {headerBadgeCount}
                 </span>
               )}
@@ -2241,7 +2241,7 @@ function CareerPlayHubContent() {
               data-office-ui="true"
               onClick={() => handleTabChange('settings')}
               title="Career settings"
-              aria-label="Career Settings"
+              aria-label="Career settings"
               aria-current={activeTab === 'settings' ? 'page' : undefined}
               className={`w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer shrink-0 text-[var(--ink-secondary)] hover:bg-[var(--surface-subcard)] hover:text-[var(--ink-primary)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${activeTab === 'settings' ? 'bg-[var(--surface-elevated)] text-[var(--ink-primary)]' : ''}`}
             >
@@ -2255,7 +2255,7 @@ function CareerPlayHubContent() {
         {/* 2. FLOATING 5-TAB NAVIGATION BAR (UNIVERSAL ACROSS ALL TABS) */}
         <div className="relative z-30 office-reveal-2">
           <nav
-            aria-label="Career Navigation"
+            aria-label="Career navigation"
             data-office-ui="true"
             data-no-swipe="true"
             className="office-floating-card rounded-xl px-1 grid grid-cols-5 select-none overflow-hidden"
@@ -2359,7 +2359,7 @@ function CareerPlayHubContent() {
                   data-office-ui="true"
                   aria-current={activeTab === item.id ? 'page' : undefined}
                   onClick={() => handleTabChange(item.id as CareerTab)}
-                  className={`w-full min-h-[44px] px-2.5 rounded-lg text-left flex items-center gap-2.5 cursor-pointer text-sm text-[var(--ink-primary)] ${
+                  className={`w-full min-h-11 px-2.5 rounded-lg text-left flex items-center gap-2.5 cursor-pointer text-sm text-[var(--ink-primary)] ${
                     activeTab === item.id ? 'bg-[var(--surface-elevated)] font-semibold' : 'font-medium hover:bg-[var(--surface-subcard)]'
                   }`}
                 >
@@ -2379,7 +2379,7 @@ function CareerPlayHubContent() {
                   handleExport();
                   setIsMoreMenuOpen(false);
                 }}
-                className="w-full min-h-[44px] px-2.5 rounded-lg text-left flex items-center gap-2.5 cursor-pointer font-medium text-sm text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)]"
+                className="w-full min-h-11 px-2.5 rounded-lg text-left flex items-center gap-2.5 cursor-pointer font-medium text-sm text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)]"
               >
                 <IconSave className="w-4 h-4 text-[var(--ink-secondary)] shrink-0" />
                 <span>Back up save</span>
@@ -2396,8 +2396,10 @@ function CareerPlayHubContent() {
             <span className="font-medium">
               {dbLoadError} Transfer market and cup opponent pools may be incomplete until reloaded.
             </span>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
+              size="sm"
+              className="shrink-0"
               onClick={() => {
                 void ensureCareerDatabaseLoaded('all').then((loaded) => {
                   if (loaded) {
@@ -2408,10 +2410,9 @@ function CareerPlayHubContent() {
                   }
                 });
               }}
-              className="min-h-8 px-3 rounded-lg bg-[var(--surface-card)] border border-[var(--border-crisp)] hover:bg-[var(--surface-subcard)] text-[var(--ink-primary)] font-semibold text-xs cursor-pointer shrink-0"
             >
               Retry
-            </button>
+            </Button>
           </div>
         )}
 
@@ -2446,7 +2447,7 @@ function CareerPlayHubContent() {
 
               return (
                 <section
-                  aria-label="Key Performance Indicators"
+                  aria-label="Key performance indicators"
                   data-office-ui="true"
                   className="office-floating-card office-reveal-2 rounded-xl select-none overflow-hidden"
                 >
@@ -2455,12 +2456,12 @@ function CareerPlayHubContent() {
                     <button
                       type="button"
                       data-office-ui="true"
-                      aria-label={`Transfer Budget ${formatOfficeBudget(save.finances.transferBudget, save.settings.currency)}, Wage room ${formatOfficeWageRoom(wageHeadroom, save.settings.currency)}`}
+                      aria-label={`Transfer budget ${formatOfficeBudget(save.finances.transferBudget, save.settings.currency)}, wage room ${formatOfficeWageRoom(wageHeadroom, save.settings.currency)}`}
                       onClick={() => {
                         navigateToSection('transfers', 'market');
                         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                       }}
-                      className="px-2.5 sm:px-3.5 py-2.5 text-left hover:bg-[var(--surface-subcard)] transition-colors cursor-pointer flex flex-col justify-start gap-0.5 min-h-[64px] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-500"
+                      className="px-2.5 sm:px-3.5 py-2.5 text-left hover:bg-[var(--surface-subcard)] transition-colors cursor-pointer flex flex-col justify-start gap-0.5 min-h-16 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-500"
                     >
                       <span className="block text-xs font-medium text-[var(--ink-muted)]">Budget</span>
                       <div className="font-display font-semibold text-lg text-[var(--ink-primary)] leading-tight tabular-nums">
@@ -2475,9 +2476,9 @@ function CareerPlayHubContent() {
                     <button
                       type="button"
                       data-office-ui="true"
-                      aria-label={`League Position ${formatOrdinalRank(userRank)}, ${userStanding?.points || 0} points`}
+                      aria-label={`League position ${formatOrdinalRank(userRank)}, ${userStanding?.points || 0} points`}
                       onClick={() => handleTabChange('table')}
-                      className="px-2.5 sm:px-3.5 py-2.5 text-left hover:bg-[var(--surface-subcard)] transition-colors cursor-pointer flex flex-col justify-start gap-0.5 min-h-[64px] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-500"
+                      className="px-2.5 sm:px-3.5 py-2.5 text-left hover:bg-[var(--surface-subcard)] transition-colors cursor-pointer flex flex-col justify-start gap-0.5 min-h-16 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-500"
                     >
                       <span className="block text-xs font-medium text-[var(--ink-muted)]">League</span>
                       <div className="flex items-baseline gap-1.5">
@@ -2491,7 +2492,7 @@ function CareerPlayHubContent() {
                       {recentFormResults.length === 0 && (
                         <div className="text-xs text-[var(--ink-secondary)]">No matches yet</div>
                       )}
-                      <div className="flex items-center gap-[3px] mt-0.5" aria-label="Recent 5 match form">
+                      <div className="flex items-center gap-0.5 mt-0.5" aria-label="Recent 5 match form">
                         {recentFormResults.slice(-5).map((res, idx) => (
                           <span
                             key={idx}
@@ -2514,7 +2515,7 @@ function CareerPlayHubContent() {
                     <button
                       type="button"
                       data-office-ui="true"
-                      aria-label={`Items for Review: ${reviewTotal}`}
+                      aria-label={`Items for review: ${reviewTotal}`}
                       onClick={() => {
                         if (officeReviewCount > 0) {
                           document
@@ -2524,7 +2525,7 @@ function CareerPlayHubContent() {
                           setShowOfficeInboxModal(true);
                         }
                       }}
-                      className="px-2.5 sm:px-3.5 py-2.5 text-left hover:bg-[var(--surface-subcard)] transition-colors cursor-pointer flex flex-col justify-start gap-0.5 min-h-[64px] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-500"
+                      className="px-2.5 sm:px-3.5 py-2.5 text-left hover:bg-[var(--surface-subcard)] transition-colors cursor-pointer flex flex-col justify-start gap-0.5 min-h-16 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-500"
                     >
                       <span className="block text-xs font-medium text-[var(--ink-muted)]">Review</span>
                       <div
@@ -2571,7 +2572,7 @@ function CareerPlayHubContent() {
               />
             ) : nextScheduled ? (
               <section
-                aria-label="Next Fixture"
+                aria-label="Next fixture"
                 data-office-ui="true"
                 className="office-reveal-3 relative select-none"
               >
@@ -2700,7 +2701,6 @@ function CareerPlayHubContent() {
                           }}
                           variant="primary"
                           fullWidth
-                          className="min-h-12 text-base"
                         >
                           Prepare &amp; play match
                         </Button>
@@ -2712,7 +2712,6 @@ function CareerPlayHubContent() {
                             disabled={simulating}
                             onClick={handlePlayNextMatchInstant}
                             variant="secondary"
-                            className="min-h-11 px-2"
                           >
                             <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[var(--ink-secondary)] shrink-0" aria-hidden="true">
                               <path d="M7 2v11h3v9l7-12h-4l4-8z" />
@@ -2725,7 +2724,6 @@ function CareerPlayHubContent() {
                             data-office-ui="true"
                             onClick={() => setMatchOverviewModal({ type: 'preview', fixture: nextScheduled.fixture })}
                             variant="secondary"
-                            className="min-h-11 px-2"
                           >
                             <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[var(--ink-secondary)] shrink-0" aria-hidden="true">
                               <path d="M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zm5.6 8H19v6h-2.8v-6z" />
@@ -2744,20 +2742,22 @@ function CareerPlayHubContent() {
                 data-office-ui="true"
                 className="office-floating-card office-reveal-3 rounded-xl p-4 text-left"
               >
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h3 className="text-base font-display font-semibold text-[var(--ink-primary)]">
-                    Season {save.season.seasonNumber} complete
-                  </h3>
-                  <Button
-                    type="button"
-                    data-office-ui="true"
-                    onClick={handleAdvanceToNextSeasonAction}
-                    disabled={simulating}
-                    variant="primary"
-                  >
-                    Advance to season {save.season.seasonNumber + 1}
-                  </Button>
-                </div>
+                <SectionHeader
+                  as="h3"
+                  title={`Season ${save.season.seasonNumber} complete`}
+                  className="items-center"
+                  action={
+                    <Button
+                      type="button"
+                      data-office-ui="true"
+                      onClick={handleAdvanceToNextSeasonAction}
+                      disabled={simulating}
+                      variant="primary"
+                    >
+                      Advance to season {save.season.seasonNumber + 1}
+                    </Button>
+                  }
+                />
               </section>
             )}
 
@@ -2765,7 +2765,7 @@ function CareerPlayHubContent() {
             {officeReviewCount > 0 && (
               <section
                 id="managerial-alerts"
-                aria-label="Contracts to Review"
+                aria-label="Contracts to review"
                 data-office-ui="true"
                 className="office-floating-card office-reveal-5 rounded-xl px-3.5 pt-3 pb-1 select-none"
               >
@@ -2773,14 +2773,14 @@ function CareerPlayHubContent() {
                   as="h2"
                   title="Expiring contracts"
                   action={
-                    <button
-                      type="button"
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       data-office-ui="true"
                       onClick={() => navigateToSection('transfers', 'contracts')}
-                      className="text-sm font-medium text-blue-700 hover:underline cursor-pointer min-h-[32px] focus-visible:outline-2 focus-visible:outline-blue-500"
                     >
                       All contracts
-                    </button>
+                    </Button>
                   }
                 />
 
@@ -2795,7 +2795,7 @@ function CareerPlayHubContent() {
                         onClick={() =>
                           navigateToSection('transfers', 'contracts', `contract-player-${player.id}`)
                         }
-                        className="w-full py-2.5 flex items-center justify-between gap-2 text-left hover:bg-[var(--surface-subcard)] transition-colors cursor-pointer min-h-[46px] focus-visible:outline-2 focus-visible:outline-blue-500"
+                        className="w-full py-2.5 flex items-center justify-between gap-2 text-left hover:bg-[var(--surface-subcard)] transition-colors cursor-pointer min-h-12 focus-visible:outline-2 focus-visible:outline-blue-500"
                       >
                         <div className="flex items-baseline gap-2 min-w-0">
                           <span className="w-8 text-xs font-medium text-[var(--ink-muted)] shrink-0">
@@ -2824,7 +2824,7 @@ function CareerPlayHubContent() {
 
             {/* 4. COMPACT ICON-BASED QUICK ACTIONS (Open Canvas — No White Card Backgrounds) */}
             <section
-              aria-label="Quick Actions"
+              aria-label="Quick actions"
               data-office-ui="true"
               className="office-reveal-6 pt-1 space-y-2.5 select-none"
             >
@@ -2838,7 +2838,7 @@ function CareerPlayHubContent() {
                     data-office-ui="true"
                     aria-expanded={showOfficeSeasonDrawer}
                     onClick={() => setShowOfficeSeasonDrawer((prev) => !prev)}
-                    className="text-sm font-medium text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] inline-flex items-center gap-1 cursor-pointer min-h-[36px] px-1.5 rounded-lg hover:bg-[var(--surface-subcard)] transition-colors focus-visible:outline-2 focus-visible:outline-blue-500"
+                    className="text-sm font-medium text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] inline-flex items-center gap-1 cursor-pointer min-h-9 px-1.5 rounded-lg hover:bg-[var(--surface-subcard)] transition-colors focus-visible:outline-2 focus-visible:outline-blue-500"
                   >
                     <span>Fast forward</span>
                     <IconChevronDown className={`w-3.5 h-3.5 transition-transform ${showOfficeSeasonDrawer ? 'rotate-180' : ''}`} />
@@ -2862,8 +2862,7 @@ function CareerPlayHubContent() {
                       onClick={handleContinueCalendar}
                       disabled={simulating}
                       variant="secondary"
-                      size="sm"
-                      className="min-h-10 px-1"
+                      className="px-1"
                     >
                       +1 day
                     </Button>
@@ -2873,8 +2872,7 @@ function CareerPlayHubContent() {
                       onClick={() => setPendingFastForward('next_match')}
                       disabled={simulating || !nextScheduled}
                       variant="secondary"
-                      size="sm"
-                      className="min-h-10 px-1"
+                      className="px-1"
                     >
                       Next match
                     </Button>
@@ -2884,8 +2882,7 @@ function CareerPlayHubContent() {
                       onClick={() => setPendingFastForward('next_week')}
                       disabled={simulating}
                       variant="secondary"
-                      size="sm"
-                      className="min-h-10 px-1"
+                      className="px-1"
                     >
                       7 days
                     </Button>
@@ -2895,8 +2892,7 @@ function CareerPlayHubContent() {
                       onClick={() => setPendingFastForward('next_month')}
                       disabled={simulating}
                       variant="secondary"
-                      size="sm"
-                      className="min-h-10 px-1"
+                      className="px-1"
                     >
                       1 month
                     </Button>
@@ -2915,7 +2911,7 @@ function CareerPlayHubContent() {
                       handleTabChange('squad');
                       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                     }}
-                    className="hover:bg-[var(--surface-subcard)] transition-colors py-3 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer min-h-[64px] text-[var(--ink-secondary)] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-500"
+                    className="hover:bg-[var(--surface-subcard)] transition-colors py-3 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer min-h-16 text-[var(--ink-secondary)] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-500"
                   >
                     <div className="flex items-center justify-center shrink-0">
                       <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none stroke-current" strokeWidth="2" aria-hidden="true">
@@ -2941,7 +2937,7 @@ function CareerPlayHubContent() {
                       handleTabChange('squad');
                       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                     }}
-                    className="hover:bg-[var(--surface-subcard)] transition-colors py-3 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer min-h-[64px] text-[var(--ink-secondary)] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-500"
+                    className="hover:bg-[var(--surface-subcard)] transition-colors py-3 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer min-h-16 text-[var(--ink-secondary)] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-500"
                   >
                     <div className="flex items-center justify-center shrink-0">
                       <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" aria-hidden="true">
@@ -2958,7 +2954,7 @@ function CareerPlayHubContent() {
                     type="button"
                     data-office-ui="true"
                     onClick={() => navigateToSection('transfers', 'board', 'board-room-section')}
-                    className="hover:bg-[var(--surface-subcard)] transition-colors py-3 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer min-h-[64px] text-[var(--ink-secondary)] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-500"
+                    className="hover:bg-[var(--surface-subcard)] transition-colors py-3 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer min-h-16 text-[var(--ink-secondary)] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-500"
                   >
                     <div className="flex items-center justify-center shrink-0">
                       <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" aria-hidden="true">
@@ -2981,7 +2977,7 @@ function CareerPlayHubContent() {
 
               return (
                 <section
-                  aria-label="Club Infrastructure & Stadium"
+                  aria-label="Club infrastructure and stadium"
                   data-office-ui="true"
                   className="office-reveal-6"
                 >
@@ -3032,7 +3028,7 @@ function CareerPlayHubContent() {
 
               return (
                 <section
-                  aria-label="Previous Match Result"
+                  aria-label="Previous match result"
                   data-office-ui="true"
                   className="office-reveal-7 select-none"
                 >
@@ -3045,7 +3041,7 @@ function CareerPlayHubContent() {
                         fixture: fix,
                       })
                     }
-                    className="office-floating-card w-full rounded-xl px-3.5 py-3 hover:bg-[var(--surface-subcard)] flex flex-col gap-2 cursor-pointer transition-colors min-h-[54px] text-left focus-visible:outline-2 focus-visible:outline-blue-500"
+                    className="office-floating-card w-full rounded-xl px-3.5 py-3 hover:bg-[var(--surface-subcard)] flex flex-col gap-2 cursor-pointer transition-colors min-h-14 text-left focus-visible:outline-2 focus-visible:outline-blue-500"
                   >
                     {/* Header Line: Label + Round on Left, Stats Action on Right */}
                     <div className="flex items-center justify-between gap-2 w-full">
@@ -3107,7 +3103,7 @@ function CareerPlayHubContent() {
           <div
             role="dialog"
             aria-modal="true"
-            aria-label="Managerial Inbox"
+            aria-label="Managerial inbox"
             className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in"
             onClick={() => setShowOfficeInboxModal(false)}
           >
@@ -3127,14 +3123,9 @@ function CareerPlayHubContent() {
                 </h3>
                 <div className="flex items-center gap-2 shrink-0">
                   {unreadInboxCount > 0 && (
-                    <button
-                      type="button"
-                      data-office-ui="true"
-                      onClick={handleMarkAllMessagesRead}
-                      className="text-sm font-medium text-blue-700 hover:underline cursor-pointer min-h-[36px] px-1"
-                    >
-                      <span>Mark all read</span>
-                    </button>
+                    <Button variant="ghost" size="sm" data-office-ui="true" onClick={handleMarkAllMessagesRead}>
+                      Mark all read
+                    </Button>
                   )}
                   <button
                     type="button"
@@ -3163,7 +3154,7 @@ function CareerPlayHubContent() {
                       data-office-ui="true"
                       aria-pressed={active}
                       onClick={() => setInboxFilter(filter.id as typeof inboxFilter)}
-                      className={`min-h-[36px] px-3 rounded-full border text-xs whitespace-nowrap cursor-pointer flex items-center gap-1 transition-colors ${
+                      className={`min-h-9 px-3 rounded-full border text-xs whitespace-nowrap cursor-pointer flex items-center gap-1 transition-colors ${
                         active
                           ? 'bg-[var(--surface-elevated)] border-[var(--border-crisp)] text-[var(--ink-primary)] font-semibold'
                           : 'bg-transparent border-[var(--border-subtle)] text-[var(--ink-secondary)] font-medium hover:text-[var(--ink-primary)]'
@@ -3178,7 +3169,7 @@ function CareerPlayHubContent() {
                   aria-label="Filter by message type"
                   value={['board', 'transfer', 'injury', 'match_report'].includes(inboxFilter) ? inboxFilter : ''}
                   onChange={(e) => setInboxFilter((e.target.value || 'all') as typeof inboxFilter)}
-                  className="ml-auto min-w-0 min-h-[36px] px-2 rounded-lg bg-[var(--surface-card)] border border-[var(--border-crisp)] text-xs font-medium text-[var(--ink-primary)] cursor-pointer"
+                  className="ml-auto min-w-0 min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] cursor-pointer"
                 >
                   <option value="">Type</option>
                   <option value="board">Board</option>
@@ -3284,8 +3275,6 @@ function CareerPlayHubContent() {
                                     showToast(res.summary);
                                   }}
                                   variant="primary"
-                                  size="sm"
-                                  className="min-h-10"
                                 >
                                   Promise 3/5 starts
                                 </Button>
@@ -3304,8 +3293,6 @@ function CareerPlayHubContent() {
                                     showToast(res.summary);
                                   }}
                                   variant="secondary"
-                                  size="sm"
-                                  className="min-h-10"
                                 >
                                   Explain rotation
                                 </Button>
@@ -3324,8 +3311,6 @@ function CareerPlayHubContent() {
                                     showToast(res.summary);
                                   }}
                                   variant="danger"
-                                  size="sm"
-                                  className="min-h-10"
                                 >
                                   Transfer list
                                 </Button>
@@ -3368,15 +3353,15 @@ function CareerPlayHubContent() {
                   });
                 })()}
                 {allInbox.some((m) => m.isRead) && (
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
+                    fullWidth
                     data-office-ui="true"
                     onClick={handleClearReadMessages}
-                    className="w-full min-h-[40px] text-sm font-medium text-[var(--ink-secondary)] hover:text-rose-700 transition-colors cursor-pointer"
                     title="Archive read messages that require no further action"
                   >
                     Clear read messages
-                  </button>
+                  </Button>
                 )}
               </div>
             </section>
@@ -3385,7 +3370,7 @@ function CareerPlayHubContent() {
 
         {/* TAB 2: SQUAD */}
         {activeTab === 'squad' && (
-          <CareerErrorBoundary slotId={slotId} sectionLabel="Squad Management">
+          <CareerErrorBoundary slotId={slotId} sectionLabel="Squad management">
             <SquadManagement
               save={save}
               onUpdateSave={handleUpdateSave}
@@ -3398,7 +3383,7 @@ function CareerPlayHubContent() {
 
         {/* TAB 3: FIXTURES */}
         {activeTab === 'fixtures' && (
-          <CareerErrorBoundary slotId={slotId} sectionLabel="Fixtures & Calendar">
+          <CareerErrorBoundary slotId={slotId} sectionLabel="Fixtures and calendar">
             <FixturesCalendar
               save={save}
               onUpdateSave={handleUpdateSave}
@@ -3410,7 +3395,7 @@ function CareerPlayHubContent() {
 
         {/* TAB 4: TABLE */}
         {activeTab === 'table' && (
-          <CareerErrorBoundary slotId={slotId} sectionLabel="League Table">
+          <CareerErrorBoundary slotId={slotId} sectionLabel="League table">
             <LeagueTable
               standings={save.standings || []}
               userClubId={save.club.id}
@@ -3436,7 +3421,7 @@ function CareerPlayHubContent() {
 
         {/* TAB 6: TRANSFERS */}
         {activeTab === 'transfers' && (
-          <CareerErrorBoundary slotId={slotId} sectionLabel="Transfer Hub">
+          <CareerErrorBoundary slotId={slotId} sectionLabel="Transfer hub">
             <TransferHub
               save={save}
               onUpdateSave={handleUpdateSave}
@@ -3450,7 +3435,7 @@ function CareerPlayHubContent() {
 
         {/* TAB 7: CLUB LEGACY & TROPHY CABINET */}
         {activeTab === 'legacy' && (
-          <CareerErrorBoundary slotId={slotId} sectionLabel="Club Legacy & Trophy Cabinet">
+          <CareerErrorBoundary slotId={slotId} sectionLabel="Club legacy and trophy cabinet">
             <ClubLegacyView
               save={save}
               onNavigateCups={() => handleTabChange('cups')}
@@ -3461,7 +3446,7 @@ function CareerPlayHubContent() {
 
         {/* TAB 8: SETTINGS & EDITING */}
         {activeTab === 'settings' && editableSettings && (
-          <CareerErrorBoundary slotId={slotId} sectionLabel="Career Settings">
+          <CareerErrorBoundary slotId={slotId} sectionLabel="Career settings">
             <CareerSettingsTab
               save={save}
               slotId={slotId}
@@ -3485,7 +3470,7 @@ function CareerPlayHubContent() {
 
       {/* Matchday Play/Sim Interactive Modal */}
       {activeMatchFixture && (
-        <CareerErrorBoundary slotId={slotId} sectionLabel="Live Matchday" onResetView={() => setActiveMatchFixture(null)}>
+        <CareerErrorBoundary slotId={slotId} sectionLabel="Live matchday" onResetView={() => setActiveMatchFixture(null)}>
           <MatchDayModal
             fixture={activeMatchFixture}
             save={save}
@@ -3587,7 +3572,7 @@ function CareerPlayHubContent() {
           <div className="office-floating-card border border-[var(--border-subtle)] rounded-xl p-5 sm:p-6 max-w-lg w-full space-y-4 shadow-sm text-left relative text-[var(--ink-primary)] max-h-[90dvh] overflow-y-auto">
             <header className="space-y-1.5">
               <Eyebrow>Announcement · 8 July {save.season.yearStart}</Eyebrow>
-              <h3 className="text-xl font-display font-bold text-[var(--ink-primary)]">
+              <h3 className="text-xl font-display font-semibold text-[var(--ink-primary)]">
                 Premier League fixture release day
               </h3>
               <p className="text-sm text-[var(--ink-secondary)] leading-relaxed">
@@ -3657,7 +3642,7 @@ function CareerPlayHubContent() {
             <div className="flex justify-between items-start gap-2">
               <div className="space-y-1 min-w-0">
                 <Eyebrow>Season {save.season.seasonNumber} review</Eyebrow>
-                <h3 className="text-xl font-display font-bold text-[var(--ink-primary)] flex items-center gap-2">
+                <h3 className="text-xl font-display font-semibold text-[var(--ink-primary)] flex items-center gap-2">
                   {seasonSummary.leagueTitle ? (
                     <>
                       <IconCrown className="w-5 h-5 text-amber-600 shrink-0" />
@@ -3725,7 +3710,7 @@ function CareerPlayHubContent() {
                   type="button"
                   aria-expanded={seasonReviewOpenSection === 'growth'}
                   onClick={() => setSeasonReviewOpenSection((prev) => (prev === 'growth' ? null : 'growth'))}
-                  className="w-full min-h-[44px] flex items-center justify-between gap-2 text-left cursor-pointer text-sm font-semibold text-[var(--ink-primary)]"
+                  className="w-full min-h-11 flex items-center justify-between gap-2 text-left cursor-pointer text-sm font-semibold text-[var(--ink-primary)]"
                 >
                   <span>
                     Player development{' '}
@@ -3753,7 +3738,7 @@ function CareerPlayHubContent() {
                     type="button"
                     aria-expanded={seasonReviewOpenSection === 'division'}
                     onClick={() => setSeasonReviewOpenSection((prev) => (prev === 'division' ? null : 'division'))}
-                    className="w-full min-h-[44px] flex items-center justify-between gap-2 text-left cursor-pointer text-sm font-semibold text-[var(--ink-primary)]"
+                    className="w-full min-h-11 flex items-center justify-between gap-2 text-left cursor-pointer text-sm font-semibold text-[var(--ink-primary)]"
                   >
                     <span>Promoted &amp; relegated</span>
                     <IconChevronDown className={`w-4 h-4 shrink-0 ${seasonReviewOpenSection === 'division' ? 'rotate-180' : ''}`} />
@@ -3837,7 +3822,7 @@ function CareerPlayHubContent() {
             </p>
 
             <div className="divide-y divide-[var(--border-subtle)] border-y border-[var(--border-subtle)] text-sm font-medium text-[var(--ink-primary)]">
-              <label className="flex items-center justify-between gap-3 min-h-[44px] cursor-pointer">
+              <label className="flex items-center justify-between gap-3 min-h-11 cursor-pointer">
                 <span>Use preferred starting 11</span>
                 <input
                   type="checkbox"
@@ -3846,14 +3831,14 @@ function CareerPlayHubContent() {
                   className="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 cursor-pointer shrink-0"
                 />
               </label>
-              <label className="flex items-center justify-between gap-3 min-h-[44px]">
+              <label className="flex items-center justify-between gap-3 min-h-11">
                 <span>Pause for transfers</span>
                 <select
                   value={fastForwardHaltOnTransferMilestone}
                   onChange={(e) =>
                     setFastForwardHaltOnTransferMilestone(e.target.value as typeof fastForwardHaltOnTransferMilestone)
                   }
-                  className="min-w-0 min-h-[36px] px-2 rounded-lg bg-[var(--surface-card)] border border-[var(--border-crisp)] text-sm font-medium text-[var(--ink-primary)] cursor-pointer"
+                  className="min-w-0 min-h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] px-3 text-base sm:text-sm text-[var(--ink-primary)] cursor-pointer"
                 >
                   <option value="deadline">Deadline day</option>
                   <option value="window_open_or_close">Window open + deadline</option>
@@ -3900,7 +3885,7 @@ function CareerPlayHubContent() {
           <div className="office-floating-card border border-[var(--border-subtle)] rounded-xl p-5 sm:p-6 max-w-md w-full space-y-4 shadow-sm text-left relative text-[var(--ink-primary)] max-h-[90dvh] overflow-y-auto">
             <div className="space-y-1">
               <Eyebrow>Board of directors notice</Eyebrow>
-              <h3 className="text-xl font-display font-bold text-rose-700">
+              <h3 className="text-xl font-display font-semibold text-[var(--ink-primary)]">
                 Contract terminated
               </h3>
               <p className="text-sm text-[var(--ink-secondary)] leading-relaxed pt-1">
@@ -3922,7 +3907,7 @@ function CareerPlayHubContent() {
               if (carouselOffers.length === 0) return null;
 
               return (
-                <section aria-label="Sacking Carousel Offers" className="text-left space-y-2">
+                <section aria-label="Sacking carousel offers" className="text-left space-y-2">
                   <SectionHeader as="h4" title="Emergency job offers" meta={carouselOffers.length} />
                   <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                     {carouselOffers.map((offer) => (
@@ -3969,8 +3954,7 @@ function CareerPlayHubContent() {
                             }
                           }}
                           variant="secondary"
-                          size="sm"
-                          className="min-h-10 shrink-0"
+                          className="shrink-0"
                         >
                           Take job
                         </Button>

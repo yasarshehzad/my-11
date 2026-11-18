@@ -64,7 +64,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
               cx="50"
               cy="50"
               r="43"
-              className="stroke-[#1d5eff] transition-all duration-700 ease-out"
+              className="stroke-[#1d5eff] transition-[stroke-dashoffset] duration-700 ease-out"
               strokeWidth="6"
               fill="transparent"
               strokeDasharray={270.1}
@@ -92,7 +92,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
             <div className="h-2 w-full bg-[var(--surface-elevated)] rounded-full overflow-hidden">
               <div
                 style={{ width: `${attack || 0}%` }}
-                className="h-full bg-[#1d5eff] rounded-full transition-all duration-500 ease-out"
+                className="h-full bg-[#1d5eff] rounded-full transition-[width] duration-500 ease-out"
               />
             </div>
           </div>
@@ -106,7 +106,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
             <div className="h-2 w-full bg-[var(--surface-elevated)] rounded-full overflow-hidden">
               <div
                 style={{ width: `${midfield || 0}%` }}
-                className="h-full bg-sky-600 rounded-full transition-all duration-500 ease-out"
+                className="h-full bg-sky-600 rounded-full transition-[width] duration-500 ease-out"
               />
             </div>
           </div>
@@ -120,7 +120,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
             <div className="h-2 w-full bg-[var(--surface-elevated)] rounded-full overflow-hidden">
               <div
                 style={{ width: `${defence || 0}%` }}
-                className="h-full bg-rose-500 rounded-full transition-all duration-500 ease-out"
+                className="h-full bg-rose-500 rounded-full transition-[width] duration-500 ease-out"
               />
             </div>
           </div>
@@ -129,7 +129,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
           <button
             type="button"
             onClick={() => setShowBreakdownModal(true)}
-            className="w-full text-left group cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-400/50 rounded-lg p-0.5 -m-0.5 transition-colors"
+            className="w-full text-left group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg p-0.5 -m-0.5 transition-colors"
             title="View chemistry breakdown"
             aria-label={`Chemistry: ${chemistry || 0} out of 100. Click to inspect full breakdown.`}
           >
@@ -143,7 +143,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
             <div className="h-2 w-full bg-[var(--surface-elevated)] rounded-full overflow-hidden">
               <div
                 style={{ width: `${chemistry || 0}%` }}
-                className="h-full bg-amber-500 rounded-full transition-all duration-500 ease-out"
+                className="h-full bg-amber-500 rounded-full transition-[width] duration-500 ease-out"
               />
             </div>
           </button>
@@ -207,14 +207,14 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
             {/* Header */}
             <div className="flex justify-between items-center gap-3 border-b border-[var(--office-divider)] pb-3">
               <div className="min-w-0">
-                <h3 id="chem-breakdown-title" className="text-base font-display font-semibold text-[var(--office-text-primary)]">
+                <h3 id="chem-breakdown-title" className="text-base font-display font-semibold text-[var(--ink-primary)]">
                   Chemistry breakdown
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setShowBreakdownModal(false)}
-                className="w-10 h-10 rounded-lg text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] flex items-center justify-center cursor-pointer shrink-0"
+                className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] cursor-pointer transition-colors shrink-0"
                 aria-label="Close chemistry breakdown"
               >
                 <IconClose className="w-4 h-4" />

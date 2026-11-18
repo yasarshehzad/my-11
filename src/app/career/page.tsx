@@ -172,7 +172,7 @@ export default function CareerEntryPage() {
             <button
               type="button"
               onClick={() => setShowGuide(true)}
-              aria-label="Career Mode Guide"
+              aria-label="Career mode guide"
               title="Career mode guide"
               className="w-10 h-10 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] hover:bg-[var(--surface-subcard)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] flex items-center justify-center transition-colors cursor-pointer"
             >
@@ -189,7 +189,7 @@ export default function CareerEntryPage() {
       {/* Main Content */}
       <main className="flex-1 w-full max-w-5xl mx-auto px-3 sm:px-4 pt-4 sm:pt-6 space-y-6">
         <div className="flex items-baseline justify-between gap-3 px-1">
-          <h1 className="text-xl sm:text-2xl font-display font-bold text-[var(--ink-primary)]">
+          <h1 className="text-xl sm:text-2xl font-display font-semibold text-[var(--ink-primary)]">
             Save slots
           </h1>
           <span className="text-sm text-[var(--ink-muted)] tabular-nums">
@@ -198,7 +198,7 @@ export default function CareerEntryPage() {
         </div>
 
         {/* 3 Save Slots Tactile Cards */}
-        <section aria-label="Save Slots" className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <section aria-label="Save slots" className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {slots.map((slot, index) => {
             const slotNumber = index + 1;
             const slotLabel = `Slot ${slotNumber}`;
@@ -234,17 +234,18 @@ export default function CareerEntryPage() {
                             onChange={(e) => handleFileUpload(e, slot.slotId)}
                           />
                         </label>
-                        <button
-                          type="button"
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="min-h-10"
                           onClick={() => {
                             setImportingSlot(slot.slotId);
                             setImportError(null);
                             setImportJsonText('');
                           }}
-                          className="inline-flex items-center justify-center gap-1.5 min-h-10 px-3 rounded-lg text-xs font-semibold bg-[var(--surface-card)] text-[var(--ink-primary)] border border-[var(--border-crisp)] hover:bg-[var(--surface-subcard)] cursor-pointer transition-colors"
                         >
-                          <span>Paste JSON</span>
-                        </button>
+                          Paste JSON
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -297,7 +298,7 @@ export default function CareerEntryPage() {
                     <div className="flex gap-2">
                       <Button
                         variant="secondary"
-                        className="flex-1 text-xs"
+                        className="flex-1"
                         onClick={() => handleExport(slot.slotId)}
                         title="Download JSON backup"
                       >
@@ -305,7 +306,6 @@ export default function CareerEntryPage() {
                       </Button>
                       <Button
                         variant="danger"
-                        className="text-xs"
                         onClick={() => setDeleteConfirmSlot(slot.slotId)}
                         aria-label={`Delete ${slotLabel}`}
                         title="Delete save file"
@@ -376,7 +376,7 @@ export default function CareerEntryPage() {
               onChange={(e) => setImportJsonText(e.target.value)}
               placeholder="Paste JSON here"
               rows={8}
-              className="w-full bg-[var(--surface-subcard)] border border-[var(--border-crisp)] rounded-lg p-3 text-xs tabular-nums text-[var(--ink-primary)] focus:outline-none focus:border-blue-600"
+              className="w-full bg-[var(--surface-subcard)] border border-[var(--border-crisp)] rounded-lg p-3 text-base sm:text-sm tabular-nums text-[var(--ink-primary)] focus:outline-none focus:border-blue-600"
             />
             {importError && (
               <p className="text-xs text-rose-700 font-semibold">{importError}</p>
