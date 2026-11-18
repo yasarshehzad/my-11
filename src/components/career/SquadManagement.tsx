@@ -1031,6 +1031,22 @@ export function SquadManagement({
             </div>
           </div>
 
+          {/* Captain and set pieces, reachable from the pitch without opening Tactics */}
+          <div className="office-floating-card bg-[var(--surface-card)] border border-[var(--border-subtle)] rounded-xl">
+            {renderDisclosureHeader(
+              'roles',
+              'squad-roles-panel',
+              'Captain and set pieces',
+              <span className="truncate">
+                {squad.find((p) => p.id === currentTactics.captainId)?.name.split(' ').slice(-1)[0] || 'No captain'}
+                {currentTactics.viceCaptainId
+                  ? ` · ${squad.find((p) => p.id === currentTactics.viceCaptainId)?.name.split(' ').slice(-1)[0] || ''}`
+                  : ''}
+              </span>
+            )}
+            {openPanels.roles && <div id="squad-roles-panel">{renderRolesCard(true)}</div>}
+          </div>
+
           {/* Bench Row (Substitutes) */}
           <div className="office-floating-card bg-white border border-slate-200/90 rounded-xl p-4 sm:p-5 space-y-3.5 shadow-sm">
             <SectionHeader
@@ -1600,145 +1616,7 @@ export function SquadManagement({
           })()}
 
           {/* Captaincy and set-piece takers */}
-          {(() => {
-            const defaultTakers = pickDefaultSetPieceTakers(squad);
-            const outfieldCandidates = squad.filter(
-              (p) => categorizePosition(p.position) !== 'GK'
-            );
-            const sortedPenalty = [...outfieldCandidates].sort((a, b) => {
-              const fa = a.faceStats?.sho ?? a.rating;
-              const fb = b.faceStats?.sho ?? b.rating;
-              return fb + b.rating * 0.4 - (fa + a.rating * 0.4);
-            });
-            const sortedFreekick = [...outfieldCandidates].sort((a, b) => {
-              const fa = (a.faceStats?.sho ?? a.rating) * 0.6 + (a.faceStats?.pas ?? a.rating) * 0.4;
-              const fb = (b.faceStats?.sho ?? b.rating) * 0.6 + (b.faceStats?.pas ?? b.rating) * 0.4;
-              return fb - fa;
-            });
-            const sortedCorner = [...outfieldCandidates].sort((a, b) => {
-              const fa = (a.faceStats?.pas ?? a.rating) * 0.7 + (a.faceStats?.dri ?? a.rating) * 0.3;
-              const fb = (b.faceStats?.pas ?? b.rating) * 0.7 + (b.faceStats?.dri ?? b.rating) * 0.3;
-              return fb - fa;
-            });
-
-            const penaltyId = currentTactics.penaltyTakerId || defaultTakers.penaltyTakerId || '';
-            const fkId = currentTactics.freeKickTakerId || defaultTakers.freeKickTakerId || '';
-            const cornerId = currentTactics.cornerTakerId || defaultTakers.cornerTakerId || '';
-
-            const rowClass = 'flex items-center gap-2';
-            const labelClass = 'w-24 shrink-0 text-xs text-[var(--ink-secondary)]';
-            const selectClass =
-              'flex-1 min-w-0 min-h-[40px] px-2.5 rounded-lg bg-[var(--surface-card)] border border-[var(--border-crisp)] text-xs font-medium text-[var(--ink-primary)] cursor-pointer focus:border-blue-500 focus:outline-hidden';
-
-            return (
-              <div className="office-subcard p-4 rounded-xl space-y-3">
-                <SectionHeader as="h4" title="Captain and set pieces" />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
-                  <label className={rowClass}>
-                    <span className={labelClass}>Captain</span>
-                    <select
-                      aria-label="Appoint Club Captain"
-                      value={currentTactics.captainId || ''}
-                      onChange={(e) => handleSetCaptain(e.target.value)}
-                      className={selectClass}
-                    >
-                      {squad.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name} ({p.position}, {p.rating} OVR, age {p.age})
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label className={rowClass}>
-                    <span className={labelClass}>Vice-captain</span>
-                    <select
-                      aria-label="Appoint Vice-Captain"
-                      value={currentTactics.viceCaptainId || ''}
-                      onChange={(e) => handleSetViceCaptain(e.target.value)}
-                      className={selectClass}
-                    >
-                      <option value="">None</option>
-                      {squad
-                        .filter((p) => p.id !== currentTactics.captainId)
-                        .map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name} ({p.position}, {p.rating} OVR, age {p.age})
-                          </option>
-                        ))}
-                    </select>
-                  </label>
-
-                  <label className={rowClass}>
-                    <span className={labelClass}>Penalties</span>
-                    <select
-                      aria-label="Designate Penalty Taker"
-                      value={penaltyId}
-                      onChange={(e) => handleSetPieceTaker('penaltyTakerId', e.target.value)}
-                      className={selectClass}
-                    >
-                      {sortedPenalty.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name} ({p.position} · SHO {p.faceStats?.sho ?? p.rating})
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label className={rowClass}>
-                    <span className={labelClass}>Free kicks</span>
-                    <select
-                      aria-label="Designate Free Kick Taker"
-                      value={fkId}
-                      onChange={(e) => handleSetPieceTaker('freeKickTakerId', e.target.value)}
-                      className={selectClass}
-                    >
-                      {sortedFreekick.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name} ({p.position} · SHO {p.faceStats?.sho ?? p.rating} / PAS {p.faceStats?.pas ?? p.rating})
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label className={rowClass}>
-                    <span className={labelClass}>Corners</span>
-                    <select
-                      aria-label="Designate Corner Taker"
-                      value={cornerId}
-                      onChange={(e) => handleSetPieceTaker('cornerTakerId', e.target.value)}
-                      className={selectClass}
-                    >
-                      {sortedCorner.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name} ({p.position} · PAS {p.faceStats?.pas ?? p.rating})
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-
-                <p className="text-xs text-slate-600 pt-2 border-t border-slate-100">
-                  Leadership <strong className="font-semibold tabular-nums text-[var(--ink-primary)]">{captaincyEffects.leadershipScore}/99</strong>
-                  {' · '}Late composure{' '}
-                  <strong
-                    className={`tabular-nums ${
-                      captaincyEffects.composureBonus > 0
-                        ? 'text-emerald-600'
-                        : captaincyEffects.composureBonus < 0
-                        ? 'text-rose-600'
-                        : 'text-slate-600'
-                    }`}
-                  >
-                    {captaincyEffects.composureBonus > 0 ? `+${captaincyEffects.composureBonus}%` : `${captaincyEffects.composureBonus}%`}
-                  </strong>
-                  {' · '}
-                  {captaincyEffects.rallyEffect}
-                </p>
-              </div>
-            );
-          })()}
+          {renderRolesCard()}
 
           {/* Dressing room harmony, hierarchy behind a disclosure */}
           <div className="office-subcard rounded-xl">
@@ -2371,6 +2249,147 @@ export function SquadManagement({
 
     </div>
   );
+
+  /** Captain, vice-captain and set-piece takers. `bare` drops the card frame and title for use inside a disclosure. */
+  function renderRolesCard(bare = false) {
+            const defaultTakers = pickDefaultSetPieceTakers(squad);
+            const outfieldCandidates = squad.filter(
+              (p) => categorizePosition(p.position) !== 'GK'
+            );
+            const sortedPenalty = [...outfieldCandidates].sort((a, b) => {
+              const fa = a.faceStats?.sho ?? a.rating;
+              const fb = b.faceStats?.sho ?? b.rating;
+              return fb + b.rating * 0.4 - (fa + a.rating * 0.4);
+            });
+            const sortedFreekick = [...outfieldCandidates].sort((a, b) => {
+              const fa = (a.faceStats?.sho ?? a.rating) * 0.6 + (a.faceStats?.pas ?? a.rating) * 0.4;
+              const fb = (b.faceStats?.sho ?? b.rating) * 0.6 + (b.faceStats?.pas ?? b.rating) * 0.4;
+              return fb - fa;
+            });
+            const sortedCorner = [...outfieldCandidates].sort((a, b) => {
+              const fa = (a.faceStats?.pas ?? a.rating) * 0.7 + (a.faceStats?.dri ?? a.rating) * 0.3;
+              const fb = (b.faceStats?.pas ?? b.rating) * 0.7 + (b.faceStats?.dri ?? b.rating) * 0.3;
+              return fb - fa;
+            });
+
+            const penaltyId = currentTactics.penaltyTakerId || defaultTakers.penaltyTakerId || '';
+            const fkId = currentTactics.freeKickTakerId || defaultTakers.freeKickTakerId || '';
+            const cornerId = currentTactics.cornerTakerId || defaultTakers.cornerTakerId || '';
+
+            const rowClass = 'flex items-center gap-2';
+            const labelClass = 'w-24 shrink-0 text-xs text-[var(--ink-secondary)]';
+            const selectClass =
+              'flex-1 min-w-0 min-h-[40px] px-2.5 rounded-lg bg-[var(--surface-card)] border border-[var(--border-crisp)] text-xs font-medium text-[var(--ink-primary)] cursor-pointer focus:border-blue-500 focus:outline-hidden';
+
+            return (
+              <div className={bare ? 'px-3.5 pb-3.5 space-y-3' : 'office-subcard p-4 rounded-xl space-y-3'}>
+                {!bare && <SectionHeader as="h4" title="Captain and set pieces" />}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+                  <label className={rowClass}>
+                    <span className={labelClass}>Captain</span>
+                    <select
+                      aria-label="Appoint Club Captain"
+                      value={currentTactics.captainId || ''}
+                      onChange={(e) => handleSetCaptain(e.target.value)}
+                      className={selectClass}
+                    >
+                      {squad.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} ({p.position}, {p.rating} OVR, age {p.age})
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className={rowClass}>
+                    <span className={labelClass}>Vice-captain</span>
+                    <select
+                      aria-label="Appoint Vice-Captain"
+                      value={currentTactics.viceCaptainId || ''}
+                      onChange={(e) => handleSetViceCaptain(e.target.value)}
+                      className={selectClass}
+                    >
+                      <option value="">None</option>
+                      {squad
+                        .filter((p) => p.id !== currentTactics.captainId)
+                        .map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name} ({p.position}, {p.rating} OVR, age {p.age})
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+
+                  <label className={rowClass}>
+                    <span className={labelClass}>Penalties</span>
+                    <select
+                      aria-label="Designate Penalty Taker"
+                      value={penaltyId}
+                      onChange={(e) => handleSetPieceTaker('penaltyTakerId', e.target.value)}
+                      className={selectClass}
+                    >
+                      {sortedPenalty.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} ({p.position} · SHO {p.faceStats?.sho ?? p.rating})
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className={rowClass}>
+                    <span className={labelClass}>Free kicks</span>
+                    <select
+                      aria-label="Designate Free Kick Taker"
+                      value={fkId}
+                      onChange={(e) => handleSetPieceTaker('freeKickTakerId', e.target.value)}
+                      className={selectClass}
+                    >
+                      {sortedFreekick.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} ({p.position} · SHO {p.faceStats?.sho ?? p.rating} / PAS {p.faceStats?.pas ?? p.rating})
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className={rowClass}>
+                    <span className={labelClass}>Corners</span>
+                    <select
+                      aria-label="Designate Corner Taker"
+                      value={cornerId}
+                      onChange={(e) => handleSetPieceTaker('cornerTakerId', e.target.value)}
+                      className={selectClass}
+                    >
+                      {sortedCorner.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} ({p.position} · PAS {p.faceStats?.pas ?? p.rating})
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <p className="text-xs text-slate-600 pt-2 border-t border-slate-100">
+                  Leadership <strong className="font-semibold tabular-nums text-[var(--ink-primary)]">{captaincyEffects.leadershipScore}/99</strong>
+                  {' · '}Late composure{' '}
+                  <strong
+                    className={`tabular-nums ${
+                      captaincyEffects.composureBonus > 0
+                        ? 'text-emerald-600'
+                        : captaincyEffects.composureBonus < 0
+                        ? 'text-rose-600'
+                        : 'text-slate-600'
+                    }`}
+                  >
+                    {captaincyEffects.composureBonus > 0 ? `+${captaincyEffects.composureBonus}%` : `${captaincyEffects.composureBonus}%`}
+                  </strong>
+                  {' · '}
+                  {captaincyEffects.rallyEffect}
+                </p>
+              </div>
+            );
+  }
 
   function renderDisclosureHeader(
     key: string,

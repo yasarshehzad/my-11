@@ -21,6 +21,9 @@ import {
 } from '../../career/transfers';
 import { playDealAccepted } from '../../utils/soundEffects';
 import { EaFcCard } from './EaFcCard';
+import { PositionMap } from './PositionMap';
+import { ContractRenewalModal } from './transfers/ContractRenewalModal';
+import { getInitialClubTactics } from '../../career/tactics';
 import { Button, Eyebrow, Tag } from '@/components/ui';
 import {
   IconBarChart,
@@ -64,6 +67,7 @@ export function SquadPlayerModal({
   const [transferListedInput, setTransferListedInput] = useState<boolean>(() => player.transferListed ?? false);
   const [loanListedInput, setLoanListedInput] = useState<boolean>(() => player.loanListed ?? false);
   const [showReleaseModal, setShowReleaseModal] = useState<boolean>(false);
+  const [showRenewalModal, setShowRenewalModal] = useState<boolean>(false);
   const [releaseActionType, setReleaseActionType] = useState<'mutual' | 'unilateral'>('mutual');
   const [squadActionMessage, setSquadActionMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
@@ -76,9 +80,37 @@ export function SquadPlayerModal({
     }
   }, [player.id, playerModalTab]);
 
+  // Swipe down to close: only when the gesture starts with the content scrolled to the top
+  // (or on the header), so it never fights normal scrolling inside the sheet.
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const pullDownRef = useRef<{ allowed: boolean; active: boolean }>({ allowed: false, active: false });
+  const SWIPE_CLOSE_DISTANCE = 90;
+
+  const setSheetOffset = (offset: number, animate: boolean) => {
+    const el = sheetRef.current;
+    if (!el) return;
+    el.style.transition = animate ? 'translate 180ms ease-out' : 'none';
+    el.style.translate = offset > 0 ? `0 ${offset}px` : '';
+  };
+
   const handleModalTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length !== 1) return;
     modalSwipeStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    const body = playerModalCardRef.current;
+    const startedInBody = Boolean(body && e.target instanceof Node && body.contains(e.target));
+    pullDownRef.current = { allowed: !startedInBody || (body?.scrollTop ?? 0) <= 0, active: false };
+  };
+
+  const handleModalTouchMove = (e: React.TouchEvent) => {
+    const start = modalSwipeStartRef.current;
+    if (!start || !pullDownRef.current.allowed || e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - start.x;
+    const dy = e.touches[0].clientY - start.y;
+    if (!pullDownRef.current.active) {
+      if (dy < 12 || dy < Math.abs(dx) * 1.5) return;
+      pullDownRef.current.active = true;
+    }
+    setSheetOffset(Math.max(0, dy), false);
   };
 
   const handleModalTouchEnd = (e: React.TouchEvent) => {
@@ -86,6 +118,15 @@ export function SquadPlayerModal({
     const dx = e.changedTouches[0].clientX - modalSwipeStartRef.current.x;
     const dy = e.changedTouches[0].clientY - modalSwipeStartRef.current.y;
     modalSwipeStartRef.current = null;
+    if (pullDownRef.current.active) {
+      pullDownRef.current.active = false;
+      if (dy >= SWIPE_CLOSE_DISTANCE) {
+        onClose();
+      } else {
+        setSheetOffset(0, true);
+      }
+      return;
+    }
     if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.3) return;
     const order: Array<'profile' | 'attributes' | 'stats' | 'market'> = ['profile', 'attributes', 'stats', 'market'];
     const idx = order.indexOf(playerModalTab);
@@ -149,9 +190,30 @@ export function SquadPlayerModal({
   const priceStep = player.value >= 10_000_000 ? 1_000_000 : 250_000;
   const priceStepLabel = priceStep === 1_000_000 ? '£1M' : '£250k';
 
+  const currentTactics = save.tactics || getInitialClubTactics(save.squad || []);
+  const isCaptain = currentTactics.captainId === player.id;
+  const isViceCaptain = currentTactics.viceCaptainId === player.id;
+  const handleSetLeadership = (role: 'captain' | 'vice') => {
+    const tactics =
+      role === 'captain'
+        ? {
+            ...currentTactics,
+            captainId: player.id,
+            viceCaptainId: currentTactics.viceCaptainId === player.id ? undefined : currentTactics.viceCaptainId,
+          }
+        : { ...currentTactics, viceCaptainId: player.id };
+    onUpdateSave({ ...save, tactics });
+    onToast?.({
+      message: `${player.name} is now ${role === 'captain' ? 'club captain' : 'vice-captain'}.`,
+      type: 'success',
+    });
+  };
+
   if (!isMounted) return null;
 
-  return createPortal(
+  return (
+    <>
+      {createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -166,12 +228,24 @@ export function SquadPlayerModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
+        ref={sheetRef}
         onTouchStart={handleModalTouchStart}
+        onTouchMove={handleModalTouchMove}
         onTouchEnd={handleModalTouchEnd}
+        onTouchCancel={() => {
+          modalSwipeStartRef.current = null;
+          pullDownRef.current.active = false;
+          setSheetOffset(0, true);
+        }}
         className="office-floating-card my11-mobile-sheet bg-[var(--surface-card)] border border-[var(--border-subtle)] rounded-t-xl sm:rounded-xl max-w-md w-full shadow-sm relative h-[85dvh] sm:h-[670px] max-h-[90dvh] sm:max-h-[88vh] flex flex-col overflow-hidden text-[var(--ink-primary)]"
       >
+        {/* Grab handle: shows the sheet can be swiped down to close (phones) */}
+        <div className="sm:hidden shrink-0 pt-2 flex justify-center" aria-hidden="true">
+          <span className="w-9 h-1 rounded-full bg-[var(--border-crisp)]" />
+        </div>
+
         {/* Compact Sticky Top Header */}
-        <div className="shrink-0 flex items-center justify-between gap-2 px-4 pt-4 pb-3 border-b border-[var(--border-subtle)] bg-[var(--surface-card)]">
+        <div className="shrink-0 flex items-center justify-between gap-2 px-4 pt-2 sm:pt-4 pb-3 border-b border-[var(--border-subtle)] bg-[var(--surface-card)]">
           <div className="min-w-0">
             <h3 className="text-base font-display font-semibold text-[var(--ink-primary)] truncate">
               {player.name}
@@ -243,6 +317,42 @@ export function SquadPlayerModal({
                           </div>
                         ))}
                       </dl>
+                      <div className="px-1 pt-2.5 border-t border-[var(--border-subtle)] flex items-center justify-between gap-3">
+                        <p className="text-sm text-[var(--ink-secondary)] min-w-0">
+                          Contract{' '}
+                          <strong className={`font-semibold ${player.contractYears <= 1 ? 'text-amber-700' : 'text-[var(--ink-primary)]'}`}>
+                            {player.contractYears <= 0
+                              ? 'expires this summer'
+                              : `${player.contractYears} ${player.contractYears === 1 ? 'year' : 'years'} left`}
+                          </strong>
+                        </p>
+                        <Button size="sm" className="min-h-10 shrink-0" onClick={() => setShowRenewalModal(true)}>
+                          Offer new contract
+                        </Button>
+                      </div>
+                      <div className="px-1 flex items-center justify-between gap-3">
+                        <p className="text-sm text-[var(--ink-secondary)] min-w-0">
+                          {isCaptain ? (
+                            <strong className="font-semibold text-[var(--ink-primary)]">Club captain</strong>
+                          ) : isViceCaptain ? (
+                            <strong className="font-semibold text-[var(--ink-primary)]">Vice-captain</strong>
+                          ) : (
+                            'Leadership'
+                          )}
+                        </p>
+                        <div className="flex gap-2 shrink-0">
+                          {!isCaptain && (
+                            <Button size="sm" className="min-h-10" onClick={() => handleSetLeadership('captain')}>
+                              Make captain
+                            </Button>
+                          )}
+                          {!isCaptain && !isViceCaptain && (
+                            <Button size="sm" className="min-h-10" onClick={() => handleSetLeadership('vice')}>
+                              Make vice-captain
+                            </Button>
+                          )}
+                        </div>
+                      </div>
                       <p className="px-1 pt-2.5 border-t border-[var(--border-subtle)] flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--ink-secondary)] tabular-nums">
                         <span className="text-[var(--ink-muted)]">This season</span>
                         <span><strong className="text-[var(--ink-primary)]">{pStats.currentSeason.goals}</strong> goals</span>
@@ -295,7 +405,6 @@ export function SquadPlayerModal({
                   ];
               const peakAge = 27;
               const roleRows: Array<[string, string]> = [
-                ['Positions', (player.naturalPositions || [player.position]).join(', ')],
                 ['Stage', `${player.age} yrs, ${player.age < peakAge ? 'developing' : player.age <= peakAge + 2 ? 'prime' : 'veteran'}`],
                 ['Potential', String(player.potential ?? player.rating)],
                 ['Morale', `${Math.round(player.morale ?? 80)}%`],
@@ -304,6 +413,10 @@ export function SquadPlayerModal({
 
               return (
                 <div className="space-y-5 text-xs">
+                  <section className="space-y-2">
+                    <h4 className="text-sm font-display font-semibold text-[var(--ink-primary)]">Positions</h4>
+                    <PositionMap player={player} />
+                  </section>
                   <div className="grid grid-cols-2 gap-x-5 gap-y-3.5">
                     {statItems.map((item) => (
                       <div key={item.label} className="space-y-1.5">
@@ -737,5 +850,21 @@ export function SquadPlayerModal({
       </div>
     </div>,
     document.body
+      )}
+      {showRenewalModal &&
+        createPortal(
+          <ContractRenewalModal
+            player={player}
+            save={save}
+            onClose={() => setShowRenewalModal(false)}
+            onUpdateSave={(updated) => {
+              onUpdateSave(updated);
+              onPlayerUpdated((updated.squad || []).find((p) => p.id === player.id) || null);
+            }}
+            onNotification={(msg) => onToast?.({ message: msg, type: 'success' })}
+          />,
+          document.body
+        )}
+    </>
   );
 }
