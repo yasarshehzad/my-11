@@ -13,14 +13,8 @@ import {
   logNativeShareTriggered,
   logChallengeLinkCopied,
 } from '../utils/analytics';
-import {
-  IconTrophy,
-  IconMedal,
-  IconCheck,
-  IconClose,
-  IconStar,
-  IconAlert,
-} from './career/GameIcons';
+import { Button } from '@/components/ui';
+import { IconCheck, IconAlert } from './career/GameIcons';
 
 interface SharePreviewProps {
   formation: string;
@@ -102,7 +96,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
     try {
       await navigator.clipboard.writeText(challengeUrl);
       logChallengeLinkCopied(simResult.wins, simResult.points);
-      setFeedbackMessage('Copied challenge link to clipboard!');
+      setFeedbackMessage('Challenge link copied.');
       setTimeout(() => setFeedbackMessage(null), 3000);
     } catch (e) {
       setErrorMessage('Could not copy to clipboard.');
@@ -115,10 +109,10 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
     try {
       await navigator.clipboard.writeText(h2hChallengeUrl);
       logChallengeLinkCopied(simResult.wins, simResult.points);
-      setFeedbackMessage('Copied H2H link. Send it to a friend.');
+      setFeedbackMessage('Head-to-head link copied. Send it to a friend.');
       setTimeout(() => setFeedbackMessage(null), 3500);
     } catch {
-      setErrorMessage('Could not copy H2H link to clipboard.');
+      setErrorMessage('Could not copy the head-to-head link.');
       setTimeout(() => setErrorMessage(null), 3000);
     }
   };
@@ -128,7 +122,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
     try {
       await navigator.clipboard.writeText(shareText);
       logChallengeLinkCopied(simResult.wins, simResult.points);
-      setFeedbackMessage('Copied challenge summary & link to clipboard!');
+      setFeedbackMessage('Summary and link copied.');
       setTimeout(() => setFeedbackMessage(null), 3000);
     } catch (e) {
       setErrorMessage('Could not copy to clipboard.');
@@ -157,11 +151,11 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
       link.download = `my11_challenge_${simResult.wins}wins.png`;
       link.href = dataUrl;
       link.click();
-      setFeedbackMessage('Downloaded 1080x1920 card!');
+      setFeedbackMessage('Image downloaded.');
       setTimeout(() => setFeedbackMessage(null), 3000);
     } catch (error) {
       console.error('Failed to generate image', error);
-      setErrorMessage('Failed to generate image. Please try copying the challenge link instead.');
+      setErrorMessage('Could not create the image. Try copying the challenge link instead.');
     } finally {
       setGenerating(false);
     }
@@ -175,11 +169,11 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Beat My Score on MY-11 (${simResult.wins} Wins)`,
+          title: `Beat my score on MY-11 (${simResult.wins} wins)`,
           text: shareText,
           url: challengeUrl,
         });
-        setFeedbackMessage('Shared successfully!');
+        setFeedbackMessage('Shared.');
         setTimeout(() => setFeedbackMessage(null), 3000);
       } catch (error: unknown) {
         if (!(error instanceof Error) || error.name !== 'AbortError') {
@@ -196,7 +190,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
     if (pos === 1) return 'Champions';
     if (pos <= 4) return 'Champions League';
     if (pos <= 7) return 'Europa League';
-    return 'Mid table';
+    return 'Mid-table';
   };
 
   const modeLabel = isDailyChallenge
@@ -207,61 +201,46 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
     ? 'Mystery draft'
     : 'Classic draft';
 
-  const secondaryBtn =
-    'min-h-[40px] px-1 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 font-display font-bold text-[11px] uppercase tracking-wide cursor-pointer active:scale-95';
+  const resultLabel = isDailyChallenge
+    ? dailyChallengeBeaten
+      ? 'Challenge cleared'
+      : 'Challenge failed'
+    : getFinishLabel(simResult.leaguePosition);
 
   return (
     <div className="w-full flex flex-col gap-3 select-none relative z-10">
       {/* Loading Overlay when generating image */}
       {generating && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex flex-col items-center justify-center">
-          <div className="w-12 h-12 rounded-full border-4 border-blue-500 border-t-transparent motion-safe:animate-spin mb-4" />
-          <h3 className="text-lg font-display font-black text-white uppercase tracking-wider">Creating image...</h3>
+        <div className="fixed inset-0 bg-black/70 z-50 flex flex-col items-center justify-center">
+          <div className="w-10 h-10 rounded-full border-4 border-white/80 border-t-transparent motion-safe:animate-spin mb-4" />
+          <h3 className="text-lg font-display font-semibold text-white">Creating image...</h3>
         </div>
       )}
 
       {/* Share card preview: headline result, key stats, the XI */}
-      <div id="share-card-container" className="w-full office-subcard rounded-2xl p-4 space-y-3">
-        <div className="flex justify-between items-center gap-2">
-          <span className="text-[11px] font-bold text-slate-600 truncate">
-            {modeLabel} · {formation}
-          </span>
-          {isDailyChallenge ? (
-            <span className={`inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-1 rounded-full border uppercase tracking-wider font-display leading-none shrink-0 ${
-              dailyChallengeBeaten ? 'bg-blue-50 text-blue-800 border-blue-300' : 'bg-rose-50 text-rose-800 border-rose-300'
-            }`}>
-              {dailyChallengeBeaten ? <IconCheck className="w-3 h-3 shrink-0" /> : <IconClose className="w-3 h-3 shrink-0" />}
-              <span>{dailyChallengeBeaten ? 'Cleared' : 'Failed'}</span>
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-amber-300 bg-amber-50 text-amber-900 uppercase tracking-wider leading-none font-display shrink-0">
-              {simResult.leaguePosition === 1 ? <IconTrophy className="w-3 h-3 shrink-0" /> : <IconMedal className="w-3 h-3 shrink-0" />}
-              <span>{getFinishLabel(simResult.leaguePosition)}</span>
-            </span>
-          )}
-        </div>
+      <div id="share-card-container" className="w-full rounded-xl bg-[var(--surface-subcard)] border border-[var(--border-subtle)] p-4 space-y-3">
+        <p className="text-xs text-[var(--ink-secondary)]">
+          {modeLabel} · {formation} · {resultLabel}
+        </p>
 
         <div>
-          <p className="text-3xl font-display font-black text-[#0b1536] leading-none tracking-tight">
+          <p className="text-3xl font-display font-bold text-[var(--ink-primary)] leading-none tabular-nums">
             {simResult.wins}W - {simResult.draws}D - {simResult.losses}L
           </p>
-          <p className="text-xs text-slate-600 font-semibold mt-1.5">
+          <p className="text-xs text-[var(--ink-secondary)] mt-1.5">
             {simResult.points} pts · top {simResult.percentile}% · {stats.overall} OVR · chem {simResult.chemistryGrade}
           </p>
         </div>
 
-        <p className="text-xs text-slate-700 font-semibold flex items-center gap-1.5 pt-2 border-t border-[var(--office-divider)]">
-          <IconStar className="w-3.5 h-3.5 text-amber-500 shrink-0" filled />
-          <span className="truncate">
-            MVP {simResult.mvp.displayName} ({simResult.mvp.rating})
-          </span>
+        <p className="text-xs text-[var(--ink-secondary)] pt-2 border-t border-[var(--border-subtle)] truncate">
+          MVP <span className="font-semibold text-[var(--ink-primary)]">{simResult.mvp.displayName}</span> ({simResult.mvp.rating})
         </p>
 
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] leading-tight">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
           {selectedPlayers.map((player) => (
             <div key={player.id} className="flex justify-between items-center gap-2 min-w-0">
-              <span className="truncate font-semibold text-slate-800">{player.displayName}</span>
-              <span className="text-[10px] font-extrabold text-slate-500 uppercase font-display shrink-0">
+              <span className="truncate text-[var(--ink-primary)]">{player.displayName}</span>
+              <span className="text-xs text-[var(--ink-muted)] shrink-0">
                 {player.primaryPosition}
               </span>
             </div>
@@ -272,7 +251,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
       {/* Status messages */}
       {feedbackMessage && (
         <div
-          className="w-full py-2 px-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 font-bold text-xs text-center inline-flex items-center justify-center gap-1.5"
+          className="w-full text-emerald-800 font-medium text-sm text-center inline-flex items-center justify-center gap-1.5"
           role="status"
         >
           <IconCheck className="w-3.5 h-3.5 shrink-0" />
@@ -282,7 +261,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
 
       {errorMessage && (
         <div
-          className="w-full py-2 px-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 font-bold text-xs text-center inline-flex items-center justify-center gap-1.5"
+          className="w-full text-rose-800 font-medium text-sm text-center inline-flex items-center justify-center gap-1.5"
           role="alert"
         >
           <IconAlert className="w-3.5 h-3.5 shrink-0" />
@@ -291,30 +270,26 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
       )}
 
       {/* Primary action */}
-      <button
-        type="button"
-        onClick={handleCopyChallengeLink}
-        className="office-play-match-btn w-full min-h-[44px] px-5 rounded-2xl text-white font-display font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
-      >
-        Copy Challenge Link
-      </button>
+      <Button variant="primary" fullWidth onClick={handleCopyChallengeLink} className="min-h-11">
+        Copy challenge link
+      </Button>
 
       {/* Secondary actions */}
       <div className={`grid gap-2 ${selectedPlayers.length === 11 ? 'grid-cols-4' : 'grid-cols-3'}`}>
         {selectedPlayers.length === 11 && (
-          <button type="button" onClick={handleCopyH2HLink} title="Copy a head-to-head match link for a friend" className={secondaryBtn}>
-            H2H Link
-          </button>
+          <Button variant="secondary" onClick={handleCopyH2HLink} title="Copy a head-to-head match link for a friend" className="px-1 text-xs">
+            H2H link
+          </Button>
         )}
-        <button type="button" onClick={handleShareResult} title="Share via your device's share menu" className={secondaryBtn}>
+        <Button variant="secondary" onClick={handleShareResult} title="Share via your device's share menu" className="px-1 text-xs">
           Share
-        </button>
-        <button type="button" onClick={handleCopyText} title="Copy result summary with link" className={secondaryBtn}>
-          Copy Text
-        </button>
-        <button type="button" onClick={handleDownloadImage} title="Download 1080x1920 image" className={secondaryBtn}>
+        </Button>
+        <Button variant="secondary" onClick={handleCopyText} title="Copy result summary with link" className="px-1 text-xs">
+          Copy text
+        </Button>
+        <Button variant="secondary" onClick={handleDownloadImage} title="Download 1080x1920 image" className="px-1 text-xs">
           Image
-        </button>
+        </Button>
       </div>
     </div>
   );

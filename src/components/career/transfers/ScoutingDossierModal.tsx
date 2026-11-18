@@ -16,6 +16,11 @@ import {
   IconStar,
   IconUser,
 } from '../GameIcons';
+import { Button, Eyebrow, Tag } from '@/components/ui';
+
+function capitalise(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
 
 interface ScoutingDossierModalProps {
   player: MarketPlayer;
@@ -101,47 +106,32 @@ export function ScoutingDossierModal({
     >
       <div
         data-office-ui="true"
-        className="office-floating-card rounded-3xl max-w-sm sm:max-w-md w-full shadow-2xl relative my-auto border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 h-[85dvh] sm:h-[670px] max-h-[90dvh] sm:max-h-[88vh] flex flex-col overflow-hidden"
+        className="office-floating-card rounded-xl max-w-sm sm:max-w-md w-full relative my-auto border border-[var(--border-subtle)] bg-[var(--surface-card)] h-[85dvh] sm:h-[670px] max-h-[90dvh] sm:max-h-[88vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
         onTouchStart={handleProfileTouchStart}
         onTouchEnd={handleProfileTouchEnd}
       >
         {/* Sticky Top Modal Header */}
-        <header className="shrink-0 flex justify-between items-start border-b border-slate-200 dark:border-slate-800 px-4 sm:px-5 pt-4 pb-3 bg-white dark:bg-slate-900">
-          <div className="space-y-1 min-w-0 pr-2">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${
-                isLegend
-                  ? 'bg-amber-100 text-amber-950 border-amber-300 dark:bg-amber-950/60 dark:text-amber-200 dark:border-amber-700'
-                  : 'bg-blue-100 text-blue-950 border-blue-300 dark:bg-blue-950/60 dark:text-blue-200 dark:border-blue-700'
-              }`}>
-                {isLegend ? 'Legend Dossier' : 'Scouting Dossier'}
-              </span>
-              <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${
-                windowIsOpen
-                  ? 'bg-emerald-100 text-emerald-950 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700'
-                  : 'bg-slate-100 text-slate-800 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600'
-              }`}>
-                {windowIsOpen ? 'Window Open' : 'Window Closed'}
-              </span>
+        <header className="shrink-0 flex justify-between items-start border-b border-[var(--border-subtle)] px-4 sm:px-5 pt-4 pb-3 bg-[var(--surface-card)]">
+          <div className="space-y-0.5 min-w-0 pr-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Eyebrow>{isLegend ? 'Legend dossier' : 'Scouting dossier'}</Eyebrow>
+              <Tag tone={windowIsOpen ? 'success' : 'neutral'}>{windowIsOpen ? 'Window open' : 'Window closed'}</Tag>
             </div>
-            <h3 className="text-base sm:text-lg font-display font-black text-slate-950 dark:text-white truncate">
+            <h3 className="text-base sm:text-lg font-display font-semibold text-[var(--ink-primary)] truncate">
               {player.name}
             </h3>
-            <div className="text-xs text-slate-600 dark:text-slate-400 font-semibold flex items-center gap-1.5 flex-wrap">
-              <span className="font-extrabold text-blue-600 dark:text-blue-400">{player.position}</span>
-              <span>•</span>
-              <span className="font-bold text-slate-900 dark:text-slate-200">{player.rating} OVR</span>
-              <span>•</span>
-              <span>{resolvedClub}</span>
-              <span>•</span>
-              <span>{player.age} yrs ({player.nationality})</span>
-            </div>
+            <p className="text-xs text-[var(--ink-secondary)]">
+              <span className="font-semibold text-[var(--ink-primary)]">
+                {player.position} · {player.rating} OVR
+              </span>{' '}
+              · {resolvedClub} · {player.age} yrs ({player.nationality})
+            </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+            className="w-9 h-9 rounded-full hover:bg-[var(--surface-subcard)] text-[var(--ink-secondary)] flex items-center justify-center transition-colors cursor-pointer shrink-0"
             title="Close profile"
             aria-label="Close modal"
           >
@@ -171,102 +161,98 @@ export function ScoutingDossierModal({
                   showProgressionBar={false}
                 />
 
-                <div className="grid grid-cols-3 gap-2 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 text-center text-xs">
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Height / Weight</span>
-                    <span className="font-mono font-black text-slate-900 dark:text-white text-xs mt-0.5 block">
-                      {bio.heightCm}cm • {bio.weightKg}kg
-                    </span>
+                <dl className="grid grid-cols-3 gap-2 border-y border-[var(--border-subtle)] py-2.5 text-center text-xs">
+                  <div className="min-w-0">
+                    <dt className="font-medium text-[var(--ink-muted)]">Height, weight</dt>
+                    <dd className="font-semibold text-[var(--ink-primary)] tabular-nums mt-0.5">
+                      {bio.heightCm}cm · {bio.weightKg}kg
+                    </dd>
                   </div>
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Foot</span>
-                    <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-xs mt-0.5 block">{bio.preferredFoot}</span>
+                  <div className="min-w-0">
+                    <dt className="font-medium text-[var(--ink-muted)]">Foot</dt>
+                    <dd className="font-semibold text-[var(--ink-primary)] mt-0.5">{bio.preferredFoot}</dd>
                   </div>
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Date of Birth</span>
-                    <span className="font-mono font-black text-slate-900 dark:text-white text-xs mt-0.5 block">{bio.dateOfBirth || `${bio.birthYear}`}</span>
+                  <div className="min-w-0">
+                    <dt className="font-medium text-[var(--ink-muted)]">Date of birth</dt>
+                    <dd className="font-semibold text-[var(--ink-primary)] tabular-nums mt-0.5">
+                      {bio.dateOfBirth || `${bio.birthYear}`}
+                    </dd>
                   </div>
-                </div>
+                </dl>
 
-                <p className="text-xs text-slate-600 dark:text-slate-400 text-center">
-                  Valued at <strong className="font-mono text-slate-950 dark:text-white">{formatCurrency(player.value)}</strong> · wants{' '}
-                  <strong className="font-mono text-slate-950 dark:text-white">{formatWage(player.wageDemand)}</strong>
+                <p className="text-xs text-[var(--ink-secondary)] text-center">
+                  Valued at <strong className="font-semibold text-[var(--ink-primary)] tabular-nums">{formatCurrency(player.value)}</strong> · wants{' '}
+                  <strong className="font-semibold text-[var(--ink-primary)] tabular-nums">{formatWage(player.wageDemand)}</strong>
                 </p>
               </div>
 
               <div className="flex gap-2 pt-1">
-                <button
-                  type="button"
+                <Button
+                  variant="secondary"
                   onClick={() => onToggleShortlist(player.id)}
-                  className={`flex-1 py-2.5 px-3 rounded-xl font-display font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs border ${
-                    isShortlisted
-                      ? 'bg-amber-100 text-amber-950 border-amber-300 hover:bg-amber-200 dark:bg-amber-950/60 dark:text-amber-200 dark:border-amber-700'
-                      : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-slate-200 dark:border-slate-600'
-                  }`}
+                  className={`flex-1 ${isShortlisted ? 'bg-amber-50 border-amber-300 text-amber-900 hover:bg-amber-100' : ''}`}
                 >
                   <IconStar className="w-3.5 h-3.5" filled={isShortlisted} />
                   <span>{isShortlisted ? 'Shortlisted' : 'Shortlist'}</span>
-                </button>
+                </Button>
 
                 {onOpenCompare && (
-                  <button
-                    type="button"
+                  <Button
+                    variant="secondary"
                     onClick={() => {
                       onClose();
                       onOpenCompare(player);
                     }}
-                    className="flex-1 py-2.5 px-3 rounded-xl font-display font-bold text-xs uppercase tracking-wider bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-500/40 flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+                    className="flex-1"
                   >
                     <IconBarChart className="w-3.5 h-3.5" />
                     <span>Compare</span>
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>
           )}
 
           {profileTab === 'attributes' && (
-            <div className="min-h-full flex flex-col justify-between gap-3">
-              <div className="rounded-2xl p-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                  {statItems.map((item) => (
-                    <div key={item.key} className="space-y-1.5">
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="font-bold text-slate-700 dark:text-slate-300 text-[11px]">{item.label}</span>
-                        <span className="font-mono font-black text-slate-950 dark:text-white text-xs">{item.val}</span>
-                      </div>
-                      <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${
-                            item.val >= 88
-                              ? 'bg-amber-500'
-                              : item.val >= 80
-                              ? 'bg-blue-600'
-                              : item.val >= 70
-                              ? 'bg-emerald-500'
-                              : 'bg-slate-400'
-                          }`}
-                          style={{ width: `${Math.min(100, (item.val / 99) * 100)}%` }}
-                        />
-                      </div>
+            <div className="min-h-full flex flex-col gap-4">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                {statItems.map((item) => (
+                  <div key={item.key} className="space-y-1.5">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-medium text-[var(--ink-secondary)]">{item.label}</span>
+                      <span className="font-semibold text-[var(--ink-primary)] tabular-nums">{item.val}</span>
                     </div>
-                  ))}
-                </div>
+                    <div className="w-full h-1.5 bg-[var(--surface-elevated)] rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${
+                          item.val >= 88
+                            ? 'bg-amber-500'
+                            : item.val >= 80
+                            ? 'bg-blue-600'
+                            : item.val >= 70
+                            ? 'bg-emerald-500'
+                            : 'bg-[var(--border-crisp)]'
+                        }`}
+                        style={{ width: `${Math.min(100, (item.val / 99) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
 
-              <dl className="rounded-2xl p-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-2 text-xs">
+              <dl className="border-t border-[var(--border-subtle)] pt-3 space-y-2 text-xs">
                 {[
                   ['Positions', (player.naturalPositions || [player.position]).join(', ')],
                   [
                     'Peak age',
-                    `${bio.peakAge ?? 27} (${player.age < (bio.peakAge ?? 27) ? 'Developing' : player.age <= (bio.peakAge ?? 27) + 2 ? 'Prime' : 'Veteran'})`,
+                    `${bio.peakAge ?? 27} (${player.age < (bio.peakAge ?? 27) ? 'developing' : player.age <= (bio.peakAge ?? 27) + 2 ? 'prime' : 'veteran'})`,
                   ],
                   ['Homegrown', player.isHomegrown ? 'Yes' : 'No'],
-                  ['Rarity', player.rarity || 'Standard'],
+                  ['Rarity', capitalise(player.rarity || 'Standard')],
                 ].map(([label, value]) => (
-                  <div key={label} className="flex items-center justify-between gap-2">
-                    <dt className="text-slate-500 font-semibold">{label}</dt>
-                    <dd className="font-display font-bold text-slate-900 dark:text-white capitalize text-right">{value}</dd>
+                  <div key={label} className="flex items-baseline justify-between gap-3">
+                    <dt className="text-[var(--ink-secondary)] shrink-0">{label}</dt>
+                    <dd className="font-medium text-[var(--ink-primary)] text-right">{value}</dd>
                   </div>
                 ))}
               </dl>
@@ -276,87 +262,67 @@ export function ScoutingDossierModal({
           {profileTab === 'contract' && (
             <div className="min-h-full flex flex-col justify-between gap-3">
               <div className="space-y-3">
-                <div className="rounded-2xl p-3.5 space-y-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-                  <div className="flex justify-between items-center text-xs">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Valuation</span>
-                      <span className="font-mono font-black text-base text-slate-950 dark:text-white">
-                        {formatCurrency(player.value)}
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Wage Demand</span>
-                      <span className="font-mono font-black text-base text-blue-600 dark:text-blue-400">
-                        {formatWage(player.wageDemand)}
-                      </span>
-                    </div>
+                <div className="flex justify-between items-start gap-3 text-xs">
+                  <div>
+                    <span className="font-medium text-[var(--ink-muted)] block">Valuation</span>
+                    <span className="font-semibold text-base text-[var(--ink-primary)] tabular-nums">
+                      {formatCurrency(player.value)}
+                    </span>
                   </div>
-                  <div className="pt-2 border-t border-slate-200 dark:border-slate-700 grid grid-cols-3 gap-2 text-center text-xs">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Desired Term</span>
-                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{pref.preferredContractYears} Years</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Expected Role</span>
-                      <span className="font-mono font-bold text-blue-600 dark:text-blue-400 uppercase">{pref.expectedSquadRole}</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Signing Bonus</span>
-                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formatCurrency(pref.expectedSigningBonus)}</span>
-                    </div>
+                  <div className="text-right">
+                    <span className="font-medium text-[var(--ink-muted)] block">Wage demand</span>
+                    <span className="font-semibold text-base text-[var(--ink-primary)] tabular-nums">
+                      {formatWage(player.wageDemand)}
+                    </span>
                   </div>
                 </div>
 
-                <div className="rounded-2xl p-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-2 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-semibold">Contract</span>
-                    <span className="font-mono font-bold text-slate-900 dark:text-white">
-                      {player.isFreeAgent ? 'Free agent' : `${player.contractYears ?? 3} yrs left`}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-500 font-semibold">Availability</span>
-                    <span className="font-mono font-bold text-blue-700 dark:text-blue-400">
-                      {player.isFreeAgent
-                        ? 'Immediate Free Signing'
+                <dl className="border-t border-[var(--border-subtle)] pt-3 space-y-2 text-xs">
+                  {[
+                    ['Desired term', `${pref.preferredContractYears} ${pref.preferredContractYears === 1 ? 'year' : 'years'}`],
+                    ['Expected role', capitalise(pref.expectedSquadRole)],
+                    ['Signing bonus', formatCurrency(pref.expectedSigningBonus)],
+                    ['Contract', player.isFreeAgent ? 'Free agent' : `${player.contractYears ?? 3} yrs left`],
+                    [
+                      'Availability',
+                      player.isFreeAgent
+                        ? 'Immediate free signing'
                         : player.loanListed
-                        ? 'Available for Loan / Bid'
+                        ? 'Available for loan or bid'
                         : player.contractYears === 1
-                        ? (isBosmanWindowOpen(save.season.currentDate) ? 'Bosman Eligible Now' : 'Bosman Opens Jan 1')
-                        : 'Standard Transfer Bid'}
-                    </span>
-                  </div>
-                </div>
+                        ? isBosmanWindowOpen(save.season.currentDate)
+                          ? 'Bosman eligible now'
+                          : 'Bosman opens 1 Jan'
+                        : 'Standard transfer bid',
+                    ],
+                  ].map(([label, value]) => (
+                    <div key={label} className="flex items-baseline justify-between gap-3">
+                      <dt className="text-[var(--ink-secondary)] shrink-0">{label}</dt>
+                      <dd className="font-medium text-[var(--ink-primary)] text-right tabular-nums">{value}</dd>
+                    </div>
+                  ))}
+                </dl>
               </div>
 
               {windowIsOpen ? (
-                <button
-                  type="button"
+                <Button
+                  variant={isSquadFull ? 'danger' : 'primary'}
+                  fullWidth
                   onClick={() => {
                     onClose();
                     onStartNegotiation(player);
                   }}
                   disabled={isSquadFull}
-                  className={`w-full py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md ${
-                    isSquadFull
-                      ? 'bg-rose-50 text-rose-700 border border-rose-200 cursor-not-allowed'
-                      : isLegend
-                      ? 'my11-badge-legend shadow-amber-500/20'
-                      : 'my11-btn-gradient text-white shadow-blue-500/20'
-                  }`}
+                  className="min-h-11"
                 >
                   <IconBriefcase className="w-3.5 h-3.5" />
-                  <span>{isSquadFull ? 'Squad Full' : isLegend ? 'Negotiate Deal' : 'Make Offer'}</span>
-                </button>
+                  <span>{isSquadFull ? 'Squad full' : isLegend ? 'Negotiate deal' : 'Make offer'}</span>
+                </Button>
               ) : (
-                <button
-                  type="button"
-                  disabled
-                  className="w-full py-2.5 px-4 rounded-xl font-display font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed select-none"
-                >
+                <Button variant="secondary" fullWidth disabled className="min-h-11 select-none">
                   <IconLock className="w-3.5 h-3.5" />
                   <span>Bids locked until window opens</span>
-                </button>
+                </Button>
               )}
             </div>
           )}
@@ -365,7 +331,7 @@ export function ScoutingDossierModal({
         {/* Sticky Bottom Thumb-Zone Tab Switcher */}
         <nav
           aria-label="Scouting dossier tabs"
-          className="shrink-0 grid grid-cols-3 gap-1.5 px-4 py-2.5 border-t border-slate-200 dark:border-slate-800 bg-[#F7F6F3] dark:bg-slate-900"
+          className="shrink-0 grid grid-cols-3 gap-1 px-3 py-1.5 border-t border-[var(--border-subtle)] bg-[var(--surface-card)]"
         >
           {(
             [
@@ -380,10 +346,10 @@ export function ScoutingDossierModal({
                 key={t.id}
                 type="button"
                 onClick={() => setProfileTab(t.id)}
-                className={`py-2 px-2 rounded-xl font-display font-black text-[11px] uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`min-h-11 px-2 rounded-lg text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
                   active
-                    ? 'office-nav-tab-active shadow-xs'
-                    : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-[#E2DFD9] dark:border-slate-700 hover:bg-slate-50'
+                    ? 'office-nav-tab-active font-semibold'
+                    : 'font-medium text-[var(--ink-secondary)] border border-transparent hover:bg-[var(--surface-subcard)] hover:text-[var(--ink-primary)]'
                 }`}
               >
                 {t.icon}

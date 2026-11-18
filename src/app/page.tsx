@@ -135,23 +135,18 @@ export default function DraftedXIGame() {
   return (
     <div className="min-h-screen my11-canvas text-foreground font-sans flex flex-col w-full overflow-x-hidden p-3 sm:p-5 select-none">
       {/* Floating MY-11 Header Card */}
-      <header className="office-floating-card w-full max-w-5xl mx-auto rounded-2xl p-3 sm:p-4 mb-3 sm:mb-4 flex items-center justify-between shadow-xs">
+      <header className="office-floating-card w-full max-w-5xl mx-auto rounded-xl p-3 sm:p-4 mb-3 sm:mb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div
-            data-force-white="true"
-            className="w-9 h-9 rounded-xl bg-[#09152b] text-white border border-slate-700 shadow-sm flex items-center justify-center shrink-0"
-          >
-            <svg viewBox="0 0 24 24" className="w-4.5 h-4.5" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
-              <path d="M12 2L4 6v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V6l-8-4z" />
-              <path d="M9 12l2 2 4-4" stroke="#34d399" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
+          <svg viewBox="0 0 24 24" className="w-7 h-7 shrink-0 text-[var(--ink-primary)]" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <path d="M12 2L4 6v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V6l-8-4z" />
+            <path d="M9 12l2 2 4-4" stroke="#047857" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
           <div className="text-left">
-            <div className="text-base sm:text-lg font-display font-black tracking-tight text-slate-900 uppercase leading-none">
-              MY-<span className="text-[#047857]">11</span>
+            <div className="text-base sm:text-lg font-display font-semibold tracking-tight text-[var(--ink-primary)]">
+              MY-11
             </div>
-            <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500 mt-0.5">
-              Football Management &amp; Draft
+            <div className="text-xs text-[var(--ink-muted)]">
+              Football management and draft
             </div>
           </div>
         </div>
@@ -162,8 +157,8 @@ export default function DraftedXIGame() {
             type="button"
             onClick={() => router.push('/draft?phase=history')}
             aria-label="View Squad History & Personal Bests"
-            title="View Squad History & Personal Bests"
-            className="w-10 h-10 rounded-xl flex items-center justify-center office-subcard text-slate-700 hover:text-slate-900 cursor-pointer active:scale-95 transition-transform shadow-2xs"
+            title="Squad history and personal bests"
+            className="w-10 h-10 rounded-lg flex items-center justify-center border border-[var(--border-crisp)] bg-[var(--surface-card)] hover:bg-[var(--surface-subcard)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] cursor-pointer transition-colors"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M12 8v4l3 3" />
@@ -176,8 +171,8 @@ export default function DraftedXIGame() {
             type="button"
             onClick={handleOpenHelpModal}
             aria-label="How to Play & Game Guides"
-            title="How to Play & Game Guides"
-            className="w-10 h-10 rounded-xl flex items-center justify-center office-subcard text-slate-700 hover:text-slate-900 cursor-pointer active:scale-95 transition-transform shadow-2xs"
+            title="How to play"
+            className="w-10 h-10 rounded-lg flex items-center justify-center border border-[var(--border-crisp)] bg-[var(--surface-card)] hover:bg-[var(--surface-subcard)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] cursor-pointer transition-colors"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <circle cx="12" cy="12" r="9" />
@@ -209,17 +204,17 @@ export default function DraftedXIGame() {
       </main>
 
       {/* App Footer */}
-      <footer className="w-full py-8 text-center border-t border-[var(--office-divider)] text-[10px] font-bold text-[var(--office-text-muted)] uppercase tracking-widest select-none space-y-3 px-4 bg-white/60 backdrop-blur-md mt-8 safe-pb">
-        <p className="max-w-md mx-auto text-[10px] text-[var(--office-text-muted)] leading-relaxed font-medium normal-case">
+      <footer className="w-full py-8 text-center border-t border-[var(--border-subtle)] text-xs text-[var(--ink-muted)] select-none space-y-3 px-4 mt-8 safe-pb">
+        <p className="max-w-md mx-auto text-xs text-[var(--ink-muted)] leading-relaxed">
           MY-11 is an unofficial, independent football draft and management simulation game. Not affiliated with, sponsored by, or endorsed by any club, league, or governing body.
         </p>
-        <div className="flex justify-center items-center gap-4 text-[var(--office-text-secondary)] normal-case text-xs font-semibold">
-          <Link href="/privacy" className="hover:text-[#1d5eff] transition-colors">Privacy Policy</Link>
-          <span className="text-[var(--office-text-muted)]">•</span>
-          <Link href="/terms" className="hover:text-[#1d5eff] transition-colors">Terms of Service</Link>
+        <div className="flex justify-center items-center gap-3 text-[var(--ink-secondary)] text-xs font-medium">
+          <Link href="/privacy" className="inline-flex items-center min-h-10 hover:text-[#1d5eff] transition-colors">Privacy policy</Link>
+          <span aria-hidden="true" className="text-[var(--ink-muted)]">·</span>
+          <Link href="/terms" className="inline-flex items-center min-h-10 hover:text-[#1d5eff] transition-colors">Terms of service</Link>
         </div>
-        <p className="text-[var(--office-text-muted)] text-[10px] font-mono tracking-wider">
-          MY-11 © 2026 • BUILT FOR FOOTBALL FANS
+        <p className="text-[var(--ink-muted)] text-xs">
+          MY-11 © 2026 · Built for football fans
         </p>
       </footer>
 

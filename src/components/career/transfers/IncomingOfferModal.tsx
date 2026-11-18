@@ -22,6 +22,7 @@ import {
   IconMessage,
   IconUser,
 } from '../GameIcons';
+import { Button } from '@/components/ui';
 
 interface IncomingOfferModalProps {
   offer: IncomingTransferOffer;
@@ -98,7 +99,7 @@ export function IncomingOfferModal({
         status: 'accepted',
         message: res.feedback,
       });
-      onNotification?.(`${offer.buyingClubName} agreed to your counter-offer of ${formatCurrency(counterFeeInput)}!`);
+      onNotification?.(`${offer.buyingClubName} agreed to your counter-offer of ${formatCurrency(counterFeeInput)}.`);
       const updatedTarget = res.updatedSave.incomingOffers?.find((o) => o.id === offer.id);
       if (updatedTarget) onOfferUpdated(updatedTarget);
     } else if (res.outcome === 'compromise') {
@@ -142,15 +143,15 @@ export function IncomingOfferModal({
   const zoneText =
     sentiment?.zone === 'fair' ? 'text-emerald-800' : sentiment?.zone === 'ambitious' ? 'text-amber-800' : 'text-rose-800';
   const stepBtn =
-    'min-h-[40px] rounded-xl bg-white border border-slate-200 hover:bg-slate-50 cursor-pointer shadow-xs text-xs font-bold';
+    'min-h-[40px] rounded-lg bg-[var(--surface-card)] border border-[var(--border-crisp)] hover:bg-[var(--surface-subcard)] cursor-pointer text-xs font-semibold';
   const optionBtn = (active: boolean) =>
-    `min-h-[40px] rounded-xl text-xs font-bold transition-all cursor-pointer ${
+    `min-h-[40px] rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
       active
-        ? 'bg-blue-600 text-white font-black shadow-sm'
-        : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs'
+        ? 'bg-blue-600 text-white border border-blue-600'
+        : 'bg-[var(--surface-card)] border border-[var(--border-crisp)] text-[var(--ink-secondary)] hover:bg-[var(--surface-subcard)]'
     }`;
   const disclosureBtn =
-    'w-full min-h-[40px] flex items-center justify-between gap-2 text-left text-xs font-bold text-slate-700 cursor-pointer';
+    'w-full min-h-[40px] flex items-center justify-between gap-2 text-left text-xs font-semibold text-[var(--ink-primary)] cursor-pointer';
   const milestoneFees = [0, 1_000_000, 2_500_000, 5_000_000];
 
   return (
@@ -169,7 +170,7 @@ export function IncomingOfferModal({
     >
       <div
         data-office-ui="true"
-        className="office-floating-card rounded-3xl max-w-lg w-full shadow-2xl relative my-auto max-h-[90dvh] sm:max-h-[85vh] flex flex-col overflow-hidden border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900"
+        className="office-floating-card rounded-xl max-w-lg w-full relative my-auto max-h-[90dvh] sm:max-h-[85vh] flex flex-col overflow-hidden border border-[var(--border-subtle)] bg-[var(--surface-card)]"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -177,38 +178,38 @@ export function IncomingOfferModal({
           onClick={onClose}
           aria-label="Close modal"
           title="Close modal"
-          className="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 flex items-center justify-center transition-colors cursor-pointer z-20"
+          className="absolute top-4 right-4 w-9 h-9 rounded-full hover:bg-[var(--surface-subcard)] text-[var(--ink-secondary)] flex items-center justify-center transition-colors cursor-pointer z-20"
         >
           <IconClose className="w-4 h-4" />
         </button>
 
         {/* Header */}
         <div className="shrink-0 px-5 sm:px-6 pt-5 pb-3 pr-14 space-y-0.5">
-          <h3 className="text-xl font-display font-black text-slate-900 uppercase tracking-tight truncate">
+          <h3 className="text-xl font-display font-bold text-[var(--ink-primary)] tracking-tight truncate">
             {offer.playerName}
           </h3>
-          <p className="text-xs text-slate-500">
-            Bid from <strong className="text-slate-900">{offer.buyingClubName}</strong> • {offer.position} • {offer.rating} OVR
+          <p className="text-xs text-[var(--ink-secondary)]">
+            Bid from <strong className="font-semibold text-[var(--ink-primary)]">{offer.buyingClubName}</strong> · {offer.position} · {offer.rating} OVR
           </p>
         </div>
 
         {/* Scrollable body */}
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain scrollbar-none px-5 sm:px-6 pb-3 space-y-3 text-xs">
           {/* Offer summary */}
-          <dl className="grid grid-cols-3 divide-x divide-slate-200 border-y border-slate-200 py-2">
+          <dl className="grid grid-cols-3 divide-x divide-[var(--border-subtle)] border-y border-[var(--border-subtle)] py-2">
             <div className="pr-2">
-              <dt className="text-[10px] uppercase font-bold text-slate-500">Offer</dt>
-              <dd className="font-display font-black text-blue-600 text-sm truncate">{formatCurrency(offer.offeredFee)}</dd>
+              <dt className="text-xs font-medium text-[var(--ink-muted)]">Offer</dt>
+              <dd className="font-display font-semibold text-blue-600 text-sm truncate">{formatCurrency(offer.offeredFee)}</dd>
             </div>
             <div className="px-2">
-              <dt className="text-[10px] uppercase font-bold text-slate-500">Value</dt>
-              <dd className="font-display font-black text-slate-900 text-sm truncate">
+              <dt className="text-xs font-medium text-[var(--ink-muted)]">Value</dt>
+              <dd className="font-display font-semibold text-[var(--ink-primary)] text-sm truncate">
                 {formatCurrency(player?.value || offer.offeredFee)}
               </dd>
             </div>
             <div className="pl-2">
-              <dt className="text-[10px] uppercase font-bold text-slate-500">Buyer max</dt>
-              <dd className="font-display font-black text-slate-900 text-sm truncate">
+              <dt className="text-xs font-medium text-[var(--ink-muted)]">Buyer max</dt>
+              <dd className="font-display font-semibold text-[var(--ink-primary)] text-sm truncate">
                 ~{formatCurrency(ballpark?.buyerCeiling || offer.offeredFee * 1.2)}
               </dd>
             </div>
@@ -217,22 +218,22 @@ export function IncomingOfferModal({
           {/* Counter fee */}
           <div className="space-y-2">
             <div className="flex justify-between items-baseline gap-2">
-              <span className="font-display font-black uppercase text-slate-700">Your counter</span>
-              <span className="text-lg font-black text-blue-600 font-mono">{formatCurrency(counterFeeInput)}</span>
+              <span className="font-display font-semibold text-[var(--ink-primary)]">Your counter</span>
+              <span className="text-lg font-semibold text-blue-600 tabular-nums">{formatCurrency(counterFeeInput)}</span>
             </div>
 
             <div className="grid grid-cols-4 gap-1.5">
               <button
                 type="button"
                 onClick={() => setCounterFeeInput(Math.max(100_000, counterFeeInput - 1_000_000))}
-                className={`${stepBtn} text-slate-700`}
+                className={`${stepBtn} text-[var(--ink-secondary)]`}
               >
                 -£1M
               </button>
               <button
                 type="button"
                 onClick={() => setCounterFeeInput(Math.max(100_000, counterFeeInput - 250_000))}
-                className={`${stepBtn} text-slate-700`}
+                className={`${stepBtn} text-[var(--ink-secondary)]`}
               >
                 -£250k
               </button>
@@ -252,11 +253,11 @@ export function IncomingOfferModal({
               </button>
             </div>
 
-            <div className="flex flex-wrap justify-between gap-x-3 text-[11px]">
+            <div className="flex flex-wrap justify-between gap-x-3 text-xs">
               <button
                 type="button"
                 onClick={() => setCounterFeeInput(offer.offeredFee)}
-                className="min-h-[32px] text-slate-500 hover:text-slate-800 underline cursor-pointer"
+                className="min-h-[32px] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] underline cursor-pointer"
               >
                 Reset to bid
               </button>
@@ -273,29 +274,29 @@ export function IncomingOfferModal({
 
             {ballpark && sentiment && (
               <div className="space-y-0.5">
-                <div className={`flex flex-wrap justify-between items-center gap-1 font-bold ${zoneText}`}>
+                <div className={`flex flex-wrap justify-between items-center gap-1 font-semibold ${zoneText}`}>
                   <span className="flex items-center gap-1.5">
                     <span className={`w-2 h-2 rounded-full shrink-0 ${zoneDot}`} />
                     <span>{sentiment.label}</span>
                   </span>
-                  <span className="font-mono">{sentiment.acceptanceProbability}% chance</span>
+                  <span className="tabular-nums">{sentiment.acceptanceProbability}% chance</span>
                 </div>
-                <p className="text-[11px] text-slate-500 leading-snug">
+                <p className="text-xs text-[var(--ink-muted)] leading-snug">
                   Fair up to {formatCurrency(ballpark.maxReasonable)} · risky above {formatCurrency(ballpark.ambitiousLimit)}
                 </p>
               </div>
             )}
 
             {addOnTotal > 0 && (
-              <div className="flex justify-between items-baseline gap-2 text-[11px] border-t border-slate-200 pt-2">
-                <span className="text-slate-600 font-bold">Total with add-ons</span>
-                <span className="font-mono text-blue-600 font-black">{formatCurrency(counterFeeInput + addOnTotal)}</span>
+              <div className="flex justify-between items-baseline gap-2 text-xs border-t border-[var(--border-subtle)] pt-2">
+                <span className="text-[var(--ink-secondary)] font-medium">Total with add-ons</span>
+                <span className="tabular-nums text-blue-600 font-semibold">{formatCurrency(counterFeeInput + addOnTotal)}</span>
               </div>
             )}
           </div>
 
           {/* Add clauses (collapsed by default) */}
-          <div className="border-t border-slate-200">
+          <div className="border-t border-[var(--border-subtle)]">
             <button
               type="button"
               aria-expanded={clausesOpen}
@@ -304,7 +305,7 @@ export function IncomingOfferModal({
               className={disclosureBtn}
             >
               <span className="shrink-0">Add clauses</span>
-              <span className="flex items-center gap-1.5 min-w-0 text-slate-500 font-medium">
+              <span className="flex items-center gap-1.5 min-w-0 text-[var(--ink-muted)] font-medium">
                 {!clausesOpen && <span className="truncate">{clauseSummary}</span>}
                 {clausesOpen ? <IconChevronUp className="w-4 h-4 shrink-0" /> : <IconChevronDown className="w-4 h-4 shrink-0" />}
               </span>
@@ -313,7 +314,7 @@ export function IncomingOfferModal({
             {clausesOpen && (
               <div id="offer-clauses" className="space-y-3 pb-2">
                 <div className="space-y-1.5">
-                  <span className="block text-slate-600 font-bold text-[11px]">Sell-on clause</span>
+                  <span className="block text-[var(--ink-secondary)] font-medium text-xs">Sell-on clause</span>
                   <div className="grid grid-cols-4 gap-1.5">
                     {[0, 10, 15, 20].map((pct) => (
                       <button
@@ -330,7 +331,7 @@ export function IncomingOfferModal({
                 </div>
 
                 <div className="space-y-1.5">
-                  <span className="block text-slate-600 font-bold text-[11px]">
+                  <span className="block text-[var(--ink-secondary)] font-medium text-xs">
                     Bonus after {counterAppearanceThreshold} appearances
                   </span>
                   <div className="grid grid-cols-4 gap-1.5">
@@ -349,7 +350,7 @@ export function IncomingOfferModal({
                 </div>
 
                 <div className="space-y-1.5">
-                  <span className="block text-slate-600 font-bold text-[11px]">
+                  <span className="block text-[var(--ink-secondary)] font-medium text-xs">
                     Bonus after {counterGoalThreshold} goals / clean sheets
                   </span>
                   <div className="grid grid-cols-4 gap-1.5">
@@ -368,7 +369,7 @@ export function IncomingOfferModal({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="min-h-[40px] text-slate-700 font-bold text-[11px] flex items-center gap-2 cursor-pointer">
+                  <label className="min-h-[40px] text-[var(--ink-primary)] font-medium text-xs flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={includeBuyBack}
@@ -381,7 +382,7 @@ export function IncomingOfferModal({
                     />
                     <span>Buy-back clause</span>
                     {includeBuyBack && (
-                      <span className="ml-auto font-mono text-blue-700 font-black text-xs">
+                      <span className="ml-auto tabular-nums text-blue-700 font-semibold text-xs">
                         {formatCurrency(counterBuyBackFee)}
                       </span>
                     )}
@@ -393,7 +394,7 @@ export function IncomingOfferModal({
                         <button
                           type="button"
                           onClick={() => setCounterBuyBackFee(Math.max(counterFeeInput, counterBuyBackFee - 1_000_000))}
-                          className={`${stepBtn} text-slate-700`}
+                          className={`${stepBtn} text-[var(--ink-secondary)]`}
                         >
                           -£1M
                         </button>
@@ -414,7 +415,7 @@ export function IncomingOfferModal({
                         </button>
                       </div>
                       {counterBuyBackFee < buyBackFloor && (
-                        <p className="flex items-center gap-1.5 text-[11px] text-rose-600 font-medium">
+                        <p className="flex items-center gap-1.5 text-xs text-rose-600 font-medium">
                           <IconAlert className="w-3.5 h-3.5 shrink-0" />
                           <span>Below {formatCurrency(buyBackFloor)}: buyer may reject.</span>
                         </p>
@@ -428,7 +429,7 @@ export function IncomingOfferModal({
 
           {/* Negotiation history (collapsed by default) */}
           {offer.history && offer.history.length > 0 && (
-            <div className="border-t border-slate-200">
+            <div className="border-t border-[var(--border-subtle)]">
               <button
                 type="button"
                 aria-expanded={ledgerOpen}
@@ -440,9 +441,9 @@ export function IncomingOfferModal({
                 {ledgerOpen ? <IconChevronUp className="w-4 h-4 shrink-0" /> : <IconChevronDown className="w-4 h-4 shrink-0" />}
               </button>
               {ledgerOpen && (
-                <div id="offer-history" className="space-y-1.5 pb-2 text-[11px]">
+                <div id="offer-history" className="space-y-1.5 pb-2 text-xs">
                   {offer.history.map((h, i) => (
-                    <div key={i} className="flex justify-between items-center gap-2 text-slate-600">
+                    <div key={i} className="flex justify-between items-start gap-2 text-[var(--ink-secondary)]">
                       <span className="inline-flex items-center gap-1 min-w-0">
                         {h.proposedBy === 'user' ? (
                           <IconUser className="w-3 h-3 shrink-0" />
@@ -453,7 +454,7 @@ export function IncomingOfferModal({
                           {h.proposedBy === 'user' ? 'You:' : 'Buyer:'} {h.message}
                         </span>
                       </span>
-                      <span className="font-mono text-slate-900 font-bold shrink-0">{formatCurrency(h.fee)}</span>
+                      <span className="tabular-nums text-[var(--ink-primary)] font-semibold shrink-0">{formatCurrency(h.fee)}</span>
                     </div>
                   ))}
                 </div>
@@ -463,7 +464,7 @@ export function IncomingOfferModal({
         </div>
 
         {/* Pinned footer */}
-        <div className="shrink-0 border-t border-slate-200 px-5 sm:px-6 pt-3 pb-4 space-y-2 text-xs">
+        <div className="shrink-0 border-t border-[var(--border-subtle)] px-5 sm:px-6 pt-3 pb-4 space-y-2 text-xs">
           {counterFeedback ? (
             <p
               role="status"
@@ -486,7 +487,7 @@ export function IncomingOfferModal({
             </p>
           ) : (
             <p
-              className={`flex items-center gap-1.5 font-bold ${
+              className={`flex items-center gap-1.5 font-semibold ${
                 patience > 1 ? 'text-amber-800' : 'text-rose-700'
               }`}
             >
@@ -496,40 +497,32 @@ export function IncomingOfferModal({
           )}
 
           <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => onRejectOffer(offer.id)}
-              className="min-h-[48px] px-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-display font-bold uppercase cursor-pointer shadow-xs"
-            >
+            <Button variant="secondary" onClick={() => onRejectOffer(offer.id)} className="min-h-12 px-3.5">
               Reject
-            </button>
+            </Button>
 
             {offer.status !== 'rejected' && (
-              <button
-                type="button"
+              <Button
+                variant="primary"
                 onClick={handleSubmitIncomingCounter}
                 disabled={patience <= 0}
-                className={`flex-1 min-w-0 min-h-[48px] px-2 rounded-xl font-display font-black uppercase tracking-wider leading-tight transition-all cursor-pointer ${
-                  patience <= 0
-                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
-                    : 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-md shadow-amber-500/20'
-                }`}
+                className="flex-1 min-w-0 min-h-12 px-2 flex-col gap-0 leading-tight"
               >
                 <span className="block">Counter</span>
-                <span className="block font-mono truncate">{formatCurrency(counterFeeInput)}</span>
-              </button>
+                <span className="block max-w-full tabular-nums truncate">{formatCurrency(counterFeeInput)}</span>
+              </Button>
             )}
 
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               onClick={() => onAcceptOffer(offer.id)}
               disabled={save.squad.length <= 18}
               title={save.squad.length <= 18 ? 'Squad too small to sell' : undefined}
-              className="flex-1 min-w-0 min-h-[48px] px-2 rounded-xl my11-btn-gradient hover:opacity-95 text-white font-display font-black uppercase tracking-wider leading-tight shadow-lg shadow-blue-500/20 cursor-pointer disabled:opacity-40"
+              className="flex-1 min-w-0 min-h-12 px-2 flex-col gap-0 leading-tight"
             >
               <span className="block">Accept</span>
-              <span className="block font-mono truncate">{formatCurrency(offer.offeredFee)}</span>
-            </button>
+              <span className="block max-w-full tabular-nums truncate">{formatCurrency(offer.offeredFee)}</span>
+            </Button>
           </div>
         </div>
       </div>

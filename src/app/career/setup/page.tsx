@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getClubsForSeason } from '../../../career/clubs';
@@ -23,7 +23,8 @@ import {
   NumberFormatPreference,
 } from '../../../career/types';
 import { saveTheme } from '../../../utils/storage';
-import { IconCheck, IconChevronDown, IconChevronUp } from '../../../components/career/GameIcons';
+import { IconArrowLeft, IconArrowRight, IconCheck, IconChevronDown, IconChevronUp } from '../../../components/career/GameIcons';
+import { Button, Eyebrow } from '../../../components/ui';
 
 const NATIONALITIES = [
   'England', 'Scotland', 'Wales', 'Northern Ireland', 'Republic of Ireland',
@@ -36,32 +37,24 @@ const DIFFICULTY_PRESETS: {
   name: string;
   summary: string;
   bullets: string[];
-  titleClass: string;
-  activeClass: string;
 }[] = [
   {
     id: 'easy',
     name: 'Easy',
     summary: 'Bigger budget, no sackings, match retry.',
     bullets: ['+50% starting budget (1.5x)', 'No board sackings', 'Match retry enabled', 'Light injuries'],
-    titleClass: 'text-emerald-700',
-    activeClass: 'bg-emerald-50/50 border-emerald-600 shadow-md',
   },
   {
     id: 'hard',
     name: 'Hard',
     summary: 'Realistic injuries, sackings, locked rules.',
     bullets: ['Standard budget (1.0x)', 'Board can sack you', 'Realistic injuries', 'Settings permanently locked'],
-    titleClass: 'text-rose-700',
-    activeClass: 'bg-rose-50/50 border-rose-600 shadow-md',
   },
   {
     id: 'custom',
     name: 'Custom',
     summary: 'Set every rule yourself.',
     bullets: [],
-    titleClass: 'text-amber-700',
-    activeClass: 'bg-amber-50/60 border-amber-600 shadow-md',
   },
 ];
 
@@ -70,14 +63,29 @@ const CUSTOM_TOGGLES: {
   label: string;
   hint?: string;
 }[] = [
-  { key: 'boardCanSack', label: 'Board Can Sack You' },
-  { key: 'retryMatch', label: 'Allow Match Retry' },
-  { key: 'homegrownRule', label: 'Homegrown Rule', hint: '8+ homegrown registered players' },
-  { key: 'financialPenalties', label: 'Financial Penalties', hint: 'Points deductions under severe debt' },
+  { key: 'boardCanSack', label: 'Board can sack you' },
+  { key: 'retryMatch', label: 'Allow match retry' },
+  { key: 'homegrownRule', label: 'Homegrown rule', hint: '8+ homegrown registered players' },
+  { key: 'financialPenalties', label: 'Financial penalties', hint: 'Points deductions under severe debt' },
 ];
 
 const INLINE_SELECT_CLASS =
-  'max-w-[60%] bg-white border border-slate-300 rounded-lg px-2 py-2 text-xs text-slate-900 font-semibold cursor-pointer';
+  'max-w-[60%] bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg px-2 py-2 text-xs text-[var(--ink-primary)] font-medium cursor-pointer';
+
+const TIER_LABELS: Record<'all' | ClubTier, string> = {
+  all: 'All',
+  elite: 'Elite',
+  upper: 'Upper',
+  mid: 'Mid',
+  lower: 'Lower',
+};
+
+const FIELD_CLASS =
+  'w-full bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg px-3.5 py-2.5 text-sm text-[var(--ink-primary)] focus:outline-none focus:border-blue-600';
+
+function slotName(slotId: string): string {
+  return `Slot ${slotId.replace('slot_', '')}`;
+}
 
 type ClubSortOption =
   | 'name_asc'
@@ -291,28 +299,25 @@ function SetupWizardContent() {
   return (
     <div className="min-h-screen my11-canvas text-foreground font-sans flex flex-col w-full overflow-x-hidden p-3 sm:p-5 select-none">
       {/* Broadcast Setup Header */}
-      <header className="office-floating-card w-full max-w-5xl mx-auto rounded-2xl p-3 sm:p-4 mb-4 flex items-center justify-between">
+      <header className="office-floating-card w-full max-w-5xl mx-auto rounded-xl p-3 sm:p-4 mb-4 flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0">
           <Link
             href="/career"
-            className="office-subcard px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-950 transition-colors flex items-center gap-1.5"
+            className="min-h-10 px-3 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] hover:bg-[var(--surface-subcard)] text-xs font-semibold text-[var(--ink-primary)] transition-colors flex items-center gap-1.5 shrink-0"
           >
-            <svg viewBox="0 0 16 16" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M10 3L5 8l5 5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span>Save Slots</span>
+            <IconArrowLeft className="w-3.5 h-3.5" />
+            <span>Save slots</span>
           </Link>
-          <div className="h-4 w-px bg-slate-200" />
           <div className="min-w-0">
-            <h1 className="text-xs sm:text-sm font-display font-black tracking-tight text-slate-900 uppercase truncate">
-              New Career Setup
+            <h1 className="text-sm font-display font-semibold text-[var(--ink-primary)] truncate">
+              New career setup
             </h1>
-            <p className="text-[10px] text-slate-500 font-mono">
-              {targetSlot.replace('_', ' ').toUpperCase()} — Step {step} of 3
+            <p className="text-xs text-[var(--ink-muted)]">
+              {slotName(targetSlot)} · Step {step} of 3
             </p>
           </div>
         </div>
-        <span className="hidden sm:inline-flex items-center text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-slate-700">
+        <span className="hidden sm:inline text-xs text-[var(--ink-muted)]">
           Season {databaseSeason}
         </span>
       </header>
@@ -322,79 +327,72 @@ function SetupWizardContent() {
         {dbError && (
           <div
             role="alert"
-            className="mb-4 rounded-2xl bg-rose-50 border border-rose-300 px-4 py-3 flex flex-wrap items-center justify-between gap-3 text-xs text-rose-900 shadow-xs"
+            className="mb-4 rounded-xl bg-rose-50 border border-rose-200 px-4 py-3 flex flex-wrap items-center justify-between gap-3 text-xs text-rose-900"
           >
-            <span className="font-semibold">{dbError}</span>
-            <button
-              type="button"
-              onClick={handleRetryDbLoad}
-              className="px-3 py-1.5 rounded-xl bg-rose-700 hover:bg-rose-800 text-white font-display font-bold uppercase tracking-wider text-[10px] cursor-pointer"
-            >
-              Retry Load
-            </button>
+            <span className="font-medium">{dbError}</span>
+            <Button variant="danger" size="sm" onClick={handleRetryDbLoad}>
+              Retry
+            </Button>
           </div>
         )}
         {/* Step Progress Indicators */}
-        <nav aria-label="Setup steps" className="flex items-center justify-center gap-2 mb-6">
+        <nav aria-label="Setup steps" className="flex items-center justify-center gap-5 mb-5 border-b border-[var(--border-subtle)]">
           {[
-            { num: 1 as const, label: '01. Manager' },
-            { num: 2 as const, label: '02. Club' },
-            { num: 3 as const, label: '03. Rules' },
-          ].map((item, idx) => (
-            <React.Fragment key={item.num}>
-              {idx > 0 && <div className="w-5 h-px bg-slate-300" />}
-              <button
-                type="button"
-                onClick={() => goToStep(item.num)}
-                className={`px-4 py-1.5 rounded-lg text-xs font-display font-black tracking-tight transition-all cursor-pointer ${
-                  step === item.num
-                    ? 'office-nav-tab-active'
-                    : 'bg-white border border-slate-200 text-slate-700 hover:border-slate-400'
-                }`}
-              >
-                {item.label}
-              </button>
-            </React.Fragment>
+            { num: 1 as const, label: '1. Manager' },
+            { num: 2 as const, label: '2. Club' },
+            { num: 3 as const, label: '3. Rules' },
+          ].map((item) => (
+            <button
+              key={item.num}
+              type="button"
+              aria-current={step === item.num ? 'step' : undefined}
+              onClick={() => goToStep(item.num)}
+              className={`min-h-10 px-1 -mb-px text-sm border-b-2 transition-colors cursor-pointer ${
+                step === item.num
+                  ? 'border-[var(--accent-primary)] font-semibold text-[var(--ink-primary)]'
+                  : 'border-transparent font-medium text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
+              }`}
+            >
+              {item.label}
+            </button>
           ))}
         </nav>
 
         {/* STEP 1: MANAGER PROFILE */}
         {step === 1 && (
-          <section className="office-floating-card max-w-md mx-auto w-full space-y-5 rounded-2xl p-6 sm:p-8">
-            <header className="space-y-1 border-b border-slate-200 pb-4">
-              <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-700">
-                Step 01
-              </div>
-              <h2 className="text-xl font-display font-black uppercase text-slate-900">
-                Manager Profile
+          <section className="office-floating-card max-w-md mx-auto w-full space-y-5 rounded-xl p-6 sm:p-8">
+            <header className="space-y-1 border-b border-[var(--border-subtle)] pb-4">
+              <Eyebrow>Step 1 of 3</Eyebrow>
+              <h2 className="text-xl font-display font-bold text-[var(--ink-primary)]">
+                Manager profile
               </h2>
-              <p className="text-xs text-slate-600">
-                Establish your managerial identity before stepping into the dugout.
+              <p className="text-sm text-[var(--ink-secondary)]">
+                Set your manager&apos;s name and nationality.
               </p>
             </header>
 
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                  Manager Full Name
+                <label className="block text-xs font-semibold text-[var(--ink-secondary)]">
+                  Manager name
                 </label>
                 <input
                   type="text"
                   value={managerName}
                   onChange={(e) => setManagerName(e.target.value)}
                   placeholder="e.g. Alex Ferguson"
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-blue-600 font-semibold"
+                  className={FIELD_CLASS}
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                <label className="block text-xs font-semibold text-[var(--ink-secondary)]">
                   Nationality
                 </label>
                 <select
                   value={nationality}
                   onChange={(e) => setNationality(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-blue-600 font-semibold cursor-pointer"
+                  className={`${FIELD_CLASS} cursor-pointer`}
                 >
                   {NATIONALITIES.map((n) => (
                     <option key={n} value={n}>
@@ -406,14 +404,10 @@ function SetupWizardContent() {
             </div>
 
             <div className="pt-2">
-              <button
-                type="button"
-                onClick={() => goToStep(2)}
-                className="office-play-match-btn my11-tactile w-full py-3.5 px-4 rounded-xl text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>Continue to Club Selection</span>
-                <span aria-hidden="true">-&gt;</span>
-              </button>
+              <Button variant="primary" fullWidth className="min-h-11" onClick={() => goToStep(2)}>
+                <span>Continue to club selection</span>
+                <IconArrowRight className="w-4 h-4" />
+              </Button>
             </div>
           </section>
         )}
@@ -421,18 +415,16 @@ function SetupWizardContent() {
         {/* STEP 2: CLUB SELECTION */}
         {step === 2 && (
           <section className={`w-full space-y-4 pb-28 ${stepDir === 'forward' ? 'my11-step-forward' : 'my11-step-back'}`}>
-            <header className="text-center space-y-1.5">
-              <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-700">
-                Step 02
-              </div>
-              <h2 className="text-2xl font-display font-black uppercase text-slate-900 tracking-tight">
-                Choose Your Club
+            <header className="space-y-1 px-1">
+              <Eyebrow>Step 2 of 3</Eyebrow>
+              <h2 className="text-xl font-display font-bold text-[var(--ink-primary)]">
+                Choose your club
               </h2>
-              <p className="text-xs text-slate-600">20 top-flight clubs, {databaseSeason} season.</p>
+              <p className="text-sm text-[var(--ink-secondary)]">20 top-flight clubs, {databaseSeason} season.</p>
             </header>
 
             {/* Filter, Search & Sort Bar */}
-            <div className="office-floating-card rounded-2xl p-3.5 sm:p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <div className="office-floating-card rounded-xl p-3.5 sm:p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
               {/* Tier Filters — Swipeable Thumb-Reachable Strip on Mobile */}
               <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto sm:flex-wrap pb-1 sm:pb-0 snap-x scrollbar-none" role="group" aria-label="Filter clubs by tier">
                 {(['all', 'elite', 'upper', 'mid', 'lower'] as const).map((tier) => (
@@ -440,13 +432,14 @@ function SetupWizardContent() {
                     key={tier}
                     type="button"
                     onClick={() => setTierFilter(tier)}
-                    className={`my11-tactile shrink-0 snap-start px-3 py-1.5 rounded-lg text-[11px] font-display font-black uppercase tracking-wider cursor-pointer ${
+                    aria-pressed={tierFilter === tier}
+                    className={`shrink-0 snap-start min-h-9 px-3 rounded-full border text-xs cursor-pointer transition-colors ${
                       tierFilter === tier
-                        ? 'office-nav-tab-active'
-                        : 'bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200'
+                        ? 'bg-[var(--surface-elevated)] border-[var(--border-crisp)] font-semibold text-[var(--ink-primary)]'
+                        : 'bg-[var(--surface-card)] border-[var(--border-subtle)] font-medium text-[var(--ink-secondary)] hover:bg-[var(--surface-subcard)]'
                     }`}
                   >
-                    {tier} ({tierCounts[tier]})
+                    {TIER_LABELS[tier]} ({tierCounts[tier]})
                   </button>
                 ))}
               </div>
@@ -460,25 +453,25 @@ function SetupWizardContent() {
                     onChange={(e) => setClubSearch(e.target.value)}
                     placeholder="Search clubs"
                     aria-label="Search clubs"
-                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-900 font-medium focus:outline-none focus:border-blue-600"
+                    className="w-full min-h-9 bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg px-3 py-1.5 text-sm text-[var(--ink-primary)] focus:outline-none focus:border-blue-600"
                   />
                 </div>
                 <div className="flex items-center gap-2">
-                  <label htmlFor="club-sort-select" className="text-[11px] font-mono font-bold uppercase text-slate-600 shrink-0">
+                  <label htmlFor="club-sort-select" className="text-xs font-medium text-[var(--ink-secondary)] shrink-0">
                     Sort by
                   </label>
                   <select
                     id="club-sort-select"
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as ClubSortOption)}
-                    className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-semibold cursor-pointer focus:outline-none focus:border-blue-600"
+                    className="flex-1 min-w-0 min-h-9 bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg px-2.5 py-1.5 text-xs text-[var(--ink-primary)] font-medium cursor-pointer focus:outline-none focus:border-blue-600"
                   >
-                    <option value="name_asc">Name (A-Z)</option>
-                    <option value="name_desc">Name (Z-A)</option>
-                    <option value="budget_desc">Budget (High-Low)</option>
-                    <option value="budget_asc">Budget (Low-High)</option>
-                    <option value="rep_desc">Reputation (High-Low)</option>
-                    <option value="capacity_desc">Stadium Capacity</option>
+                    <option value="name_asc">Name (A to Z)</option>
+                    <option value="name_desc">Name (Z to A)</option>
+                    <option value="budget_desc">Budget (high to low)</option>
+                    <option value="budget_asc">Budget (low to high)</option>
+                    <option value="rep_desc">Reputation (high to low)</option>
+                    <option value="capacity_desc">Stadium capacity</option>
                   </select>
                 </div>
               </div>
@@ -486,17 +479,19 @@ function SetupWizardContent() {
 
             {/* Club Grid */}
             {filteredAndSortedClubs.length === 0 ? (
-              <div className="office-floating-card rounded-2xl p-8 text-center space-y-2">
-                <p className="text-sm font-bold text-slate-800">No clubs match &ldquo;{clubSearch}&rdquo;</p>
+              <div className="office-floating-card rounded-xl p-8 text-center space-y-2">
+                <p className="text-sm font-semibold text-[var(--ink-primary)]">
+                  {clubSearch.trim() ? <>No clubs match &ldquo;{clubSearch}&rdquo;</> : 'No clubs in this tier'}
+                </p>
                 <button
                   type="button"
                   onClick={() => {
                     setClubSearch('');
                     setTierFilter('all');
                   }}
-                  className="text-xs font-bold text-amber-700 hover:underline cursor-pointer"
+                  className="min-h-10 text-sm font-semibold text-blue-700 hover:underline cursor-pointer"
                 >
-                  Reset Filters
+                  Reset filters
                 </button>
               </div>
             ) : (
@@ -512,41 +507,38 @@ function SetupWizardContent() {
                       key={club.id}
                       aria-pressed={isSelected}
                       onClick={() => setSelectedClubId(club.id)}
-                      className={`office-floating-card my11-tactile text-left rounded-2xl p-4 cursor-pointer relative overflow-hidden flex flex-col justify-between ${
-                        isSelected
-                          ? 'border-2 border-amber-600 ring-2 ring-amber-500/25 shadow-md'
-                          : 'hover:border-zinc-400'
+                      className={`office-floating-card text-left rounded-xl p-4 cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+                        isSelected ? 'ring-2 ring-[var(--accent-primary)]' : ''
                       }`}
                     >
-                      {/* Club Colors Top Bar */}
+                      {/* Club colour line */}
                       <div
-                        className="absolute top-0 left-0 right-0 h-1.5"
-                        style={{
-                          background: `linear-gradient(to right, ${club.primaryColor}, ${club.secondaryColor})`,
-                        }}
+                        className="absolute top-0 left-0 right-0 h-1"
+                        style={{ backgroundColor: club.primaryColor }}
                       />
 
-                      <div className="pt-1">
-                        <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-700">
-                          {club.tier}
-                        </span>
-                        <h3 className="text-sm sm:text-base font-display font-black text-slate-900 leading-tight mt-2">
-                          {displayName}
-                        </h3>
+                      <div className="pt-1 flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <h3 className="text-base font-display font-semibold text-[var(--ink-primary)] leading-snug">
+                            {displayName}
+                          </h3>
+                          <span className="text-xs text-[var(--ink-muted)]">{TIER_LABELS[club.tier]} tier</span>
+                        </div>
+                        {isSelected && <IconCheck className="w-4 h-4 mt-1 shrink-0 text-[var(--ink-primary)]" />}
                       </div>
 
-                      <div className="mt-3 pt-2.5 border-t border-slate-200 flex justify-between items-center text-xs tabular-nums">
+                      <div className="mt-3 pt-2.5 border-t border-[var(--border-subtle)] flex justify-between items-center text-sm tabular-nums">
                         <div>
-                          <div className="text-[10px] uppercase font-bold text-zinc-500">Budget</div>
-                          <div className="font-display font-black text-amber-700">
+                          <div className="text-xs text-[var(--ink-muted)]">Budget</div>
+                          <div className="font-semibold text-[var(--ink-primary)]">
                             £{(club.startingBudget / 1_000_000).toFixed(0)}M
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-[10px] uppercase font-bold text-slate-500">
+                          <div className="text-xs text-[var(--ink-muted)]">
                             {sortBy === 'capacity_desc' ? 'Capacity' : 'Reputation'}
                           </div>
-                          <div className="font-display font-black text-slate-800">
+                          <div className="font-semibold text-[var(--ink-primary)]">
                             {sortBy === 'capacity_desc' ? club.stadiumCapacity.toLocaleString() : `${club.reputation}/100`}
                           </div>
                         </div>
@@ -558,40 +550,30 @@ function SetupWizardContent() {
             )}
 
             {/* Floating Sticky Bottom Progression Bar */}
-            <div className="fixed bottom-3 safe-bottom left-3 right-3 max-w-5xl mx-auto z-50 p-3 sm:p-3.5 office-floating-card rounded-2xl shadow-lg flex items-center justify-between gap-3">
+            <div className="fixed bottom-3 safe-bottom left-3 right-3 max-w-5xl mx-auto z-50 p-3 sm:p-3.5 office-floating-card rounded-xl shadow-sm flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 min-w-0">
                 <div
-                  className="w-4 h-4 rounded-full border border-slate-300 shrink-0"
-                  style={{
-                    background: `linear-gradient(135deg, ${selectedClub.primaryColor}, ${selectedClub.secondaryColor})`,
-                  }}
+                  className="w-3 h-3 rounded-full border border-[var(--border-crisp)] shrink-0"
+                  style={{ backgroundColor: selectedClub.primaryColor }}
                 />
                 <div className="min-w-0">
-                  <div className="text-[10px] uppercase font-mono font-bold text-slate-500 leading-tight">
+                  <div className="text-xs text-[var(--ink-muted)]">
                     Selected
                   </div>
-                  <div className="text-xs sm:text-sm font-display font-black text-slate-900 truncate">
+                  <div className="text-sm font-display font-semibold text-[var(--ink-primary)] truncate">
                     {effectiveSelectedName}
                   </div>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => goToStep(1)}
-                  className="my11-tactile bg-slate-100 hover:bg-slate-200 border border-slate-300 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-800 uppercase tracking-wider cursor-pointer transition-colors"
-                >
+                <Button variant="secondary" className="px-3" onClick={() => goToStep(1)}>
                   Back
-                </button>
-                <button
-                  type="button"
-                  onClick={() => goToStep(3)}
-                  className="office-play-match-btn my11-tactile px-4 py-2.5 rounded-xl text-white font-display font-black text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer"
-                >
-                  <span>Next: Rules</span>
-                  <span aria-hidden="true">-&gt;</span>
-                </button>
+                </Button>
+                <Button variant="primary" className="px-3" onClick={() => goToStep(3)}>
+                  <span>Next: rules</span>
+                  <IconArrowRight className="w-4 h-4" />
+                </Button>
               </div>
             </div>
           </section>
@@ -600,27 +582,25 @@ function SetupWizardContent() {
         {/* STEP 3: DIFFICULTY & RULES */}
         {step === 3 && (
           <section className={`max-w-3xl mx-auto w-full space-y-5 pb-8 ${stepDir === 'forward' ? 'my11-step-forward' : 'my11-step-back'}`}>
-            <header className="text-center space-y-1.5">
-              <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-700">
-                Step 03
-              </div>
-              <h2 className="text-2xl font-display font-black uppercase text-slate-900">
-                Difficulty &amp; Rules
+            <header className="space-y-1 px-1">
+              <Eyebrow>Step 3 of 3</Eyebrow>
+              <h2 className="text-xl font-display font-bold text-[var(--ink-primary)]">
+                Difficulty and rules
               </h2>
             </header>
 
             {/* Summary & optional rename */}
-            <div className="office-floating-card rounded-2xl p-4 space-y-3">
+            <div className="office-floating-card rounded-xl p-4 space-y-3">
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                <div className="text-sm font-display font-black text-slate-900">
+                <div className="text-sm font-display font-semibold text-[var(--ink-primary)]">
                   {managerName.trim() || 'Manager'} at {effectiveSelectedName}
                 </div>
-                <div className="text-xs tabular-nums text-slate-600">
-                  Budget <strong className="text-amber-700 font-display font-black">£{effectiveBudgetMillions}M</strong>
+                <div className="text-sm tabular-nums text-[var(--ink-secondary)]">
+                  Budget <strong className="font-semibold text-[var(--ink-primary)]">£{effectiveBudgetMillions}M</strong>
                 </div>
               </div>
               <div className="flex items-center gap-2.5">
-                <label htmlFor="single-custom-club-name" className="text-[11px] font-bold text-slate-700 uppercase tracking-wider shrink-0">
+                <label htmlFor="single-custom-club-name" className="text-xs font-semibold text-[var(--ink-secondary)] shrink-0">
                   Club name
                 </label>
                 <input
@@ -629,7 +609,7 @@ function SetupWizardContent() {
                   value={customClubNames[selectedClub.id] ?? ''}
                   onChange={(e) => handleClubRename(selectedClub.id, e.target.value)}
                   placeholder={selectedClub.defaultName}
-                  className="flex-1 min-w-0 bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-semibold focus:outline-none focus:border-amber-600"
+                  className="flex-1 min-w-0 min-h-10 bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg px-3 py-2 text-sm text-[var(--ink-primary)] focus:outline-none focus:border-blue-600"
                 />
               </div>
             </div>
@@ -645,21 +625,23 @@ function SetupWizardContent() {
                       type="button"
                       aria-pressed={isActive}
                       onClick={() => handlePresetSelect(item.id)}
-                      className={`rounded-2xl px-4 py-3 min-h-[56px] text-left transition-all cursor-pointer border-2 ${
-                        isActive ? item.activeClass : 'bg-white border-[#D4D2CD] hover:border-zinc-400 shadow-xs'
+                      className={`rounded-xl px-4 py-3 min-h-[56px] text-left transition-colors cursor-pointer border ${
+                        isActive
+                          ? 'bg-[var(--surface-subcard)] border-[var(--ink-primary)]'
+                          : 'bg-[var(--surface-card)] border-[var(--border-crisp)] hover:bg-[var(--surface-subcard)]'
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <h3 className={`font-display font-black uppercase text-sm ${item.titleClass}`}>{item.name}</h3>
-                        {isActive && <IconCheck className={`w-4 h-4 ${item.titleClass}`} />}
+                        <h3 className="font-display font-semibold text-sm text-[var(--ink-primary)]">{item.name}</h3>
+                        {isActive && <IconCheck className="w-4 h-4 text-[var(--ink-primary)]" />}
                       </div>
-                      <p className="text-[11px] text-slate-600 leading-snug mt-0.5">{item.summary}</p>
+                      <p className="text-xs text-[var(--ink-secondary)] leading-snug mt-0.5">{item.summary}</p>
                     </button>
                   );
                 })}
               </div>
               {activePreset.bullets.length > 0 && (
-                <ul className="list-disc pl-5 text-xs text-slate-700 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
+                <ul className="list-disc pl-5 text-xs text-[var(--ink-secondary)] grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
                   {activePreset.bullets.map((bullet) => (
                     <li key={bullet}>{bullet}</li>
                   ))}
@@ -669,16 +651,16 @@ function SetupWizardContent() {
 
             {/* Custom rules: only when Custom is selected */}
             {preset === 'custom' && (
-              <div className="office-floating-card rounded-2xl px-4 py-2">
-                <h3 className="text-xs font-display font-black uppercase tracking-wider text-slate-900 py-2.5">
-                  Custom Rules
+              <div className="office-floating-card rounded-xl px-4 py-2">
+                <h3 className="text-sm font-display font-semibold text-[var(--ink-primary)] py-2.5">
+                  Custom rules
                 </h3>
-                <div className="divide-y divide-slate-200 text-xs border-t border-slate-200">
+                <div className="divide-y divide-[var(--border-subtle)] text-sm border-t border-[var(--border-subtle)]">
                   {CUSTOM_TOGGLES.map((toggle) => (
                     <label key={toggle.key} className="flex justify-between items-center gap-3 py-3 min-h-[44px] cursor-pointer">
                       <span className="min-w-0">
-                        <span className="font-bold text-slate-900">{toggle.label}</span>
-                        {toggle.hint && <span className="block text-[11px] text-slate-600">{toggle.hint}</span>}
+                        <span className="font-semibold text-[var(--ink-primary)]">{toggle.label}</span>
+                        {toggle.hint && <span className="block text-xs text-[var(--ink-secondary)]">{toggle.hint}</span>}
                       </span>
                       <input
                         type="checkbox"
@@ -690,7 +672,7 @@ function SetupWizardContent() {
                   ))}
 
                   <label className="flex justify-between items-center gap-3 py-3 min-h-[44px]">
-                    <span className="font-bold text-slate-900">Injury Severity</span>
+                    <span className="font-semibold text-[var(--ink-primary)]">Injury severity</span>
                     <select
                       value={customSettings.injurySeverity}
                       onChange={(e) =>
@@ -705,7 +687,7 @@ function SetupWizardContent() {
                   </label>
 
                   <label className="flex justify-between items-center gap-3 py-3 min-h-[44px]">
-                    <span className="font-bold text-slate-900">Budget Multiplier</span>
+                    <span className="font-semibold text-[var(--ink-primary)]">Budget multiplier</span>
                     <select
                       value={String(customSettings.startingBudgetMultiplier)}
                       onChange={(e) =>
@@ -713,16 +695,16 @@ function SetupWizardContent() {
                       }
                       className={INLINE_SELECT_CLASS}
                     >
-                      <option value="0.75">0.75x (Strict)</option>
-                      <option value="1">1.0x (Standard)</option>
-                      <option value="1.25">1.25x (Generous)</option>
-                      <option value="1.5">1.5x (Abundant)</option>
-                      <option value="2">2.0x (Warchest)</option>
+                      <option value="0.75">0.75x (strict)</option>
+                      <option value="1">1.0x (standard)</option>
+                      <option value="1.25">1.25x (generous)</option>
+                      <option value="1.5">1.5x (abundant)</option>
+                      <option value="2">2.0x (war chest)</option>
                     </select>
                   </label>
 
                   <label className="flex justify-between items-center gap-3 py-3 min-h-[44px]">
-                    <span className="font-bold text-slate-900">Player Pool</span>
+                    <span className="font-semibold text-[var(--ink-primary)]">Player pool</span>
                     <select
                       value={customSettings.playerPool}
                       onChange={(e) =>
@@ -730,16 +712,16 @@ function SetupWizardContent() {
                       }
                       className={INLINE_SELECT_CLASS}
                     >
-                      <option value="modern">Modern Only</option>
-                      <option value="all">Modern + Legends</option>
-                      <option value="legends">Legends Only</option>
+                      <option value="modern">Modern only</option>
+                      <option value="all">Modern and legends</option>
+                      <option value="legends">Legends only</option>
                     </select>
                   </label>
 
                   <label className="flex justify-between items-center gap-3 py-3 min-h-[44px] cursor-pointer">
                     <span className="min-w-0">
-                      <span className="font-bold text-amber-900">Lock Settings Permanently</span>
-                      <span className="block text-[11px] text-amber-800">No rule edits after you start</span>
+                      <span className="font-semibold text-[var(--ink-primary)]">Lock settings permanently</span>
+                      <span className="block text-xs text-amber-800">No rule edits after you start</span>
                     </span>
                     <input
                       type="checkbox"
@@ -759,7 +741,7 @@ function SetupWizardContent() {
             )}
 
             {/* Display units: collapsed by default, also editable in Settings */}
-            <div className="office-floating-card rounded-2xl px-4">
+            <div className="office-floating-card rounded-xl px-4">
               <button
                 type="button"
                 aria-expanded={unitsOpen}
@@ -768,22 +750,22 @@ function SetupWizardContent() {
                 className="w-full min-h-[48px] flex items-center justify-between gap-3 text-left cursor-pointer"
               >
                 <span className="min-w-0">
-                  <span className="block text-xs font-display font-black uppercase tracking-wider text-slate-900">
+                  <span className="block text-sm font-display font-semibold text-[var(--ink-primary)]">
                     Display units
                   </span>
-                  <span className="block text-[11px] text-slate-600">UK defaults. Can be changed later in Settings.</span>
+                  <span className="block text-xs text-[var(--ink-secondary)]">UK defaults. Can be changed later in Settings.</span>
                 </span>
                 {unitsOpen ? (
-                  <IconChevronUp className="w-4 h-4 text-slate-600 shrink-0" />
+                  <IconChevronUp className="w-4 h-4 text-[var(--ink-secondary)] shrink-0" />
                 ) : (
-                  <IconChevronDown className="w-4 h-4 text-slate-600 shrink-0" />
+                  <IconChevronDown className="w-4 h-4 text-[var(--ink-secondary)] shrink-0" />
                 )}
               </button>
 
               {unitsOpen && (
-                <div id="setup-display-units" className="divide-y divide-slate-200 border-t border-slate-200 text-xs">
+                <div id="setup-display-units" className="divide-y divide-[var(--border-subtle)] border-t border-[var(--border-subtle)] text-sm">
                   <label className="flex justify-between items-center gap-3 py-3">
-                    <span className="font-bold text-slate-900">Date</span>
+                    <span className="font-semibold text-[var(--ink-primary)]">Date</span>
                     <select
                       value={customSettings.dateFormat || 'uk'}
                       onChange={(e) =>
@@ -798,7 +780,7 @@ function SetupWizardContent() {
                   </label>
 
                   <label className="flex justify-between items-center gap-3 py-3">
-                    <span className="font-bold text-slate-900">Currency</span>
+                    <span className="font-semibold text-[var(--ink-primary)]">Currency</span>
                     <select
                       value={customSettings.currency || 'GBP'}
                       onChange={(e) =>
@@ -813,7 +795,7 @@ function SetupWizardContent() {
                   </label>
 
                   <label className="flex justify-between items-center gap-3 py-3">
-                    <span className="font-bold text-slate-900">Wages</span>
+                    <span className="font-semibold text-[var(--ink-primary)]">Wages</span>
                     <select
                       value={customSettings.wageUnit || 'weekly'}
                       onChange={(e) =>
@@ -828,7 +810,7 @@ function SetupWizardContent() {
                   </label>
 
                   <label className="flex justify-between items-center gap-3 py-3">
-                    <span className="font-bold text-slate-900">Height</span>
+                    <span className="font-semibold text-[var(--ink-primary)]">Height</span>
                     <select
                       value={customSettings.heightUnit || 'ft_in'}
                       onChange={(e) =>
@@ -836,14 +818,14 @@ function SetupWizardContent() {
                       }
                       className={INLINE_SELECT_CLASS}
                     >
-                      <option value="ft_in">Feet &amp; inches (5&apos; 11&quot;)</option>
+                      <option value="ft_in">Feet and inches (5&apos; 11&quot;)</option>
                       <option value="cm">Centimetres (180 cm)</option>
                       <option value="m">Metres (1.80 m)</option>
                     </select>
                   </label>
 
                   <label className="flex justify-between items-center gap-3 py-3">
-                    <span className="font-bold text-slate-900">Weight</span>
+                    <span className="font-semibold text-[var(--ink-primary)]">Weight</span>
                     <select
                       value={customSettings.weightUnit || 'kg'}
                       onChange={(e) =>
@@ -852,13 +834,13 @@ function SetupWizardContent() {
                       className={INLINE_SELECT_CLASS}
                     >
                       <option value="kg">Kilograms (75 kg)</option>
-                      <option value="st_lbs">Stone &amp; pounds (11st 11lbs)</option>
+                      <option value="st_lbs">Stone and pounds (11st 11lbs)</option>
                       <option value="lbs">Pounds (165 lbs)</option>
                     </select>
                   </label>
 
                   <label className="flex justify-between items-center gap-3 py-3">
-                    <span className="font-bold text-slate-900">Numbers</span>
+                    <span className="font-semibold text-[var(--ink-primary)]">Numbers</span>
                     <select
                       value={customSettings.numberFormat || 'comma'}
                       onChange={(e) =>
@@ -877,24 +859,20 @@ function SetupWizardContent() {
 
             {/* Actions */}
             <div className="flex justify-between items-center pt-2 gap-3">
-              <button
-                type="button"
-                onClick={() => goToStep(2)}
-                className="bg-white border border-slate-300 hover:bg-slate-100 py-3 px-5 rounded-xl text-xs font-bold text-slate-800 font-display uppercase tracking-wider cursor-pointer transition-colors"
-              >
+              <Button variant="secondary" className="min-h-11" onClick={() => goToStep(2)}>
                 Back
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="primary"
+                className="flex-1 min-w-0 min-h-11 whitespace-nowrap"
                 onClick={handleStartCareer}
                 disabled={isStartingCareer}
-                className="office-play-match-btn flex-1 min-w-0 py-3.5 px-4 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap disabled:opacity-60"
               >
                 <span className="truncate">
-                  {isStartingCareer ? 'Starting...' : `Start Career at ${effectiveSelectedName}`}
+                  {isStartingCareer ? 'Starting...' : `Start career at ${effectiveSelectedName}`}
                 </span>
-                <span aria-hidden="true" className="shrink-0">-&gt;</span>
-              </button>
+                <IconArrowRight className="w-4 h-4 shrink-0" />
+              </Button>
             </div>
           </section>
         )}
@@ -907,8 +885,8 @@ export default function CareerSetupPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-slate-100 text-slate-900 flex items-center justify-center font-display font-black uppercase text-sm">
-          Loading Setup Wizard...
+        <div className="min-h-screen bg-[var(--surface-ground)] text-[var(--ink-primary)] flex items-center justify-center font-display font-semibold text-sm">
+          Loading setup...
         </div>
       }
     >

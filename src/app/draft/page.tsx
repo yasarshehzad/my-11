@@ -14,10 +14,11 @@ import { HowToPlayModal } from '../../components/HowToPlayModal';
 import { players } from '../../data/players';
 import { ensurePlayerBiosLoaded } from '../../career/playerBioDatabase';
 import { parseH2HChallengeFromUrl, parseChallengeFromUrl } from '../../utils/challengeUrl';
+import { IconArrowLeft } from '@/components/career/GameIcons';
 
 function ScreenFallback() {
   return (
-    <div className="office-floating-card rounded-3xl p-8 text-center text-xs font-display font-bold uppercase tracking-wider text-slate-500">
+    <div className="office-floating-card rounded-xl p-8 text-center text-sm text-[var(--ink-muted)]">
       Loading view...
     </div>
   );
@@ -121,22 +122,20 @@ function DraftPageContent() {
   // Safe fallback if database failed to bundle
   if (!players || players.length === 0) {
     return (
-      <div className="min-h-screen my11-canvas text-slate-900 font-sans flex flex-col p-6 justify-center items-center">
-        <main className="w-full max-w-md office-floating-card rounded-3xl p-8 border border-rose-200 shadow-2xl text-center space-y-6">
-          <div className="w-12 h-12 mx-auto rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center justify-center font-mono font-bold text-xs">
-            ERR
-          </div>
-          <h1 className="text-2xl font-display font-black text-slate-900 uppercase tracking-tight">
-            Database Loading Error
+      <div className="min-h-screen my11-canvas text-[var(--ink-primary)] font-sans flex flex-col p-6 justify-center items-center">
+        <main className="w-full max-w-md office-floating-card rounded-xl p-8 text-center space-y-4">
+          <h1 className="text-xl font-display font-semibold text-[var(--ink-primary)]">
+            Database loading error
           </h1>
-          <p className="text-sm text-slate-600 leading-relaxed font-semibold">
+          <p className="text-sm text-[var(--ink-secondary)] leading-relaxed">
             We couldn&apos;t load the MY-11 player database. This might be due to a corrupt build or missing database assets.
           </p>
           <Link
             href="/"
-            className="inline-block py-2 px-4 rounded-xl bg-white border border-slate-300 text-xs font-bold text-slate-800 hover:bg-slate-50"
+            className="inline-flex items-center justify-center gap-2 min-h-10 px-4 rounded-lg bg-[var(--surface-card)] border border-[var(--border-crisp)] text-sm font-semibold text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)]"
           >
-            &larr; Return to Home
+            <IconArrowLeft className="w-3.5 h-3.5 shrink-0" />
+            <span>Return to home</span>
           </Link>
         </main>
       </div>
@@ -146,33 +145,32 @@ function DraftPageContent() {
   return (
     <div className="min-h-screen my11-canvas text-foreground font-sans flex flex-col w-full overflow-x-hidden p-3 sm:p-5 select-none">
       {/* Draft Mode Floating MY-11 Header */}
-      <header className="office-floating-card w-full max-w-5xl mx-auto rounded-2xl p-3 sm:p-4 mb-4 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-2.5">
+      <header className="office-floating-card w-full max-w-5xl mx-auto rounded-xl p-3 sm:p-4 mb-4 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-3 min-w-0">
           <button
+            type="button"
             onClick={handleReturnHome}
-            title="Return to Home"
-            className="office-subcard px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 hover:text-slate-900 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+            title="Return to home"
+            className="min-h-10 px-3 rounded-lg bg-[var(--surface-card)] border border-[var(--border-crisp)] text-sm font-semibold text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
           >
-            <span>&larr;</span> <span>Home</span>
+            <IconArrowLeft className="w-3.5 h-3.5 shrink-0" />
+            <span>Home</span>
           </button>
-          <span className="text-[10px] font-mono font-bold tracking-wider text-blue-800 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded uppercase">
-            Draft
+          <span className="min-w-0 text-sm text-[var(--ink-secondary)]">
+            <span className="font-semibold text-[var(--ink-primary)]">Draft</span>
+            {game.streakStats.currentDailyStreak > 0 && (
+              <span className="hidden min-[440px]:inline whitespace-nowrap"> · {game.streakStats.currentDailyStreak}-day streak</span>
+            )}
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
-          {game.streakStats.currentDailyStreak > 0 && (
-            <span className="office-subcard text-[10px] font-mono font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-full uppercase tracking-wider leading-none border border-amber-200">
-              Streak {game.streakStats.currentDailyStreak}d
-            </span>
-          )}
+        <div className="flex items-center gap-2 shrink-0">
 
           {/* Quick link to Career Mode */}
           <Link
             href="/career"
-            title="Career Mode"
-            className="bg-[#09152b] hover:bg-[#0f2142] text-white text-[10px] font-mono font-bold tracking-wider uppercase px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1 leading-none shadow-xs"
-            data-force-white="true"
+            title="Career mode"
+            className="min-h-10 px-3 rounded-lg text-sm font-semibold text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] transition-colors flex items-center"
           >
             Career
           </Link>
@@ -186,9 +184,9 @@ function DraftPageContent() {
                 game.handleViewHistory();
               }
             }}
-            aria-label="View Squad History & Personal Bests"
-            title="View Squad History & Personal Bests"
-            className="w-8 h-8 rounded-xl flex items-center justify-center office-subcard text-slate-700 hover:text-slate-900 cursor-pointer active:scale-95 transition-transform shadow-2xs"
+            aria-label="View squad history and personal bests"
+            title="View squad history and personal bests"
+            className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] cursor-pointer transition-colors"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 8v4l3 3" />
@@ -199,9 +197,9 @@ function DraftPageContent() {
           {/* Help Tutorial Trigger Button */}
           <button
             onClick={() => setShowTutorial(true)}
-            aria-label="How to Play & Game Guides"
-            title="How to Play & Game Guides"
-            className="w-8 h-8 rounded-xl flex items-center justify-center office-subcard text-slate-700 hover:text-slate-900 cursor-pointer active:scale-95 transition-transform shadow-2xs"
+            aria-label="How to play and game guides"
+            title="How to play and game guides"
+            className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] cursor-pointer transition-colors"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="9" />
@@ -215,19 +213,19 @@ function DraftPageContent() {
       {/* Screen Coordinator */}
       <main className="flex-1 w-full mx-auto flex flex-col justify-center max-w-lg">
         {game.activeH2HChallenge && (game.phase === 'formation' || game.phase === 'draft') && (
-          <div className="mb-3 rounded-2xl bg-emerald-50 border border-emerald-300 px-4 py-2.5 flex items-center justify-between gap-3 text-xs shadow-2xs">
+          <div className="mb-3 rounded-xl bg-[var(--surface-card)] border border-[var(--border-subtle)] px-4 py-2.5 flex items-center justify-between gap-3">
             <div className="min-w-0 text-left">
-              <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-800">
-                H2H Rival Active
+              <div className="text-xs font-medium text-emerald-800">
+                Head-to-head rival
               </div>
-              <div className="font-display font-bold text-slate-900 truncate">
-                {game.activeH2HChallenge.clubName} ({game.activeH2HChallenge.formation} • {game.activeH2HChallenge.overall} OVR)
+              <div className="text-sm font-semibold text-[var(--ink-primary)] truncate">
+                {game.activeH2HChallenge.clubName} · {game.activeH2HChallenge.formation} · {game.activeH2HChallenge.overall} OVR
               </div>
             </div>
             <button
               type="button"
               onClick={game.handleDismissH2HChallenge}
-              className="px-2.5 py-1 rounded-lg bg-white border border-emerald-200 text-[10px] font-bold text-slate-600 hover:bg-slate-50 cursor-pointer shrink-0"
+              className="min-h-8 px-3 rounded-lg bg-[var(--surface-card)] border border-[var(--border-crisp)] text-xs font-semibold text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] cursor-pointer shrink-0"
             >
               Cancel
             </button>
@@ -337,17 +335,17 @@ function DraftPageContent() {
       </main>
 
       {/* App Footer */}
-      <footer className="w-full py-8 text-center border-t border-[var(--office-divider)] text-[10px] font-bold text-[var(--office-text-muted)] uppercase tracking-widest select-none space-y-3 px-4 bg-white/60 backdrop-blur-md mt-8 safe-pb">
-        <p className="max-w-md mx-auto text-[10px] text-[var(--office-text-muted)] leading-relaxed font-medium normal-case">
+      <footer className="w-full py-8 text-center border-t border-[var(--office-divider)] text-xs text-[var(--office-text-muted)] select-none space-y-3 px-4 mt-8 safe-pb">
+        <p className="max-w-md mx-auto text-xs text-[var(--office-text-muted)] leading-relaxed">
           MY-11 is an unofficial, independent football draft and management simulation game. Not affiliated with, sponsored by, or endorsed by any club, league, or governing body.
         </p>
-        <div className="flex justify-center items-center gap-4 text-[var(--office-text-secondary)] normal-case text-xs font-semibold">
-          <Link href="/privacy" className="hover:text-[#1d5eff] transition-colors">Privacy Policy</Link>
-          <span className="text-[var(--office-text-muted)]">•</span>
-          <Link href="/terms" className="hover:text-[#1d5eff] transition-colors">Terms of Service</Link>
+        <div className="flex justify-center items-center gap-4 text-[var(--office-text-secondary)] text-xs font-medium">
+          <Link href="/privacy" className="hover:text-[#1d5eff] transition-colors">Privacy policy</Link>
+          <span className="text-[var(--office-text-muted)]">·</span>
+          <Link href="/terms" className="hover:text-[#1d5eff] transition-colors">Terms of service</Link>
         </div>
-        <p className="text-[var(--office-text-muted)] text-[10px] font-mono tracking-wider">
-          MY-11 © 2026 • BUILT FOR FOOTBALL FANS
+        <p className="text-[var(--office-text-muted)] text-xs">
+          MY-11 © 2026 · Built for football fans
         </p>
       </footer>
 
@@ -382,8 +380,8 @@ export default function DraftPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen my11-canvas text-[var(--office-text-primary)] flex items-center justify-center font-display font-black uppercase text-sm">
-          Loading Draft Mode...
+        <div className="min-h-screen my11-canvas text-[var(--office-text-primary)] flex items-center justify-center font-display font-semibold text-sm">
+          Loading draft mode...
         </div>
       }
     >

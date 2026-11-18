@@ -1,7 +1,7 @@
 import React from 'react';
 import { ChallengeTemplate } from '../types/game';
 import { DailyChallengeStatus } from '../utils/storage';
-import { IconCheck, IconClose } from './career/GameIcons';
+import { Button, Eyebrow } from '@/components/ui';
 
 interface DailyChallengeBannerProps {
   todayChallenge: ChallengeTemplate | null;
@@ -16,55 +16,36 @@ export function DailyChallengeBanner({
 }: DailyChallengeBannerProps) {
   if (!todayChallenge) {
     return (
-      <div className="w-full max-w-[340px] h-[210px] rounded-3xl border border-slate-900 bg-slate-950/40 motion-safe:animate-pulse glass" />
+      <div className="w-full max-w-[340px] h-[210px] rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subcard)]" />
     );
   }
 
   return (
-    <div className="w-full max-w-[340px] rounded-3xl border border-blue-500/25 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-slate-950/70 p-5 text-left relative glass shadow-2xl animate-card-deal motion-reduce:animate-none">
-      <span className="text-[10px] font-extrabold text-blue-400 uppercase tracking-widest">
-        Today&apos;s Challenge
-      </span>
-      
-      <h3 className="text-lg font-display font-black text-foreground uppercase tracking-tight mt-1 leading-tight">
+    <div className="w-full max-w-[340px] rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 text-left relative animate-card-deal motion-reduce:animate-none">
+      <Eyebrow>Today&apos;s challenge</Eyebrow>
+
+      <h3 className="text-lg font-display font-semibold text-[var(--ink-primary)] mt-1 leading-tight">
         {todayChallenge.title}
       </h3>
-      
-      <p className="text-[11px] text-slate-400 font-semibold leading-relaxed mt-2">
+
+      <p className="text-sm text-[var(--ink-secondary)] leading-relaxed mt-2">
         {todayChallenge.description}
       </p>
 
-      {dailyStatus.completed ? (
-        <div className="flex justify-between items-center mt-4 pt-3 border-t border-slate-900 leading-none">
-          <span className="text-[10px] font-bold text-slate-500 uppercase inline-flex items-center gap-1">
-            <span className={`inline-flex items-center gap-1 ${dailyStatus.beaten ? 'text-emerald-400' : 'text-rose-400'}`}>
-              {dailyStatus.beaten ? (
-                <>
-                  <IconCheck className="w-3 h-3" />
-                  <span>Cleared</span>
-                </>
-              ) : (
-                <>
-                  <IconClose className="w-3 h-3" />
-                  <span>Failed</span>
-                </>
-              )}
-            </span>
+      {dailyStatus.completed && (
+        <p className="mt-4 pt-3 border-t border-[var(--border-subtle)] text-sm text-[var(--ink-secondary)] flex justify-between items-center gap-2">
+          <span className={`font-medium ${dailyStatus.beaten ? 'text-emerald-700' : 'text-rose-700'}`}>
+            {dailyStatus.beaten ? 'Cleared' : 'Failed'}
           </span>
-          <span className="text-[10px] font-black text-slate-500 uppercase">
-            Score: <span className="text-blue-400 font-bold">{dailyStatus.score}</span>
+          <span>
+            Score: <span className="font-semibold text-[var(--ink-primary)]">{dailyStatus.score}</span>
           </span>
-        </div>
-      ) : (
-        <div className="h-[1px] w-full bg-slate-900/60 mt-4" />
+        </p>
       )}
 
-      <button
-        onClick={onPlay}
-        className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/25 mt-4 transition-all duration-300 transform active:scale-98 cursor-pointer text-center"
-      >
-        {dailyStatus.completed ? "Play Again" : "Play"}
-      </button>
+      <Button variant="primary" fullWidth onClick={onPlay} className="mt-4 min-h-11">
+        {dailyStatus.completed ? 'Play again' : 'Play'}
+      </Button>
     </div>
   );
 }

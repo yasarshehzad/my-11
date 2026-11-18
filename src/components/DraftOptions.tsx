@@ -2,7 +2,8 @@ import React from 'react';
 import { Player, PitchSlot, DraftModifier } from '../types/game';
 import { getProjectedChemistry, getMysteryClues } from '../utils/gameLogic';
 import { PlayerCard } from './PlayerCard';
-import { IconClose, IconRefresh, IconSearch, IconSparkles } from './career/GameIcons';
+import { IconClose, IconRefresh, IconSearch } from './career/GameIcons';
+import { Button } from '@/components/ui';
 
 interface DraftOptionsProps {
   currentSlot: PitchSlot | undefined;
@@ -81,54 +82,48 @@ export function DraftOptions({
     <div className="flex flex-col gap-3.5 w-full">
       {/* Slot being filled + reroll */}
       <div className="flex justify-between items-center gap-3 px-1">
-        <span className="text-[11px] font-bold text-[var(--office-text-muted)] uppercase tracking-wider leading-none inline-flex items-center gap-1.5 min-w-0">
-          {isMysteryRound && <IconSparkles className="w-3.5 h-3.5 text-purple-700 shrink-0" />}
-          <span className="truncate">
-            {isMysteryRound ? 'Mystery pick for' : 'Pick for'}{' '}
-            <span className="text-[#1d5eff] font-display font-black text-sm">{currentSlot?.label}</span>
-          </span>
+        <span className="text-sm text-[var(--ink-secondary)] min-w-0 truncate">
+          {isMysteryRound ? 'Mystery pick for' : 'Pick for'}{' '}
+          <span className="text-[var(--ink-primary)] font-display font-semibold">{currentSlot?.label}</span>
         </span>
 
         {!freeSearchEnabled && (
-          <button
-            type="button"
+          <Button
+            variant="secondary"
             onClick={onRerollOptions}
             disabled={rerollsRemaining <= 0}
             aria-label={`Reroll choices, ${rerollsRemaining} left`}
-            className={`min-h-[40px] px-3 rounded-xl font-display font-black text-[11px] uppercase tracking-wider transition-all select-none inline-flex items-center gap-1.5 shrink-0 ${
-              rerollsRemaining > 0
-                ? 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 active:scale-95 cursor-pointer'
-                : 'office-subcard text-slate-400 cursor-not-allowed opacity-60'
-            }`}
+            className="shrink-0 select-none"
           >
             <IconRefresh className="w-3.5 h-3.5" />
             <span>Reroll ({rerollsRemaining})</span>
-          </button>
+          </Button>
         )}
       </div>
 
       {/* Tab Swapper */}
       {freeSearchEnabled && !isMysteryRound && (
-        <div className="flex office-subcard p-1 rounded-2xl w-full">
+        <div className="flex gap-1 p-1 rounded-lg w-full bg-[var(--surface-subcard)] border border-[var(--border-subtle)]">
           <button
             type="button"
             onClick={() => onSetDraftTab('recommended')}
-            className={`flex-grow py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer text-center inline-flex items-center justify-center gap-1.5 ${
+            aria-pressed={draftTab === 'recommended'}
+            className={`flex-1 min-h-10 px-4 rounded-md font-semibold text-sm transition-colors cursor-pointer text-center inline-flex items-center justify-center gap-1.5 border ${
               draftTab === 'recommended'
-                ? 'office-action-btn-primary text-white shadow-md'
-                : 'text-[var(--office-text-secondary)] hover:text-[var(--office-text-primary)]'
+                ? 'bg-[var(--surface-card)] text-[var(--ink-primary)] border-[var(--border-crisp)]'
+                : 'border-transparent text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
             }`}
           >
-            <IconSparkles className="w-3.5 h-3.5" />
-            <span>Scout Picks</span>
+            <span>Scout picks</span>
           </button>
           <button
             type="button"
             onClick={() => onSetDraftTab('search')}
-            className={`flex-grow py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer text-center inline-flex items-center justify-center gap-1.5 ${
+            aria-pressed={draftTab === 'search'}
+            className={`flex-1 min-h-10 px-4 rounded-md font-semibold text-sm transition-colors cursor-pointer text-center inline-flex items-center justify-center gap-1.5 border ${
               draftTab === 'search'
-                ? 'office-action-btn-primary text-white shadow-md'
-                : 'text-[var(--office-text-secondary)] hover:text-[var(--office-text-primary)]'
+                ? 'bg-[var(--surface-card)] text-[var(--ink-primary)] border-[var(--border-crisp)]'
+                : 'border-transparent text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
             }`}
           >
             <IconSearch className="w-3.5 h-3.5" />
@@ -167,9 +162,9 @@ export function DraftOptions({
               value={searchQuery}
               onChange={(e) => onSetSearchQuery(e.target.value)}
               placeholder="Name, club, season or nation" aria-label="Search players"
-              className="w-full bg-white border border-slate-300 rounded-2xl py-3 pl-10 pr-10 text-xs text-[var(--office-text-primary)] placeholder-slate-400 focus:outline-none focus:border-[#1d5eff] focus:ring-2 focus:ring-blue-500/20 transition-all font-semibold"
+              className="w-full bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg py-2.5 pl-10 pr-10 text-sm text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] focus:outline-none focus:border-[#1d5eff] focus:ring-2 focus:ring-blue-500/20 transition-colors"
             />
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--ink-muted)] pointer-events-none">
               <IconSearch className="w-3.5 h-3.5" />
             </span>
             {searchQuery !== '' && (
@@ -177,7 +172,7 @@ export function DraftOptions({
                 type="button"
                 onClick={() => onSetSearchQuery('')}
                 aria-label="Clear search"
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-slate-400 hover:text-[var(--office-text-primary)] cursor-pointer"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-[var(--ink-muted)] hover:text-[var(--ink-primary)] cursor-pointer"
               >
                 <IconClose className="w-3.5 h-3.5" />
               </button>
@@ -192,9 +187,9 @@ export function DraftOptions({
                 aria-label="Filter by club"
                 value={selectedClub}
                 onChange={(e) => onSetSelectedClub(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-xl py-2.5 px-3 text-xs text-[var(--office-text-primary)] font-bold tracking-wide focus:outline-none focus:border-[#1d5eff] cursor-pointer"
+                className="w-full min-h-10 bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg py-2 px-3 text-sm text-[var(--ink-primary)] focus:outline-none focus:border-[#1d5eff] cursor-pointer"
               >
-                <option value="" className="text-[var(--office-text-primary)] bg-white">All Clubs</option>
+                <option value="" className="text-[var(--office-text-primary)] bg-white">All clubs</option>
                 {allClubs.map((club) => (
                   <option key={club} value={club} className="text-[var(--office-text-primary)] bg-white">
                     {club}
@@ -209,15 +204,15 @@ export function DraftOptions({
                 aria-label="Filter by era"
                 value={selectedEra}
                 onChange={(e) => onSetSelectedEra(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-xl py-2.5 px-3 text-xs text-[var(--office-text-primary)] font-bold tracking-wide focus:outline-none focus:border-[#1d5eff] cursor-pointer"
+                className="w-full min-h-10 bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg py-2 px-3 text-sm text-[var(--ink-primary)] focus:outline-none focus:border-[#1d5eff] cursor-pointer"
               >
-                <option value="" className="text-[var(--office-text-primary)] bg-white">All Eras</option>
+                <option value="" className="text-[var(--office-text-primary)] bg-white">All eras</option>
                 {allEras.map((era) => {
                   const eraLabels: Record<string, string> = {
-                    '90s': '1990s Era',
-                    '00s': '2000s Era',
-                    '10s': '2010s Era',
-                    'Modern': 'Modern Era',
+                    '90s': '1990s',
+                    '00s': '2000s',
+                    '10s': '2010s',
+                    'Modern': 'Modern',
                   };
                   return (
                     <option key={era} value={era} className="text-[var(--office-text-primary)] bg-white">
@@ -231,8 +226,8 @@ export function DraftOptions({
 
           {/* Position lock status toggle */}
           <label className="flex items-center justify-between gap-3 min-h-[40px] px-1 cursor-pointer">
-            <span className="text-[11px] font-bold text-[var(--office-text-secondary)] uppercase tracking-wider">
-              Only <span className="text-[#1d5eff] font-display font-black">{currentSlot?.position}</span> players
+            <span className="text-sm text-[var(--ink-secondary)]">
+              Only <span className="text-[var(--ink-primary)] font-semibold">{currentSlot?.position}</span> players
             </span>
             <span className="relative inline-flex items-center">
               <input
@@ -241,13 +236,13 @@ export function DraftOptions({
                 onChange={(e) => onSetOnlyMatchingPosition(e.target.checked)}
                 className="sr-only peer"
               />
-              <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#1d5eff]"></div>
+              <div className="w-9 h-5 bg-[var(--border-crisp)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[var(--border-crisp)] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#1d5eff]"></div>
             </span>
           </label>
 
           {/* Search Results Display */}
           <div className="flex flex-col gap-1.5 mt-1 w-full">
-            <span className="text-[10px] font-bold text-[var(--office-text-muted)] uppercase tracking-widest px-1">
+            <span className="text-xs text-[var(--ink-muted)] px-1">
               {filteredPlayers.length} players
             </span>
             
@@ -275,7 +270,7 @@ export function DraftOptions({
                 })}
               </div>
             ) : (
-              <p className="py-8 px-4 text-center text-xs text-[var(--office-text-secondary)] font-semibold">
+              <p className="py-8 px-4 text-center text-sm text-[var(--ink-secondary)]">
                 No players match. Try loosening the filters.
               </p>
             )}

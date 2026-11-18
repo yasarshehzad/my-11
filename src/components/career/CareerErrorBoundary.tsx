@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { exportCareerSaveAsJson } from '../../career/saveVault';
 import { IconAlert, IconRefresh, IconSave, IconHome } from './GameIcons';
+import { Button, Eyebrow } from '@/components/ui';
 
 interface CareerErrorBoundaryProps {
   children: React.ReactNode;
@@ -70,57 +71,45 @@ export class CareerErrorBoundary extends React.Component<
     return (
       <section
         role="alert"
-        className="office-floating-card rounded-3xl p-6 max-w-lg mx-auto my-6 border border-rose-200 bg-white space-y-4 text-left shadow-md"
+        className="office-floating-card rounded-xl p-5 sm:p-6 max-w-lg mx-auto my-6 border border-[var(--border-subtle)] bg-[var(--surface-card)] space-y-4 text-left"
       >
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 shrink-0">
-            <IconAlert className="w-5 h-5" />
-          </div>
-          <div className="min-w-0 flex-1 space-y-1">
-            <span className="text-[10px] font-display font-black uppercase tracking-wider text-rose-600 block">
-              Safe View Recovery
-            </span>
-            <h2 className="text-base font-display font-black text-[#0b1536] uppercase">
+        <div className="space-y-1">
+          <Eyebrow>Safe view recovery</Eyebrow>
+          <h2 className="flex items-start gap-2 text-base font-display font-semibold text-[var(--ink-primary)]">
+            <IconAlert className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <span className="min-w-0">
               {this.props.sectionLabel ? `${this.props.sectionLabel} hit an issue` : 'This view hit an unexpected issue'}
-            </h2>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Your career progress in local storage is safe. You can reload this panel or export an immediate JSON backup below.
+            </span>
+          </h2>
+          <p className="text-sm text-[var(--ink-secondary)] leading-relaxed">
+            Your career progress in local storage is safe. You can reload this panel or export a JSON backup below.
+          </p>
+          {this.state.errorMessage && (
+            <p className="text-xs tabular-nums text-[var(--ink-secondary)] bg-[var(--surface-subcard)] border border-[var(--border-subtle)] rounded-lg px-3 py-2 break-words">
+              {this.state.errorMessage}
             </p>
-            {this.state.errorMessage && (
-              <p className="text-[11px] font-mono text-slate-500 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 break-words">
-                {this.state.errorMessage}
-              </p>
-            )}
-          </div>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-2 pt-1">
-          <button
-            type="button"
-            onClick={this.handleRetry}
-            className="office-action-btn-primary py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider inline-flex items-center gap-1.5 cursor-pointer"
-          >
+          <Button variant="primary" onClick={this.handleRetry}>
             <IconRefresh className="w-3.5 h-3.5" />
-            <span>Recover View</span>
-          </button>
+            <span>Recover view</span>
+          </Button>
 
           {this.props.slotId && (
-            <button
-              type="button"
-              onClick={this.handleSafeBackup}
-              className="office-subcard py-2.5 px-4 rounded-xl font-display font-bold text-xs text-slate-800 hover:bg-slate-100 inline-flex items-center gap-1.5 cursor-pointer border border-slate-200"
-            >
-              <IconSave className="w-3.5 h-3.5 text-[#1d5eff]" />
-              <span>Export Safe Backup</span>
-            </button>
+            <Button variant="secondary" onClick={this.handleSafeBackup}>
+              <IconSave className="w-3.5 h-3.5 text-[var(--ink-secondary)]" />
+              <span>Export backup</span>
+            </Button>
           )}
 
           <Link
             href="/career"
-            className="office-subcard py-2.5 px-4 rounded-xl font-display font-bold text-xs text-slate-700 hover:bg-slate-100 inline-flex items-center gap-1.5 border border-slate-200"
+            className="inline-flex items-center justify-center gap-2 min-h-10 px-4 rounded-lg text-sm font-semibold bg-[var(--surface-card)] text-[var(--ink-primary)] border border-[var(--border-crisp)] hover:bg-[var(--surface-subcard)]"
           >
-            <IconHome className="w-3.5 h-3.5" />
-            <span>Save Slots</span>
+            <IconHome className="w-3.5 h-3.5 text-[var(--ink-secondary)]" />
+            <span>Save slots</span>
           </Link>
         </div>
       </section>

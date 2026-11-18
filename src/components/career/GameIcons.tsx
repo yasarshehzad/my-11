@@ -714,7 +714,7 @@ export function RegionBadge({
     );
   }
   return (
-    <span className={`inline-flex items-center justify-center rounded-md bg-slate-800/90 border border-slate-600/80 text-slate-100 font-black tracking-wider text-[10px] px-2 py-0.5 ${className}`}>
+    <span className={`inline-flex items-center justify-center rounded-md bg-slate-800/90 border border-slate-600/80 text-slate-100 font-semibold text-xs px-2 py-0.5 ${className}`}>
       {cleanCode}
     </span>
   );

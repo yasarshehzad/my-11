@@ -51,12 +51,12 @@ export default function DebugBalancingPage() {
   if (process.env.NODE_ENV === 'production') {
     return (
       <main style={{ padding: '48px 24px', maxWidth: '640px', margin: '0 auto', color: '#f3f4f6', fontFamily: 'system-ui, sans-serif', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '12px' }}>Page Not Available</h1>
+        <h1 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '12px' }}>Page not available</h1>
         <p style={{ color: '#9ca3af', marginBottom: '24px' }}>
           This internal balancing simulator is only enabled during local development.
         </p>
         <Link href="/" style={{ color: '#60a5fa', textDecoration: 'underline', fontWeight: '600' }}>
-          Return to Home
+          Return to home
         </Link>
       </main>
     );
@@ -359,7 +359,7 @@ function DebugBalancingWorkbench() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <h1 style={{ fontSize: '28px', fontWeight: '800', margin: 0, color: '#f9fafb' }}>
-              MY-11 Game Balance & Monte Carlo QA
+              MY-11 game balance and Monte Carlo QA
             </h1>
             <p style={{ margin: '6px 0 0 0', color: '#9ca3af', fontSize: '14px' }}>
               Internal simulation dashboard for draft appearance distribution, formation fairness, and 38-game season engine verification.
@@ -379,7 +379,7 @@ function DebugBalancingWorkbench() {
                 fontWeight: '600',
               }}
             >
-              Run 1,000 Sims
+              Run 1,000 sims
             </button>
             <button
               onClick={() => runSimulation(5000)}
@@ -394,7 +394,7 @@ function DebugBalancingWorkbench() {
                 fontWeight: '600',
               }}
             >
-              Run 5,000 Sims
+              Run 5,000 sims
             </button>
             <button
               onClick={() => runSimulation(10000)}
@@ -409,7 +409,7 @@ function DebugBalancingWorkbench() {
                 fontWeight: '700',
               }}
             >
-              Run 10,000 Sims
+              Run 10,000 sims
             </button>
           </div>
         </div>
@@ -437,12 +437,12 @@ function DebugBalancingWorkbench() {
       {/* Section 1: Database Overview */}
       <section style={{ marginBottom: '32px' }}>
         <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '16px', color: '#e5e7eb' }}>
-          1. Player Database Audit ({dbMetrics.totalCards.toLocaleString()} Season Cards / {dbMetrics.uniquePlayers} Base Players)
+          1. Player database audit ({dbMetrics.totalCards.toLocaleString()} season cards / {dbMetrics.uniquePlayers} base players)
         </h2>
         
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', marginBottom: '20px' }}>
           <div style={{ background: '#1f2937', padding: '16px', borderRadius: '12px', border: '1px solid #374151' }}>
-            <h3 style={{ fontSize: '14px', color: '#9ca3af', margin: '0 0 12px 0' }}>RATING TIERS (Anti-inflation)</h3>
+            <h3 style={{ fontSize: '14px', color: '#9ca3af', margin: '0 0 12px 0' }}>Rating tiers (anti-inflation)</h3>
             {Object.entries(dbMetrics.byTier).map(([tier, count]) => (
               <div key={tier} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '13px' }}>
                 <span style={{ color: '#d1d5db' }}>{tier}</span>
@@ -452,7 +452,7 @@ function DebugBalancingWorkbench() {
           </div>
 
           <div style={{ background: '#1f2937', padding: '16px', borderRadius: '12px', border: '1px solid #374151' }}>
-            <h3 style={{ fontSize: '14px', color: '#9ca3af', margin: '0 0 12px 0' }}>DATABASE RARITY POOL</h3>
+            <h3 style={{ fontSize: '14px', color: '#9ca3af', margin: '0 0 12px 0' }}>Database rarity pool</h3>
             {Object.entries(dbMetrics.byRarity).map(([rarity, count]) => (
               <div key={rarity} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '13px' }}>
                 <span style={{ textTransform: 'capitalize', color: '#d1d5db' }}>{rarity}</span>
@@ -462,7 +462,7 @@ function DebugBalancingWorkbench() {
           </div>
 
           <div style={{ background: '#1f2937', padding: '16px', borderRadius: '12px', border: '1px solid #374151' }}>
-            <h3 style={{ fontSize: '14px', color: '#9ca3af', margin: '0 0 12px 0' }}>ERA DISTRIBUTION</h3>
+            <h3 style={{ fontSize: '14px', color: '#9ca3af', margin: '0 0 12px 0' }}>Era distribution</h3>
             {Object.entries(dbMetrics.byEra).map(([era, count]) => (
               <div key={era} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '13px' }}>
                 <span style={{ color: '#d1d5db' }}>{era}</span>
@@ -478,13 +478,13 @@ function DebugBalancingWorkbench() {
         <>
           <section style={{ marginBottom: '32px' }}>
             <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '16px', color: '#e5e7eb' }}>
-              2. Monte Carlo Results ({simStats.totalDrafts.toLocaleString()} Full Seasons Simulated)
+              2. Monte Carlo results ({simStats.totalDrafts.toLocaleString()} full seasons simulated)
             </h2>
 
             {/* Scorecard KPIs */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
               <div style={{ background: '#1f2937', padding: '16px', borderRadius: '12px', border: '1px solid #374151' }}>
-                <div style={{ fontSize: '12px', color: '#9ca3af', fontWeight: '600' }}>AVG / MEDIAN WINS</div>
+                <div style={{ fontSize: '12px', color: '#9ca3af', fontWeight: '600' }}>Avg / median wins</div>
                 <div style={{ fontSize: '24px', fontWeight: '800', color: '#10b981', marginTop: '4px' }}>
                   {simStats.avgWins} <span style={{ fontSize: '16px', color: '#9ca3af' }}>/ {simStats.medianWins}</span>
                 </div>
@@ -492,7 +492,7 @@ function DebugBalancingWorkbench() {
               </div>
 
               <div style={{ background: '#1f2937', padding: '16px', borderRadius: '12px', border: '1px solid #374151' }}>
-                <div style={{ fontSize: '12px', color: '#9ca3af', fontWeight: '600' }}>38-0-0 (THE IMMORTALS)</div>
+                <div style={{ fontSize: '12px', color: '#9ca3af', fontWeight: '600' }}>38-0-0 (perfect seasons)</div>
                 <div style={{ fontSize: '24px', fontWeight: '800', color: simStats.perfectSeasons > 0 ? '#f59e0b' : '#9ca3af', marginTop: '4px' }}>
                   {simStats.perfectSeasons}
                 </div>
@@ -502,7 +502,7 @@ function DebugBalancingWorkbench() {
               </div>
 
               <div style={{ background: '#1f2937', padding: '16px', borderRadius: '12px', border: '1px solid #374151' }}>
-                <div style={{ fontSize: '12px', color: '#9ca3af', fontWeight: '600' }}>UNBEATEN (0 LOSSES)</div>
+                <div style={{ fontSize: '12px', color: '#9ca3af', fontWeight: '600' }}>Unbeaten (0 losses)</div>
                 <div style={{ fontSize: '24px', fontWeight: '800', color: '#60a5fa', marginTop: '4px' }}>
                   {simStats.unbeatenSeasons}
                 </div>
@@ -512,7 +512,7 @@ function DebugBalancingWorkbench() {
               </div>
 
               <div style={{ background: '#1f2937', padding: '16px', borderRadius: '12px', border: '1px solid #374151' }}>
-                <div style={{ fontSize: '12px', color: '#9ca3af', fontWeight: '600' }}>30+ WINS (ELITE RUNS)</div>
+                <div style={{ fontSize: '12px', color: '#9ca3af', fontWeight: '600' }}>30+ wins</div>
                 <div style={{ fontSize: '24px', fontWeight: '800', color: '#a78bfa', marginTop: '4px' }}>
                   {simStats.w30Plus}
                 </div>
@@ -524,7 +524,7 @@ function DebugBalancingWorkbench() {
 
             {/* Win Distribution Histogram */}
             <div style={{ background: '#1f2937', padding: '20px', borderRadius: '12px', border: '1px solid #374151', marginBottom: '24px' }}>
-              <h3 style={{ fontSize: '15px', color: '#f3f4f6', margin: '0 0 16px 0' }}>Win Frequency Histogram (0 to 38 Wins)</h3>
+              <h3 style={{ fontSize: '15px', color: '#f3f4f6', margin: '0 0 16px 0' }}>Win frequency histogram (0 to 38 wins)</h3>
               <div style={{ display: 'flex', alignItems: 'flex-end', height: '160px', gap: '3px', paddingTop: '10px' }}>
                 {simStats.winHistogram.map((count, w) => {
                   const heightPct = (count / maxHistCount) * 100;
@@ -544,30 +544,30 @@ function DebugBalancingWorkbench() {
                 })}
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#9ca3af', marginTop: '8px' }}>
-                <span>0 Wins</span>
-                <span>10 Wins</span>
-                <span>20 Wins</span>
-                <span>30 Wins</span>
-                <span>38 Wins</span>
+                <span>0 wins</span>
+                <span>10 wins</span>
+                <span>20 wins</span>
+                <span>30 wins</span>
+                <span>38 wins</span>
               </div>
             </div>
 
             {/* Formation Fairness Comparison */}
             <div style={{ background: '#1f2937', padding: '20px', borderRadius: '12px', border: '1px solid #374151', marginBottom: '24px' }}>
-              <h3 style={{ fontSize: '15px', color: '#f3f4f6', margin: '0 0 16px 0' }}>Formation Fairness Comparison</h3>
+              <h3 style={{ fontSize: '15px', color: '#f3f4f6', margin: '0 0 16px 0' }}>Formation fairness comparison</h3>
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid #374151', color: '#9ca3af' }}>
                       <th style={{ padding: '8px 12px' }}>Formation</th>
-                      <th style={{ padding: '8px 12px' }}>Simulated Runs</th>
-                      <th style={{ padding: '8px 12px' }}>Avg Wins</th>
-                      <th style={{ padding: '8px 12px' }}>Median Wins</th>
+                      <th style={{ padding: '8px 12px' }}>Simulated runs</th>
+                      <th style={{ padding: '8px 12px' }}>Avg wins</th>
+                      <th style={{ padding: '8px 12px' }}>Median wins</th>
                       <th style={{ padding: '8px 12px' }}>Avg OVR</th>
-                      <th style={{ padding: '8px 12px' }}>Avg Chemistry</th>
-                      <th style={{ padding: '8px 12px' }}>30+ Wins %</th>
-                      <th style={{ padding: '8px 12px' }}>35+ Wins</th>
-                      <th style={{ padding: '8px 12px' }}>38-0 Perfect</th>
+                      <th style={{ padding: '8px 12px' }}>Avg chemistry</th>
+                      <th style={{ padding: '8px 12px' }}>30+ wins %</th>
+                      <th style={{ padding: '8px 12px' }}>35+ wins</th>
+                      <th style={{ padding: '8px 12px' }}>38-0 perfect</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -592,7 +592,7 @@ function DebugBalancingWorkbench() {
             {/* Rarity & Player Frequency */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
               <div style={{ background: '#1f2937', padding: '20px', borderRadius: '12px', border: '1px solid #374151' }}>
-                <h3 style={{ fontSize: '15px', color: '#f3f4f6', margin: '0 0 16px 0' }}>Draft Choices Rarity (Offered vs Selected)</h3>
+                <h3 style={{ fontSize: '15px', color: '#f3f4f6', margin: '0 0 16px 0' }}>Draft choices rarity (offered vs selected)</h3>
                 {Object.entries(simStats.offeredRarities).map(([rarity, offCount]) => {
                   const totalOff = Object.values(simStats.offeredRarities).reduce((a, b) => a + b, 0);
                   const totalSel = Object.values(simStats.selectedRarities).reduce((a, b) => a + b, 0);
@@ -615,18 +615,18 @@ function DebugBalancingWorkbench() {
               </div>
 
               <div style={{ background: '#1f2937', padding: '20px', borderRadius: '12px', border: '1px solid #374151' }}>
-                <h3 style={{ fontSize: '15px', color: '#f3f4f6', margin: '0 0 16px 0' }}>Player Name Appearance Balance</h3>
+                <h3 style={{ fontSize: '15px', color: '#f3f4f6', margin: '0 0 16px 0' }}>Player name appearance balance</h3>
                 <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '12px' }}>
                   Verification that cards per player does not bias appearance frequency.
                 </div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: '#e5e7eb', marginBottom: '8px' }}>Top 5 Most Offered:</div>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: '#e5e7eb', marginBottom: '8px' }}>Top 5 most offered:</div>
                 {topOfferedPlayers.slice(0, 5).map(([name, count]) => (
                   <div key={name} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px', color: '#d1d5db' }}>
                     <span>{name}</span>
                     <span>{count.toLocaleString()} times</span>
                   </div>
                 ))}
-                <div style={{ fontSize: '13px', fontWeight: '600', color: '#e5e7eb', marginTop: '12px', marginBottom: '8px' }}>Bottom 5 Least Offered:</div>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: '#e5e7eb', marginTop: '12px', marginBottom: '8px' }}>Bottom 5 least offered:</div>
                 {bottomOfferedPlayers.map(([name, count]) => (
                   <div key={name} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px', color: '#9ca3af' }}>
                     <span>{name}</span>

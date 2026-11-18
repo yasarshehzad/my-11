@@ -48,17 +48,14 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     specialTrait,
   } = player;
 
-  // Rarity styling mapping
+  // Rarity styling mapping. `bg` is only used by the compact pitch card; rows use a flat surface with a thin rarity edge.
   const rarityConfig = {
     legend: {
       border: 'border-legend-border',
       bg: 'bg-gradient-to-b from-legend-bg-from via-legend-bg-via to-legend-bg-to',
       text: 'text-legend-text',
-      ratingText: 'text-legend-rating font-extrabold',
-      glow: 'animate-glow-legend shadow-[0_0_20px_rgba(245,158,11,0.25)]',
-      badge: 'bg-legend-badge-bg text-legend-badge-text border-legend-badge-border',
-      accent: 'from-legend-accent-from to-legend-accent-to',
-      label: 'LEGEND',
+      ratingText: 'text-legend-rating font-semibold',
+      label: 'Legend',
       textPrimary: 'text-legend-text-primary',
       textSecondary: 'text-legend-text-secondary',
       textMuted: 'text-legend-text-muted',
@@ -69,11 +66,8 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
       border: 'border-elite-border',
       bg: 'bg-gradient-to-b from-elite-bg-from via-elite-bg-via to-elite-bg-to',
       text: 'text-elite-text',
-      ratingText: 'text-elite-rating font-extrabold',
-      glow: 'animate-glow-elite shadow-[0_0_20px_rgba(168,85,247,0.25)]',
-      badge: 'bg-elite-badge-bg text-elite-badge-text border-elite-badge-border',
-      accent: 'from-elite-accent-from to-elite-accent-to',
-      label: 'ELITE',
+      ratingText: 'text-elite-rating font-semibold',
+      label: 'Elite',
       textPrimary: 'text-elite-text-primary',
       textSecondary: 'text-elite-text-secondary',
       textMuted: 'text-elite-text-muted',
@@ -84,11 +78,8 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
       border: 'border-rare-border',
       bg: 'bg-gradient-to-b from-rare-bg-from via-rare-bg-via to-rare-bg-to',
       text: 'text-rare-text',
-      ratingText: 'text-rare-rating font-extrabold',
-      glow: 'animate-glow-rare shadow-[0_0_15px_rgba(59,130,246,0.25)]',
-      badge: 'bg-rare-badge-bg text-rare-badge-text border-rare-badge-border',
-      accent: 'from-rare-accent-from to-rare-accent-to',
-      label: 'RARE',
+      ratingText: 'text-rare-rating font-semibold',
+      label: 'Rare',
       textPrimary: 'text-rare-text-primary',
       textSecondary: 'text-rare-text-secondary',
       textMuted: 'text-rare-text-muted',
@@ -99,11 +90,8 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
       border: 'border-cult-border',
       bg: 'bg-gradient-to-b from-cult-bg-from via-cult-bg-via to-cult-bg-to',
       text: 'text-cult-text',
-      ratingText: 'text-cult-rating font-extrabold',
-      glow: 'shadow-[0_0_15px_rgba(16,185,129,0.25)]',
-      badge: 'bg-cult-badge-bg text-cult-badge-text border-cult-badge-border',
-      accent: 'from-cult-accent-from to-cult-accent-to',
-      label: 'CULT HERO',
+      ratingText: 'text-cult-rating font-semibold',
+      label: 'Cult hero',
       textPrimary: 'text-cult-text-primary',
       textSecondary: 'text-cult-text-secondary',
       textMuted: 'text-cult-text-muted',
@@ -115,10 +103,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
       bg: 'bg-gradient-to-b from-solid-bg-from via-solid-bg-via to-solid-bg-to',
       text: 'text-solid-text',
       ratingText: 'text-solid-rating font-semibold',
-      glow: 'shadow-none',
-      badge: 'bg-solid-badge-bg text-solid-badge-text border-solid-badge-border',
-      accent: 'from-solid-accent-from to-solid-accent-to',
-      label: 'SOLID',
+      label: 'Solid',
       textPrimary: 'text-solid-text-primary',
       textSecondary: 'text-solid-text-secondary',
       textMuted: 'text-solid-text-muted',
@@ -130,10 +115,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
       bg: 'bg-gradient-to-b from-common-bg-from via-common-bg-via to-common-bg-to',
       text: 'text-common-text',
       ratingText: 'text-common-rating font-bold',
-      glow: 'shadow-none',
-      badge: 'bg-common-badge-bg text-common-badge-text border-common-badge-border',
-      accent: 'from-common-accent-from to-common-accent-to',
-      label: 'COMMON',
+      label: 'Common',
       textPrimary: 'text-common-text-primary',
       textSecondary: 'text-common-text-secondary',
       textMuted: 'text-common-text-muted',
@@ -145,10 +127,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     bg: 'bg-gradient-to-b from-common-bg-from via-common-bg-via to-common-bg-to',
     text: 'text-common-text',
     ratingText: 'text-common-rating font-bold',
-    glow: 'shadow-none',
-    badge: 'bg-common-badge-bg text-common-badge-text border-common-badge-border',
-    accent: 'from-common-accent-from to-common-accent-to',
-    label: 'COMMON',
+    label: 'Common',
     textPrimary: 'text-common-text-primary',
     textSecondary: 'text-common-text-secondary',
     textMuted: 'text-common-text-muted',
@@ -197,9 +176,9 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   // LARGE LAYOUT (Used in draft selection): a slim full-width row so three choices fit on a phone
   if (layout === 'large') {
     const delta = projectedInfo?.delta ?? 0;
-    const chemText = `CHEM ${delta >= 0 ? `+${delta}` : delta}`;
-    const chemTone = delta > 0 ? 'text-emerald-700' : delta < 0 ? 'text-rose-700' : 'text-slate-600';
-    const selectedRing = selected ? 'ring-2 ring-blue-500 ring-offset-2' : '';
+    const chemText = `Chem ${delta >= 0 ? `+${delta}` : delta}`;
+    const chemTone = delta > 0 ? 'text-emerald-700' : delta < 0 ? 'text-rose-700' : 'text-[var(--ink-secondary)]';
+    const selectedRing = selected ? 'ring-2 ring-blue-500 ring-offset-1' : '';
     const hoverHandlers = {
       onMouseEnter: () => onHover && onHover(true),
       onMouseLeave: () => onHover && onHover(false),
@@ -211,24 +190,24 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
           type="button"
           onClick={onClick}
           {...hoverHandlers}
-          aria-label={`Mystery Option: Position ${mysteryClues.position}, ${mysteryClues.era} Era, Top Attribute ${mysteryClues.topAttribute.name} (${mysteryClues.topAttribute.tier}), ${mysteryClues.affiliationHint.label}, ${mysteryClues.rarityTier} tier`}
-          className={`w-full rounded-2xl border border-purple-300 bg-purple-50 p-3 flex items-center gap-3 text-left transition-transform active:scale-[0.99] cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-purple-400 ${selectedRing}`}
+          aria-label={`Mystery option: position ${mysteryClues.position}, ${mysteryClues.era} era, top attribute ${mysteryClues.topAttribute.name} (${mysteryClues.topAttribute.tier}), ${mysteryClues.affiliationHint.label}, ${mysteryClues.rarityTier} tier`}
+          className={`w-full rounded-xl border border-[var(--border-crisp)] bg-[var(--surface-card)] p-3 flex items-center gap-3 text-left transition-transform active:scale-[0.99] cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-blue-500 ${selectedRing}`}
         >
-          <div className="w-11 shrink-0 flex flex-col items-center leading-none">
-            <IconLock className="w-5 h-5 text-purple-700" />
-            <span className="text-[10px] font-bold text-purple-800 uppercase font-display mt-1.5">
+          <div className="w-11 shrink-0 flex flex-col items-center">
+            <IconLock className="w-5 h-5 text-[var(--ink-muted)]" />
+            <span className="text-xs font-semibold text-[var(--ink-secondary)] font-display mt-1">
               {mysteryClues.position}
             </span>
           </div>
-          <div className="flex-1 min-w-0 text-[11px] text-slate-700 font-medium leading-snug">
-            <h3 className="text-sm font-display font-black text-purple-900 uppercase tracking-tight truncate">
+          <div className="flex-1 min-w-0 text-xs text-[var(--ink-secondary)] leading-snug">
+            <h3 className="text-sm font-display font-semibold text-[var(--ink-primary)] truncate">
               {mysteryClues.archetypeHint}
             </h3>
             <p className="truncate">
-              {mysteryClues.rarityTier} • {mysteryClues.era} era • {mysteryClues.affiliationHint.label}
+              {mysteryClues.rarityTier} · {mysteryClues.era} era · {mysteryClues.affiliationHint.label}
             </p>
             <p className="truncate">
-              Best at {mysteryClues.topAttribute.name} ({mysteryClues.topAttribute.tier}) • {mysteryClues.traitHint}
+              Best at {mysteryClues.topAttribute.name} ({mysteryClues.topAttribute.tier}) · {mysteryClues.traitHint}
             </p>
           </div>
         </button>
@@ -258,7 +237,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
           projectedInfo.tacticalRoleNote || '',
         ]
           .filter(Boolean)
-          .join(' • ')
+          .join(' · ')
       : '';
 
     return (
@@ -267,42 +246,42 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         onClick={onClick}
         {...hoverHandlers}
         aria-label={accessibleLabel}
-        className={`w-full rounded-2xl border ${rarityConfig.border} ${rarityConfig.bg} p-3 flex items-center gap-3 text-left transition-transform active:scale-[0.99] ${selectedRing} ${
+        className={`w-full rounded-xl border ${rarityConfig.border} bg-[var(--surface-card)] p-3 flex items-center gap-3 text-left transition-transform active:scale-[0.99] ${selectedRing} ${
           pulse ? 'motion-safe:animate-pulse' : ''
         } cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-blue-500`}
       >
         <div className="w-11 shrink-0 flex flex-col items-center leading-none">
-          <span className={`text-2xl font-display font-black tracking-tight ${rarityConfig.ratingText}`}>
+          <span className={`text-2xl font-display font-bold tracking-tight ${rarityConfig.ratingText}`}>
             {rating}
           </span>
-          <span className={`text-[10px] font-bold ${rarityConfig.textMuted} uppercase font-display mt-1`}>
+          <span className={`text-xs font-semibold ${rarityConfig.textMuted} font-display mt-1`}>
             {primaryPosition}
           </span>
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className={`text-sm font-display font-black leading-tight ${rarityConfig.textPrimary} uppercase tracking-tight truncate`}>
+          <h3 className={`text-sm font-display font-semibold leading-tight ${rarityConfig.textPrimary} truncate`}>
             {displayName}
           </h3>
-          <p className={`text-[11px] font-semibold ${rarityConfig.textSecondary} truncate`}>
-            {club} • {season}
+          <p className={`text-xs ${rarityConfig.textSecondary} truncate`}>
+            {club} · {season}
           </p>
           {projectedInfo ? (
-            <p className="text-[11px] font-semibold text-slate-600 truncate">
-              <span className={`font-display font-black ${chemTone}`}>{chemText}</span>
-              {' • '}
+            <p className="text-xs text-[var(--ink-secondary)] truncate">
+              <span className={`font-semibold ${chemTone}`}>{chemText}</span>
+              {' · '}
               {draftIQActive ? iqLine : projectedInfo.topReason}
             </p>
           ) : specialTrait ? (
-            <p className={`text-[11px] font-semibold ${rarityConfig.textSecondary} truncate`}>{specialTrait}</p>
+            <p className={`text-xs ${rarityConfig.textSecondary} truncate`}>{specialTrait}</p>
           ) : null}
         </div>
 
         <div className="flex gap-2 shrink-0">
           {keyStats.map((st) => (
             <div key={st.label} className="flex flex-col items-center leading-none w-7">
-              <span className={`text-[10px] font-semibold ${rarityConfig.textMuted} uppercase`}>{st.label}</span>
-              <span className={`text-sm font-display font-black ${rarityConfig.textSecondary} mt-1`}>{st.value}</span>
+              <span className={`text-2xs font-medium ${rarityConfig.textMuted}`}>{st.label}</span>
+              <span className={`text-sm font-display font-semibold ${rarityConfig.textSecondary} mt-1`}>{st.value}</span>
             </div>
           ))}
         </div>
@@ -315,17 +294,17 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     return (
       <div
         onClick={onClick}
-        className={`w-[62px] h-[60px] sm:w-[68px] sm:h-[84px] rounded-xl border ${rarityConfig.border} ${rarityConfig.bg} flex flex-col p-1 sm:p-1.5 relative transition-all duration-300 transform active:scale-95 text-left select-none shadow-md overflow-hidden ${
-          onClick ? 'cursor-pointer hover:scale-[1.03] hover:brightness-105' : ''
+        className={`w-[62px] h-[64px] sm:w-[68px] sm:h-[84px] rounded-xl border ${rarityConfig.border} ${rarityConfig.bg} flex flex-col p-1 sm:p-1.5 relative transition-all duration-300 transform active:scale-95 text-left select-none shadow-sm overflow-hidden ${
+          onClick ? 'cursor-pointer' : ''
         }`}
       >
         {/* Rating and Position */}
         <div className="flex justify-between items-start leading-none relative z-10">
-          <span className={`text-[12px] font-black font-display ${rarityConfig.text}`}>
+          <span className={`text-xs leading-none font-semibold font-display ${rarityConfig.text}`}>
             {rating}
           </span>
           <span
-            className={`text-[10px] font-bold ${rarityConfig.textMuted} uppercase`}
+            className={`text-2xs leading-none font-semibold ${rarityConfig.textMuted}`}
           >
             {primaryPosition}
           </span>
@@ -333,14 +312,14 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
 
         {/* Display Name */}
         <div className="flex-1 flex flex-col justify-end mt-1 mb-0.5 leading-none relative z-10">
-          <span className={`text-[10px] font-display font-extrabold ${rarityConfig.textPrimary} uppercase tracking-tight truncate`}>
+          <span className={`text-2xs leading-tight font-display font-semibold ${rarityConfig.textPrimary} truncate`}>
             {displayName.split(' ').slice(0, -1).join(' ') || displayName}
           </span>
         </div>
 
         {/* Club and Season Tag at the bottom */}
         <div
-          className={`flex justify-between items-center text-[10px] ${rarityConfig.textMuted} border-t ${rarityConfig.subBorder} pt-0.5 mt-0.5 leading-none relative z-10`}
+          className={`flex justify-between items-center text-2xs leading-none ${rarityConfig.textMuted} border-t ${rarityConfig.subBorder} pt-0.5 mt-0.5 relative z-10`}
         >
           <span className="truncate max-w-[30px] font-semibold">{getAbbreviation(club)}</span>
           <span
@@ -364,40 +343,36 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   // MINI LAYOUT (Used in lists / summary stats table)
   return (
     <div
-      className={`flex items-center justify-between p-2.5 rounded-xl border ${rarityConfig.border} ${rarityConfig.bg} select-none overflow-hidden`}
+      className={`flex items-center justify-between gap-2 p-2.5 rounded-xl border ${rarityConfig.border} bg-[var(--surface-card)] select-none overflow-hidden`}
     >
       <div className="flex items-center gap-3 min-w-0 flex-1">
-        <div
-          className={`w-9 h-9 rounded-full flex items-center justify-center border font-display font-black text-sm flex-shrink-0 ${rarityConfig.border} ${rarityConfig.subBg} ${rarityConfig.text}`}
-        >
+        <span className={`w-7 text-center font-display font-bold text-lg flex-shrink-0 ${rarityConfig.ratingText}`}>
           {rating}
-        </div>
+        </span>
         
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <h4 className={`text-sm font-bold ${rarityConfig.textPrimary} truncate uppercase font-display leading-tight`}>
+            <h4 className={`text-sm font-bold ${rarityConfig.textPrimary} truncate font-display leading-tight`}>
               {displayName}
             </h4>
-            <span
-              className={`text-[10px] font-bold px-1 py-0.5 ${rarityConfig.subBg} rounded border ${rarityConfig.subBorder} ${rarityConfig.textMuted} uppercase leading-none`}
-            >
+            <span className={`text-xs font-medium ${rarityConfig.textMuted} shrink-0`}>
               {primaryPosition}
             </span>
           </div>
-          <p className={`text-[10px] ${rarityConfig.textSecondary} truncate mt-0.5 leading-none`}>
-            {club} • {season} • {rarityConfig.label}
+          <p className={`text-xs ${rarityConfig.textSecondary} truncate mt-0.5`}>
+            {club} · {season} · {rarityConfig.label}
           </p>
         </div>
       </div>
 
-      <div className="flex gap-2 text-right items-center ml-2">
+      <div className="flex gap-2 items-center shrink-0">
         {keyStats.map((st, idx) => (
           <div
             key={idx}
-            className={`flex flex-col text-[10px] items-center px-1.5 py-0.5 ${rarityConfig.subBg} rounded border ${rarityConfig.subBorder} leading-none`}
+            className="flex flex-col items-center w-7"
           >
-            <span className={`${rarityConfig.textMuted} font-semibold uppercase text-[10px]`}>{st.label}</span>
-            <span className={`font-bold ${rarityConfig.textSecondary} mt-0.5`}>{st.value}</span>
+            <span className={`${rarityConfig.textMuted} font-medium text-2xs`}>{st.label}</span>
+            <span className={`text-sm font-display font-semibold ${rarityConfig.textSecondary}`}>{st.value}</span>
           </div>
         ))}
       </div>

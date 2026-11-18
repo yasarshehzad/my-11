@@ -311,6 +311,10 @@ html.dark {
 }
 
 @theme {
+  /* Type scale: the only extra step below text-xs. Use for dense table and pitch labels only. */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
@@ -906,15 +910,14 @@ body {
 }
 
 .my11-canopy-head .text-slate-100,
-.my11-canopy-head .text-slate-200 {
-  color: #F4F4F5 !important;
+.my11-canopy-head .text-slate-200,
+.my11-canopy-head .text-white {
+  color: var(--ink-primary) !important;
 }
 .my11-canopy-head .text-slate-300,
-.my11-canopy-head .text-slate-400 {
-  color: #D4D4D8 !important;
-}
+.my11-canopy-head .text-slate-400,
 .my11-canopy-head .text-emerald-300 {
-  color: #FCD34D !important;
+  color: var(--ink-secondary) !important;
 }
 
 [data-theme='light'] ::-webkit-scrollbar-thumb {
@@ -1418,18 +1421,18 @@ body {
 /* Active Navigation Tab — Solid Broadcast Navy */
 .my11-nav-pill-active,
 .office-nav-tab-active {
-  background-color: #1E2024 !important;
-  background-image: linear-gradient(135deg, #1E2024 0%, #2B2E34 100%) !important;
-  color: #ffffff !important;
-  border: 1px solid #1E2024 !important;
-  box-shadow: 0 2px 6px -1px rgba(24, 24, 27, 0.22) !important;
+  background-color: var(--surface-elevated) !important;
+  background-image: none !important;
+  color: var(--ink-primary) !important;
+  border: 1px solid transparent !important;
+  box-shadow: inset 0 -2px 0 var(--accent-primary) !important;
 }
 
 .my11-nav-pill-active > span,
 .my11-nav-pill-active > svg,
 .office-nav-tab-active > span,
 .office-nav-tab-active > svg {
-  color: #ffffff !important;
+  color: var(--ink-primary) !important;
 }
 
 /* iOS Safari Safe Area Bottom Clearance — Ensures 90px+ clearance above Safari floating toolbar */
@@ -1468,12 +1471,12 @@ body {
 .office-action-btn-primary,
 .office-play-match-btn {
   background-color: #F59E0B !important;
-  background-image: linear-gradient(180deg, #FBBF24 0%, #D97706 100%) !important;
+  background-image: none !important;
   animation: none !important;
   color: #18181B !important;
-  border: 1px solid #B45309 !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 4px 12px -2px rgba(217, 119, 6, 0.28) !important;
-  transition: transform 150ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 180ms ease, filter 150ms ease;
+  border: 1px solid #D48806 !important;
+  box-shadow: none !important;
+  transition: background-color 150ms ease, transform 150ms ease;
 }
 
 .my11-btn-gradient *,
@@ -1485,9 +1488,7 @@ body {
 .my11-btn-gradient:hover,
 .office-action-btn-primary:hover,
 .office-play-match-btn:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.03);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 8px 18px -3px rgba(217, 119, 6, 0.36) !important;
+  background-color: #E8930A !important;
 }
 
 .my11-btn-gradient:active,
@@ -1515,13 +1516,13 @@ button.text-white,
 a.text-white,
 span.text-white,
 [data-force-white="true"],
-[data-force-white="true"] *:not(.office-play-match-btn):not(.office-play-match-btn *):not(.office-action-btn-primary):not(.office-action-btn-primary *):not(.my11-btn-gradient):not(.my11-btn-gradient *),
-.office-nav-tab-active {
+[data-force-white="true"] *:not(.office-play-match-btn):not(.office-play-match-btn *):not(.office-action-btn-primary):not(.office-action-btn-primary *):not(.my11-btn-gradient):not(.my11-btn-gradient *) {
   color: #ffffff !important;
 }
 
+.office-nav-tab-active,
 .office-nav-tab-active * {
-  color: #ffffff !important;
+  color: var(--ink-primary) !important;
 }
 
 button.office-action-btn-primary,
@@ -2154,9 +2155,9 @@ div[role="dialog"].fixed,
 
 .my11-canopy-head {
   position: relative;
-  background: linear-gradient(180deg, #1E2024 0%, #262930 100%);
-  color: #ffffff;
-  border-bottom: 2px solid #D97706;
+  background: var(--surface-card);
+  color: var(--ink-primary);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .my11-canopy-head * {

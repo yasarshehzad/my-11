@@ -58,8 +58,6 @@ import {
   IconSearch,
   IconPen,
   IconStadium,
-  IconMic,
-  IconDocument,
   IconBuilding,
   IconClose,
   IconCheck,
@@ -70,12 +68,9 @@ import {
   IconChevronLeft,
   IconChevronRight,
   IconRefresh,
-  IconMessage,
   IconTag,
   IconShield,
   IconCalendar,
-  IconTarget,
-  IconScale,
   IconTrophy,
   IconMedal,
   IconSave,
@@ -86,14 +81,13 @@ import {
   IconShirt,
   IconUsers,
   IconCoins,
-  IconReceipt,
   IconSparkles,
   IconPlane,
-  IconNewspaper,
   IconArrowRight,
   FacilityIcon,
   RegionBadge,
 } from './GameIcons';
+import { Button, Eyebrow, SectionHeader, Tag } from '../ui';
 import { calculateEaFcFaceStats } from '../../career/formAndProgression';
 import { playDealAccepted } from '../../utils/soundEffects';
 
@@ -293,7 +287,7 @@ export function TransferHub({
     onUpdateSave(res.updatedSave);
     const regionName = SCOUTING_REGIONS[selectedScoutingRegion].name;
     setScoutingFeedback({
-      message: `Scouting team successfully deployed to ${regionName}! Initial dossier expected in ${SCOUTING_REGIONS[selectedScoutingRegion].durationDays} days.`,
+      message: `Scouting team deployed to ${regionName}. Initial dossier expected in ${SCOUTING_REGIONS[selectedScoutingRegion].durationDays} days.`,
       type: 'success',
     });
     setTimeout(() => setScoutingFeedback(null), 4000);
@@ -589,7 +583,7 @@ export function TransferHub({
       }
       playDealAccepted();
       onUpdateSave(res.updatedSave);
-      onNotification?.(`Free Agent Signed! ${negotiatingPlayer.name} has joined the squad for £0 fee.`);
+      onNotification?.(`Free agent signed. ${negotiatingPlayer.name} has joined the squad for £0 fee.`);
       setNegotiatingPlayer(null);
       return;
     }
@@ -611,7 +605,7 @@ export function TransferHub({
       }
       playDealAccepted();
       onUpdateSave(res.updatedSave);
-      onNotification?.(`Pre-Contract Secured! ${negotiatingPlayer.name} will join on July 1st (£0 fee).`);
+      onNotification?.(`Pre-contract secured. ${negotiatingPlayer.name} will join on July 1st (£0 fee).`);
       setNegotiatingPlayer(null);
       return;
     }
@@ -633,7 +627,7 @@ export function TransferHub({
       }
       playDealAccepted();
       onUpdateSave(res.updatedSave);
-      onNotification?.(`Loan Deal Complete! ${negotiatingPlayer.name} arrives on loan from ${negotiatingPlayer.club}.`);
+      onNotification?.(`Loan deal complete. ${negotiatingPlayer.name} arrives on loan from ${negotiatingPlayer.club}.`);
       setNegotiatingPlayer(null);
       return;
     }
@@ -685,7 +679,7 @@ export function TransferHub({
 
     playDealAccepted();
     onUpdateSave(signResult.updatedSave);
-    onNotification?.(`Deal Complete! Signed ${negotiatingPlayer.name} for ${formatCurrency(offeredFee)}.`);
+    onNotification?.(`Deal complete. Signed ${negotiatingPlayer.name} for ${formatCurrency(offeredFee)}.`);
     setNegotiatingPlayer(null);
   };
 
@@ -699,7 +693,7 @@ export function TransferHub({
     }
     playDealAccepted();
     onUpdateSave(res.updatedSave);
-    onNotification?.(`Loan Out Complete! ${loaningOutPlayer.name} has joined ${dest} on loan.`);
+    onNotification?.(`Loan out complete. ${loaningOutPlayer.name} has joined ${dest} on loan.`);
     setLoaningOutPlayer(null);
   };
 
@@ -719,7 +713,7 @@ export function TransferHub({
       updatedSave = renewalRes.updatedSave;
       onUpdateSave(updatedSave);
       if (renewalRes.renewedCount > 0) {
-        onNotification?.(`Sporting Director finalized ${renewalRes.renewedCount} contract extensions immediately!`);
+        onNotification?.(`Sporting Director finalized ${renewalRes.renewedCount} contract extensions immediately.`);
       } else {
         onNotification?.('Sporting Director delegated to handle key contract renewals automatically.');
       }
@@ -732,11 +726,11 @@ export function TransferHub({
   const handleRunSportingDirectorBatchRenewals = () => {
     const res = processSportingDirectorRenewals(save, { force: true });
     if (res.renewedCount === 0) {
-      onNotification?.('Sporting Director: All squad contracts are currently secured (no expiring deals under 1 yr).');
+      onNotification?.('Sporting Director: all squad contracts are currently secured (no expiring deals under 1 yr).');
       return;
     }
     onUpdateSave(res.updatedSave);
-    onNotification?.(`Sporting Director finalized ${res.renewedCount} contract extensions!`);
+    onNotification?.(`Sporting Director finalized ${res.renewedCount} contract extensions.`);
   };
 
   const handleStartRenewal = (player: CareerPlayer) => {
@@ -794,7 +788,7 @@ export function TransferHub({
     if (res.success) {
       playDealAccepted();
       onUpdateSave(res.updatedSave);
-      onNotification?.('Buy-Back clause activated! Player returned to squad.');
+      onNotification?.('Buy-back clause activated. Player returned to squad.');
     } else if (res.error) {
       onNotification?.(`${res.error}`);
     }
@@ -873,11 +867,11 @@ export function TransferHub({
 
       onUpdateSave(res.updatedSave);
       if (res.outcome === 'approved') {
-        onNotification?.(`Board Approved! ${res.grantType === 'wage' ? formatWage(res.amountGranted) : formatCurrency(res.amountGranted)} added.`);
+        onNotification?.(`Board approved: ${res.grantType === 'wage' ? formatWage(res.amountGranted) : formatCurrency(res.amountGranted)} added.`);
       } else if (res.outcome === 'compromised') {
-        onNotification?.(`Board Compromise: ${res.grantType === 'wage' ? formatWage(res.amountGranted) : formatCurrency(res.amountGranted)} granted.`);
+        onNotification?.(`Board compromise: ${res.grantType === 'wage' ? formatWage(res.amountGranted) : formatCurrency(res.amountGranted)} granted.`);
       } else {
-        onNotification?.(`Board Declined: ${res.feedback}`);
+        onNotification?.(`Board declined: ${res.feedback}`);
       }
     }, 400);
   };
@@ -910,7 +904,7 @@ export function TransferHub({
     return (
       <article
         key={player.id}
-        className={`rounded-2xl p-2.5 sm:p-3 ${isLegend ? 'my11-scouting-card-legend' : 'my11-scouting-card'}`}
+        className={`rounded-xl p-2.5 sm:p-3 ${isLegend ? 'my11-scouting-card-legend' : 'my11-scouting-card'}`}
       >
         <div className="flex items-center gap-2">
           <button
@@ -920,46 +914,33 @@ export function TransferHub({
             className="group flex items-center gap-2 flex-1 min-w-0 text-left cursor-pointer rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             <span
-              className={`w-9 h-9 rounded-xl flex items-center justify-center font-display font-black text-xs shrink-0 shadow-sm ${badgeClass}`}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center font-display font-semibold text-xs shrink-0 shadow-sm ${badgeClass}`}
             >
               {player.rating}
             </span>
             <span className="min-w-0 block">
-              <span className="font-display font-black text-sm text-slate-900 group-hover:text-blue-600 leading-tight break-words flex items-center gap-1">
+              <span className="font-display font-semibold text-sm text-slate-900 group-hover:text-blue-600 leading-tight break-words flex items-center gap-1">
                 <span className="min-w-0">{player.name}</span>
                 {isLegend && <IconCrown className="w-3 h-3 shrink-0 text-amber-600" />}
               </span>
-              <span className="text-[11px] text-slate-500 block truncate">
+              <span className="text-xs text-slate-500 block truncate">
                 <span className={isLegend ? 'text-amber-700 font-bold' : 'text-blue-600 font-bold'}>{player.position}</span>
                 {' '}&bull; {player.age}y &bull; {getClubDisplayName(player.club)}
               </span>
-              <span className="text-[11px] font-mono block truncate">
+              <span className="text-xs tabular-nums block truncate">
                 <span className="font-bold text-slate-900">{formatCurrency(player.value)}</span>
                 <span className="text-slate-500"> &bull; {formatWage(player.wageDemand)}</span>
               </span>
             </span>
           </button>
 
-          <button
-            type="button"
+          <Button variant={isSquadFull ? 'danger' : isFA || canAfford ? 'secondary' : 'ghost'}
             onClick={() => handleStartNegotiation(player)}
             disabled={isBlocked}
-            className={`min-h-10 px-3 rounded-xl font-display font-black text-[11px] uppercase tracking-wider transition-all cursor-pointer shrink-0 ${
-              isSquadFull
-                ? 'bg-rose-50 border border-rose-200 text-rose-700 cursor-not-allowed'
-                : isFA
-                ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm shadow-emerald-500/20'
-                : !windowIsOpen && !canBosmanNow
-                ? 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed'
-                : isLegend
-                ? 'my11-badge-legend shadow-sm'
-                : canAfford
-                ? 'my11-btn-gradient text-white shadow-sm shadow-blue-500/20'
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
-            }`}
+            className="shrink-0"
           >
             {isSquadFull
-              ? 'Squad Full'
+              ? 'Squad full'
               : isFA
               ? 'Sign'
               : !windowIsOpen && !canBosmanNow
@@ -971,7 +952,7 @@ export function TransferHub({
               : canBosmanNow
               ? 'Bosman'
               : 'Bid'}
-          </button>
+          </Button>
           <button
             type="button"
             aria-expanded={isExpanded}
@@ -997,12 +978,12 @@ export function TransferHub({
               <div className="grid grid-cols-6 gap-1 text-center font-display">
                 {labels.map((label, i) => (
                   <div key={label}>
-                    <span className="text-slate-500 block text-[10px] font-bold">{label}</span>
-                    <span className="font-black text-slate-900 text-xs">{values[i]}</span>
+                    <span className="text-slate-500 block text-xs font-bold">{label}</span>
+                    <span className="font-semibold text-slate-900 text-xs">{values[i]}</span>
                   </div>
                 ))}
               </div>
-              <p className="text-[11px] text-slate-600">
+              <p className="text-xs text-slate-600">
                 {[
                   player.nationality,
                   player.isHomegrown ? 'Homegrown' : null,
@@ -1020,7 +1001,7 @@ export function TransferHub({
                   type="button"
                   aria-pressed={isShortlisted}
                   onClick={() => handleToggleShortlist(player.id)}
-                  className={`flex-1 min-h-9 px-2 rounded-xl text-[11px] font-display font-bold uppercase cursor-pointer inline-flex items-center justify-center gap-1 border ${
+                  className={`flex-1 min-h-9 px-2 rounded-xl text-xs font-display font-bold cursor-pointer inline-flex items-center justify-center gap-1 border ${
                     isShortlisted
                       ? 'bg-amber-100 text-amber-700 border-amber-300'
                       : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
@@ -1033,7 +1014,7 @@ export function TransferHub({
                   <button
                     type="button"
                     onClick={() => onOpenCompare(player)}
-                    className="flex-1 min-h-9 px-2 rounded-xl text-[11px] font-display font-bold uppercase cursor-pointer inline-flex items-center justify-center gap-1 bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200"
+                    className="flex-1 min-h-9 px-2 rounded-xl text-xs font-display font-bold cursor-pointer inline-flex items-center justify-center gap-1 bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200"
                   >
                     <IconBarChart className="w-3.5 h-3.5" />
                     <span>Compare</span>
@@ -1053,7 +1034,7 @@ export function TransferHub({
       {(save.deadlineDayState?.isActive || isTransferDeadlineDay(save.season.currentDate, save.season.yearStart)) && (
         <section
           data-office-ui="true"
-          className="office-floating-card rounded-2xl px-3 py-2 sm:px-4 border border-amber-300/85 bg-amber-50/60 shadow-xs text-xs"
+          className="office-floating-card rounded-xl px-3 py-2 sm:px-4 border border-amber-300/85 bg-amber-50/60 shadow-xs text-xs"
         >
           <div className="flex items-center gap-2">
             <button
@@ -1065,8 +1046,8 @@ export function TransferHub({
             >
               <IconClock className="w-4 h-4 shrink-0 text-amber-700" />
               <span className="min-w-0 truncate font-bold text-amber-950">
-                <span className="font-display font-black uppercase">Deadline Day</span>{' '}
-                <span className="font-mono">{save.deadlineDayState?.timeString || '09:00 BST'}</span>
+                <span className="font-display font-semibold">Deadline day</span>{' '}
+                <span className="tabular-nums">{save.deadlineDayState?.timeString || '09:00 BST'}</span>
                 <span className="text-amber-800">
                   {' '}&bull; {save.deadlineDayState?.hoursRemaining ?? 14}h left &bull; {save.deadlineDayState?.dealsCompletedCount || 0} deals
                 </span>
@@ -1077,18 +1058,17 @@ export function TransferHub({
                 <IconChevronDown className="w-3.5 h-3.5 shrink-0 text-amber-800" />
               )}
             </button>
-            <button
-              type="button"
+            <Button variant="primary"
               onClick={handleAdvanceDeadlinePhase}
-              className="shrink-0 min-h-10 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-2xs cursor-pointer flex items-center gap-1 active:scale-95"
+              className="shrink-0"
             >
               {save.deadlineDayState?.phase === 'deadline' ? (
                 <IconAlert className="w-3.5 h-3.5" />
               ) : (
                 <IconSkipForward className="w-3.5 h-3.5" />
               )}
-              <span>{save.deadlineDayState?.phase === 'deadline' ? 'Close Window' : 'Advance'}</span>
-            </button>
+              <span>{save.deadlineDayState?.phase === 'deadline' ? 'Close window' : 'Advance'}</span>
+            </Button>
           </div>
 
           {warRoomOpen && (
@@ -1098,7 +1078,7 @@ export function TransferHub({
                   { id: 'morning', label: 'Morning', time: '09:00' },
                   { id: 'afternoon', label: 'Afternoon', time: '13:00' },
                   { id: 'evening', label: 'Evening', time: '18:00' },
-                  { id: 'deadline', label: 'Final Hour', time: '22:00' },
+                  { id: 'deadline', label: 'Final hour', time: '22:00' },
                 ].map((step, idx) => {
                   const currentPhase = save.deadlineDayState?.phase || 'morning';
                   const currentIdx = ['morning', 'afternoon', 'evening', 'deadline'].indexOf(currentPhase);
@@ -1107,15 +1087,15 @@ export function TransferHub({
                     <li
                       key={step.id}
                       aria-current={isCurrent ? 'step' : undefined}
-                      className={`py-1 px-1 rounded-lg text-[10px] leading-tight ${
+                      className={`pt-1 border-t-2 text-xs leading-tight ${
                         isCurrent
-                          ? 'bg-amber-400 text-slate-950 font-black'
+                          ? 'border-amber-500 text-amber-950 font-semibold'
                           : currentIdx >= idx
-                          ? 'bg-amber-100/70 text-amber-900 font-bold'
-                          : 'text-slate-400 font-semibold'
+                          ? 'border-amber-300 text-amber-900 font-medium'
+                          : 'border-[var(--border-subtle)] text-[var(--ink-muted)] font-medium'
                       }`}
                     >
-                      <span className="font-mono block">{step.time}</span>
+                      <span className="tabular-nums block">{step.time}</span>
                       <span className="font-display block truncate">{step.label}</span>
                     </li>
                   );
@@ -1123,7 +1103,7 @@ export function TransferHub({
               </ol>
 
               {save.deadlineDayState?.breakingNews && save.deadlineDayState.breakingNews.length > 0 && (
-                <ul className="space-y-1 max-h-36 overflow-y-auto scrollbar-none font-mono text-[11px] text-slate-700">
+                <ul className="space-y-1 max-h-36 overflow-y-auto scrollbar-none tabular-nums text-xs text-slate-700">
                   {save.deadlineDayState.breakingNews.slice(0, 8).map((item, idx) => (
                     <li key={idx} className="flex items-start gap-1.5 leading-relaxed">
                       <span className="w-1.5 h-1.5 rounded-xs bg-amber-500 shrink-0 mt-1.5 inline-block" />
@@ -1133,76 +1113,43 @@ export function TransferHub({
                 </ul>
               )}
 
-              <button
-                type="button"
+              <Button variant="secondary"
                 onClick={() => handleOpenPetitionModal('deadline_day_marquee')}
-                className="w-full sm:w-auto min-h-10 px-3.5 rounded-xl bg-white hover:bg-amber-50 text-amber-900 border border-amber-300 font-display font-black text-xs uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5"
+                className="w-full sm:w-auto"
               >
                 <IconBuilding className="w-3.5 h-3.5" />
-                <span>Request Board Funds</span>
-              </button>
+                <span>Request board funds</span>
+              </Button>
             </div>
           )}
         </section>
       )}
 
-      {/* Transfer Window Status Banner - Compact Header Bar */}
-      <section
-        className={`office-floating-card px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-2xl border border-white/80 flex flex-wrap sm:flex-nowrap justify-between items-center gap-2 shadow-xs ${
-          windowIsOpen
-            ? 'bg-gradient-to-r from-blue-50/60 via-indigo-50/40 to-white'
-            : 'bg-white'
-        }`}
-      >
+      {/* Transfer window status and budget summary */}
+      <section className="office-floating-card px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-card)] flex flex-wrap justify-between items-center gap-x-4 gap-y-2">
         <div className="flex items-center gap-2 min-w-0">
-          <span
-            className={`w-2 h-2 rounded-full shrink-0 ${
-              windowIsOpen ? 'bg-emerald-500 motion-safe:animate-pulse' : 'bg-slate-400'
-            }`}
-          />
-          <span
-            className={`text-[11px] font-display font-black uppercase tracking-wider shrink-0 px-2 py-0.5 rounded-full border ${
-              windowIsOpen
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80'
-                : 'bg-slate-100 text-slate-600 border-slate-200'
-            }`}
-          >
-            {windowIsOpen ? 'Window Open' : 'Window Closed'}
-          </span>
-          <span className="text-slate-300 text-xs hidden sm:inline">•</span>
-          <span className="text-[10px] text-slate-500 font-mono hidden sm:inline">
-            {save.season.currentDate}
-          </span>
+          <Tag tone={windowIsOpen ? 'success' : 'neutral'}>{windowIsOpen ? 'Window open' : 'Window closed'}</Tag>
+          <span className="text-xs text-[var(--ink-muted)] tabular-nums hidden sm:inline">{save.season.currentDate}</span>
         </div>
 
-        <div className="flex items-center gap-2.5 sm:gap-4 bg-slate-50/90 border border-slate-200/80 px-2.5 py-1 sm:px-3 sm:py-1 rounded-xl ml-auto text-[11px] shadow-2xs">
+        <dl className="flex items-start gap-4 ml-auto text-xs">
           <div>
-            <span className="text-[10px] uppercase font-bold text-slate-500 block leading-tight">
-              Budget
-            </span>
-            <span className="font-display font-black text-blue-600 text-xs sm:text-sm">
+            <dt className="text-[var(--ink-muted)]">Budget</dt>
+            <dd className="font-semibold text-sm text-[var(--ink-primary)] tabular-nums">
               {formatCurrency(save.finances.transferBudget)}
-            </span>
+            </dd>
           </div>
-          <div className="h-5 w-px bg-slate-200" />
           <div>
-            <span className="text-[10px] uppercase font-bold text-slate-500 block leading-tight">
-              Wage Room
-            </span>
-            <span className="font-display font-black text-slate-800 text-xs sm:text-sm">
+            <dt className="text-[var(--ink-muted)]">Wage room</dt>
+            <dd className="font-semibold text-sm text-[var(--ink-primary)] tabular-nums">
               {formatCurrency(Math.max(0, save.finances.weeklyWageBudget - save.finances.currentWeeklyWages))}/w
-            </span>
+            </dd>
           </div>
-          <div className="h-5 w-px bg-slate-200" />
           <div>
-            <span className="text-[10px] uppercase font-bold text-slate-500 block leading-tight">
-              Senior
-            </span>
-            <span className="font-display font-black text-slate-700 text-xs sm:text-sm">
-              {seniorCount}/25
-            </span>
+            <dt className="text-[var(--ink-muted)]">Senior</dt>
+            <dd className="font-semibold text-sm text-[var(--ink-primary)] tabular-nums">{seniorCount}/25</dd>
           </div>
-        </div>
+        </dl>
       </section>
 
       {/* Workspace navigation: 4 primary groups, then the active group's tabs */}
@@ -1215,13 +1162,12 @@ export function TransferHub({
         const groups: {
           id: string;
           label: string;
-          icon: React.ReactNode;
-          tabs: { id: SubTabId; label: string; badge?: number | string }[];
+                    tabs: { id: SubTabId; label: string; badge?: number | string }[];
         }[] = [
           {
             id: 'transfers',
             label: 'Transfers',
-            icon: <IconSearch className="w-3.5 h-3.5" />,
+            
             tabs: [
               { id: 'market', label: 'Market' },
               { id: 'incoming', label: 'Incoming', badge: incomingCount > 0 ? incomingCount : undefined },
@@ -1233,7 +1179,7 @@ export function TransferHub({
           {
             id: 'club',
             label: 'Club',
-            icon: <IconPen className="w-3.5 h-3.5" />,
+            
             tabs: [
               { id: 'contracts', label: 'Contracts', badge: criticalExpiringCount > 0 ? criticalExpiringCount : undefined },
               { id: 'infrastructure', label: 'Facilities' },
@@ -1243,13 +1189,13 @@ export function TransferHub({
           {
             id: 'board',
             label: 'Board',
-            icon: <IconBuilding className="w-3.5 h-3.5" />,
+            
             tabs: [{ id: 'board', label: 'Board' }],
           },
           {
             id: 'press',
             label: 'Press',
-            icon: <IconMic className="w-3.5 h-3.5" />,
+            
             tabs: [{ id: 'media', label: 'Press', badge: pressPending ? 'Live' : undefined }],
           },
         ];
@@ -1262,11 +1208,11 @@ export function TransferHub({
             window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
           }
         };
-        const badgeCls = 'text-[10px] font-mono font-bold px-1.5 rounded-md bg-rose-500 text-white';
+        const badgeCls = 'text-xs tabular-nums font-bold px-1.5 rounded-md bg-rose-500 text-white';
 
         return (
           <div className="space-y-2" data-no-swipe="true">
-            <nav aria-label="Transfer workspaces" className="grid grid-cols-4 gap-1.5">
+            <nav aria-label="Transfer workspaces" className="grid grid-cols-4 gap-1 p-1 rounded-lg bg-[var(--surface-subcard)] border border-[var(--border-subtle)]">
               {groups.map((group) => {
                 const isActive = group.id === activeGroup.id;
                 const groupBadge = group.tabs.find((t) => t.badge !== undefined)?.badge;
@@ -1276,11 +1222,11 @@ export function TransferHub({
                     type="button"
                     aria-current={isActive ? 'page' : undefined}
                     onClick={() => goTo(isActive ? subTab : group.tabs[0].id)}
-                    className={`min-h-10 px-1.5 rounded-xl text-[11px] sm:text-xs font-display font-black uppercase tracking-wide flex items-center justify-center gap-1 cursor-pointer transition-all ${
-                      isActive ? 'office-nav-tab-active shadow-sm' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                    className={`min-h-10 px-1.5 rounded-md text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer transition-colors ${
+                      isActive ? 'bg-[var(--surface-card)] text-[var(--ink-primary)] shadow-xs' : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
                     }`}
                   >
-                    <span className="hidden min-[420px]:inline-flex items-center">{group.icon}</span>
+                    
                     <span className="truncate">{group.label}</span>
                     {groupBadge !== undefined && <span className={badgeCls}>{groupBadge}</span>}
                   </button>
@@ -1291,7 +1237,7 @@ export function TransferHub({
             {activeGroup.tabs.length > 1 && (
               <nav
                 aria-label={`${activeGroup.label} sections`}
-                className="flex gap-1 overflow-x-auto scrollbar-none overscroll-x-contain touch-pan-x border-b border-slate-200/80"
+                className="flex gap-1 overflow-x-auto scrollbar-none overscroll-x-contain touch-pan-x border-b border-[var(--border-subtle)]"
               >
                 {activeGroup.tabs.map((tab) => {
                   const isSelected = subTab === tab.id;
@@ -1301,10 +1247,10 @@ export function TransferHub({
                       type="button"
                       aria-current={isSelected ? 'page' : undefined}
                       onClick={() => goTo(tab.id)}
-                      className={`min-h-10 px-2.5 -mb-px text-xs font-bold whitespace-nowrap cursor-pointer flex items-center gap-1.5 border-b-2 transition-colors ${
+                      className={`min-h-10 px-2.5 -mb-px text-xs font-semibold whitespace-nowrap cursor-pointer flex items-center gap-1.5 border-b-2 transition-colors ${
                         isSelected
-                          ? 'border-blue-600 text-slate-900'
-                          : 'border-transparent text-slate-500 hover:text-slate-800'
+                          ? 'border-[var(--ink-primary)] text-[var(--ink-primary)]'
+                          : 'border-transparent text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
                       }`}
                     >
                       <span>{tab.label}</span>
@@ -1321,7 +1267,7 @@ export function TransferHub({
       {subTab === 'market' && (
         <section id="market-section" className="space-y-3 scroll-mt-20">
           {/* Search, quick chips and one Filters drawer */}
-          <div className="office-floating-card border border-white/80 rounded-3xl p-3 sm:p-4 space-y-2.5 shadow-xs bg-white">
+          <div className="office-floating-card border border-white/80 rounded-xl p-3 sm:p-4 space-y-2.5 shadow-xs bg-white">
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 inline-flex items-center pointer-events-none">
@@ -1356,7 +1302,7 @@ export function TransferHub({
               <button
                 type="button"
                 onClick={() => setIsAdvancedFiltersOpen(!isAdvancedFiltersOpen)}
-                className={`min-h-10 px-3 rounded-xl text-xs font-display font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shrink-0 border ${
+                className={`min-h-10 px-3 rounded-xl text-xs font-display font-semibold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 border ${
                   isAdvancedFiltersOpen || activeFilterCount > 0
                     ? 'office-nav-tab-active shadow-sm border-slate-900'
                     : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
@@ -1367,7 +1313,7 @@ export function TransferHub({
                 <IconSliders className="w-3.5 h-3.5" />
                 <span>Filters</span>
                 {activeFilterCount > 0 && (
-                  <span className="bg-amber-400 !text-slate-950 text-[10px] font-black rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center">
+                  <span className="bg-amber-400 !text-slate-950 text-xs font-semibold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center">
                     {activeFilterCount}
                   </span>
                 )}
@@ -1385,7 +1331,7 @@ export function TransferHub({
                     setCurrentPage(1);
                   }}
                   aria-label="Player era"
-                  className="min-h-8 shrink-0 bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-1.5 text-[11px] font-display font-bold focus:outline-none focus:border-blue-500"
+                  className="min-h-8 shrink-0 bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-1.5 text-xs font-display font-bold focus:outline-none focus:border-blue-500"
                 >
                   <option value="all">All eras</option>
                   <option value="modern">Modern</option>
@@ -1401,26 +1347,26 @@ export function TransferHub({
                     setSelectedPosCategory(cat);
                     setCurrentPage(1);
                   }}
-                  className={`min-h-8 px-2.5 rounded-lg text-[11px] font-display font-black uppercase tracking-wider shrink-0 cursor-pointer transition-colors border ${
+                  className={`min-h-8 px-2.5 rounded-lg text-xs font-display font-semibold shrink-0 cursor-pointer transition-colors border ${
                     selectedPosCategory === cat
                       ? 'office-nav-tab-active'
                       : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
                   }`}
                 >
-                  {cat}
+                                    {cat === 'ALL' ? 'All' : cat}
                 </button>
               ))}
               <span aria-hidden="true" className="h-5 w-px bg-slate-200 shrink-0" />
               {[
-                { label: 'Within Budget', on: affordableOnly, toggle: () => setAffordableOnly(!affordableOnly) },
+                { label: 'Within budget', on: affordableOnly, toggle: () => setAffordableOnly(!affordableOnly) },
                 {
-                  label: 'Free Agents',
+                  label: 'Free agents',
                   on: selectedContractStatus === 'free_agents',
                   toggle: () => setSelectedContractStatus(selectedContractStatus === 'free_agents' ? 'ALL' : 'free_agents'),
                 },
                 { label: 'Homegrown', on: homegrownOnly, toggle: () => setHomegrownOnly(!homegrownOnly) },
                 {
-                  label: 'Loan Listed',
+                  label: 'Loan listed',
                   on: selectedContractStatus === 'loans',
                   toggle: () => setSelectedContractStatus(selectedContractStatus === 'loans' ? 'ALL' : 'loans'),
                 },
@@ -1434,7 +1380,7 @@ export function TransferHub({
                     chip.toggle();
                     setCurrentPage(1);
                   }}
-                  className={`min-h-8 px-2.5 rounded-lg text-[11px] font-display font-bold whitespace-nowrap shrink-0 cursor-pointer transition-colors border ${
+                  className={`min-h-8 px-2.5 rounded-lg text-xs font-display font-bold whitespace-nowrap shrink-0 cursor-pointer transition-colors border ${
                     chip.on
                       ? 'bg-blue-600 text-white border-blue-600'
                       : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
@@ -1450,15 +1396,15 @@ export function TransferHub({
               <div id="market-filter-drawer" className="pt-2.5 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                 {[
                   {
-                    label: 'Sort By',
+                    label: 'Sort by',
                     value: selectedSortBy,
                     set: (v: string) => setSelectedSortBy(v as typeof selectedSortBy),
                     options: [
-                      ['value_desc', 'Value (High to Low)'],
-                      ['value_asc', 'Value (Low to High)'],
-                      ['rating_desc', 'Rating (High to Low)'],
-                      ['rating_asc', 'Rating (Low to High)'],
-                      ['age_asc', 'Age (Youngest First)'],
+                      ['value_desc', 'Value (high to low)'],
+                      ['value_asc', 'Value (low to high)'],
+                      ['rating_desc', 'Rating (high to low)'],
+                      ['rating_asc', 'Rating (low to high)'],
+                      ['age_asc', 'Age (youngest first)'],
                       ['name_asc', 'Name (A to Z)'],
                     ],
                   },
@@ -1467,21 +1413,21 @@ export function TransferHub({
                     value: specificPosition,
                     set: (v: string) => setSpecificPosition(v),
                     options: [
-                      ['ALL', 'All Roles'],
+                      ['ALL', 'All roles'],
                       ...['GK', 'CB', 'LB', 'RB', 'CDM', 'CM', 'CAM', 'LM', 'RM', 'LW', 'RW', 'ST'].map((r) => [r, r]),
                     ],
                   },
                   {
-                    label: 'Min Rating',
+                    label: 'Min rating',
                     value: String(minRating),
                     set: (v: string) => setMinRating(Number(v)),
                     options: [
-                      ['0', 'Any Rating'],
+                      ['0', 'Any rating'],
                       ['70', '70+'],
                       ['75', '75+'],
                       ['80', '80+'],
-                      ['84', '84+ Elite'],
-                      ['88', '88+ Superstar'],
+                      ['84', '84+'],
+                      ['88', '88+'],
                     ],
                   },
                   {
@@ -1489,7 +1435,7 @@ export function TransferHub({
                     value: ageCategory,
                     set: (v: string) => setAgeCategory(v as typeof ageCategory),
                     options: [
-                      ['ALL', 'All Ages'],
+                      ['ALL', 'All ages'],
                       ['U21', 'U21 (21 and under)'],
                       ['PEAK', 'Prime (22–29)'],
                       ['VET', 'Veterans (30+)'],
@@ -1500,10 +1446,10 @@ export function TransferHub({
                     value: selectedContractStatus,
                     set: (v: string) => setSelectedContractStatus(v as typeof selectedContractStatus),
                     options: [
-                      ['ALL', 'All Contracts'],
-                      ['free_agents', 'Free Agents'],
+                      ['ALL', 'All contracts'],
+                      ['free_agents', 'Free agents'],
                       ['expiring', 'Expiring (Bosman)'],
-                      ['loans', 'Available for Loan'],
+                      ['loans', 'Available for loan'],
                     ],
                   },
                   {
@@ -1511,9 +1457,9 @@ export function TransferHub({
                     value: selectedLeague,
                     set: (v: string) => setSelectedLeague(v as typeof selectedLeague),
                     options: [
-                      ['ALL', 'All Leagues'],
+                      ['ALL', 'All leagues'],
                       ['pl', 'Premier League'],
-                      ['continental', 'Europe Continental'],
+                      ['continental', 'Continental Europe'],
                       ...(configuredPool !== 'modern' ? [['legends', 'Legends / Icons']] : []),
                     ],
                   },
@@ -1521,17 +1467,17 @@ export function TransferHub({
                     label: 'Club',
                     value: selectedClub,
                     set: (v: string) => setSelectedClub(v),
-                    options: [['ALL', 'All Clubs'], ...availableClubs.map((c) => [c, c])],
+                    options: [['ALL', 'All clubs'], ...availableClubs.map((c) => [c, c])],
                   },
                   {
                     label: 'Nationality',
                     value: selectedNationality,
                     set: (v: string) => setSelectedNationality(v),
-                    options: [['ALL', 'All Nationalities'], ...availableNationalities.map((n) => [n, n])],
+                    options: [['ALL', 'All nationalities'], ...availableNationalities.map((n) => [n, n])],
                   },
                 ].map((field) => (
                   <label key={field.label} className="space-y-0.5 min-w-0">
-                    <span className="text-[10px] uppercase font-bold text-slate-500 block">{field.label}</span>
+                    <span className="text-xs font-bold text-slate-500 block">{field.label}</span>
                     <select
                       value={field.value}
                       onChange={(e) => {
@@ -1549,29 +1495,26 @@ export function TransferHub({
                   </label>
                 ))}
 
-                <button
-                  type="button"
+                <Button variant="ghost" size="sm"
                   onClick={handleResetFilters}
-                  className="col-span-2 sm:col-span-4 min-h-9 px-2 rounded-xl border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 text-[11px] font-display font-bold uppercase transition-all cursor-pointer inline-flex items-center justify-center gap-1"
+                  className="col-span-2 sm:col-span-4"
                 >
                   <IconRefresh className="w-3 h-3" />
-                  <span>Reset All</span>
-                </button>
+                  <span>Reset all</span>
+                </Button>
               </div>
             )}
           </div>
 
           {/* Market Grid */}
           {marketPlayers.length === 0 ? (
-            <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center text-slate-500 text-xs space-y-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-8 text-center text-slate-500 text-xs space-y-3">
               <div>No players match these filters.</div>
-              <button
-                type="button"
+              <Button variant="secondary"
                 onClick={handleResetFilters}
-                className="py-2 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white font-display font-black text-xs uppercase shadow-md shadow-blue-500/20"
               >
-                Reset Filters
-              </button>
+                Reset filters
+              </Button>
             </div>
           ) : (
             <div className="space-y-3">
@@ -1587,27 +1530,23 @@ export function TransferHub({
                 </span>
 
                 <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
+                  <Button variant="secondary" size="sm"
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={validPage <= 1}
-                    className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed font-display font-bold text-xs uppercase cursor-pointer inline-flex items-center gap-1"
                   >
                     <IconChevronLeft className="w-3.5 h-3.5" />
                     <span>Prev</span>
-                  </button>
-                  <span className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-mono text-xs shadow-2xs">
+                  </Button>
+                  <span className="px-1 text-xs text-[var(--ink-secondary)] tabular-nums">
                     Page <span className="text-slate-900 font-bold">{validPage}</span> / {totalPages}
                   </span>
-                  <button
-                    type="button"
+                  <Button variant="secondary" size="sm"
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={validPage >= totalPages}
-                    className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed font-display font-bold text-xs uppercase cursor-pointer inline-flex items-center gap-1"
                   >
                     <span>Next</span>
                     <IconChevronRight className="w-3.5 h-3.5" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -1619,7 +1558,7 @@ export function TransferHub({
       {subTab === 'incoming' && (
         <section id="incoming-offers-section" className="space-y-4 scroll-mt-20">
           {(!save.incomingOffers || save.incomingOffers.length === 0) ? (
-            <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-500 text-xs shadow-xs">
+            <div className="bg-white border border-slate-200 rounded-xl p-12 text-center text-slate-500 text-xs shadow-xs">
               No incoming offers right now.
             </div>
           ) : (
@@ -1634,7 +1573,7 @@ export function TransferHub({
                   <article
                     key={offer.id}
                     id={`incoming-offer-${offer.id}`}
-                    className={`office-floating-card rounded-2xl p-4 sm:p-4.5 space-y-3.5 border transition-all scroll-mt-20 ${
+                    className={`office-floating-card rounded-xl p-4 sm:p-4.5 space-y-3.5 border transition-all scroll-mt-20 ${
                       isAccepted
                         ? 'bg-emerald-50/40 border-emerald-300 shadow-xs'
                         : isRejected
@@ -1647,58 +1586,45 @@ export function TransferHub({
                     <div className="flex justify-between items-start gap-2">
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className={`text-[10px] uppercase font-black px-2 py-0.5 rounded-full font-display border ${
-                            isAccepted
-                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                              : isRejected
-                              ? 'bg-rose-100 text-rose-800 border-rose-300'
-                              : isNegotiating
-                              ? 'bg-amber-100 text-amber-800 border-amber-300'
-                              : 'bg-blue-50 text-blue-700 border-blue-200'
-                          }`}>
+                          <Tag tone={isAccepted ? 'success' : isRejected ? 'danger' : isNegotiating ? 'warning' : 'info'}>
                             {isAccepted
-                              ? 'Deal Agreed'
+                              ? 'Deal agreed'
                               : isRejected
-                              ? 'Talks Collapsed'
+                              ? 'Talks collapsed'
                               : isNegotiating
-                              ? 'Active Negotiation'
-                              : 'Official Bid'}
-                          </span>
-                          {(offer.patienceRemaining ?? 3) < 3 && !isRejected && (
-                            <span className="text-[10px] font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
-                              {offer.patienceRemaining} patience left
-                            </span>
-                          )}
+                              ? 'Active negotiation'
+                              : 'Bid received'}
+                          </Tag>
                           {offer.isPanicBid && (
-                            <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 font-display shadow-sm shadow-amber-400/20 motion-safe:animate-pulse inline-flex items-center gap-1">
-                              <IconAlert className="w-3 h-3" />
-                              <span>Panic Bid (+{offer.panicMarkupPercent || 30}%)</span>
-                            </span>
+                            <Tag tone="warning">Panic bid (+{offer.panicMarkupPercent || 30}%)</Tag>
+                          )}
+                          {(offer.patienceRemaining ?? 3) < 3 && !isRejected && (
+                            <span className="text-xs text-[var(--ink-muted)]">{offer.patienceRemaining} patience left</span>
                           )}
                         </div>
 
-                        <h4 className="font-display font-black text-base text-slate-900 pt-0.5">
+                        <h4 className="font-display font-semibold text-base text-slate-900 pt-0.5">
                           {offer.playerName}
                         </h4>
-                        <p className="text-[11px] text-slate-500">
-                          {offer.position} • {offer.rating} OVR • Valuation: <span className="text-slate-900 font-mono font-bold">{formatCurrency(squadPlayer?.value || offer.offeredFee)}</span>
+                        <p className="text-xs text-slate-500">
+                          {offer.position} • {offer.rating} OVR • Valuation: <span className="text-slate-900 tabular-nums font-bold">{formatCurrency(squadPlayer?.value || offer.offeredFee)}</span>
                         </p>
                       </div>
 
                       <div className="text-right shrink-0">
-                        <span className="text-[10px] uppercase font-bold text-slate-500 block">
-                          Offered Fee
+                        <span className="text-xs font-bold text-slate-500 block">
+                          Offered fee
                         </span>
-                        <span className="font-display font-black text-blue-600 text-lg">
+                        <span className="font-display font-semibold text-blue-600 text-lg">
                           {formatCurrency(offer.offeredFee)}
                         </span>
                         {(offer.sellOnPercent ?? 0) > 0 && (
-                          <span className="text-[10px] font-mono text-blue-700 block font-bold">
-                            +{offer.sellOnPercent}% Sell-On
+                          <span className="text-xs tabular-nums text-blue-700 block font-bold">
+                            +{offer.sellOnPercent}% sell-on
                           </span>
                         )}
                         {Boolean((offer.appearanceMilestoneFee ?? 0) > 0 || (offer.goalMilestoneFee ?? 0) > 0 || (offer.buyBackFee ?? 0) > 0) && (
-                          <div className="flex flex-col gap-0.5 text-[10px] text-amber-700 font-mono pt-1 text-right">
+                          <div className="flex flex-col gap-0.5 text-xs text-amber-700 tabular-nums pt-1 text-right">
                             {(offer.appearanceMilestoneFee ?? 0) > 0 && (
                               <span>+{formatCurrency(offer.appearanceMilestoneFee!)} ({offer.appearanceThreshold || 20} apps)</span>
                             )}
@@ -1708,7 +1634,7 @@ export function TransferHub({
                             {(offer.buyBackFee ?? 0) > 0 && (
                               <span className="text-blue-700 font-bold inline-flex items-center justify-end gap-1">
                                 <IconRefresh className="w-3 h-3" />
-                                <span>{formatCurrency(offer.buyBackFee!)} Buy-Back</span>
+                                <span>{formatCurrency(offer.buyBackFee!)} buy-back</span>
                               </span>
                             )}
                           </div>
@@ -1721,46 +1647,37 @@ export function TransferHub({
                         From <span className="font-bold text-slate-900">{offer.buyingClubName}</span>
                       </span>
                       {offer.originalOfferedFee && offer.originalOfferedFee !== offer.offeredFee && (
-                        <span className="font-mono text-slate-400 line-through" title="Opening bid">
+                        <span className="tabular-nums text-slate-400 line-through" title="Opening bid">
                           {formatCurrency(offer.originalOfferedFee)}
                         </span>
                       )}
                     </p>
 
                     {offer.lastFeedback && (
-                      <p className="text-[11px] text-slate-600 italic">&ldquo;{offer.lastFeedback}&rdquo;</p>
+                      <p className="text-xs text-slate-600 italic">&ldquo;{offer.lastFeedback}&rdquo;</p>
                     )}
 
                     <div className="flex flex-wrap gap-2 pt-1">
-                      <button
-                        type="button"
+                      <Button variant="secondary"
                         onClick={() => handleRejectIncomingOffer(offer.id)}
-                        className="py-2 px-3 rounded-xl border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-700 font-display font-bold text-xs uppercase tracking-wider cursor-pointer"
                       >
                         Reject
-                      </button>
+                      </Button>
 
-                      <button
-                        type="button"
+                      <Button variant="secondary"
                         onClick={() => handleOpenIncomingNegotiation(offer)}
-                        className="flex-1 py-2 px-3 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap"
+                        className="flex-1 whitespace-nowrap"
                       >
-                        <IconMessage className="w-3.5 h-3.5" />
-                        <span>Counter &amp; Negotiate</span>
-                      </button>
+                        <span>Counter &amp; negotiate</span>
+                      </Button>
 
-                      <button
-                        type="button"
+                      <Button variant="primary"
                         onClick={() => handleAcceptIncomingOffer(offer.id)}
                         disabled={save.squad.length <= 18}
-                        className={`py-2 px-3.5 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
-                          save.squad.length <= 18
-                            ? 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed'
-                            : 'my11-btn-gradient text-white shadow-md shadow-blue-500/20'
-                        }`}
+                        className="whitespace-nowrap"
                       >
-                        {save.squad.length <= 18 ? 'Min Squad (18)' : isAccepted ? 'Finalize Deal' : 'Accept & Sell'}
-                      </button>
+                        {save.squad.length <= 18 ? 'Min squad (18)' : isAccepted ? 'Finalize deal' : 'Accept & sell'}
+                      </Button>
                     </div>
                   </article>
                 );
@@ -1791,8 +1708,8 @@ export function TransferHub({
                     pressed ? 'bg-white border-slate-900 shadow-sm' : 'bg-slate-50 border-slate-200 hover:bg-white'
                   }`}
                 >
-                  <span className={`text-base font-display font-black block leading-tight ${f.tone}`}>{f.count}</span>
-                  <span className="text-[10px] uppercase font-bold text-slate-500 block">{f.label}</span>
+                  <span className={`text-base font-display font-semibold block leading-tight ${f.tone}`}>{f.count}</span>
+                  <span className="text-xs font-bold text-slate-500 block">{f.label}</span>
                 </button>
               );
             })}
@@ -1800,16 +1717,10 @@ export function TransferHub({
 
           {/* Director of Football: one row */}
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-            <button
-              type="button"
+            <Button variant="secondary"
               aria-pressed={Boolean(save.settings.sportingDirectorHandlesRenewals)}
               onClick={handleToggleSportingDirectorRenewals}
               title="Director of Football renews key expiring contracts (74+ OVR or U23) within wage limits"
-              className={`min-h-10 px-3 rounded-xl font-display font-bold border cursor-pointer inline-flex items-center gap-1.5 ${
-                save.settings.sportingDirectorHandlesRenewals
-                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-500'
-                  : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
-              }`}
             >
               {save.settings.sportingDirectorHandlesRenewals ? (
                 <IconCheck className="w-3.5 h-3.5" />
@@ -1817,20 +1728,14 @@ export function TransferHub({
                 <IconBriefcase className="w-3.5 h-3.5" />
               )}
               <span>Director auto-renew: {save.settings.sportingDirectorHandlesRenewals ? 'On' : 'Off'}</span>
-            </button>
+            </Button>
             {(save.settings.sportingDirectorHandlesRenewals || criticalExpiringCount >= 2) && (
-              <button
-                type="button"
+              <Button variant={criticalExpiringCount >= 2 ? 'danger' : 'secondary'}
                 onClick={handleRunSportingDirectorBatchRenewals}
-                className={`min-h-10 px-3 rounded-xl font-display font-bold border cursor-pointer inline-flex items-center gap-1.5 ${
-                  criticalExpiringCount >= 2
-                    ? 'bg-rose-600 hover:bg-rose-500 text-white border-rose-600'
-                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
-                }`}
               >
                 <IconBolt className="w-3.5 h-3.5" />
                 <span>{criticalExpiringCount > 0 ? `Renew expiring (${criticalExpiringCount})` : 'Run renewals now'}</span>
-              </button>
+              </Button>
             )}
           </div>
 
@@ -1851,7 +1756,7 @@ export function TransferHub({
 
             if (filteredSquad.length === 0) {
               return (
-                <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-500 text-xs shadow-xs">
+                <div className="bg-white border border-slate-200 rounded-xl p-12 text-center text-slate-500 text-xs shadow-xs">
                   No players match this filter.
                 </div>
               );
@@ -1862,7 +1767,7 @@ export function TransferHub({
                 {filteredSquad.map((player) => {
                   const yearsLeft = player.contractYears ?? 2;
                   const isCritical = yearsLeft <= 1;
-                  const isMedium = yearsLeft === 2;
+                  
                   const expYear = save.season.yearStart + yearsLeft;
 
                   const badgeClass = player.rating >= 88
@@ -1877,38 +1782,34 @@ export function TransferHub({
                     <article
                       key={player.id}
                       id={`contract-player-${player.id}`}
-                      className={`office-floating-card p-4 rounded-2xl border transition-all space-y-3 scroll-mt-20 bg-white shadow-xs ${
+                      className={`office-floating-card p-4 rounded-xl border transition-all space-y-3 scroll-mt-20 bg-white shadow-xs ${
                         isCritical
                           ? 'border-rose-300'
-                          : isMedium
-                          ? 'border-amber-200'
-                          : 'border-slate-200/90'
+                          : 'border-[var(--border-subtle)]'
                       }`}
                     >
                       <div className="flex justify-between items-start gap-2">
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <span className={`w-9 h-9 rounded-xl flex items-center justify-center font-display font-black text-xs shadow-sm shrink-0 ${badgeClass}`}>
+                          <span className={`w-9 h-9 rounded-xl flex items-center justify-center font-display font-semibold text-xs shadow-sm shrink-0 ${badgeClass}`}>
                             {player.rating}
                           </span>
                           <div className="min-w-0">
-                            <h4 className="font-display font-black text-sm text-slate-900 truncate">
+                            <h4 className="font-display font-semibold text-sm text-slate-900 truncate">
                               {player.name}
                             </h4>
-                            <div className="text-[10px] text-slate-500 truncate">
+                            <div className="text-xs text-slate-500 truncate">
                               {player.position} • {player.age} yrs • {player.nationality}
                             </div>
                           </div>
                         </div>
 
-                        <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg border shrink-0 ${
-                          isCritical
-                            ? 'bg-rose-50 text-rose-700 border-rose-200 motion-safe:animate-pulse'
-                            : isMedium
-                            ? 'bg-amber-50 text-amber-700 border-amber-200'
-                            : 'bg-blue-50 text-blue-700 border-blue-200'
-                        }`}>
-                          {yearsLeft} {yearsLeft === 1 ? 'Year Left' : 'Years Left'}
-                        </span>
+                        {isCritical ? (
+                          <Tag tone="danger" className="shrink-0">
+                            {yearsLeft} {yearsLeft === 1 ? 'year left' : 'years left'}
+                          </Tag>
+                        ) : (
+                          <span className="text-xs text-[var(--ink-muted)] shrink-0 whitespace-nowrap">{yearsLeft} years left</span>
+                        )}
                       </div>
 
                       {/* Contract terms */}
@@ -1921,33 +1822,27 @@ export function TransferHub({
                         ].map(([label, value]) => (
                           <div key={label} className="flex justify-between gap-2 min-w-0">
                             <dt className="text-slate-500">{label}</dt>
-                            <dd className="font-mono font-bold text-slate-900 truncate capitalize">{value}</dd>
+                            <dd className="tabular-nums font-bold text-slate-900 truncate capitalize">{value}</dd>
                           </div>
                         ))}
                       </dl>
 
                       {/* Action */}
                       {player.isOnLoan ? (
-                        <div className="w-full py-2.5 px-3 rounded-xl bg-cyan-50 border border-cyan-200 text-cyan-800 text-xs font-bold text-center flex items-center justify-center gap-1.5 shadow-2xs">
+                        <div className="text-xs text-[var(--ink-secondary)] flex items-center gap-1.5">
                           <IconHandshake className="w-3.5 h-3.5 shrink-0" />
                           <span>Currently on loan ({player.loanParentClubName || 'Senior League'})</span>
                         </div>
                       ) : (
                         <div className="flex gap-2">
-                          <button
-                            type="button"
+                          <Button variant={isCritical ? 'primary' : 'secondary'}
                             onClick={() => handleStartRenewal(player)}
-                            className={`flex-1 py-2.5 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                              isCritical
-                                ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-500/20'
-                                : 'my11-btn-gradient text-white shadow-md shadow-blue-500/20'
-                            }`}
+                            className="flex-1"
                           >
                             <IconPen className="w-3.5 h-3.5" />
                             <span>Extend</span>
-                          </button>
-                          <button
-                            type="button"
+                          </Button>
+                          <Button variant="secondary"
                             onClick={() => {
                               setLoaningOutPlayer(player);
                               const defaultDest = availableClubs.find((c) => c !== (save.club.customName || save.club.defaultName)) || 'Rival Club';
@@ -1955,11 +1850,11 @@ export function TransferHub({
                               setLoanOutWagePercent(100);
                             }}
                             title="Loan player to another club to gain match experience and save wages"
-                            className="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-display font-bold text-xs uppercase cursor-pointer transition-colors shrink-0 flex items-center gap-1 shadow-2xs"
+                            className="shrink-0"
                           >
                             <IconHandshake className="w-3.5 h-3.5" />
-                            <span>Loan Out</span>
-                          </button>
+                            <span>Loan out</span>
+                          </Button>
                         </div>
                       )}
                     </article>
@@ -1975,7 +1870,7 @@ export function TransferHub({
       {subTab === 'shortlist' && (
         <section id="shortlist-section" className="space-y-4 scroll-mt-20">
           {shortlistedPlayers.length === 0 ? (
-            <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-500 text-xs shadow-xs">
+            <div className="bg-white border border-slate-200 rounded-xl p-12 text-center text-slate-500 text-xs shadow-xs">
               Shortlist is empty. Star players in the Market to track them here.
             </div>
           ) : (
@@ -1993,23 +1888,25 @@ export function TransferHub({
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
+                aria-pressed={historyView === 'my_club'}
                 onClick={() => setHistoryView('my_club')}
-                className={`py-1.5 px-3 rounded-lg text-xs font-display font-bold uppercase tracking-wider transition-colors cursor-pointer inline-flex items-center gap-1.5 ${
+                className={`min-h-10 px-3 rounded-lg text-xs font-semibold transition-colors cursor-pointer inline-flex items-center gap-1.5 ${
                   historyView === 'my_club'
-                    ? 'office-action-btn-primary'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                    ? 'office-nav-tab-active'
+                    : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
                 }`}
               >
                 <IconShield className="w-3.5 h-3.5" />
-                <span>My Club ({save.transfersHistory?.length || 0})</span>
+                <span>My club ({save.transfersHistory?.length || 0})</span>
               </button>
               <button
                 type="button"
+                aria-pressed={historyView === 'world'}
                 onClick={() => setHistoryView('world')}
-                className={`py-1.5 px-3 rounded-lg text-xs font-display font-bold uppercase tracking-wider transition-colors cursor-pointer inline-flex items-center gap-1.5 ${
+                className={`min-h-10 px-3 rounded-lg text-xs font-semibold transition-colors cursor-pointer inline-flex items-center gap-1.5 ${
                   historyView === 'world'
-                    ? 'office-action-btn-primary'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                    ? 'office-nav-tab-active'
+                    : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
                 }`}
               >
                 <IconGlobe className="w-3.5 h-3.5" />
@@ -2031,68 +1928,48 @@ export function TransferHub({
                     className="office-subcard p-3.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs"
                   >
                     <div className="flex items-start sm:items-center gap-3">
-                      <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-display font-black uppercase tracking-wider ${
-                          tx.type === 'signing'
-                            ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                            : 'bg-amber-100 text-amber-800 border border-amber-200'
-                        }`}
-                      >
-                        {tx.type}
-                      </span>
                       <div className="space-y-1">
-                        <div className="font-display font-black text-slate-900 text-sm">
+                        <Eyebrow>{tx.type.charAt(0).toUpperCase() + tx.type.slice(1).replace(/_/g, ' ')}</Eyebrow>
+                        <div className="font-display font-semibold text-slate-900 text-sm">
                           {tx.playerName} <span className="text-xs font-normal text-slate-500">({tx.position} • {tx.rating})</span>
                         </div>
-                        <div className="text-[10px] text-slate-500 font-medium inline-flex items-center gap-1 flex-wrap">
+                        <div className="text-xs text-slate-500 font-medium inline-flex items-center gap-1 flex-wrap">
                           <span>{tx.fromClubName}</span>
                           <IconArrowRight className="w-3 h-3 text-slate-400" />
                           <span>{tx.toClubName}</span>
                         </div>
-                        {/* Active Clauses / Add-Ons */}
-                        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                          {tx.sellOnPercent ? (
-                            <span className="bg-slate-100 text-slate-700 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border border-slate-200">
-                              {tx.sellOnPercent}% Sell-On
-                            </span>
-                          ) : null}
-                          {tx.appearanceMilestoneFee ? (
-                            <span className="bg-blue-50 text-blue-700 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border border-blue-200">
-                              +{formatCurrency(tx.appearanceMilestoneFee)} @ {tx.appearanceThreshold} Apps
-                            </span>
-                          ) : null}
-                          {tx.goalMilestoneFee ? (
-                            <span className="bg-blue-50 text-blue-700 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border border-blue-200">
-                              +{formatCurrency(tx.goalMilestoneFee)} @ {tx.goalThreshold} Goals/CS
-                            </span>
-                          ) : null}
-                          {tx.buyBackFee ? (
-                            <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border inline-flex items-center gap-1 ${
-                              tx.buyBackActive
-                                ? 'bg-amber-50 text-amber-800 border-amber-200'
-                                : 'bg-slate-100 text-slate-400 border-slate-200 line-through'
-                            }`}>
-                              <IconRefresh className="w-2.5 h-2.5" />
-                              <span>Buy-Back: {formatCurrency(tx.buyBackFee)} {tx.buyBackActive ? '(Active)' : '(Exercised/Expired)'}</span>
-                            </span>
-                          ) : null}
-                        </div>
+                        {(() => {
+                          const clauses = [
+                            tx.sellOnPercent ? `${tx.sellOnPercent}% sell-on` : null,
+                            tx.appearanceMilestoneFee
+                              ? `+${formatCurrency(tx.appearanceMilestoneFee)} at ${tx.appearanceThreshold} apps`
+                              : null,
+                            tx.goalMilestoneFee
+                              ? `+${formatCurrency(tx.goalMilestoneFee)} at ${tx.goalThreshold} goals/CS`
+                              : null,
+                            tx.buyBackFee
+                              ? `Buy-back ${formatCurrency(tx.buyBackFee)} (${tx.buyBackActive ? 'active' : 'exercised or expired'})`
+                              : null,
+                          ].filter(Boolean);
+                          return clauses.length > 0 ? (
+                            <p className="text-xs text-[var(--ink-muted)]">{clauses.join(' · ')}</p>
+                          ) : null;
+                        })()}
                       </div>
                     </div>
 
                     <div className="flex sm:flex-col items-start sm:items-end justify-between w-full sm:w-auto gap-2">
                       <div className="flex sm:flex-col items-center sm:items-end gap-0.5">
-                        <span className="font-display font-black text-blue-600 text-sm">
+                        <span className="font-display font-semibold text-blue-600 text-sm">
                           {formatCurrency(tx.fee)}
                         </span>
-                        <span className="text-[10px] font-mono text-slate-500">
+                        <span className="text-xs tabular-nums text-slate-500">
                           {formatCareerDate(tx.date, save.settings?.dateFormat)}
                         </span>
                       </div>
 
                       {tx.type === 'sale' && tx.buyBackActive && tx.buyBackFee && (
-                        <button
-                          type="button"
+                        <Button variant="secondary"
                           onClick={() => handleTriggerBuyBack(tx.playerId)}
                           disabled={!windowIsOpen || save.finances.transferBudget < tx.buyBackFee || save.squad.length >= MAX_SQUAD_SIZE}
                           title={
@@ -2104,11 +1981,11 @@ export function TransferHub({
                               ? 'Squad is at maximum size'
                               : undefined
                           }
-                          className="py-1.5 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-display font-black text-[10px] uppercase tracking-wider shadow-md shadow-amber-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-1.5 whitespace-nowrap"
+                          className="whitespace-nowrap"
                         >
                           <IconRefresh className="w-3 h-3" />
-                          <span>Trigger Buy-Back ({formatCurrency(tx.buyBackFee)})</span>
-                        </button>
+                          <span>Trigger buy-back ({formatCurrency(tx.buyBackFee)})</span>
+                        </Button>
                       )}
                     </div>
                   </div>
@@ -2129,38 +2006,20 @@ export function TransferHub({
                       key={tx.id}
                       className={`office-subcard p-3.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs border ${
                         isBlockbuster
-                          ? 'border-amber-300/80 bg-gradient-to-r from-amber-50/40 via-white to-transparent shadow-xs'
+                          ? 'border-amber-300/80'
                           : 'border-slate-200/90'
                       }`}
                     >
                       <div className="flex items-start sm:items-center gap-3">
-                        <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-display font-black uppercase tracking-wider inline-flex items-center gap-1 shrink-0 ${
-                            isBlockbuster
-                              ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                              : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
-                          }`}
-                        >
-                          {isBlockbuster ? (
-                            <>
-                              <IconStar className="w-3 h-3" filled />
-                              <span>Blockbuster</span>
-                            </>
-                          ) : (
-                            <>
-                              <IconGlobe className="w-3 h-3" />
-                              <span>World Deal</span>
-                            </>
-                          )}
-                        </span>
                         <div className="space-y-1">
-                          <div className="font-display font-black text-slate-900 text-sm">
+                          <Eyebrow>{isBlockbuster ? 'Blockbuster' : 'World deal'}</Eyebrow>
+                          <div className="font-display font-semibold text-slate-900 text-sm">
                             {tx.playerName}{' '}
                             <span className="text-xs font-normal text-slate-500">
                               ({tx.position} • {tx.rating} OVR)
                             </span>
                           </div>
-                          <div className="text-[11px] text-slate-600 font-medium inline-flex items-center gap-1 flex-wrap">
+                          <div className="text-xs text-slate-600 font-medium inline-flex items-center gap-1 flex-wrap">
                             <span className="font-bold text-slate-800">{tx.fromClubName}</span>
                             <IconArrowRight className="w-3 h-3 text-slate-400" />
                             <span className="font-bold text-blue-700">{tx.toClubName}</span>
@@ -2169,10 +2028,10 @@ export function TransferHub({
                       </div>
 
                       <div className="flex sm:flex-col items-start sm:items-end justify-between w-full sm:w-auto gap-1">
-                        <span className="font-display font-black text-[#1d5eff] text-sm">
+                        <span className="font-display font-semibold text-[#1d5eff] text-sm">
                           {formatCurrency(tx.fee)}
                         </span>
-                        <span className="text-[10px] font-mono text-slate-500 inline-flex items-center gap-1">
+                        <span className="text-xs tabular-nums text-slate-500 inline-flex items-center gap-1">
                           <IconCalendar className="w-3 h-3" />
                           <span>{formatCareerDate(tx.date, save.settings?.dateFormat)}</span>
                         </span>
@@ -2189,15 +2048,15 @@ export function TransferHub({
       {/* SUB-VIEW 5: BOARD ROOM (Board | Finances) */}
       {subTab === 'board' && (
         <section id="board-room-section" className="space-y-3 scroll-mt-20">
-          <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-slate-100 border border-slate-200/80" role="group" aria-label="Board view">
+          <div className="flex gap-1 border-b border-[var(--border-subtle)]" role="group" aria-label="Board view">
             {(['board', 'finances'] as const).map((view) => (
               <button
                 key={view}
                 type="button"
                 aria-pressed={boardView === view}
                 onClick={() => setBoardView(view)}
-                className={`min-h-10 rounded-lg text-xs font-display font-black uppercase tracking-wider cursor-pointer transition-colors ${
-                  boardView === view ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                className={`min-h-10 px-2.5 -mb-px text-xs font-semibold whitespace-nowrap cursor-pointer border-b-2 transition-colors ${
+                  boardView === view ? 'border-[var(--ink-primary)] text-[var(--ink-primary)]' : 'border-transparent text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
                 }`}
               >
                 {view === 'board' ? 'Board' : 'Finances'}
@@ -2210,9 +2069,9 @@ export function TransferHub({
               {/* Confidence + governance facts in one card */}
               <div className="office-floating-card p-3.5 sm:p-4 text-xs">
                 <div className="flex items-baseline justify-between gap-2 pb-2">
-                  <span className="font-display font-black uppercase text-slate-900 text-sm">Board Confidence</span>
+                  <span className="font-display font-semibold text-slate-900 text-sm">Board confidence</span>
                   <span
-                    className={`text-xl font-display font-black ${
+                    className={`text-xl font-display font-bold ${
                       boardStatus.confidence >= 75
                         ? 'text-emerald-600'
                         : boardStatus.confidence >= 50
@@ -2231,7 +2090,7 @@ export function TransferHub({
                   <div className="flex justify-between gap-3 py-1.5">
                     <dt className="text-slate-500">Job security</dt>
                     <dd
-                      className={`font-bold capitalize text-right ${
+                      className={`font-bold first-letter:uppercase text-right ${
                         boardStatus.status === 'secure'
                           ? 'text-emerald-700'
                           : boardStatus.status === 'stable'
@@ -2245,7 +2104,7 @@ export function TransferHub({
                   </div>
                   <div className="flex justify-between gap-3 py-1.5">
                     <dt className="text-slate-500">Warnings</dt>
-                    <dd className={`font-mono font-bold ${boardStatus.warningsCount > 0 ? 'text-rose-700' : 'text-slate-900'}`}>
+                    <dd className={`tabular-nums font-bold ${boardStatus.warningsCount > 0 ? 'text-rose-700' : 'text-slate-900'}`}>
                       {boardStatus.warningsCount}/3
                     </dd>
                   </div>
@@ -2256,20 +2115,20 @@ export function TransferHub({
               {save.managerCareer?.activeUltimatum?.status === 'active' && (
                 <section
                   aria-label="Board Ultimatum"
-                  className="office-floating-card p-3.5 border-2 border-rose-400 bg-rose-50/70 flex flex-wrap items-center justify-between gap-2"
+                  className="office-floating-card p-3.5 border border-rose-300 bg-rose-50/70 flex flex-wrap items-center justify-between gap-2"
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <IconAlert className="w-5 h-5 text-rose-600 shrink-0" />
                     <div className="min-w-0">
-                      <h4 className="font-display font-black text-xs sm:text-sm uppercase tracking-tight text-rose-800">
-                        Board Ultimatum
+                      <h4 className="font-display font-semibold text-xs sm:text-sm tracking-tight text-rose-800">
+                        Board ultimatum
                       </h4>
-                      <p className="text-[11px] text-rose-700">{save.managerCareer.activeUltimatum.reason}</p>
+                      <p className="text-xs text-rose-700">{save.managerCareer.activeUltimatum.reason}</p>
                     </div>
                   </div>
-                  <span className="px-2.5 py-1 rounded-xl bg-rose-600 text-white font-mono text-xs font-black">
-                    {save.managerCareer.activeUltimatum.pointsEarned} / {save.managerCareer.activeUltimatum.pointsRequired} PTS ({save.managerCareer.activeUltimatum.matchesRemaining} Left)
-                  </span>
+                  <Tag tone="danger">
+                    {save.managerCareer.activeUltimatum.pointsEarned} / {save.managerCareer.activeUltimatum.pointsRequired} pts ({save.managerCareer.activeUltimatum.matchesRemaining} left)
+                  </Tag>
                 </section>
               )}
 
@@ -2281,27 +2140,27 @@ export function TransferHub({
                 return (
                   <>
                     <section id="manager-career-section" className="office-floating-card p-3.5 sm:p-4 space-y-2.5 text-xs scroll-mt-20">
-                      <header className="flex flex-wrap items-center justify-between gap-2">
-                        <h4 className="text-sm font-display font-black text-slate-900 uppercase tracking-tight flex items-center gap-1.5">
-                          <IconTrophy className="w-4 h-4 text-amber-600 shrink-0" />
-                          <span>Manager Standing</span>
-                        </h4>
-                        <span className="font-mono font-bold text-slate-700">
-                          Rep {mc.reputation}/100 &bull; {formatCurrency(mc.weeklySalary)}/wk
-                        </span>
-                      </header>
+                      <SectionHeader
+                        as="h4"
+                        title="Manager standing"
+                        action={
+                          <span className="text-xs text-[var(--ink-secondary)] tabular-nums">
+                            Rep {mc.reputation}/100 &bull; {formatCurrency(mc.weeklySalary)}/wk
+                          </span>
+                        }
+                      />
 
                       <ul className="divide-y divide-slate-100 border-t border-slate-100">
                         {mc.tenures.map((tenure, i) => (
                           <li key={`${tenure.clubId}_${i}`} className="py-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5">
                             <div className="min-w-0">
-                              <span className="font-display font-black text-slate-900">{tenure.clubName}</span>
-                              <span className="text-[11px] font-mono text-slate-500 block">
+                              <span className="font-display font-semibold text-slate-900">{tenure.clubName}</span>
+                              <span className="text-xs tabular-nums text-slate-500 block">
                                 {formatCareerDate(tenure.startDate, save.settings.dateFormat)} –{' '}
                                 {tenure.endDate ? formatCareerDate(tenure.endDate, save.settings.dateFormat) : 'now'}
                               </span>
                             </div>
-                            <div className="flex items-center gap-2.5 font-mono text-[11px] text-slate-700">
+                            <div className="flex items-center gap-2.5 tabular-nums text-xs text-slate-700">
                               <span>{tenure.matchesManaged}P</span>
                               <span className="text-emerald-700 font-bold">{tenure.wins}W</span>
                               <span>{tenure.draws}D</span>
@@ -2316,16 +2175,16 @@ export function TransferHub({
                       </ul>
 
                       {mc.accolades.length === 0 ? (
-                        <p className="text-[11px] text-slate-500">No accolades yet.</p>
+                        <p className="text-xs text-slate-500">No accolades yet.</p>
                       ) : (
                         <ul className="space-y-1.5">
                           {mc.accolades.map((acc) => (
                             <li key={acc.id} className="flex items-start gap-1.5">
                               <IconMedal className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
                               <span className="min-w-0">
-                                <span className="font-display font-black text-amber-900">{acc.title}</span>
-                                <span className="font-mono text-[11px] text-amber-700"> {acc.seasonLabel}</span>
-                                <span className="text-[11px] text-slate-600 block">{acc.summary}</span>
+                                <span className="font-display font-semibold text-amber-900">{acc.title}</span>
+                                <span className="tabular-nums text-xs text-amber-700"> {acc.seasonLabel}</span>
+                                <span className="text-xs text-slate-600 block">{acc.summary}</span>
                               </span>
                             </li>
                           ))}
@@ -2334,10 +2193,7 @@ export function TransferHub({
                     </section>
 
                     <section id="job-offers-section" className="office-floating-card p-3.5 sm:p-4 space-y-2.5 scroll-mt-20">
-                      <h4 className="text-sm font-display font-black text-slate-900 uppercase tracking-tight flex items-center gap-1.5">
-                        <IconBriefcase className="w-4 h-4 text-slate-700 shrink-0" />
-                        <span>Job Offers</span>
-                      </h4>
+                      <SectionHeader as="h4" title="Job offers" />
 
                       {pendingJobOffers.length === 0 ? (
                         <p className="text-xs text-slate-500">No approaches from other clubs right now.</p>
@@ -2349,56 +2205,51 @@ export function TransferHub({
                                 <div className="flex items-center gap-2 min-w-0">
                                   <span className="w-3 h-8 rounded-full shrink-0" style={{ backgroundColor: offer.primaryColor }} />
                                   <div className="min-w-0">
-                                    <h5 className="font-display font-black text-sm text-slate-900 truncate">{offer.clubName}</h5>
-                                    <div className="text-[11px] font-mono text-slate-500 uppercase">
-                                      {offer.clubTier} Tier &bull; Rep {offer.clubReputation}
+                                    <h5 className="font-display font-semibold text-sm text-slate-900 truncate">{offer.clubName}</h5>
+                                    <div className="text-xs tabular-nums text-slate-500">
+                                      {offer.clubTier} tier &bull; Rep {offer.clubReputation}
                                     </div>
                                   </div>
                                 </div>
                                 {offer.isEmergencyRebound && (
-                                  <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-800">
-                                    Rebound
-                                  </span>
+                                  <Tag tone="warning">Rebound</Tag>
                                 )}
                               </div>
 
                               <p className="text-xs text-slate-600 leading-relaxed">{offer.pitchMessage}</p>
 
-                              <p className="text-[11px] font-mono text-slate-600">
+                              <p className="text-xs tabular-nums text-slate-600">
                                 Budget <span className="font-bold text-blue-700">{formatCurrency(offer.transferBudget)}</span> &bull; Salary{' '}
                                 <span className="font-bold text-emerald-700">{formatCurrency(offer.managerWeeklySalary)}/wk</span>
                               </p>
 
                               <div className="flex flex-wrap gap-2">
-                                <button
-                                  type="button"
+                                <Button variant="primary"
                                   onClick={() => {
                                     const res = acceptManagerJobOffer(save, offer.id);
                                     if (res.success) {
                                       onUpdateSave(res.updatedSave);
-                                      onNotification?.(`Joined ${offer.clubName}! Welcome to your new club.`);
+                                      onNotification?.(`Joined ${offer.clubName}. Welcome to your new club.`);
                                     } else if (res.error) {
                                       onNotification?.(res.error);
                                     }
                                   }}
-                                  className="flex-1 min-h-10 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-display font-black text-[11px] uppercase tracking-wider cursor-pointer transition-colors motion-reduce:transition-none"
+                                  className="flex-1"
                                 >
-                                  Accept &amp; Join
-                                </button>
+                                  Accept &amp; join
+                                </Button>
                                 {!offer.isEmergencyRebound && (
-                                  <button
-                                    type="button"
+                                  <Button variant="secondary"
                                     onClick={() => {
                                       const res = declineManagerJobOffer(save, offer.id);
                                       if (res.success) {
                                         onUpdateSave(res.updatedSave);
-                                        onNotification?.(`Declined ${offer.clubName} (+4% Board Trust for Loyalty).`);
+                                        onNotification?.(`Declined ${offer.clubName} (+4% board trust for loyalty).`);
                                       }
                                     }}
-                                    className="min-h-10 px-3 rounded-xl border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 font-display font-bold text-[11px] uppercase tracking-wider cursor-pointer transition-colors motion-reduce:transition-none"
                                   >
-                                    Decline (+4% Trust)
-                                  </button>
+                                    Decline (+4% trust)
+                                  </Button>
                                 )}
                               </div>
                             </article>
@@ -2412,10 +2263,7 @@ export function TransferHub({
 
               {/* Board petitions: one row each */}
               <section className="office-floating-card p-3.5 sm:p-4 space-y-1">
-                <h4 className="text-sm font-display font-black text-slate-900 uppercase tracking-tight flex items-center gap-1.5">
-                  <IconBuilding className="w-4 h-4 text-slate-700 shrink-0" />
-                  <span>Board Petitions</span>
-                </h4>
+                <SectionHeader as="h4" title="Board petitions" />
                 {(() => {
                   const isDeadline = Boolean(
                     save.deadlineDayState?.isActive || isTransferDeadlineDay(save.season.currentDate, save.season.yearStart)
@@ -2464,16 +2312,15 @@ export function TransferHub({
                           <span className="shrink-0">{p.icon}</span>
                           <span className="flex-1 min-w-0">
                             <span className="text-xs font-bold text-slate-900 block">{p.title}</span>
-                            <span className="text-[11px] text-slate-500 block truncate">{p.note}</span>
+                            <span className="text-xs text-slate-500 block truncate">{p.note}</span>
                           </span>
-                          <button
-                            type="button"
+                          <Button variant="secondary"
                             onClick={() => handleOpenPetitionModal(p.type)}
                             disabled={!p.enabled}
-                            className="min-h-10 px-3 rounded-xl font-display font-black text-[11px] uppercase tracking-wider cursor-pointer shrink-0 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 disabled:cursor-not-allowed"
+                            className="shrink-0"
                           >
                             Petition
-                          </button>
+                          </Button>
                         </li>
                       ))}
                     </ul>
@@ -2487,34 +2334,34 @@ export function TransferHub({
             <>
               {/* Transfer / wage budget split */}
               <section className="office-floating-card p-3.5 sm:p-4 space-y-3">
-                <div className="flex items-baseline justify-between gap-2">
-                  <h4 className="text-sm font-display font-black text-slate-900 uppercase tracking-tight flex items-center gap-1.5">
-                    <IconScale className="w-4 h-4 text-slate-700 shrink-0" />
-                    <span>Budget Split</span>
-                  </h4>
-                  <span className="text-[11px] font-mono text-slate-500">
-                    Pool {formatCurrency(budgetBounds.totalFlexibleFund)}
-                  </span>
-                </div>
+                <SectionHeader
+                  as="h4"
+                  title="Budget split"
+                  action={
+                    <span className="text-xs text-[var(--ink-muted)] tabular-nums">
+                      Pool {formatCurrency(budgetBounds.totalFlexibleFund)}
+                    </span>
+                  }
+                />
 
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div>
-                    <span className="text-slate-500 font-bold uppercase text-[10px] block">Transfers</span>
-                    <span className="text-lg font-display font-black text-blue-600 block leading-tight">
+                    <span className="text-slate-500 font-bold text-xs block">Transfers</span>
+                    <span className="text-lg font-display font-semibold text-blue-600 block leading-tight">
                       {formatCurrency(allocatedTransferBudget)}
                     </span>
                     {allocatedTransferBudget !== save.finances.transferBudget && (
-                      <span className={`text-[11px] font-mono font-bold ${allocatedTransferBudget > save.finances.transferBudget ? 'text-emerald-600' : 'text-amber-600'}`}>
+                      <span className={`text-xs tabular-nums font-bold ${allocatedTransferBudget > save.finances.transferBudget ? 'text-emerald-600' : 'text-amber-600'}`}>
                         {allocatedTransferBudget > save.finances.transferBudget ? '+' : ''}{formatCurrency(allocatedTransferBudget - save.finances.transferBudget)}
                       </span>
                     )}
                   </div>
                   <div className="text-right">
-                    <span className="text-slate-500 font-bold uppercase text-[10px] block">Weekly wage cap</span>
-                    <span className="text-lg font-display font-black text-slate-900 block leading-tight">
+                    <span className="text-slate-500 font-bold text-xs block">Weekly wage cap</span>
+                    <span className="text-lg font-display font-semibold text-slate-900 block leading-tight">
                       {formatWage(derivedWeeklyWage)}
                     </span>
-                    <span className={`text-[11px] font-mono font-bold ${derivedWeeklySpare > 0 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                    <span className={`text-xs tabular-nums font-bold ${derivedWeeklySpare > 0 ? 'text-emerald-600' : 'text-slate-400'}`}>
                       {derivedWeeklySpare > 0 ? `+${formatWage(derivedWeeklySpare)} spare` : 'At cap'}
                     </span>
                   </div>
@@ -2534,9 +2381,9 @@ export function TransferHub({
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex flex-wrap gap-1">
                     {[
-                      { label: 'Max Wages', value: 0 },
+                      { label: 'Max wages', value: 0 },
                       { label: '50/50', value: Math.round((budgetBounds.totalFlexibleFund * 0.5) / 50_000) * 50_000 },
-                      { label: 'Max Transfers', value: budgetBounds.maxTransferBudget },
+                      { label: 'Max transfers', value: budgetBounds.maxTransferBudget },
                       { label: 'Reset', value: save.finances.transferBudget },
                     ].map((preset) => (
                       <button
@@ -2544,43 +2391,37 @@ export function TransferHub({
                         type="button"
                         onClick={() => setAllocatedTransferBudget(preset.value)}
                         disabled={preset.label === 'Reset' && allocatedTransferBudget === save.finances.transferBudget}
-                        className="min-h-9 px-2 rounded-lg bg-white hover:bg-slate-100 text-slate-700 font-mono text-[11px] font-bold border border-slate-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="min-h-9 px-2 rounded-lg bg-white hover:bg-slate-100 text-slate-700 tabular-nums text-xs font-bold border border-slate-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         {preset.label}
                       </button>
                     ))}
                   </div>
-                  <button
-                    type="button"
+                  <Button variant="primary"
                     onClick={handleApplyBudgetReallocation}
                     disabled={allocatedTransferBudget === save.finances.transferBudget}
-                    className="min-h-10 px-3 rounded-xl my11-btn-gradient hover:opacity-95 text-white font-display font-black text-[11px] uppercase tracking-wider shadow-sm shadow-blue-500/20 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
                   >
                     <IconSave className="w-3.5 h-3.5" />
                     <span>Apply</span>
-                  </button>
+                  </Button>
                 </div>
               </section>
 
               {/* Season statement */}
               <section className="office-floating-card p-3.5 sm:p-4 space-y-3.5 text-xs">
-                <header className="flex items-center justify-between gap-2">
-                  <h4 className="text-sm font-display font-black text-slate-900 uppercase tracking-tight flex items-center gap-1.5">
-                    <IconBarChart className="w-4 h-4 text-blue-600 shrink-0" />
-                    <span>Season Finances</span>
-                  </h4>
-                  <span
-                    className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full font-mono border ${
-                      financialHealth.psrStatus === 'exceptional' || financialHealth.psrStatus === 'healthy'
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                        : financialHealth.psrStatus === 'warning'
-                        ? 'bg-amber-50 text-amber-800 border-amber-200'
-                        : 'bg-rose-50 text-rose-800 border-rose-200'
-                    }`}
-                  >
-                    PSR: {financialHealth.psrLabel}
-                  </span>
-                </header>
+                <SectionHeader
+                  as="h4"
+                  title="Season finances"
+                  action={
+                    financialHealth.psrStatus === 'exceptional' || financialHealth.psrStatus === 'healthy' ? (
+                      <span className="text-xs text-[var(--ink-muted)]">PSR: {financialHealth.psrLabel}</span>
+                    ) : (
+                      <Tag tone={financialHealth.psrStatus === 'warning' ? 'warning' : 'danger'}>
+                        PSR: {financialHealth.psrLabel}
+                      </Tag>
+                    )
+                  }
+                />
 
                 <dl className="grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-2">
                   {[
@@ -2590,8 +2431,8 @@ export function TransferHub({
                     { label: 'Net profit', value: `${ledger.netProfit >= 0 ? '+' : ''}${formatCurrency(ledger.netProfit)}`, tone: ledger.netProfit >= 0 ? 'text-emerald-600' : 'text-rose-600' },
                   ].map((kpi) => (
                     <div key={kpi.label}>
-                      <dt className="text-[10px] uppercase font-bold text-slate-500">{kpi.label}</dt>
-                      <dd className={`text-base font-display font-black ${kpi.tone}`}>{kpi.value}</dd>
+                      <dt className="text-xs font-bold text-slate-500">{kpi.label}</dt>
+                      <dd className={`text-base font-display font-semibold ${kpi.tone}`}>{kpi.value}</dd>
                     </div>
                   ))}
                 </dl>
@@ -2600,7 +2441,7 @@ export function TransferHub({
                 <div className="space-y-1 border-t border-slate-100 pt-3">
                   <div className="flex items-baseline justify-between gap-2">
                     <span className="font-bold text-slate-800">Wages vs turnover</span>
-                    <span className="font-mono font-black text-blue-600">{financialHealth.wageToTurnoverRatio}%</span>
+                    <span className="tabular-nums font-semibold text-blue-600">{financialHealth.wageToTurnoverRatio}%</span>
                   </div>
                   <div className="relative w-full h-3 bg-slate-200 rounded-full overflow-hidden">
                     <div
@@ -2615,9 +2456,9 @@ export function TransferHub({
                       }`}
                       style={{ width: `${Math.min(100, financialHealth.wageToTurnoverRatio)}%` }}
                     />
-                    <div className="absolute top-0 bottom-0 w-0.5 bg-slate-900 z-10" style={{ left: '70%' }} title="70% PSR target" />
+                    <div className="absolute top-0 bottom-0 w-0.5 bg-[var(--ink-primary)] z-10" style={{ left: '70%' }} title="70% PSR target" />
                   </div>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-xs text-slate-500">
                     Target 70% &bull; Payroll {formatCurrency(financialHealth.annualWageBill)} of {formatCurrency(financialHealth.projectedAnnualTurnover)} turnover
                   </p>
                 </div>
@@ -2627,7 +2468,6 @@ export function TransferHub({
                   {[
                     {
                       title: 'Revenue',
-                      tone: 'text-emerald-800',
                       sign: '',
                       valueTone: 'text-slate-900',
                       rows: [
@@ -2640,7 +2480,6 @@ export function TransferHub({
                     },
                     {
                       title: 'Expenses',
-                      tone: 'text-rose-800',
                       sign: '-',
                       valueTone: 'text-rose-700',
                       rows: [
@@ -2652,12 +2491,12 @@ export function TransferHub({
                     },
                   ].map((group) => (
                     <div key={group.title}>
-                      <h5 className={`font-display font-black text-xs uppercase ${group.tone}`}>{group.title}</h5>
+                      <h5 className="text-xs font-semibold text-[var(--ink-secondary)]">{group.title}</h5>
                       <dl className="divide-y divide-slate-100">
                         {group.rows.map(([label, amount]) => (
                           <div key={label} className="flex justify-between gap-2 py-1">
                             <dt className="text-slate-600">{label}</dt>
-                            <dd className={`font-mono font-bold ${group.valueTone}`}>
+                            <dd className={`tabular-nums font-bold ${group.valueTone}`}>
                               {group.sign}{formatCurrency(amount)}
                             </dd>
                           </div>
@@ -2668,7 +2507,7 @@ export function TransferHub({
                 </div>
                 <div className="flex justify-between gap-2 border-t border-slate-100 pt-2">
                   <span className="font-bold text-slate-800">Projected season-end balance</span>
-                  <span className={`font-mono font-bold ${financialHealth.projectedEndBalance >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                  <span className={`tabular-nums font-bold ${financialHealth.projectedEndBalance >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
                     {formatCurrency(financialHealth.projectedEndBalance)}
                   </span>
                 </div>
@@ -2676,10 +2515,7 @@ export function TransferHub({
 
               {/* Transaction ledger: latest 5, rest on demand */}
               <section className="office-floating-card p-3.5 sm:p-4 space-y-1 text-xs">
-                <h4 className="text-sm font-display font-black text-slate-900 uppercase tracking-tight flex items-center gap-1.5">
-                  <IconReceipt className="w-4 h-4 text-slate-700 shrink-0" />
-                  <span>Transactions</span>
-                </h4>
+                <SectionHeader as="h4" title="Transactions" />
 
                 {transactions.length === 0 ? (
                   <p className="text-slate-500 py-2">No transactions yet this season.</p>
@@ -2693,11 +2529,11 @@ export function TransferHub({
                             {renderTransactionCategoryIcon(tx.category, isIncome)}
                             <span className="flex-1 min-w-0">
                               <span className="font-bold text-slate-900 block truncate">{tx.description}</span>
-                              <span className="text-[11px] text-slate-500 font-mono block">
+                              <span className="text-xs text-slate-500 tabular-nums block">
                                 {formatCareerDate(tx.date, save.settings.dateFormat)}
                               </span>
                             </span>
-                            <span className={`font-mono font-bold shrink-0 ${isIncome ? 'text-emerald-700' : 'text-rose-700'}`}>
+                            <span className={`tabular-nums font-bold shrink-0 ${isIncome ? 'text-emerald-700' : 'text-rose-700'}`}>
                               {isIncome ? '+' : '-'}{formatCurrency(tx.amount)}
                             </span>
                           </li>
@@ -2710,7 +2546,7 @@ export function TransferHub({
                         aria-expanded={ledgerShowAll}
                         aria-controls="finance-ledger-rows"
                         onClick={() => setLedgerShowAll(!ledgerShowAll)}
-                        className="w-full min-h-10 text-[11px] font-bold text-blue-700 hover:text-blue-900 cursor-pointer inline-flex items-center justify-center gap-1"
+                        className="w-full min-h-10 text-xs font-bold text-blue-700 hover:text-blue-900 cursor-pointer inline-flex items-center justify-center gap-1"
                       >
                         <span>{ledgerShowAll ? 'Show fewer' : `Show all (${Math.min(15, transactions.length)})`}</span>
                         {ledgerShowAll ? <IconChevronUp className="w-3 h-3" /> : <IconChevronDown className="w-3 h-3" />}
@@ -2731,7 +2567,7 @@ export function TransferHub({
           {scoutingFeedback && (
             <div
               role="status"
-              className={`p-3 rounded-2xl text-xs font-bold flex items-center justify-between gap-2 border ${
+              className={`p-3 rounded-xl text-xs font-bold flex items-center justify-between gap-2 border ${
                 scoutingFeedback.type === 'success'
                   ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
                   : 'bg-rose-50 text-rose-800 border-rose-200'
@@ -2754,9 +2590,9 @@ export function TransferHub({
             const active = (save.scoutingState?.activeMissions || []).filter((m) => !m.completed);
             return (
               <div className="office-floating-card p-3.5 sm:p-4 text-xs">
-                <h4 className="text-sm font-display font-black uppercase tracking-tight text-[#0b1536] flex items-center justify-between gap-2">
-                  <span>Scouts in the Field</span>
-                  <span className="font-mono text-slate-500 text-xs">{active.length}/3</span>
+                <h4 className="text-sm font-display font-semibold tracking-tight text-[#0b1536] flex items-center justify-between gap-2">
+                  <span>Scouts in the field</span>
+                  <span className="tabular-nums text-slate-500 text-xs">{active.length}/3</span>
                 </h4>
                 {active.length === 0 ? (
                   <p className="text-slate-500 pt-1">None deployed.</p>
@@ -2769,11 +2605,11 @@ export function TransferHub({
                           <RegionBadge code={regionConfig?.flag} />
                           <span className="flex-1 min-w-0">
                             <span className="font-bold text-slate-900 block truncate">{regionConfig?.name || mission.region}</span>
-                            <span className="text-[11px] text-slate-500 block truncate capitalize">
+                            <span className="text-xs text-slate-500 block truncate first-letter:uppercase">
                               {mission.targetProfile.replace(/_/g, ' ')} &bull; {mission.scoutName}
                             </span>
                           </span>
-                          <span className="font-mono font-bold text-blue-700 shrink-0">
+                          <span className="tabular-nums font-bold text-blue-700 shrink-0">
                             {formatCareerDate(mission.completionDate, save.settings.dateFormat)}
                           </span>
                         </li>
@@ -2787,8 +2623,8 @@ export function TransferHub({
 
           {/* Mission Dispatch */}
           <div className="office-floating-card p-3.5 sm:p-4 space-y-3 bg-white">
-            <h4 className="text-sm font-display font-black uppercase tracking-tight text-[#0b1536]">
-              Send a Scout
+            <h4 className="text-sm font-display font-semibold tracking-tight text-[#0b1536]">
+              Send a scout
             </h4>
 
             {/* Region Selector */}
@@ -2817,29 +2653,29 @@ export function TransferHub({
                   >
                     <span className="flex items-center gap-1.5">
                       <RegionBadge code={config.flag} />
-                      <span className="font-display font-black text-xs text-[#0b1536] leading-tight">{config.name}</span>
+                      <span className="font-display font-semibold text-xs text-[#0b1536] leading-tight">{config.name}</span>
                     </span>
-                    <span className="text-[11px] font-mono text-slate-600 block">
+                    <span className="text-xs tabular-nums text-slate-600 block">
                       {isUnderway ? 'Deployed' : `${formatCurrency(config.cost)} • ${config.durationDays} days`}
                     </span>
                   </button>
                 );
               })}
             </div>
-            <p className="text-[11px] text-slate-500">{SCOUTING_REGIONS[selectedScoutingRegion]?.description}</p>
+            <p className="text-xs text-slate-500">{SCOUTING_REGIONS[selectedScoutingRegion]?.description}</p>
 
             {/* Target Profile Chips & Action */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100">
               <div className="space-y-1">
-                <span className="text-[10px] uppercase font-bold text-slate-500 block tracking-wider">
+                <span className="text-xs font-bold text-slate-500 block">
                   Looking for
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {[
                     { id: 'wonderkid', label: 'Wonderkids (U21)' },
-                    { id: 'starter', label: 'First-Team Starters' },
-                    { id: 'bargain_expiring', label: 'Bargains & Expiring' },
-                    { id: 'physical_power', label: 'Pace & Power' },
+                    { id: 'starter', label: 'First-team starters' },
+                    { id: 'bargain_expiring', label: 'Bargains & expiring' },
+                    { id: 'physical_power', label: 'Pace & power' },
                   ].map((p) => {
                     const isSelected = selectedScoutingProfile === p.id;
                     return (
@@ -2848,7 +2684,7 @@ export function TransferHub({
                         key={p.id}
                         onClick={() => setSelectedScoutingProfile(p.id as ScoutingTargetProfile)}
                         aria-pressed={isSelected}
-                        className={`px-2.5 min-h-9 rounded-xl text-[11px] font-display font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        className={`px-2.5 min-h-9 rounded-xl text-xs font-display font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                           isSelected
                             ? 'bg-blue-600 text-white shadow-2xs'
                             : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
@@ -2863,23 +2699,19 @@ export function TransferHub({
               </div>
 
               {/* Commission Button */}
-              <button
-                type="button"
+              <Button variant="primary"
                 onClick={handleAuthorizeScoutingMission}
-                className="min-h-10 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-display font-black text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto sm:self-end active:scale-95 shrink-0"
+                className="w-full sm:w-auto sm:self-end shrink-0"
               >
                 <IconPlane className="w-4 h-4" />
-                <span>Deploy Scout ({formatCurrency(SCOUTING_REGIONS[selectedScoutingRegion]?.cost || 300_000)})</span>
-              </button>
+                <span>Deploy scout ({formatCurrency(SCOUTING_REGIONS[selectedScoutingRegion]?.cost || 300_000)})</span>
+              </Button>
             </div>
           </div>
 
           {/* Completed Intelligence Dossiers */}
           <div className="space-y-4">
-            <h4 className="text-xs font-display font-black uppercase tracking-wider text-[#0b1536] flex items-center gap-1.5">
-              <IconDocument className="w-4 h-4 text-blue-600 shrink-0" />
-              <span>Scout Reports</span>
-            </h4>
+            <SectionHeader as="h4" title="Scout reports" />
 
             {(save.scoutingState?.scoutingDossiers || []).length === 0 ? (
               <p className="text-xs text-slate-500">No reports filed yet.</p>
@@ -2890,17 +2722,17 @@ export function TransferHub({
                   return (
                     <div
                       key={dossier.id}
-                      className="office-floating-card rounded-3xl p-3.5 sm:p-4 border border-slate-200/90 bg-white shadow-sm space-y-3"
+                      className="office-floating-card rounded-xl p-3.5 sm:p-4 border border-slate-200/90 bg-white shadow-sm space-y-3"
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
                           <RegionBadge code={regConfig?.flag} />
                           <div>
-                            <h5 className="font-display font-black text-sm text-[#0b1536]">
+                            <h5 className="font-display font-semibold text-sm text-[#0b1536]">
                               {regConfig?.name || dossier.region}
                             </h5>
-                            <span className="text-[10px] text-slate-500 font-medium">
-                              <span className="capitalize">{dossier.targetProfile.replace(/_/g, ' ')}</span> • {dossier.scoutName} • {formatCareerDate(dossier.date, save.settings.dateFormat)}
+                            <span className="text-xs text-slate-500 font-medium">
+                              <span className="inline-block first-letter:uppercase">{dossier.targetProfile.replace(/_/g, ' ')}</span> • {dossier.scoutName} • {formatCareerDate(dossier.date, save.settings.dateFormat)}
                             </span>
                           </div>
                         </div>
@@ -2915,49 +2747,45 @@ export function TransferHub({
                           return (
                             <div
                               key={prospect.playerId}
-                              className="pt-3 border-t border-slate-100 md:border md:border-slate-200/90 md:rounded-2xl md:p-3 flex flex-col justify-between space-y-2.5"
+                              className="pt-3 border-t border-slate-100 md:border md:border-slate-200/90 md:rounded-xl md:p-3 flex flex-col justify-between space-y-2.5"
                             >
                               <div className="space-y-2">
                                 <div className="flex justify-between items-start gap-1">
                                   <div>
-                                    <h6 className="font-display font-black text-sm text-[#0b1536] leading-tight">
+                                    <h6 className="font-display font-semibold text-sm text-[#0b1536] leading-tight">
                                       {prospect.name}
                                     </h6>
-                                    <span className="text-[10px] text-slate-500 font-medium">
+                                    <span className="text-xs text-slate-500 font-medium">
                                       {prospect.position} • Age {prospect.age} • {prospect.club}
                                     </span>
                                   </div>
                                   <div className="text-right shrink-0">
-                                    <span className="px-1.5 py-0.5 rounded font-display font-black text-xs bg-blue-100 text-blue-900 border border-blue-200">
-                                      {prospect.rating} OVR
-                                    </span>
-                                    <span className="text-[10px] text-slate-500 block font-mono mt-0.5">
-                                      Pot: {prospect.potential}
-                                    </span>
+                                    <span className="text-xs font-semibold text-[var(--ink-primary)] block">{prospect.rating} OVR</span>
+                                    <span className="text-xs text-[var(--ink-muted)] block">POT {prospect.potential}</span>
                                   </div>
                                 </div>
 
-                                <p className="text-[11px] text-slate-600 leading-snug line-clamp-2">
+                                <p className="text-xs text-slate-600 leading-snug line-clamp-2">
                                   {prospect.scoutNotes}
                                 </p>
 
                                 {/* Pros & Cons Tags */}
                                 <div className="space-y-1">
                                   {prospect.pros.slice(0, 1).map((pro, idx) => (
-                                    <div key={idx} className="text-[10px] text-emerald-700 font-semibold flex items-center gap-1">
+                                    <div key={idx} className="text-xs text-emerald-700 font-semibold flex items-center gap-1">
                                       <IconCheck className="w-3 h-3 text-emerald-600 shrink-0" />
                                       <span className="truncate">{pro}</span>
                                     </div>
                                   ))}
                                   {prospect.cons.slice(0, 1).map((con, idx) => (
-                                    <div key={idx} className="text-[10px] text-rose-600 font-medium flex items-center gap-1">
+                                    <div key={idx} className="text-xs text-rose-600 font-medium flex items-center gap-1">
                                       <IconClose className="w-3 h-3 text-rose-500 shrink-0" />
                                       <span className="truncate">{con}</span>
                                     </div>
                                   ))}
                                 </div>
 
-                                <div className="pt-2 border-t border-slate-200/80 flex justify-between items-center text-xs font-mono">
+                                <div className="pt-2 border-t border-slate-200/80 flex justify-between items-center text-xs tabular-nums">
                                   <span className="text-slate-500">Val: <strong className="text-slate-800">{formatCurrency(prospect.estimatedValue)}</strong></span>
                                   <span className="text-slate-500">Wage: <strong className="text-slate-800">{formatWage(prospect.wageWeekly)}</strong></span>
                                 </div>
@@ -2968,7 +2796,7 @@ export function TransferHub({
                                 <button
                                   type="button"
                                   onClick={() => handleToggleShortlist(prospect.playerId)}
-                                  className={`py-1.5 px-2 rounded-xl text-[10px] font-display font-black uppercase tracking-wider transition-colors cursor-pointer border inline-flex items-center justify-center gap-1 ${
+                                  className={`min-h-10 px-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer border inline-flex items-center justify-center gap-1 ${
                                     isShortlisted
                                       ? 'bg-amber-100 text-amber-900 border-amber-300'
                                       : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
@@ -2984,8 +2812,7 @@ export function TransferHub({
                                   )}
                                 </button>
 
-                                <button
-                                  type="button"
+                                <Button variant="secondary"
                                   onClick={() => {
                                     const marketMatch = marketPlayers.find(
                                       (m) => m.id === prospect.playerId || m.name === prospect.name
@@ -3011,11 +2838,10 @@ export function TransferHub({
                                       setNegotiatingPlayer(customMarketPlayer);
                                     }
                                   }}
-                                  className="py-1.5 px-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-[10px] font-display font-black uppercase tracking-wider transition-all cursor-pointer shadow-2xs inline-flex items-center justify-center gap-1"
                                 >
                                   <IconBriefcase className="w-3 h-3" />
                                   <span>Bid</span>
-                                </button>
+                                </Button>
                               </div>
                             </div>
                           );
@@ -3043,11 +2869,8 @@ export function TransferHub({
             if (activeProjects.length === 0) return null;
 
             return (
-              <div className="office-floating-card rounded-2xl p-3.5 sm:p-4 border border-amber-300 bg-amber-50/60 text-xs">
-                <h4 className="font-display font-black text-sm text-amber-950 uppercase tracking-tight flex items-center gap-1.5">
-                  <IconBuilding className="w-4 h-4 text-amber-700 shrink-0" />
-                  <span>Under Construction</span>
-                </h4>
+              <div className="office-floating-card rounded-xl p-3.5 sm:p-4 border border-amber-300 bg-amber-50/60 text-xs">
+                <SectionHeader as="h4" title="Under construction" />
                 <ul className="divide-y divide-amber-200/70">
                   {activeProjects.map((project) => {
                     const startMs = new Date(project.startDate).getTime();
@@ -3064,7 +2887,7 @@ export function TransferHub({
                           <span className="font-bold text-slate-900 min-w-0 truncate">
                             {project.facilityName} (Tier {project.targetLevel})
                           </span>
-                          <span className="font-mono font-bold text-amber-900 shrink-0">{daysLeft} days left</span>
+                          <span className="tabular-nums font-bold text-amber-900 shrink-0">{daysLeft} days left</span>
                         </div>
                         <div
                           className="w-full bg-white rounded-full h-2 overflow-hidden border border-amber-200"
@@ -3075,7 +2898,7 @@ export function TransferHub({
                           aria-label={`${project.facilityName} construction progress`}
                         >
                           <div
-                            className="bg-gradient-to-r from-amber-500 to-orange-500 h-2 rounded-full transition-all duration-500 motion-reduce:transition-none"
+                            className="bg-amber-500 h-2 rounded-full transition-all duration-500 motion-reduce:transition-none"
                             style={{ width: `${progressPct}%` }}
                           />
                         </div>
@@ -3115,14 +2938,14 @@ export function TransferHub({
               return (
                 <article
                   key={type}
-                  className="office-floating-card rounded-3xl p-3.5 sm:p-4 border border-slate-200/90 bg-white shadow-xs space-y-2.5 text-xs"
+                  className="office-floating-card rounded-xl p-3.5 sm:p-4 border border-slate-200/90 bg-white shadow-xs space-y-2.5 text-xs"
                 >
                   <header className="flex items-center gap-2.5">
                     <FacilityIcon type={type} className="w-5 h-5 text-slate-700 shrink-0" />
-                    <h4 className="font-display font-black text-sm text-slate-900 leading-tight flex-1 min-w-0">
+                    <h4 className="font-display font-semibold text-sm text-slate-900 leading-tight flex-1 min-w-0">
                       {meta.name}
                     </h4>
-                    <span className="font-mono font-bold text-slate-700 shrink-0">Tier {currentLvl}/5</span>
+                    <span className="text-xs text-[var(--ink-muted)] shrink-0 tabular-nums">Tier {currentLvl}/5</span>
                   </header>
 
                   <div className="flex items-center gap-1.5 w-full" aria-hidden="true">
@@ -3159,65 +2982,49 @@ export function TransferHub({
                     )}
                   </button>
                   {perksOpen && (
-                    <ul id={`facility-perks-${type}`} className="space-y-1 text-emerald-800">
+                    <ul id={`facility-perks-${type}`} className="divide-y divide-[var(--border-subtle)] text-[var(--ink-secondary)]">
                       {(currentTierConfig?.benefits || []).map((benefit, idx) => (
-                        <li key={idx} className="flex items-start gap-1.5">
-                          <IconCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                          <span>{benefit}</span>
-                        </li>
+                        <li key={idx} className="py-1">{benefit}</li>
                       ))}
                     </ul>
                   )}
 
                   {/* Next tier is the call to action */}
                   {activeProject ? (
-                    <p className="border-t border-slate-100 pt-2.5 font-bold text-amber-800 flex items-center gap-1.5">
-                      <IconBuilding className="w-3.5 h-3.5 shrink-0" />
-                      <span>Tier {activeProject.targetLevel} under construction, ready {activeProject.completionDate}</span>
+                    <p className="border-t border-[var(--border-subtle)] pt-2.5 font-medium text-amber-800">
+                      Tier {activeProject.targetLevel} under construction, ready {activeProject.completionDate}
                     </p>
                   ) : nextTierConfig ? (
                     <div className="border-t border-slate-100 pt-2.5 space-y-2">
                       <div className="flex items-baseline justify-between gap-2">
-                        <span className="font-display font-black text-indigo-950">Next: {nextTierConfig.name}</span>
-                        <span className="font-mono text-slate-500 shrink-0">{nextTierConfig.constructionDays} days</span>
+                        <span className="font-semibold text-[var(--ink-primary)]">Next: {nextTierConfig.name}</span>
+                        <span className="text-[var(--ink-muted)] shrink-0 tabular-nums">{nextTierConfig.constructionDays} days</span>
                       </div>
-                      <ul className="space-y-1 text-indigo-900">
+                      <ul className="divide-y divide-[var(--border-subtle)] text-[var(--ink-secondary)]">
                         {nextTierConfig.benefits.map((b, idx) => (
-                          <li key={idx} className="flex items-start gap-1.5">
-                            <IconSparkles className="w-3.5 h-3.5 text-indigo-600 shrink-0 mt-0.5" />
-                            <span>{b}</span>
-                          </li>
+                          <li key={idx} className="py-1">{b}</li>
                         ))}
                       </ul>
-                      <button
-                        type="button"
+                      <Button variant="secondary" fullWidth
                         disabled={!canAfford}
                         onClick={() => {
                           const res = commissionFacilityUpgrade(save, type);
                           if (res.success) {
                             onUpdateSave(res.updatedSave);
                             if (onNotification) {
-                              onNotification(`Commissioned expansion of ${meta.name} (Tier ${nextLvl})!`);
+                              onNotification(`Commissioned expansion of ${meta.name} (Tier ${nextLvl}).`);
                             }
                           } else if (res.error && onNotification) {
                             onNotification(res.error);
                           }
                         }}
-                        className={`w-full min-h-10 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer ${
-                          canAfford
-                            ? 'bg-gradient-to-r from-indigo-700 to-blue-700 hover:from-indigo-600 hover:to-blue-600 text-white shadow-sm'
-                            : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
-                        }`}
                       >
                         <span>{canAfford ? `Upgrade to Tier ${nextLvl}` : 'Cannot afford'}</span>
-                        <span className="font-mono">{formatCurrency(nextTierConfig.cost)}</span>
-                      </button>
+                        <span className="tabular-nums">{formatCurrency(nextTierConfig.cost)}</span>
+                      </Button>
                     </div>
                   ) : (
-                    <p className="border-t border-slate-100 pt-2.5 font-bold text-emerald-800 flex items-center gap-1.5">
-                      <IconTrophy className="w-3.5 h-3.5 shrink-0" />
-                      <span>Maximum tier reached</span>
-                    </p>
+                    <p className="border-t border-[var(--border-subtle)] pt-2.5 text-[var(--ink-muted)]">Maximum tier reached</p>
                   )}
                 </article>
               );
@@ -3226,17 +3033,11 @@ export function TransferHub({
 
           {/* Completed Construction History Ledger */}
           {(save.infrastructure?.completedProjectsHistory || []).length > 0 && (
-            <div className="office-floating-card rounded-3xl p-3.5 sm:p-4 border border-slate-200/90 bg-white space-y-1">
-              <h4 className="font-display font-black text-sm text-slate-900 uppercase tracking-tight flex items-center gap-2">
-                <IconDocument className="w-4 h-4 text-slate-700 shrink-0" />
-                <span>Completed Projects</span>
-              </h4>
+            <div className="office-floating-card rounded-xl p-3.5 sm:p-4 border border-slate-200/90 bg-white space-y-1">
+              <SectionHeader as="h4" title="Completed projects" />
               <div className="divide-y divide-slate-100">
                 {save.infrastructure?.completedProjectsHistory?.map((entry, idx) => (
-                  <div key={idx} className="py-1.5 text-xs text-slate-700 flex items-center gap-2">
-                    <IconCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    <span>{entry}</span>
-                  </div>
+                  <div key={idx} className="py-1.5 text-xs text-[var(--ink-secondary)]">{entry}</div>
                 ))}
               </div>
             </div>
@@ -3262,18 +3063,15 @@ export function TransferHub({
 
         return (
           <section id="transfer-feeder-section" className="space-y-3 scroll-mt-20" aria-label="Continental Feeder Club Network">
-            <p className="text-xs text-slate-600 font-mono px-1">
+            <p className="text-xs text-slate-600 tabular-nums px-1">
               <span className="font-bold text-slate-900">{network.partnerships.length}/{maxSlots}</span> affiliates &bull;{' '}
               <span className="font-bold text-slate-900">{network.activeLoans.length}</span> on loan &bull;{' '}
               <span className="font-bold text-slate-900">{formatWage(weeklySaved)}</span> saved
             </p>
 
             {/* Quick Loan Dispatch Console */}
-            <section className="office-floating-card rounded-3xl p-3.5 sm:p-4 space-y-3 border border-slate-200/90">
-              <h4 className="font-display font-black text-sm uppercase tracking-tight text-slate-900 flex items-center gap-2">
-                <IconPlane className="w-4 h-4 text-blue-600 shrink-0" />
-                <span>Send Player on Loan</span>
-              </h4>
+            <section className="office-floating-card rounded-xl p-3.5 sm:p-4 space-y-3 border border-slate-200/90">
+              <SectionHeader as="h4" title="Send player on loan" />
               {network.partnerships.length === 0 ? (
                 <p className="text-xs text-slate-500">
                   Sign a partner club below first.
@@ -3281,8 +3079,8 @@ export function TransferHub({
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
                   <div className="space-y-1">
-                    <label htmlFor="feeder-club-select" className="text-[10px] font-bold uppercase text-slate-500 block">
-                      Partner Club
+                    <label htmlFor="feeder-club-select" className="text-xs font-bold text-slate-500 block">
+                      Partner club
                     </label>
                     <select
                       id="feeder-club-select"
@@ -3302,7 +3100,7 @@ export function TransferHub({
                   </div>
 
                   <div className="space-y-1">
-                    <label htmlFor="feeder-player-select" className="text-[10px] font-bold uppercase text-slate-500 block">
+                    <label htmlFor="feeder-player-select" className="text-xs font-bold text-slate-500 block">
                       Player
                     </label>
                     <select
@@ -3319,8 +3117,7 @@ export function TransferHub({
                     </select>
                   </div>
 
-                  <button
-                    type="button"
+                  <Button variant="primary"
                     disabled={!activePartnerClubId || !activePlayerId}
                     onClick={() => {
                       const res = sendPlayerToFeederClub(save, activePlayerId, activePartnerClubId);
@@ -3331,35 +3128,31 @@ export function TransferHub({
                         onNotification?.(res.error);
                       }
                     }}
-                    className="py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-display font-black text-xs uppercase tracking-wider cursor-pointer transition-colors motion-reduce:transition-none"
                   >
-                    Send on Loan
-                  </button>
+                    Send on loan
+                  </Button>
                 </div>
               )}
             </section>
 
             {/* Active Feeder Loans Progression Tracker */}
             {network.activeLoans.length > 0 && (
-              <section className="office-floating-card rounded-3xl p-4 sm:p-6 space-y-3 border border-slate-200/90">
-                <h4 className="font-display font-black text-sm uppercase tracking-tight text-slate-900 flex items-center gap-2">
-                  <IconTrendingUp className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Players on Loan</span>
-                </h4>
+              <section className="office-floating-card rounded-xl p-4 sm:p-6 space-y-3 border border-slate-200/90">
+                <SectionHeader as="h4" title="Players on loan" />
                 <div className="divide-y divide-slate-100">
                   {network.activeLoans.map((loan) => (
                     <article key={loan.id} className="py-2.5 space-y-2">
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <h5 className="font-display font-black text-sm text-slate-900">
+                          <h5 className="font-display font-semibold text-sm text-slate-900">
                             {loan.playerName}{' '}
-                            <span className="text-[11px] font-mono text-blue-600">({loan.position})</span>
+                            <span className="text-xs tabular-nums text-blue-600">({loan.position})</span>
                           </h5>
-                          <p className="text-[11px] text-slate-500">
+                          <p className="text-xs text-slate-500">
                             On loan at <strong className="text-slate-700">{loan.feederClubName}</strong>
                           </p>
                         </div>
-                        <span className="px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 font-mono text-xs font-black inline-flex items-center gap-1">
+                        <span className="text-xs font-semibold text-emerald-700 tabular-nums inline-flex items-center gap-1 shrink-0">
                           <span>{loan.ratingAtDeparture}</span>
                           <IconArrowRight className="w-3 h-3" />
                           <span>{loan.currentRating} OVR{loan.ovrGained > 0 ? ` (+${loan.ovrGained})` : ''}</span>
@@ -3367,7 +3160,7 @@ export function TransferHub({
                       </div>
 
                       <div className="space-y-1">
-                        <div className="flex justify-between text-[10px] font-mono text-slate-500">
+                        <div className="flex justify-between text-xs tabular-nums text-slate-500">
                           <span>Progress to +1 OVR</span>
                           <span>{loan.xpAccumulated}%</span>
                         </div>
@@ -3379,10 +3172,9 @@ export function TransferHub({
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between text-[11px] font-mono text-slate-600 pt-1">
-                        <span>{loan.appearances} Apps • {loan.goals}G • {loan.assists}A</span>
-                        <button
-                          type="button"
+                      <div className="flex items-center justify-between text-xs tabular-nums text-slate-600 pt-1">
+                        <span>{loan.appearances} apps • {loan.goals}G • {loan.assists}A</span>
+                        <Button variant="secondary" size="sm"
                           onClick={() => {
                             const res = recallPlayerFromFeederClub(save, loan.playerId);
                             if (res.success) {
@@ -3392,10 +3184,9 @@ export function TransferHub({
                               onNotification?.(res.error);
                             }
                           }}
-                          className="px-3 py-1.5 rounded-xl border border-slate-300 bg-slate-50 hover:bg-slate-100 font-display font-bold text-[10px] uppercase tracking-wider text-slate-800 cursor-pointer"
                         >
-                          Recall to Squad
-                        </button>
+                          Recall to squad
+                        </Button>
                       </div>
                     </article>
                   ))}
@@ -3405,8 +3196,8 @@ export function TransferHub({
 
             {/* Global Partner Club Catalog */}
             <section className="space-y-3">
-              <h4 className="font-display font-black text-sm uppercase tracking-tight text-slate-900">
-                Partner Clubs
+              <h4 className="font-display font-semibold text-sm tracking-tight text-slate-900">
+                Partner clubs
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {AVAILABLE_FEEDER_CLUBS.map((club) => {
@@ -3414,7 +3205,7 @@ export function TransferHub({
                   return (
                     <article
                       key={club.id}
-                      className={`office-floating-card rounded-3xl p-3.5 space-y-2 border ${
+                      className={`office-floating-card rounded-xl p-3.5 space-y-2 border ${
                         isPartnered ? 'border-emerald-300 bg-emerald-50/20' : 'border-slate-200/90 bg-white'
                       }`}
                     >
@@ -3422,28 +3213,27 @@ export function TransferHub({
                         <div className="flex items-center gap-2.5 min-w-0">
                           <RegionBadge code={club.crestEmoji} />
                           <div className="min-w-0">
-                            <h5 className="font-display font-black text-sm text-slate-900 truncate">
+                            <h5 className="font-display font-semibold text-sm text-slate-900 truncate">
                               {club.name}
                             </h5>
-                            <div className="text-[10px] font-mono text-slate-500">
+                            <div className="text-xs tabular-nums text-slate-500">
                               {club.leagueName} • Tier {club.tierStrength}
                             </div>
                           </div>
                         </div>
-                        <span className="px-2 py-0.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 font-mono text-[11px] font-black shrink-0">
+                        <span className="text-xs text-[var(--ink-secondary)] tabular-nums shrink-0">
                           {club.developmentMultiplier.toFixed(2)}x XP
                         </span>
                       </div>
 
-                      <p className="text-[11px] text-slate-600">{club.specialties.join(' • ')}</p>
+                      <p className="text-xs text-slate-600">{club.specialties.join(' • ')}</p>
 
                       <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
-                        <span className="text-xs font-mono font-bold text-slate-700">
+                        <span className="text-xs tabular-nums font-bold text-slate-700">
                           Fee: {formatCurrency(club.annualPartnershipFee)}/yr
                         </span>
                         {isPartnered ? (
-                          <button
-                            type="button"
+                          <Button variant="danger"
                             onClick={() => {
                               const res = terminateFeederPartnership(save, club.id);
                               if (res.success) {
@@ -3451,26 +3241,23 @@ export function TransferHub({
                                 onNotification?.(`Partnership with ${club.name} terminated.`);
                               }
                             }}
-                            className="px-3 py-1.5 rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-700 font-display font-bold text-[11px] uppercase tracking-wider cursor-pointer"
                           >
-                            Terminate Link
-                          </button>
+                            Terminate link
+                          </Button>
                         ) : (
-                          <button
-                            type="button"
+                          <Button variant="secondary"
                             onClick={() => {
                               const res = establishFeederPartnership(save, club.id);
                               if (res.success) {
                                 onUpdateSave(res.updatedSave);
-                                onNotification?.(`Signed affiliate deal with ${club.name}!`);
+                                onNotification?.(`Signed affiliate deal with ${club.name}.`);
                               } else if (res.error) {
                                 onNotification?.(res.error);
                               }
                             }}
-                            className="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-blue-700 text-white font-display font-black text-[11px] uppercase tracking-wider cursor-pointer transition-colors motion-reduce:transition-none"
                           >
-                            Sign Partnership
-                          </button>
+                            Sign partnership
+                          </Button>
                         )}
                       </div>
                     </article>
@@ -3489,43 +3276,42 @@ export function TransferHub({
 
         return (
           <section id="transfer-media-section" className="space-y-3 scroll-mt-20" aria-label="Press Room and Media Mind Games">
-            <header className="office-floating-card rounded-3xl p-3.5 sm:p-4 border border-slate-200/90 space-y-2.5 text-xs">
+            <header className="office-floating-card rounded-xl p-3.5 sm:p-4 border border-slate-200/90 space-y-2.5 text-xs">
               <div className="flex items-baseline justify-between gap-2">
-                <h3 className="text-sm font-display font-black text-slate-900 uppercase tracking-tight">Media Standing</h3>
-                <span className="font-mono font-black text-blue-700">{press.mediaRelationshipScore}/100</span>
+                <h3 className="text-sm font-display font-semibold text-slate-900 tracking-tight">Media standing</h3>
+                <span className="tabular-nums font-semibold text-blue-700">{press.mediaRelationshipScore}/100</span>
               </div>
               {press.mindGamesBuffNextMatch && (
                 <p className="text-indigo-800 font-bold">Next match: {press.mindGamesBuffNextMatch.description}</p>
               )}
               {(!activeConf || activeConf.answered) && (
-                <button
-                  type="button"
+                <Button variant="primary"
                   onClick={() => {
                     const updated = generatePreMatchMindGamesPressConference(save);
                     onUpdateSave(updated);
-                    onNotification?.('Journalists assembled for Pre-Match Mind-Games briefing!');
+                    onNotification?.('Journalists assembled for the pre-match briefing.');
                   }}
-                  className="w-full sm:w-auto min-h-10 px-4 rounded-xl bg-slate-900 hover:bg-blue-700 text-white font-display font-black text-xs uppercase tracking-wider cursor-pointer transition-colors motion-reduce:transition-none"
+                  className="w-full sm:w-auto"
                 >
-                  Hold Pre-Match Briefing
-                </button>
+                  Hold pre-match briefing
+                </Button>
               )}
             </header>
 
             {/* Active Conference Prompt */}
             {activeConf && !activeConf.answered && (
-              <section className="office-floating-card rounded-3xl p-4 sm:p-6 border-2 border-indigo-300 bg-indigo-50/30 space-y-4">
+              <section className="office-floating-card rounded-xl p-4 sm:p-6 border border-indigo-300 bg-[var(--surface-card)] space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-100 pb-3">
                   <div>
-                    <span className="text-[10px] font-mono font-bold uppercase text-indigo-700">
+                    <span className="text-xs tabular-nums font-bold text-indigo-700">
                       {activeConf.outlet} • {activeConf.journalistName}
                     </span>
-                    <h4 className="font-display font-black text-base text-slate-900 mt-1">
+                    <h4 className="font-display font-semibold text-base text-slate-900 mt-1">
                       &ldquo;{activeConf.question}&rdquo;
                     </h4>
                   </div>
                   {activeConf.scoreline && (
-                    <span className="px-2.5 py-1 rounded-xl bg-slate-900 text-white font-mono text-xs font-black">
+                    <span className="text-xs text-[var(--ink-secondary)] tabular-nums">
                       {activeConf.matchOutcome} {activeConf.scoreline} vs {activeConf.opponentClubName}
                     </span>
                   )}
@@ -3549,24 +3335,24 @@ export function TransferHub({
                           onNotification?.(res.error);
                         }
                       }}
-                      className="text-left office-subcard p-4 rounded-2xl border border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50/30 space-y-2 cursor-pointer transition-all motion-reduce:transition-none"
+                      className="text-left office-subcard p-4 rounded-xl border border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50/30 space-y-2 cursor-pointer transition-all motion-reduce:transition-none"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-display font-black text-xs uppercase text-blue-700">
+                        <span className="font-display font-semibold text-xs text-blue-700">
                           {opt.label}
                         </span>
-                        <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-slate-100 text-slate-600">
-                          {opt.tone.replace('_', ' ')}
+                        <span className="text-xs text-[var(--ink-muted)] inline-block first-letter:uppercase shrink-0">
+                          {opt.tone.replace(/_/g, ' ')}
                         </span>
                       </div>
                       <p className="text-xs text-slate-700 italic leading-relaxed">{opt.quote}</p>
-                      <div className="flex flex-wrap gap-2 text-[10px] font-mono text-slate-500 pt-1">
+                      <div className="flex flex-wrap gap-2 text-xs tabular-nums text-slate-500 pt-1">
                         <span>Morale {opt.moraleDelta >= 0 ? `+${opt.moraleDelta}` : opt.moraleDelta}</span>
                         <span>• Board {opt.boardConfidenceDelta >= 0 ? `+${opt.boardConfidenceDelta}` : opt.boardConfidenceDelta}%</span>
                         <span>• Media {opt.mediaRelationDelta >= 0 ? `+${opt.mediaRelationDelta}` : opt.mediaRelationDelta}</span>
                         {opt.mindGamesEffect && (
                           <span className="text-indigo-700 font-bold">
-                            • +{opt.mindGamesEffect.attackBonus}% Mind Games
+                            • +{opt.mindGamesEffect.attackBonus}% mind games
                           </span>
                         )}
                       </div>
@@ -3577,11 +3363,8 @@ export function TransferHub({
             )}
 
             {/* Back-Page Headlines Archive */}
-            <section className="office-floating-card rounded-3xl p-4 sm:p-6 space-y-3 border border-slate-200/90">
-              <h4 className="font-display font-black text-sm uppercase tracking-tight text-slate-900 flex items-center gap-2">
-                <IconNewspaper className="w-4 h-4 text-slate-700 shrink-0" />
-                <span>Headlines</span>
-              </h4>
+            <section className="office-floating-card rounded-xl p-4 sm:p-6 space-y-3 border border-slate-200/90">
+              <SectionHeader as="h4" title="Headlines" />
               {press.mediaHistory.length === 0 ? (
                 <p className="text-xs text-slate-500">
                   No headlines yet.
@@ -3591,14 +3374,14 @@ export function TransferHub({
                   {press.mediaHistory.map((item) => (
                     <article key={item.id} className="py-2.5 space-y-1">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="text-[10px] font-mono font-bold uppercase text-blue-700">
+                        <span className="text-xs tabular-nums font-bold text-blue-700">
                           {item.outlet} • {formatCareerDate(item.date, save.settings.dateFormat)}
                         </span>
-                        <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                        <span className="text-xs font-medium text-emerald-700">
                           {item.impactSummary}
                         </span>
                       </div>
-                      <h5 className="font-display font-black text-sm text-slate-900">{item.headline}</h5>
+                      <h5 className="font-display font-semibold text-sm text-slate-900">{item.headline}</h5>
                       <p className="text-xs text-slate-600 italic">{item.quote}</p>
                     </article>
                   ))}
@@ -3638,16 +3421,13 @@ export function TransferHub({
         >
           <div
             data-office-ui="true"
-            className="office-floating-card rounded-3xl max-w-sm sm:max-w-md w-full p-4 sm:p-5 space-y-3.5 shadow-2xl relative my-auto border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 max-h-[90dvh] overflow-y-auto scrollbar-none"
+            className="office-floating-card rounded-xl max-w-sm sm:max-w-md w-full p-4 sm:p-5 space-y-3.5 shadow-sm relative my-auto border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 max-h-[90dvh] overflow-y-auto scrollbar-none"
             onClick={(e) => e.stopPropagation()}
           >
             <header className="flex justify-between items-center border-b border-slate-100 pb-3 gap-2">
               <div className="min-w-0">
-                <span className="font-display font-black text-xs uppercase tracking-wider text-cyan-600 inline-flex items-center gap-1.5">
-                  <IconHandshake className="w-3.5 h-3.5" />
-                  <span>Loan Out</span>
-                </span>
-                <h3 className="text-lg font-display font-black text-slate-900 uppercase truncate">
+                <Eyebrow>Loan out</Eyebrow>
+                <h3 className="text-lg font-display font-semibold text-slate-900 truncate">
                   {loaningOutPlayer.name}
                 </h3>
               </div>
@@ -3666,13 +3446,13 @@ export function TransferHub({
               <span>
                 {loaningOutPlayer.position} &bull; {loaningOutPlayer.rating} OVR &bull; {loaningOutPlayer.age}y
               </span>
-              <span className="font-bold font-mono text-cyan-700">{formatWage(loaningOutPlayer.wageWeekly)}</span>
+              <span className="font-bold tabular-nums text-cyan-700">{formatWage(loaningOutPlayer.wageWeekly)}</span>
             </p>
 
             <div className="space-y-3 text-xs">
               <div className="space-y-1">
-                <label className="block text-slate-700 font-bold uppercase text-[10px]">
-                  Destination Club
+                <label className="block text-slate-700 font-bold text-xs">
+                  Destination club
                 </label>
                 <select
                   value={loanOutDestinationClub}
@@ -3691,8 +3471,8 @@ export function TransferHub({
 
               <div className="space-y-1">
                 <div className="flex justify-between font-bold text-slate-700">
-                  <span>Wages Paid by Them</span>
-                  <span className="font-mono text-cyan-600">{loanOutWagePercent}%</span>
+                  <span>Wages paid by them</span>
+                  <span className="tabular-nums text-cyan-600">{loanOutWagePercent}%</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   {[50, 75, 100].map((pct) => (
@@ -3702,7 +3482,7 @@ export function TransferHub({
                       onClick={() => setLoanOutWagePercent(pct)}
                       className={`py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         loanOutWagePercent === pct
-                          ? 'bg-cyan-600 text-white font-black shadow-xs'
+                          ? 'bg-cyan-600 text-white font-semibold shadow-xs'
                           : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                       }`}
                     >
@@ -3710,28 +3490,25 @@ export function TransferHub({
                     </button>
                   ))}
                 </div>
-                <span className="text-[10px] text-slate-500 block">
+                <span className="text-xs text-slate-500 block">
                   Saves you {formatWage(Math.round((loaningOutPlayer.wageWeekly || 0) * (loanOutWagePercent / 100)))} a week.
                 </span>
               </div>
             </div>
 
             <div className="flex gap-2 pt-2">
-              <button
-                type="button"
+              <Button variant="secondary"
                 onClick={() => setLoaningOutPlayer(null)}
-                className="py-3 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 uppercase tracking-wider cursor-pointer shadow-xs"
               >
                 Cancel
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button variant="primary"
                 onClick={handleConfirmLoanOut}
                 disabled={!windowIsOpen}
-                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:opacity-95 text-white font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-cyan-500/20 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex-1"
               >
-                {!windowIsOpen ? 'Transfer Window Closed' : 'Confirm Season Loan'}
-              </button>
+                {!windowIsOpen ? 'Transfer window closed' : 'Confirm season loan'}
+              </Button>
             </div>
           </div>
         </div>
@@ -3754,24 +3531,13 @@ export function TransferHub({
         >
           <div
             data-office-ui="true"
-            className="office-floating-card rounded-3xl max-w-sm sm:max-w-md w-full p-4 sm:p-5 space-y-3.5 shadow-2xl relative my-auto border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 max-h-[90dvh] sm:max-h-[85vh] overflow-y-auto scrollbar-none"
+            className="office-floating-card rounded-xl max-w-sm sm:max-w-md w-full p-4 sm:p-5 space-y-3.5 shadow-sm relative my-auto border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 max-h-[90dvh] sm:max-h-[85vh] overflow-y-auto scrollbar-none"
             onClick={(e) => e.stopPropagation()}
           >
             <header className="flex justify-between items-center border-b border-slate-100 pb-3 gap-2">
               <div className="min-w-0">
-                <span className={`font-display font-black text-xs uppercase tracking-wider inline-flex items-center gap-1.5 ${
-                  negotiatingPlayer.isLegend ? 'text-amber-600' : 'text-blue-600'
-                }`}>
-                  {negotiatingPlayer.isLegend ? (
-                    <>
-                      <IconCrown className="w-3.5 h-3.5" />
-                      <span>Icon Bid</span>
-                    </>
-                  ) : (
-                    <span>Make an Offer</span>
-                  )}
-                </span>
-                <h3 className="text-lg font-display font-black text-slate-900 uppercase truncate">
+                <Eyebrow>{negotiatingPlayer.isLegend ? 'Icon bid' : 'Make an offer'}</Eyebrow>
+                <h3 className="text-lg font-display font-semibold text-slate-900 truncate">
                   {negotiatingPlayer.name}
                 </h3>
               </div>
@@ -3794,12 +3560,12 @@ export function TransferHub({
               const isLoan = Boolean(negotiatingPlayer.loanListed);
 
               return (
-                <div className="flex flex-wrap gap-1 p-1 bg-slate-100 rounded-2xl shadow-inner">
+                <div className="flex flex-wrap gap-1 p-1 bg-[var(--surface-subcard)] rounded-lg border border-[var(--border-subtle)]">
                   {!isFA && (
                     <button
                       type="button"
                       onClick={() => setDealType('buy')}
-                      className={`flex-1 py-1.5 px-2 rounded-xl font-display font-black text-[10.5px] uppercase tracking-wider transition-all cursor-pointer ${
+                      className={`flex-1 py-1.5 px-2 rounded-xl font-display font-semibold text-xs transition-all cursor-pointer ${
                         dealType === 'buy'
                           ? 'bg-white text-blue-600 shadow-xs'
                           : 'text-slate-600 hover:text-slate-900'
@@ -3809,10 +3575,7 @@ export function TransferHub({
                     </button>
                   )}
                   {isFA && (
-                    <div className="flex-1 py-1.5 px-2 rounded-xl font-display font-black text-[10.5px] uppercase tracking-wider text-center bg-emerald-500 text-white shadow-xs inline-flex items-center justify-center gap-1">
-                      <IconSparkles className="w-3 h-3 shrink-0" />
-                      <span>Free Agent (No Fee)</span>
-                    </div>
+                    <p className="flex-1 py-1.5 px-2 text-xs font-medium text-center text-[var(--ink-secondary)]">Free agent (no fee)</p>
                   )}
                   {isExp && !isFA && (
                     <button
@@ -3820,11 +3583,11 @@ export function TransferHub({
                       disabled={!canBosmanNow}
                       onClick={() => canBosmanNow && setDealType('pre_contract')}
                       title={canBosmanNow ? 'Approach for free Bosman pre-contract' : 'Bosman approaches open January 1 (6 months before expiry)'}
-                      className={`flex-1 py-1.5 px-2 rounded-xl font-display font-black text-[10.5px] uppercase tracking-wider transition-all inline-flex items-center justify-center gap-1 ${
+                      className={`flex-1 py-1.5 px-2 rounded-xl font-display font-semibold text-xs transition-all inline-flex items-center justify-center gap-1 ${
                         !canBosmanNow
                           ? 'text-slate-400 bg-slate-200/60 cursor-not-allowed'
                           : dealType === 'pre_contract'
-                          ? 'bg-white text-amber-600 shadow-xs font-black cursor-pointer'
+                          ? 'bg-white text-amber-600 shadow-xs font-semibold cursor-pointer'
                           : 'text-slate-600 hover:text-slate-900 cursor-pointer'
                       }`}
                     >
@@ -3836,14 +3599,14 @@ export function TransferHub({
                     <button
                       type="button"
                       onClick={() => setDealType('loan')}
-                      className={`flex-1 py-1.5 px-2 rounded-xl font-display font-black text-[10.5px] uppercase tracking-wider transition-all cursor-pointer inline-flex items-center justify-center gap-1 ${
+                      className={`flex-1 py-1.5 px-2 rounded-xl font-display font-semibold text-xs transition-all cursor-pointer inline-flex items-center justify-center gap-1 ${
                         dealType === 'loan'
-                          ? 'bg-white text-cyan-600 shadow-xs font-black'
+                          ? 'bg-white text-cyan-600 shadow-xs font-semibold'
                           : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
                       <IconHandshake className="w-3 h-3 shrink-0" />
-                      <span>Season Loan</span>
+                      <span>Season loan</span>
                     </button>
                   )}
                 </div>
@@ -3862,7 +3625,7 @@ export function TransferHub({
                 <span className="truncate">{getClubDisplayName(negotiatingPlayer.club)}</span>
                 <span className="shrink-0">
                   Value{' '}
-                  <span className={`font-bold font-mono ${negotiatingPlayer.isLegend ? 'text-amber-700' : 'text-blue-600'}`}>
+                  <span className={`font-bold tabular-nums ${negotiatingPlayer.isLegend ? 'text-amber-700' : 'text-blue-600'}`}>
                     {formatCurrency(negotiatingPlayer.value)}
                   </span>
                 </span>
@@ -3874,10 +3637,7 @@ export function TransferHub({
               const pref = getPlayerPreferredTerms(negotiatingPlayer as unknown as CareerPlayer);
               return (
                 <div className="text-xs">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 font-display inline-flex items-center gap-1.5">
-                    <IconTarget className="w-3.5 h-3.5" />
-                    <span>Player Demands</span>
-                  </span>
+                  <Eyebrow>Player demands</Eyebrow>
                   <dl className="grid grid-cols-2 gap-x-4 gap-y-0.5 pt-1">
                     {[
                       ['Wage', formatWage(pref.preferredWageWeekly)],
@@ -3888,7 +3648,7 @@ export function TransferHub({
                     ].map(([label, value]) => (
                       <div key={label} className="flex justify-between gap-2">
                         <dt className="text-slate-500">{label}</dt>
-                        <dd className="font-bold text-slate-900 font-mono capitalize">{value}</dd>
+                        <dd className="font-bold text-slate-900 tabular-nums first-letter:uppercase">{value}</dd>
                       </div>
                     ))}
                   </dl>
@@ -3899,22 +3659,19 @@ export function TransferHub({
             {/* Detailed Negotiation Inputs */}
             <div className="space-y-4 text-xs">
               {dealType === 'pre_contract' && (
-                <p className="text-[11px] text-amber-800 font-medium flex items-center gap-1.5">
+                <p className="text-xs text-amber-800 font-medium flex items-center gap-1.5">
                   <IconClock className="w-3.5 h-3.5 shrink-0" />
                   <span>No fee. Player joins on 1 July.</span>
                 </p>
               )}
 
               {dealType === 'loan' && (
-                <div className="p-3.5 rounded-2xl bg-cyan-50/90 border border-cyan-200 text-cyan-950 text-xs space-y-3 shadow-2xs">
-                  <div className="font-bold flex items-center gap-1.5 text-cyan-900">
-                    <IconHandshake className="w-3.5 h-3.5 shrink-0" />
-                    <span className="font-display uppercase tracking-wide">Season-Long Loan Deal</span>
-                  </div>
+                <div className="text-xs space-y-3">
+                  <Eyebrow>Season-long loan deal</Eyebrow>
                   <div className="space-y-1">
-                    <div className="flex justify-between text-[11px] font-bold text-slate-700">
-                      <span>Loan Fee:</span>
-                      <span className="font-mono text-cyan-700 font-bold">{formatCurrency(loanFeeInput)}</span>
+                    <div className="flex justify-between text-xs font-bold text-slate-700">
+                      <span>Loan fee</span>
+                      <span className="tabular-nums text-cyan-700 font-bold">{formatCurrency(loanFeeInput)}</span>
                     </div>
                     <input
                       type="range"
@@ -3927,9 +3684,9 @@ export function TransferHub({
                     />
                   </div>
                   <div className="space-y-1">
-                    <div className="flex justify-between text-[11px] font-bold text-slate-700">
-                      <span>Wage Contribution ({loanWageContributionPercent}%):</span>
-                      <span className="font-mono text-cyan-700 font-bold">
+                    <div className="flex justify-between text-xs font-bold text-slate-700">
+                      <span>Wage contribution ({loanWageContributionPercent}%)</span>
+                      <span className="tabular-nums text-cyan-700 font-bold">
                         {formatWage(Math.round(negotiatingPlayer.wageDemand * (loanWageContributionPercent / 100)))}
                       </span>
                     </div>
@@ -3944,9 +3701,9 @@ export function TransferHub({
                     />
                   </div>
                   <div className="space-y-1">
-                    <div className="flex justify-between text-[11px] font-bold text-slate-700">
-                      <span>Future Purchase Option:</span>
-                      <span className="font-mono text-cyan-700 font-bold">{formatCurrency(loanBuyOptionInput)}</span>
+                    <div className="flex justify-between text-xs font-bold text-slate-700">
+                      <span>Future purchase option</span>
+                      <span className="tabular-nums text-cyan-700 font-bold">{formatCurrency(loanBuyOptionInput)}</span>
                     </div>
                     <input
                       type="range"
@@ -3966,8 +3723,8 @@ export function TransferHub({
                   {/* Transfer Base Fee */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-slate-700 font-bold">
-                      <span>Transfer Fee</span>
-                      <span className="font-mono text-blue-600 font-black">{formatCurrency(offeredFee)}</span>
+                      <span>Transfer fee</span>
+                      <span className="tabular-nums text-blue-600 font-semibold">{formatCurrency(offeredFee)}</span>
                     </div>
                     <input
                       type="range"
@@ -3978,7 +3735,7 @@ export function TransferHub({
                       onChange={(e) => setOfferedFee(Number(e.target.value))}
                       className="w-full accent-blue-600 cursor-pointer"
                     />
-                    <div className="flex justify-between text-[10px] text-slate-500">
+                    <div className="flex justify-between text-xs text-slate-500">
                       <span>Min: {formatCurrency(negotiatingPlayer.value * 0.5)}</span>
                       <span>Demand: {formatCurrency(negotiatingPlayer.value)}</span>
                       <span>Max: {formatCurrency(negotiatingPlayer.value * 2.0)}</span>
@@ -3988,9 +3745,9 @@ export function TransferHub({
                   {/* Structured Add-Ons & Sell-on Clause */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <div className="flex justify-between text-slate-600 text-[11px] font-bold">
+                      <div className="flex justify-between text-slate-600 text-xs font-bold">
                         <span>Add-ons</span>
-                        <span className="font-mono text-slate-800">{formatCurrency(offeredAddOnFee)}</span>
+                        <span className="tabular-nums text-slate-800">{formatCurrency(offeredAddOnFee)}</span>
                       </div>
                       <input
                         type="range"
@@ -4004,9 +3761,9 @@ export function TransferHub({
                     </div>
 
                     <div className="space-y-1">
-                      <div className="flex justify-between text-slate-600 text-[11px] font-bold">
+                      <div className="flex justify-between text-slate-600 text-xs font-bold">
                         <span>Sell-on</span>
-                        <span className="font-mono text-slate-800">{offeredSellOnClause}%</span>
+                        <span className="tabular-nums text-slate-800">{offeredSellOnClause}%</span>
                       </div>
                       <input
                         type="range"
@@ -4027,8 +3784,8 @@ export function TransferHub({
                   {/* Weekly Wage Offer */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-slate-700 font-bold">
-                      <span>Weekly Wage</span>
-                      <span className="font-mono text-blue-600 font-black">{formatWage(offeredWage)}</span>
+                      <span>Weekly wage</span>
+                      <span className="tabular-nums text-blue-600 font-semibold">{formatWage(offeredWage)}</span>
                     </div>
                     <input
                       type="range"
@@ -4039,15 +3796,15 @@ export function TransferHub({
                       onChange={(e) => setOfferedWage(Number(e.target.value))}
                       className="w-full accent-blue-600 cursor-pointer"
                     />
-                    <div className="flex justify-between text-[10px] text-slate-500">
+                    <div className="flex justify-between text-xs text-slate-500">
                       <span>Demand: {formatWage(negotiatingPlayer.wageDemand)}</span>
-                      <span>Wage Ceiling: {formatCurrency(save.finances.weeklyWageBudget)}/w</span>
+                      <span>Wage ceiling: {formatCurrency(save.finances.weeklyWageBudget)}/w</span>
                     </div>
                   </div>
 
                   {/* Contract Length */}
                   <div className="space-y-1.5">
-                    <span className="block text-slate-700 font-bold">Contract Length</span>
+                    <span className="block text-slate-700 font-bold">Contract length</span>
                     <div className="grid grid-cols-5 gap-2">
                       {[1, 2, 3, 4, 5].map((yrs) => (
                         <button
@@ -4056,7 +3813,7 @@ export function TransferHub({
                           onClick={() => setOfferedContractYears(yrs)}
                           className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                             offeredContractYears === yrs
-                              ? 'bg-blue-600 text-white font-black shadow-sm'
+                              ? 'bg-blue-600 text-white font-semibold shadow-sm'
                               : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs'
                           }`}
                         >
@@ -4068,16 +3825,16 @@ export function TransferHub({
 
                   {/* Promised Squad Role */}
                   <div className="space-y-1.5">
-                    <span className="block text-slate-700 font-bold">Squad Role</span>
-                    <div className="grid grid-cols-5 gap-1.5">
+                    <span className="block text-slate-700 font-bold">Squad role</span>
+                    <div className="grid grid-cols-3 gap-1.5">
                       {(['crucial', 'important', 'squad', 'sporadic', 'prospect'] as SquadRole[]).map((role) => (
                         <button
                           key={role}
                           type="button"
                           onClick={() => setOfferedSquadRole(role)}
-                          className={`py-1.5 px-1 rounded-xl text-[10px] font-bold uppercase transition-all cursor-pointer truncate ${
+                          className={`min-h-9 px-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer capitalize ${
                             offeredSquadRole === role
-                              ? 'bg-blue-600 text-white font-black shadow-sm'
+                              ? 'bg-blue-600 text-white font-semibold shadow-sm'
                               : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-xs'
                           }`}
                         >
@@ -4090,9 +3847,9 @@ export function TransferHub({
                   {/* Signing Bonus & Release Clause */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <div className="flex justify-between items-center text-[11px]">
-                        <span className="text-slate-600 font-bold">Signing Bonus:</span>
-                        <span className="font-mono text-blue-600 font-bold">{formatCurrency(offeredSigningBonus)}</span>
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-slate-600 font-bold">Signing bonus</span>
+                        <span className="tabular-nums text-blue-600 font-bold">{formatCurrency(offeredSigningBonus)}</span>
                       </div>
                       <input
                         type="text"
@@ -4102,13 +3859,13 @@ export function TransferHub({
                           const raw = e.target.value.replace(/[^0-9]/g, '');
                           setOfferedSigningBonus(raw ? Number(raw) : 0);
                         }}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono text-xs focus:outline-none focus:border-blue-500 shadow-xs"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 tabular-nums text-xs focus:outline-none focus:border-blue-500 shadow-xs"
                       />
                     </div>
                     <div className="space-y-1">
-                      <div className="flex justify-between items-center text-[11px]">
-                        <span className="text-slate-600 font-bold">Release Clause:</span>
-                        <span className="font-mono text-blue-600 font-bold">{offeredReleaseClause ? formatCurrency(offeredReleaseClause) : 'None'}</span>
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-slate-600 font-bold">Release clause</span>
+                        <span className="tabular-nums text-blue-600 font-bold">{offeredReleaseClause ? formatCurrency(offeredReleaseClause) : 'None'}</span>
                       </div>
                       <input
                         type="text"
@@ -4120,7 +3877,7 @@ export function TransferHub({
                           setOfferedReleaseClause(val > 0 ? val : undefined);
                         }}
                         placeholder="None"
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-mono text-xs focus:outline-none focus:border-blue-500 shadow-xs"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-900 tabular-nums text-xs focus:outline-none focus:border-blue-500 shadow-xs"
                       />
                     </div>
                   </div>
@@ -4154,7 +3911,7 @@ export function TransferHub({
 
               return (
                 <div className="border-t border-slate-200/80 pt-3 space-y-2 text-xs">
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 font-mono">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 tabular-nums">
                     <dl className="space-y-1">
                       <div className="flex justify-between gap-2">
                         <dt className="text-slate-500 font-sans">Transfer budget</dt>
@@ -4224,13 +3981,11 @@ export function TransferHub({
 
             {/* Actions */}
             <div className="flex gap-2 pt-2">
-              <button
-                type="button"
+              <Button variant="secondary"
                 onClick={() => setNegotiatingPlayer(null)}
-                className="py-3 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 uppercase tracking-wider cursor-pointer shadow-xs"
               >
                 Withdraw
-              </button>
+              </Button>
               {(() => {
                 const totalUpfrontCost =
                   dealType === 'free_agent' || dealType === 'pre_contract'
@@ -4249,46 +4004,33 @@ export function TransferHub({
                     : !windowIsOpen || totalUpfrontCost > save.finances.transferBudget;
 
                 return (
-                  <button
-                    type="button"
+                  <Button variant="primary"
                     onClick={handleConfirmBid}
                     disabled={isDealBlocked}
-                    className={`flex-1 py-3 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer inline-flex items-center justify-center gap-1.5 ${
-                      isDealBlocked
-                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
-                        : dealType === 'free_agent'
-                        ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white shadow-lg shadow-emerald-500/20'
-                        : dealType === 'pre_contract'
-                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-95 text-white shadow-lg shadow-amber-500/20'
-                        : dealType === 'loan'
-                        ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:opacity-95 text-white shadow-lg shadow-cyan-500/20'
-                        : negotiatingPlayer.isLegend
-                        ? 'bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 shadow-lg shadow-amber-500/25'
-                        : 'my11-btn-gradient hover:opacity-95 text-white shadow-lg shadow-blue-500/20'
-                    }`}
+                    className="flex-1"
                   >
                     {isDealBlocked && (!windowIsOpen && dealType !== 'free_agent' && dealType !== 'pre_contract') ? (
                       <>
                         <IconLock className="w-3.5 h-3.5 shrink-0" />
-                        <span>Transfer Window Closed</span>
+                        <span>Transfer window closed</span>
                       </>
                     ) : isDealBlocked ? (
-                      <span>Insufficient Budget</span>
+                      <span>Insufficient budget</span>
                     ) : dealType === 'free_agent' ? (
-                      <span>Sign Free Agent (£0 Fee)</span>
+                      <span>Sign free agent (£0 fee)</span>
                     ) : dealType === 'pre_contract' ? (
-                      <span>Finalize Pre-Contract (£0 Fee)</span>
+                      <span>Finalize pre-contract (£0 fee)</span>
                     ) : dealType === 'loan' ? (
-                      <span>Agree Loan Deal</span>
+                      <span>Agree loan deal</span>
                     ) : negotiatingPlayer.isLegend ? (
                       <>
                         <IconCrown className="w-3.5 h-3.5 shrink-0" />
-                        <span>Submit Icon Bid</span>
+                        <span>Submit icon bid</span>
                       </>
                     ) : (
-                      <span>Submit Formal Bid</span>
+                      <span>Submit formal bid</span>
                     )}
-                  </button>
+                  </Button>
                 );
               })()}
             </div>
@@ -4336,20 +4078,18 @@ export function TransferHub({
           aria-label="Board Financial Petition"
           className="fixed inset-0 bg-slate-950/40 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
         >
-          <div className="office-floating-card rounded-3xl max-w-lg w-full max-h-[90dvh] overflow-y-auto scrollbar-none p-5 sm:p-6 space-y-4 shadow-2xl relative my-auto border border-white/80">
+          <div className="office-floating-card rounded-xl max-w-lg w-full max-h-[90dvh] overflow-y-auto scrollbar-none p-5 sm:p-6 space-y-4 shadow-sm relative my-auto border border-white/80">
             <header className="flex justify-between items-center gap-3 border-b border-slate-100 pb-3">
               <div className="min-w-0">
-                <span className="font-display font-black text-xs uppercase tracking-wider text-blue-600">
-                  Board Petition
-                </span>
-                <h3 className="text-lg font-display font-black text-slate-900 uppercase">
+                <Eyebrow>Board petition</Eyebrow>
+                <h3 className="text-lg font-display font-semibold text-slate-900">
                   {selectedPetitionType === 'deadline_day_marquee'
-                    ? 'Emergency Deadline Day Warchest'
+                    ? 'Emergency deadline day warchest'
                     : selectedPetitionType === 'injury_crisis'
-                    ? 'Injury Crisis Replacement Grant'
+                    ? 'Injury crisis replacement grant'
                     : selectedPetitionType === 'wage_budget_increase'
-                    ? 'Weekly Wage Ceiling Expansion'
-                    : 'Transfer Budget Expansion'}
+                    ? 'Weekly wage ceiling expansion'
+                    : 'Transfer budget expansion'}
                 </h3>
               </div>
               <button
@@ -4370,8 +4110,8 @@ export function TransferHub({
                 {/* Board Sentiment Preview */}
                 <div className="office-subcard p-3.5 flex items-center justify-between gap-3 text-xs">
                   <div className="space-y-0.5">
-                    <span className="text-[10px] uppercase font-bold text-slate-500 block">Board Confidence</span>
-                    <span className={`font-display font-black text-base ${
+                    <span className="text-xs font-bold text-slate-500 block">Board confidence</span>
+                    <span className={`font-display font-semibold text-base ${
                       boardStatus.confidence >= 75
                         ? 'text-emerald-600'
                         : boardStatus.confidence >= 50
@@ -4382,8 +4122,8 @@ export function TransferHub({
                     </span>
                   </div>
                   <div className="text-right space-y-0.5">
-                    <span className="text-[10px] uppercase font-bold text-slate-500 block">Bank Balance</span>
-                    <span className="font-mono font-bold text-slate-900 text-sm">
+                    <span className="text-xs font-bold text-slate-500 block">Bank balance</span>
+                    <span className="tabular-nums font-bold text-slate-900 text-sm">
                       {formatCurrency(save.finances.balance)}
                     </span>
                   </div>
@@ -4392,8 +4132,8 @@ export function TransferHub({
                 {/* Specific Petition Inputs */}
                 {selectedPetitionType === 'deadline_day_marquee' && (
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700 uppercase block">
-                      Target Player (Optional)
+                    <label className="text-xs font-bold text-slate-700 block">
+                      Target player (optional)
                     </label>
                     <input
                       type="text"
@@ -4407,8 +4147,8 @@ export function TransferHub({
 
                 {selectedPetitionType === 'injury_crisis' && (
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700 uppercase block">
-                      Injured Player
+                    <label className="text-xs font-bold text-slate-700 block">
+                      Injured player
                     </label>
                     <select
                       value={petitionInjuredPlayerId}
@@ -4425,8 +4165,8 @@ export function TransferHub({
                 )}
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700 uppercase block">
-                    Your Case (Optional)
+                  <label className="text-xs font-bold text-slate-700 block">
+                    Your case (optional)
                   </label>
                   <textarea
                     rows={3}
@@ -4438,80 +4178,67 @@ export function TransferHub({
                 </div>
 
                 <div className="flex gap-2 pt-2">
-                  <button
-                    type="button"
+                  <Button variant="secondary"
                     onClick={() => setPetitionModalOpen(false)}
-                    className="w-1/3 min-h-10 px-3 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold border border-slate-200 transition-all cursor-pointer shadow-xs"
+                    className="w-1/3"
                   >
                     Cancel
-                  </button>
-                  <button
-                    type="button"
+                  </Button>
+                  <Button variant="primary"
                     onClick={handleSubmitBoardPetition}
                     disabled={petitionSubmitting}
-                    className="w-2/3 min-h-10 px-3 rounded-xl my11-btn-gradient hover:opacity-95 text-white font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-2/3"
                   >
                     {petitionSubmitting ? (
                       <>
-                        <span className="inline-block w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full motion-safe:animate-spin" />
-                        <span>Board Deliberating...</span>
+                        <span className="inline-block w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full motion-safe:animate-spin" />
+                        <span>Board deliberating...</span>
                       </>
                     ) : (
                       <>
                         <IconBuilding className="w-3.5 h-3.5 shrink-0" />
-                        <span>Submit Petition</span>
+                        <span>Submit petition</span>
                       </>
                     )}
-                  </button>
+                  </Button>
                 </div>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className={`p-4 rounded-2xl border text-center space-y-2 ${
+                <div className={`p-4 rounded-xl border text-center space-y-2 ${
                   petitionResult.outcome === 'approved'
                     ? 'bg-emerald-50 border-emerald-200'
                     : petitionResult.outcome === 'compromised'
                     ? 'bg-amber-50 border-amber-200'
                     : 'bg-rose-50 border-rose-200'
                 }`}>
-                  <div className="flex justify-center">
-                    {petitionResult.outcome === 'approved' ? (
-                      <IconTrophy className="w-8 h-8 text-emerald-600" />
-                    ) : petitionResult.outcome === 'compromised' ? (
-                      <IconMessage className="w-8 h-8 text-amber-700" />
-                    ) : (
-                      <IconAlert className="w-8 h-8 text-rose-600" />
-                    )}
-                  </div>
-                  <div className={`font-display font-black text-sm uppercase tracking-wider ${
+                  <div className={`font-display font-semibold text-sm ${
                     petitionResult.outcome === 'approved'
                       ? 'text-emerald-700'
                       : petitionResult.outcome === 'compromised'
                       ? 'text-amber-800'
                       : 'text-rose-700'
                   }`}>
-                    Petition {petitionResult.outcome.toUpperCase()}
+                    Petition {petitionResult.outcome}
                   </div>
                   {petitionResult.amountGranted > 0 && (
-                    <div className="text-xl font-display font-black text-slate-900 font-mono">
+                    <div className="text-xl font-display font-bold text-slate-900 tabular-nums">
                       +{petitionResult.grantType === 'wage' ? formatWage(petitionResult.amountGranted) : formatCurrency(petitionResult.amountGranted)}
                     </div>
                   )}
-                  <p className="text-xs text-slate-700 text-left pt-2 leading-relaxed bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
+                  <p className="text-xs text-[var(--ink-secondary)] text-left pt-2 leading-relaxed">
                     &ldquo;{petitionResult.feedback}&rdquo;
                   </p>
                 </div>
 
-                <button
-                  type="button"
+                <Button variant="primary" fullWidth
                   onClick={() => {
                     setPetitionModalOpen(false);
                     setPetitionResult(null);
                   }}
-                  className="w-full py-2.5 px-4 rounded-xl my11-btn-gradient hover:opacity-95 text-white font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md"
                 >
                   Done
-                </button>
+                </Button>
               </div>
             )}
           </div>

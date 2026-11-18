@@ -8,14 +8,10 @@ import { StatsDisplay } from './StatsDisplay';
 import { DraftOptions } from './DraftOptions';
 import { PlayerCard } from './PlayerCard';
 import { DraftOnboardingGuide } from './DraftOnboardingGuide';
+import { Button, Eyebrow } from '@/components/ui';
 import {
   IconCheck,
   IconAlert,
-  IconTarget,
-  IconTrophy,
-  IconBall,
-  IconBolt,
-  IconSparkles,
   IconArrowLeft,
   IconArrowRight,
   IconClock,
@@ -145,7 +141,7 @@ export function DraftScreen({
       : timeLeft === ROUND_SECONDS
       ? `Quick draft round: ${ROUND_SECONDS} seconds remaining.`
       : timeLeft === 3
-      ? '3 seconds remaining. Time running out!'
+      ? '3 seconds remaining. Time running out.'
       : timeoutAnnouncement;
 
   // Quick Draft countdown ticker
@@ -210,15 +206,29 @@ export function DraftScreen({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [revealedPlayer, handleConfirmMysteryReveal]);
 
+  // One plain line above the title: the daily challenge name and the draft mode.
+  const modeLine = [
+    isDailyChallenge ? todayChallenge?.title : null,
+    draftModifier === 'quick'
+      ? 'Quick'
+      : draftModifier === 'mystery'
+      ? 'Mystery'
+      : !isDailyChallenge
+      ? 'Classic'
+      : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
   const timerBar = (
     <div
       className="w-full flex items-center gap-2.5 select-none"
       role="timer"
       aria-live="off"
-      aria-label={`Draft Timer: ${timeLeft} seconds remaining`}
+      aria-label={`Draft timer: ${timeLeft} seconds remaining`}
     >
       <IconClock className={`w-4 h-4 shrink-0 ${timeLeft <= 3 ? 'text-rose-600' : 'text-amber-700'}`} />
-      <div className="h-2 flex-1 bg-slate-200/90 rounded-full overflow-hidden">
+      <div className="h-2 flex-1 bg-[var(--surface-elevated)] rounded-full overflow-hidden">
         <div
           style={{ width: `${(timeLeft / ROUND_SECONDS) * 100}%` }}
           className={`h-full transition-all duration-1000 ease-linear rounded-full ${
@@ -226,7 +236,7 @@ export function DraftScreen({
           }`}
         />
       </div>
-      <span className={`font-display font-black text-base tracking-tight shrink-0 tabular-nums ${
+      <span className={`font-display font-semibold text-base tracking-tight shrink-0 tabular-nums ${
         timeLeft <= 3 ? 'text-rose-600' : timeLeft <= 5 ? 'text-amber-700' : 'text-blue-600'
       }`}>
         0:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}
@@ -286,10 +296,10 @@ export function DraftScreen({
       
       {/* Floating Chemistry Toast Notification (Micro-interaction) */}
       {chemistryToast && (
-        <div className={`fixed bottom-36 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-full border shadow-2xl motion-safe:animate-card-deal text-xs font-black uppercase tracking-wider backdrop-blur-md inline-flex items-center gap-1.5 ${
+        <div className={`fixed bottom-36 left-1/2 -translate-x-1/2 z-50 max-w-[calc(100vw-2rem)] px-4 py-2.5 rounded-lg border shadow-sm motion-safe:animate-card-deal text-xs font-medium inline-flex items-center gap-1.5 ${
           chemistryToast.type === 'positive'
-            ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-emerald-500/20'
-            : 'bg-rose-50 text-rose-800 border-rose-300 shadow-rose-500/20'
+            ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+            : 'bg-rose-50 text-rose-800 border-rose-300'
         }`}>
           {chemistryToast.type === 'positive' ? (
             <IconCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
@@ -302,40 +312,17 @@ export function DraftScreen({
 
       {/* Replay Target Banner */}
       {targetToBeat && (
-        <div className="w-full py-2.5 px-4 rounded-2xl office-subcard border-amber-300 bg-amber-50/90 text-amber-900 text-[10px] font-display font-black uppercase tracking-wider flex items-center justify-between gap-2 shadow-sm">
-          <span className="flex items-center gap-1.5 flex-wrap">
-            <IconTarget className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-            <span>Beat: <span className="text-[#0b1536] font-black">{targetToBeat.targetWins} WINS</span> ({targetToBeat.targetPoints} PTS)</span>
-          </span>
-        </div>
+        <p className="w-full text-sm text-[var(--ink-secondary)]">
+          Target to beat: <span className="font-semibold text-[var(--ink-primary)]">{targetToBeat.targetWins} wins</span> ({targetToBeat.targetPoints} pts)
+        </p>
       )}
 
       {/* Progress Header */}
-      <div className="flex justify-between items-center w-full leading-none gap-2">
+      <div className="flex justify-between items-center w-full gap-2">
         <div className="min-w-0">
-          <div className="flex items-center flex-wrap gap-1.5 mb-1 text-[10px] font-black uppercase tracking-wider">
-            {isDailyChallenge && (
-              <span className="text-blue-600 inline-flex items-center gap-1 min-w-0">
-                <IconTrophy className="w-3 h-3 shrink-0" />
-                <span className="truncate">{todayChallenge?.title}</span>
-              </span>
-            )}
-            {draftModifier === 'quick' ? (
-              <span className="inline-flex items-center gap-1 text-amber-800">
-                <IconBolt className="w-3 h-3 shrink-0" /> Quick
-              </span>
-            ) : draftModifier === 'mystery' ? (
-              <span className="inline-flex items-center gap-1 text-purple-800">
-                <IconSparkles className="w-3 h-3 shrink-0" /> Mystery
-              </span>
-            ) : !isDailyChallenge ? (
-              <span className="inline-flex items-center gap-1 text-blue-600">
-                <IconBall className="w-3 h-3 shrink-0" /> Classic
-              </span>
-            ) : null}
-          </div>
-          <h2 className="text-lg font-display font-black text-[#0b1536] uppercase tracking-wider">
-            {isFinished ? 'Draft Complete' : `Pick ${currentSlotIndex + 1} of 11`}
+          {modeLine && <Eyebrow className="truncate">{modeLine}</Eyebrow>}
+          <h2 className="text-lg font-display font-semibold text-[var(--ink-primary)]">
+            {isFinished ? 'Draft complete' : `Pick ${currentSlotIndex + 1} of 11`}
           </h2>
         </div>
 
@@ -343,22 +330,17 @@ export function DraftScreen({
           <button
             type="button"
             onClick={() => setSfxEnabled(toggleSfxEnabled())}
-            title={sfxEnabled ? 'Mute Sound Effects' : 'Enable Sound Effects'}
-            aria-label={sfxEnabled ? 'Mute Sound Effects' : 'Enable Sound Effects'}
+            title={sfxEnabled ? 'Mute sound effects' : 'Enable sound effects'}
+            aria-label={sfxEnabled ? 'Mute sound effects' : 'Enable sound effects'}
             aria-pressed={!sfxEnabled}
-            className="w-10 h-10 rounded-xl office-subcard flex items-center justify-center text-slate-600 hover:text-[#0b1536] cursor-pointer transition-all active:scale-95 shadow-sm"
+            className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] cursor-pointer transition-colors"
           >
-            {sfxEnabled ? <IconVolumeOn className="w-4 h-4 text-blue-600" /> : <IconVolumeOff className="w-4 h-4 text-slate-400" />}
+            {sfxEnabled ? <IconVolumeOn className="w-4 h-4" /> : <IconVolumeOff className="w-4 h-4 text-[var(--ink-muted)]" />}
           </button>
           {(isFinished || currentSlotIndex > 0) && (
-            <button
-              type="button"
-              onClick={onUndoPick}
-              title="Undo last pick"
-              className="office-subcard min-h-[40px] px-3.5 rounded-xl text-slate-700 hover:text-[#0b1536] font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 shadow-sm shrink-0"
-            >
+            <Button variant="secondary" onClick={onUndoPick} title="Undo last pick" className="shrink-0">
               <IconArrowLeft className="w-3.5 h-3.5 shrink-0" /> Undo
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -394,21 +376,16 @@ export function DraftScreen({
       {/* Mystery Reveal Modal */}
       {revealedPlayer && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md motion-safe:animate-card-deal"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 motion-safe:animate-card-deal"
           role="dialog"
           aria-modal="true"
           aria-labelledby="mystery-reveal-title"
         >
-          <div className="office-floating-card border-purple-300 rounded-3xl p-6 w-full max-w-sm max-h-[90dvh] overflow-y-auto scrollbar-none shadow-2xl flex flex-col items-center gap-4 text-center relative bg-white/95">
-            {/* Glow */}
-            <div className="absolute inset-0 bg-gradient-to-b from-purple-500/10 via-transparent to-transparent pointer-events-none" />
-
+          <div className="office-floating-card rounded-xl p-6 w-full max-w-sm max-h-[90dvh] overflow-y-auto scrollbar-none flex flex-col items-center gap-4 text-center relative">
             <div className="relative z-10 flex flex-col items-center">
-              <span className="inline-flex items-center gap-1 text-[10px] font-black text-purple-600 tracking-widest uppercase mb-1">
-                <IconSparkles className="w-3 h-3 shrink-0" /> Mystery pick
-              </span>
-              <h3 id="mystery-reveal-title" className="text-xl font-display font-black text-[#0b1536] uppercase tracking-tight">
-                You Drafted...
+              <Eyebrow>Mystery pick</Eyebrow>
+              <h3 id="mystery-reveal-title" className="text-xl font-display font-bold text-[var(--ink-primary)]">
+                You drafted
               </h3>
             </div>
 
@@ -422,15 +399,16 @@ export function DraftScreen({
             </div>
 
             {/* Confirm Button */}
-            <button
-              type="button"
+            <Button
+              variant="primary"
+              fullWidth
               onClick={handleConfirmMysteryReveal}
               autoFocus
-              className="w-full py-3.5 rounded-2xl office-action-btn-primary text-white font-display font-black text-xs uppercase tracking-wider cursor-pointer active:scale-98 transition-all relative z-10 inline-flex items-center justify-center gap-1.5"
+              className="min-h-12 relative z-10"
             >
-              <span>Add to Squad</span>
+              <span>Add to squad</span>
               <IconArrowRight className="w-3.5 h-3.5 shrink-0" />
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -438,16 +416,17 @@ export function DraftScreen({
       {/* Sticky Proceed Button for Mobile (Bottom of screen with safe area) */}
       {isFinished && simResult && (
         <div className="fixed bottom-[max(0.75rem,env(safe-area-inset-bottom,16px))] left-3 right-3 md:relative md:bottom-auto md:left-auto md:right-auto z-40 flex justify-center">
-          <button
+          <Button
+            variant="primary"
             onClick={() => {
               playKickoffWhistle();
               onStartSimulation();
             }}
-            className="office-play-match-btn w-full max-w-sm py-4 px-6 rounded-2xl text-white font-display font-black text-sm uppercase tracking-wider shadow-2xl cursor-pointer text-center inline-flex items-center justify-center gap-2"
+            className="w-full max-w-sm min-h-12 shadow-sm"
           >
-            <span>Start Simulation</span>
+            <span>Start simulation</span>
             <IconArrowRight className="w-4 h-4 shrink-0" />
-          </button>
+          </Button>
         </div>
       )}
     </div>

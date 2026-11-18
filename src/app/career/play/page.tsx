@@ -36,33 +36,20 @@ import {
   IconTrophy,
   IconSave,
   IconMedkit,
-  IconMail,
   IconClose,
-  IconAlert,
-  IconStar,
-  IconBolt,
-  IconArrowLeft,
   IconHome,
-  IconCalendar,
-  IconSparkles,
-  IconSkipForward,
   IconCrown,
   IconMedal,
-  IconSprout,
-  IconRefresh,
   IconTrendingUp,
-  IconBriefcase,
-  IconBuilding,
-  IconArrowRight,
-  IconDocument,
   IconVolumeOn,
   IconVolumeOff,
 } from '../../../components/career/GameIcons';
+import { SectionHeader, Eyebrow, Tag, Button, StatRow } from '@/components/ui';
 
 function TabPanelFallback() {
   return (
-    <div className="office-floating-card rounded-3xl p-8 text-center text-xs font-display font-bold uppercase tracking-wider text-slate-500">
-      Loading module...
+    <div className="office-floating-card rounded-xl p-8 text-center text-sm text-[var(--ink-muted)]">
+      Loading...
     </div>
   );
 }
@@ -542,7 +529,7 @@ function OfficeClubJerseySvg({
 function OfficeStadiumSceneSvg() {
   return (
     <div
-      className="absolute inset-x-0 top-0 h-[212px] sm:h-[224px] rounded-2xl pointer-events-none overflow-hidden select-none [mask-image:linear-gradient(to_bottom,#000_68%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,#000_68%,transparent_100%)]"
+      className="absolute inset-x-0 top-0 h-[212px] sm:h-[224px] rounded-xl pointer-events-none overflow-hidden select-none [mask-image:linear-gradient(to_bottom,#000_68%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,#000_68%,transparent_100%)]"
       aria-hidden="true"
     >
       <svg
@@ -1168,7 +1155,7 @@ function CareerPlayHubContent() {
         },
       };
       handleUpdateSave(updatedSave);
-      showToast('Lineup updated successfully.');
+      showToast('Lineup updated.');
     } else {
       showToast('Players must be in starting XI and bench to swap.');
     }
@@ -1316,7 +1303,7 @@ function CareerPlayHubContent() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    showToast('Save backup exported successfully.');
+    showToast('Save backup exported.');
   };
 
   const handleSaveSettings = () => {
@@ -1344,7 +1331,7 @@ function CareerPlayHubContent() {
     saveCareerSave(updated);
     setSave(updated);
     setEditableSettings(updatedSettings);
-    showToast('Settings saved successfully.');
+    showToast('Settings saved.');
   };
 
   const handleResetSaveSlot = () => {
@@ -1389,47 +1376,47 @@ function CareerPlayHubContent() {
   const getFastForwardDetails = (target: TimeSkipTarget) => {
     switch (target) {
       case 'next_match': {
-        const targetDate = nextScheduled ? formatCareerDate(nextScheduled.fixture.date, save?.settings.dateFormat || 'uk', 'long') : 'Next Scheduled Match';
+        const targetDate = nextScheduled ? formatCareerDate(nextScheduled.fixture.date, save?.settings.dateFormat || 'uk', 'long') : 'the next scheduled match';
         return {
-          title: 'Advance to Next Match',
-          badge: 'Next Match',
+          title: 'Advance to next match',
+          badge: 'Next match',
           targetDate,
         };
       }
       case 'next_week': {
         return {
-          title: 'Fast Forward +7 Days',
-          badge: '+7 Days',
-          targetDate: '1 Week Forward',
+          title: 'Fast forward 7 days',
+          badge: '+7 days',
+          targetDate: 'one week ahead',
         };
       }
       case 'next_month': {
         return {
-          title: 'Fast Forward +1 Month',
-          badge: '+1 Month',
-          targetDate: '30 Days Forward',
+          title: 'Fast forward 1 month',
+          badge: '+1 month',
+          targetDate: '30 days ahead',
         };
       }
       case 'transfer_deadline': {
         return {
-          title: 'Advance to Deadline Day',
-          badge: 'Deadline Day',
+          title: 'Advance to deadline day',
+          badge: 'Deadline day',
           targetDate: '1 Sep / 1 Feb',
         };
       }
       case 'season_end': {
         return {
-          title: 'Simulate to Season End',
-          badge: 'Season End',
-          targetDate: 'Round 38 (Finale)',
+          title: 'Simulate to season end',
+          badge: 'Season end',
+          targetDate: 'round 38, the final day',
         };
       }
       case 'continue':
       default: {
         return {
-          title: 'Advance Calendar',
+          title: 'Advance calendar',
           badge: 'Continue',
-          targetDate: 'Day by Day',
+          targetDate: 'the next day',
         };
       }
     }
@@ -1440,7 +1427,7 @@ function CareerPlayHubContent() {
 
     // 1. Guard against Deadline Day clock in progress
     if (save.deadlineDayState?.isActive && save.deadlineDayState.phase !== 'closed') {
-      showToast('Transfer Deadline Day is in progress! Advance the deadline clock or finalize deals before simulating matches.');
+      showToast('Transfer deadline day is in progress. Advance the deadline clock or finalize deals before simulating matches.');
       return;
     }
 
@@ -1460,7 +1447,7 @@ function CareerPlayHubContent() {
       deadlineSave = initializeDeadlineDay(deadlineSave);
       saveCareerSave(deadlineSave);
       setSave(deadlineSave);
-      showToast('Transfer Deadline Day has arrived! The summer window shuts tonight at 23:00 BST. Complete your transfer and squad registration business.');
+      showToast('Transfer deadline day has arrived. The summer window shuts tonight at 23:00 BST. Complete your transfer and squad registration business.');
       return;
     }
 
@@ -1476,7 +1463,7 @@ function CareerPlayHubContent() {
       deadlineSave = initializeDeadlineDay(deadlineSave);
       saveCareerSave(deadlineSave);
       setSave(deadlineSave);
-      showToast('Transfer Deadline Day has arrived! The winter window shuts tonight at 23:00 BST.');
+      showToast('Transfer deadline day has arrived. The winter window shuts tonight at 23:00 BST.');
       return;
     }
 
@@ -1739,7 +1726,7 @@ function CareerPlayHubContent() {
     saveCareerSave(updatedSave);
     setSave(updatedSave);
     setSimulating(false);
-    showToast(`Fast-forwarded past ${intlBreak.name}. Squad returned to training!`);
+    showToast(`Fast-forwarded past ${intlBreak.name}. Squad returned to training.`);
   };
 
   const handleAdvanceToNextSeasonAction = () => {
@@ -1749,7 +1736,7 @@ function CareerPlayHubContent() {
     saveCareerSave(updatedSave);
     setSave(updatedSave);
     setSimulating(false);
-    showToast(`Welcome to Season ${updatedSave.season.seasonNumber}! Summer transfer window open.`);
+    showToast(`Welcome to season ${updatedSave.season.seasonNumber}. Summer transfer window open.`);
   };
 
   const handleToggleMessageRead = (msgId: string) => {
@@ -1836,7 +1823,7 @@ function CareerPlayHubContent() {
     saveCareerSave(finalSave);
     setSave(finalSave);
     setActiveMatchFixture(null);
-    showToast('Match completed and results saved! Press Conference open in Media desk.');
+    showToast('Match completed and results saved. Press conference open in the media desk.');
   };
 
   const handleChoosePreseasonTour = (tourId: PreseasonTourId, delegateToAssistant: boolean) => {
@@ -1845,7 +1832,7 @@ function CareerPlayHubContent() {
     saveCareerSave(updated);
     setSave(updated);
     setShowPreseasonModal(false);
-    showToast(`Pre-season tour selected: ${tourId.toUpperCase()}! 3 Friendlies scheduled.`);
+    showToast(`Pre-season tour selected: ${tourId === 'usa' ? 'USA' : tourId.charAt(0).toUpperCase() + tourId.slice(1)}. 3 friendlies scheduled.`);
   };
 
   const handleFinishFixtureRelease = () => {
@@ -1861,7 +1848,7 @@ function CareerPlayHubContent() {
     saveCareerSave(updated);
     setSave(updated);
     setShowFixtureReleaseModal(false);
-    showToast('Premier League fixtures released for the new season!');
+    showToast('Premier League fixtures released for the new season.');
   };
 
   const handleFinishUclDraw = (drawnOpponents: LeaguePhaseOpponent[]) => {
@@ -1870,7 +1857,7 @@ function CareerPlayHubContent() {
     saveCareerSave(updated);
     setSave(updated);
     setShowUclDrawModal(false);
-    showToast('UEFA Champions League League Phase Draw concluded! Fixtures scheduled.');
+    showToast('UEFA Champions League league phase draw concluded. Fixtures scheduled.');
   };
 
   const handleSimulateAssistantPreseason = (fixtureId: string) => {
@@ -1880,7 +1867,7 @@ function CareerPlayHubContent() {
     saveCareerSave(updated);
     setSave(updated);
     setSimulating(false);
-    showToast('Assistant Manager simulated pre-season friendly! Check inbox for match report.');
+    showToast('Assistant manager simulated the pre-season friendly. Check inbox for the match report.');
   };
 
   const handleContinueCalendar = () => {
@@ -1913,16 +1900,14 @@ function CareerPlayHubContent() {
 
   if (!save && !vaultReady) {
     return (
-      <div className="min-h-screen my11-canvas text-slate-900 font-sans flex flex-col p-6 justify-center items-center">
-        <main className="w-full max-w-md office-floating-card rounded-3xl p-8 border border-slate-200 shadow-2xl text-center space-y-4">
-          <div className="w-12 h-12 mx-auto rounded-2xl bg-[#09152b] text-white flex items-center justify-center font-mono font-bold text-xs shadow-sm">
-            MY-11
-          </div>
-          <h1 className="text-lg font-display font-black text-slate-900 uppercase tracking-tight">
-            Loading Manager Office...
+      <div className="min-h-screen my11-canvas text-[var(--ink-primary)] font-sans flex flex-col p-6 justify-center items-center">
+        <main className="w-full max-w-md office-floating-card rounded-xl p-8 border border-[var(--border-subtle)] text-center space-y-2">
+          <Eyebrow>MY-11</Eyebrow>
+          <h1 className="text-lg font-display font-semibold text-[var(--ink-primary)]">
+            Loading manager office...
           </h1>
-          <p className="text-xs text-slate-600 font-medium leading-relaxed">
-            Syncing save vault and player database for {slotId.replace('_', ' ').toUpperCase()}.
+          <p className="text-sm text-[var(--ink-secondary)] leading-relaxed">
+            Loading the save and player database for {slotId.replace('_', ' ')}.
           </p>
         </main>
       </div>
@@ -1931,29 +1916,26 @@ function CareerPlayHubContent() {
 
   if (!save) {
     return (
-      <div className="min-h-screen my11-canvas text-slate-900 font-sans flex flex-col p-6 justify-center items-center">
-        <main className="w-full max-w-md office-floating-card rounded-3xl p-8 border border-slate-200 shadow-2xl text-center space-y-6">
-          <div className="w-12 h-12 mx-auto rounded-2xl bg-slate-900 text-white flex items-center justify-center font-mono font-bold text-xs shadow-sm">
-            SAVE
-          </div>
-          <h1 className="text-xl font-display font-black text-slate-900 uppercase tracking-tight">
-            No Save Found in {slotId.replace('_', ' ').toUpperCase()}
+      <div className="min-h-screen my11-canvas text-[var(--ink-primary)] font-sans flex flex-col p-6 justify-center items-center">
+        <main className="w-full max-w-md office-floating-card rounded-xl p-8 border border-[var(--border-subtle)] text-center space-y-4">
+          <h1 className="text-xl font-display font-bold text-[var(--ink-primary)]">
+            No save found in {slotId.replace('_', ' ')}
           </h1>
-          <p className="text-xs text-slate-600 font-medium leading-relaxed">
-            There is currently no career save loaded in this slot. You can start a new career or import a backup file.
+          <p className="text-sm text-[var(--ink-secondary)] leading-relaxed">
+            There is no career save in this slot. You can start a new career or import a backup file.
           </p>
           <div className="pt-2 flex gap-3">
             <Link
               href="/career"
-              className="flex-1 py-3 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-xs font-bold text-slate-800 font-display uppercase tracking-wider"
+              className="flex-1 min-h-10 px-4 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] hover:bg-[var(--surface-subcard)] text-sm font-semibold text-[var(--ink-primary)] flex items-center justify-center"
             >
-              Save Slots
+              Save slots
             </Link>
             <Link
               href={`/career/setup?slot=${slotId}`}
-              className="flex-1 py-3 px-4 rounded-xl office-play-match-btn text-white text-xs font-display font-black uppercase tracking-wider flex items-center justify-center gap-1"
+              className="flex-1 min-h-10 px-4 rounded-lg office-action-btn-primary text-sm font-semibold flex items-center justify-center"
             >
-              Start New
+              Start new career
             </Link>
           </div>
         </main>
@@ -2017,7 +1999,7 @@ function CareerPlayHubContent() {
       ? 'Satisfied'
       : boardConfidence >= 45
       ? 'Cautious'
-      : 'Under Pressure';
+      : 'Under pressure';
 
   return (
     <div
@@ -2032,11 +2014,9 @@ function CareerPlayHubContent() {
         <aside
           role="status"
           aria-live="polite"
-          data-force-white="true"
-          className="fixed top-18 left-1/2 -translate-x-1/2 z-50 bg-[#1E2024] border text-white px-4 py-2 rounded-xl font-display font-bold text-xs tracking-wide shadow-xl flex items-center gap-2 max-w-[92vw]"
-          style={{ backgroundColor: '#1E2024', borderColor: '#D97706' }}
+          className="fixed top-18 left-1/2 -translate-x-1/2 z-50 bg-[var(--surface-card)] border border-[var(--border-crisp)] text-[var(--ink-primary)] px-4 py-2 rounded-xl font-medium text-sm shadow-sm flex items-center gap-2 max-w-[92vw]"
         >
-          <IconCheck className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+          <IconCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
           <span className="truncate">{toastMessage}</span>
         </aside>
       )}
@@ -2051,7 +2031,7 @@ function CareerPlayHubContent() {
         {/* 1. FLOATING HEADER CARD (UNIVERSAL ACROSS ALL TABS) */}
         <header
           data-office-ui="true"
-          className="office-floating-card office-reveal-1 rounded-[22px] px-2 sm:px-3.5 py-2 sm:py-2.5 flex items-center justify-between gap-1 sm:gap-1.5 select-none"
+          className="office-floating-card office-reveal-1 rounded-xl px-2 sm:px-3.5 py-2 sm:py-2.5 flex items-center justify-between gap-1 sm:gap-1.5 select-none"
         >
           {/* Left: MY-11 Brand Mark + Club & Season/Date */}
           <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 overflow-hidden">
@@ -2059,25 +2039,11 @@ function CareerPlayHubContent() {
               type="button"
               onClick={handleLogoClick}
               data-office-ui="true"
-              title={activeTab !== 'overview' ? 'Return to Career Office' : 'Exit Career Mode'}
+              title={activeTab !== 'overview' ? 'Return to career office' : 'Exit career mode'}
               aria-label={activeTab !== 'overview' ? 'Return to Career Office' : 'Exit Career Mode'}
-              className="flex flex-col items-center justify-center shrink-0 cursor-pointer group focus:outline-none"
+              className="flex items-center justify-center shrink-0 cursor-pointer min-h-9 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             >
-              {/* Crown SVG above MY-11 */}
-              <svg viewBox="0 0 28 12" className="w-3.5 h-2.5 -mb-0.5 transition-transform duration-150 group-hover:-translate-y-0.5" aria-hidden="true">
-                <defs>
-                  <linearGradient id="my11-crown-grad-univ" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#00d2ff" />
-                    <stop offset="50%" stopColor="#2563eb" />
-                    <stop offset="100%" stopColor="#c026d3" />
-                  </linearGradient>
-                </defs>
-                <path
-                  d="M2 10 L4 3 L10 7 L14 1 L18 7 L24 3 L26 10 Z"
-                  fill="url(#my11-crown-grad-univ)"
-                />
-              </svg>
-              <span className="font-display font-black text-[14px] sm:text-[17px] tracking-tighter leading-none text-[var(--office-text-primary)]">
+              <span className="font-display font-semibold text-sm sm:text-lg tracking-tighter leading-none text-[var(--office-text-primary)]">
                 MY-11
               </span>
             </button>
@@ -2085,61 +2051,37 @@ function CareerPlayHubContent() {
             <div className="w-px h-6 bg-[var(--office-divider)] shrink-0" />
 
             <div className="min-w-0 flex-1 overflow-hidden">
-              <h1 className="font-display font-black text-[12px] min-[390px]:text-[13.5px] sm:text-[15.5px] text-[var(--office-text-primary)] leading-tight tracking-tight truncate">
+              <h1 className="font-display font-semibold text-sm sm:text-base text-[var(--ink-primary)] leading-tight truncate">
                 {effectiveClubName}
               </h1>
-              <p className="text-[10.5px] min-[390px]:text-[11px] sm:text-xs font-bold text-[#1d4ed8] leading-tight truncate mt-0.5">
+              <p className="text-xs text-[var(--ink-muted)] leading-tight truncate mt-0.5">
                 {formatOfficeShortDate(save.season.currentDate)}
               </p>
             </div>
           </div>
 
           {/* Right: Board Confidence Pill + Inbox + Settings */}
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
             <button
               type="button"
               data-office-ui="true"
               onClick={() => setShowBoardDossierModal(true)}
-              title="View Boardroom Confidence Dossier"
-              className="office-subcard rounded-full px-1.5 min-[390px]:px-2 sm:px-2.5 py-1 flex items-center gap-1 sm:gap-1.5 cursor-pointer bg-[#e6fcf5] border border-[#6ee7b7] hover:border-[#059669]"
+              title="View board confidence"
+              className="min-h-9 px-1.5 rounded-lg text-left text-xs font-medium leading-tight text-[var(--ink-secondary)] hover:bg-[var(--surface-subcard)] hover:text-[var(--ink-primary)] cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             >
+              <span className="block min-[430px]:inline whitespace-nowrap">Board {boardConfidence}%</span>
+              <span className="hidden min-[430px]:inline"> · </span>
               <span
-                className={`w-4.5 h-4.5 min-[390px]:w-5 min-[390px]:h-5 sm:w-5.5 sm:h-5.5 rounded-full flex items-center justify-center text-white shrink-0 shadow-2xs ${
+                className={`block min-[430px]:inline whitespace-nowrap ${
                   boardConfidence >= 60
-                    ? 'bg-[#047857]'
+                    ? 'text-emerald-700'
                     : boardConfidence >= 45
-                    ? 'bg-[#b45309]'
-                    : 'bg-[#b91c1c]'
+                    ? 'text-amber-700'
+                    : 'text-rose-700'
                 }`}
               >
-                <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current" aria-hidden="true">
-                  <circle cx="9" cy="10" r="1.5" />
-                  <circle cx="15" cy="10" r="1.5" />
-                  <path
-                    d="M8.5 14.5 C9.8 16.5, 14.2 16.5, 15.5 14.5"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    fill="none"
-                  />
-                </svg>
+                {boardSentimentLabel}
               </span>
-              <div className="text-left leading-none pr-0.5">
-                <div className="text-[11px] sm:text-[11.5px] font-display font-black text-[#0b1536] whitespace-nowrap">
-                  Board {boardConfidence}%
-                </div>
-                <div
-                  className={`text-[10px] sm:text-[10.5px] font-extrabold mt-0.5 whitespace-nowrap ${
-                    boardConfidence >= 60
-                      ? 'text-[#065f46]'
-                      : boardConfidence >= 45
-                      ? 'text-[#92400e]'
-                      : 'text-[#991b1b]'
-                  }`}
-                >
-                  {boardSentimentLabel}
-                </div>
-              </div>
             </button>
 
             {/* Sound Effects Toggle Button */}
@@ -2147,15 +2089,15 @@ function CareerPlayHubContent() {
               type="button"
               data-office-ui="true"
               onClick={handleToggleSfx}
-              title={sfxEnabled ? 'Mute Sound Effects' : 'Enable Sound Effects'}
+              title={sfxEnabled ? 'Mute sound effects' : 'Enable sound effects'}
               aria-label={sfxEnabled ? 'Mute Sound Effects' : 'Enable Sound Effects'}
               aria-pressed={!sfxEnabled}
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl flex items-center justify-center cursor-pointer transition-transform active:scale-95 shrink-0 bg-white border border-[#cbd5e1] shadow-2xs hover:border-[#1d5eff]/50"
+              className="w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer shrink-0 text-[var(--ink-secondary)] hover:bg-[var(--surface-subcard)] hover:text-[var(--ink-primary)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             >
               {sfxEnabled ? (
-                <IconVolumeOn className="w-4 h-4 text-[#1d4ed8]" />
+                <IconVolumeOn className="w-4 h-4" />
               ) : (
-                <IconVolumeOff className="w-4 h-4 text-slate-400" />
+                <IconVolumeOff className="w-4 h-4 text-[var(--ink-muted)]" />
               )}
             </button>
 
@@ -2164,15 +2106,15 @@ function CareerPlayHubContent() {
               type="button"
               data-office-ui="true"
               onClick={() => setShowOfficeInboxModal(true)}
-              title="Open Managerial Inbox"
+              title="Open inbox"
               aria-label="Open Managerial Inbox"
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl flex items-center justify-center relative cursor-pointer transition-transform active:scale-95 shrink-0 bg-white border border-[#cbd5e1] shadow-2xs hover:border-[#1d5eff]/50"
+              className="relative w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer shrink-0 text-[var(--ink-secondary)] hover:bg-[var(--surface-subcard)] hover:text-[var(--ink-primary)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             >
-              <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#1d4ed8]" fill="currentColor" aria-hidden="true">
+              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor" aria-hidden="true">
                 <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4.2-8 5-8-5V6l8 5 8-5v2.2z" />
               </svg>
               {headerBadgeCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 rounded-full bg-[#dc2626] text-white font-display font-black text-[10px] flex items-center justify-center shadow-xs border-2 border-white">
+                <span data-force-white="true" className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#dc2626] text-white font-semibold text-2xs flex items-center justify-center">
                   {headerBadgeCount}
                 </span>
               )}
@@ -2183,12 +2125,12 @@ function CareerPlayHubContent() {
               type="button"
               data-office-ui="true"
               onClick={() => handleTabChange('settings')}
-              title="Career Settings"
+              title="Career settings"
               aria-label="Career Settings"
               aria-current={activeTab === 'settings' ? 'page' : undefined}
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-2xl flex items-center justify-center cursor-pointer transition-transform active:scale-95 shrink-0 bg-white border shadow-2xs hover:border-[#1d5eff]/50 ${activeTab === 'settings' ? 'border-[#1d5eff]' : 'border-[#cbd5e1]'}`}
+              className={`w-9 h-9 rounded-lg flex items-center justify-center cursor-pointer shrink-0 text-[var(--ink-secondary)] hover:bg-[var(--surface-subcard)] hover:text-[var(--ink-primary)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${activeTab === 'settings' ? 'bg-[var(--surface-elevated)] text-[var(--ink-primary)]' : ''}`}
             >
-              <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#334155]" fill="currentColor" aria-hidden="true">
+              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor" aria-hidden="true">
                 <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
               </svg>
             </button>
@@ -2201,19 +2143,20 @@ function CareerPlayHubContent() {
             aria-label="Career Navigation"
             data-office-ui="true"
             data-no-swipe="true"
-            className="office-floating-card rounded-[20px] p-1 grid grid-cols-5 gap-1 select-none"
+            className="office-floating-card rounded-xl px-1 grid grid-cols-5 select-none overflow-hidden"
           >
             {/* Office */}
             <button
               type="button"
               data-office-ui="true"
               onClick={() => handleTabChange('overview')}
-              className={`${activeTab === 'overview' ? 'office-nav-tab-active' : 'office-nav-tab-inactive'} rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer relative`}
+              aria-current={activeTab === 'overview' ? 'page' : undefined}
+              className={`${activeTab === 'overview' ? 'office-nav-tab-active' : 'office-nav-tab-inactive'} min-h-12 py-1.5 px-0.5 flex flex-col items-center justify-center gap-0.5 cursor-pointer relative`}
             >
               <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
                 <path d="M12 3 3 10h2v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9h2L12 3z" />
               </svg>
-              <span className="text-xs font-extrabold tracking-tight leading-tight">Office</span>
+              <span className="text-xs font-medium leading-tight">Office</span>
             </button>
 
             {/* Squad */}
@@ -2221,12 +2164,13 @@ function CareerPlayHubContent() {
               type="button"
               data-office-ui="true"
               onClick={() => handleTabChange('squad')}
-              className={`${activeTab === 'squad' ? 'office-nav-tab-active' : 'office-nav-tab-inactive'} rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer relative`}
+              aria-current={activeTab === 'squad' ? 'page' : undefined}
+              className={`${activeTab === 'squad' ? 'office-nav-tab-active' : 'office-nav-tab-inactive'} min-h-12 py-1.5 px-0.5 flex flex-col items-center justify-center gap-0.5 cursor-pointer relative`}
             >
               <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
                 <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
               </svg>
-              <span className="text-xs font-extrabold tracking-tight leading-tight">Squad</span>
+              <span className="text-xs font-medium leading-tight">Squad</span>
             </button>
 
             {/* Fixtures */}
@@ -2234,12 +2178,13 @@ function CareerPlayHubContent() {
               type="button"
               data-office-ui="true"
               onClick={() => handleTabChange('fixtures')}
-              className={`${activeTab === 'fixtures' ? 'office-nav-tab-active' : 'office-nav-tab-inactive'} rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer relative`}
+              aria-current={activeTab === 'fixtures' ? 'page' : undefined}
+              className={`${activeTab === 'fixtures' ? 'office-nav-tab-active' : 'office-nav-tab-inactive'} min-h-12 py-1.5 px-0.5 flex flex-col items-center justify-center gap-0.5 cursor-pointer relative`}
             >
               <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
                 <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5v-5z" />
               </svg>
-              <span className="text-xs font-extrabold tracking-tight leading-tight">Fixtures</span>
+              <span className="text-xs font-medium leading-tight">Fixtures</span>
             </button>
 
             {/* Transfers */}
@@ -2247,12 +2192,13 @@ function CareerPlayHubContent() {
               type="button"
               data-office-ui="true"
               onClick={() => handleTabChange('transfers')}
-              className={`${activeTab === 'transfers' ? 'office-nav-tab-active' : 'office-nav-tab-inactive'} rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer relative`}
+              aria-current={activeTab === 'transfers' ? 'page' : undefined}
+              className={`${activeTab === 'transfers' ? 'office-nav-tab-active' : 'office-nav-tab-inactive'} min-h-12 py-1.5 px-0.5 flex flex-col items-center justify-center gap-0.5 cursor-pointer relative`}
             >
               <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
                 <path d="M6.99 11 3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z" />
               </svg>
-              <span className="text-xs font-extrabold tracking-tight leading-tight">Transfers</span>
+              <span className="text-xs font-medium leading-tight">Transfers</span>
               {incomingOffersCount > 0 && (
                 <span className="absolute top-1 right-2 w-2 h-2 rounded-full bg-[#f59e0b]" />
               )}
@@ -2265,14 +2211,14 @@ function CareerPlayHubContent() {
               onClick={() => setIsMoreMenuOpen((prev) => !prev)}
               aria-expanded={isMoreMenuOpen}
               aria-haspopup="true"
-              className={`${['table', 'cups', 'legacy'].includes(activeTab) ? 'office-nav-tab-active' : 'office-nav-tab-inactive'} rounded-[15px] py-1.5 px-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer relative`}
+              className={`${['table', 'cups', 'legacy'].includes(activeTab) ? 'office-nav-tab-active' : 'office-nav-tab-inactive'} min-h-12 py-1.5 px-0.5 flex flex-col items-center justify-center gap-0.5 cursor-pointer relative`}
             >
               <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
                 <circle cx="6" cy="12" r="2" />
                 <circle cx="12" cy="12" r="2" />
                 <circle cx="18" cy="12" r="2" />
               </svg>
-              <span className="text-xs font-extrabold tracking-tight leading-tight inline-flex items-center gap-0.5">
+              <span className="text-xs font-medium leading-tight inline-flex items-center gap-0.5">
                 <span>{activeTab === 'table' ? 'Table' : activeTab === 'cups' ? 'Cups' : activeTab === 'legacy' ? 'Legacy' : 'More'}</span>
                 <IconChevronDown className={`w-3 h-3 shrink-0 ${isMoreMenuOpen ? 'rotate-180' : ''}`} />
               </span>
@@ -2283,13 +2229,13 @@ function CareerPlayHubContent() {
           {isMoreMenuOpen && (
             <div
               data-office-ui="true"
-              className="office-floating-card absolute right-0 top-full mt-1.5 z-40 w-52 rounded-2xl p-1.5 shadow-2xl"
+              className="office-floating-card absolute right-0 top-full mt-1.5 z-40 w-52 rounded-xl p-1.5 shadow-sm"
               role="menu"
             >
               {[
-                { id: 'table', label: 'League Table', icon: <IconBarChart className="w-4 h-4 text-blue-700 shrink-0" /> },
-                { id: 'cups', label: 'Cups & Europe', icon: <IconTrophy className="w-4 h-4 text-amber-600 shrink-0" /> },
-                { id: 'legacy', label: 'Club Legacy', icon: <IconMedal className="w-4 h-4 text-emerald-700 shrink-0" /> },
+                { id: 'table', label: 'League table', icon: <IconBarChart className="w-4 h-4 text-[var(--ink-secondary)] shrink-0" /> },
+                { id: 'cups', label: 'Cups & Europe', icon: <IconTrophy className="w-4 h-4 text-[var(--ink-secondary)] shrink-0" /> },
+                { id: 'legacy', label: 'Club legacy', icon: <IconMedal className="w-4 h-4 text-[var(--ink-secondary)] shrink-0" /> },
               ].map((item) => (
                 <button
                   key={item.id}
@@ -2298,13 +2244,13 @@ function CareerPlayHubContent() {
                   data-office-ui="true"
                   aria-current={activeTab === item.id ? 'page' : undefined}
                   onClick={() => handleTabChange(item.id as CareerTab)}
-                  className={`w-full min-h-[44px] px-2.5 rounded-xl text-left flex items-center gap-2.5 cursor-pointer font-display font-bold text-[13px] text-[var(--office-text-primary)] ${
-                    activeTab === item.id ? 'bg-[#F7F6F3]' : 'hover:bg-[#F7F6F3]'
+                  className={`w-full min-h-[44px] px-2.5 rounded-lg text-left flex items-center gap-2.5 cursor-pointer text-sm text-[var(--ink-primary)] ${
+                    activeTab === item.id ? 'bg-[var(--surface-elevated)] font-semibold' : 'font-medium hover:bg-[var(--surface-subcard)]'
                   }`}
                 >
                   {item.icon}
                   <span className="flex-1 truncate">{item.label}</span>
-                  {activeTab === item.id && <IconCheck className="w-3.5 h-3.5 shrink-0 text-emerald-700" />}
+                  {activeTab === item.id && <IconCheck className="w-3.5 h-3.5 shrink-0 text-[var(--ink-secondary)]" />}
                 </button>
               ))}
 
@@ -2318,10 +2264,10 @@ function CareerPlayHubContent() {
                   handleExport();
                   setIsMoreMenuOpen(false);
                 }}
-                className="w-full min-h-[44px] px-2.5 rounded-xl text-left flex items-center gap-2.5 cursor-pointer font-display font-bold text-[13px] text-[var(--office-text-primary)] hover:bg-[#F7F6F3]"
+                className="w-full min-h-[44px] px-2.5 rounded-lg text-left flex items-center gap-2.5 cursor-pointer font-medium text-sm text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)]"
               >
-                <IconSave className="w-4 h-4 text-slate-700 shrink-0" />
-                <span>Backup Save</span>
+                <IconSave className="w-4 h-4 text-[var(--ink-secondary)] shrink-0" />
+                <span>Back up save</span>
               </button>
             </div>
           )}
@@ -2330,9 +2276,9 @@ function CareerPlayHubContent() {
         {dbLoadError && (
           <div
             role="alert"
-            className="mb-3 rounded-2xl bg-amber-50 border border-amber-300 px-3.5 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs text-amber-950 shadow-2xs"
+            className="mb-3 rounded-xl bg-amber-50 border border-amber-200 px-3.5 py-2.5 flex flex-wrap items-center justify-between gap-2 text-sm text-amber-900"
           >
-            <span className="font-semibold">
+            <span className="font-medium">
               {dbLoadError} Transfer market and cup opponent pools may be incomplete until reloaded.
             </span>
             <button
@@ -2347,7 +2293,7 @@ function CareerPlayHubContent() {
                   }
                 });
               }}
-              className="px-2.5 py-1 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-display font-bold uppercase tracking-wider text-[10px] cursor-pointer shrink-0"
+              className="min-h-8 px-3 rounded-lg bg-[var(--surface-card)] border border-[var(--border-crisp)] hover:bg-[var(--surface-subcard)] text-[var(--ink-primary)] font-semibold text-xs cursor-pointer shrink-0"
             >
               Retry
             </button>
@@ -2387,9 +2333,9 @@ function CareerPlayHubContent() {
                 <section
                   aria-label="Key Performance Indicators"
                   data-office-ui="true"
-                  className="office-reveal-2 rounded-2xl bg-[#E8E6E1] border border-zinc-300/70 p-1 select-none shadow-xs"
+                  className="office-floating-card office-reveal-2 rounded-xl select-none overflow-hidden"
                 >
-                  <div className="bg-white rounded-xl grid grid-cols-3 divide-x divide-[#E2DFD9]">
+                  <div className="grid grid-cols-3 divide-x divide-[var(--border-subtle)]">
                     {/* Metric 1: Transfer Budget */}
                     <button
                       type="button"
@@ -2399,20 +2345,13 @@ function CareerPlayHubContent() {
                         navigateToSection('transfers', 'market');
                         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                       }}
-                      className="px-2.5 sm:px-3.5 py-2.5 text-left hover:bg-[#F7F6F3] rounded-l-xl transition-colors cursor-pointer flex flex-col justify-between min-h-[64px] group focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#D97706]"
+                      className="px-2.5 sm:px-3.5 py-2.5 text-left hover:bg-[var(--surface-subcard)] transition-colors cursor-pointer flex flex-col justify-start gap-0.5 min-h-[64px] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-500"
                     >
-                      <div className="flex items-center justify-between gap-1 w-full">
-                        <span className="text-[11px] font-display font-bold uppercase tracking-wider text-zinc-600">
-                          Budget
-                        </span>
-                        <span className="text-sm font-black text-emerald-700 leading-none group-hover:translate-x-0.5 transition-transform" aria-hidden="true">
-                          &rsaquo;
-                        </span>
-                      </div>
-                      <div className="font-display font-extrabold text-lg sm:text-xl text-zinc-900 leading-tight tracking-tight mt-0.5 font-mono">
+                      <span className="block text-xs font-medium text-[var(--ink-muted)]">Budget</span>
+                      <div className="font-display font-semibold text-lg text-[var(--ink-primary)] leading-tight tabular-nums">
                         {formatOfficeBudget(save.finances.transferBudget, save.settings.currency)}
                       </div>
-                      <div className="text-[11px] sm:text-xs font-semibold text-emerald-700 whitespace-nowrap mt-0.5">
+                      <div className="text-xs text-[var(--ink-secondary)]">
                         {formatOfficeWageRoom(wageHeadroom, save.settings.currency)} room
                       </div>
                     </button>
@@ -2423,25 +2362,18 @@ function CareerPlayHubContent() {
                       data-office-ui="true"
                       aria-label={`League Position ${formatOrdinalRank(userRank)}, ${userStanding?.points || 0} points`}
                       onClick={() => handleTabChange('table')}
-                      className="px-2.5 sm:px-3.5 py-2.5 text-left hover:bg-[#F7F6F3] transition-colors cursor-pointer flex flex-col justify-between min-h-[64px] group focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#D97706]"
+                      className="px-2.5 sm:px-3.5 py-2.5 text-left hover:bg-[var(--surface-subcard)] transition-colors cursor-pointer flex flex-col justify-start gap-0.5 min-h-[64px] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-500"
                     >
-                      <div className="flex items-center justify-between gap-1 w-full">
-                        <span className="text-[11px] font-display font-bold uppercase tracking-wider text-zinc-600">
-                          League
-                        </span>
-                        <span className="text-sm font-black text-amber-700 leading-none group-hover:translate-x-0.5 transition-transform" aria-hidden="true">
-                          &rsaquo;
-                        </span>
-                      </div>
-                      <div className="flex items-baseline gap-1.5 mt-0.5">
-                        <span className="font-display font-extrabold text-lg sm:text-xl text-zinc-900 leading-tight">
+                      <span className="block text-xs font-medium text-[var(--ink-muted)]">League</span>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="font-display font-semibold text-lg text-[var(--ink-primary)] leading-tight tabular-nums">
                           {formatOrdinalRank(userRank)}
                         </span>
-                        <span className="text-[11px] sm:text-xs font-bold font-mono text-zinc-600 whitespace-nowrap">
+                        <span className="text-xs text-[var(--ink-secondary)] whitespace-nowrap tabular-nums">
                           {userStanding?.points || 0} pts
                         </span>
                       </div>
-                      <div className="flex items-center gap-1 mt-1" aria-label="Recent 5 match form">
+                      <div className="flex items-center gap-[3px] mt-0.5" aria-label="Recent 5 match form">
                         {(recentFormResults.length > 0
                           ? recentFormResults.slice(-5)
                           : (['W', 'W', 'D', 'W', 'W'] as const)
@@ -2449,7 +2381,7 @@ function CareerPlayHubContent() {
                           <span
                             key={idx}
                             data-force-white="true"
-                            className={`w-4.5 h-4.5 rounded-[4px] text-[10px] font-display font-extrabold text-white flex items-center justify-center ${
+                            className={`w-4 h-4 rounded-sm text-2xs font-semibold text-white flex items-center justify-center ${
                               res === 'W'
                                 ? 'bg-[#047857]'
                                 : res === 'D'
@@ -2477,33 +2409,19 @@ function CareerPlayHubContent() {
                           setShowOfficeInboxModal(true);
                         }
                       }}
-                      className="px-2.5 sm:px-3.5 py-2.5 text-left hover:bg-[#F7F6F3] rounded-r-xl transition-colors cursor-pointer flex flex-col justify-between min-h-[64px] group focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#D97706]"
+                      className="px-2.5 sm:px-3.5 py-2.5 text-left hover:bg-[var(--surface-subcard)] transition-colors cursor-pointer flex flex-col justify-start gap-0.5 min-h-[64px] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-500"
                     >
-                      <div className="flex items-center justify-between gap-1 w-full">
-                        <span
-                          className={`text-[11px] font-display font-bold uppercase tracking-wider flex items-center gap-1 ${
-                            reviewTotal > 0 ? 'text-amber-800' : 'text-zinc-600'
-                          }`}
-                        >
-                          {reviewTotal > 0 && (
-                            <span className="w-2 h-2 rounded-full bg-[#D97706] shrink-0" aria-hidden="true" />
-                          )}
-                          <span>Review</span>
-                        </span>
-                        <span className="text-sm font-black text-zinc-600 leading-none group-hover:translate-x-0.5 transition-transform" aria-hidden="true">
-                          &rsaquo;
-                        </span>
-                      </div>
+                      <span className="block text-xs font-medium text-[var(--ink-muted)]">Review</span>
                       <div
-                        className={`font-display font-extrabold text-lg sm:text-xl leading-tight mt-0.5 font-mono ${
-                          reviewTotal > 0 ? 'text-amber-800' : 'text-zinc-900'
+                        className={`font-display font-semibold text-lg leading-tight tabular-nums ${
+                          reviewTotal > 0 ? 'text-amber-800' : 'text-[var(--ink-primary)]'
                         }`}
                       >
                         {reviewTotal}
                       </div>
                       <div
-                        className={`text-[11px] sm:text-xs font-semibold whitespace-nowrap mt-0.5 ${
-                          reviewTotal > 0 ? 'text-amber-800' : 'text-zinc-600'
+                        className={`text-xs ${
+                          reviewTotal > 0 ? 'text-amber-800' : 'text-[var(--ink-secondary)]'
                         }`}
                       >
                         {officeReviewCount > 0
@@ -2564,47 +2482,24 @@ function CareerPlayHubContent() {
 
                   return (
                     <div className="space-y-3">
-                      {/* V11 Double-Bezel Matchday Showcase Card */}
-                      <div className="rounded-2xl bg-[#E8E6E1] border border-zinc-300/70 p-1 shadow-xs overflow-hidden">
-                        {/* Charcoal Stadium Header Strip */}
-                        <div
-                          data-force-white="true"
-                          className="relative rounded-t-xl overflow-hidden px-3.5 py-3 flex items-start justify-between gap-2"
-                          style={{
-                            backgroundColor: '#1E2024',
-                            borderBottom: '2px solid #D97706',
-                          }}
-                        >
-                          <img
-                            src="/images/photo_stadium_bowl.jpg"
-                            alt=""
-                            className="absolute inset-0 w-full h-full object-cover opacity-25 pointer-events-none"
-                          />
-                          <div className="relative z-10 min-w-0 text-left">
-                            <div className="text-[10.5px] font-mono font-bold uppercase tracking-wider text-amber-300 leading-tight whitespace-nowrap">
-                              Next Fixture
-                            </div>
-                            <div className="text-[13px] sm:text-sm font-display font-bold text-white leading-tight whitespace-nowrap mt-0.5">
-                              {nextScheduled.cupId === CUP_IDS.PRESEASON
-                                ? `${save.preseasonState?.tournamentName || 'Pre-Season Tour'}`
-                                : nextScheduled.isCup
-                                ? `${nextScheduled.cupName} • ${nextScheduled.roundName}`
-                                : `Matchday ${(nextScheduled.fixture as LeagueFixture).round} of 38`}
-                            </div>
-                          </div>
+                      {/* Next fixture card: plain header, then the two kits */}
+                      <div className="office-floating-card rounded-xl p-3.5 sm:p-4">
+                        <SectionHeader
+                          as="h2"
+                          title="Next fixture"
+                          meta={
+                            nextScheduled.cupId === CUP_IDS.PRESEASON
+                              ? `${save.preseasonState?.tournamentName || 'Pre-season tour'}`
+                              : nextScheduled.isCup
+                              ? `${nextScheduled.cupName} · ${nextScheduled.roundName}`
+                              : `Matchday ${(nextScheduled.fixture as LeagueFixture).round} of 38`
+                          }
+                        />
+                        <p className="mt-0.5 text-sm text-[var(--ink-muted)]">
+                          {formatOfficeFixtureDate(nextScheduled.fixture.date)} · {venueDisplay}
+                        </p>
 
-                          <div className="relative z-10 text-right shrink-0">
-                            <div className="font-display font-bold text-[12.5px] sm:text-sm text-white leading-tight whitespace-nowrap">
-                              {formatOfficeFixtureDate(nextScheduled.fixture.date)}
-                            </div>
-                            <div className="text-[11px] sm:text-xs font-semibold text-zinc-300 leading-tight mt-0.5 whitespace-nowrap">
-                              {venueDisplay}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Crisp Matchup Body */}
-                        <div className="bg-white rounded-b-xl px-3 py-4">
+                        <div className="pt-4">
                           <div className="grid grid-cols-[1fr_auto_1fr] items-center px-0.5">
                             {/* Home Club Kit */}
                             <div className="flex flex-col items-center text-center min-w-0 office-kit-enter-left">
@@ -2613,17 +2508,17 @@ function CareerPlayHubContent() {
                                 displayName={homeName}
                                 uid="office-hero-home"
                               />
-                              <h3 className="font-display font-extrabold text-[15px] sm:text-base text-zinc-900 tracking-tight truncate max-w-full mt-1.5">
+                              <h3 className="font-display font-semibold text-base text-[var(--ink-primary)] truncate max-w-full mt-1.5">
                                 {homeName}
                               </h3>
-                              <span className="mt-1 inline-block px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10.5px] font-mono font-bold uppercase tracking-wider">
+                              <span className="text-xs text-[var(--ink-muted)]">
                                 {isNeutralWembley ? 'Neutral' : 'Home'}
                               </span>
                             </div>
 
                             {/* Center VS */}
                             <div className="flex flex-col items-center justify-center px-1.5 -mt-5">
-                              <span className="w-9 h-9 rounded-full bg-[#F7F6F3] border border-[#E2DFD9] flex items-center justify-center font-display font-black text-xs text-zinc-700 uppercase tracking-wider">
+                              <span className="text-sm text-[var(--ink-muted)]">
                                 vs
                               </span>
                             </div>
@@ -2635,10 +2530,10 @@ function CareerPlayHubContent() {
                                 displayName={awayName}
                                 uid="office-hero-away"
                               />
-                              <h3 className="font-display font-extrabold text-[15px] sm:text-base text-zinc-900 tracking-tight truncate max-w-full mt-1.5">
+                              <h3 className="font-display font-semibold text-base text-[var(--ink-primary)] truncate max-w-full mt-1.5">
                                 {awayName}
                               </h3>
-                              <span className="mt-1 inline-block px-2.5 py-0.5 rounded-full bg-[#F7F6F3] text-zinc-700 border border-[#E2DFD9] text-[10.5px] font-mono font-bold uppercase tracking-wider">
+                              <span className="text-xs text-[var(--ink-muted)]">
                                 {isNeutralWembley ? 'Neutral' : 'Away'}
                               </span>
                             </div>
@@ -2648,7 +2543,7 @@ function CareerPlayHubContent() {
 
                       {/* Action Hierarchy: Tactile Amber Primary CTA + Clean V11 Secondary Pills */}
                       <div className="relative z-10 space-y-2">
-                        <button
+                        <Button
                           type="button"
                           data-office-ui="true"
                           disabled={simulating}
@@ -2677,7 +2572,7 @@ function CareerPlayHubContent() {
                               deadlineSave = initializeDeadlineDay(deadlineSave);
                               saveCareerSave(deadlineSave);
                               setSave(deadlineSave);
-                              showToast('Transfer Deadline Day has arrived! Complete negotiations before 23:00 BST.');
+                              showToast('Transfer deadline day has arrived. Complete negotiations before 23:00 BST.');
                               return;
                             }
                             if (save.season.currentDate < winterDeadline && fixDate >= winterDeadline) {
@@ -2685,45 +2580,45 @@ function CareerPlayHubContent() {
                               deadlineSave = initializeDeadlineDay(deadlineSave);
                               saveCareerSave(deadlineSave);
                               setSave(deadlineSave);
-                              showToast('Winter Transfer Deadline Day has arrived!');
+                              showToast('Winter transfer deadline day has arrived.');
                               return;
                             }
                             setActiveMatchFixture(nextScheduled.fixture);
                           }}
-                          className="office-play-match-btn w-full py-3.5 px-6 rounded-xl font-display font-extrabold text-base sm:text-[17px] tracking-tight flex items-center justify-center gap-2 cursor-pointer min-h-[50px] shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D97706]"
+                          variant="primary"
+                          fullWidth
+                          className="min-h-12 text-base"
                         >
-                          <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current shrink-0" aria-hidden="true">
-                            <path d="M8 5v14l11-7z" />
-                          </svg>
-                          <span>Prepare &amp; Play Match</span>
-                          <span className="text-lg leading-none font-bold ml-0.5" aria-hidden="true">&rsaquo;</span>
-                        </button>
+                          Prepare &amp; play match
+                        </Button>
 
                         <div className="grid grid-cols-2 gap-2">
-                          <button
+                          <Button
                             type="button"
                             data-office-ui="true"
                             disabled={simulating}
                             onClick={handlePlayNextMatchInstant}
-                            className="py-2.5 px-3 rounded-xl bg-white hover:bg-[#F7F6F3] border border-zinc-300/80 flex items-center justify-center gap-1.5 font-display font-bold text-sm text-zinc-900 cursor-pointer min-h-[44px] transition-all active:scale-[0.98] shadow-2xs focus-visible:outline-2 focus-visible:outline-[#D97706]"
+                            variant="secondary"
+                            className="min-h-11 px-2"
                           >
-                            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-amber-600" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[var(--ink-secondary)] shrink-0" aria-hidden="true">
                               <path d="M7 2v11h3v9l7-12h-4l4-8z" />
                             </svg>
-                            <span>Instant Sim</span>
-                          </button>
+                            <span>Instant sim</span>
+                          </Button>
 
-                          <button
+                          <Button
                             type="button"
                             data-office-ui="true"
                             onClick={() => setMatchOverviewModal({ type: 'preview', fixture: nextScheduled.fixture })}
-                            className="py-2.5 px-3 rounded-xl bg-white hover:bg-[#F7F6F3] border border-zinc-300/80 flex items-center justify-center gap-1.5 font-display font-bold text-sm text-zinc-900 cursor-pointer min-h-[44px] transition-all active:scale-[0.98] shadow-2xs focus-visible:outline-2 focus-visible:outline-[#D97706]"
+                            variant="secondary"
+                            className="min-h-11 px-2"
                           >
-                            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-zinc-700" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-[var(--ink-secondary)] shrink-0" aria-hidden="true">
                               <path d="M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zm5.6 8H19v6h-2.8v-6z" />
                             </svg>
-                            <span>Match Dossier</span>
-                          </button>
+                            <span>Match dossier</span>
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -2734,21 +2629,21 @@ function CareerPlayHubContent() {
               /* End-of-Season Banner when all 38 fixtures concluded */
               <section
                 data-office-ui="true"
-                className="office-reveal-3 rounded-2xl bg-white/90 backdrop-blur-md border border-slate-200/90 p-4 space-y-3 text-left shadow-xs"
+                className="office-floating-card office-reveal-3 rounded-xl p-4 text-left"
               >
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-base font-display font-black text-[var(--office-text-primary)]">
-                    Season {save.season.seasonNumber} Complete
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h3 className="text-base font-display font-semibold text-[var(--ink-primary)]">
+                    Season {save.season.seasonNumber} complete
                   </h3>
-                  <button
+                  <Button
                     type="button"
                     data-office-ui="true"
                     onClick={handleAdvanceToNextSeasonAction}
                     disabled={simulating}
-                    className="office-play-match-btn py-2.5 px-4 rounded-full font-display font-bold text-sm cursor-pointer"
+                    variant="primary"
                   >
-                    Advance to Season {save.season.seasonNumber + 1} &rsaquo;
-                  </button>
+                    Advance to season {save.season.seasonNumber + 1}
+                  </Button>
                 </div>
               </section>
             )}
@@ -2759,32 +2654,24 @@ function CareerPlayHubContent() {
                 id="managerial-alerts"
                 aria-label="Contracts to Review"
                 data-office-ui="true"
-                className="office-reveal-5 border-y border-slate-300/80 py-2.5 px-1 select-none"
+                className="office-floating-card office-reveal-5 rounded-xl px-3.5 pt-3 pb-1 select-none"
               >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 border border-amber-300 text-[#b45309] shrink-0">
-                      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current" aria-hidden="true">
-                        <path d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 0 0 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
-                      </svg>
-                    </span>
-                    <h2 className="font-display font-extrabold text-sm sm:text-[15px] text-[#0b1536] truncate">
-                      Expiring Contracts
-                    </h2>
-                  </div>
+                <SectionHeader
+                  as="h2"
+                  title="Expiring contracts"
+                  action={
+                    <button
+                      type="button"
+                      data-office-ui="true"
+                      onClick={() => navigateToSection('transfers', 'contracts')}
+                      className="text-sm font-medium text-blue-700 hover:underline cursor-pointer min-h-[32px] focus-visible:outline-2 focus-visible:outline-blue-500"
+                    >
+                      All contracts
+                    </button>
+                  }
+                />
 
-                  <button
-                    type="button"
-                    data-office-ui="true"
-                    onClick={() => navigateToSection('transfers', 'contracts')}
-                    className="text-[13.5px] sm:text-sm font-display font-extrabold text-[#0f534c] hover:text-[#0f766e] hover:underline flex items-center gap-0.5 cursor-pointer shrink-0 min-h-[32px] focus-visible:outline-2 focus-visible:outline-[#0f766e]"
-                  >
-                    <span>All contracts</span>
-                    <span aria-hidden="true">&rsaquo;</span>
-                  </button>
-                </div>
-
-                <div className="divide-y divide-slate-300/75 border-t border-slate-300/75 mt-2">
+                <div className="divide-y divide-[var(--border-subtle)] mt-1.5">
                   {contractReviewPlayers.slice(0, 2).map((player) => {
                     const yearsLeft = Math.max(1, player.contractYears || 1);
                     return (
@@ -2795,28 +2682,25 @@ function CareerPlayHubContent() {
                         onClick={() =>
                           navigateToSection('transfers', 'contracts', `contract-player-${player.id}`)
                         }
-                        className="w-full py-2.5 flex items-center justify-between gap-1.5 sm:gap-2.5 text-left hover:bg-amber-500/[0.06] transition-colors cursor-pointer min-h-[46px] group focus-visible:outline-2 focus-visible:outline-[#b45309]"
+                        className="w-full py-2.5 flex items-center justify-between gap-2 text-left hover:bg-[var(--surface-subcard)] transition-colors cursor-pointer min-h-[46px] focus-visible:outline-2 focus-visible:outline-blue-500"
                       >
-                        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                          <span className="w-2 h-2 rounded-full bg-[#d97706] shrink-0" aria-hidden="true" />
-                          <span className="px-1.5 py-0.5 rounded bg-[#ccfbf1] text-[#065f46] border border-[#5eead4] font-display font-black text-xs shrink-0">
+                        <div className="flex items-baseline gap-2 min-w-0">
+                          <span className="w-8 text-xs font-medium text-[var(--ink-muted)] shrink-0">
                             {player.position}
                           </span>
-                          <span className="font-display font-extrabold text-[13.5px] sm:text-[15px] text-[#0b1536] tracking-tight truncate">
+                          <span className="font-semibold text-sm text-[var(--ink-primary)] truncate">
                             {player.name}
                           </span>
-                          <span className="text-xs font-bold text-[#334155] shrink-0">
+                          <span className="text-xs text-[var(--ink-muted)] shrink-0 tabular-nums">
                             {player.rating} OVR
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-1 shrink-0">
-                          <span className="px-2 py-0.5 rounded-full bg-amber-100 text-[#78350f] border border-amber-300 font-display font-extrabold text-xs whitespace-nowrap">
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Tag tone="warning">
                             {yearsLeft} {yearsLeft === 1 ? 'yr' : 'yrs'} left
-                          </span>
-                          <span className="text-[#b45309] font-black text-sm group-hover:translate-x-0.5 transition-transform" aria-hidden="true">
-                            &rsaquo;
-                          </span>
+                          </Tag>
+                          <IconChevronDown className="w-3.5 h-3.5 -rotate-90 text-[var(--ink-muted)]" aria-hidden="true" />
                         </div>
                       </button>
                     );
@@ -2831,75 +2715,85 @@ function CareerPlayHubContent() {
               data-office-ui="true"
               className="office-reveal-6 pt-1 space-y-2.5 select-none"
             >
-              <div className="flex items-center justify-between gap-2 px-1">
-                <h2 className="font-display font-extrabold text-xs sm:text-[13px] uppercase tracking-wider text-[#1e293b]">
-                  Quick Actions
-                </h2>
-                <button
-                  type="button"
-                  data-office-ui="true"
-                  aria-expanded={showOfficeSeasonDrawer}
-                  onClick={() => setShowOfficeSeasonDrawer((prev) => !prev)}
-                  className="text-[13px] sm:text-sm font-display font-bold text-amber-800 hover:text-amber-950 inline-flex items-center gap-1 cursor-pointer min-h-[34px] px-1.5 py-0.5 rounded-lg hover:bg-amber-500/10 transition-colors focus-visible:outline-2 focus-visible:outline-[#D97706]"
-                >
-                  <span>Fast forward</span>
-                  <IconChevronDown className={`w-3.5 h-3.5 transition-transform ${showOfficeSeasonDrawer ? 'rotate-180' : ''}`} />
-                </button>
-              </div>
+              <SectionHeader
+                as="h2"
+                title="Quick actions"
+                className="items-center px-1"
+                action={
+                  <button
+                    type="button"
+                    data-office-ui="true"
+                    aria-expanded={showOfficeSeasonDrawer}
+                    onClick={() => setShowOfficeSeasonDrawer((prev) => !prev)}
+                    className="text-sm font-medium text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] inline-flex items-center gap-1 cursor-pointer min-h-[36px] px-1.5 rounded-lg hover:bg-[var(--surface-subcard)] transition-colors focus-visible:outline-2 focus-visible:outline-blue-500"
+                  >
+                    <span>Fast forward</span>
+                    <IconChevronDown className={`w-3.5 h-3.5 transition-transform ${showOfficeSeasonDrawer ? 'rotate-180' : ''}`} />
+                  </button>
+                }
+              />
 
               {/* Collapsible Fast-Forward / Calendar Strip */}
               {showOfficeSeasonDrawer && (
-                <div className="border-y border-slate-300/80 py-2.5 px-1 space-y-2">
+                <div className="space-y-2">
                   {injuredCount > 0 && (
-                    <div className="text-xs font-extrabold text-[#b91c1c] flex items-center gap-1">
+                    <div className="px-1 text-xs font-medium text-rose-700 flex items-center gap-1">
                       <IconMedkit className="w-3.5 h-3.5 shrink-0" />
-                      <span>{injuredCount} Injured</span>
+                      <span>{injuredCount} injured</span>
                     </div>
                   )}
                   <div className="grid grid-cols-4 gap-1.5">
-                    <button
+                    <Button
                       type="button"
                       data-office-ui="true"
                       onClick={handleContinueCalendar}
                       disabled={simulating}
-                      className="office-subcard py-2 px-2 rounded-xl font-display font-extrabold text-xs sm:text-[13px] text-[#1e40af] cursor-pointer min-h-[42px]"
+                      variant="secondary"
+                      size="sm"
+                      className="min-h-10 px-1"
                     >
-                      +1 Day
-                    </button>
-                    <button
+                      +1 day
+                    </Button>
+                    <Button
                       type="button"
                       data-office-ui="true"
                       onClick={() => setPendingFastForward('next_match')}
                       disabled={simulating || !nextScheduled}
-                      className="office-subcard py-2 px-2 rounded-xl font-display font-extrabold text-xs sm:text-[13px] text-[#0b1536] cursor-pointer min-h-[42px]"
+                      variant="secondary"
+                      size="sm"
+                      className="min-h-10 px-1"
                     >
-                      Next Match
-                    </button>
-                    <button
+                      Next match
+                    </Button>
+                    <Button
                       type="button"
                       data-office-ui="true"
                       onClick={() => setPendingFastForward('next_week')}
                       disabled={simulating}
-                      className="office-subcard py-2 px-2 rounded-xl font-display font-extrabold text-xs sm:text-[13px] text-[#0b1536] cursor-pointer min-h-[42px]"
+                      variant="secondary"
+                      size="sm"
+                      className="min-h-10 px-1"
                     >
-                      7 Days
-                    </button>
-                    <button
+                      7 days
+                    </Button>
+                    <Button
                       type="button"
                       data-office-ui="true"
                       onClick={() => setPendingFastForward('next_month')}
                       disabled={simulating}
-                      className="office-subcard py-2 px-2 rounded-xl font-display font-extrabold text-xs sm:text-[13px] text-[#0b1536] cursor-pointer min-h-[42px]"
+                      variant="secondary"
+                      size="sm"
+                      className="min-h-10 px-1"
                     >
-                      1 Month
-                    </button>
+                      1 month
+                    </Button>
                   </div>
                 </div>
               )}
 
-              {/* V11 Tactile Quick Actions Tray */}
-              <div className="rounded-2xl bg-[#E8E6E1] border border-zinc-300/70 p-1 shadow-xs">
-                <div className="bg-white rounded-xl p-2 grid grid-cols-3 gap-2">
+              {/* Quick actions row */}
+              <div className="office-floating-card rounded-xl overflow-hidden">
+                <div className="grid grid-cols-3 divide-x divide-[var(--border-subtle)]">
                   {/* Tactics */}
                   <button
                     type="button"
@@ -2908,10 +2802,10 @@ function CareerPlayHubContent() {
                       handleTabChange('squad');
                       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                     }}
-                    className="my11-tactile rounded-xl bg-[#F7F6F3] hover:bg-white border border-[#E2DFD9] hover:border-amber-400/80 py-2.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer min-h-[68px]"
+                    className="hover:bg-[var(--surface-subcard)] transition-colors py-3 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer min-h-[64px] text-[var(--ink-secondary)] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-500"
                   >
-                    <div className="w-9 h-9 rounded-lg bg-[#1E2024] text-white flex items-center justify-center shrink-0">
-                      <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-none stroke-current" strokeWidth="2" aria-hidden="true">
+                    <div className="flex items-center justify-center shrink-0">
+                      <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none stroke-current" strokeWidth="2" aria-hidden="true">
                         <circle cx="6" cy="6" r="2" fill="currentColor" />
                         <circle cx="18" cy="6" r="2" fill="currentColor" />
                         <circle cx="12" cy="12" r="2" fill="currentColor" />
@@ -2920,7 +2814,7 @@ function CareerPlayHubContent() {
                         <path d="M7.5 7.5 10.5 10.5M16.5 7.5 13.5 10.5M10.5 13.5 7.5 16.5M13.5 13.5 16.5 16.5" strokeLinecap="round" />
                       </svg>
                     </div>
-                    <span className="font-display font-bold text-xs text-zinc-900 leading-tight whitespace-nowrap">
+                    <span className="font-medium text-sm text-[var(--ink-primary)] leading-tight whitespace-nowrap">
                       Tactics
                     </span>
                   </button>
@@ -2934,14 +2828,14 @@ function CareerPlayHubContent() {
                       handleTabChange('squad');
                       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                     }}
-                    className="my11-tactile rounded-xl bg-[#F7F6F3] hover:bg-white border border-[#E2DFD9] hover:border-amber-400/80 py-2.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer min-h-[68px]"
+                    className="hover:bg-[var(--surface-subcard)] transition-colors py-3 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer min-h-[64px] text-[var(--ink-secondary)] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-500"
                   >
-                    <div className="w-9 h-9 rounded-lg bg-[#1E2024] text-white flex items-center justify-center shrink-0">
-                      <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
+                    <div className="flex items-center justify-center shrink-0">
+                      <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" aria-hidden="true">
                         <path d="M20.57 14.86 22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z" />
                       </svg>
                     </div>
-                    <span className="font-display font-bold text-xs text-zinc-900 leading-tight whitespace-nowrap">
+                    <span className="font-medium text-sm text-[var(--ink-primary)] leading-tight whitespace-nowrap">
                       Training
                     </span>
                   </button>
@@ -2951,14 +2845,14 @@ function CareerPlayHubContent() {
                     type="button"
                     data-office-ui="true"
                     onClick={() => navigateToSection('transfers', 'board', 'board-room-section')}
-                    className="my11-tactile rounded-xl bg-[#F7F6F3] hover:bg-white border border-[#E2DFD9] hover:border-amber-400/80 py-2.5 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer min-h-[68px]"
+                    className="hover:bg-[var(--surface-subcard)] transition-colors py-3 px-1 flex flex-col items-center justify-center gap-1.5 cursor-pointer min-h-[64px] text-[var(--ink-secondary)] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-500"
                   >
-                    <div className="w-9 h-9 rounded-lg bg-[#1E2024] text-white flex items-center justify-center shrink-0">
-                      <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-current" aria-hidden="true">
+                    <div className="flex items-center justify-center shrink-0">
+                      <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" aria-hidden="true">
                         <path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zM2 22h19v-3H2v3zm14-12v7h3v-7h-3zm-4.5-9L2 6v2h19V6l-9.5-5z" />
                       </svg>
                     </div>
-                    <span className="font-display font-bold text-xs text-zinc-900 leading-tight whitespace-nowrap">
+                    <span className="font-medium text-sm text-[var(--ink-primary)] leading-tight whitespace-nowrap">
                       Boardroom
                     </span>
                   </button>
@@ -2980,41 +2874,23 @@ function CareerPlayHubContent() {
                 >
                   <button
                     type="button"
-                    data-force-white="true"
                     onClick={() => {
                       navigateToSection('transfers', 'infrastructure', 'transfer-infrastructure-section');
                     }}
-                    className="w-full text-left rounded-2xl px-3.5 py-2.5 sm:px-4 flex items-center justify-between gap-3 shadow-sm hover:brightness-110 active:scale-[0.99] transition-all cursor-pointer group border border-zinc-800"
-                    style={{
-                      backgroundColor: '#1E2024',
-                      borderBottom: '2px solid #D97706',
-                    }}
+                    className="office-floating-card w-full text-left rounded-xl px-3.5 py-3 flex items-center justify-between gap-3 cursor-pointer hover:bg-[var(--surface-subcard)] transition-colors focus-visible:outline-2 focus-visible:outline-blue-500"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center font-display font-bold text-xs text-amber-300 shrink-0 group-hover:scale-105 transition-transform">
-                        HQ
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-display font-semibold text-base leading-snug text-[var(--ink-primary)]">
+                          Facilities
+                        </span>
+                        {activeCount > 0 && <Tag>{activeCount} upgrading</Tag>}
                       </div>
-                      <div className="min-w-0 space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-300">
-                            Facilities
-                          </span>
-                          {activeCount > 0 && (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-400 text-zinc-950">
-                              {activeCount} Upgrading
-                            </span>
-                          )}
-                        </div>
-                        <h4 className="font-display font-extrabold text-sm sm:text-base text-white truncate">
-                          {save.club.stadiumName || 'Club Stadium'} • {cap.toLocaleString()} seats
-                        </h4>
-                      </div>
+                      <p className="text-sm text-[var(--ink-muted)] truncate">
+                        {save.club.stadiumName || 'Club stadium'} · {cap.toLocaleString()} seats
+                      </p>
                     </div>
-
-                    <div className="flex items-center gap-1.5 text-xs font-display font-bold text-amber-300 group-hover:text-white transition-colors shrink-0">
-                      <span className="hidden sm:inline">Manage</span>
-                      <span className="text-base font-black leading-none group-hover:translate-x-0.5 transition-transform">&rsaquo;</span>
-                    </div>
+                    <IconChevronDown className="w-4 h-4 -rotate-90 shrink-0 text-[var(--ink-muted)]" aria-hidden="true" />
                   </button>
                 </section>
               );
@@ -3056,21 +2932,20 @@ function CareerPlayHubContent() {
                         fixture: fix,
                       })
                     }
-                    className="w-full border-t border-slate-300/80 pt-2.5 pb-1.5 px-1 hover:bg-slate-900/[0.03] flex flex-col gap-1.5 cursor-pointer transition-colors min-h-[54px] group focus-visible:outline-2 focus-visible:outline-[#1d5eff]"
+                    className="office-floating-card w-full rounded-xl px-3.5 py-3 hover:bg-[var(--surface-subcard)] flex flex-col gap-2 cursor-pointer transition-colors min-h-[54px] text-left focus-visible:outline-2 focus-visible:outline-blue-500"
                   >
                     {/* Header Line: Label + Round on Left, Stats Action on Right */}
                     <div className="flex items-center justify-between gap-2 w-full">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-display font-extrabold text-xs uppercase tracking-wider text-[#1e3a8a]">
-                          {prevScheduled ? 'Last Result' : 'Match Preview'}
+                      <div className="flex items-baseline gap-2 min-w-0">
+                        <span className="font-display font-semibold text-base leading-snug text-[var(--ink-primary)]">
+                          {prevScheduled ? 'Last result' : 'Match preview'}
                         </span>
-                        <span className="text-[#334155] font-bold text-xs">
-                          &bull; {roundLabel}
+                        <span className="text-sm text-[var(--ink-muted)] truncate">
+                          {roundLabel}
                         </span>
                       </div>
-                      <span className="font-display font-extrabold text-[13.5px] sm:text-sm text-[#1e40af] group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
-                        <span>Stats</span>
-                        <span aria-hidden="true">&rsaquo;</span>
+                      <span className="text-sm font-medium text-blue-700 shrink-0">
+                        Stats
                       </span>
                     </div>
 
@@ -3084,17 +2959,17 @@ function CareerPlayHubContent() {
                           uid="office-last-home"
                           className="!w-5 !h-5 shrink-0"
                         />
-                        <span className="font-display font-extrabold text-sm sm:text-[15px] text-[#0b1536] tracking-tight whitespace-nowrap">
+                        <span className="font-medium text-sm text-[var(--ink-primary)] truncate">
                           {homeName}
                         </span>
                       </div>
 
-                      <span className="px-2.5 py-0.5 rounded-lg bg-[#0b1536] text-white font-display font-black text-[13.5px] sm:text-sm shrink-0 whitespace-nowrap shadow-2xs">
+                      <span className="font-display font-semibold text-base text-[var(--ink-primary)] shrink-0 whitespace-nowrap tabular-nums">
                         {scoreLabel}
                       </span>
 
                       <div className="flex items-center justify-end gap-1.5 min-w-0">
-                        <span className="font-display font-extrabold text-sm sm:text-[15px] text-[#0b1536] tracking-tight whitespace-nowrap">
+                        <span className="font-medium text-sm text-[var(--ink-primary)] truncate">
                           {awayName}
                         </span>
                         <OfficeClubJerseySvg
@@ -3127,32 +3002,24 @@ function CareerPlayHubContent() {
               id="managerial-inbox"
               data-office-ui="true"
               onClick={(e) => e.stopPropagation()}
-              className="office-floating-card rounded-3xl p-4 sm:p-5 w-full max-w-lg max-h-[85vh] flex flex-col space-y-3.5 border border-indigo-100/80 shadow-2xl overflow-hidden"
+              className="office-floating-card rounded-xl p-4 sm:p-5 w-full max-w-lg max-h-[85vh] flex flex-col space-y-3.5 border border-[var(--border-subtle)] shadow-sm overflow-hidden"
             >
               {/* Header Bar */}
               <div className="flex items-center justify-between gap-2 border-b border-[var(--office-divider)] pb-2.5 shrink-0">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-[#1d5eff] shrink-0">
-                    <IconMail className="w-4 h-4" />
+                <h3 className="min-w-0 font-display font-semibold text-base text-[var(--ink-primary)] flex items-baseline gap-2">
+                  <span className="truncate">Managerial inbox</span>
+                  <span className="font-sans font-normal text-sm text-[var(--ink-muted)] tabular-nums">
+                    {allInbox.length}
                   </span>
-                  <div className="min-w-0">
-                    <h3 className="font-display font-extrabold text-sm text-[var(--office-text-primary)] flex items-center gap-2">
-                      <span className="truncate">Managerial Inbox</span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-50 border border-indigo-200/60 text-[#1d5eff] font-bold shrink-0">
-                        {allInbox.length}
-                      </span>
-                    </h3>
-                  </div>
-                </div>
+                </h3>
                 <div className="flex items-center gap-2 shrink-0">
                   {unreadInboxCount > 0 && (
                     <button
                       type="button"
                       data-office-ui="true"
                       onClick={handleMarkAllMessagesRead}
-                      className="text-xs font-bold text-[#1d5eff] hover:underline cursor-pointer inline-flex items-center gap-1 min-h-[36px] px-1"
+                      className="text-sm font-medium text-blue-700 hover:underline cursor-pointer min-h-[36px] px-1"
                     >
-                      <IconCheck className="w-3 h-3 shrink-0" />
                       <span>Mark all read</span>
                     </button>
                   )}
@@ -3160,7 +3027,7 @@ function CareerPlayHubContent() {
                     type="button"
                     data-office-ui="true"
                     onClick={() => setShowOfficeInboxModal(false)}
-                    className="office-subcard w-9 h-9 rounded-full flex items-center justify-center text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] transition-colors cursor-pointer shrink-0"
+                    className="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--ink-secondary)] hover:bg-[var(--surface-subcard)] hover:text-[var(--ink-primary)] transition-colors cursor-pointer shrink-0"
                     aria-label="Close managerial inbox"
                   >
                     <IconClose className="w-4 h-4" />
@@ -3183,14 +3050,14 @@ function CareerPlayHubContent() {
                       data-office-ui="true"
                       aria-pressed={active}
                       onClick={() => setInboxFilter(filter.id as typeof inboxFilter)}
-                      className={`min-h-[36px] px-2.5 rounded-xl text-xs font-display font-bold whitespace-nowrap cursor-pointer flex items-center gap-1 ${
+                      className={`min-h-[36px] px-3 rounded-full border text-xs whitespace-nowrap cursor-pointer flex items-center gap-1 transition-colors ${
                         active
-                          ? 'office-nav-tab-active shadow-sm'
-                          : 'office-subcard text-[var(--office-text-secondary)] hover:text-[var(--office-text-primary)]'
+                          ? 'bg-[var(--surface-elevated)] border-[var(--border-crisp)] text-[var(--ink-primary)] font-semibold'
+                          : 'bg-transparent border-[var(--border-subtle)] text-[var(--ink-secondary)] font-medium hover:text-[var(--ink-primary)]'
                       }`}
                     >
                       <span>{filter.label}</span>
-                      <span className="font-mono text-[10px] opacity-80">{filter.count}</span>
+                      <span className="tabular-nums text-[var(--ink-muted)]">{filter.count}</span>
                     </button>
                   );
                 })}
@@ -3198,7 +3065,7 @@ function CareerPlayHubContent() {
                   aria-label="Filter by message type"
                   value={['board', 'transfer', 'injury', 'match_report'].includes(inboxFilter) ? inboxFilter : ''}
                   onChange={(e) => setInboxFilter((e.target.value || 'all') as typeof inboxFilter)}
-                  className="ml-auto min-w-0 min-h-[36px] px-2 rounded-xl bg-white border border-slate-300 text-xs font-display font-bold text-[var(--office-text-primary)] cursor-pointer"
+                  className="ml-auto min-w-0 min-h-[36px] px-2 rounded-lg bg-[var(--surface-card)] border border-[var(--border-crisp)] text-xs font-medium text-[var(--ink-primary)] cursor-pointer"
                 >
                   <option value="">Type</option>
                   <option value="board">Board</option>
@@ -3223,7 +3090,7 @@ function CareerPlayHubContent() {
 
                   if (filteredMessages.length === 0) {
                     return (
-                      <p className="py-8 text-center text-xs font-semibold text-[var(--office-text-muted)]">
+                      <p className="py-8 text-center text-sm text-[var(--ink-muted)]">
                         No messages here.
                       </p>
                     );
@@ -3242,63 +3109,54 @@ function CareerPlayHubContent() {
                         key={msg.id}
                         data-office-ui="true"
                         onClick={() => handleToggleMessageRead(msg.id)}
-                        className={`office-subcard rounded-2xl p-3.5 space-y-2 cursor-pointer text-left transition-all hover:bg-indigo-50/20 ${
-                          !msg.isRead
-                            ? 'border-l-4 border-l-[#1d5eff] bg-gradient-to-r from-indigo-50/30 via-white to-white'
-                            : ''
-                        }`}
+                        className="office-subcard rounded-xl p-3.5 space-y-1.5 cursor-pointer text-left"
                       >
-                        {/* Card Header & Priority Tag */}
-                        <div className="flex items-center justify-between gap-2 text-[10.5px]">
+                        {/* Sender, status and date */}
+                        <div className="flex items-center justify-between gap-2 text-xs">
                           <div className="flex items-center gap-1.5 min-w-0">
                             {!msg.isRead && (
                               <span
-                                className="w-2 h-2 rounded-full bg-[#1d5eff] shrink-0 motion-safe:animate-pulse"
+                                className="w-2 h-2 rounded-full bg-[#1d5eff] shrink-0"
                                 title="Unread message"
                               />
                             )}
-                            <span className="font-display font-bold text-[var(--office-text-primary)] truncate">
+                            <span className="text-[var(--ink-secondary)] truncate">
                               {msg.sender}
                             </span>
                           </div>
 
                           <div className="flex items-center gap-2 shrink-0">
                             {isActionRequired ? (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1">
-                                <IconAlert className="w-2.5 h-2.5 shrink-0" />
-                                <span>Action Required</span>
-                              </span>
+                              <Tag tone="danger">Action required</Tag>
                             ) : isImportant ? (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
-                                <IconStar className="w-2.5 h-2.5 shrink-0" filled />
-                                <span>Important</span>
-                              </span>
+                              <Tag tone="warning">Important</Tag>
                             ) : (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-[#1d5eff] border border-blue-200 flex items-center gap-1">
-                                <IconDocument className="w-2.5 h-2.5 shrink-0" />
-                                <span>Info</span>
-                              </span>
+                              <Tag>Info</Tag>
                             )}
-                            <span className="font-mono text-[var(--office-text-muted)] text-[10px]">
+                            <span className="text-[var(--ink-muted)] text-xs tabular-nums">
                               {formatOfficeShortDate(msg.date)}
                             </span>
                           </div>
                         </div>
 
                         {/* Message Subject */}
-                        <div className="font-display font-bold text-xs text-[var(--office-text-primary)] leading-snug">
+                        <div
+                          className={`text-sm text-[var(--ink-primary)] leading-snug ${
+                            msg.isRead ? 'font-medium' : 'font-semibold'
+                          }`}
+                        >
                           {msg.subject}
                         </div>
 
                         {/* Body & Actions */}
                         {isExpanded ? (
-                          <div className="pt-2 border-t border-[var(--office-divider)] space-y-2.5 animate-fade-in">
-                            <p className="text-[11px] text-[var(--office-text-secondary)] whitespace-pre-line leading-relaxed">
+                          <div className="pt-2 border-t border-[var(--border-subtle)] space-y-2.5 animate-fade-in">
+                            <p className="text-sm text-[var(--ink-secondary)] whitespace-pre-line leading-relaxed">
                               {msg.body}
                             </p>
                             {effectiveActionType === 'promise_game_time' && !isResolved && (targetId || msg.targetId) ? (
                               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
-                                <button
+                                <Button
                                   type="button"
                                   data-office-ui="true"
                                   onClick={(e) => {
@@ -3312,11 +3170,13 @@ function CareerPlayHubContent() {
                                     handleUpdateSave(res.updatedSave);
                                     showToast(res.summary);
                                   }}
-                                  className="office-action-btn-primary py-2 px-3 rounded-xl font-display font-black text-[10.5px] uppercase tracking-wider shadow-sm cursor-pointer"
+                                  variant="primary"
+                                  size="sm"
+                                  className="min-h-10"
                                 >
-                                  Promise 3/5 Starts
-                                </button>
-                                <button
+                                  Promise 3/5 starts
+                                </Button>
+                                <Button
                                   type="button"
                                   data-office-ui="true"
                                   onClick={(e) => {
@@ -3330,11 +3190,13 @@ function CareerPlayHubContent() {
                                     handleUpdateSave(res.updatedSave);
                                     showToast(res.summary);
                                   }}
-                                  className="py-2 px-3 rounded-xl bg-white border border-slate-300 hover:border-blue-400 text-slate-800 font-display font-bold text-[10.5px] uppercase tracking-wider cursor-pointer"
+                                  variant="secondary"
+                                  size="sm"
+                                  className="min-h-10"
                                 >
-                                  Explain Rotation
-                                </button>
-                                <button
+                                  Explain rotation
+                                </Button>
+                                <Button
                                   type="button"
                                   data-office-ui="true"
                                   onClick={(e) => {
@@ -3348,13 +3210,15 @@ function CareerPlayHubContent() {
                                     handleUpdateSave(res.updatedSave);
                                     showToast(res.summary);
                                   }}
-                                  className="py-2 px-3 rounded-xl bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 font-display font-bold text-[10.5px] uppercase tracking-wider cursor-pointer"
+                                  variant="danger"
+                                  size="sm"
+                                  className="min-h-10"
                                 >
-                                  Transfer List
-                                </button>
+                                  Transfer list
+                                </Button>
                               </div>
                             ) : effectiveActionLabel && !isResolved ? (
-                              <button
+                              <Button
                                 type="button"
                                 data-office-ui="true"
                                 onClick={(e) => {
@@ -3367,23 +3231,21 @@ function CareerPlayHubContent() {
                                     targetId: targetId || msg.targetId,
                                   });
                                 }}
-                                className="office-action-btn-primary w-full py-2.5 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                                variant="primary"
+                                fullWidth
                               >
                                 <span>{effectiveActionLabel}</span>
-                                <span>&rarr;</span>
-                              </button>
+                              </Button>
                             ) : null}
                           </div>
                         ) : (
                           <div className="space-y-1">
-                            <p className="text-[11px] text-[var(--office-text-muted)] truncate">
+                            <p className="text-sm text-[var(--ink-muted)] truncate">
                               {msg.body.replace(/\n+/g, ' ')}
                             </p>
                             {isActionRequired && effectiveActionLabel && (
-                              <div className="text-[10px] font-bold text-[#1d5eff] flex items-center gap-1 pt-0.5">
-                                <IconBolt className="w-3 h-3 shrink-0" />
+                              <div className="text-xs font-medium text-blue-700 pt-0.5">
                                 <span>{effectiveActionLabel}</span>
-                                <span>&rsaquo;</span>
                               </div>
                             )}
                           </div>
@@ -3397,7 +3259,7 @@ function CareerPlayHubContent() {
                     type="button"
                     data-office-ui="true"
                     onClick={handleClearReadMessages}
-                    className="w-full min-h-[40px] text-xs font-bold text-slate-600 hover:text-rose-600 transition-colors cursor-pointer"
+                    className="w-full min-h-[40px] text-sm font-medium text-[var(--ink-secondary)] hover:text-rose-700 transition-colors cursor-pointer"
                     title="Archive read messages that require no further action"
                   >
                     Clear read messages
@@ -3610,59 +3472,44 @@ function CareerPlayHubContent() {
           aria-modal="true"
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fade-in motion-reduce:animate-none"
         >
-          <div className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-7 max-w-lg w-full space-y-5 shadow-2xl text-left relative text-[#0b1536] max-h-[90dvh] overflow-y-auto">
+          <div className="office-floating-card border border-[var(--border-subtle)] rounded-xl p-5 sm:p-6 max-w-lg w-full space-y-4 shadow-sm text-left relative text-[var(--ink-primary)] max-h-[90dvh] overflow-y-auto">
             <header className="space-y-1.5">
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 bg-amber-50 border border-amber-300 px-2.5 py-0.5 rounded-full inline-block font-display">
-                  Official Announcement
-                </span>
-                <span className="text-xs font-mono font-bold text-slate-500">
-                  8 July {save.season.yearStart}
-                </span>
-              </div>
-              <h3 className="text-xl sm:text-2xl font-display font-black text-[#0b1536] uppercase tracking-tight flex items-center gap-2">
-                <IconCalendar className="w-5 h-5 text-[#1d5eff] shrink-0" />
-                <span>Premier League Fixture Release Day!</span>
+              <Eyebrow>Announcement · 8 July {save.season.yearStart}</Eyebrow>
+              <h3 className="text-xl font-display font-bold text-[var(--ink-primary)]">
+                Premier League fixture release day
               </h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                The Premier League computer has officially finalized all 38 fixtures for the {save.season.yearStart}/{(save.season.yearStart + 1).toString().slice(-2)} season. Opening day, rival derbies, festive fixtures, and the final day are ready.
+              <p className="text-sm text-[var(--ink-secondary)] leading-relaxed">
+                All 38 fixtures for the {save.season.yearStart}/{(save.season.yearStart + 1).toString().slice(-2)} season are set. Opening day, rival derbies, festive fixtures and the final day are ready.
               </p>
             </header>
 
-            <div className="office-subcard border border-slate-200/80 rounded-2xl p-4 text-xs space-y-2 bg-slate-50/70">
-              <div className="flex justify-between items-center text-slate-700">
-                <span className="text-slate-500 font-medium">Campaign Length:</span>
-                <span className="font-mono text-[#0b1536] font-bold">38 Matchday Rounds</span>
-              </div>
-              <div className="flex justify-between items-center text-slate-700">
-                <span className="text-slate-500 font-medium">Match Allocation:</span>
-                <span className="font-mono text-amber-800 font-bold">19 Home • 19 Away</span>
-              </div>
+            <div className="divide-y divide-[var(--border-subtle)] border-y border-[var(--border-subtle)]">
+              <StatRow label="Campaign length" value="38 matchdays" />
+              <StatRow label="Match allocation" value="19 home · 19 away" />
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
-              <button
+              <Button
                 type="button"
                 onClick={() => {
                   setShowFixtureReleasePromptModal(false);
                   setShowFixtureReleaseModal(true);
                 }}
-                className="office-action-btn-primary flex-1 py-3 px-4 rounded-xl text-white font-display font-black text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                variant="primary"
+                className="flex-1"
               >
-                <IconSparkles className="w-3.5 h-3.5 shrink-0" />
-                <span>Launch Live Reveal Ceremony</span>
-              </button>
-              <button
+                Launch live reveal ceremony
+              </Button>
+              <Button
                 type="button"
                 onClick={() => {
                   setShowFixtureReleasePromptModal(false);
                   handleFinishFixtureRelease();
                 }}
-                className="office-subcard py-3 px-4 rounded-xl border border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-900 font-display font-bold text-xs uppercase transition-all cursor-pointer text-center shadow-2xs inline-flex items-center justify-center gap-1.5"
+                variant="secondary"
               >
-                <IconSkipForward className="w-3.5 h-3.5 shrink-0" />
-                <span>Skip &amp; Unlock Calendar</span>
-              </button>
+                Skip &amp; unlock calendar
+              </Button>
             </div>
           </div>
         </div>
@@ -3694,17 +3541,15 @@ function CareerPlayHubContent() {
           aria-modal="true"
           className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 motion-reduce:transition-none motion-reduce:animate-none animate-fade-in"
         >
-          <div className="office-floating-card bg-white border border-amber-300/80 rounded-3xl p-5 sm:p-7 max-w-xl w-full space-y-4 shadow-2xl text-left relative max-h-[90dvh] overflow-y-auto text-[#0b1536]">
+          <div className="office-floating-card border border-[var(--border-subtle)] rounded-xl p-5 sm:p-6 max-w-xl w-full space-y-4 shadow-sm text-left relative max-h-[90dvh] overflow-y-auto text-[var(--ink-primary)]">
             <div className="flex justify-between items-start gap-2">
               <div className="space-y-1 min-w-0">
-                <span className="text-[11px] font-black uppercase text-amber-700 tracking-wider font-display">
-                  Season {save.season.seasonNumber} Review
-                </span>
-                <h3 className="text-xl sm:text-2xl font-display font-black text-[#0b1536] uppercase tracking-tight flex items-center gap-2">
+                <Eyebrow>Season {save.season.seasonNumber} review</Eyebrow>
+                <h3 className="text-xl font-display font-bold text-[var(--ink-primary)] flex items-center gap-2">
                   {seasonSummary.leagueTitle ? (
                     <>
-                      <IconCrown className="w-5 h-5 text-amber-500 shrink-0" />
-                      <span>League Champions</span>
+                      <IconCrown className="w-5 h-5 text-amber-600 shrink-0" />
+                      <span>League champions</span>
                     </>
                   ) : (
                     <span>Finished {formatOrdinalRank(seasonSummary.finalPosition)}</span>
@@ -3714,7 +3559,7 @@ function CareerPlayHubContent() {
               <button
                 type="button"
                 onClick={() => setShowSeasonReviewModal(false)}
-                className="w-10 h-10 rounded-full office-subcard border border-slate-200 text-slate-500 hover:text-[#0b1536] flex items-center justify-center cursor-pointer transition-colors shadow-2xs shrink-0"
+                className="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--ink-secondary)] hover:bg-[var(--surface-subcard)] hover:text-[var(--ink-primary)] transition-colors cursor-pointer shrink-0"
                 aria-label="Close modal"
               >
                 <IconClose className="w-4 h-4" />
@@ -3722,64 +3567,64 @@ function CareerPlayHubContent() {
             </div>
 
             {/* Headline result: record, prize, silverware, Europe (each shown once) */}
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 border-y border-slate-200 py-3">
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 border-y border-[var(--border-subtle)] py-3">
               {userStanding && (
                 <div>
-                  <dt className="text-[11px] font-bold text-slate-500 uppercase">Record</dt>
-                  <dd className="font-display font-black text-base text-[#0b1536]">
+                  <dt className="text-xs font-medium text-[var(--ink-muted)]">Record</dt>
+                  <dd className="font-display font-semibold text-base text-[var(--ink-primary)] tabular-nums">
                     {userStanding.won}W {userStanding.drawn}D {userStanding.lost}L
-                    <span className="font-mono font-bold text-xs text-slate-600"> · {userStanding.points} pts</span>
+                    <span className="font-sans font-normal text-xs text-[var(--ink-secondary)]"> · {userStanding.points} pts</span>
                   </dd>
                 </div>
               )}
               <div>
-                <dt className="text-[11px] font-bold text-slate-500 uppercase">Prize Money</dt>
-                <dd className="font-display font-black text-base text-emerald-700">
+                <dt className="text-xs font-medium text-[var(--ink-muted)]">Prize money</dt>
+                <dd className="font-display font-semibold text-base text-emerald-700 tabular-nums">
                   +{formatCareerCurrency(seasonSummary.prizeMoney, save.settings.currency)}
                 </dd>
               </div>
               <div>
-                <dt className="text-[11px] font-bold text-slate-500 uppercase">Silverware</dt>
-                <dd className="font-display font-black text-base text-amber-700">
+                <dt className="text-xs font-medium text-[var(--ink-muted)]">Silverware</dt>
+                <dd className="font-display font-semibold text-base text-[var(--ink-primary)]">
                   {seasonSummary.trophiesWon.length > 0
-                    ? `${seasonSummary.trophiesWon.length} ${seasonSummary.trophiesWon.length === 1 ? 'Trophy' : 'Trophies'}`
+                    ? `${seasonSummary.trophiesWon.length} ${seasonSummary.trophiesWon.length === 1 ? 'trophy' : 'trophies'}`
                     : 'None'}
                 </dd>
               </div>
               <div className="min-w-0">
-                <dt className="text-[11px] font-bold text-slate-500 uppercase">Europe</dt>
-                <dd className="font-display font-bold text-xs text-blue-700 leading-snug pt-1">
+                <dt className="text-xs font-medium text-[var(--ink-muted)]">Europe</dt>
+                <dd className="font-medium text-sm text-[var(--ink-primary)] leading-snug pt-0.5">
                   {seasonSummary.europeanQualification}
                 </dd>
               </div>
             </dl>
 
-            <p className="text-xs text-slate-700">
+            <p className="text-sm text-[var(--ink-secondary)]">
               Season {save.season.seasonNumber + 1} transfer budget:{' '}
-              <span className="font-mono font-bold text-[#0b1536]">
+              <span className="font-semibold text-[var(--ink-primary)] tabular-nums">
                 {formatCareerCurrency(save.finances.transferBudget + seasonSummary.prizeMoney, save.settings.currency)}
               </span>
             </p>
 
             {/* Secondary detail behind disclosures (collapsed by default) */}
-            <div className="divide-y divide-slate-200 border-y border-slate-200">
+            <div className="divide-y divide-[var(--border-subtle)] border-y border-[var(--border-subtle)]">
               <div>
                 <button
                   type="button"
                   aria-expanded={seasonReviewOpenSection === 'growth'}
                   onClick={() => setSeasonReviewOpenSection((prev) => (prev === 'growth' ? null : 'growth'))}
-                  className="w-full min-h-[44px] flex items-center justify-between gap-2 text-left cursor-pointer text-xs font-display font-black uppercase tracking-wider text-[#0b1536]"
+                  className="w-full min-h-[44px] flex items-center justify-between gap-2 text-left cursor-pointer text-sm font-semibold text-[var(--ink-primary)]"
                 >
-                  <span className="flex items-center gap-1.5">
-                    <IconSprout className="w-3.5 h-3.5 text-blue-700 shrink-0" />
-                    <span>Player Development ({seasonSummary.progressionReport.logs.length})</span>
+                  <span>
+                    Player development{' '}
+                    <span className="font-normal text-[var(--ink-muted)]">{seasonSummary.progressionReport.logs.length}</span>
                   </span>
                   <IconChevronDown className={`w-4 h-4 shrink-0 ${seasonReviewOpenSection === 'growth' ? 'rotate-180' : ''}`} />
                 </button>
                 {seasonReviewOpenSection === 'growth' && (
                   <div className="pb-3 space-y-1.5">
-                    <p className="text-[11px] text-slate-600">Everyone ages a year; fitness resets to 100%.</p>
-                    <ul className="text-xs text-slate-700 divide-y divide-slate-200">
+                    <p className="text-xs text-[var(--ink-muted)]">Everyone ages a year; fitness resets to 100%.</p>
+                    <ul className="text-sm text-[var(--ink-secondary)] divide-y divide-[var(--border-subtle)]">
                       {seasonSummary.progressionReport.logs.map((log, idx) => (
                         <li key={idx} className="py-1">
                           {log}
@@ -3796,21 +3641,18 @@ function CareerPlayHubContent() {
                     type="button"
                     aria-expanded={seasonReviewOpenSection === 'division'}
                     onClick={() => setSeasonReviewOpenSection((prev) => (prev === 'division' ? null : 'division'))}
-                    className="w-full min-h-[44px] flex items-center justify-between gap-2 text-left cursor-pointer text-xs font-display font-black uppercase tracking-wider text-[#0b1536]"
+                    className="w-full min-h-[44px] flex items-center justify-between gap-2 text-left cursor-pointer text-sm font-semibold text-[var(--ink-primary)]"
                   >
-                    <span className="flex items-center gap-1.5">
-                      <IconRefresh className="w-3.5 h-3.5 text-[#1d5eff] shrink-0" />
-                      <span>Promoted &amp; Relegated</span>
-                    </span>
+                    <span>Promoted &amp; relegated</span>
                     <IconChevronDown className={`w-4 h-4 shrink-0 ${seasonReviewOpenSection === 'division' ? 'rotate-180' : ''}`} />
                   </button>
                   {seasonReviewOpenSection === 'division' && (
-                    <div className="pb-3 space-y-1.5 text-xs">
+                    <div className="pb-3 space-y-1.5 text-sm">
                       {seasonSummary.promotedClubNames && seasonSummary.promotedClubNames.length > 0 && (
                         <p className="flex items-start gap-1.5 text-emerald-900">
                           <IconTrendingUp className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                           <span>
-                            <span className="font-bold">Up:</span> {seasonSummary.promotedClubNames.join(', ')}
+                            <span className="font-semibold">Up:</span> {seasonSummary.promotedClubNames.join(', ')}
                           </span>
                         </p>
                       )}
@@ -3818,7 +3660,7 @@ function CareerPlayHubContent() {
                         <p className="flex items-start gap-1.5 text-rose-900">
                           <IconTrendingUp className="w-3.5 h-3.5 rotate-180 shrink-0 mt-0.5" />
                           <span>
-                            <span className="font-bold">Down:</span> {seasonSummary.relegatedClubNames.join(', ')}
+                            <span className="font-semibold">Down:</span> {seasonSummary.relegatedClubNames.join(', ')}
                           </span>
                         </p>
                       )}
@@ -3830,25 +3672,25 @@ function CareerPlayHubContent() {
 
             {/* Action Buttons */}
             <div className="flex gap-3">
-              <button
+              <Button
                 type="button"
                 onClick={() => setShowSeasonReviewModal(false)}
-                className="office-subcard py-3 px-4 rounded-xl border border-slate-200 text-slate-700 hover:text-slate-900 text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                variant="secondary"
               >
                 Close
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 onClick={() => {
                   setShowSeasonReviewModal(false);
                   handleAdvanceToNextSeasonAction();
                 }}
                 disabled={simulating}
-                className="flex-1 py-3 px-5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+                variant="primary"
+                className="flex-1"
               >
-                <IconArrowRight className="w-3.5 h-3.5 shrink-0" />
-                <span>Start Season {save.season.seasonNumber + 1}</span>
-              </button>
+                Start season {save.season.seasonNumber + 1}
+              </Button>
             </div>
           </div>
         </div>
@@ -3861,28 +3703,28 @@ function CareerPlayHubContent() {
           aria-modal="true"
           className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 motion-reduce:transition-none"
         >
-          <div className="office-floating-card bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 max-w-md w-full space-y-4 shadow-2xl text-left relative text-slate-900 max-h-[90dvh] overflow-y-auto">
+          <div className="office-floating-card border border-[var(--border-subtle)] rounded-xl p-5 sm:p-6 max-w-md w-full space-y-4 shadow-sm text-left relative text-[var(--ink-primary)] max-h-[90dvh] overflow-y-auto">
             <div className="flex justify-between items-start gap-2">
-              <h3 className="text-lg font-display font-black text-slate-900 uppercase tracking-tight">
+              <h3 className="text-lg font-display font-semibold text-[var(--ink-primary)]">
                 {getFastForwardDetails(pendingFastForward).title}
               </h3>
               <button
                 type="button"
                 onClick={() => setPendingFastForward(null)}
-                className="w-10 h-10 rounded-full office-subcard border border-slate-200 text-slate-500 hover:text-slate-900 flex items-center justify-center cursor-pointer shrink-0 transition-colors"
+                className="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--ink-secondary)] hover:bg-[var(--surface-subcard)] hover:text-[var(--ink-primary)] transition-colors cursor-pointer shrink-0"
                 aria-label="Close modal"
               >
                 <IconClose className="w-4 h-4" />
               </button>
             </div>
 
-            <p className="text-xs text-slate-700 leading-relaxed">
+            <p className="text-sm text-[var(--ink-secondary)] leading-relaxed">
               Simulates to{' '}
-              <span className="font-bold text-blue-700">{getFastForwardDetails(pendingFastForward).targetDate}</span>.
-              Results are permanent unless Match Retry is on.
+              <span className="font-semibold text-[var(--ink-primary)]">{getFastForwardDetails(pendingFastForward).targetDate}</span>.
+              Results are permanent unless match retry is on.
             </p>
 
-            <div className="divide-y divide-slate-200 border-y border-slate-200 text-xs font-bold text-slate-900">
+            <div className="divide-y divide-[var(--border-subtle)] border-y border-[var(--border-subtle)] text-sm font-medium text-[var(--ink-primary)]">
               <label className="flex items-center justify-between gap-3 min-h-[44px] cursor-pointer">
                 <span>Use preferred starting 11</span>
                 <input
@@ -3899,7 +3741,7 @@ function CareerPlayHubContent() {
                   onChange={(e) =>
                     setFastForwardHaltOnTransferMilestone(e.target.value as typeof fastForwardHaltOnTransferMilestone)
                   }
-                  className="min-w-0 min-h-[36px] px-2 rounded-lg bg-white border border-slate-300 text-xs font-bold text-slate-900 cursor-pointer"
+                  className="min-w-0 min-h-[36px] px-2 rounded-lg bg-[var(--surface-card)] border border-[var(--border-crisp)] text-sm font-medium text-[var(--ink-primary)] cursor-pointer"
                 >
                   <option value="deadline">Deadline day</option>
                   <option value="window_open_or_close">Window open + deadline</option>
@@ -3909,13 +3751,14 @@ function CareerPlayHubContent() {
             </div>
 
             <div className="flex gap-3 pt-1">
-              <button
+              <Button
                 onClick={() => setPendingFastForward(null)}
-                className="flex-1 py-3 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer"
+                variant="secondary"
+                className="flex-1"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => {
                   const target = pendingFastForward;
                   setPendingFastForward(null);
@@ -3924,10 +3767,11 @@ function CareerPlayHubContent() {
                     haltOnTransferMilestone: fastForwardHaltOnTransferMilestone,
                   });
                 }}
-                className="flex-1 py-3 px-4 rounded-xl office-play-match-btn text-white font-display font-black text-xs uppercase tracking-wider transition-all cursor-pointer"
+                variant="primary"
+                className="flex-1"
               >
-                Fast Forward
-              </button>
+                Fast forward
+              </Button>
             </div>
           </div>
         </div>
@@ -3941,26 +3785,20 @@ function CareerPlayHubContent() {
           aria-modal="true"
           className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in motion-reduce:animate-none"
         >
-          <div className="office-floating-card bg-white border border-rose-300 rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-6 shadow-2xl text-center relative text-[#0b1536] max-h-[90dvh] overflow-y-auto">
-            <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center mx-auto text-rose-600 shadow-2xs">
-              <IconAlert className="w-7 h-7" />
-            </div>
+          <div className="office-floating-card border border-[var(--border-subtle)] rounded-xl p-5 sm:p-6 max-w-md w-full space-y-4 shadow-sm text-left relative text-[var(--ink-primary)] max-h-[90dvh] overflow-y-auto">
             <div className="space-y-1">
-              <span className="text-[10px] font-black uppercase text-rose-700 tracking-wider font-display">
-                Board of Directors Executive Notice
-              </span>
-              <h3 className="text-2xl font-display font-black text-rose-700 uppercase tracking-tight">
-                Contract Terminated
+              <Eyebrow>Board of directors notice</Eyebrow>
+              <h3 className="text-xl font-display font-bold text-rose-700">
+                Contract terminated
               </h3>
-              <p className="text-xs text-slate-600 leading-relaxed pt-1">
-                The Board of Directors of {effectiveClubName} has officially relieved you of your duties as first-team manager following an unacceptable run of league results and failure to meet seasonal expectations.
+              <p className="text-sm text-[var(--ink-secondary)] leading-relaxed pt-1">
+                The board of {effectiveClubName} has relieved you of your duties as first-team manager after a poor run of league results and a failure to meet the season&apos;s expectations.
               </p>
             </div>
 
-            <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 text-xs space-y-1">
-              <div className="text-[10px] uppercase font-bold text-slate-500">Board Confidence</div>
-              <div className="text-xl font-display font-black text-rose-700">0% (Dismissed)</div>
-              <div className="text-[10px] text-slate-600 font-medium">Club Objective Failed</div>
+            <div className="border-y border-[var(--border-subtle)]">
+              <StatRow label="Board confidence" value="0% (dismissed)" />
+              <StatRow label="Club objective" value="Failed" />
             </div>
 
             {/* Option C: Sacking Carousel Rebound Job Offers */}
@@ -3972,26 +3810,23 @@ function CareerPlayHubContent() {
               if (carouselOffers.length === 0) return null;
 
               return (
-                <section aria-label="Sacking Carousel Offers" className="text-left space-y-2 border-t border-slate-200 pt-3">
-                  <div className="text-[10px] font-display font-black uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
-                    <IconBriefcase className="w-3.5 h-3.5 shrink-0" />
-                    <span>Sacking Carousel — Emergency Rebound Offers ({carouselOffers.length})</span>
-                  </div>
+                <section aria-label="Sacking Carousel Offers" className="text-left space-y-2">
+                  <SectionHeader as="h4" title="Emergency job offers" meta={carouselOffers.length} />
                   <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                     {carouselOffers.map((offer) => (
                       <div
                         key={offer.id}
-                        className="office-subcard p-2.5 flex items-center justify-between gap-2 border border-slate-200 bg-slate-50/70"
+                        className="office-subcard rounded-lg p-2.5 flex items-center justify-between gap-2"
                       >
                         <div className="min-w-0">
-                          <div className="font-display font-black text-xs text-slate-900 truncate">
+                          <div className="font-semibold text-sm text-[var(--ink-primary)] truncate">
                             {offer.clubName}
                           </div>
-                          <div className="text-[10px] font-mono text-slate-500">
-                            {offer.clubTier.toUpperCase()} • Budget {formatOfficeBudget(offer.transferBudget, save.settings.currency)}
+                          <div className="text-xs text-[var(--ink-muted)]">
+                            {offer.clubTier.charAt(0).toUpperCase() + offer.clubTier.slice(1)} tier · Budget {formatOfficeBudget(offer.transferBudget, save.settings.currency)}
                           </div>
                         </div>
-                        <button
+                        <Button
                           type="button"
                           onClick={() => {
                             const seededSave: CareerSaveFile =
@@ -4018,13 +3853,15 @@ function CareerPlayHubContent() {
                               handleUpdateSave(res.updatedSave);
                               setDismissedSackedModal(false);
                               setActiveTab('overview');
-                              showToast(`Rebound accepted! Welcome to ${offer.clubName}.`);
+                              showToast(`Job accepted. Welcome to ${offer.clubName}.`);
                             }
                           }}
-                          className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-display font-black text-[10px] uppercase tracking-wider shrink-0 cursor-pointer"
+                          variant="secondary"
+                          size="sm"
+                          className="min-h-10 shrink-0"
                         >
-                          Take Job
-                        </button>
+                          Take job
+                        </Button>
                       </div>
                     ))}
                   </div>
@@ -4035,11 +3872,11 @@ function CareerPlayHubContent() {
             <div className="flex flex-col gap-2.5 pt-2">
               <Link
                 href="/career"
-                className="w-full py-3 px-4 rounded-xl office-subcard border border-slate-200 text-slate-700 hover:text-slate-900 font-display font-black text-xs uppercase tracking-wider transition-all shadow-2xs text-center"
+                className="w-full min-h-10 px-4 rounded-lg bg-[var(--surface-card)] border border-[var(--border-crisp)] hover:bg-[var(--surface-subcard)] text-[var(--ink-primary)] font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer transition-colors"
               >
-                Accept Dismissal &amp; Resign
+                Accept dismissal &amp; resign
               </Link>
-              <button
+              <Button
                 type="button"
                 onClick={() => {
                   const restoredSave: CareerSaveFile = {
@@ -4055,10 +3892,11 @@ function CareerPlayHubContent() {
                   setDismissedSackedModal(true);
                   showToast('Board granted one final probation period. Deliver results immediately.');
                 }}
-                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-rose-600 hover:from-amber-400 hover:to-rose-500 text-white font-display font-black text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer"
+                variant="primary"
+                fullWidth
               >
-                Appeal to Board (One Final Chance)
-              </button>
+                Appeal to board (one final chance)
+              </Button>
             </div>
           </div>
         </div>
@@ -4108,7 +3946,7 @@ function CareerPlayHubContent() {
               registeredPlayerIds: updatedIds,
             };
             handleUpdateSave(updated);
-            showToast('Squad registration submitted successfully.');
+            showToast('Squad registration submitted.');
           }}
         />
       )}
@@ -4130,41 +3968,39 @@ function CareerPlayHubContent() {
           <div
             data-office-ui="true"
             onClick={(e) => e.stopPropagation()}
-            className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 max-w-sm w-full space-y-4 shadow-2xl relative text-center text-[#0b1536]"
+            className="office-floating-card border border-[var(--border-subtle)] rounded-xl p-5 sm:p-6 max-w-sm w-full space-y-4 shadow-sm relative text-left text-[var(--ink-primary)]"
           >
-            <div className="w-12 h-12 rounded-2xl office-subcard border border-slate-200 text-slate-700 flex items-center justify-center mx-auto shadow-2xs">
-              <IconArrowLeft className="w-5 h-5" />
-            </div>
             <div>
-              <h3 className="font-display font-black text-[#0b1536] text-base uppercase tracking-tight">
-                Exit Career Mode?
+              <h3 className="font-display font-semibold text-[var(--ink-primary)] text-lg">
+                Exit career mode?
               </h3>
-              <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                Your season progress is automatically saved to your device. Where would you like to go?
+              <p className="text-sm text-[var(--ink-secondary)] mt-1.5 leading-relaxed">
+                Your season progress is saved to your device automatically. Where would you like to go?
               </p>
             </div>
             <div className="space-y-2 pt-1">
               <Link
                 href="/career"
-                className="w-full py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-md"
+                className="w-full min-h-10 px-4 rounded-lg bg-[var(--surface-card)] border border-[var(--border-crisp)] hover:bg-[var(--surface-subcard)] text-[var(--ink-primary)] font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer transition-colors"
               >
-                <IconSave className="w-3.5 h-3.5" />
-                <span>Save Slots Screen</span>
+                <IconSave className="w-4 h-4 text-[var(--ink-secondary)]" />
+                <span>Save slots screen</span>
               </Link>
               <Link
                 href="/"
-                className="w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-sm"
+                className="w-full min-h-10 px-4 rounded-lg bg-[var(--surface-card)] border border-[var(--border-crisp)] hover:bg-[var(--surface-subcard)] text-[var(--ink-primary)] font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer transition-colors"
               >
-                <IconHome className="w-3.5 h-3.5" />
-                <span>Main Title Screen</span>
+                <IconHome className="w-4 h-4 text-[var(--ink-secondary)]" />
+                <span>Main title screen</span>
               </Link>
-              <button
+              <Button
                 type="button"
                 onClick={() => setShowExitConfirmModal(false)}
-                className="w-full py-2.5 px-3 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 font-display font-bold text-xs uppercase tracking-wider cursor-pointer transition-colors"
+                variant="ghost"
+                fullWidth
               >
-                Keep Playing
-              </button>
+                Keep playing
+              </Button>
             </div>
           </div>
         </div>
@@ -4180,111 +4016,90 @@ function CareerPlayHubContent() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 max-w-lg w-full space-y-4 shadow-2xl relative text-[#0b1536] max-h-[90dvh] overflow-y-auto"
+            className="office-floating-card border border-[var(--border-subtle)] rounded-xl p-5 sm:p-6 max-w-lg w-full space-y-4 shadow-sm relative text-left text-[var(--ink-primary)] max-h-[90dvh] overflow-y-auto"
           >
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3 gap-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 text-[#1d5eff] flex items-center justify-center shrink-0">
-                  <IconBuilding className="w-4 h-4" />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="font-display font-black text-sm uppercase tracking-wide text-[#0b1536] truncate">
-                    Boardroom Confidence Dossier
-                  </h3>
-                  <span className="text-[10px] text-slate-500 block truncate">
-                    Comprehensive 1% granular club management evaluation
-                  </span>
-                </div>
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <h3 className="font-display font-semibold text-lg text-[var(--ink-primary)]">
+                  Board confidence
+                </h3>
+                <p className="text-sm text-[var(--ink-secondary)]">
+                  How the board rates your management.
+                </p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowBoardDossierModal(false)}
                 aria-label="Close modal"
-                className="w-9 h-9 rounded-full office-subcard border border-slate-200 text-slate-500 hover:text-[#0b1536] flex items-center justify-center cursor-pointer transition-colors shadow-2xs shrink-0"
+                className="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--ink-secondary)] hover:bg-[var(--surface-subcard)] hover:text-[var(--ink-primary)] transition-colors cursor-pointer shrink-0"
               >
                 <IconClose className="w-4 h-4" />
               </button>
             </div>
 
             {/* Overall Score Banner */}
-            <div className={`p-3.5 rounded-2xl border flex items-center justify-between gap-3 ${
-              boardConfidence >= 65
-                ? 'bg-emerald-50/80 border-emerald-300'
-                : boardConfidence >= 45
-                ? 'bg-amber-50/80 border-amber-300'
-                : 'bg-rose-50/80 border-rose-300'
-            }`}>
-              <div>
-                <span className="text-[10px] uppercase font-bold text-slate-500 block">Current Standing</span>
-                <div className="font-display font-black text-lg uppercase flex items-center gap-2">
+            <div className="border-y border-[var(--border-subtle)] py-3 grid grid-cols-2 gap-4">
+              <div className="min-w-0">
+                <span className="text-xs font-medium text-[var(--ink-muted)] block">Current standing</span>
+                <div className="font-display font-semibold text-lg leading-snug">
                   <span className={boardConfidence >= 65 ? 'text-emerald-700' : boardConfidence >= 45 ? 'text-amber-700' : 'text-rose-700'}>
                     {boardConfidence >= 75
                       ? 'Delighted'
                       : boardConfidence >= 60
                       ? 'Content'
                       : boardConfidence >= 45
-                      ? 'Under Scrutiny'
+                      ? 'Under scrutiny'
                       : 'Precarious'}
                   </span>
-                  <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded-full border shadow-2xs ${
-                    boardConfidence >= 65
-                      ? 'bg-white text-emerald-800 border-emerald-200'
-                      : boardConfidence >= 45
-                      ? 'bg-white text-amber-800 border-amber-200'
-                      : 'bg-white text-rose-800 border-rose-200'
-                  }`}>
-                    {boardConfidence}%
-                  </span>
+                  <span className="font-sans font-normal text-sm text-[var(--ink-muted)] tabular-nums"> · {boardConfidence}%</span>
                 </div>
               </div>
-              <div className="text-right">
-                <span className="text-[10px] uppercase font-bold text-slate-500 block">Season Objective</span>
-                <span className="text-xs font-display font-black text-blue-700">
-                  {boardStatus.expectation || (save.club.tier === 'elite' ? 'Win Title' : save.club.tier === 'upper' ? 'European Qualification' : 'Avoid Relegation')}
+              <div className="min-w-0">
+                <span className="text-xs font-medium text-[var(--ink-muted)] block">Season objective</span>
+                <span className="text-sm font-semibold text-[var(--ink-primary)] leading-snug">
+                  {boardStatus.expectation || (save.club.tier === 'elite' ? 'Win title' : save.club.tier === 'upper' ? 'European qualification' : 'Avoid relegation')}
                 </span>
               </div>
             </div>
 
             {/* 4 Pillars Breakdown */}
             <div className="space-y-2">
-              <span className="text-[10.5px] uppercase font-display font-black text-slate-500 tracking-wider block">
-                Evaluation Pillars Breakdown
-              </span>
+              <SectionHeader as="h4" title="Evaluation breakdown" />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                 {(boardStatus.pillars || [
                   {
-                    title: 'League Expectation',
+                    title: 'League expectation',
                     score: Math.min(100, Math.max(10, boardConfidence + 2)),
                     description: boardStatus.leagueContext || 'Tracking aligned with board league target.',
                     positive: boardConfidence >= 50
                   },
                   {
-                    title: 'Recent Form',
+                    title: 'Recent form',
                     score: Math.min(100, Math.max(10, boardConfidence - 3)),
                     description: boardStatus.formContext || 'Recent match results evaluated by directors.',
                     positive: boardConfidence >= 55
                   },
                   {
-                    title: 'Financial Discipline',
+                    title: 'Financial discipline',
                     score: Math.min(100, Math.max(10, boardConfidence + 5)),
                     description: boardStatus.financialContext || 'Wage bill and net transfer spending sustainable.',
                     positive: true
                   },
                   {
-                    title: 'Squad & Goal Diff',
+                    title: 'Squad & goal difference',
                     score: boardConfidence,
                     description: 'Roster depth and scoring efficiency meets benchmarks.',
                     positive: boardConfidence >= 45
                   }
                 ]).map((pillar, idx) => (
-                  <div key={idx} className="office-subcard border border-slate-200/80 p-3 rounded-2xl space-y-1.5 shadow-2xs bg-slate-50/60">
-                    <div className="flex items-center justify-between text-[11px] font-bold">
-                      <span className="text-[#0b1536] font-display font-bold">{pillar.title}</span>
-                      <span className={`font-mono font-bold ${pillar.positive ? 'text-emerald-700' : 'text-rose-700'}`}>
+                  <div key={idx} className="office-subcard p-3 rounded-lg space-y-1.5">
+                    <div className="flex items-baseline justify-between gap-2 text-sm">
+                      <span className="text-[var(--ink-primary)] font-semibold">{pillar.title}</span>
+                      <span className={`font-semibold tabular-nums ${pillar.positive ? 'text-emerald-700' : 'text-rose-700'}`}>
                         {pillar.score}%
                       </span>
                     </div>
-                    <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 bg-[var(--surface-elevated)] rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all ${
                           pillar.positive ? 'bg-emerald-600' : pillar.score >= 45 ? 'bg-amber-500' : 'bg-rose-600'
@@ -4298,7 +4113,7 @@ function CareerPlayHubContent() {
                         }}
                       />
                     </div>
-                    <p className="text-[11px] text-slate-600 leading-snug font-medium">
+                    <p className="text-xs text-[var(--ink-secondary)] leading-snug">
                       {pillar.description}
                     </p>
                   </div>
@@ -4308,7 +4123,7 @@ function CareerPlayHubContent() {
 
             {/* Actions */}
             <div className="pt-2 flex items-center justify-between gap-2 flex-wrap">
-              <button
+              <Button
                 type="button"
                 onClick={() => {
                   setShowBoardDossierModal(false);
@@ -4316,19 +4131,17 @@ function CareerPlayHubContent() {
                   handleTabChange('transfers');
                   window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                 }}
-                className="office-subcard hover:border-[#1d5eff] text-slate-700 hover:text-[#1d5eff] font-display font-bold uppercase tracking-wider text-xs py-2 px-3 rounded-xl border border-slate-200 flex items-center gap-1.5 cursor-pointer shadow-2xs transition-colors"
+                variant="secondary"
               >
-                <IconBuilding className="w-3.5 h-3.5 shrink-0" />
-                <span>Full Boardroom &amp; Petitions</span>
-                <IconArrowRight className="w-3.5 h-3.5 shrink-0" />
-              </button>
-              <button
+                Full boardroom &amp; petitions
+              </Button>
+              <Button
                 type="button"
                 onClick={() => setShowBoardDossierModal(false)}
-                className="office-action-btn-primary py-2 px-4 rounded-xl text-white font-display font-black text-xs uppercase tracking-wider shadow-md cursor-pointer"
+                variant="ghost"
               >
                 Close
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -4341,8 +4154,8 @@ export default function CareerPlayPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen my11-canvas text-slate-900 flex items-center justify-center font-display font-black uppercase text-sm">
-          Loading Manager Office...
+        <div className="min-h-screen my11-canvas text-[var(--ink-secondary)] flex items-center justify-center text-sm">
+          Loading manager office...
         </div>
       }
     >

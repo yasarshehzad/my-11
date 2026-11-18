@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Club } from '../../career/types';
 import { getEffectiveClubName } from '../../career/clubs';
 import { IconRefresh, IconStar } from './GameIcons';
+import { Eyebrow } from '@/components/ui';
 
 export interface InstantSimLoadingModalProps {
   homeClub: Club;
@@ -58,8 +59,8 @@ export function InstantSimLoadingModal({
 
   const phases = [
     { text: 'Simulating tactical matchups and early pressure...', minute: `${matchMinute}'` },
-    { text: 'Analyzing shot quality, key passes and defensive duels...', minute: `${matchMinute}'` },
-    { text: 'Final whistle! Calculating match stats and player ratings...', minute: 'FT' },
+    { text: 'Analysing shot quality, key passes and defensive duels...', minute: `${matchMinute}'` },
+    { text: 'Final whistle. Calculating match stats and player ratings...', minute: 'FT' },
   ];
 
   const currentPhase = phases[phaseIndex] || phases[0];
@@ -78,26 +79,22 @@ export function InstantSimLoadingModal({
     >
       <div
         data-office-ui="true"
-        className="office-floating-card rounded-3xl p-6 sm:p-8 max-w-lg w-full space-y-6 shadow-2xl relative text-center border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 motion-reduce:transition-none"
+        className="office-floating-card rounded-xl p-5 sm:p-8 max-w-lg w-full space-y-5 relative text-center border border-[var(--border-subtle)] bg-[var(--surface-card)] motion-reduce:transition-none"
       >
-        {/* Header Tag */}
-        <header className="space-y-1.5 border-b border-slate-200 dark:border-slate-800 pb-4">
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-blue-100/90 dark:bg-blue-950/60 border border-blue-300 dark:border-blue-700 text-[#0f3eb5] dark:text-blue-300 text-[11px] font-black uppercase tracking-wider font-display shadow-2xs">
-            <span className="w-2 h-2 rounded-full bg-[#1d5eff] animate-ping motion-reduce:animate-none" />
-            <span>Simulating Matchday</span>
-          </div>
-          <h2 className="text-xs sm:text-sm font-display font-black text-slate-900 dark:text-white uppercase tracking-tight">
-            {competitionTitle} • {roundTitle}
+        <header className="space-y-1 border-b border-[var(--border-subtle)] pb-4">
+          <Eyebrow>Simulating matchday</Eyebrow>
+          <h2 className="text-sm sm:text-base font-display font-semibold text-[var(--ink-primary)] tracking-tight">
+            {competitionTitle} · {roundTitle}
           </h2>
         </header>
 
-        {/* Club Crests Face-Off */}
-        <article className="flex items-center justify-between gap-4 py-2">
+        {/* Club crests */}
+        <article className="flex items-start justify-between gap-3 py-2">
           {/* Home Club */}
           <div className="flex-1 flex flex-col items-center space-y-2 min-w-0">
             <div
               data-force-white="true"
-              className="club-crest w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-white/80 shadow-lg flex items-center justify-center text-sm sm:text-base font-black text-white shrink-0 transform transition-transform hover:scale-105 motion-reduce:transform-none"
+              className="club-crest w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-white/80 shadow-sm flex items-center justify-center text-sm sm:text-base font-semibold text-white shrink-0"
               style={{
                 background: `linear-gradient(135deg, ${homeClub.primaryColor}, ${homeClub.secondaryColor})`,
               }}
@@ -105,14 +102,14 @@ export function InstantSimLoadingModal({
               {homeClub.shortName}
             </div>
             <div className="min-w-0 w-full text-center">
-              <h3 className="font-display font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate">
+              <h3 className="font-display font-semibold text-xs sm:text-sm text-[var(--ink-primary)] truncate">
                 {getEffectiveClubName(homeClub, userClub)}
               </h3>
-              <span className="text-[10px] uppercase font-extrabold text-slate-600 dark:text-slate-400 inline-flex items-center justify-center gap-0.5 truncate mt-0.5">
+              <span className="text-xs font-medium text-[var(--ink-secondary)] inline-flex items-center justify-center gap-1 mt-0.5">
                 {homeClub.id === userClub.id ? (
                   <>
-                    <IconStar className="w-2.5 h-2.5 text-amber-500" filled />
-                    <span>YOU (HOME)</span>
+                    <IconStar className="w-3 h-3 text-amber-500" filled />
+                    <span>You (home)</span>
                   </>
                 ) : (
                   'Home'
@@ -121,24 +118,19 @@ export function InstantSimLoadingModal({
             </div>
           </div>
 
-          {/* Center VS & Pulse */}
-          <div className="flex flex-col items-center justify-center shrink-0 px-2 space-y-1.5">
-            <span className="text-xs font-mono font-black text-amber-950 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 px-3 py-0.5 rounded-full shadow-2xs">
+          {/* Match minute */}
+          <div className="flex flex-col items-center justify-center shrink-0 px-1 pt-5 sm:pt-7 space-y-0.5">
+            <span className="text-base tabular-nums font-semibold text-[var(--ink-primary)]">
               {currentPhase.minute}
             </span>
-            <div className="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center shadow-sm">
-              <span className="text-[#0f3eb5] dark:text-blue-400 font-display font-black text-xs tracking-wider">
-                VS
-              </span>
-            </div>
-            <span className="text-[11px] font-mono font-bold text-slate-600 dark:text-slate-400">Live Engine</span>
+            <span className="text-xs font-medium text-[var(--ink-muted)]">vs</span>
           </div>
 
           {/* Away Club */}
           <div className="flex-1 flex flex-col items-center space-y-2 min-w-0">
             <div
               data-force-white="true"
-              className="club-crest w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-white/80 shadow-lg flex items-center justify-center text-sm sm:text-base font-black text-white shrink-0 transform transition-transform hover:scale-105 motion-reduce:transform-none"
+              className="club-crest w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-white/80 shadow-sm flex items-center justify-center text-sm sm:text-base font-semibold text-white shrink-0"
               style={{
                 background: `linear-gradient(135deg, ${awayClub.primaryColor}, ${awayClub.secondaryColor})`,
               }}
@@ -146,14 +138,14 @@ export function InstantSimLoadingModal({
               {awayClub.shortName}
             </div>
             <div className="min-w-0 w-full text-center">
-              <h3 className="font-display font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate">
+              <h3 className="font-display font-semibold text-xs sm:text-sm text-[var(--ink-primary)] truncate">
                 {getEffectiveClubName(awayClub, userClub)}
               </h3>
-              <span className="text-[10px] uppercase font-extrabold text-slate-600 dark:text-slate-400 inline-flex items-center justify-center gap-0.5 truncate mt-0.5">
+              <span className="text-xs font-medium text-[var(--ink-secondary)] inline-flex items-center justify-center gap-1 mt-0.5">
                 {awayClub.id === userClub.id ? (
                   <>
-                    <IconStar className="w-2.5 h-2.5 text-amber-500" filled />
-                    <span>YOU (AWAY)</span>
+                    <IconStar className="w-3 h-3 text-amber-500" filled />
+                    <span>You (away)</span>
                   </>
                 ) : (
                   'Away'
@@ -163,20 +155,18 @@ export function InstantSimLoadingModal({
           </div>
         </article>
 
-        {/* Live Simulation Progress & Ticker */}
-        <section className="rounded-2xl p-4 space-y-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 shadow-xs">
-          {/* Progress Bar */}
-          <div className="w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden p-0.5 shadow-inner border border-slate-300/80 dark:border-slate-600">
+        {/* Simulation progress and status */}
+        <section className="space-y-3">
+          <div className="w-full h-2 bg-[var(--surface-elevated)] rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-[#00b4d8] via-[#1d5eff] to-[#7c3aed] rounded-full transition-all duration-300 ease-out motion-reduce:transition-none"
+              className="h-full bg-[#1d5eff] rounded-full transition-all duration-300 ease-out motion-reduce:transition-none"
               style={{ width: `${progress}%` }}
             />
           </div>
 
-          {/* Status Message */}
-          <div className="flex items-center justify-center gap-2 text-xs text-slate-800 dark:text-slate-200 min-h-[24px]">
-            <IconRefresh className="w-3.5 h-3.5 animate-spin motion-reduce:animate-none text-[#1d5eff] shrink-0" />
-            <span className="font-bold">{currentPhase.text}</span>
+          <div className="flex items-start justify-center gap-2 text-xs text-[var(--ink-secondary)] min-h-[32px] text-left">
+            <IconRefresh className="w-3.5 h-3.5 animate-spin motion-reduce:animate-none text-[#1d5eff] shrink-0 mt-0.5" />
+            <span className="font-medium">{currentPhase.text}</span>
           </div>
         </section>
       </div>

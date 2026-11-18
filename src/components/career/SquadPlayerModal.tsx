@@ -21,19 +21,13 @@ import {
 } from '../../career/transfers';
 import { playDealAccepted } from '../../utils/soundEffects';
 import { EaFcCard } from './EaFcCard';
+import { Button, Eyebrow, Tag } from '@/components/ui';
 import {
-  IconUser,
   IconBarChart,
-  IconBriefcase,
   IconSwap,
-  IconMegaphone,
-  IconHandshake,
-  IconAlert,
   IconTrophy,
-  IconBolt,
   IconCard,
   IconClose,
-  IconMail,
 } from './GameIcons';
 
 const emptySubscribe = () => () => {};
@@ -108,7 +102,7 @@ export function SquadPlayerModal({
     onUpdateSave(res.updatedSave);
     const updated = res.updatedSave.squad.find((p) => p.id === player.id);
     if (updated) onPlayerUpdated(updated);
-    setSquadActionMessage({ text: 'Transfer listing updated successfully.', type: 'success' });
+    setSquadActionMessage({ text: 'Transfer listing updated.', type: 'success' });
     setTimeout(() => setSquadActionMessage(null), 3000);
   };
 
@@ -174,23 +168,23 @@ export function SquadPlayerModal({
         onClick={(e) => e.stopPropagation()}
         onTouchStart={handleModalTouchStart}
         onTouchEnd={handleModalTouchEnd}
-        className="office-floating-card my11-mobile-sheet bg-white border border-slate-200/90 rounded-t-3xl sm:rounded-3xl max-w-md w-full shadow-2xl relative h-[85dvh] sm:h-[670px] max-h-[90dvh] sm:max-h-[88vh] flex flex-col overflow-hidden text-[#0b1536]"
+        className="office-floating-card my11-mobile-sheet bg-[var(--surface-card)] border border-[var(--border-subtle)] rounded-t-xl sm:rounded-xl max-w-md w-full shadow-sm relative h-[85dvh] sm:h-[670px] max-h-[90dvh] sm:max-h-[88vh] flex flex-col overflow-hidden text-[var(--ink-primary)]"
       >
         {/* Compact Sticky Top Header */}
-        <div className="shrink-0 flex items-center justify-between gap-2 px-4 pt-4 pb-3 border-b border-[#E2DFD9] bg-white">
+        <div className="shrink-0 flex items-center justify-between gap-2 px-4 pt-4 pb-3 border-b border-[var(--border-subtle)] bg-[var(--surface-card)]">
           <div className="min-w-0">
-            <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-700">
-              {player.position} • {getEffectiveRating(player)} OVR • {Math.round(player.fitness ?? 100)}% Fit
-            </div>
-            <h3 className="text-base font-display font-black text-zinc-900 truncate">
+            <h3 className="text-base font-display font-semibold text-[var(--ink-primary)] truncate">
               {player.name}
             </h3>
+            <Eyebrow>
+              {player.position} · {getEffectiveRating(player)} OVR · {Math.round(player.fitness ?? 100)}% fit
+            </Eyebrow>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="w-10 h-10 rounded-full bg-[#F7F6F3] hover:bg-zinc-200 border border-[#E2DFD9] text-zinc-700 hover:text-zinc-950 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+            className="w-10 h-10 rounded-full bg-[var(--surface-card)] hover:bg-[var(--surface-subcard)] border border-[var(--border-subtle)] text-[var(--ink-secondary)] flex items-center justify-center transition-colors cursor-pointer shrink-0"
             aria-label="Close player profile"
           >
             <IconClose className="w-4 h-4" />
@@ -214,13 +208,13 @@ export function SquadPlayerModal({
 
                 {/* Disciplinary & Availability Status */}
                 {Boolean(player.suspendedMatches && player.suspendedMatches > 0) ? (
-                  <div className="bg-red-50 border border-red-200 text-red-900 p-2.5 rounded-2xl text-xs font-semibold flex items-center gap-1.5">
-                    <IconCard tone="rose" className="w-3.5 h-3.5 text-red-900 shrink-0" />
+                  <div className="bg-rose-50 border border-rose-200 text-rose-900 p-2.5 rounded-lg text-xs font-medium flex items-center gap-1.5">
+                    <IconCard tone="rose" className="w-3.5 h-3.5 shrink-0" />
                     <span><strong>Suspended:</strong> {player.suspensionReason || `${player.suspendedMatches} match ban remaining`}</span>
                   </div>
                 ) : (player.yellowCardsTotal && player.yellowCardsTotal > 0) ? (
-                  <div className="bg-amber-50/80 border border-amber-200 text-amber-900 p-2.5 rounded-2xl text-[11px] font-medium flex items-center gap-1.5">
-                    <IconCard tone="amber" className="w-3.5 h-3.5 text-amber-800 shrink-0" />
+                  <div className="bg-amber-50 border border-amber-200 text-amber-900 p-2.5 rounded-lg text-xs font-medium flex items-center gap-1.5">
+                    <IconCard tone="amber" className="w-3.5 h-3.5 shrink-0" />
                     <span>
                       <strong>{player.yellowCardsTotal}</strong> yellow cards, {5 - (player.yellowCardsTotal % 5)} until ban
                     </span>
@@ -244,16 +238,16 @@ export function SquadPlayerModal({
                       <dl className="grid grid-cols-3 gap-x-3 gap-y-2.5 px-1 text-xs">
                         {details.map(([label, value]) => (
                           <div key={label} className="min-w-0">
-                            <dt className="text-[10px] uppercase font-bold text-slate-500">{label}</dt>
-                            <dd className="font-display font-black text-[#0b1536] mt-0.5 break-words">{value}</dd>
+                            <dt className="text-xs text-[var(--ink-muted)]">{label}</dt>
+                            <dd className="text-sm font-semibold text-[var(--ink-primary)] mt-0.5 break-words tabular-nums">{value}</dd>
                           </div>
                         ))}
                       </dl>
-                      <p className="px-1 pt-2.5 border-t border-slate-200 flex items-center gap-3 font-mono text-[11px] text-slate-600">
-                        <span className="font-sans font-bold uppercase text-[10px] text-slate-500">This season</span>
-                        <span><strong className="text-[#0b1536]">{pStats.currentSeason.goals}</strong> G</span>
-                        <span><strong className="text-[#0b1536]">{pStats.currentSeason.assists}</strong> A</span>
-                        <span><strong className="text-[#0b1536]">{pStats.currentSeason.appearances}</strong> Apps</span>
+                      <p className="px-1 pt-2.5 border-t border-[var(--border-subtle)] flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--ink-secondary)] tabular-nums">
+                        <span className="text-[var(--ink-muted)]">This season</span>
+                        <span><strong className="text-[var(--ink-primary)]">{pStats.currentSeason.goals}</strong> goals</span>
+                        <span><strong className="text-[var(--ink-primary)]">{pStats.currentSeason.assists}</strong> assists</span>
+                        <span><strong className="text-[var(--ink-primary)]">{pStats.currentSeason.appearances}</strong> apps</span>
                       </p>
                     </>
                   );
@@ -263,26 +257,20 @@ export function SquadPlayerModal({
               {/* Action Row */}
               <div className="flex gap-2 pt-1">
                 {onOpenCompare && (
-                  <button
-                    type="button"
+                  <Button
                     onClick={() => {
                       onClose();
                       onOpenCompare(player);
                     }}
-                    className="min-h-10 px-3 rounded-xl border border-blue-200 dark:border-blue-500/40 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-950/70 text-blue-700 dark:text-blue-300 font-display font-black text-xs uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     <IconBarChart className="w-3.5 h-3.5" />
                     <span>Compare</span>
-                  </button>
+                  </Button>
                 )}
-                <button
-                  type="button"
-                  onClick={() => onSwapOnPitch(player.id)}
-                  className="flex-1 min-h-10 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-display font-black text-xs uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5"
-                >
+                <Button variant="primary" onClick={() => onSwapOnPitch(player.id)} className="flex-1">
                   <IconSwap className="w-3.5 h-3.5" />
-                  <span>Swap on Pitch</span>
-                </button>
+                  <span>Swap on pitch</span>
+                </Button>
               </div>
             </div>
           ) : playerModalTab === 'attributes' ? (
@@ -320,10 +308,10 @@ export function SquadPlayerModal({
                     {statItems.map((item) => (
                       <div key={item.label} className="space-y-1.5">
                         <div className="flex justify-between items-baseline">
-                          <span className="font-bold text-slate-700 text-xs">{item.label}</span>
-                          <span className="font-mono font-black text-slate-950 text-sm">{item.val}</span>
+                          <span className="text-[var(--ink-secondary)] text-xs">{item.label}</span>
+                          <span className="font-semibold text-[var(--ink-primary)] text-sm tabular-nums">{item.val}</span>
                         </div>
-                        <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="w-full h-1 bg-[var(--surface-subcard)] rounded-full overflow-hidden">
                           <div
                             className={`h-full rounded-full ${
                               item.val >= 88
@@ -332,7 +320,7 @@ export function SquadPlayerModal({
                                 ? 'bg-blue-600'
                                 : item.val >= 70
                                 ? 'bg-emerald-500'
-                                : 'bg-slate-400'
+                                : 'bg-[var(--ink-muted)]'
                             }`}
                             style={{ width: `${Math.min(100, (item.val / 99) * 100)}%` }}
                           />
@@ -341,11 +329,11 @@ export function SquadPlayerModal({
                     ))}
                   </div>
 
-                  <dl className="divide-y divide-slate-200 border-t border-slate-200">
+                  <dl className="divide-y divide-[var(--border-subtle)] border-t border-[var(--border-subtle)]">
                     {roleRows.map(([label, value]) => (
                       <div key={label} className="flex justify-between items-baseline gap-3 py-2.5">
-                        <dt className="text-slate-500 font-medium">{label}</dt>
-                        <dd className="font-display font-black text-slate-900 text-right">{value}</dd>
+                        <dt className="text-[var(--ink-secondary)]">{label}</dt>
+                        <dd className="font-semibold text-[var(--ink-primary)] text-right">{value}</dd>
                       </div>
                     ))}
                   </dl>
@@ -368,23 +356,22 @@ export function SquadPlayerModal({
                 <div className="space-y-4 text-xs">
                   {/* Current season */}
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-black uppercase text-blue-700 tracking-wider font-display inline-flex items-center gap-1.5 min-w-0">
-                      <IconBarChart className="w-3.5 h-3.5 shrink-0" />
-                      <span className="truncate">Season {save.season?.seasonNumber || 1} • {cur.seasonLabel}</span>
-                    </span>
-                    <span className="text-[10px] font-mono text-slate-500 font-bold shrink-0">{cur.competition}</span>
+                    <h4 className="text-sm font-display font-semibold text-[var(--ink-primary)] truncate min-w-0">
+                      Season {save.season?.seasonNumber || 1} · {cur.seasonLabel}
+                    </h4>
+                    <span className="text-xs text-[var(--ink-muted)] shrink-0">{cur.competition}</span>
                   </div>
 
                   <dl className="grid grid-cols-4 gap-2 text-center">
                     {headline.map(([label, value]) => (
                       <div key={label}>
-                        <dd className="font-display font-black text-slate-900 text-xl leading-tight">{value}</dd>
-                        <dt className="text-[10px] uppercase font-bold text-slate-500 mt-0.5">{label}</dt>
+                        <dd className="font-display font-bold text-[var(--ink-primary)] text-xl leading-tight">{value}</dd>
+                        <dt className="text-xs text-[var(--ink-muted)] mt-0.5">{label}</dt>
                       </div>
                     ))}
                   </dl>
 
-                  <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] text-slate-600 font-medium">
+                  <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-[var(--ink-secondary)]">
                     <span>{cur.starts} starts</span>
                     {isGkOrDef && <span>{cur.cleanSheets} clean sheets</span>}
                     <span className="inline-flex items-center gap-1">
@@ -394,18 +381,18 @@ export function SquadPlayerModal({
                       <span>{cur.redCards}</span>
                     </span>
                     <span className="inline-flex items-center gap-1">
-                      <IconTrophy className="w-3 h-3 text-amber-700" />
+                      <IconTrophy className="w-3 h-3" />
                       <span>{cur.manOfTheMatch} MOTM</span>
                     </span>
                   </p>
 
                   {/* Career history */}
                   <div className="space-y-1.5">
-                    <h4 className="font-display font-black text-slate-800 uppercase tracking-wider text-[11px]">
+                    <h4 className="font-display font-semibold text-[var(--ink-primary)] text-sm">
                       Career history
                     </h4>
-                    <table className="w-full text-left text-[11px] border-t border-slate-200">
-                      <thead className="text-[10px] font-bold uppercase text-slate-500 border-b border-slate-200">
+                    <table className="w-full text-left text-xs border-t border-[var(--border-subtle)]">
+                      <thead className="text-2xs font-medium text-[var(--ink-muted)] border-b border-[var(--border-subtle)]">
                         <tr>
                           <th className="py-2 pr-2">Season</th>
                           <th className="py-2 px-2 hidden sm:table-cell">Club</th>
@@ -416,56 +403,56 @@ export function SquadPlayerModal({
                           <th className="py-2 pl-2 text-right">Avg</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
-                        <tr className="text-blue-900 font-bold">
-                          <td className="py-2 pr-2 font-mono">{cur.seasonLabel}</td>
+                      <tbody className="divide-y divide-[var(--border-subtle)] text-[var(--ink-primary)] tabular-nums">
+                        <tr className="text-[var(--ink-primary)] font-semibold">
+                          <td className="py-2 pr-2">{cur.seasonLabel}</td>
                           <td className="py-2 px-2 truncate max-w-[90px] hidden sm:table-cell">{cur.clubName}</td>
-                          <td className="py-2 px-1.5 text-center font-mono">{cur.appearances}</td>
-                          <td className="py-2 px-1.5 text-center font-mono">{cur.goals}</td>
-                          <td className="py-2 px-1.5 text-center font-mono">{cur.assists}</td>
-                          <td className="py-2 px-1.5 text-center font-mono hidden sm:table-cell">
+                          <td className="py-2 px-1.5 text-center">{cur.appearances}</td>
+                          <td className="py-2 px-1.5 text-center">{cur.goals}</td>
+                          <td className="py-2 px-1.5 text-center">{cur.assists}</td>
+                          <td className="py-2 px-1.5 text-center hidden sm:table-cell">
                             {isGkOrDef ? cur.cleanSheets : cur.goals + cur.assists}
                           </td>
-                          <td className="py-2 pl-2 text-right font-mono">
+                          <td className="py-2 pl-2 text-right">
                             {cur.appearances > 0 ? cur.averageRating : '–'}
                           </td>
                         </tr>
 
                         {/* Previous seasons (only seasons actually played in this career) */}
                         {pStats.previousSeasons.map((prev) => (
-                          <tr key={prev.seasonLabel} className="text-slate-700">
-                            <td className="py-2 pr-2 font-mono text-slate-500">{prev.seasonLabel}</td>
+                          <tr key={prev.seasonLabel} className="text-[var(--ink-secondary)]">
+                            <td className="py-2 pr-2 text-[var(--ink-muted)]">{prev.seasonLabel}</td>
                             <td className="py-2 px-2 truncate max-w-[90px] hidden sm:table-cell">{prev.clubName}</td>
-                            <td className="py-2 px-1.5 text-center font-mono">{prev.appearances}</td>
-                            <td className="py-2 px-1.5 text-center font-mono">{prev.goals}</td>
-                            <td className="py-2 px-1.5 text-center font-mono">{prev.assists}</td>
-                            <td className="py-2 px-1.5 text-center font-mono hidden sm:table-cell">
+                            <td className="py-2 px-1.5 text-center">{prev.appearances}</td>
+                            <td className="py-2 px-1.5 text-center">{prev.goals}</td>
+                            <td className="py-2 px-1.5 text-center">{prev.assists}</td>
+                            <td className="py-2 px-1.5 text-center hidden sm:table-cell">
                               {isGkOrDef ? prev.cleanSheets : prev.goals + prev.assists}
                             </td>
-                            <td className="py-2 pl-2 text-right font-mono">
+                            <td className="py-2 pl-2 text-right">
                               {prev.appearances > 0 ? prev.averageRating : '–'}
                             </td>
                           </tr>
                         ))}
                       </tbody>
-                      <tfoot className="text-slate-900 font-bold border-t border-slate-200">
+                      <tfoot className="text-[var(--ink-primary)] font-semibold border-t border-[var(--border-subtle)] tabular-nums">
                         <tr>
-                          <td className="py-2 pr-2 font-display uppercase tracking-wider text-amber-700">Total</td>
+                          <td className="py-2 pr-2">Total</td>
                           <td className="hidden sm:table-cell" />
-                          <td className="py-2 px-1.5 text-center font-mono">{pStats.careerTotals.appearances}</td>
-                          <td className="py-2 px-1.5 text-center font-mono">{pStats.careerTotals.goals}</td>
-                          <td className="py-2 px-1.5 text-center font-mono">{pStats.careerTotals.assists}</td>
-                          <td className="py-2 px-1.5 text-center font-mono hidden sm:table-cell">
+                          <td className="py-2 px-1.5 text-center">{pStats.careerTotals.appearances}</td>
+                          <td className="py-2 px-1.5 text-center">{pStats.careerTotals.goals}</td>
+                          <td className="py-2 px-1.5 text-center">{pStats.careerTotals.assists}</td>
+                          <td className="py-2 px-1.5 text-center hidden sm:table-cell">
                             {isGkOrDef ? pStats.careerTotals.cleanSheets : pStats.careerTotals.goals + pStats.careerTotals.assists}
                           </td>
-                          <td className="py-2 pl-2 text-right font-mono">
+                          <td className="py-2 pl-2 text-right">
                             {pStats.careerTotals.appearances > 0 ? pStats.careerTotals.averageRating : '–'}
                           </td>
                         </tr>
                       </tfoot>
                     </table>
                     {pStats.previousSeasons.length === 0 && (
-                      <p className="text-[11px] text-slate-500">Past seasons appear here.</p>
+                      <p className="text-xs text-[var(--ink-muted)]">Past seasons appear here.</p>
                     )}
                   </div>
                 </div>
@@ -476,10 +463,10 @@ export function SquadPlayerModal({
               {/* Feedback Alert */}
               {squadActionMessage && (
                 <div
-                  className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-between gap-2 ${
+                  className={`p-2.5 rounded-lg border text-xs font-medium flex items-center justify-between gap-2 ${
                     squadActionMessage.type === 'success'
-                      ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/70 dark:border-blue-500/50 dark:text-blue-300'
-                      : 'bg-rose-950/70 border-rose-500/50 text-rose-300'
+                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                      : 'bg-rose-50 text-rose-800 border-rose-200'
                   }`}
                 >
                   <span>{squadActionMessage.text}</span>
@@ -497,13 +484,11 @@ export function SquadPlayerModal({
               {/* Listing: status, asking price, save */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-slate-600">
-                    Valued at <strong className="text-slate-900">{formatCurrency(player.value)}</strong>
+                  <span className="text-[var(--ink-secondary)]">
+                    Valued at <strong className="text-[var(--ink-primary)]">{formatCurrency(player.value)}</strong>
                   </span>
                   {player.transferListed && (
-                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full border bg-amber-50 text-amber-800 border-amber-300">
-                      Transfer Listed
-                    </span>
+                    <Tag tone="warning">Transfer listed</Tag>
                   )}
                 </div>
 
@@ -515,54 +500,52 @@ export function SquadPlayerModal({
                       onChange={(e) => setTransferListedInput(e.target.checked)}
                       className="accent-blue-600 rounded w-4 h-4"
                     />
-                    <span className="font-bold text-slate-800">Transfer list</span>
+                    <span className="text-sm font-medium text-[var(--ink-primary)]">Transfer list</span>
                   </label>
                   <label className="flex items-center gap-2 min-h-10 cursor-pointer select-none">
                     <input
                       type="checkbox"
                       checked={loanListedInput}
                       onChange={(e) => setLoanListedInput(e.target.checked)}
-                      className="accent-blue-500 rounded w-4 h-4"
+                      className="accent-blue-600 rounded w-4 h-4"
                     />
-                    <span className="font-bold text-slate-800">Loan list</span>
+                    <span className="text-sm font-medium text-[var(--ink-primary)]">Loan list</span>
                   </label>
                 </div>
 
                 {/* Asking price: stepper + three presets */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <button
-                      type="button"
+                    <Button
                       onClick={() => setAskingPriceInput(Math.max(100_000, askingPriceInput - priceStep))}
-                      className="min-h-10 px-3 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold cursor-pointer shrink-0"
+                      className="shrink-0"
                       aria-label={`Lower asking price by ${priceStepLabel}`}
                     >
                       −{priceStepLabel}
-                    </button>
+                    </Button>
                     <div className="flex-1 text-center min-w-0">
-                      <div className="text-[10px] uppercase font-bold text-slate-500">Asking price</div>
-                      <div className="font-display font-black text-blue-700 text-base truncate">
+                      <div className="text-xs text-[var(--ink-muted)]">Asking price</div>
+                      <div className="font-display font-semibold text-[var(--ink-primary)] text-base truncate tabular-nums">
                         {formatCurrency(askingPriceInput)}
                       </div>
                     </div>
-                    <button
-                      type="button"
+                    <Button
                       onClick={() => setAskingPriceInput(askingPriceInput + priceStep)}
-                      className="min-h-10 px-3 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-blue-700 font-bold cursor-pointer shrink-0"
+                      className="shrink-0"
                       aria-label={`Raise asking price by ${priceStepLabel}`}
                     >
                       +{priceStepLabel}
-                    </button>
+                    </Button>
                   </div>
-                  <div className="grid grid-cols-3 gap-2 text-[11px] font-bold">
+                  <div className="grid grid-cols-3 gap-2">
                     {([
                       ['Quick sale', 0.85],
                       ['Fair value', 1],
                       ['Premium', 1.2],
                     ] as const).map(([label, factor]) => (
-                      <button
+                      <Button
                         key={label}
-                        type="button"
+                        size="sm"
                         onClick={() =>
                           setAskingPriceInput(
                             factor === 1
@@ -570,21 +553,18 @@ export function SquadPlayerModal({
                               : Math.max(100_000, Math.round((player.value * factor) / 100_000) * 100_000)
                           )
                         }
-                        className="min-h-10 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer"
+                        className="min-h-12 flex-col gap-0 py-1 font-medium"
                       >
-                        {label} <span className="font-mono text-slate-500">{Math.round(factor * 100)}%</span>
-                      </button>
+                        <span>{label}</span>
+                        <span className="font-normal text-[var(--ink-muted)] tabular-nums">{Math.round(factor * 100)}%</span>
+                      </Button>
                     ))}
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleUpdateTransferStatus}
-                  className="w-full min-h-10 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-display font-black text-xs uppercase tracking-wider hover:from-blue-500 hover:to-indigo-500 cursor-pointer active:scale-95 motion-reduce:transform-none"
-                >
+                <Button variant="primary" fullWidth onClick={handleUpdateTransferStatus}>
                   Save listing
-                </button>
+                </Button>
               </div>
 
               {/* Active Incoming Bids for this Player */}
@@ -594,30 +574,28 @@ export function SquadPlayerModal({
                 );
                 if (playerBids.length === 0) return null;
                 return (
-                  <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl px-3 py-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[11px] font-display font-black uppercase tracking-wider text-emerald-900 inline-flex items-center gap-1.5">
-                        <IconMail className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                        <span>Bids ({playerBids.length})</span>
-                      </span>
+                  <div className="pt-3 border-t border-[var(--border-subtle)]">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <h4 className="text-sm font-display font-semibold text-[var(--ink-primary)]">
+                        Bids <span className="font-sans font-normal text-[var(--ink-muted)]">{playerBids.length}</span>
+                      </h4>
                       {player.agentBrokeringActive && (
-                        <span className="text-[10px] font-bold text-purple-700">5% broker fee</span>
+                        <span className="text-xs text-[var(--ink-muted)]">5% broker fee</span>
                       )}
                     </div>
-                    <div className="divide-y divide-emerald-200/80">
+                    <div className="divide-y divide-[var(--border-subtle)]">
                       {playerBids.map((bid) => (
                         <div key={bid.id} className="flex items-center justify-between gap-2 py-2">
                           <div className="min-w-0">
-                            <div className="font-display font-black text-xs text-slate-900 truncate">
+                            <div className="font-semibold text-sm text-[var(--ink-primary)] truncate">
                               {bid.buyingClubName}
                             </div>
-                            <div className="text-[11px] font-mono font-bold text-emerald-700">
+                            <div className="text-xs font-semibold text-emerald-700 tabular-nums">
                               {formatCurrency(bid.offeredFee)}
                             </div>
                           </div>
                           <div className="flex items-center gap-1.5 shrink-0">
-                            <button
-                              type="button"
+                            <Button
                               onClick={() => {
                                 const res = executePlayerSale(
                                   save,
@@ -641,12 +619,11 @@ export function SquadPlayerModal({
                                   setSquadActionMessage({ text: res.error || 'Could not complete sale.', type: 'error' });
                                 }
                               }}
-                              className="min-h-10 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-display font-black text-[11px] uppercase cursor-pointer"
                             >
                               Accept
-                            </button>
-                            <button
-                              type="button"
+                            </Button>
+                            <Button
+                              variant="ghost"
                               onClick={() => {
                                 const updatedOffers = (save.incomingOffers || []).map((o) =>
                                   o.id === bid.id ? { ...o, status: 'rejected' as const } : o
@@ -654,10 +631,9 @@ export function SquadPlayerModal({
                                 onUpdateSave({ ...save, incomingOffers: updatedOffers });
                                 setSquadActionMessage({ text: `Rejected ${bid.buyingClubName}'s offer.`, type: 'success' });
                               }}
-                              className="min-h-10 px-3 rounded-xl bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 font-display font-bold text-[11px] uppercase cursor-pointer"
                             >
                               Reject
-                            </button>
+                            </Button>
                           </div>
                         </div>
                       ))}
@@ -667,35 +643,24 @@ export function SquadPlayerModal({
               })()}
 
               {/* Find a buyer */}
-              <div className="grid grid-cols-2 gap-2 pt-3 border-t border-slate-200">
-                <button
-                  type="button"
-                  onClick={handleOfferToClubs}
-                  className="min-h-10 px-2 rounded-xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100/70 text-slate-900 font-display font-black text-[11px] uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 motion-reduce:transform-none"
-                >
-                  <IconMegaphone className="w-3.5 h-3.5 text-blue-700 shrink-0" />
-                  <span>Offer to clubs</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleHireIntermediary}
-                  className="min-h-10 px-2 rounded-xl border border-purple-200 bg-purple-50/70 hover:bg-purple-100/70 text-slate-900 font-display font-black text-[11px] uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 motion-reduce:transform-none"
-                >
-                  <IconHandshake className="w-3.5 h-3.5 text-purple-700 shrink-0" />
-                  <span>Agent (5% fee)</span>
-                </button>
+              <div className="grid grid-cols-2 gap-2 pt-3 border-t border-[var(--border-subtle)]">
+                <Button onClick={handleOfferToClubs}>
+                  Offer to clubs
+                </Button>
+                <Button onClick={handleHireIntermediary}>
+                  Agent (5% fee)
+                </Button>
               </div>
 
               {/* Release (disclosure) */}
-              <button
-                type="button"
+              <Button
+                variant="danger"
+                fullWidth
                 aria-expanded={showReleaseModal}
                 onClick={() => setShowReleaseModal(!showReleaseModal)}
-                className="w-full min-h-10 px-3 rounded-xl border border-rose-200 hover:border-rose-300 bg-rose-50/70 hover:bg-rose-100/70 text-rose-800 font-display font-bold text-[11px] uppercase tracking-wider cursor-pointer flex items-center justify-center gap-2"
               >
-                <IconAlert className="w-3.5 h-3.5 text-rose-700 shrink-0" />
-                <span>Release on a free</span>
-              </button>
+                Release on a free
+              </Button>
 
               {showReleaseModal && (() => {
                 const remainingWeeks = Math.max(1, (player.contractYears ?? 2) * 52);
@@ -708,7 +673,7 @@ export function SquadPlayerModal({
 
                 return (
                   <div className="space-y-2.5">
-                    <p className="text-[11px] text-slate-700">
+                    <p className="text-xs text-[var(--ink-secondary)]">
                       Frees <strong className="text-emerald-700">{formatWage(player.wageWeekly)}/wk</strong> in wages. Choose the payout:
                     </p>
                     <div className="grid grid-cols-2 gap-2">
@@ -718,34 +683,26 @@ export function SquadPlayerModal({
                           type="button"
                           aria-pressed={releaseActionType === opt.type}
                           onClick={() => setReleaseActionType(opt.type)}
-                          className={`p-2 rounded-xl border cursor-pointer text-left ${
+                          className={`p-2.5 rounded-lg border cursor-pointer text-left ${
                             releaseActionType === opt.type
                               ? 'bg-rose-50 border-rose-400'
-                              : 'bg-white border-slate-300'
+                              : 'bg-[var(--surface-card)] border-[var(--border-crisp)]'
                           }`}
                         >
-                          <span className="text-[10px] font-black uppercase block text-slate-600">{opt.label}</span>
-                          <span className="font-display font-black text-xs text-slate-900 block mt-0.5">
+                          <span className="text-xs block text-[var(--ink-secondary)]">{opt.label}</span>
+                          <span className="font-semibold text-sm text-[var(--ink-primary)] block mt-0.5 tabular-nums">
                             {formatCurrency(opt.cost)}
                           </span>
                         </button>
                       ))}
                     </div>
                     <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setShowReleaseModal(false)}
-                        className="min-h-10 px-3 rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 font-bold text-xs uppercase cursor-pointer"
-                      >
+                      <Button variant="ghost" onClick={() => setShowReleaseModal(false)}>
                         Cancel
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleConfirmRelease}
-                        className="flex-1 min-h-10 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-display font-black text-xs uppercase tracking-wider cursor-pointer"
-                      >
-                        Release {player.name}
-                      </button>
+                      </Button>
+                      <Button variant="danger" onClick={handleConfirmRelease} className="flex-1 min-w-0">
+                        <span className="truncate">Release {player.name}</span>
+                      </Button>
                     </div>
                   </div>
                 );
@@ -755,26 +712,23 @@ export function SquadPlayerModal({
         </div>
 
         {/* Bottom Thumb-Zone Tab Switcher (Swipeable or Tap) */}
-        <div className="shrink-0 border-t border-[#E2DFD9] bg-[#F7F6F3] p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-          <div className="grid grid-cols-4 gap-1.5">
+        <div className="shrink-0 border-t border-[var(--border-subtle)] bg-[var(--surface-card)] px-2 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+          <div className="grid grid-cols-4 gap-1">
             {([
-              ['profile', 'Profile', IconUser],
-              ['attributes', 'Attrs', IconBolt],
-              ['stats', 'Stats', IconBarChart],
-              ['market', 'Market', IconBriefcase],
-            ] as const).map(([tab, label, Icon]) => (
+              ['profile', 'Profile'],
+              ['attributes', 'Attributes'],
+              ['stats', 'Stats'],
+              ['market', 'Market'],
+            ] as const).map(([tab, label]) => (
               <button
                 key={tab}
                 type="button"
                 aria-pressed={playerModalTab === tab}
                 onClick={() => setPlayerModalTab(tab)}
-                className={`min-h-10 px-1 rounded-xl text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer truncate flex items-center justify-center gap-1 ${
-                  playerModalTab === tab
-                    ? 'office-nav-tab-active shadow-sm'
-                    : 'bg-white border border-[#E2DFD9] text-zinc-700'
+                className={`min-h-10 px-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer flex items-center justify-center ${
+                  playerModalTab === tab ? 'office-nav-tab-active' : 'office-nav-tab-inactive'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5 shrink-0" />
                 <span>{label}</span>
               </button>
             ))}

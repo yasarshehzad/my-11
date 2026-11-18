@@ -4,10 +4,11 @@ import React, { useMemo } from 'react';
 import { CareerSaveFile, CareerPlayer } from '../../career/types';
 import { getEffectiveClubName, ALL_CAREER_CLUBS, getClubsWithUserClub } from '../../career/clubs';
 import { formatCareerCurrency } from '../../career/formatters';
-import { IconTrophy, IconMedal, IconCalendar } from './GameIcons';
+import { IconTrophy } from './GameIcons';
+import { SectionHeader } from '../ui';
 
 const LINK_BUTTON_CLASS =
-  'min-h-[40px] px-2 text-xs font-display font-bold text-[#1d5eff] underline underline-offset-4 cursor-pointer';
+  'min-h-10 px-2 -my-2 text-sm font-medium text-[#1d5eff] underline underline-offset-4 cursor-pointer';
 
 interface ClubLegacyViewProps {
   save: CareerSaveFile;
@@ -213,55 +214,55 @@ export function ClubLegacyView({
   return (
     <div id="club-legacy-view" data-office-ui="true" className="space-y-4 w-full scroll-mt-20">
       {/* Club banner */}
-      <section className="my11-canopy-card">
-        <div className="my11-canopy-head p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <section className="office-floating-card rounded-xl">
+        <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-1 text-left min-w-0">
-            <h2 className="text-xl sm:text-2xl font-display font-black uppercase tracking-tight text-white truncate">
+            <h2 className="text-xl font-display font-bold text-[var(--ink-primary)] truncate">
               {clubName}
             </h2>
-            <p className="text-xs text-slate-200">
+            <p className="text-sm text-[var(--ink-secondary)]">
               {save.manager?.name || 'Manager'} · Season {save.season.seasonNumber} ({save.season.yearStart}/{String((save.season.yearStart + 1) % 100).padStart(2, '0')})
             </p>
           </div>
 
           <dl className="flex gap-6 shrink-0">
             <div>
-              <dt className="text-[10px] font-mono uppercase tracking-wider text-slate-300">Trophies</dt>
-              <dd className="text-lg font-display font-black text-amber-300">{trophies.length}</dd>
+              <dt className="text-xs text-[var(--ink-muted)]">Trophies</dt>
+              <dd className="text-lg font-display font-semibold text-[var(--ink-primary)] tabular-nums">{trophies.length}</dd>
             </div>
             <div>
-              <dt className="text-[10px] font-mono uppercase tracking-wider text-slate-300">Win Rate</dt>
-              <dd className="text-lg font-display font-black text-emerald-300">{stats.winPct}%</dd>
+              <dt className="text-xs text-[var(--ink-muted)]">Win rate</dt>
+              <dd className="text-lg font-display font-semibold text-[var(--ink-primary)] tabular-nums">{stats.winPct}%</dd>
             </div>
           </dl>
         </div>
       </section>
 
       {/* Trophy Cabinet */}
-      <section className="office-floating-card rounded-3xl p-4 sm:p-5 border border-amber-200/80 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--office-divider)] pb-2.5">
-          <h3 className="text-sm font-display font-black text-[#0b1536] uppercase tracking-tight flex items-center gap-2">
-            <IconTrophy className="w-4 h-4 text-amber-600 shrink-0" />
-            <span>Trophy Cabinet</span>
-          </h3>
-          {onNavigateCups && (
-            <button type="button" onClick={onNavigateCups} className={LINK_BUTTON_CLASS}>
-              Cup brackets
-            </button>
-          )}
-        </div>
+      <section className="office-floating-card rounded-xl p-4 sm:p-5">
+        <SectionHeader
+          title="Trophy cabinet"
+          className="border-b border-[var(--border-subtle)] pb-2.5"
+          action={
+            onNavigateCups && (
+              <button type="button" onClick={onNavigateCups} className={LINK_BUTTON_CLASS}>
+                Cup brackets
+              </button>
+            )
+          }
+        />
 
         {trophies.length === 0 ? (
-          <p className="pt-3 text-xs text-slate-500">No trophies yet. League titles and cup wins appear here.</p>
+          <p className="pt-3 text-sm text-[var(--ink-muted)]">No trophies yet. League titles and cup wins appear here.</p>
         ) : (
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-[var(--border-subtle)]">
             {stats.trophyGroups.map((group) => (
-              <li key={group.name} className="py-2.5 flex items-baseline justify-between gap-3 text-xs">
-                <span className="font-display font-black text-[#0b1536] uppercase min-w-0">
+              <li key={group.name} className="py-2.5 flex items-baseline justify-between gap-3 text-sm">
+                <span className="font-semibold text-[var(--ink-primary)] min-w-0">
                   {group.name}
-                  {group.years.length > 1 && <span className="text-amber-700"> ×{group.years.length}</span>}
+                  {group.years.length > 1 && <span className="font-normal text-[var(--ink-muted)]"> ×{group.years.length}</span>}
                 </span>
-                <span className="font-mono font-bold text-amber-800 text-right">{group.years.join(', ')}</span>
+                <span className="text-[var(--ink-secondary)] tabular-nums text-right">{group.years.join(', ')}</span>
               </li>
             ))}
           </ul>
@@ -269,18 +270,15 @@ export function ClubLegacyView({
       </section>
 
       {/* Records */}
-      <section className="office-floating-card rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-sm">
-        <h3 className="text-sm font-display font-black text-[#0b1536] uppercase tracking-tight flex items-center gap-2 border-b border-[var(--office-divider)] pb-2.5">
-          <IconMedal className="w-4 h-4 text-[#1d5eff] shrink-0" />
-          <span>Records</span>
-        </h3>
-        <dl className="divide-y divide-slate-100 text-xs">
+      <section className="office-floating-card rounded-xl p-4 sm:p-5">
+        <SectionHeader title="Records" className="border-b border-[var(--border-subtle)] pb-2.5" />
+        <dl className="divide-y divide-[var(--border-subtle)] text-sm">
           {records.map((row) => (
             <div key={row.label} className="py-2.5 flex items-baseline justify-between gap-3">
-              <dt className="text-slate-500 shrink-0">{row.label}</dt>
+              <dt className="text-[var(--ink-secondary)]">{row.label}</dt>
               <dd className="min-w-0 text-right">
-                <span className="font-display font-black text-[#0b1536]">{row.value}</span>
-                {row.note && <span className="text-slate-500 font-mono"> · {row.note}</span>}
+                <span className="font-semibold text-[var(--ink-primary)] tabular-nums">{row.value}</span>
+                {row.note && <span className="block text-xs text-[var(--ink-muted)] tabular-nums">{row.note}</span>}
               </dd>
             </div>
           ))}
@@ -288,48 +286,48 @@ export function ClubLegacyView({
       </section>
 
       {/* Season-by-Season History */}
-      <section className="office-floating-card rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--office-divider)] pb-2.5">
-          <h3 className="text-sm font-display font-black text-[#0b1536] uppercase tracking-tight flex items-center gap-2">
-            <IconCalendar className="w-4 h-4 text-[#1d5eff] shrink-0" />
-            <span>Season History</span>
-          </h3>
-          {onNavigateTable && (
-            <button type="button" onClick={onNavigateTable} className={LINK_BUTTON_CLASS}>
-              League table
-            </button>
-          )}
-        </div>
+      <section className="office-floating-card rounded-xl p-4 sm:p-5">
+        <SectionHeader
+          title="Season history"
+          className="border-b border-[var(--border-subtle)] pb-2.5"
+          action={
+            onNavigateTable && (
+              <button type="button" onClick={onNavigateTable} className={LINK_BUTTON_CLASS}>
+                League table
+              </button>
+            )
+          }
+        />
 
         {history.length === 0 ? (
-          <p className="pt-3 text-xs text-slate-500">
+          <p className="pt-3 text-sm text-[var(--ink-muted)]">
             Season {save.season.seasonNumber} is under way. It is archived here after all 38 matchdays.
           </p>
         ) : (
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-[var(--border-subtle)]">
             {[...history].reverse().map((rec) => {
               const gd = rec.goalsFor - rec.goalsAgainst;
               return (
                 <li key={`${rec.seasonNumber}_${rec.yearLabel}`} className="py-3 space-y-1 text-xs">
                   <div className="flex items-baseline justify-between gap-3">
-                    <span className="font-display font-black text-[#0b1536] uppercase">
+                    <span className="text-sm font-semibold text-[var(--ink-primary)]">
                       {rec.finalPosition === 1 ? 'Champions' : `Finished #${rec.finalPosition}`}
                     </span>
-                    <span className="font-mono font-bold text-slate-500 shrink-0">
-                      S{rec.seasonNumber} · {rec.yearLabel}
+                    <span className="text-[var(--ink-muted)] tabular-nums shrink-0">
+                      Season {rec.seasonNumber} · {rec.yearLabel}
                     </span>
                   </div>
-                  <p className="font-mono text-slate-600">
+                  <p className="text-[var(--ink-secondary)] tabular-nums">
                     {rec.points} pts · {rec.won}W-{rec.drawn}D-{rec.lost}L · GD {gd >= 0 ? `+${gd}` : gd} ({rec.goalsFor}-{rec.goalsAgainst})
                   </p>
                   {rec.trophiesWon.length > 0 && (
-                    <p className="font-bold text-amber-800 flex items-start gap-1.5">
+                    <p className="font-semibold text-[var(--ink-primary)] flex items-start gap-1.5">
                       <IconTrophy className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
                       <span>{rec.trophiesWon.join(', ')}</span>
                     </p>
                   )}
                   {(rec.topScorerName || rec.europeanQualification) && (
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-xs text-[var(--ink-muted)]">
                       {[
                         rec.topScorerName ? `Top scorer: ${rec.topScorerName} (${rec.topScorerGoals || 0})` : null,
                         rec.europeanQualification ? `Europe: ${rec.europeanQualification}` : null,
@@ -339,7 +337,7 @@ export function ClubLegacyView({
                     </p>
                   )}
                   {((rec.promotedClubNames?.length ?? 0) > 0 || (rec.relegatedClubNames?.length ?? 0) > 0) && (
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-xs text-[var(--ink-muted)]">
                       {[
                         rec.promotedClubNames?.length ? `Promoted: ${rec.promotedClubNames.join(', ')}` : null,
                         rec.relegatedClubNames?.length ? `Relegated: ${rec.relegatedClubNames.join(', ')}` : null,

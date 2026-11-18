@@ -1,6 +1,7 @@
 import React from 'react';
 import { FormationType, DraftModifier, QUICK_DRAFT_TIMER_SECONDS } from '../types/game';
-import { IconClock, IconBolt, IconSparkles, IconArrowRight } from './career/GameIcons';
+import { IconArrowRight } from './career/GameIcons';
+import { Button } from '@/components/ui';
 
 interface FormationSelectionProps {
   formation: FormationType | null;
@@ -51,10 +52,11 @@ export function FormationSelection({
     { id: 'mystery' as const, label: 'Mystery', note: '3 blind picks' },
   ];
 
-  const sectionLabel = 'text-[10px] font-black text-[var(--office-text-muted)] uppercase tracking-widest font-display px-1';
-  const tileBase = 'rounded-xl transition-colors duration-200 cursor-pointer active:scale-[0.99] min-h-[44px]';
-  const tileOn = 'border-2 border-amber-600 bg-amber-50/40';
-  const tileOff = 'office-subcard hover:border-indigo-200';
+  const sectionLabel = 'text-sm font-medium text-[var(--ink-primary)]';
+  // One selected style for every group: tinted surface and a darker border.
+  const tileBase = 'rounded-lg border transition-colors cursor-pointer min-h-11';
+  const tileOn = 'border-[var(--ink-secondary)] bg-[var(--surface-elevated)]';
+  const tileOff = 'border-[var(--border-subtle)] bg-[var(--surface-card)] hover:bg-[var(--surface-subcard)]';
 
   const switchRow = (label: string, hint: string, on: boolean, onToggle: () => void) => (
     <button
@@ -65,17 +67,17 @@ export function FormationSelection({
       className="w-full min-h-[44px] py-2 flex items-center justify-between gap-3 text-left cursor-pointer"
     >
       <span className="min-w-0">
-        <span className="block text-xs font-display font-black uppercase tracking-wide text-[var(--office-text-primary)]">
+        <span className="block text-sm font-medium text-[var(--ink-primary)]">
           {label}
         </span>
-        <span className="block text-[11px] text-[var(--office-text-secondary)] font-medium">{hint}</span>
+        <span className="block text-xs text-[var(--ink-secondary)]">{hint}</span>
       </span>
       <span
         aria-hidden="true"
-        className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-200 shrink-0 ${on ? 'bg-[#1d5eff]' : 'bg-slate-300'}`}
+        className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-200 shrink-0 ${on ? 'bg-[#1d5eff]' : 'bg-[var(--border-crisp)]'}`}
       >
         <span
-          className={`block bg-white w-5 h-5 rounded-full shadow-md transform transition-transform duration-200 ${
+          className={`block bg-white w-5 h-5 rounded-full shadow-sm transform transition-transform duration-200 ${
             on ? 'translate-x-5' : 'translate-x-0'
           }`}
         />
@@ -85,9 +87,9 @@ export function FormationSelection({
 
   return (
     <div className="flex flex-col items-center justify-center px-2 sm:px-4 py-3 sm:py-5 w-full max-w-xl mx-auto overflow-hidden">
-      <div className="office-floating-card w-full rounded-[28px] p-4 sm:p-6 shadow-xl space-y-4">
-        <h2 className="text-xl sm:text-2xl font-display font-black text-[var(--office-text-primary)] uppercase tracking-tight leading-none text-center">
-          Draft Setup
+      <div className="office-floating-card w-full rounded-xl p-4 sm:p-6 space-y-4">
+        <h2 className="text-xl font-display font-bold text-[var(--ink-primary)]">
+          Draft setup
         </h2>
 
         {/* Formation */}
@@ -104,12 +106,10 @@ export function FormationSelection({
                   onClick={() => onSelectFormation(f.type)}
                   className={`${tileBase} w-full px-3 py-2 text-left ${active ? tileOn : tileOff}`}
                 >
-                  <span className={`block text-base font-display font-black leading-tight ${
-                    active ? 'text-[#1d5eff]' : 'text-[var(--office-text-primary)]'
-                  }`}>
+                  <span className="block text-base font-display font-semibold leading-tight text-[var(--ink-primary)]">
                     {f.type}
                   </span>
-                  <span className="block text-[11px] text-[var(--office-text-secondary)] font-medium">{f.desc}</span>
+                  <span className="block text-xs text-[var(--ink-secondary)]">{f.desc}</span>
                 </button>
               );
             })}
@@ -118,10 +118,10 @@ export function FormationSelection({
 
         {/* League */}
         <div className="w-full space-y-1.5">
-          <div className={`${sectionLabel} flex justify-between gap-2`}>
+          <div className={`${sectionLabel} flex justify-between items-baseline gap-2`}>
             <span>League</span>
             {activeLeague && (
-              <span className="normal-case tracking-normal font-sans font-semibold text-[11px] text-[var(--office-text-secondary)] truncate">
+              <span className="font-normal text-xs text-[var(--ink-secondary)] truncate">
                 {activeLeague.name}
               </span>
             )}
@@ -138,12 +138,10 @@ export function FormationSelection({
                   onClick={() => onSelectLeague(lg.id)}
                   className={`${tileBase} px-1 py-1.5 text-center ${active ? tileOn : tileOff}`}
                 >
-                  <span className={`block font-display font-black text-xs tracking-wide ${
-                    active ? 'text-[#1d5eff]' : 'text-[var(--office-text-primary)]'
-                  }`}>
+                  <span className="block font-semibold text-sm text-[var(--ink-primary)]">
                     {lg.code}
                   </span>
-                  <span className="block text-[10px] font-mono font-bold text-[var(--office-text-secondary)]">
+                  <span className="block text-xs text-[var(--ink-secondary)] tabular-nums">
                     {lg.avgRating} avg
                   </span>
                 </button>
@@ -166,19 +164,10 @@ export function FormationSelection({
                   onClick={() => onSelectDraftModifier?.(mode.id)}
                   className={`${tileBase} px-2 py-1.5 text-center ${active ? tileOn : tileOff}`}
                 >
-                  <span className={`flex items-center justify-center gap-1 font-display font-black text-xs uppercase tracking-wide ${
-                    active ? 'text-[#1d5eff]' : 'text-[var(--office-text-primary)]'
-                  }`}>
-                    {mode.id === 'classic' ? (
-                      <IconClock className="w-3.5 h-3.5 shrink-0" />
-                    ) : mode.id === 'quick' ? (
-                      <IconBolt className="w-3.5 h-3.5 shrink-0" />
-                    ) : (
-                      <IconSparkles className="w-3.5 h-3.5 shrink-0" />
-                    )}
+                  <span className="block font-semibold text-sm text-[var(--ink-primary)]">
                     {mode.label}
                   </span>
-                  <span className="block text-[10px] font-semibold text-[var(--office-text-secondary)]">{mode.note}</span>
+                  <span className="block text-xs text-[var(--ink-secondary)]">{mode.note}</span>
                 </button>
               );
             })}
@@ -189,18 +178,13 @@ export function FormationSelection({
         <div className="w-full divide-y divide-[var(--office-divider)] border-y border-[var(--office-divider)]">
           {switchRow('Draft IQ', 'Scouting tips and chemistry hints', draftIQMode, onToggleDraftIQMode)}
           {onToggleFreeSearch &&
-            switchRow('Free Search', 'Pick any player from the database', freeSearchEnabled, onToggleFreeSearch)}
+            switchRow('Free search', 'Pick any player from the database', freeSearchEnabled, onToggleFreeSearch)}
         </div>
 
-        <button
-          type="button"
-          onClick={onConfirmTactics}
-          disabled={!formation}
-          className="office-play-match-btn w-full py-3.5 px-6 rounded-2xl text-white font-display font-black text-sm uppercase tracking-wider cursor-pointer text-center shadow-lg transition-transform active:scale-[0.99] inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <span>{formation ? 'Start Draft' : 'Choose a Formation'}</span>
+        <Button variant="primary" fullWidth onClick={onConfirmTactics} disabled={!formation} className="min-h-12">
+          <span>{formation ? 'Start draft' : 'Choose a formation'}</span>
           {formation && <IconArrowRight className="w-4 h-4 shrink-0" />}
-        </button>
+        </Button>
       </div>
     </div>
   );

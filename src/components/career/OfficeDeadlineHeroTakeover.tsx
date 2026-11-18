@@ -15,11 +15,12 @@ import {
   IconSearch,
   IconBuilding,
   IconClose,
-  IconSparkles,
+  IconCheck,
   IconHandshake,
   IconChevronDown,
   IconChevronUp,
 } from './GameIcons';
+import { Button, Eyebrow, Tag } from '@/components/ui';
 
 function formatOfficeFixtureDate(dateStr: string): string {
   const parts = dateStr.split('-').map(Number);
@@ -104,17 +105,17 @@ export function OfficeDeadlineHeroTakeover({
     evening: {
       title: 'Evening',
       nextTime: '22:00',
-      nextPhaseName: 'Final Hour',
+      nextPhaseName: 'Final hour',
     },
     deadline: {
-      title: 'Final Hour',
+      title: 'Final hour',
       nextTime: '23:00',
-      nextPhaseName: 'Window Closed',
+      nextPhaseName: 'Window closed',
     },
     closed: {
-      title: 'Window Closed',
+      title: 'Window closed',
       nextTime: 'Concluded',
-      nextPhaseName: 'Rosters Locked',
+      nextPhaseName: 'Rosters locked',
     },
   };
 
@@ -156,20 +157,20 @@ export function OfficeDeadlineHeroTakeover({
 
       if (res.outcome === 'approved') {
         setPetitionFeedback(
-          `Board Approved! ${formatOfficeBudget(res.amountGranted, save.settings?.currency)} added to Transfer Warchest.`
+          `Board approved: ${formatOfficeBudget(res.amountGranted, save.settings?.currency)} added to the transfer warchest.`
         );
         onNotification?.(
-          `Board granted ${formatOfficeBudget(res.amountGranted, save.settings?.currency)} for deadline day!`
+          `Board granted ${formatOfficeBudget(res.amountGranted, save.settings?.currency)} for deadline day.`
         );
       } else if (res.outcome === 'compromised') {
         setPetitionFeedback(
-          `Compromise Granted: ${formatOfficeBudget(res.amountGranted, save.settings?.currency)} released.`
+          `Compromise granted: ${formatOfficeBudget(res.amountGranted, save.settings?.currency)} released.`
         );
         onNotification?.(
           `Board approved compromise grant of ${formatOfficeBudget(res.amountGranted, save.settings?.currency)}.`
         );
       } else {
-        setPetitionFeedback(`Petition Declined: ${res.feedback}`);
+        setPetitionFeedback(`Petition declined: ${res.feedback}`);
         onNotification?.(`Board declined petition: ${res.feedback}`);
       }
     }, 350);
@@ -179,95 +180,92 @@ export function OfficeDeadlineHeroTakeover({
     { id: 'morning', label: 'Morning', time: '09:00' },
     { id: 'afternoon', label: 'Afternoon', time: '13:00' },
     { id: 'evening', label: 'Evening', time: '18:00' },
-    { id: 'deadline', label: 'Final Hour', time: '22:00' },
+    { id: 'deadline', label: 'Final hour', time: '22:00' },
   ];
   const currentStepIdx = scheduleSteps.findIndex((s) => s.id === currentPhase);
-  const secondaryBtn =
-    'py-2.5 px-2.5 rounded-full bg-white hover:bg-amber-50 border border-amber-300 flex items-center justify-center gap-1.5 font-display font-extrabold text-[13px] sm:text-sm text-[#0b1536] cursor-pointer min-h-[44px] whitespace-nowrap transition-all active:scale-[0.98] motion-reduce:transform-none';
   const countLink =
-    'min-h-[40px] inline-flex items-center gap-1 font-bold text-[13px] text-[#78350f] hover:underline cursor-pointer';
+    'min-h-[40px] inline-flex items-baseline gap-1 text-sm font-medium text-[var(--ink-secondary)] hover:underline cursor-pointer';
+  const fieldClass =
+    'w-full p-2.5 rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] text-[var(--ink-primary)] text-sm focus:outline-blue-500';
 
   return (
     <section
       aria-label="Transfer Deadline Day"
       data-office-ui="true"
-      className="office-floating-card office-reveal-3 rounded-[24px] overflow-hidden relative select-none border border-amber-300/90 bg-gradient-to-b from-amber-500/[0.08] via-white to-amber-500/[0.02] shadow-md shadow-amber-500/10"
+      className="office-floating-card office-reveal-3 rounded-xl overflow-hidden relative select-none border border-[var(--border-subtle)] bg-[var(--surface-card)]"
     >
       <div className="p-3.5 sm:p-4 space-y-2">
         {/* Headline + time left */}
         <header className="flex items-center justify-between gap-2">
-          <h2 className="text-lg sm:text-xl font-display font-black text-slate-900 tracking-tight min-w-0 truncate">
-            Deadline Day <span className="text-[#92400e]">· {meta.title}</span>
+          <h2 className="text-lg sm:text-xl font-display font-bold text-[var(--ink-primary)] tracking-tight min-w-0 truncate">
+            Deadline day <span className="font-semibold text-[var(--ink-secondary)]">· {meta.title}</span>
           </h2>
-          <span className="shrink-0 inline-flex items-center gap-1 text-xs font-extrabold text-[#78350f] bg-amber-100 px-2.5 py-1 rounded-full border border-amber-300">
+          <Tag tone="warning" className="shrink-0">
             <IconClock className="w-3.5 h-3.5 shrink-0" />
             <span>
               {timeString} · {hoursLeft}h left
             </span>
-          </span>
+          </Tag>
         </header>
 
         {/* Counts */}
         <div className="flex flex-wrap items-center gap-x-5">
           <button type="button" onClick={() => onNavigateToTransfers('incoming')} className={countLink}>
-            <span className="font-black text-base text-[#0b1536]">{pendingOffers.length}</span>
+            <span className="font-semibold text-base text-[var(--ink-primary)]">{pendingOffers.length}</span>
             <span>incoming {pendingOffers.length === 1 ? 'bid' : 'bids'} &rsaquo;</span>
           </button>
           <button type="button" onClick={() => onNavigateToTransfers('shortlist')} className={countLink}>
-            <span className="font-black text-base text-[#0b1536]">{shortlistCount}</span>
+            <span className="font-semibold text-base text-[var(--ink-primary)]">{shortlistCount}</span>
             <span>shortlisted &rsaquo;</span>
           </button>
         </div>
 
         {urgentDecisionCount > 0 && (
-          <div className="flex items-center justify-between gap-2 text-[13px] text-amber-950">
-            <span className="flex items-center gap-2 min-w-0 font-extrabold">
+          <div className="flex items-center justify-between gap-2 text-sm text-[var(--ink-primary)]">
+            <span className="flex items-center gap-2 min-w-0 font-semibold">
               <IconAlert className="w-4 h-4 text-amber-700 shrink-0" />
               <span className="truncate">
                 {urgentDecisionCount} urgent {urgentDecisionCount === 1 ? 'decision' : 'decisions'}
               </span>
             </span>
             {onReviewUrgentDecisions && (
-              <button
-                type="button"
-                onClick={onReviewUrgentDecisions}
-                className="shrink-0 min-h-[40px] px-3.5 rounded-full bg-amber-500 text-slate-950 font-display font-black text-xs uppercase tracking-wide hover:bg-amber-400 active:scale-95 motion-reduce:transform-none cursor-pointer"
-              >
+              <Button variant="secondary" size="sm" onClick={onReviewUrgentDecisions} className="shrink-0 min-h-10">
                 Review &rsaquo;
-              </button>
+              </Button>
             )}
           </div>
         )}
 
         {/* Primary action */}
-        <button
-          type="button"
+        <Button
+          variant="primary"
+          fullWidth
           data-office-ui="true"
           onClick={onAdvanceDeadlinePhase}
-          className="w-full py-3 px-4 rounded-full font-display font-black text-[15px] sm:text-base tracking-tight flex items-center justify-center gap-2 cursor-pointer min-h-[50px] shadow-lg shadow-amber-500/20 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-200 text-slate-950 transition-all hover:scale-[1.01] active:scale-[0.98] motion-reduce:transform-none"
+          className="min-h-12 text-base"
         >
           <span className="whitespace-nowrap">Continue</span>
-          <span className="text-xs font-extrabold text-[#78350f] truncate">
-            {meta.nextTime} {meta.nextPhaseName}
+          <span className="text-sm font-medium truncate">
+            {meta.nextTime} · {meta.nextPhaseName}
           </span>
-          <span className="text-base leading-none font-bold">&rsaquo;</span>
-        </button>
+          <span className="font-bold">&rsaquo;</span>
+        </Button>
 
         {/* Secondary actions */}
         <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
+          <Button
+            variant="secondary"
             data-office-ui="true"
             onClick={() => onNavigateToTransfers('market')}
-            className={secondaryBtn}
+            className="min-h-11 px-2.5"
           >
-            <IconSearch className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-            <span>Transfer Market</span>
-          </button>
-          <button type="button" data-office-ui="true" onClick={handleOpenBoardModal} className={secondaryBtn}>
-            <IconBuilding className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-            <span>Board Funds</span>
-          </button>
+            <IconSearch className="w-3.5 h-3.5 text-[var(--ink-secondary)] shrink-0" />
+            <span>Transfer market</span>
+          </Button>
+          <Button variant="secondary" data-office-ui="true" onClick={handleOpenBoardModal} className="min-h-11 px-2.5">
+            <IconBuilding className="w-3.5 h-3.5 text-[var(--ink-secondary)] shrink-0" />
+            <span>Board funds</span>
+          </Button>
         </div>
 
         {/* Schedule (collapsed by default) */}
@@ -277,34 +275,34 @@ export function OfficeDeadlineHeroTakeover({
             aria-expanded={scheduleOpen}
             aria-controls="deadline-day-schedule"
             onClick={() => setScheduleOpen((o) => !o)}
-            className="w-full min-h-[40px] flex items-center justify-between gap-2 text-xs font-bold text-[#78350f] cursor-pointer"
+            className="w-full min-h-[40px] flex items-center justify-between gap-2 text-xs font-semibold text-[var(--ink-secondary)] cursor-pointer"
           >
-            <span>{nextScheduled ? 'Schedule & next match' : 'Schedule'}</span>
+            <span>{nextScheduled ? 'Schedule and next match' : 'Schedule'}</span>
             {scheduleOpen ? <IconChevronUp className="w-4 h-4" /> : <IconChevronDown className="w-4 h-4" />}
           </button>
           {scheduleOpen && (
             <div id="deadline-day-schedule" className="space-y-2 pb-1">
-              <ol className="grid grid-cols-4 gap-1 text-center text-[11px]">
+              <ol className="grid grid-cols-4 gap-1 text-center text-xs">
                 {scheduleSteps.map((step, idx) => (
                   <li
                     key={step.id}
                     aria-current={idx === currentStepIdx ? 'step' : undefined}
                     className={`border-t-2 pt-1 leading-tight ${
                       idx === currentStepIdx
-                        ? 'border-amber-500 text-slate-950 font-black'
+                        ? 'border-amber-500 text-[var(--ink-primary)] font-semibold'
                         : idx < currentStepIdx || currentPhase === 'closed'
-                        ? 'border-amber-300 text-[#78350f] font-bold'
-                        : 'border-slate-300 text-[#475569] font-semibold'
+                        ? 'border-amber-300 text-[var(--ink-secondary)] font-medium'
+                        : 'border-[var(--border-crisp)] text-[var(--ink-muted)] font-medium'
                     }`}
                   >
-                    <span className="font-mono block">{step.time}</span>
-                    <span className="block truncate">{step.label}</span>
+                    <span className="tabular-nums block">{step.time}</span>
+                    <span className="block">{step.label}</span>
                   </li>
                 ))}
               </ol>
               {nextScheduled && (
-                <div className="flex items-center justify-between gap-2 text-xs text-[#334155]">
-                  <span className="min-w-0 truncate font-semibold">
+                <div className="flex flex-wrap items-center justify-between gap-x-3 text-xs text-[var(--ink-secondary)]">
+                  <span className="min-w-0 font-medium">
                     Matchday paused · {formatOfficeFixtureDate(nextScheduled.fixture.date)}
                   </span>
                   <span className="flex items-center gap-3 shrink-0">
@@ -312,20 +310,21 @@ export function OfficeDeadlineHeroTakeover({
                       <button
                         type="button"
                         onClick={() => onOpenMatchOverview(nextScheduled.fixture)}
-                        className="min-h-[40px] text-[#1e40af] font-display font-extrabold hover:underline cursor-pointer"
+                        className="min-h-[40px] text-blue-700 font-semibold hover:underline cursor-pointer"
                       >
                         Dossier &rsaquo;
                       </button>
                     )}
                     {onPlayMatch && (
-                      <button
-                        type="button"
+                      <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={() => onPlayMatch(nextScheduled.fixture)}
-                        className="min-h-[40px] px-3 rounded-full bg-blue-100 text-[#1e3a8a] hover:bg-blue-200 border border-blue-300 font-display font-black text-[11px] uppercase cursor-pointer"
+                        className="min-h-10"
                         title="Prepare and play match if scheduled for today"
                       >
                         Play
-                      </button>
+                      </Button>
                     )}
                   </span>
                 </div>
@@ -341,50 +340,44 @@ export function OfficeDeadlineHeroTakeover({
           role="dialog"
           aria-modal="true"
           aria-labelledby="petition-modal-title"
-          className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
           onClick={() => setBoardModalOpen(false)}
         >
           <div
-            className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 max-w-md w-full space-y-4 shadow-2xl relative text-slate-900 max-h-[90dvh] overflow-y-auto"
+            className="office-floating-card bg-[var(--surface-card)] border border-[var(--border-subtle)] rounded-xl p-5 sm:p-6 max-w-md w-full space-y-4 relative text-[var(--ink-primary)] max-h-[90dvh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <header className="flex justify-between items-start gap-2 border-b border-slate-100 pb-3">
-              <div>
-                <span className="text-[10px] font-display font-black uppercase tracking-wider text-amber-600 block">
-                  Board of Directors • Emergency Session
-                </span>
+            <header className="flex justify-between items-start gap-2 border-b border-[var(--border-subtle)] pb-3">
+              <div className="min-w-0">
+                <Eyebrow>Board of directors · emergency session</Eyebrow>
                 <h3
                   id="petition-modal-title"
-                  className="text-base sm:text-lg font-display font-black text-slate-900"
+                  className="text-base sm:text-lg font-display font-semibold text-[var(--ink-primary)]"
                 >
-                  Emergency Deadline Day Warchest
+                  Emergency deadline day warchest
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setBoardModalOpen(false)}
-                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold flex items-center justify-center cursor-pointer shrink-0"
+                className="w-9 h-9 rounded-full hover:bg-[var(--surface-subcard)] text-[var(--ink-secondary)] flex items-center justify-center cursor-pointer shrink-0"
                 aria-label="Close"
               >
                 <IconClose className="w-4 h-4" />
               </button>
             </header>
 
-            <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200 text-xs text-amber-950 space-y-1">
-              <div className="font-bold flex items-center gap-1.5">
-                <IconClock className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                <span>Eleventh-Hour Warchest Grant</span>
-              </div>
-              <p className="text-[11px] text-amber-900 leading-snug">
-                The Board can release emergency reserves before the 23:00 buzzer based on your current confidence ({save.boardStatus?.confidence || 80}%) and club financial health.
-              </p>
-            </div>
+            <p className="text-sm text-[var(--ink-secondary)] leading-snug">
+              <span className="font-semibold text-[var(--ink-primary)]">Eleventh-hour warchest grant.</span> The board
+              can release emergency reserves before the 23:00 deadline, based on your current confidence (
+              {save.boardStatus?.confidence || 80}%) and the club&apos;s financial health.
+            </p>
 
             {petitionFeedback ? (
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-3">
-                <p className="font-semibold text-slate-800 flex items-start gap-2">
+              <div className="space-y-3">
+                <p className="text-sm font-medium text-[var(--ink-primary)] flex items-start gap-2">
                   {petitionOutcome === 'approved' ? (
-                    <IconSparkles className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <IconCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   ) : petitionOutcome === 'compromised' ? (
                     <IconHandshake className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                   ) : (
@@ -392,13 +385,9 @@ export function OfficeDeadlineHeroTakeover({
                   )}
                   <span>{petitionFeedback}</span>
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setBoardModalOpen(false)}
-                  className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-display font-black text-xs uppercase cursor-pointer"
-                >
-                  Close &amp; Return to War Room
-                </button>
+                <Button variant="secondary" fullWidth onClick={() => setBoardModalOpen(false)}>
+                  Close and return to war room
+                </Button>
               </div>
             ) : (
               <form
@@ -406,49 +395,41 @@ export function OfficeDeadlineHeroTakeover({
                   e.preventDefault();
                   handleSubmitPetition();
                 }}
-                className="space-y-3 text-xs"
+                className="space-y-3"
               >
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold uppercase text-slate-500 block">
-                    Target Marquee Player (Optional)
+                  <label className="text-xs font-medium text-[var(--ink-secondary)] block">
+                    Target marquee player (optional)
                   </label>
                   <input
                     type="text"
                     value={targetPlayer}
                     onChange={(e) => setTargetPlayer(e.target.value)}
-                    placeholder="e.g. World-Class Striker, Elite Playmaker..."
-                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium text-xs focus:outline-blue-500"
+                    placeholder="e.g. a striker or a playmaker"
+                    className={fieldClass}
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold uppercase text-slate-500 block">
-                    Manager Justification Memo
+                  <label className="text-xs font-medium text-[var(--ink-secondary)] block">
+                    Manager justification memo
                   </label>
                   <textarea
                     rows={2}
                     value={justification}
                     onChange={(e) => setJustification(e.target.value)}
-                    placeholder="Provide context on why this signing will achieve seasonal objectives..."
-                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium text-xs focus:outline-blue-500"
+                    placeholder="Why this signing will help meet the season objectives"
+                    className={fieldClass}
                   />
                 </div>
 
                 <div className="flex gap-2 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => setBoardModalOpen(false)}
-                    className="flex-1 py-2.5 rounded-xl border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-700 font-display font-bold text-xs uppercase cursor-pointer"
-                  >
+                  <Button variant="secondary" onClick={() => setBoardModalOpen(false)}>
                     Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmittingPetition}
-                    className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-display font-black text-xs uppercase shadow-sm cursor-pointer disabled:opacity-50"
-                  >
-                    {isSubmittingPetition ? 'Petitioning Board...' : 'Submit Emergency Petition'}
-                  </button>
+                  </Button>
+                  <Button type="submit" variant="primary" disabled={isSubmittingPetition} className="flex-1">
+                    {isSubmittingPetition ? 'Petitioning board...' : 'Submit petition'}
+                  </Button>
                 </div>
               </form>
             )}

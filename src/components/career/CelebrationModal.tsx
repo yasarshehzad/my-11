@@ -5,7 +5,8 @@ import { createPortal } from 'react-dom';
 import { CelebrationEvent } from '../../career/celebrations';
 import { formatCareerCurrency } from '../../career/formatters';
 import { playTrophyFanfare } from '../../utils/soundEffects';
-import { CelebrationBadgeIcon, IconArrowRight, IconBuilding, IconTrophy } from './GameIcons';
+import { CelebrationBadgeIcon, IconTrophy } from './GameIcons';
+import { Button, Eyebrow, StatRow } from '@/components/ui';
 
 export interface CelebrationModalProps {
   event: CelebrationEvent;
@@ -39,168 +40,85 @@ export function CelebrationModal({
 
   if (!mounted) return null;
 
-  const isTitleOrTrophy = event.category === 'title_win' || event.category === 'cup_win';
-
   const modalContent = (
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="celebration-title"
-      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 overflow-y-auto bg-slate-950/85 backdrop-blur-md animate-fadeIn motion-reduce:animate-none"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 overflow-y-auto bg-black/60 animate-fadeIn motion-reduce:animate-none"
       onClick={onClose}
     >
-      {/* Confetti particles */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden motion-reduce:hidden" aria-hidden="true">
-        {[...Array(24)].map((_, i) => {
-          const left = `${(i * 4.2 + 2) % 100}%`;
-          const delay = `${(i * 0.15) % 2.5}s`;
-          const duration = `${2.8 + (i % 5) * 0.4}s`;
-          const colors = [
-            'bg-amber-400',
-            'bg-blue-400',
-            'bg-yellow-300',
-            'bg-sky-400',
-            'bg-rose-400',
-            'bg-violet-400',
-          ];
-          const color = colors[i % colors.length];
-          const size = i % 2 === 0 ? 'w-2 h-3.5' : 'w-2.5 h-2.5 rounded-full';
-
-          return (
-            <div
-              key={i}
-              className={`absolute -top-6 ${size} ${color} opacity-90 animate-confetti-fall`}
-              style={{
-                left,
-                animationDelay: delay,
-                animationDuration: duration,
-              }}
-            />
-          );
-        })}
-      </div>
-
       <div
-        className="relative w-full max-w-lg bg-slate-900 border border-amber-500/40 rounded-3xl p-5 sm:p-7 shadow-2xl text-slate-100 space-y-5 my-auto max-h-[90vh] overflow-y-auto scrollbar-thin dark:bg-slate-900 dark:border-amber-500/40 light:bg-white light:border-slate-200 light:text-slate-900 celebration-modal-card"
+        className="relative w-full max-w-lg bg-[var(--surface-card)] border border-[var(--border-subtle)] rounded-xl p-5 sm:p-6 shadow-sm text-[var(--ink-primary)] space-y-5 my-auto max-h-[90vh] overflow-y-auto scrollbar-thin"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Glow Header Accent */}
-        <div
-          className={`absolute -top-12 left-1/2 -translate-x-1/2 w-48 h-24 rounded-full blur-2xl pointer-events-none ${
-            isTitleOrTrophy ? 'bg-amber-500/30' : 'bg-blue-500/25'
-          }`}
-        />
-
-        {/* Top Floating Badge & Tag */}
-        <div className="text-center space-y-2 pt-1">
-          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-tr from-amber-500/20 via-yellow-400/30 to-amber-500/10 border-2 border-amber-400/60 shadow-lg shadow-amber-500/20 text-amber-300 animate-bounce-short motion-reduce:animate-none">
-            <CelebrationBadgeIcon badge={event.badge} className="w-8 h-8 sm:w-10 sm:h-10" />
-          </div>
-
-          <div>
-            <span
-              className={`text-[10px] font-mono font-black uppercase tracking-widest px-3 py-1 rounded-full border inline-block ${
-                isTitleOrTrophy
-                  ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
-                  : 'bg-blue-500/15 text-blue-300 border-blue-500/30'
-              }`}
-            >
-              {event.stageName ? `${event.competitionName} • ${event.stageName}` : event.competitionName}
-            </span>
-          </div>
-
+        <div className="space-y-1.5">
+          <CelebrationBadgeIcon badge={event.badge} className="w-8 h-8 text-amber-600" />
+          <Eyebrow>
+            {event.stageName ? `${event.competitionName} · ${event.stageName}` : event.competitionName}
+          </Eyebrow>
           <h2
             id="celebration-title"
-            className="text-xl sm:text-2xl font-display font-black uppercase tracking-tight text-slate-900 dark:text-white celebration-title"
+            className="text-xl sm:text-2xl font-display font-bold tracking-tight text-[var(--ink-primary)]"
           >
             {event.title}
           </h2>
-          <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 celebration-subhead">
-            {event.subheadline}
-          </p>
+          <p className="text-sm text-[var(--ink-secondary)]">{event.subheadline}</p>
         </div>
 
-        {/* Rewards / Accolades Strip */}
+        {/* Rewards */}
         {event.rewards && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 rounded-2xl bg-slate-950/60 border border-slate-800 celebration-rewards-box">
+          <div className="border-y border-[var(--border-subtle)] divide-y divide-[var(--border-subtle)]">
             {event.rewards.trophyName && (
-              <div className="text-center p-2 rounded-xl bg-slate-900/80 border border-slate-800/80">
-                <span className="text-xs block text-slate-400">Trophy</span>
-                <span className="font-display font-black text-amber-400 text-xs inline-flex items-center justify-center gap-1 truncate max-w-full">
-                  <IconTrophy className="w-3.5 h-3.5 shrink-0" />
-                  <span>Silverware</span>
-                </span>
-              </div>
+              <StatRow
+                label="Trophy"
+                value={
+                  <span className="inline-flex items-center gap-1">
+                    <IconTrophy className="w-3.5 h-3.5 shrink-0 text-amber-600" />
+                    <span>Silverware</span>
+                  </span>
+                }
+              />
             )}
             {event.rewards.prizeMoney && event.rewards.prizeMoney > 0 && (
-              <div className="text-center p-2 rounded-xl bg-slate-900/80 border border-slate-800/80">
-                <span className="text-xs block text-slate-400">Prize Fund</span>
-                <span className="font-mono font-bold text-blue-400 text-xs block">
-                  +{formatCareerCurrency(event.rewards.prizeMoney)}
-                </span>
-              </div>
+              <StatRow label="Prize fund" value={`+${formatCareerCurrency(event.rewards.prizeMoney)}`} />
             )}
             {event.rewards.confidenceBoost && (
-              <div className="text-center p-2 rounded-xl bg-slate-900/80 border border-slate-800/80 col-span-2 sm:col-span-1">
-                <span className="text-xs block text-slate-400">Board Status</span>
-                <span className="font-mono font-bold text-blue-400 text-xs block">
-                  +{event.rewards.confidenceBoost}% Trust
-                </span>
-              </div>
+              <StatRow label="Board status" value={`+${event.rewards.confidenceBoost}% trust`} />
             )}
           </div>
         )}
 
-        {/* Executive Board Message */}
-        <section
-          aria-label="Board Statement"
-          className="rounded-2xl p-4 bg-slate-950/80 border border-slate-800 space-y-2 celebration-quote-box"
-        >
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2">
-              <span className="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 flex items-center justify-center shrink-0">
-                <IconBuilding className="w-3.5 h-3.5" />
-              </span>
-              <div>
-                <h3 className="font-display font-black text-xs uppercase tracking-wider text-slate-900 dark:text-white celebration-quote-sender">
-                  {event.boardReaction.sender}
-                </h3>
-                <span className="text-[10px] text-slate-400 block font-mono">
-                  {event.boardReaction.role}
-                </span>
-              </div>
-            </div>
+        {/* Board message */}
+        <section aria-label="Board Statement" className="space-y-2">
+          <div>
+            <h3 className="font-display font-semibold text-sm text-[var(--ink-primary)]">
+              {event.boardReaction.sender}
+            </h3>
+            <span className="text-xs text-[var(--ink-muted)] block">{event.boardReaction.role}</span>
           </div>
-
-          <p className="text-xs text-slate-300 leading-relaxed italic border-l-2 border-amber-400/60 pl-3 pt-1 celebration-quote-text">
+          <p className="text-sm text-[var(--ink-secondary)] leading-relaxed border-l border-[var(--border-crisp)] pl-3">
             &ldquo;{event.boardReaction.statement}&rdquo;
           </p>
         </section>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
+        {/* Actions */}
+        <div className="flex flex-col-reverse sm:flex-row gap-2.5">
           {onNavigateTab && (
-            <button
-              type="button"
+            <Button
+              variant="secondary"
+              className="flex-1"
               onClick={() => {
                 onClose();
                 onNavigateTab(event.category === 'title_win' ? 'table' : 'cups');
               }}
-              className="office-subcard py-3 px-4 rounded-xl border border-slate-200 text-slate-700 hover:text-slate-900 text-xs font-display font-bold uppercase tracking-wider transition-colors cursor-pointer flex-1 inline-flex items-center justify-center gap-1.5 shadow-2xs"
             >
-              <span>{event.category === 'title_win' ? 'View League Table' : 'View Cups'}</span>
-              <IconArrowRight className="w-3.5 h-3.5" />
-            </button>
+              {event.category === 'title_win' ? 'View league table' : 'View cups'}
+            </Button>
           )}
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="py-3 px-5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/25 transition-all cursor-pointer flex-1 inline-flex items-center justify-center gap-1.5"
-          >
-            <span>Celebrate &amp; Continue</span>
-            <IconArrowRight className="w-3.5 h-3.5" />
-          </button>
+          <Button variant="primary" className="flex-1" onClick={onClose}>
+            Continue
+          </Button>
         </div>
       </div>
     </div>

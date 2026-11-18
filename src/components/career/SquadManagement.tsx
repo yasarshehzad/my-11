@@ -39,36 +39,26 @@ import {
   SquadRotationResult,
 } from '../../career/squad';
 import { SquadRegistrationModal } from './SquadRegistrationModal';
+import { Button, SectionHeader, Tag, type TagTone } from '../ui';
 
 import { formatCurrency, formatWage } from '../../career/finance';
 import { generateYouthIntake, promoteYouthProspect, releaseYouthProspect } from '../../career/youthAcademy';
 import {
-  IconBarChart,
   IconSwap,
-  IconHandshake,
   IconAlert,
-  IconTrophy,
-  IconBolt,
   IconTarget,
   IconFlame,
   IconShield,
   IconSliders,
   IconCheck,
-  IconClipboard,
-  IconUsers,
   IconMedkit,
   IconCard,
   IconSnowflake,
   IconStar,
   IconSprout,
   IconClock,
-  IconCrown,
   IconSearch,
   IconClose,
-  IconSparkles,
-  IconBall,
-  IconStadium,
-  IconDumbbell,
   IconChevronDown,
   IconChevronUp,
   TacticalPhilosophyIcon,
@@ -85,6 +75,7 @@ const SquadPlayerModal = dynamic(
   { ssr: false }
 );
 const emptySubscribe = () => () => {};
+const sentenceCase = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
 function renderTrainingFocusIcon(id: TeamTrainingFocus, className = 'w-5 h-5') {
   switch (id) {
@@ -110,33 +101,33 @@ const TRAINING_FOCUS_OPTIONS: Array<{
 }> = [
   {
     id: 'match_prep',
-    title: 'Match Preparation',
-    description: 'Tactical walkthroughs & opposition analysis. Highest sharpness for upcoming matches.',
-    buffs: ['+1.2 ATT/MID/DEF', '+2 Composure', 'Protected Form'],
+    title: 'Match preparation',
+    description: 'Tactical walkthroughs and opposition analysis. Highest sharpness for upcoming matches.',
+    buffs: ['+1.2 ATT/MID/DEF', '+2 composure', 'Protected form'],
   },
   {
     id: 'recovery',
-    title: 'Rest & Recovery',
-    description: 'Light hydrotherapy & recovery drills. Essential during mid-week congested schedules.',
-    buffs: ['+15% Stamina Regen', '18% Slower Match Drain', '-40% Injury Chance'],
+    title: 'Rest and recovery',
+    description: 'Light hydrotherapy and recovery drills. Essential during mid-week congested schedules.',
+    buffs: ['+15% stamina regen', '18% slower match drain', '-40% injury chance'],
   },
   {
     id: 'attacking',
-    title: 'Attacking Drills',
+    title: 'Attacking drills',
     description: 'Finishing, winger overlaps, and rapid box penetration to maximize goal output.',
-    buffs: ['+2.2 ATT Power', '+10% Conversion', '+Winger/FWD XP'],
+    buffs: ['+2.2 ATT power', '+10% conversion', '+winger/FWD XP'],
   },
   {
     id: 'defensive',
-    title: 'Defensive Shape',
+    title: 'Defensive shape',
     description: 'Low block structure, aerial clearing, and coordinated offside traps.',
-    buffs: ['+2.2 DEF Solidity', '-12% Opponent xG', '+Defender/GK XP'],
+    buffs: ['+2.2 DEF solidity', '-12% opponent xG', '+defender/GK XP'],
   },
   {
     id: 'balanced',
-    title: 'Balanced Routine',
+    title: 'Balanced routine',
     description: 'Standard holistic football drills maintaining general squad readiness.',
-    buffs: ['Standard Recovery', 'Even Development', 'Balanced Load'],
+    buffs: ['Standard recovery', 'Even development', 'Balanced load'],
   },
 ];
 
@@ -218,14 +209,14 @@ export function SquadManagement({
       return;
     }
     onUpdateSave(result.updatedSave);
-    setAcademyToast({ message: 'Promoted prospect to first team squad successfully!', type: 'success' });
+    setAcademyToast({ message: 'Prospect promoted to the first team.', type: 'success' });
     setTimeout(() => setAcademyToast(null), 3000);
   };
 
   const handleReleaseProspect = (prospectId: string) => {
     const result = releaseYouthProspect(save, prospectId);
     onUpdateSave(result.updatedSave);
-    setAcademyToast({ message: 'Released prospect from Youth Academy.', type: 'success' });
+    setAcademyToast({ message: 'Prospect released from the youth academy.', type: 'success' });
     setTimeout(() => setAcademyToast(null), 3000);
   };
 
@@ -235,7 +226,7 @@ export function SquadManagement({
       ...save,
       youthAcademy: [...(save.youthAcademy || []), ...newIntake],
     });
-    setAcademyToast({ message: `Scouted ${newIntake.length} new prospects into the Academy!`, type: 'success' });
+    setAcademyToast({ message: `Scouted ${newIntake.length} new prospects into the academy.`, type: 'success' });
     setTimeout(() => setAcademyToast(null), 3000);
   };
 
@@ -272,7 +263,7 @@ export function SquadManagement({
       tactics: updatedTactics,
     });
     if (onNotification) {
-      onNotification(`Tactical Philosophy shifted to ${TACTICAL_PHILOSOPHIES[philosophy].name}.`);
+      onNotification(`Tactical philosophy changed to ${TACTICAL_PHILOSOPHIES[philosophy].name}.`);
     }
   };
 
@@ -288,7 +279,7 @@ export function SquadManagement({
     });
     const cap = squad.find((p) => p.id === captainId);
     if (onNotification && cap) {
-      onNotification(`${cap.name} appointed as Club Captain.`);
+      onNotification(`${cap.name} appointed club captain.`);
     }
   };
 
@@ -304,7 +295,7 @@ export function SquadManagement({
     });
     const vc = squad.find((p) => p.id === viceCaptainId);
     if (onNotification && vc) {
-      onNotification(`${vc.name} appointed as Vice-Captain.`);
+      onNotification(`${vc.name} appointed vice-captain.`);
     }
   };
 
@@ -324,10 +315,10 @@ export function SquadManagement({
     if (onNotification && player) {
       const label =
         role === 'penaltyTakerId'
-          ? 'Penalty Taker'
+          ? 'penalty taker'
           : role === 'freeKickTakerId'
-          ? 'Free Kick Taker'
-          : 'Corner Taker';
+          ? 'free kick taker'
+          : 'corner taker';
       onNotification(`${player.name} designated as primary ${label}.`);
     }
   };
@@ -369,7 +360,8 @@ export function SquadManagement({
       ...save,
       trainingState: updatedTrainingState,
     });
-    onNotification?.(`Training focus set to ${focus.replace('_', ' ').toUpperCase()}`);
+    const focusTitle = TRAINING_FOCUS_OPTIONS.find((opt) => opt.id === focus)?.title ?? focus.replace('_', ' ');
+    onNotification?.(`Training focus set to ${focusTitle.toLowerCase()}.`);
   };
 
   const handleAssignMentorship = (playerId: string, drill: MentorshipDrill | 'none') => {
@@ -399,7 +391,7 @@ export function SquadManagement({
       onNotification?.(
         drill === 'none'
           ? `Removed specialist mentorship from ${player.name}.`
-          : `Assigned ${player.name} to ${drill.toUpperCase()} mentorship program!`
+          : `Assigned ${player.name} to ${drill} mentorship.`
       );
     }
   };
@@ -426,7 +418,7 @@ export function SquadManagement({
     });
     setRotationFeedback(result);
     onNotification?.(
-      `Smart Rotation: Rotated ${result.rotatedCount} fatigued starter${result.rotatedCount > 1 ? 's' : ''} for fresh options.`
+      `Rotated ${result.rotatedCount} fatigued starter${result.rotatedCount > 1 ? 's' : ''} for fresh options.`
     );
   };
 
@@ -445,7 +437,7 @@ export function SquadManagement({
     setTrainingSessionResults(result);
     if (result.breakthroughs.length > 0) {
       onNotification?.(
-        `Training Breakthrough! ${result.breakthroughs.map((b) => `${b.player.name} (+1 OVR)`).join(', ')}`
+        `Training breakthrough: ${result.breakthroughs.map((b) => `${b.player.name} (+1 OVR)`).join(', ')}`
       );
     } else {
       onNotification?.(
@@ -815,24 +807,24 @@ export function SquadManagement({
   return (
     <div className="space-y-4">
       {/* 1. Squad vitals, formation controls and view tabs */}
-      <section className="office-floating-card bg-white rounded-2xl p-2.5 sm:p-3 border border-slate-200/90 shadow-sm space-y-2" aria-label="Squad vitals and controls">
+      <section className="office-floating-card bg-white rounded-xl p-2.5 sm:p-3 border border-slate-200/90 shadow-sm space-y-2" aria-label="Squad vitals and controls">
         <div className="flex items-center justify-between gap-2">
           <dl className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 text-xs min-w-0">
             <div className="flex items-baseline gap-1">
-              <dt className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">XI</dt>
-              <dd className="font-display font-black text-blue-600">{startingXiAvg}</dd>
+              <dt className="text-xs text-[var(--ink-muted)]">XI</dt>
+              <dd className="font-semibold text-[var(--ink-primary)]">{startingXiAvg}</dd>
             </div>
             <div className="flex items-baseline gap-1">
-              <dt className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Squad</dt>
-              <dd className="font-display font-black text-[#0b1536]">
+              <dt className="text-xs text-[var(--ink-muted)]">Squad</dt>
+              <dd className="font-semibold text-[var(--ink-primary)]">
                 {squad.length}
-                <span className="text-[10px] text-slate-400 font-mono">/35</span>
+                <span className="font-normal text-[var(--ink-muted)]">/35</span>
               </dd>
             </div>
             <div className="flex items-baseline gap-1">
-              <dt className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">HG</dt>
+              <dt className="text-xs text-[var(--ink-muted)]">HG</dt>
               <dd
-                className="font-display font-black text-blue-600 inline-flex items-center gap-0.5"
+                className="font-semibold text-[var(--ink-primary)] inline-flex items-center gap-0.5"
                 title={homegrownCompliant ? 'Within the 17 non-homegrown senior limit' : 'Over the 17 non-homegrown senior limit'}
               >
                 {validation.homegrownCount}
@@ -844,8 +836,8 @@ export function SquadManagement({
               </dd>
             </div>
             <div className="flex items-baseline gap-1">
-              <dt className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Wages</dt>
-              <dd className="font-display font-black text-emerald-700">{formatWage(validation.totalWagesWeekly)}</dd>
+              <dt className="text-xs text-[var(--ink-muted)]">Wages</dt>
+              <dd className="font-semibold text-[var(--ink-primary)]">{formatWage(validation.totalWagesWeekly)}</dd>
             </div>
           </dl>
           <button
@@ -854,14 +846,14 @@ export function SquadManagement({
             aria-controls="squad-vitals-more"
             aria-label="More squad numbers"
             onClick={() => togglePanel('vitals')}
-            className="w-10 h-10 -my-1 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 cursor-pointer shrink-0"
+            className="w-10 h-10 -my-1 rounded-lg flex items-center justify-center text-[var(--ink-muted)] hover:bg-[var(--surface-subcard)] cursor-pointer shrink-0"
           >
             {openPanels.vitals ? <IconChevronUp className="w-4 h-4" /> : <IconChevronDown className="w-4 h-4" />}
           </button>
         </div>
 
         {openPanels.vitals && (
-          <dl id="squad-vitals-more" className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-[11px] pt-2 border-t border-slate-100">
+          <dl id="squad-vitals-more" className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-xs pt-2 border-t border-slate-100">
             {[
               ['Squad average', `${validation.averageRating} OVR`],
               ['Squad value', formatCurrency(validation.totalSquadValue)],
@@ -878,14 +870,14 @@ export function SquadManagement({
             ].map(([label, value]) => (
               <div key={label} className="flex items-baseline justify-between gap-2 min-w-0">
                 <dt className="text-slate-500 truncate">{label}</dt>
-                <dd className="font-mono font-bold text-slate-800 whitespace-nowrap">{value}</dd>
+                <dd className="tabular-nums font-bold text-slate-800 whitespace-nowrap">{value}</dd>
               </div>
             ))}
           </dl>
         )}
 
         {validation.errors.length > 0 && (
-          <div className="flex items-center gap-1.5 text-[11px] text-rose-600 bg-rose-50/50 p-1.5 rounded-lg">
+          <div className="flex items-center gap-1.5 text-xs text-rose-600 bg-rose-50/50 p-1.5 rounded-lg">
             <IconAlert className="w-3.5 h-3.5 shrink-0" />
             <span className="font-bold truncate">{validation.errors[0]}</span>
           </div>
@@ -896,7 +888,7 @@ export function SquadManagement({
             <select
               value={currentFormation}
               onChange={(e) => handleFormationChange(e.target.value)}
-              className="bg-slate-50 border border-slate-300 rounded-xl px-2 min-h-[40px] text-xs font-display font-black text-[#0b1536] focus:outline-none focus:border-teal-500 cursor-pointer shadow-2xs"
+              className="bg-[var(--surface-card)] border border-[var(--border-crisp)] rounded-lg px-2 min-h-[40px] text-xs font-semibold text-[var(--ink-primary)] focus:outline-none focus:border-blue-500 cursor-pointer"
               aria-label="Formation"
             >
               {(['4 at the back', '3 at the back', '5 at the back'] as const).map((cat) => (
@@ -910,39 +902,32 @@ export function SquadManagement({
               ))}
             </select>
 
-            <button
-              type="button"
+            <Button
+              size="sm"
               onClick={handleAutoPick}
-              className="px-2.5 rounded-xl border border-teal-200 bg-teal-50/90 hover:bg-teal-100 text-teal-800 text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap min-h-[40px] shadow-2xs flex items-center gap-1 active:scale-95"
+              className="min-h-10! whitespace-nowrap"
               title="Automatically pick highest-rated team sheet"
             >
-              <IconBolt className="w-3.5 h-3.5 shrink-0" />
-              <span>Auto-Pick</span>
-            </button>
+              Auto-pick
+            </Button>
 
-            <button
-              type="button"
+            <Button
+              size="sm"
               onClick={() => setShowRegistrationModal(true)}
               aria-label={`25-man registration: ${registeredSeniorCount} of ${MAX_SENIOR_SQUAD_SIZE} registered. Manage`}
               title={isOverRegistration ? `${seniorSquadCount - registeredSeniorCount} senior player(s) unregistered` : '25-man league registration'}
-              className={`px-2.5 rounded-xl border text-[11px] font-display font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap min-h-[40px] shadow-2xs flex items-center gap-1 active:scale-95 ${
-                isOverRegistration
-                  ? 'bg-amber-50 border-amber-300 text-amber-800'
-                  : 'bg-blue-50 border-blue-200 text-blue-700'
+              className={`min-h-10! whitespace-nowrap ${
+                isOverRegistration ? 'bg-amber-50! border-amber-300! text-amber-800!' : ''
               }`}
             >
-              {isOverRegistration ? (
-                <IconAlert className="w-3.5 h-3.5 shrink-0" />
-              ) : (
-                <IconClipboard className="w-3.5 h-3.5 shrink-0" />
-              )}
+              {isOverRegistration && <IconAlert className="w-3.5 h-3.5 shrink-0" />}
               <span>
                 Registered {registeredSeniorCount}/{MAX_SENIOR_SQUAD_SIZE}
               </span>
-            </button>
+            </Button>
           </div>
 
-          <div className="grid grid-cols-5 sm:flex w-full sm:w-auto items-center gap-0.5 bg-[#F7F6F3] border border-[#E2DFD9] rounded-xl p-0.5">
+          <div className="grid grid-cols-5 sm:flex w-full sm:w-auto items-center gap-0.5 bg-[var(--surface-subcard)] border border-[var(--border-subtle)] rounded-lg p-0.5">
             {viewTabs.map((tab) => {
               const isActive = viewMode === tab.id;
               return (
@@ -958,21 +943,15 @@ export function SquadManagement({
                       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                     }
                   }}
-                  className={`min-h-[40px] px-1 sm:px-2.5 rounded-lg text-[10.5px] sm:text-xs font-display font-black uppercase transition-all flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap ${
-                    isActive ? 'office-nav-tab-active shadow-xs' : 'office-nav-tab-inactive'
+                  className={`min-h-[40px] px-1 sm:px-2.5 rounded-md text-xs font-semibold transition-colors flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap ${
+                    isActive ? 'office-nav-tab-active' : 'office-nav-tab-inactive'
                   }`}
                 >
                   <span>{tab.label}</span>
                   {tab.badge && (
                     <span
-                      className={`hidden sm:inline-flex text-[10px] px-1.5 rounded-full font-mono font-bold ${
-                        tab.alert
-                          ? isActive
-                            ? 'bg-amber-400 text-slate-950'
-                            : 'bg-amber-100 text-amber-800'
-                          : isActive
-                          ? 'bg-white/20 text-white'
-                          : 'bg-slate-200 text-slate-700'
+                      className={`hidden sm:inline text-xs tabular-nums ${
+                        tab.alert ? 'font-semibold text-amber-700!' : 'font-normal text-[var(--ink-muted)]!'
                       }`}
                       title={tab.badgeTitle}
                     >
@@ -990,7 +969,7 @@ export function SquadManagement({
       {viewMode === 'pitch' && (
         <section id="squad-pitch-section" className="space-y-3 scroll-mt-20">
           {/* Double-Bezel Tactile Pitch Frame */}
-          <div className="rounded-2xl bg-[#E8E6E1] border border-zinc-300/70 p-2 sm:p-3 shadow-xs">
+          <div className="rounded-xl bg-[#E8E6E1] border border-zinc-300/70 p-2 sm:p-3 shadow-xs">
             {/* Virtual Pitch Canvas with True-Circle SVG Markings */}
             <div className="my11-broadcast-pitch p-2 sm:p-4 w-full aspect-[440/520] max-h-[680px] mx-auto flex flex-col justify-between relative select-none">
               <svg
@@ -1052,29 +1031,25 @@ export function SquadManagement({
           </div>
 
           {/* Bench Row (Substitutes) */}
-          <div className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 space-y-3.5 shadow-md">
-            <div className="flex justify-between items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h4 className="text-xs font-display font-black uppercase tracking-wider text-[#0b1536] flex items-center gap-1.5">
-                  <IconUsers className="w-3.5 h-3.5 text-[#1d5eff] shrink-0" />
-                  <span>Matchday Substitutes ({bench.length}/9)</span>
-                </h4>
-                {bench.length < 9 && (
-                  <button
-                    type="button"
+          <div className="office-floating-card bg-white border border-slate-200/90 rounded-xl p-4 sm:p-5 space-y-3.5 shadow-sm">
+            <SectionHeader
+              as="h4"
+              title="Matchday substitutes"
+              meta={`${bench.length}/9`}
+              description="Hold and drag to swap"
+              action={
+                bench.length < 9 ? (
+                  <Button
+                    size="sm"
                     onClick={handleAutoFillBench}
-                    className="py-1 px-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[10px] font-display font-black uppercase tracking-wider transition-colors cursor-pointer shadow-2xs inline-flex items-center gap-1"
+                    className="min-h-10!"
                     title="Automatically fill remaining bench spots with top reserves"
                   >
-                    <IconBolt className="w-3 h-3 shrink-0" />
-                    <span>Auto-Fill Bench</span>
-                  </button>
-                )}
-              </div>
-              <span className="text-[10px] text-slate-500 font-medium">
-                Hold and drag to swap
-              </span>
-            </div>
+                    Auto-fill bench
+                  </Button>
+                ) : undefined
+              }
+            />
 
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2.5">
               {bench.map((player) => {
@@ -1099,11 +1074,11 @@ export function SquadManagement({
                     onTouchMove={handleTouchMove}
                     onTouchEnd={handleTouchEnd}
                     onClick={() => handlePlayerClick(player)}
-                    className={`office-subcard p-2.5 rounded-2xl border text-center cursor-grab active:cursor-grabbing transition-all scroll-mt-20 select-none ${
+                    className={`office-subcard p-2.5 rounded-xl border text-center cursor-grab active:cursor-grabbing transition-all scroll-mt-20 select-none ${
                       isDragTarget
-                        ? 'border-blue-500 ring-3 ring-blue-500/40 scale-105 z-10 shadow-lg'
+                        ? 'border-blue-500 ring-3 ring-blue-500/40 scale-105 z-10 shadow-sm'
                         : isSwapping
-                        ? 'border-amber-400 ring-2 ring-amber-400 scale-105 shadow-md'
+                        ? 'border-amber-400 ring-2 ring-amber-400 scale-105 shadow-sm'
                         : benchFit === 'natural'
                         ? 'border-emerald-400 ring-2 ring-emerald-400/80 bg-emerald-50/50 shadow-xs'
                         : benchFit === 'competent'
@@ -1111,32 +1086,28 @@ export function SquadManagement({
                         : 'border-slate-200/90 hover:border-blue-400/80 shadow-xs'
                     }`}
                   >
-                    <div className="flex justify-between items-center text-[10px] font-bold mb-1">
+                    <div className="flex justify-between items-center text-xs font-bold mb-1">
                       <div className="flex items-center gap-1">
-                        <span className="text-blue-700 font-display font-black text-[9.5px] px-1 py-0.2 bg-blue-50 rounded border border-blue-100">
+                        <span className="text-[var(--ink-secondary)] font-semibold text-xs">
                           {player.position}
                         </span>
                         {benchFit && (
-                          <span
-                            className={`text-[7.5px] font-black uppercase px-1 py-0.2 rounded border shadow-2xs font-display ${
-                              benchFit === 'natural'
-                                ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                                : benchFit === 'competent'
-                                ? 'bg-amber-100 text-amber-800 border-amber-300'
-                                : 'bg-rose-100 text-rose-800 border-rose-300'
-                            }`}
-                            title={`Fit for selected ${selectedStarterSlot} position: ${benchFit}`}
-                          >
-                            {benchFit === 'natural' ? 'NAT' : benchFit === 'competent' ? 'SEC' : 'OOP'}
+                          <span title={`Fit for selected ${selectedStarterSlot} position: ${benchFit.replace(/_/g, ' ')}`}>
+                            <Tag
+                              tone={benchFit === 'natural' ? 'success' : benchFit === 'competent' ? 'warning' : 'danger'}
+                              className="px-1"
+                            >
+                              {benchFit === 'natural' ? 'NAT' : benchFit === 'competent' ? 'SEC' : 'OOP'}
+                            </Tag>
                           </span>
                         )}
                       </div>
-                      <span className="text-[#0b1536] font-display font-black text-xs">{player.rating}</span>
+                      <span className="text-[var(--ink-primary)] font-semibold text-xs tabular-nums">{player.rating}</span>
                     </div>
-                    <div className="text-xs font-display font-black text-[#0b1536] truncate leading-tight" title={player.name}>
+                    <div className="text-xs font-display font-semibold text-[#0b1536] truncate leading-tight" title={player.name}>
                       {player.name}
                     </div>
-                    <div className="text-[9px] text-slate-500 font-mono mt-1">
+                    <div className="text-xs text-[var(--ink-muted)] mt-1">
                       {formatCurrency(player.value)}
                     </div>
                   </div>
@@ -1158,7 +1129,7 @@ export function SquadManagement({
                     if (dragOverPlayerId === 'empty-bench') setDragOverPlayerId(null);
                   }}
                   onDrop={handleDropOnEmptyBench}
-                  className={`col-span-full min-h-[40px] px-3 rounded-xl border border-dashed cursor-pointer transition-all flex items-center justify-center gap-1.5 select-none text-[11px] font-display font-black uppercase tracking-wider ${
+                  className={`col-span-full min-h-[40px] px-3 rounded-xl border border-dashed cursor-pointer transition-all flex items-center justify-center gap-1.5 select-none text-xs font-display font-semibold ${
                     dragOverPlayerId === 'empty-bench' || (swapSourceId && !benchIdsSet.has(swapSourceId))
                       ? 'border-amber-400 bg-amber-50/70 text-amber-800 animate-pulse motion-reduce:animate-none'
                       : 'border-slate-300 bg-slate-50/70 text-slate-500 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50/50'
@@ -1174,11 +1145,8 @@ export function SquadManagement({
 
           {/* Reserves (Non-Matchday Squad) */}
           {reserves.length > 0 && (
-            <div className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 space-y-3.5 shadow-md">
-              <h4 className="text-xs font-display font-black uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
-                <IconUsers className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                <span>Reserves ({reserves.length})</span>
-              </h4>
+            <div className="office-floating-card bg-white border border-slate-200/90 rounded-xl p-4 sm:p-5 space-y-3.5 shadow-sm">
+              <SectionHeader as="h4" title="Reserves" meta={reserves.length} />
               <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2.5">
                 {reserves.map((player) => {
                   const isSwapping = swapSourceId === player.id;
@@ -1197,24 +1165,24 @@ export function SquadManagement({
                       onTouchMove={handleTouchMove}
                       onTouchEnd={handleTouchEnd}
                       onClick={() => handlePlayerClick(player)}
-                      className={`office-subcard p-2.5 rounded-2xl border text-center cursor-grab active:cursor-grabbing transition-all scroll-mt-20 select-none ${
+                      className={`office-subcard p-2.5 rounded-xl border text-center cursor-grab active:cursor-grabbing transition-all scroll-mt-20 select-none ${
                         isDragTarget
-                          ? 'border-blue-500 ring-3 ring-blue-500/40 scale-105 z-10 shadow-lg'
+                          ? 'border-blue-500 ring-3 ring-blue-500/40 scale-105 z-10 shadow-sm'
                           : isSwapping
-                          ? 'border-amber-400 ring-2 ring-amber-400 scale-105 shadow-md'
+                          ? 'border-amber-400 ring-2 ring-amber-400 scale-105 shadow-sm'
                           : 'border-slate-200/80 hover:border-blue-400/80 shadow-2xs'
                       }`}
                     >
-                      <div className="flex justify-between items-center text-[10px] font-bold mb-1">
-                        <span className="text-slate-500 font-display font-black text-[9px] px-1 py-0.2 bg-slate-100 rounded">
+                      <div className="flex justify-between items-center text-xs font-bold mb-1">
+                        <span className="text-[var(--ink-secondary)] font-semibold text-xs">
                           {player.position}
                         </span>
-                        <span className="text-slate-800 font-display font-black text-xs">{player.rating}</span>
+                        <span className="text-[var(--ink-primary)] font-semibold text-xs tabular-nums">{player.rating}</span>
                       </div>
-                      <div className="text-xs font-display font-black text-[#0b1536] truncate leading-tight" title={player.name}>
+                      <div className="text-xs font-display font-semibold text-[#0b1536] truncate leading-tight" title={player.name}>
                         {player.name}
                       </div>
-                      <div className="text-[9px] text-slate-500 font-mono mt-1">
+                      <div className="text-xs text-[var(--ink-muted)] mt-1">
                         {formatCurrency(player.value)}
                       </div>
                     </div>
@@ -1236,34 +1204,34 @@ export function SquadManagement({
               <button
                 key={group}
                 onClick={() => setFilterGroup(group)}
-                className={`py-1.5 px-3 rounded-xl text-xs font-display font-black uppercase tracking-wider transition-all cursor-pointer ${
+                className={`min-h-9 px-3.5 rounded-full border text-xs font-semibold transition-colors cursor-pointer ${
                   filterGroup === group
-                    ? 'office-nav-tab-active shadow-xs'
-                    : 'bg-white border border-zinc-300 text-zinc-700 hover:text-zinc-900 hover:bg-[#F7F6F3]'
+                    ? 'bg-[var(--surface-elevated)] border-[var(--border-crisp)] text-[var(--ink-primary)]'
+                    : 'bg-[var(--surface-card)] border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:bg-[var(--surface-subcard)]'
                 }`}
               >
-                {group}
+                {group === 'ALL' ? 'All' : group}
               </button>
             ))}
           </div>
 
           {/* Player table: tap a row to manage the player */}
-          <div className="rounded-2xl border border-[#D4D2CD] overflow-hidden bg-white shadow-xs">
+          <div className="rounded-xl border border-[var(--border-subtle)] overflow-hidden bg-[var(--surface-card)]">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#1E2024] text-[10px] font-bold uppercase text-zinc-300 border-b-2 border-[#D97706] select-none">
+                <thead className="bg-[var(--surface-subcard)] text-2xs font-semibold text-[var(--ink-muted)] border-b border-[var(--border-subtle)] select-none">
                   <tr>
-                    <th className="py-3 px-3 sm:px-4">Player</th>
-                    <th className="py-3 px-2 sm:px-3 text-center">Pos</th>
-                    <th className="py-3 px-2 sm:px-3 text-center">OVR</th>
-                    <th className="hidden md:table-cell py-3 px-3 text-center">Form</th>
-                    <th className="hidden sm:table-cell py-3 px-3 text-center">POT</th>
-                    <th className="hidden lg:table-cell py-3 px-3 text-center">Age</th>
-                    <th className="hidden lg:table-cell py-3 px-3">Value / Wage</th>
-                    <th className="py-3 px-3 sm:px-4 text-right">Assign</th>
+                    <th className="py-2 px-3 sm:px-4 font-semibold">Player</th>
+                    <th className="py-2 px-2 sm:px-3 text-center font-semibold">Pos</th>
+                    <th className="py-2 px-2 sm:px-3 text-center font-semibold">OVR</th>
+                    <th className="hidden md:table-cell py-2 px-3 text-center font-semibold">Form</th>
+                    <th className="hidden sm:table-cell py-2 px-3 text-center font-semibold">POT</th>
+                    <th className="hidden lg:table-cell py-2 px-3 text-center font-semibold">Age</th>
+                    <th className="hidden lg:table-cell py-2 px-3 font-semibold">Value / wage</th>
+                    <th className="py-2 px-3 sm:px-4 text-right font-semibold">Assign</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-850/60">
+                <tbody className="divide-y divide-[var(--border-subtle)]">
                   {filteredSquad.map((player) => {
                     const isStarter = starterIdsSet.has(player.id);
                     const isBench = benchIdsSet.has(player.id);
@@ -1271,50 +1239,41 @@ export function SquadManagement({
                     const effectiveRating = getEffectiveRating(player);
                     const fitness = Math.round(player.fitness ?? 100);
 
-                    // Status badges in priority order; only the first two are shown inline.
-                    const badges: Array<{ label: string; title: string; className: string }> = [];
+                    // Status tags in priority order; only the first two are shown inline.
+                    const badges: Array<{ label: string; title: string; tone: TagTone }> = [];
                     if (player.injured) {
                       badges.push({
                         label: `Inj ${player.injuryWeeks ?? 1}w`,
                         title: player.injuryDescription || 'Injured',
-                        className: 'bg-rose-950 text-rose-300 border-rose-800',
+                        tone: 'danger',
                       });
                     }
                     if (player.suspendedMatches && player.suspendedMatches > 0) {
                       badges.push({
                         label: `Ban ${player.suspendedMatches}m`,
                         title: player.suspensionReason || `Suspended (${player.suspendedMatches} match ban)`,
-                        className: 'bg-red-950 text-red-300 border-red-800',
+                        tone: 'danger',
                       });
                     }
                     if (!isPlayerRegisteredForMatch(player, squad, save.registeredPlayerIds, save.season?.yearStart)) {
                       badges.push({
                         label: 'Unreg',
                         title: 'Unregistered for matchdays',
-                        className: 'bg-amber-950 text-amber-300 border-amber-800',
+                        tone: 'warning',
                       });
-                    }
-                    if (player.id === currentTactics.captainId) {
-                      badges.push({ label: 'C', title: 'Club Captain', className: 'bg-amber-400 text-slate-950 border-amber-500' });
-                    }
-                    if (player.id === currentTactics.viceCaptainId) {
-                      badges.push({ label: 'VC', title: 'Vice-Captain', className: 'bg-slate-300 text-slate-900 border-slate-400' });
                     }
                     if (player.transferListed) {
                       badges.push({
                         label: 'Listed',
                         title: `Transfer listed, asking ${formatCurrency(player.askingPrice || player.value)}`,
-                        className: 'bg-amber-950/80 text-amber-300 border-amber-800/60',
+                        tone: 'neutral',
                       });
                     }
                     if (player.loanListed) {
-                      badges.push({ label: 'Loan', title: 'Loan listed', className: 'bg-blue-950/80 text-blue-300 border-blue-800/60' });
+                      badges.push({ label: 'Loan', title: 'Loan listed', tone: 'neutral' });
                     }
                     if (player.agentBrokeringActive) {
-                      badges.push({ label: 'Brokered', title: 'Agent brokering active', className: 'bg-purple-950/80 text-purple-300 border-purple-800/60' });
-                    }
-                    if (player.age <= 23) {
-                      badges.push({ label: 'U23', title: 'Under 23', className: 'bg-blue-50 text-blue-700 border-blue-200' });
+                      badges.push({ label: 'Brokered', title: 'Agent brokering active', tone: 'neutral' });
                     }
                     const hiddenBadges = badges.slice(2);
 
@@ -1323,41 +1282,48 @@ export function SquadManagement({
                         key={player.id}
                         id={`squad-player-${player.id}`}
                         onClick={() => handleSelectPlayerWithActions(player)}
-                        className="hover:bg-slate-50 transition-colors scroll-mt-20 cursor-pointer"
+                        className="hover:bg-[var(--surface-subcard)] transition-colors scroll-mt-20 cursor-pointer"
                       >
-                        <td className="py-2.5 px-3 sm:px-4 font-bold text-slate-900">
+                        <td className="py-2.5 px-3 sm:px-4 text-[var(--ink-primary)]">
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleSelectPlayerWithActions(player);
                             }}
-                            className="hover:text-amber-700 text-left font-display font-black text-xs sm:text-sm flex items-center gap-1.5 flex-wrap cursor-pointer"
+                            className="hover:text-blue-700 text-left font-semibold text-sm flex items-center gap-x-1.5 gap-y-0.5 flex-wrap cursor-pointer"
                           >
                             <span>{player.name}</span>
+                            {player.id === currentTactics.captainId && (
+                              <span className="text-xs font-normal text-[var(--ink-muted)]" title="Club captain">
+                                (C)
+                              </span>
+                            )}
+                            {player.id === currentTactics.viceCaptainId && (
+                              <span className="text-xs font-normal text-[var(--ink-muted)]" title="Vice-captain">
+                                (VC)
+                              </span>
+                            )}
                             {badges.slice(0, 2).map((b) => (
-                              <span
-                                key={b.label}
-                                className={`text-[10px] px-1.5 rounded border font-mono font-bold ${b.className}`}
-                                title={b.title}
-                              >
-                                {b.label}
+                              <span key={b.label} title={b.title} className="inline-flex">
+                                <Tag tone={b.tone}>{b.label}</Tag>
                               </span>
                             ))}
                             {hiddenBadges.length > 0 && (
                               <span
-                                className="text-[10px] px-1 rounded border border-slate-300 bg-slate-100 text-slate-600 font-mono font-bold"
-                                title={hiddenBadges.map((b) => b.title).join(' • ')}
+                                className="text-xs font-normal text-[var(--ink-muted)]"
+                                title={hiddenBadges.map((b) => b.title).join(' · ')}
                               >
                                 +{hiddenBadges.length}
                               </span>
                             )}
                           </button>
-                          <div className="text-[10px] text-slate-500 font-normal flex items-center gap-1.5 mt-0.5">
+                          <div className="text-xs text-[var(--ink-muted)] flex items-center gap-x-1.5 flex-wrap mt-0.5">
                             <span>{player.nationality}</span>
-                            {player.isHomegrown && <span title="Homegrown">• HG</span>}
+                            {player.isHomegrown && <span title="Homegrown">· HG</span>}
+                            {player.age <= 23 && <span title="Under 23">· U23</span>}
                             <span
-                              className={`font-mono font-bold ${
+                              className={`font-semibold tabular-nums ${
                                 fitness >= 80 ? 'text-emerald-700' : fitness >= 65 ? 'text-amber-700' : 'text-rose-700'
                               }`}
                               title="Fitness"
@@ -1370,7 +1336,7 @@ export function SquadManagement({
                         <td className="py-2.5 px-2 sm:px-3 text-center font-bold text-slate-700">
                           <div>{player.position}</div>
                           {player.naturalPositions && player.naturalPositions.filter((p) => p !== player.position).length > 0 && (
-                            <div className="text-[10px] font-semibold text-amber-700" title={`Natural in: ${player.naturalPositions.join(', ')}`}>
+                            <div className="text-xs font-semibold text-amber-700" title={`Natural in: ${player.naturalPositions.join(', ')}`}>
                               +{player.naturalPositions.filter((p) => p !== player.position).join('/')}
                             </div>
                           )}
@@ -1378,13 +1344,13 @@ export function SquadManagement({
 
                         <td className="py-2.5 px-2 sm:px-3 text-center">
                           <div className="flex items-center justify-center gap-1">
-                            <span className="font-display font-black text-sm text-zinc-900">
+                            <span className="font-semibold text-sm tabular-nums text-[var(--ink-primary)]">
                               {effectiveRating}
                             </span>
                             {bonus !== 0 && (
                               <span
-                                className={`text-[10px] font-bold px-1 rounded ${
-                                  bonus > 0 ? 'bg-amber-100 text-amber-900' : 'bg-rose-100 text-rose-900'
+                                className={`text-xs font-semibold tabular-nums ${
+                                  bonus > 0 ? 'text-emerald-700' : 'text-rose-700'
                                 }`}
                                 title={`Base: ${player.rating} (${bonus > 0 ? `+${bonus}` : bonus} OVR)`}
                               >
@@ -1393,7 +1359,7 @@ export function SquadManagement({
                             )}
                           </div>
                           {player.potential && (
-                            <div className="sm:hidden text-[10px] font-mono font-bold text-amber-700 mt-0.5">
+                            <div className="sm:hidden text-xs tabular-nums font-bold text-amber-700 mt-0.5">
                               POT {player.potential}
                             </div>
                           )}
@@ -1405,22 +1371,22 @@ export function SquadManagement({
                               {player.recentForm.slice(-3).map((r, i) => (
                                 <span
                                   key={i}
-                                  className={`text-[10px] font-mono font-bold px-1 rounded ${
+                                  className={`text-xs font-semibold tabular-nums px-0.5 ${
                                     r >= 7.8
-                                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+                                      ? 'text-emerald-700'
                                       : r >= 6.4
-                                      ? 'bg-slate-800 text-slate-300'
-                                      : 'bg-rose-950 text-rose-300'
+                                      ? 'text-[var(--ink-secondary)]'
+                                      : 'text-rose-700'
                                   }`}
                                 >
                                   {r.toFixed(1)}
                                 </span>
                               ))}
-                              {bonus > 0 && <IconFlame className="w-3 h-3 text-amber-500 shrink-0" aria-label="In-Form" />}
+                              {bonus > 0 && <IconFlame className="w-3 h-3 text-amber-500 shrink-0" aria-label="In form" />}
                               {bonus < 0 && <IconSnowflake className="w-3 h-3 text-sky-500 shrink-0" aria-label="Slump" />}
                             </div>
                           ) : (
-                            <span className="text-slate-400 font-mono text-[10px]">
+                            <span className="text-slate-400 tabular-nums text-xs">
                               {player.form ? player.form.toFixed(1) : '7.0'}
                             </span>
                           )}
@@ -1434,7 +1400,7 @@ export function SquadManagement({
                             </span>
                           ) : '-'}
                           {player.age <= 23 && typeof player.developmentProgress === 'number' && player.developmentProgress > 0 && (
-                            <div className="text-[10px] font-mono text-emerald-700 font-semibold mt-0.5 inline-flex items-center justify-center gap-0.5" title="In-season XP progress">
+                            <div className="text-xs tabular-nums text-emerald-700 font-semibold mt-0.5 inline-flex items-center justify-center gap-0.5" title="In-season XP progress">
                               <IconSprout className="w-2.5 h-2.5 shrink-0" />
                               <span>{player.developmentProgress}%</span>
                             </div>
@@ -1447,8 +1413,8 @@ export function SquadManagement({
 
                         <td className="hidden lg:table-cell py-3 px-3">
                           <div className="font-semibold text-slate-700">{formatCurrency(player.value)}</div>
-                          <div className="text-[10px] text-slate-500">
-                            {formatWage(player.wageWeekly)} • {player.contractYears}y
+                          <div className="text-xs text-slate-500">
+                            {formatWage(player.wageWeekly)} · {player.contractYears}y
                           </div>
                         </td>
 
@@ -1457,7 +1423,7 @@ export function SquadManagement({
                             aria-label={`Assign ${player.name}`}
                             value={isStarter ? 'starter' : isBench ? 'bench' : 'reserve'}
                             onChange={(e) => handleRoleChange(player, e.target.value as 'starter' | 'bench' | 'reserve')}
-                            className="min-h-[40px] px-1.5 rounded-lg bg-zinc-100 border border-zinc-300 text-[11px] font-bold text-zinc-800 cursor-pointer focus:outline-none focus:border-teal-500"
+                            className="min-h-[40px] px-1.5 rounded-lg bg-[var(--surface-card)] border border-[var(--border-crisp)] text-xs font-medium text-[var(--ink-primary)] cursor-pointer focus:outline-none focus:border-blue-500"
                           >
                             <option value="starter">XI</option>
                             <option value="bench">Sub</option>
@@ -1478,72 +1444,56 @@ export function SquadManagement({
       {viewMode === 'tactics' && (
         <section id="squad-tactics-section" className="space-y-6 scroll-mt-20 animate-fade-in motion-reduce:animate-none" aria-label="Tactical DNA & Managerial Identity">
           {/* Active philosophy, familiarity and live synergy */}
-          <div className="rounded-2xl border border-zinc-300/70 shadow-xs overflow-hidden bg-white">
-            <div
-              data-force-white="true"
-              className="p-3 sm:p-4 flex items-center justify-between gap-3"
-              style={{ backgroundColor: '#1E2024', borderBottom: '2px solid #D97706' }}
-            >
+          <div className="rounded-xl border border-[var(--border-subtle)] overflow-hidden bg-[var(--surface-card)]">
+            <div className="p-3 sm:p-4 flex items-center justify-between gap-3 border-b border-[var(--border-subtle)]">
               <div className="flex items-center gap-2 min-w-0">
-                <span className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-400/30 text-amber-300 flex items-center justify-center shrink-0">
-                  <TacticalPhilosophyIcon type={currentTactics.philosophy} className="w-4 h-4" />
-                </span>
-                <h3 className="text-base sm:text-lg font-display font-black text-white uppercase tracking-tight truncate">
+                <TacticalPhilosophyIcon
+                  type={currentTactics.philosophy}
+                  className="w-4 h-4 shrink-0 text-[var(--ink-secondary)]"
+                />
+                <h3 className="text-base font-display font-semibold text-[var(--ink-primary)] truncate">
                   {getTacticalPhilosophy(currentTactics.philosophy).name}
                 </h3>
               </div>
 
               <div className="w-32 sm:w-48 shrink-0 space-y-1" title="Familiarity (60% threshold)">
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="font-display font-bold uppercase text-zinc-300 tracking-wider">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-[var(--ink-secondary)]">
                     {currentTactics.familiarity >= 80 ? 'Fluent' : currentTactics.familiarity >= 60 ? 'Acclimated' : 'Adapting'}
                   </span>
-                  <span className="font-mono font-black text-amber-300">{currentTactics.familiarity}%</span>
+                  <span className="font-semibold tabular-nums text-[var(--ink-primary)]">{currentTactics.familiarity}%</span>
                 </div>
-                <div className="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                <div className="w-full bg-[var(--surface-elevated)] rounded-full h-1.5 overflow-hidden">
                   <div
-                    className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-amber-400 to-emerald-400"
+                    className="h-full rounded-full transition-all duration-500 bg-[var(--accent-primary)]"
                     style={{ width: `${currentTactics.familiarity}%` }}
                   />
                 </div>
               </div>
             </div>
 
-            <div
-              className={`p-3 sm:p-4 flex flex-wrap items-center gap-x-3 gap-y-2 ${
-                philosophyBonus.synergyActive ? 'bg-[#ECFDF5]' : 'bg-[#FFFBEB]'
-              }`}
-            >
+            <div className="p-3 sm:p-4 flex flex-wrap items-center gap-x-3 gap-y-1.5 bg-[var(--surface-subcard)]">
               <span className={philosophyBonus.synergyActive ? 'text-emerald-700 shrink-0' : 'text-amber-700 shrink-0'}>
                 {philosophyBonus.synergyActive ? <IconFlame className="w-4 h-4" /> : <IconClock className="w-4 h-4" />}
               </span>
-              <p className="text-xs flex-1 min-w-[12rem]" style={{ color: '#3F3F46' }}>
+              <p className="text-xs flex-1 min-w-[12rem] text-[var(--ink-secondary)]">
                 <strong
-                  className="font-display font-black uppercase tracking-wider"
-                  style={{ color: philosophyBonus.synergyActive ? '#064E3B' : '#78350F' }}
+                  className={`font-semibold ${philosophyBonus.synergyActive ? 'text-emerald-800' : 'text-amber-800'}`}
                 >
                   XI synergy {philosophyBonus.synergyActive ? 'active' : 'building'}.
                 </strong>{' '}
                 {philosophyBonus.description}
               </p>
               {philosophyBonus.synergyActive && (
-                <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
-                  {philosophyBonus.attackBonus > 0 && (
-                    <span className="px-2 py-0.5 rounded-lg bg-emerald-600 text-white font-mono font-bold text-[11px]">
-                      +{philosophyBonus.attackBonus} ATT
-                    </span>
-                  )}
-                  {philosophyBonus.midfieldBonus > 0 && (
-                    <span className="px-2 py-0.5 rounded-lg bg-blue-600 text-white font-mono font-bold text-[11px]">
-                      +{philosophyBonus.midfieldBonus} MID
-                    </span>
-                  )}
-                  {philosophyBonus.defenceBonus > 0 && (
-                    <span className="px-2 py-0.5 rounded-lg bg-indigo-600 text-white font-mono font-bold text-[11px]">
-                      +{philosophyBonus.defenceBonus} DEF
-                    </span>
-                  )}
-                </div>
+                <span className="text-xs font-semibold tabular-nums text-emerald-800 shrink-0">
+                  {[
+                    philosophyBonus.attackBonus > 0 ? `+${philosophyBonus.attackBonus} ATT` : '',
+                    philosophyBonus.midfieldBonus > 0 ? `+${philosophyBonus.midfieldBonus} MID` : '',
+                    philosophyBonus.defenceBonus > 0 ? `+${philosophyBonus.defenceBonus} DEF` : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </span>
               )}
             </div>
           </div>
@@ -1555,10 +1505,7 @@ export function SquadManagement({
             const shownIsActive = shownType === currentTactics.philosophy;
             return (
               <div className="space-y-2.5">
-                <h4 className="text-sm font-display font-black uppercase tracking-wider text-[#0b1536] flex items-center gap-1.5">
-                  <IconSliders className="w-4 h-4 text-[#1d5eff] shrink-0" />
-                  <span>Philosophy</span>
-                </h4>
+                <SectionHeader as="h4" title="Philosophy" />
 
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
                   {(Object.keys(TACTICAL_PHILOSOPHIES) as TacticalPhilosophyType[]).map((type) => {
@@ -1571,22 +1518,19 @@ export function SquadManagement({
                         type="button"
                         aria-pressed={isShown}
                         onClick={() => setPreviewPhilosophy(type)}
-                        className={`text-left p-2.5 rounded-xl border min-h-[52px] flex items-center gap-2 transition-all cursor-pointer ${
+                        className={`text-left p-2.5 rounded-lg border min-h-[52px] flex items-center gap-2 transition-colors cursor-pointer ${
                           isShown
-                            ? 'border-blue-600 bg-blue-50/60 ring-2 ring-blue-500/20'
-                            : 'border-slate-200/90 bg-white hover:border-blue-300'
+                            ? 'border-blue-600 bg-blue-50/60'
+                            : 'border-[var(--border-subtle)] bg-[var(--surface-card)] hover:border-[var(--border-crisp)]'
                         }`}
                       >
-                        <span
-                          className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${
-                            isActive ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-100 text-slate-700 border-slate-200'
-                          }`}
-                        >
-                          <TacticalPhilosophyIcon type={type} className="w-3.5 h-3.5" />
-                        </span>
+                        <TacticalPhilosophyIcon
+                          type={type}
+                          className={`w-4 h-4 shrink-0 ${isActive ? 'text-blue-700' : 'text-[var(--ink-muted)]'}`}
+                        />
                         <span className="min-w-0">
-                          <span className="block font-display font-black text-xs text-[#0b1536] leading-tight">{config.name}</span>
-                          <span className={`block text-[10px] line-clamp-1 ${isActive ? 'text-blue-700 font-bold uppercase' : 'text-slate-500'}`}>
+                          <span className="block font-semibold text-xs text-[var(--ink-primary)] leading-snug">{config.name}</span>
+                          <span className={`block text-xs line-clamp-1 ${isActive ? 'text-blue-700 font-medium' : 'text-[var(--ink-muted)]'}`}>
                             {isActive ? 'Active' : config.tagline}
                           </span>
                         </span>
@@ -1595,43 +1539,35 @@ export function SquadManagement({
                   })}
                 </div>
 
-                <div className="office-subcard p-3.5 rounded-2xl border border-slate-200/90 bg-white space-y-2.5">
+                <div className="office-subcard p-3.5 rounded-xl space-y-2.5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <h5 className="font-display font-black text-sm text-[#0b1536] leading-tight">{shown.name}</h5>
-                      <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">{shown.description}</p>
+                      <h5 className="font-display font-semibold text-sm text-[var(--ink-primary)] leading-snug">{shown.name}</h5>
+                      <p className="text-xs text-[var(--ink-secondary)] mt-0.5 leading-relaxed">{shown.description}</p>
                     </div>
                     {shownIsActive ? (
-                      <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white font-display font-black text-[10px] uppercase tracking-wider shrink-0">
-                        Active
-                      </span>
+                      <span className="text-xs font-medium text-blue-700 shrink-0">Active</span>
                     ) : (
-                      <button
-                        type="button"
+                      <Button
+                        variant="primary"
                         onClick={() => {
                           handleSelectPhilosophy(shownType);
                           setPreviewPhilosophy(null);
                         }}
-                        className="min-h-[40px] px-4 rounded-xl bg-[#1E2024] hover:bg-zinc-800 text-white font-display font-black text-xs uppercase tracking-wider cursor-pointer shrink-0"
+                        className="shrink-0"
                       >
                         Adopt
-                      </button>
+                      </Button>
                     )}
                   </div>
 
-                  <div className="flex flex-wrap gap-1">
-                    {shown.primaryAttributes.map((attr, idx) => (
-                      <span key={idx} className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-bold">
-                        {attr}
-                      </span>
-                    ))}
-                  </div>
+                  <p className="text-xs text-[var(--ink-secondary)]">{shown.primaryAttributes.join(' · ')}</p>
 
-                  <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] pt-2 border-t border-slate-100">
+                  <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs pt-2 border-t border-slate-100">
                     <div className="flex justify-between gap-2">
                       <dt className="text-slate-500">Stamina drain</dt>
                       <dd
-                        className={`font-mono font-bold ${
+                        className={`tabular-nums font-bold ${
                           shown.staminaDrainMultiplier > 1.15
                             ? 'text-rose-600'
                             : shown.staminaDrainMultiplier < 0.95
@@ -1644,17 +1580,17 @@ export function SquadManagement({
                     </div>
                     <div className="flex justify-between gap-2">
                       <dt className="text-slate-500">Possession</dt>
-                      <dd className="font-mono font-bold text-slate-700">
+                      <dd className="tabular-nums font-bold text-slate-700">
                         {shown.possessionBias > 0 ? `+${shown.possessionBias}%` : shown.possessionBias < 0 ? `${shown.possessionBias}%` : 'Even'}
                       </dd>
                     </div>
                     <div className="flex justify-between gap-2">
                       <dt className="text-slate-500">Counters</dt>
-                      <dd className="font-bold text-slate-700 capitalize text-right">{shown.effectiveAgainst.replace(/_/g, ' ')}</dd>
+                      <dd className="font-semibold text-[var(--ink-primary)] text-right">{sentenceCase(shown.effectiveAgainst.replace(/_/g, ' '))}</dd>
                     </div>
                     <div className="flex justify-between gap-2">
                       <dt className="text-slate-500">Weak to</dt>
-                      <dd className="font-bold text-slate-700 capitalize text-right">{shown.counteredBy.replace(/_/g, ' ')}</dd>
+                      <dd className="font-semibold text-[var(--ink-primary)] text-right">{sentenceCase(shown.counteredBy.replace(/_/g, ' '))}</dd>
                     </div>
                   </dl>
                 </div>
@@ -1689,16 +1625,13 @@ export function SquadManagement({
             const cornerId = currentTactics.cornerTakerId || defaultTakers.cornerTakerId || '';
 
             const rowClass = 'flex items-center gap-2';
-            const labelClass = 'w-24 shrink-0 text-[11px] font-display font-black uppercase tracking-wider text-slate-600';
+            const labelClass = 'w-24 shrink-0 text-xs text-[var(--ink-secondary)]';
             const selectClass =
-              'flex-1 min-w-0 min-h-[40px] px-2.5 rounded-xl bg-white border border-slate-300 text-xs font-display font-bold text-[#0b1536] cursor-pointer focus:border-blue-500 focus:outline-hidden';
+              'flex-1 min-w-0 min-h-[40px] px-2.5 rounded-lg bg-[var(--surface-card)] border border-[var(--border-crisp)] text-xs font-medium text-[var(--ink-primary)] cursor-pointer focus:border-blue-500 focus:outline-hidden';
 
             return (
-              <div className="office-subcard p-4 rounded-2xl space-y-3 shadow-sm border border-slate-200/90 bg-white">
-                <h4 className="text-sm font-display font-black uppercase tracking-wider text-[#0b1536] flex items-center gap-1.5">
-                  <IconTrophy className="w-4 h-4 text-amber-500 shrink-0" />
-                  <span>Captain &amp; Set Pieces</span>
-                </h4>
+              <div className="office-subcard p-4 rounded-xl space-y-3">
+                <SectionHeader as="h4" title="Captain and set pieces" />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
                   <label className={rowClass}>
@@ -1711,7 +1644,7 @@ export function SquadManagement({
                     >
                       {squad.map((p) => (
                         <option key={p.id} value={p.id}>
-                          {p.name} ({p.position}, {p.rating} OVR, Age {p.age})
+                          {p.name} ({p.position}, {p.rating} OVR, age {p.age})
                         </option>
                       ))}
                     </select>
@@ -1725,12 +1658,12 @@ export function SquadManagement({
                       onChange={(e) => handleSetViceCaptain(e.target.value)}
                       className={selectClass}
                     >
-                      <option value="">None Designated</option>
+                      <option value="">None</option>
                       {squad
                         .filter((p) => p.id !== currentTactics.captainId)
                         .map((p) => (
                           <option key={p.id} value={p.id}>
-                            {p.name} ({p.position}, {p.rating} OVR, Age {p.age})
+                            {p.name} ({p.position}, {p.rating} OVR, age {p.age})
                           </option>
                         ))}
                     </select>
@@ -1746,7 +1679,7 @@ export function SquadManagement({
                     >
                       {sortedPenalty.map((p) => (
                         <option key={p.id} value={p.id}>
-                          {p.name} ({p.position} • SHO {p.faceStats?.sho ?? p.rating})
+                          {p.name} ({p.position} · SHO {p.faceStats?.sho ?? p.rating})
                         </option>
                       ))}
                     </select>
@@ -1762,7 +1695,7 @@ export function SquadManagement({
                     >
                       {sortedFreekick.map((p) => (
                         <option key={p.id} value={p.id}>
-                          {p.name} ({p.position} • SHO {p.faceStats?.sho ?? p.rating} / PAS {p.faceStats?.pas ?? p.rating})
+                          {p.name} ({p.position} · SHO {p.faceStats?.sho ?? p.rating} / PAS {p.faceStats?.pas ?? p.rating})
                         </option>
                       ))}
                     </select>
@@ -1778,18 +1711,18 @@ export function SquadManagement({
                     >
                       {sortedCorner.map((p) => (
                         <option key={p.id} value={p.id}>
-                          {p.name} ({p.position} • PAS {p.faceStats?.pas ?? p.rating})
+                          {p.name} ({p.position} · PAS {p.faceStats?.pas ?? p.rating})
                         </option>
                       ))}
                     </select>
                   </label>
                 </div>
 
-                <p className="text-[11px] text-slate-600 pt-2 border-t border-slate-100">
-                  Leadership <strong className="font-mono text-blue-700">{captaincyEffects.leadershipScore}/99</strong>
-                  {' • '}Late composure{' '}
+                <p className="text-xs text-slate-600 pt-2 border-t border-slate-100">
+                  Leadership <strong className="font-semibold tabular-nums text-[var(--ink-primary)]">{captaincyEffects.leadershipScore}/99</strong>
+                  {' · '}Late composure{' '}
                   <strong
-                    className={`font-mono ${
+                    className={`tabular-nums ${
                       captaincyEffects.composureBonus > 0
                         ? 'text-emerald-600'
                         : captaincyEffects.composureBonus < 0
@@ -1799,7 +1732,7 @@ export function SquadManagement({
                   >
                     {captaincyEffects.composureBonus > 0 ? `+${captaincyEffects.composureBonus}%` : `${captaincyEffects.composureBonus}%`}
                   </strong>
-                  {' • '}
+                  {' · '}
                   {captaincyEffects.rallyEffect}
                 </p>
               </div>
@@ -1807,84 +1740,80 @@ export function SquadManagement({
           })()}
 
           {/* Dressing room harmony, hierarchy behind a disclosure */}
-          <div className="office-subcard rounded-2xl shadow-sm border border-slate-200/90 bg-white">
+          <div className="office-subcard rounded-xl">
             {renderDisclosureHeader(
               'hierarchy',
               'squad-hierarchy-panel',
-              <IconHandshake className="w-4 h-4 text-[#1d5eff] shrink-0" />,
-              'Dressing Room',
+              'Dressing room',
               <>
-                <span className="font-mono font-black text-blue-700">{dressingRoomHarmony.harmonyIndex}%</span>
-                <span
-                  className={`px-1.5 py-0.5 rounded-md text-[10px] font-black uppercase font-display ${
+                <span className="font-semibold tabular-nums text-[var(--ink-primary)]">{dressingRoomHarmony.harmonyIndex}%</span>
+                <Tag
+                  tone={
                     dressingRoomHarmony.status === 'ecstatic'
-                      ? 'bg-emerald-600 text-white'
+                      ? 'success'
                       : dressingRoomHarmony.status === 'united'
-                      ? 'bg-blue-600 text-white'
+                      ? 'info'
                       : dressingRoomHarmony.status === 'content'
-                      ? 'bg-slate-700 text-white'
-                      : 'bg-rose-600 text-white'
-                  }`}
+                      ? 'neutral'
+                      : 'danger'
+                  }
                 >
                   {dressingRoomHarmony.statusLabel}
-                </span>
+                </Tag>
               </>
             )}
 
             {openPanels.hierarchy && (
               <div id="squad-hierarchy-panel" className="grid grid-cols-1 md:grid-cols-3 gap-x-5 gap-y-3 px-3.5 pb-3.5">
                 <div>
-                  <h5 className="text-[11px] font-display font-black uppercase text-slate-700 flex items-center gap-1 pb-1 border-b border-slate-200">
-                    <IconCrown className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                    <span>Leaders ({dressingRoomHarmony.leaders.length})</span>
+                  <h5 className="text-xs font-semibold text-[var(--ink-primary)] pb-1 border-b border-[var(--border-subtle)]">
+                    Leaders <span className="font-normal text-[var(--ink-muted)]">{dressingRoomHarmony.leaders.length}</span>
                   </h5>
                   <ul className="divide-y divide-slate-100 max-h-48 overflow-y-auto">
                     {dressingRoomHarmony.leaders.map((p) => (
                       <li key={p.id} className="py-1.5 flex justify-between items-center gap-2 text-xs">
                         <span className="flex items-center gap-1.5 min-w-0">
                           {p.id === currentTactics.captainId && (
-                            <span className="px-1 rounded bg-amber-400 text-slate-950 font-black text-[10px]">C</span>
+                            <span className="text-xs text-[var(--ink-muted)] shrink-0" title="Club captain">(C)</span>
                           )}
-                          <span className="font-bold text-[#0b1536] truncate">{p.name}</span>
+                          <span className="font-medium text-[var(--ink-primary)] truncate">{p.name}</span>
                         </span>
-                        <span className="text-[10px] font-mono text-slate-500 shrink-0">{p.rating} OVR • {p.morale ?? 85}%</span>
+                        <span className="text-xs tabular-nums text-[var(--ink-muted)] shrink-0">{p.rating} OVR · {p.morale ?? 85}%</span>
                       </li>
                     ))}
                   </ul>
                 </div>
 
                 <div>
-                  <h5 className="text-[11px] font-display font-black uppercase text-slate-700 flex items-center gap-1 pb-1 border-b border-slate-200">
-                    <IconStar className="w-3.5 h-3.5 text-blue-600 shrink-0" filled />
-                    <span>Influential Core ({dressingRoomHarmony.influential.length})</span>
+                  <h5 className="text-xs font-semibold text-[var(--ink-primary)] pb-1 border-b border-[var(--border-subtle)]">
+                    Influential core <span className="font-normal text-[var(--ink-muted)]">{dressingRoomHarmony.influential.length}</span>
                   </h5>
                   <ul className="divide-y divide-slate-100 max-h-48 overflow-y-auto">
                     {dressingRoomHarmony.influential.slice(0, 7).map((p) => (
                       <li key={p.id} className="py-1.5 flex justify-between items-center gap-2 text-xs">
-                        <span className="font-bold text-[#0b1536] truncate">{p.name}</span>
-                        <span className="text-[10px] font-mono text-slate-500 shrink-0">{p.position} • {p.morale ?? 85}%</span>
+                        <span className="font-medium text-[var(--ink-primary)] truncate">{p.name}</span>
+                        <span className="text-xs tabular-nums text-[var(--ink-muted)] shrink-0">{p.position} · {p.morale ?? 85}%</span>
                       </li>
                     ))}
                     {dressingRoomHarmony.influential.length > 7 && (
-                      <li className="py-1.5 text-[10px] text-slate-500">+{dressingRoomHarmony.influential.length - 7} more</li>
+                      <li className="py-1.5 text-xs text-slate-500">+{dressingRoomHarmony.influential.length - 7} more</li>
                     )}
                   </ul>
                 </div>
 
                 <div>
-                  <h5 className="text-[11px] font-display font-black uppercase text-slate-700 flex items-center gap-1 pb-1 border-b border-slate-200">
-                    <IconUsers className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                    <span>Fringe &amp; Youth ({dressingRoomHarmony.fringe.length})</span>
+                  <h5 className="text-xs font-semibold text-[var(--ink-primary)] pb-1 border-b border-[var(--border-subtle)]">
+                    Fringe and youth <span className="font-normal text-[var(--ink-muted)]">{dressingRoomHarmony.fringe.length}</span>
                   </h5>
                   <ul className="divide-y divide-slate-100 max-h-48 overflow-y-auto">
                     {dressingRoomHarmony.fringe.slice(0, 7).map((p) => (
                       <li key={p.id} className="py-1.5 flex justify-between items-center gap-2 text-xs">
                         <span className="font-medium text-[#0b1536] truncate">{p.name}</span>
-                        <span className="text-[10px] font-mono text-slate-500 shrink-0">{p.age}y • {p.morale ?? 85}%</span>
+                        <span className="text-xs tabular-nums text-[var(--ink-muted)] shrink-0">{p.age}y · {p.morale ?? 85}%</span>
                       </li>
                     ))}
                     {dressingRoomHarmony.fringe.length > 7 && (
-                      <li className="py-1.5 text-[10px] text-slate-500">+{dressingRoomHarmony.fringe.length - 7} more</li>
+                      <li className="py-1.5 text-xs text-slate-500">+{dressingRoomHarmony.fringe.length - 7} more</li>
                     )}
                   </ul>
                 </div>
@@ -1896,34 +1825,21 @@ export function SquadManagement({
       {viewMode === 'academy' && (
         <section className="space-y-6" aria-label="Youth Academy">
           {/* Academy Status & Scout Action Banner */}
-          <div className="office-floating-card rounded-3xl p-5 sm:p-6 border border-blue-200/80 bg-gradient-to-r from-blue-50/80 via-white to-indigo-50/40 shadow-sm relative overflow-hidden flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="space-y-1 z-10">
-              <div className="flex items-center gap-2">
-                <IconSparkles className="w-5 h-5 text-[#1d5eff] shrink-0" />
-                <h3 className="text-lg font-display font-black text-slate-900 uppercase tracking-tight">
-                  Youth Academy &amp; Wonderkid Pipeline
-                </h3>
-              </div>
-              <p className="text-xs text-slate-600 font-medium">
-                U21 prospects are exempt from the 25-man cap and grow +1 to +3 OVR a year.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3 z-10 w-full sm:w-auto">
-              <button
-                onClick={handleGenerateIntake}
-                className="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-display font-black uppercase tracking-wider transition-all shadow-md shadow-blue-500/20 flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
-              >
-                <IconSearch className="w-3.5 h-3.5 shrink-0" />
-                <span>Scout New Intake</span>
-              </button>
-            </div>
+          <div className="office-floating-card rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <SectionHeader
+              title="Youth academy and wonderkid pipeline"
+              description="U21 prospects are exempt from the 25-man cap and grow +1 to +3 OVR a year."
+            />
+            <Button variant="primary" onClick={handleGenerateIntake} className="w-full sm:w-auto shrink-0">
+              <IconSearch className="w-3.5 h-3.5 shrink-0" />
+              <span>Scout new intake</span>
+            </Button>
           </div>
 
           {academyToast && (
             <div
               role="alert"
-              className={`p-3.5 rounded-2xl border text-xs font-bold flex items-center justify-between gap-2 ${
+              className={`p-3 rounded-lg border text-xs font-medium flex items-center justify-between gap-2 ${
                 academyToast.type === 'success'
                   ? 'bg-blue-50 text-blue-700 border-blue-200'
                   : 'bg-rose-50 border-rose-200 text-rose-700'
@@ -1942,116 +1858,74 @@ export function SquadManagement({
           )}
 
           {academy.length === 0 ? (
-            <div className="office-floating-card bg-white border border-slate-200/90 rounded-3xl p-12 text-center space-y-4 shadow-sm">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto">
-                <IconSprout className="w-6 h-6" />
-              </div>
-              <h4 className="text-base font-display font-black text-slate-900 uppercase">
-                No Prospects Currently in Academy
+            <div className="office-floating-card rounded-xl p-8 sm:p-12 text-center space-y-3">
+              <h4 className="text-base font-display font-semibold text-[var(--ink-primary)]">
+                No prospects in the academy
               </h4>
-              <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+              <p className="text-sm text-[var(--ink-secondary)] max-w-md mx-auto leading-relaxed">
                 Send out your scouting network to discover promising young talents across England and the British Isles.
               </p>
-              <button
-                onClick={handleGenerateIntake}
-                className="py-2.5 px-6 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-display font-black uppercase tracking-wider transition-all font-bold shadow-lg shadow-blue-500/20 cursor-pointer active:scale-95"
-              >
-                Run Annual Youth Intake
-              </button>
+              <Button onClick={handleGenerateIntake}>Run annual youth intake</Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {academy.map((prospect) => {
                 const isWonderkid = prospect.potential >= 88;
-                const isHighPotential = prospect.potential >= 84;
 
                 return (
                   <article
                     key={prospect.id}
-                    className="office-floating-card bg-white border border-slate-200/90 hover:border-blue-300 rounded-2xl p-4 sm:p-5 space-y-4 transition-all flex flex-col justify-between relative group shadow-xs"
+                    className="office-floating-card rounded-xl p-4 sm:p-5 space-y-4 flex flex-col justify-between"
                   >
                     <div className="space-y-3">
-                      {/* Top Badges */}
-                      <div className="flex justify-between items-center text-xs">
-                        <div className="flex items-center gap-1.5">
-                          <span className="bg-blue-100 text-blue-800 font-display font-black px-2 py-0.5 rounded-md text-[10px]">
-                            {prospect.position}
-                          </span>
-                          <span className="text-slate-500 text-[11px] font-medium">
-                            {prospect.age} yrs • {prospect.nationality}
-                          </span>
-                        </div>
-                        <span className="text-[10px] bg-blue-50 text-blue-700 border border-blue-200 font-bold px-1.5 py-0.5 rounded">
-                          Homegrown
-                        </span>
-                      </div>
+                      {/* Position, age, nationality */}
+                      <p className="text-xs text-[var(--ink-muted)]">
+                        {prospect.position} · {prospect.age} yrs · {prospect.nationality} · Homegrown
+                      </p>
 
                       {/* Name & OVR/Potential */}
-                      <div className="flex justify-between items-start gap-2">
-                        <div>
-                          <h4 className="text-base font-display font-black text-slate-900 leading-tight">
-                            {prospect.name}
-                          </h4>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs font-display font-black text-blue-700 font-mono">
-                              {prospect.rating} OVR
-                            </span>
-                            <span className="text-[10px] text-slate-400">•</span>
-                            <span
-                              className={`text-[10px] font-display font-black px-1.5 py-0.5 rounded inline-flex items-center gap-1 ${
-                                isWonderkid
-                                  ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                                  : isHighPotential
-                                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
-                                  : 'bg-blue-50 text-blue-700 border border-blue-200'
-                              }`}
-                            >
-                              <IconStar className="w-2.5 h-2.5 shrink-0" filled />
-                              <span>POT: {prospect.potential}</span>
-                            </span>
-                          </div>
-                        </div>
-                        {isWonderkid && (
-                          <span title="Wonderkid Talent" className="text-amber-500 shrink-0">
-                            <IconSparkles className="w-4 h-4" />
-                          </span>
-                        )}
+                      <div>
+                        <h4 className="text-base font-display font-semibold text-[var(--ink-primary)] leading-snug">
+                          {prospect.name}
+                        </h4>
+                        <p className="text-sm text-[var(--ink-secondary)] mt-0.5 tabular-nums">
+                          <span className="font-semibold text-[var(--ink-primary)]">{prospect.rating} OVR</span>
+                          {' · '}
+                          <span className="font-semibold text-[var(--ink-primary)]">POT {prospect.potential}</span>
+                          {isWonderkid && <span className="font-medium text-amber-700"> · Wonderkid</span>}
+                        </p>
                       </div>
 
                       {/* Valuation & Wage */}
-                      <p className="text-[11px] text-slate-600">
-                        Value <span className="font-semibold text-slate-800">{formatCurrency(prospect.value)}</span>
-                        {' • '}Wage <span className="font-semibold text-slate-800">{formatWage(prospect.wageWeekly)}</span>
+                      <p className="text-xs text-[var(--ink-secondary)]">
+                        Value <span className="font-semibold text-[var(--ink-primary)]">{formatCurrency(prospect.value)}</span>
+                        {' · '}Wage <span className="font-semibold text-[var(--ink-primary)]">{formatWage(prospect.wageWeekly)}</span>
                       </p>
 
                       {/* Scout Report Note */}
-                      <p className="text-[11px] text-slate-600 italic leading-relaxed">
+                      <p className="text-xs text-[var(--ink-secondary)] italic leading-relaxed">
                         &ldquo;{prospect.scoutReport}&rdquo;
                       </p>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex gap-2 pt-2 border-t border-slate-100">
-                      <button
+                    <div className="flex gap-2 pt-3 border-t border-[var(--border-subtle)]">
+                      <Button
                         onClick={() => handlePromoteProspect(prospect.id)}
                         disabled={squad.length >= 35}
-                        className={`flex-1 py-2 px-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                          squad.length >= 35
-                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-md shadow-blue-500/20 active:scale-95'
-                        }`}
-                        title={squad.length >= 35 ? 'Club squad is at full capacity (35/35)' : 'Promote to First Team'}
+                        className="flex-1"
+                        title={squad.length >= 35 ? 'Club squad is at full capacity (35/35)' : 'Promote to first team'}
                       >
-                        <span>Promote</span>
-                      </button>
+                        Promote
+                      </Button>
 
-                      <button
+                      <Button
+                        variant="danger"
                         onClick={() => handleReleaseProspect(prospect.id)}
-                        className="py-2 px-3 rounded-xl border border-slate-200 hover:border-rose-300 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 text-xs font-bold transition-all cursor-pointer active:scale-95"
                         title="Release prospect"
                       >
                         Release
-                      </button>
+                      </Button>
                     </div>
                   </article>
                 );
@@ -2065,49 +1939,40 @@ export function SquadManagement({
       {viewMode === 'training' && (
         <section id="squad-training-section" className="space-y-4 scroll-mt-20 animate-fade-in motion-reduce:animate-none" aria-label="Training Ground & Performance Lab">
           {/* Actions and session feedback */}
-          <div className="office-subcard p-3 sm:p-4 rounded-2xl space-y-3 shadow-sm border border-slate-200/90 bg-white">
+          <div className="office-subcard p-3 sm:p-4 rounded-xl space-y-3">
             <div className="flex items-center justify-between gap-2 flex-wrap">
-              <h3 className="text-base font-display font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
-                <IconDumbbell className="w-5 h-5 text-emerald-700 shrink-0" />
-                <span>Training</span>
-              </h3>
+              <SectionHeader title="Training" />
 
               <div className="flex items-center gap-2 flex-wrap">
-                <button
-                  type="button"
+                <Button
                   onClick={handleAutoRotateLineup}
-                  className="min-h-[40px] px-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-display font-black text-xs uppercase tracking-wider shadow-sm transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
                   title="Automatically replace fatigued starters with fit bench players"
                 >
-                  <IconBolt className="w-3.5 h-3.5 shrink-0" />
-                  <span>Auto-Pick Fit XI</span>
+                  <span>Auto-pick fit XI</span>
                   {fatiguedStartersCount > 0 && (
-                    <span className="bg-slate-950 text-amber-300 text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold">
+                    <span
+                      className="font-semibold tabular-nums text-amber-700"
+                      title={`${fatiguedStartersCount} starter(s) fatigued`}
+                    >
                       {fatiguedStartersCount}
                     </span>
                   )}
-                </button>
+                </Button>
 
-                <button
-                  type="button"
-                  onClick={handleRunTrainingSession}
-                  className="min-h-[40px] px-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-display font-black text-xs uppercase tracking-wider shadow-sm transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
-                >
-                  <IconBall className="w-3.5 h-3.5 shrink-0" />
-                  <span>Run Weekly Drills</span>
-                </button>
+                <Button variant="primary" onClick={handleRunTrainingSession}>
+                  Run weekly drills
+                </Button>
               </div>
             </div>
 
             {rotationFeedback && (
-              <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-2 animate-fade-in motion-reduce:animate-none">
-                <div className="flex items-center gap-2">
-                  <IconBolt className="w-4 h-4 text-amber-600 shrink-0" />
+              <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-2 animate-fade-in motion-reduce:animate-none">
+                <div className="flex items-center gap-2 min-w-0">
                   {rotationFeedback.rotatedCount === 0 ? (
                     <span className="font-semibold">Starting XI is fit. No rotation needed.</span>
                   ) : (
                     <span>
-                      <strong className="font-bold">Rotated:</strong> {rotationFeedback.swaps.map(s => `${s.freshPlayer.name} on for ${s.fatiguedPlayer.name} (${s.position})`).join(', ')}
+                      <strong className="font-semibold">Rotated:</strong> {rotationFeedback.swaps.map(s => `${s.freshPlayer.name} on for ${s.fatiguedPlayer.name} (${s.position})`).join(', ')}
                     </span>
                   )}
                 </div>
@@ -2123,13 +1988,13 @@ export function SquadManagement({
             )}
 
             {trainingSessionResults && (
-              <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center justify-between gap-2 animate-fade-in motion-reduce:animate-none">
-                <div className="flex items-center gap-2">
-                  <IconSparkles className="w-4 h-4 text-emerald-600 shrink-0" />
+              <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center justify-between gap-2 animate-fade-in motion-reduce:animate-none">
+                <div className="flex items-center gap-2 min-w-0">
+                  <IconCheck className="w-4 h-4 text-emerald-700 shrink-0" />
                   {trainingSessionResults.breakthroughs.length > 0 ? (
                     <span>
-                      <strong className="font-bold">Breakthrough!</strong>{' '}
-                      {trainingSessionResults.breakthroughs.map(b => `${b.player.name} +1 OVR (${b.newRating})`).join(' • ')}
+                      <strong className="font-semibold">Breakthrough:</strong>{' '}
+                      {trainingSessionResults.breakthroughs.map(b => `${b.player.name} +1 OVR (${b.newRating})`).join(' · ')}
                     </span>
                   ) : (
                     <span>
@@ -2152,10 +2017,7 @@ export function SquadManagement({
 
           {/* Weekly team focus: tiles, with detail for the active one only */}
           <div className="space-y-2">
-            <h4 className="text-xs font-display font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-              <IconClipboard className="w-3.5 h-3.5 text-[#1d5eff] shrink-0" />
-              <span>Team Weekly Focus</span>
-            </h4>
+            <SectionHeader as="h4" title="Team weekly focus" />
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
               {TRAINING_FOCUS_OPTIONS.map((opt) => {
@@ -2166,14 +2028,14 @@ export function SquadManagement({
                     type="button"
                     aria-pressed={isActive}
                     onClick={() => handleSetTeamTrainingFocus(opt.id)}
-                    className={`text-left min-h-[44px] px-2.5 py-1.5 rounded-xl border transition-all cursor-pointer flex items-center gap-2 ${
+                    className={`text-left min-h-[44px] px-2.5 py-1.5 rounded-lg border transition-colors cursor-pointer flex items-center gap-2 ${
                       isActive
-                        ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-500/20'
-                        : 'bg-white border-slate-200/90 hover:border-slate-300 hover:bg-slate-50/50'
+                        ? 'border-blue-600 bg-blue-50/60'
+                        : 'bg-[var(--surface-card)] border-[var(--border-subtle)] hover:border-[var(--border-crisp)]'
                     }`}
                   >
                     {renderTrainingFocusIcon(opt.id, 'w-4 h-4 shrink-0')}
-                    <span className="font-display font-black text-[11px] text-slate-900 uppercase tracking-tight leading-tight">
+                    <span className="font-semibold text-xs text-[var(--ink-primary)] leading-snug">
                       {opt.title}
                     </span>
                   </button>
@@ -2183,34 +2045,27 @@ export function SquadManagement({
 
             {TRAINING_FOCUS_OPTIONS.filter((opt) => opt.id === currentTeamFocus).map((opt) => (
               <div key={opt.id} className="space-y-1.5">
-                <p className="text-[11px] text-slate-600 leading-snug">{opt.description}</p>
-                <div className="flex flex-wrap gap-1">
-                  {opt.buffs.map((b, idx) => (
-                    <span key={idx} className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-700 font-mono font-semibold">
-                      {b}
-                    </span>
-                  ))}
-                </div>
+                <p className="text-xs text-[var(--ink-secondary)] leading-snug">{opt.description}</p>
+                <p className="text-xs text-[var(--ink-muted)] leading-snug">{opt.buffs.join(' · ')}</p>
               </div>
             ))}
           </div>
 
           {/* U23 mentorship (collapsed by default) */}
-          <div className="office-subcard rounded-2xl border border-slate-200/90 bg-white shadow-xs">
+          <div className="office-subcard rounded-xl">
             {renderDisclosureHeader(
               'mentorship',
               'training-mentorship-panel',
-              <IconStar className="w-3.5 h-3.5 text-amber-500 shrink-0" filled />,
-              'U23 Mentorship',
-              <span className="font-mono truncate">
-                {Object.keys(currentMentorships).length}/3 slots • {u23Players.length} eligible
+              'U23 mentorship',
+              <span className="truncate">
+                {Object.keys(currentMentorships).length}/3 slots · {u23Players.length} eligible
               </span>
             )}
 
             {openPanels.mentorship && (
               <div id="training-mentorship-panel" className="px-3.5 pb-3.5">
                 {u23Players.length === 0 ? (
-                  <p className="text-xs text-slate-500">No Under-23 players in the senior squad. Promote prospects from the Academy tab.</p>
+                  <p className="text-xs text-[var(--ink-muted)]">No under-23 players in the senior squad. Promote prospects from the Academy tab.</p>
                 ) : (
                   <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-5 divide-y divide-slate-100 md:divide-y-0 md:gap-y-3">
                     {u23Players.map((player) => {
@@ -2223,25 +2078,25 @@ export function SquadManagement({
                         <li key={player.id} className="py-2.5 md:py-0 space-y-1.5">
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2 min-w-0">
-                              <span className="w-8 h-8 rounded-xl bg-slate-900 text-white font-mono font-bold text-xs flex items-center justify-center shrink-0">
+                              <span className="w-6 text-sm font-semibold tabular-nums text-[var(--ink-primary)] shrink-0" title="OVR">
                                 {player.rating}
                               </span>
                               <div className="min-w-0">
-                                <div className="font-display font-black text-xs text-slate-900 truncate">{player.name}</div>
-                                <div className="text-[11px] text-slate-500 font-mono">
-                                  {player.position} • {player.age} • Pot <span className="font-bold text-emerald-700">{potential}</span>
+                                <div className="font-semibold text-xs text-[var(--ink-primary)] truncate">{player.name}</div>
+                                <div className="text-xs text-[var(--ink-muted)]">
+                                  {player.position} · {player.age} · POT <span className="font-semibold text-[var(--ink-secondary)]">{potential}</span>
                                 </div>
                               </div>
                             </div>
-                            <span className="text-[10px] font-mono font-bold text-slate-600 shrink-0" title="Development XP">
+                            <span className="text-xs tabular-nums text-[var(--ink-secondary)] shrink-0" title="Development XP">
                               {progress}% XP
                             </span>
                           </div>
 
-                          <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                          <div className="w-full bg-[var(--surface-elevated)] h-1.5 rounded-full overflow-hidden">
                             <div
                               className={`h-full rounded-full transition-all duration-300 ${
-                                assignedDrill ? 'bg-gradient-to-r from-teal-500 to-emerald-500' : 'bg-slate-400'
+                                assignedDrill ? 'bg-emerald-600' : 'bg-[var(--border-crisp)]'
                               }`}
                               style={{ width: `${Math.min(100, Math.max(4, progress))}%` }}
                             />
@@ -2252,17 +2107,17 @@ export function SquadManagement({
                             value={assignedDrill || 'none'}
                             onChange={(e) => handleAssignMentorship(player.id, e.target.value as MentorshipDrill | 'none')}
                             disabled={isMaxed}
-                            className={`w-full min-h-[40px] px-2.5 rounded-xl border text-xs font-semibold text-slate-800 cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-teal-500 ${
-                              assignedDrill ? 'border-teal-300 bg-teal-50/50' : 'border-slate-200 bg-slate-50/70'
+                            className={`w-full min-h-[40px] px-2.5 rounded-lg border bg-[var(--surface-card)] text-xs font-medium text-[var(--ink-primary)] cursor-pointer focus:outline-hidden focus:border-blue-500 ${
+                              assignedDrill ? 'border-emerald-500' : 'border-[var(--border-crisp)]'
                             }`}
                           >
-                            <option value="none">Standard Training (+8 XP/wk)</option>
-                            <option value="finishing">Finishing Masterclass (+22 XP, SHO)</option>
-                            <option value="playmaking">Playmaking &amp; Vision (+22 XP, PAS/DRI)</option>
-                            <option value="explosiveness">Explosiveness &amp; Pace (+22 XP, PAC/PHY)</option>
-                            <option value="defending">Defensive Positioning (+22 XP, DEF)</option>
+                            <option value="none">Standard training (+8 XP/wk)</option>
+                            <option value="finishing">Finishing (+22 XP, SHO)</option>
+                            <option value="playmaking">Playmaking and vision (+22 XP, PAS/DRI)</option>
+                            <option value="explosiveness">Explosiveness and pace (+22 XP, PAC/PHY)</option>
+                            <option value="defending">Defensive positioning (+22 XP, DEF)</option>
                             {player.position === 'GK' && (
-                              <option value="goalkeeping">Goalkeeping Reflexes (+22 XP, GK)</option>
+                              <option value="goalkeeping">Goalkeeping reflexes (+22 XP, GK)</option>
                             )}
                           </select>
                         </li>
@@ -2275,46 +2130,42 @@ export function SquadManagement({
           </div>
 
           {/* Training ground units (collapsed by default) */}
-          <div className="office-subcard rounded-2xl border border-slate-200/90 bg-white shadow-xs">
+          <div className="office-subcard rounded-xl">
             {renderDisclosureHeader(
               'units',
               'training-units-panel',
-              <IconStadium className="w-3.5 h-3.5 text-[#1d5eff] shrink-0" />,
-              'Training Units',
-              <span className="font-mono truncate">
-                ATT {attackingPlayers.length} • MID {midfieldPlayers.length} • DEF {defensivePlayers.length} • Physio {recoveringPlayers.length}
+              'Training units',
+              <span className="truncate">
+                ATT {attackingPlayers.length} · MID {midfieldPlayers.length} · DEF {defensivePlayers.length} · Physio {recoveringPlayers.length}
               </span>
             )}
 
             {openPanels.units && (
-              <div id="training-units-panel" className="px-3.5 pb-3.5 divide-y divide-slate-100">
+              <div id="training-units-panel" className="px-3.5 pb-3.5 divide-y divide-[var(--border-subtle)]">
                 {[
-                  { key: 'att', label: 'Attacking', icon: <IconBolt className="w-3.5 h-3.5 text-amber-600 shrink-0" />, players: attackingPlayers.slice(0, 8), total: attackingPlayers.length },
-                  { key: 'mid', label: 'Midfield', icon: <IconTarget className="w-3.5 h-3.5 text-blue-600 shrink-0" />, players: midfieldPlayers.slice(0, 8), total: midfieldPlayers.length },
-                  { key: 'def', label: 'Defensive', icon: <IconShield className="w-3.5 h-3.5 text-indigo-600 shrink-0" />, players: defensivePlayers.slice(0, 8), total: defensivePlayers.length },
-                  { key: 'rec', label: 'Recovery & Physio', icon: <IconMedkit className="w-3.5 h-3.5 text-rose-600 shrink-0" />, players: recoveringPlayers, total: recoveringPlayers.length },
+                  { key: 'att', label: 'Attacking', players: attackingPlayers.slice(0, 8), total: attackingPlayers.length },
+                  { key: 'mid', label: 'Midfield', players: midfieldPlayers.slice(0, 8), total: midfieldPlayers.length },
+                  { key: 'def', label: 'Defensive', players: defensivePlayers.slice(0, 8), total: defensivePlayers.length },
+                  { key: 'rec', label: 'Recovery and physio', players: recoveringPlayers, total: recoveringPlayers.length },
                 ].map((unit) => (
                   <div key={unit.key} className="py-2 space-y-1.5">
-                    <div className="flex items-center justify-between text-xs font-display font-bold text-slate-800">
-                      <span className="flex items-center gap-1.5">
-                        {unit.icon}
-                        <span>{unit.label}</span>
-                      </span>
-                      <span className="font-mono text-[11px] text-slate-500">{unit.total}</span>
+                    <div className="flex items-center justify-between text-xs font-semibold text-[var(--ink-primary)]">
+                      <span>{unit.label}</span>
+                      <span className="font-normal tabular-nums text-[var(--ink-muted)]">{unit.total}</span>
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {unit.players.length === 0 ? (
-                        <span className="text-[11px] text-slate-400">None</span>
+                        <span className="text-xs text-slate-400">None</span>
                       ) : (
                         unit.players.map((p) => (
                           <button
                             key={p.id}
                             type="button"
                             onClick={() => handleSelectPlayerWithActions(p)}
-                            className={`text-[11px] px-1.5 py-1 rounded-md bg-white border font-semibold cursor-pointer ${
+                            className={`text-xs px-2 min-h-8 rounded-full bg-[var(--surface-card)] border font-medium cursor-pointer ${
                               unit.key === 'rec'
                                 ? 'border-amber-300 text-amber-800'
-                                : 'border-slate-200 text-slate-700 hover:border-teal-400'
+                                : 'border-[var(--border-subtle)] text-[var(--ink-secondary)] hover:border-[var(--border-crisp)]'
                             }`}
                           >
                             {p.name.split(' ').pop()} ({unit.key === 'rec' && p.injured ? `${p.injuryWeeks}w` : `${p.fitness}%`})
@@ -2374,45 +2225,38 @@ export function SquadManagement({
         <aside
           role="region"
           aria-label="Active player swap"
-          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-lg office-floating-card bg-white/95 border-2 border-amber-400 rounded-3xl p-3 sm:p-3.5 shadow-2xl backdrop-blur-md flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-4 motion-reduce:animate-none"
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-lg office-floating-card rounded-xl p-3 flex items-center justify-between gap-2 animate-in fade-in slide-in-from-bottom-4 motion-reduce:animate-none"
         >
           {(() => {
             const p = squad.find((sp) => sp.id === swapSourceId);
             return (
               <>
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-9 h-9 rounded-2xl bg-amber-50 border border-amber-300 flex items-center justify-center text-amber-700 font-bold shrink-0 shadow-2xs">
-                    <IconSwap className="w-4 h-4" />
-                  </div>
+                <div className="flex items-center gap-2 min-w-0">
+                  <IconSwap className="w-4 h-4 text-amber-700 shrink-0" />
                   <div className="min-w-0">
-                    <div className="text-[10px] font-black uppercase text-amber-700 tracking-wider font-display truncate">
+                    <div className="text-xs font-medium text-amber-800">
                       Tap a player or bench slot to swap
                     </div>
-                    <div className="text-xs sm:text-sm font-display font-black text-[#0b1536] truncate">
-                      {p?.name} <span className="text-slate-500 text-[11px] font-medium">({p?.position} • {p?.rating} OVR)</span>
+                    <div className="text-sm font-semibold text-[var(--ink-primary)] truncate">
+                      {p?.name} <span className="text-[var(--ink-muted)] text-xs font-normal">({p?.position} · {p?.rating} OVR)</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-1.5 shrink-0">
                   {onOpenCompare && p && (
-                    <button
-                      type="button"
+                    <Button
+                      size="sm"
                       onClick={() => onOpenCompare(p)}
-                      className="py-1.5 px-3 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 text-xs font-bold cursor-pointer transition-colors shadow-2xs inline-flex items-center gap-1"
+                      className="min-h-10!"
                       title="Compare with squad rivals"
                     >
-                      <IconBarChart className="w-3.5 h-3.5 shrink-0" />
-                      <span>Compare</span>
-                    </button>
+                      Compare
+                    </Button>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => setSwapSourceId(null)}
-                    className="py-1.5 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-display font-black uppercase tracking-wider cursor-pointer border border-slate-300 transition-colors shadow-2xs"
-                  >
+                  <Button size="sm" variant="ghost" onClick={() => setSwapSourceId(null)} className="min-h-10!">
                     Cancel
-                  </button>
+                  </Button>
                 </div>
               </>
             );
@@ -2431,16 +2275,16 @@ export function SquadManagement({
             pointerEvents: 'none',
             zIndex: 9999,
           }}
-          className="w-24 p-2 rounded-2xl border-2 border-blue-500 bg-slate-950/95 shadow-2xl backdrop-blur-md opacity-90 text-center select-none"
+          className="w-24 p-2 rounded-lg border border-blue-500 bg-[var(--surface-card)] shadow-sm opacity-95 text-center select-none"
         >
-          <div className="flex justify-between items-center text-[9px] font-black text-blue-400 mb-0.5">
+          <div className="flex justify-between items-center text-xs font-semibold text-[var(--ink-secondary)] mb-0.5">
             <span>{touchDragPlayer.position}</span>
-            <span className="text-white font-mono">{touchDragPlayer.rating}</span>
+            <span className="text-[var(--ink-primary)] tabular-nums">{touchDragPlayer.rating}</span>
           </div>
-          <div className="text-[10px] font-display font-black text-white truncate">
+          <div className="text-xs font-semibold text-[var(--ink-primary)] truncate">
             {touchDragPlayer.name}
           </div>
-          <div className="text-[8px] text-blue-300 font-bold mt-0.5">
+          <div className="text-xs text-blue-700 mt-0.5">
             Dragging...
           </div>
         </div>
@@ -2453,22 +2297,18 @@ export function SquadManagement({
               onClick={() => setShowReservePickerModal(false)}
             >
           <div
-            className="office-floating-card my11-mobile-sheet bg-white border border-slate-200/90 rounded-t-3xl sm:rounded-3xl max-w-md w-full p-4 sm:p-5 shadow-2xl space-y-4 max-h-[85dvh] flex flex-col text-slate-900"
+            className="office-floating-card my11-mobile-sheet rounded-t-xl sm:rounded-xl max-w-md w-full p-4 sm:p-5 space-y-4 max-h-[85dvh] flex flex-col text-[var(--ink-primary)]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 gap-2">
-              <div>
-                <h3 className="text-sm font-display font-black uppercase tracking-wider text-slate-900">
-                  Add Substitute to Bench
-                </h3>
-                <p className="text-[11px] text-slate-500 font-medium">
-                  Select an eligible reserve player ({bench.length}/9 slots filled)
-                </p>
-              </div>
+            <div className="flex items-start justify-between pb-3 border-b border-[var(--border-subtle)] gap-2">
+              <SectionHeader
+                title="Add substitute to bench"
+                description={`Select an eligible reserve player (${bench.length}/9 slots filled)`}
+              />
               <button
                 type="button"
                 onClick={() => setShowReservePickerModal(false)}
-                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center cursor-pointer transition-colors shrink-0"
+                className="w-10 h-10 -mt-1 -mr-1 rounded-full hover:bg-[var(--surface-subcard)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)] flex items-center justify-center cursor-pointer transition-colors shrink-0"
                 aria-label="Close"
               >
                 <IconClose className="w-4 h-4" />
@@ -2487,27 +2327,27 @@ export function SquadManagement({
                       handleMovePlayerToBench(player.id);
                       setShowReservePickerModal(false);
                     }}
-                    className="w-full p-2.5 rounded-xl border border-slate-200/80 bg-slate-50/80 hover:bg-blue-50/80 hover:border-blue-300 flex items-center justify-between gap-2 transition-all cursor-pointer text-left shadow-2xs active:scale-[0.99]"
+                    className="w-full p-2.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-card)] hover:bg-[var(--surface-subcard)] hover:border-[var(--border-crisp)] flex items-center justify-between gap-2 transition-colors cursor-pointer text-left"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="w-8 text-center px-1.5 py-0.5 rounded text-[10px] font-black bg-blue-100 text-blue-800 font-display">
+                      <span className="w-8 shrink-0 text-xs font-semibold text-[var(--ink-secondary)]">
                         {player.position}
                       </span>
                       <div className="min-w-0">
-                        <div className="text-xs font-display font-black text-slate-900 truncate">
+                        <div className="text-sm font-semibold text-[var(--ink-primary)] truncate">
                           {player.name}
                         </div>
-                        <div className="text-[10px] text-slate-500 font-medium">
-                          Age {player.age} • {formatCurrency(player.value)}
+                        <div className="text-xs text-[var(--ink-muted)]">
+                          Age {player.age} · {formatCurrency(player.value)}
                         </div>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <div className="text-sm font-display font-black text-blue-700 font-mono">
+                      <div className="text-sm font-semibold tabular-nums text-[var(--ink-primary)]">
                         {player.rating}
                       </div>
-                      <span className="text-[9.5px] text-blue-600 font-bold uppercase">
-                        + Add
+                      <span className="text-xs text-blue-700 font-medium">
+                        Add
                       </span>
                     </div>
                   </button>
@@ -2520,14 +2360,8 @@ export function SquadManagement({
               )}
             </div>
 
-            <div className="pt-2 border-t border-slate-100 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setShowReservePickerModal(false)}
-                className="py-2 px-4 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 text-xs font-bold hover:bg-slate-200 cursor-pointer transition-colors"
-              >
-                Close
-              </button>
+            <div className="pt-2 border-t border-[var(--border-subtle)] flex justify-end">
+              <Button onClick={() => setShowReservePickerModal(false)}>Close</Button>
             </div>
           </div>
         </div>,
@@ -2540,7 +2374,6 @@ export function SquadManagement({
   function renderDisclosureHeader(
     key: string,
     panelId: string,
-    icon: React.ReactNode,
     title: string,
     summary: React.ReactNode
   ) {
@@ -2553,11 +2386,8 @@ export function SquadManagement({
         onClick={() => togglePanel(key)}
         className="w-full min-h-[44px] px-3.5 py-2 flex items-center justify-between gap-2 text-left cursor-pointer"
       >
-        <span className="flex items-center gap-1.5 shrink-0">
-          {icon}
-          <span className="text-xs font-display font-black uppercase tracking-wider text-[#0b1536]">{title}</span>
-        </span>
-        <span className="flex items-center gap-1.5 min-w-0 text-[11px] text-slate-500">
+        <span className="text-sm font-display font-semibold text-[var(--ink-primary)] shrink-0">{title}</span>
+        <span className="flex items-center gap-1.5 min-w-0 text-xs text-[var(--ink-muted)]">
           {summary}
           {isOpen ? <IconChevronUp className="w-4 h-4 shrink-0" /> : <IconChevronDown className="w-4 h-4 shrink-0" />}
         </span>
@@ -2608,13 +2438,13 @@ export function SquadManagement({
               ? 'border-amber-400 bg-amber-500/20 text-amber-200 animate-pulse motion-reduce:animate-none'
               : ''
           }`}
-          title={`${slotPos} (Empty) - Click or drop to assign`}
+          title={`${slotPos} (empty) - click or drop to assign`}
         >
-          <span className="text-sm font-display font-black leading-none mb-0.5">+</span>
-          <span className="text-[10px] font-display font-black uppercase tracking-wider">{slotPos}</span>
+          <span className="text-sm font-display font-semibold leading-none mb-0.5">+</span>
+          <span className="text-xs font-display font-semibold">{slotPos}</span>
           {prospectiveFit && (
             <span
-              className={`text-[10px] leading-tight font-black uppercase px-1 rounded mt-0.5 border shadow-2xs font-display ${
+              className={`text-2xs font-semibold px-1 rounded mt-0.5 border shadow-2xs font-display ${
                 prospectiveFit === 'natural'
                   ? 'bg-emerald-600 text-white border-emerald-400'
                   : prospectiveFit === 'competent'
@@ -2663,9 +2493,9 @@ export function SquadManagement({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onClick={() => handlePlayerClick(player)}
-        title={`${player.name} (${player.position}) • Role: ${slotPos} (${
-          fit === 'natural' ? 'Natural 100%' : fit === 'competent' ? 'Secondary 98%' : 'Out of Position 86%'
-        }) • ${effectiveRating} OVR • Drag or click to swap`}
+        title={`${player.name} (${player.position}) · Role: ${slotPos} (${
+          fit === 'natural' ? 'Natural 100%' : fit === 'competent' ? 'Secondary 98%' : 'Out of position 86%'
+        }) · ${effectiveRating} OVR · Drag or click to swap`}
         aria-label={`${player.name}, position ${player.position}, rating ${effectiveRating}${player.injured ? ', injured' : ''}${isSuspended ? ', suspended' : ''}`}
         className={`my11-pitch-player-card ${slotWidthClass} p-1.5 sm:p-2 cursor-grab active:cursor-grabbing text-center scroll-mt-20 transition-all overflow-hidden ${
           isDragTarget
@@ -2673,11 +2503,11 @@ export function SquadManagement({
             : isSwapping
             ? 'my11-pitch-player-card-swapping'
             : prospectiveFit === 'natural'
-            ? 'ring-2 ring-emerald-500 bg-emerald-50/70 shadow-md scale-102'
+            ? 'ring-2 ring-emerald-500 bg-emerald-50/70 shadow-sm scale-102'
             : prospectiveFit === 'competent'
-            ? 'ring-2 ring-amber-400 bg-amber-50/70 shadow-md scale-102'
+            ? 'ring-2 ring-amber-400 bg-amber-50/70 shadow-sm scale-102'
             : prospectiveFit === 'out_of_position'
-            ? 'ring-2 ring-rose-500 bg-rose-50/70 shadow-md'
+            ? 'ring-2 ring-rose-500 bg-rose-50/70 shadow-sm'
             : fit === 'out_of_position'
             ? 'ring-2 ring-rose-500/90'
             : fit === 'competent'
@@ -2685,7 +2515,7 @@ export function SquadManagement({
             : 'ring-1 ring-emerald-500/40'
         }`}
       >
-        <div className="flex justify-between items-center leading-none mb-1 gap-0.5">
+        <div className="flex justify-between items-center mb-1 gap-0.5">
           <div className="flex items-center gap-0.5 min-w-0 overflow-hidden">
             <span
               className={`w-2 h-2 rounded-full shrink-0 ${fitDotClass}`}
@@ -2693,12 +2523,12 @@ export function SquadManagement({
               aria-label={fit === 'natural' ? 'Natural position' : fit === 'competent' ? 'Secondary position' : 'Out of position'}
             />
             {player.id === currentTactics.captainId && (
-              <span className="px-1 rounded font-display font-black text-[10px] leading-[14px] bg-amber-400 text-slate-950" title="Club Captain">
+              <span className="px-1 rounded font-display font-semibold text-2xs leading-[14px] bg-amber-400 text-slate-950" title="Club captain">
                 C
               </span>
             )}
             {player.id === currentTactics.viceCaptainId && (
-              <span className="px-0.5 rounded font-display font-black text-[10px] leading-[14px] bg-slate-300 text-slate-900" title="Vice-Captain">
+              <span className="px-0.5 rounded font-display font-semibold text-2xs leading-[14px] bg-slate-300 text-slate-900" title="Vice-captain">
                 VC
               </span>
             )}
@@ -2718,7 +2548,7 @@ export function SquadManagement({
               </span>
             )}
           </div>
-          <span className={`px-1 py-0.5 rounded-md font-display font-black text-[10px] shrink-0 ${ratingBadgeClass}`}>
+          <span className={`px-1 py-0.5 rounded-md font-display font-semibold text-xs shrink-0 ${ratingBadgeClass}`}>
             {effectiveRating}
           </span>
         </div>
@@ -2726,7 +2556,7 @@ export function SquadManagement({
         {/* Swap preview: how the moving player would fit this slot */}
         {prospectiveFit && (
           <div
-            className={`text-[10px] leading-tight font-black font-display uppercase px-1 rounded border mb-0.5 ${
+            className={`text-2xs font-semibold font-display px-1 rounded border mb-0.5 ${
               prospectiveFit === 'natural'
                 ? 'bg-emerald-600 text-white border-emerald-400 shadow-2xs'
                 : prospectiveFit === 'competent'
@@ -2738,23 +2568,23 @@ export function SquadManagement({
           </div>
         )}
 
-        <div className="text-[10px] sm:text-[10.5px] font-display font-black text-[#0b1536] leading-[1.12] line-clamp-2 break-words min-h-[22px] flex items-center justify-center text-center px-0.5">
+        <div className="text-2xs sm:text-xs font-display font-semibold text-[#0b1536] leading-tight line-clamp-2 break-words min-h-[28px] flex items-center justify-center text-center px-0.5">
           {player.name}
         </div>
 
         {/* Form, fitness and role detail only on the selected card */}
         {isSwapping && (
-          <div className="text-[10px] text-zinc-600 font-semibold mt-0.5 flex items-center justify-center gap-1 flex-wrap">
+          <div className="text-2xs text-zinc-600 font-semibold mt-0.5 flex items-center justify-center gap-1 flex-wrap">
             <span>{player.position}</span>
             {fit !== 'natural' && (
-              <span className={`font-black px-1 rounded ${fit === 'competent' ? 'bg-amber-100 text-amber-900' : 'bg-rose-100 text-rose-900'}`}>
+              <span className={`font-semibold px-1 rounded ${fit === 'competent' ? 'bg-amber-100 text-amber-900' : 'bg-rose-100 text-rose-900'}`}>
                 {fit === 'competent' ? 'SEC' : 'OOP'}
               </span>
             )}
-            <span className={`font-mono font-bold ${fitness >= 80 ? 'text-emerald-700' : fitness >= 65 ? 'text-amber-700' : 'text-rose-700'}`}>
+            <span className={`tabular-nums font-bold ${fitness >= 80 ? 'text-emerald-700' : fitness >= 65 ? 'text-amber-700' : 'text-rose-700'}`}>
               {fitness}%
             </span>
-            {bonus > 0 && <IconFlame className="w-2.5 h-2.5 text-amber-500 shrink-0" aria-label={`In-Form (+${bonus})`} />}
+            {bonus > 0 && <IconFlame className="w-2.5 h-2.5 text-amber-500 shrink-0" aria-label={`In form (+${bonus})`} />}
             {bonus < 0 && <IconSnowflake className="w-2.5 h-2.5 text-sky-500 shrink-0" aria-label={`Slump (${bonus})`} />}
           </div>
         )}

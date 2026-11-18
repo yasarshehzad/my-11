@@ -1,5 +1,61 @@
 import React, { useState } from 'react';
 import { IconClose } from './career/GameIcons';
+import { Button } from '@/components/ui';
+
+interface GuideStep {
+  title: string;
+  body: React.ReactNode;
+}
+
+const draftSteps: GuideStep[] = [
+  {
+    title: 'Choose formation and tactics',
+    body: (
+      <>
+        Select your formation (4-3-3, 4-4-2 and so on) and league. Turn on <b>Draft IQ</b> for live chemistry advice and positional notes.
+      </>
+    ),
+  },
+  {
+    title: 'Draft 11 player cards',
+    body: (
+      <>
+        Pick from 3 player choices per slot. Link teammates with matching <b>nationality</b>, <b>club</b> or <b>era</b> to raise chemistry.
+      </>
+    ),
+  },
+  {
+    title: 'Simulate the season',
+    body: 'Simulate a full 38-game league season in seconds. Follow the goals, climb the table, and challenge friends to beat your win tally.',
+  },
+];
+
+const careerSteps: GuideStep[] = [
+  {
+    title: 'Pick your club',
+    body: (
+      <>
+        Manage any of the 20 Premier League clubs with updated <b>2026/27</b> rosters, budgets and club profiles.
+      </>
+    ),
+  },
+  {
+    title: '25-man Premier League registration',
+    body: (
+      <>
+        Register up to 25 senior players (age 22+). <b>Under-21 players are exempt</b> from the cap, with a full 35-player squad capacity. Maximum 17 foreign seniors.
+      </>
+    ),
+  },
+  {
+    title: 'Transfers and youth academy',
+    body: 'Scout players, submit transfer bids, negotiate contracts, and promote high-potential teenagers from your youth academy.',
+  },
+  {
+    title: 'Compete for domestic and European trophies',
+    body: 'Simulate week-by-week fixtures across the English Top Flight, FA Cup, League Cup and European Champions Cup over multi-season careers.',
+  },
+];
 
 export interface HowToPlayModalProps {
   isOpen: boolean;
@@ -44,32 +100,30 @@ export function HowToPlayModal({
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm cursor-pointer transition-opacity"
+        className="fixed inset-0 bg-black/50 cursor-pointer transition-opacity"
         onClick={() => onClose(false)}
         aria-hidden="true"
       />
 
       {/* Modal Container */}
-      <div className="w-full max-w-lg office-floating-card border-[var(--office-divider)] bg-white/98 rounded-3xl p-6 sm:p-7 shadow-2xl relative z-10 space-y-5 animate-card-deal motion-reduce:animate-none my-auto max-h-[90dvh] overflow-y-auto scrollbar-none">
+      <div className="w-full max-w-lg office-floating-card rounded-xl p-5 sm:p-6 relative z-10 space-y-5 animate-card-deal motion-reduce:animate-none my-auto max-h-[90dvh] overflow-y-auto scrollbar-none">
         {/* Modal Header */}
-        <div className="flex justify-between items-center pb-3 border-b border-[var(--office-divider)]">
-          <div className="flex items-center gap-2">
-            <h3
-              id="how-to-play-title"
-              className="text-base font-display font-black text-[#0b1536] uppercase tracking-wider leading-none"
-            >
-              {mode === 'all'
-                ? 'MY-11 Game Guide'
-                : activeTab === 'draft'
-                ? 'Draft Mode Guide'
-                : 'Career Mode Guide'}
-            </h3>
-          </div>
+        <div className="flex justify-between items-center gap-3 pb-3 border-b border-[var(--office-divider)]">
+          <h3
+            id="how-to-play-title"
+            className="text-base font-display font-semibold text-[var(--ink-primary)]"
+          >
+            {mode === 'all'
+              ? 'MY-11 game guide'
+              : activeTab === 'draft'
+              ? 'Draft mode guide'
+              : 'Career mode guide'}
+          </h3>
           <button
             type="button"
             onClick={() => onClose(false)}
             aria-label="Close modal"
-            className="w-9 h-9 rounded-full office-subcard text-slate-500 hover:text-[#0b1536] flex items-center justify-center transition-colors cursor-pointer shadow-sm shrink-0"
+            className="w-10 h-10 rounded-lg text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] flex items-center justify-center transition-colors cursor-pointer shrink-0"
           >
             <IconClose className="w-4 h-4" />
           </button>
@@ -77,139 +131,48 @@ export function HowToPlayModal({
 
         {/* Tab Switcher if mode is 'all' */}
         {mode === 'all' && (
-          <div className="flex rounded-xl office-subcard p-1 border-[var(--office-divider)] text-xs font-display font-black uppercase tracking-wider">
+          <div className="flex gap-1 rounded-lg bg-[var(--surface-subcard)] border border-[var(--border-subtle)] p-1 text-sm font-semibold">
             <button
               type="button"
               onClick={() => setActiveTab('draft')}
-              className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              aria-pressed={activeTab === 'draft'}
+              className={`flex-1 min-h-10 px-3 rounded-md flex items-center justify-center transition-colors cursor-pointer ${
                 activeTab === 'draft'
-                  ? 'bg-[#09152b] text-white font-bold shadow-sm'
-                  : 'text-slate-600 hover:text-[#0b1536]'
+                  ? 'bg-[var(--surface-elevated)] text-[var(--ink-primary)]'
+                  : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
               }`}
             >
-              Draft Mode
+              Draft mode
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('career')}
-              className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              aria-pressed={activeTab === 'career'}
+              className={`flex-1 min-h-10 px-3 rounded-md flex items-center justify-center transition-colors cursor-pointer ${
                 activeTab === 'career'
-                  ? 'bg-[#047857] text-white font-bold shadow-sm'
-                  : 'text-slate-600 hover:text-[#0b1536]'
+                  ? 'bg-[var(--surface-elevated)] text-[var(--ink-primary)]'
+                  : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
               }`}
             >
-              Career Mode
+              Career mode
             </button>
           </div>
         )}
 
-        {/* Draft Mode Guide */}
-        {activeTab === 'draft' && (
-          <div className="text-xs text-slate-600 space-y-4 font-semibold leading-relaxed">
-            <div className="flex gap-3 items-start">
-              <span className="w-6 h-6 rounded-full bg-[#1E2024] border border-amber-500/40 text-amber-300 flex items-center justify-center font-display font-black flex-shrink-0 text-xs">
-                1
+        {/* Guide steps */}
+        <ol className="space-y-4">
+          {(activeTab === 'draft' ? draftSteps : careerSteps).map((step, i) => (
+            <li key={step.title} className="flex gap-3 items-baseline">
+              <span className="w-4 shrink-0 text-sm font-display font-semibold text-[var(--ink-muted)] tabular-nums">
+                {i + 1}
               </span>
-              <div>
-                <h4 className="text-[#0b1536] uppercase font-display font-black text-xs mb-0.5">
-                  Choose Formation & Tactics
-                </h4>
-                <p className="text-[11.5px] text-slate-600 font-medium">
-                  Select your tactical formation (4-3-3, 4-4-2, etc.) and opponent tier. Toggle <b>Draft IQ</b> for live synergy advice and positional intel.
-                </p>
+              <div className="min-w-0">
+                <h4 className="text-sm font-semibold text-[var(--ink-primary)]">{step.title}</h4>
+                <p className="text-sm text-[var(--ink-secondary)] leading-relaxed mt-0.5">{step.body}</p>
               </div>
-            </div>
-
-            <div className="flex gap-3 items-start">
-              <span className="w-6 h-6 rounded-full bg-[#1E2024] border border-amber-500/40 text-amber-300 flex items-center justify-center font-display font-black flex-shrink-0 text-xs">
-                2
-              </span>
-              <div>
-                <h4 className="text-[#0b1536] uppercase font-display font-black text-xs mb-0.5">
-                  Draft 11 Iconic Cards
-                </h4>
-                <p className="text-[11.5px] text-slate-600 font-medium">
-                  Pick from 3 curated player choices per slot. Link teammates with matching <b>nationality</b>, <b>club</b>, or <b>era</b> to unlock Chemistry Boosts.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-3 items-start">
-              <span className="w-6 h-6 rounded-full bg-[#1E2024] border border-amber-500/40 text-amber-300 flex items-center justify-center font-display font-black flex-shrink-0 text-xs">
-                3
-              </span>
-              <div>
-                <h4 className="text-[#0b1536] uppercase font-display font-black text-xs mb-0.5">
-                  Simulate & Become Invincible
-                </h4>
-                <p className="text-[11.5px] text-slate-600 font-medium">
-                  Simulate a full 38-game league season in seconds. Watch live goal commentary, climb the table, and challenge friends to beat your win tally!
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Career Mode Guide */}
-        {activeTab === 'career' && (
-          <div className="text-xs text-slate-600 space-y-4 font-semibold leading-relaxed">
-            <div className="flex gap-3 items-start">
-              <span className="w-6 h-6 rounded-full bg-indigo-100 border border-indigo-200 text-indigo-700 flex items-center justify-center font-display font-black flex-shrink-0 text-xs">
-                1
-              </span>
-              <div>
-                <h4 className="text-[#0b1536] uppercase font-display font-black text-xs mb-0.5">
-                  Pick Your Club
-                </h4>
-                <p className="text-[11.5px] text-slate-600 font-medium">
-                  Manage any of the 20 Premier League clubs with updated <b>2026/27</b> rosters, budgets, and realistic club profiles.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-3 items-start">
-              <span className="w-6 h-6 rounded-full bg-indigo-100 border border-indigo-200 text-indigo-700 flex items-center justify-center font-display font-black flex-shrink-0 text-xs">
-                2
-              </span>
-              <div>
-                <h4 className="text-[#0b1536] uppercase font-display font-black text-xs mb-0.5">
-                  Realistic 25-Man PL Registration
-                </h4>
-                <p className="text-[11.5px] text-slate-600 font-medium">
-                  Register up to 25 senior players (age 22+). <b>Under-21 players are exempt</b> from the cap with full 35-player squad capacity. Max 17 foreign seniors.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-3 items-start">
-              <span className="w-6 h-6 rounded-full bg-indigo-100 border border-indigo-200 text-indigo-700 flex items-center justify-center font-display font-black flex-shrink-0 text-xs">
-                3
-              </span>
-              <div>
-                <h4 className="text-[#0b1536] uppercase font-display font-black text-xs mb-0.5">
-                  Transfers & Youth Academy
-                </h4>
-                <p className="text-[11.5px] text-slate-600 font-medium">
-                  Scout real talent, submit transfer bids, negotiate contracts, and promote high-potential teenagers directly from your Youth Academy.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-3 items-start">
-              <span className="w-6 h-6 rounded-full bg-indigo-100 border border-indigo-200 text-indigo-700 flex items-center justify-center font-display font-black flex-shrink-0 text-xs">
-                4
-              </span>
-              <div>
-                <h4 className="text-[#0b1536] uppercase font-display font-black text-xs mb-0.5">
-                  Fight for Domestic &amp; European Silverware
-                </h4>
-                <p className="text-[11.5px] text-slate-600 font-medium">
-                  Simulate week-by-week fixtures across the English Top Flight, FA Cup, League Cup, and European Champions Cup across multi-season careers.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+            </li>
+          ))}
+        </ol>
 
         {/* Footer with "Don't show again" & Action CTA */}
         <div className="pt-3 border-t border-[var(--office-divider)] flex flex-col gap-3">
@@ -219,27 +182,21 @@ export function HowToPlayModal({
                 type="checkbox"
                 checked={dontShowAgain}
                 onChange={(e) => setDontShowAgain(e.target.checked)}
-                className="rounded border-slate-300 accent-amber-600 focus:ring-amber-500/20 w-4 h-4 bg-white focus:outline-none"
+                className="rounded accent-amber-600 w-4 h-4"
               />
-              <span className="text-[10px] text-slate-600 font-bold uppercase tracking-wider">
+              <span className="text-sm text-[var(--ink-secondary)]">
                 Don&apos;t show again
               </span>
             </label>
           )}
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleAction}
-              className="office-play-match-btn w-full py-3.5 px-4 rounded-2xl font-display font-black text-xs uppercase tracking-wider text-white cursor-pointer text-center"
-            >
-              {mode === 'all'
-                ? 'Got it'
-                : activeTab === 'draft'
-                ? 'Start Draft'
-                : 'Enter Career Mode'}
-            </button>
-          </div>
+          <Button variant="primary" fullWidth onClick={handleAction} className="min-h-12">
+            {mode === 'all'
+              ? 'Got it'
+              : activeTab === 'draft'
+              ? 'Start draft'
+              : 'Enter career mode'}
+          </Button>
         </div>
       </div>
     </div>

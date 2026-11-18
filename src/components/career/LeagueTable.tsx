@@ -5,7 +5,7 @@ import { ClubStanding, Club, LeagueFixture, CareerPlayer, SeasonHistoryRecord } 
 import { getQualificationZone } from '../../career/table';
 import { getEffectiveClubName, getClubsWithUserClub } from '../../career/clubs';
 import { getLeagueLeaderboards, LeagueLeaderboardEntry } from '../../career/playerStats';
-import { IconBall, IconShield, IconTarget } from './GameIcons';
+import { SectionHeader } from '../ui';
 
 interface LeagueTableProps {
   standings: ClubStanding[];
@@ -23,7 +23,7 @@ const SUB_TABS: { id: TableSubTab; label: string }[] = [
   { id: 'standings', label: 'Standings' },
   { id: 'scorers', label: 'Goals' },
   { id: 'assists', label: 'Assists' },
-  { id: 'clean_sheets', label: 'Clean Sheets' },
+  { id: 'clean_sheets', label: 'Clean sheets' },
 ];
 
 export function LeagueTable({
@@ -43,43 +43,28 @@ export function LeagueTable({
 
   const leaderboards = getLeagueLeaderboards(fixtures, userClubId, userSquad);
 
-  const getRankBadge = (rank: number) => {
-    if (rank === 1) {
-      return (
-        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] shadow-2xs">
-          1
-        </span>
-      );
-    }
-    if (rank === 2) {
-      return (
-        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-300 text-slate-950 font-black text-[11px] shadow-2xs">
-          2
-        </span>
-      );
-    }
-    if (rank === 3) {
-      return (
-        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-700 text-white font-black text-[11px] shadow-2xs">
-          3
-        </span>
-      );
-    }
-    return <span className="font-mono font-bold text-slate-500 text-xs">#{rank}</span>;
-  };
+  const getRankBadge = (rank: number) => (
+    <span
+      className={`text-xs tabular-nums ${
+        rank <= 3 ? 'font-semibold text-[var(--ink-primary)]' : 'text-[var(--ink-muted)]'
+      }`}
+    >
+      {rank}
+    </span>
+  );
 
   return (
     <section id="league-table-section" data-office-ui="true" aria-label="League Standings and Player Stats" className="space-y-3.5 scroll-mt-20 w-full">
       {/* Sub-tab Switcher: Standings vs Player Stats Leaderboards */}
-      <nav aria-label="League navigation" className="office-subcard p-1 flex items-center gap-1 overflow-x-auto no-scrollbar shadow-xs rounded-2xl">
+      <nav aria-label="League navigation" className="flex items-center gap-4 px-1 border-b border-[var(--border-subtle)] overflow-x-auto no-scrollbar">
         {SUB_TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
             aria-pressed={activeSubTab === tab.id}
             onClick={() => setActiveSubTab(tab.id)}
-            className={`flex-1 min-h-[40px] py-2 px-2 rounded-xl text-[11px] font-display font-black uppercase tracking-wide transition-all text-center whitespace-nowrap cursor-pointer ${
-              activeSubTab === tab.id ? 'office-nav-tab-active shadow-xs' : 'office-nav-tab-inactive'
+            className={`min-h-10 px-0.5 text-sm text-center whitespace-nowrap cursor-pointer transition-colors border-b-2 ${
+              activeSubTab === tab.id ? 'border-[var(--accent-primary)] font-semibold text-[var(--ink-primary)]' : 'border-transparent font-medium text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
             }`}
           >
             {tab.label}
@@ -88,7 +73,7 @@ export function LeagueTable({
       </nav>
 
       {isPreSeason && (
-        <p className="px-1 text-[11px] font-bold text-amber-800">
+        <p className="px-1 text-xs text-[var(--ink-secondary)]">
           Pre-season: {activeSubTab === 'standings' ? 'the table' : 'stats'} will update after Matchday 1.
         </p>
       )}
@@ -96,10 +81,10 @@ export function LeagueTable({
       {/* VIEW 1: STANDINGS TABLE */}
       {activeSubTab === 'standings' && (
         <>
-          <div className="office-floating-card rounded-2xl overflow-hidden shadow-xs border border-slate-200/90">
+          <div className="office-floating-card rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs tabular-nums border-collapse">
-                <thead className="sticky top-0 bg-slate-50/95 backdrop-blur-md z-10 text-[10px] font-display font-black uppercase tracking-wider text-slate-500 border-b border-slate-200 select-none shadow-2xs">
+                <thead className="sticky top-0 bg-[var(--surface-subcard)] z-10 text-2xs font-medium text-[var(--ink-muted)] border-b border-[var(--border-subtle)] select-none">
                   <tr>
                     <th className="py-2.5 px-2 text-center w-8">Pos</th>
                     <th className="py-2.5 px-2.5 sm:px-4">Club</th>
@@ -110,37 +95,28 @@ export function LeagueTable({
                     <th className="py-2.5 px-2 text-center hidden sm:table-cell">GF</th>
                     <th className="py-2.5 px-2 text-center hidden sm:table-cell">GA</th>
                     <th className="py-2.5 px-1.5 sm:px-2.5 text-center">GD</th>
-                    <th className="py-2.5 px-2.5 sm:px-4 text-center font-display font-black text-[#0b1536]">Pts</th>
+                    <th className="py-2.5 px-2.5 sm:px-4 text-center font-semibold text-[var(--ink-primary)]">Pts</th>
                     <th className="py-2.5 px-3 text-center hidden md:table-cell">Form</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 font-medium bg-white">
+                <tbody className="divide-y divide-[var(--border-subtle)] bg-[var(--surface-card)]">
                   {standings.map((row, index) => {
                     const position = index + 1;
                     const club = clubsMap.get(row.clubId);
                     const isUserClub = row.clubId === userClubId;
                     const zone = getQualificationZone(position);
 
-                    let posBadgeClass = 'text-slate-500 font-bold';
+                    const posBadgeClass = 'text-[var(--ink-secondary)]';
                     let rowBorderClass = 'border-l-[3px] border-l-transparent';
-                    let zoneBg = '';
 
                     if (zone === 'champions_league') {
-                      posBadgeClass = 'text-blue-700 font-display font-black';
                       rowBorderClass = 'border-l-[3px] border-l-blue-600';
-                      zoneBg = 'bg-blue-50/15';
                     } else if (zone === 'europa_league') {
-                      posBadgeClass = 'text-amber-700 font-display font-black';
                       rowBorderClass = 'border-l-[3px] border-l-amber-500';
-                      zoneBg = 'bg-amber-50/15';
                     } else if (zone === 'conference_league') {
-                      posBadgeClass = 'text-teal-700 font-display font-black';
                       rowBorderClass = 'border-l-[3px] border-l-teal-500';
-                      zoneBg = 'bg-teal-50/15';
                     } else if (zone === 'relegation') {
-                      posBadgeClass = 'text-rose-700 font-display font-black';
                       rowBorderClass = 'border-l-[3px] border-l-rose-500';
-                      zoneBg = 'bg-rose-50/15';
                     }
 
                     const displayName = club ? getEffectiveClubName(club) : row.clubId;
@@ -148,10 +124,8 @@ export function LeagueTable({
                     return (
                       <tr
                         key={row.clubId}
-                        className={`transition-colors ${rowBorderClass} ${zoneBg} ${
-                          isUserClub
-                            ? 'bg-amber-50/90 hover:bg-amber-100/70 font-bold ring-1 ring-inset ring-amber-500/40'
-                            : 'hover:bg-[#F7F6F3]'
+                        className={`${rowBorderClass} ${
+                          isUserClub ? 'bg-[var(--surface-elevated)] font-semibold' : ''
                         }`}
                       >
                         {/* Position */}
@@ -161,60 +135,52 @@ export function LeagueTable({
 
                         {/* Club */}
                         <td className="py-2 px-2.5 sm:px-4">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
                             {club && (
                               <div
                                 data-force-white="true"
-                                className="club-crest w-4 h-4 rounded-full border border-slate-300 flex-shrink-0 shadow-2xs"
-                                style={{
-                                  background: `linear-gradient(135deg, ${club.primaryColor}, ${club.secondaryColor})`,
-                                }}
+                                className="club-crest w-4 h-4 rounded-full border border-[var(--border-crisp)] flex-shrink-0"
+                                style={{ background: club.primaryColor }}
                               />
                             )}
-                            <span className={`truncate text-xs ${isUserClub ? 'text-blue-700 font-black' : 'text-[#0b1536]'}`}>
+                            <span className="truncate text-xs text-[var(--ink-primary)]">
                               {displayName}
                             </span>
                             {isUserClub && (
-                              <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-full bg-blue-600 text-white font-display leading-tight shadow-2xs">
-                                YOU
-                              </span>
+                              <span className="text-xs font-normal text-[var(--ink-muted)] shrink-0">You</span>
                             )}
                           </div>
                         </td>
 
                         {/* P / W / D / L */}
-                        <td className="py-2 px-1.5 sm:px-2.5 text-center text-slate-600 text-xs font-mono">{row.played}</td>
-                        <td className="py-2 px-1.5 sm:px-2.5 text-center text-slate-600 text-xs font-mono">{row.won}</td>
-                        <td className="py-2 px-1.5 sm:px-2.5 text-center text-slate-500 text-xs font-mono">{row.drawn}</td>
-                        <td className="py-2 px-1.5 sm:px-2.5 text-center text-slate-500 text-xs font-mono">{row.lost}</td>
+                        <td className="py-2 px-1.5 sm:px-2.5 text-center text-[var(--ink-secondary)] text-xs">{row.played}</td>
+                        <td className="py-2 px-1.5 sm:px-2.5 text-center text-[var(--ink-secondary)] text-xs">{row.won}</td>
+                        <td className="py-2 px-1.5 sm:px-2.5 text-center text-[var(--ink-secondary)] text-xs">{row.drawn}</td>
+                        <td className="py-2 px-1.5 sm:px-2.5 text-center text-[var(--ink-secondary)] text-xs">{row.lost}</td>
 
                         {/* GF / GA */}
-                        <td className="py-2 px-2 text-center text-slate-500 text-xs hidden sm:table-cell font-mono">{row.goalsFor}</td>
-                        <td className="py-2 px-2 text-center text-slate-500 text-xs hidden sm:table-cell font-mono">{row.goalsAgainst}</td>
+                        <td className="py-2 px-2 text-center text-[var(--ink-secondary)] text-xs hidden sm:table-cell">{row.goalsFor}</td>
+                        <td className="py-2 px-2 text-center text-[var(--ink-secondary)] text-xs hidden sm:table-cell">{row.goalsAgainst}</td>
 
                         {/* GD */}
-                        <td className={`py-2 px-1.5 sm:px-2.5 text-center text-xs font-mono font-bold ${row.goalDifference > 0 ? 'text-emerald-700' : row.goalDifference < 0 ? 'text-rose-700' : 'text-slate-500'}`}>
+                        <td className={`py-2 px-1.5 sm:px-2.5 text-center text-xs ${row.goalDifference > 0 ? 'text-emerald-700' : row.goalDifference < 0 ? 'text-rose-700' : 'text-[var(--ink-secondary)]'}`}>
                           {row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}
                         </td>
 
                         {/* Points */}
-                        <td className="py-2 px-2.5 sm:px-4 text-center font-display font-black text-xs sm:text-sm text-[#0b1536]">
+                        <td className="py-2 px-2.5 sm:px-4 text-center font-semibold text-sm text-[var(--ink-primary)]">
                           {row.points}
                         </td>
 
                         {/* Form Dots */}
                         <td className="py-2 px-3 text-center hidden md:table-cell">
                           <div className="flex justify-center items-center gap-1">
-                            {row.form.length === 0 && <span className="text-slate-400 font-mono">-</span>}
+                            {row.form.length === 0 && <span className="text-[var(--ink-muted)]">-</span>}
                             {row.form.map((res, i) => (
                               <span
                                 key={i}
-                                className={`w-4 h-4 rounded-full text-[10px] font-black font-display flex items-center justify-center leading-none shadow-2xs ${
-                                  res === 'W'
-                                    ? 'bg-emerald-600 text-white'
-                                    : res === 'D'
-                                    ? 'bg-amber-500 text-slate-950 font-black'
-                                    : 'bg-rose-600 text-white'
+                                className={`w-5 text-xs font-semibold text-center ${
+                                  res === 'W' ? 'text-emerald-700' : res === 'D' ? 'text-amber-700' : 'text-rose-700'
                                 }`}
                               >
                                 {res}
@@ -231,28 +197,28 @@ export function LeagueTable({
           </div>
 
           {/* Legend */}
-          <footer className="office-subcard p-3 sm:p-3.5 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-600 shadow-xs">
-            <div className="flex items-center gap-3.5 flex-wrap font-medium">
+          <footer className="px-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-xs text-[var(--ink-secondary)]">
+            <div className="flex items-center gap-x-3.5 gap-y-1.5 flex-wrap">
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-600 shadow-2xs" />
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
                 <span>1–4: Champions Cup</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-2xs" />
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
                 <span>5: Challenge Cup</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-teal-500 shadow-2xs" />
+                <span className="w-2.5 h-2.5 rounded-full bg-teal-500" />
                 <span>6: European Plate</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-2xs" />
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
                 <span>18–20: Relegation</span>
               </div>
             </div>
 
-            <div className="text-[10px] text-slate-500 font-mono font-bold">
-              38 Matches • 20 Clubs
+            <div className="text-xs text-[var(--ink-muted)]">
+              38 matches · 20 clubs
             </div>
           </footer>
         </>
@@ -261,43 +227,40 @@ export function LeagueTable({
       {/* VIEW 2: TOP SCORERS / GOLDEN BOOT */}
       {activeSubTab === 'scorers' && (
         <LeaderboardCard
-          title="Golden Boot Race"
+          title="Golden boot race"
           statLabel="Goals"
-          statIcon={<IconBall className="w-4 h-4 text-blue-600" />}
           entries={leaderboards.topScorers}
           userClubId={userClubId}
           getRankBadge={getRankBadge}
-          emptyText="No goals scored yet this season. Fixtures played will update this chart in real-time."
+          emptyText="No goals scored yet this season. This list updates as fixtures are played."
         />
       )}
 
       {/* VIEW 3: TOP ASSISTS / PLAYMAKER */}
       {activeSubTab === 'assists' && (
         <LeaderboardCard
-          title="Playmaker Award"
+          title="Playmaker award"
           statLabel="Assists"
-          statIcon={<IconTarget className="w-4 h-4 text-amber-600" />}
           entries={leaderboards.topAssists}
           userClubId={userClubId}
           getRankBadge={getRankBadge}
-          emptyText="No assists recorded yet this season. Fixtures played will update this chart in real-time."
+          emptyText="No assists recorded yet this season. This list updates as fixtures are played."
         />
       )}
 
       {/* VIEW 4: CLEAN SHEETS / GOLDEN GLOVE */}
       {activeSubTab === 'clean_sheets' && (
         <LeaderboardCard
-          title="Golden Glove"
-          statLabel="Clean Sheets"
-          statIcon={<IconShield className="w-4 h-4 text-emerald-600" />}
+          title="Golden glove"
+          statLabel="Clean sheets"
           entries={leaderboards.topCleanSheets}
           userClubId={userClubId}
           getRankBadge={getRankBadge}
-          emptyText="No clean sheets recorded yet this season. Keep your defense solid to lead this race!"
+          emptyText="No clean sheets recorded yet this season. This list updates as fixtures are played."
         />
       )}
 
-      <p className="text-[11px] text-slate-500 text-center">Past seasons are listed in the Legacy tab.</p>
+      <p className="text-xs text-[var(--ink-muted)] text-center">Past seasons are listed in the Legacy tab.</p>
     </section>
   );
 }
@@ -305,7 +268,6 @@ export function LeagueTable({
 interface LeaderboardCardProps {
   title: string;
   statLabel: string;
-  statIcon: React.ReactNode;
   entries: LeagueLeaderboardEntry[];
   userClubId: string;
   getRankBadge: (rank: number) => React.ReactNode;
@@ -315,7 +277,6 @@ interface LeaderboardCardProps {
 function LeaderboardCard({
   title,
   statLabel,
-  statIcon,
   entries,
   userClubId,
   getRankBadge,
@@ -323,7 +284,7 @@ function LeaderboardCard({
 }: LeaderboardCardProps) {
   if (entries.length === 0) {
     return (
-      <div className="office-subcard rounded-2xl p-8 text-center text-slate-500 text-xs shadow-xs">
+      <div className="office-subcard rounded-xl p-8 text-center text-[var(--ink-muted)] text-sm">
         {emptyText}
       </div>
     );
@@ -331,37 +292,30 @@ function LeaderboardCard({
 
   return (
     <div className="space-y-3">
-      <h3 className="font-display font-black text-xs sm:text-sm text-[#0b1536] flex items-center gap-1.5 px-1">
-        {statIcon}
-        <span>{title}</span>
-      </h3>
+      <SectionHeader title={title} className="px-1" />
 
       {/* Leaderboard Table */}
-      <div className="office-floating-card rounded-2xl overflow-hidden shadow-xs border border-slate-200/90">
+      <div className="office-floating-card rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs tabular-nums border-collapse">
-            <thead className="bg-slate-50/95 backdrop-blur-md text-[10px] font-display font-black uppercase tracking-wider text-slate-500 border-b border-slate-200 select-none">
+            <thead className="bg-[var(--surface-subcard)] text-2xs font-medium text-[var(--ink-muted)] border-b border-[var(--border-subtle)] select-none">
               <tr>
                 <th className="py-2.5 px-3 text-center w-12">Rank</th>
                 <th className="py-2.5 px-3">Player</th>
                 <th className="py-2.5 px-3 hidden sm:table-cell">Club</th>
-                <th className="py-2.5 px-3 text-center w-16">Apps</th>
-                <th className="py-2.5 px-4 text-center font-display font-black text-blue-700 w-24">
+                <th className="py-2.5 px-2 text-center w-12">Apps</th>
+                <th className="py-2.5 px-3 text-center font-semibold text-[var(--ink-primary)] w-24">
                   {statLabel}
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 font-medium bg-white">
+            <tbody className="divide-y divide-[var(--border-subtle)] bg-[var(--surface-card)]">
               {entries.map((entry) => {
                 const isUser = entry.isUserPlayer || entry.clubId === userClubId;
                 return (
                   <tr
                     key={`${entry.clubId}-${entry.playerName}-${entry.rank}`}
-                    className={`transition-colors ${
-                      isUser
-                        ? 'bg-blue-50/90 hover:bg-blue-100/70 font-bold ring-1 ring-inset ring-blue-500/30'
-                        : 'hover:bg-slate-50/80'
-                    }`}
+                    className={isUser ? 'bg-[var(--surface-elevated)] font-semibold' : undefined}
                   >
                     {/* Rank Badge */}
                     <td className="py-2 px-3 text-center">
@@ -372,33 +326,31 @@ function LeaderboardCard({
 
                     {/* Player Name */}
                     <td className="py-2 px-3">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`font-display font-bold text-xs truncate ${isUser ? 'text-blue-700 font-black' : 'text-[#0b1536]'}`}>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-xs text-[var(--ink-primary)]">
                           {entry.playerName}
                         </span>
                         {isUser && (
-                          <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-full bg-blue-600 text-white font-display leading-tight shadow-2xs">
-                            YOU
-                          </span>
+                          <span className="text-xs font-normal text-[var(--ink-muted)] shrink-0">You</span>
                         )}
-                        <span className="text-[10px] text-slate-500 sm:hidden">
-                          • {entry.clubName}
-                        </span>
+                      </div>
+                      <div className="text-xs font-normal text-[var(--ink-muted)] sm:hidden">
+                        {entry.clubName}
                       </div>
                     </td>
 
                     {/* Club */}
-                    <td className="py-2 px-3 text-slate-600 text-xs hidden sm:table-cell">
+                    <td className="py-2 px-3 text-[var(--ink-secondary)] text-xs hidden sm:table-cell">
                       {entry.clubName}
                     </td>
 
                     {/* Appearances */}
-                    <td className="py-2 px-3 text-center text-slate-500 text-xs font-mono">
+                    <td className="py-2 px-2 text-center text-[var(--ink-secondary)] text-xs">
                       {entry.appearances}
                     </td>
 
                     {/* Stat Value */}
-                    <td className="py-2 px-4 text-center font-display font-black text-xs sm:text-sm text-blue-700">
+                    <td className="py-2 px-3 text-center font-semibold text-sm text-[var(--ink-primary)]">
                       {entry.statValue}
                     </td>
                   </tr>

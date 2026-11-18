@@ -18,18 +18,12 @@ import { getEffectiveClubName } from '../../career/clubs';
 import { formatCareerDate } from '../../career/formatters';
 import { MatchDayModal } from './MatchDayModal';
 import {
-  IconStar,
-  IconGlobe,
-  IconMedal,
-  IconCrown,
   IconTrophy,
-  IconShield,
-  IconBolt,
-  IconCalendar,
   IconChevronDown,
   IconChevronUp,
   IconPlay,
 } from './GameIcons';
+import { Button, Tag } from '../ui';
 
 interface TournamentsHubProps {
   save: CareerSaveFile;
@@ -104,31 +98,13 @@ export function TournamentsHub({
   }, [selectedTournamentId, save.season.currentDate]);
 
   const tournamentList = [
-    { id: CUP_IDS.EURO_CHAMPIONS, name: 'Champions Cup', icon: 'star' },
-    { id: CUP_IDS.EURO_CHALLENGE, name: 'Challenge Cup', icon: 'globe' },
-    { id: CUP_IDS.EURO_PLATE, name: 'European Plate', icon: 'medal' },
-    { id: CUP_IDS.ENGLISH_CUP, name: 'The English Cup', icon: 'crown' },
-    { id: CUP_IDS.LEAGUE_CUP, name: 'League Cup', icon: 'trophy' },
-    { id: CUP_IDS.SHIELD, name: 'Season Opener Shield', icon: 'shield' },
+    { id: CUP_IDS.EURO_CHAMPIONS, name: 'Champions Cup' },
+    { id: CUP_IDS.EURO_CHALLENGE, name: 'Challenge Cup' },
+    { id: CUP_IDS.EURO_PLATE, name: 'European Plate' },
+    { id: CUP_IDS.ENGLISH_CUP, name: 'The English Cup' },
+    { id: CUP_IDS.LEAGUE_CUP, name: 'League Cup' },
+    { id: CUP_IDS.SHIELD, name: 'Season Opener Shield' },
   ];
-
-  const renderTournamentIcon = (key: string) => {
-    switch (key) {
-      case 'star':
-        return <IconStar className="w-3.5 h-3.5 shrink-0" filled />;
-      case 'globe':
-        return <IconGlobe className="w-3.5 h-3.5 shrink-0" />;
-      case 'medal':
-        return <IconMedal className="w-3.5 h-3.5 shrink-0" />;
-      case 'crown':
-        return <IconCrown className="w-3.5 h-3.5 shrink-0" />;
-      case 'trophy':
-        return <IconTrophy className="w-3.5 h-3.5 shrink-0" />;
-      case 'shield':
-      default:
-        return <IconShield className="w-3.5 h-3.5 shrink-0" />;
-    }
-  };
 
   return (
     <div id="tournaments-hub" data-office-ui="true" className="space-y-4 w-full scroll-mt-20">
@@ -137,7 +113,7 @@ export function TournamentsHub({
         <nav
           aria-label="Cup Tournaments Selector"
           data-no-swipe="true"
-          className="office-floating-card p-1.5 rounded-2xl shadow-xs flex items-center gap-1.5 overflow-x-auto no-scrollbar overscroll-x-contain touch-pan-x"
+          className="flex items-center gap-4 px-1 border-b border-[var(--border-subtle)] overflow-x-auto no-scrollbar overscroll-x-contain touch-pan-x"
         >
           {tournamentList.map((t) => {
             const isSelected = selectedTournamentId === t.id;
@@ -155,34 +131,33 @@ export function TournamentsHub({
                     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                   }
                 }}
-                className={`min-h-[40px] py-1.5 px-3 rounded-xl text-xs font-display font-black uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap cursor-pointer transition-all shrink-0 ${
-                  isSelected ? 'office-nav-tab-active shadow-xs' : 'office-nav-tab-inactive'
+                className={`min-h-10 px-0.5 text-sm whitespace-nowrap cursor-pointer transition-colors shrink-0 border-b-2 ${
+                  isSelected
+                    ? 'border-[var(--accent-primary)] font-semibold text-[var(--ink-primary)]'
+                    : 'border-transparent font-medium text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
                 }`}
               >
-                {renderTournamentIcon(t.icon)}
-                <span>{t.name}</span>
+                {t.name}
               </button>
             );
           })}
         </nav>
-        {/* Subtle right-edge scroll fade indicator on mobile screens */}
-        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-[#f8fafc] to-transparent sm:hidden" />
       </div>
 
       {!currentTournament ? (
-        <div className="office-subcard rounded-2xl p-8 text-center text-slate-500 text-xs shadow-xs">
+        <div className="office-subcard rounded-xl p-8 text-center text-[var(--ink-muted)] text-sm">
           Tournament data not available.
         </div>
       ) : (
         /* VIEW 2: TOURNAMENT BRACKET & FIXTURES */
         <section id={`cup-tournament-${selectedTournamentId}`} className="space-y-3.5 scroll-mt-20">
           {/* Header Card: name, round and prize stated once */}
-          <header className="office-floating-card rounded-2xl px-4 py-3 flex flex-wrap sm:flex-nowrap justify-between items-center gap-2 shadow-xs border border-slate-200/90">
+          <header className="px-1 flex flex-wrap sm:flex-nowrap justify-between items-center gap-2">
             <div className="min-w-0">
-              <h2 className="text-base sm:text-lg font-display font-black text-[#0b1536] uppercase tracking-tight truncate">
+              <h2 className="text-lg font-display font-semibold text-[var(--ink-primary)] truncate">
                 {currentTournament.name}
               </h2>
-              <p className="text-[11px] font-bold text-slate-500 mt-0.5">
+              <p className="text-sm text-[var(--ink-secondary)] mt-0.5">
                 {currentTournament.currentRound} · Prize £{(currentTournament.prizeMoney / 1_000_000).toFixed(1)}M
               </p>
             </div>
@@ -191,10 +166,10 @@ export function TournamentsHub({
               <div className="flex items-center gap-2 ml-auto shrink-0">
                 <IconTrophy className="w-5 h-5 text-amber-600 shrink-0" />
                 <div>
-                  <span className="text-[10px] uppercase font-black text-amber-800 block font-display tracking-wider">
+                  <span className="text-xs text-[var(--ink-muted)] block">
                     Champion
                   </span>
-                  <span className="text-xs font-display font-black text-[#0b1536] uppercase">
+                  <span className="text-sm font-display font-semibold text-[var(--ink-primary)]">
                     {(() => {
                       const w = findAnyClub(currentTournament.winnerClubId);
                       return w ? getEffectiveClubName(w, save.club) : currentTournament.winnerClubId;
@@ -227,42 +202,31 @@ export function TournamentsHub({
 
                   return (
                     <div key={roundName} className="space-y-2">
-                      <div className="flex items-center justify-between border-b border-slate-200/80 pb-1 px-1 gap-2">
-                        <h3 className="text-xs font-display font-black uppercase tracking-wider text-[#0b1536] flex items-center gap-1.5 min-w-0">
-                          {isFinal ? (
-                            <IconTrophy className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                          ) : (
-                            <IconBolt className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                          )}
-                          <span className="truncate">{roundName}</span>
-                          {isFinal && (
-                            <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[10px] px-1.5 py-0.2 rounded font-black shrink-0">
-                              FINAL
-                            </span>
-                          )}
+                      <div className="flex items-baseline justify-between border-b border-[var(--border-subtle)] pb-1 px-1 gap-2">
+                        <h3 className="text-sm font-display font-semibold text-[var(--ink-primary)] min-w-0 truncate">
+                          {roundName}
                         </h3>
-                        <span className="text-[10.5px] font-mono text-slate-500 font-bold shrink-0">
-                          {roundFixtures.filter((f) => f.played).length} / {roundFixtures.length} Completed
+                        <span className="text-xs text-[var(--ink-muted)] tabular-nums shrink-0">
+                          {roundFixtures.filter((f) => f.played).length} of {roundFixtures.length} played
                         </span>
                       </div>
 
                       {/* Draw pending (shown once on the first undrawn round) */}
                       {!currentTournament.drawCompleted && currentTournament.drawDate && roundIndex === 0 && (
-                        <div className="office-subcard rounded-2xl px-3 py-1 border border-amber-300 shadow-xs">
-                          <div className="flex flex-wrap items-center justify-between gap-2 py-2 text-xs font-display font-black text-amber-900 uppercase">
-                            <span>Draw pending</span>
-                            <span className="inline-flex items-center gap-1 font-mono text-[10px] text-amber-800 font-bold">
-                              <IconCalendar className="w-3 h-3" />
-                              <span>{formatCareerDate(currentTournament.drawDate, save.settings?.dateFormat)}</span>
+                        <div className="rounded-xl px-3 py-1 bg-[var(--surface-card)] border border-[var(--border-subtle)]">
+                          <div className="flex flex-wrap items-center justify-between gap-2 py-2 text-xs">
+                            <Tag tone="warning">Draw pending</Tag>
+                            <span className="text-[var(--ink-secondary)] tabular-nums">
+                              Draw on {formatCareerDate(currentTournament.drawDate, save.settings?.dateFormat)}
                             </span>
                           </div>
                           {currentTournament.qualifyingClubs && currentTournament.qualifyingClubs.length > 0 && (
-                            <div className="border-t border-amber-200">
+                            <div className="border-t border-[var(--border-subtle)]">
                               <button
                                 type="button"
                                 aria-expanded={showEntrants}
                                 onClick={() => setShowEntrants((open) => !open)}
-                                className="w-full min-h-[40px] flex items-center justify-between gap-2 text-xs font-bold text-zinc-700 cursor-pointer"
+                                className="w-full min-h-10 flex items-center justify-between gap-2 text-xs font-semibold text-[var(--ink-secondary)] cursor-pointer"
                               >
                                 <span>
                                   {showEntrants ? 'Hide' : 'Show'} entrants ({currentTournament.qualifyingClubs.length})
@@ -270,7 +234,7 @@ export function TournamentsHub({
                                 {showEntrants ? <IconChevronUp className="w-4 h-4" /> : <IconChevronDown className="w-4 h-4" />}
                               </button>
                               {showEntrants && (
-                                <p className="pb-2.5 text-[11px] leading-relaxed text-zinc-700">
+                                <p className="pb-2.5 text-xs leading-relaxed text-[var(--ink-secondary)]">
                                   {currentTournament.qualifyingClubs.map((cId, i) => {
                                     const club = findAnyClub(cId);
                                     const name = club
@@ -282,7 +246,7 @@ export function TournamentsHub({
                                     return (
                                       <React.Fragment key={cId}>
                                         {i > 0 && ', '}
-                                        {cId === userClubId ? <strong className="text-zinc-950">{name}</strong> : name}
+                                        {cId === userClubId ? <strong className="text-[var(--ink-primary)]">{name}</strong> : name}
                                       </React.Fragment>
                                     );
                                   })}
@@ -300,59 +264,28 @@ export function TournamentsHub({
                         const isUserHome = userTie.homeClubId === userClubId;
 
                         return (
-                          <article className={`p-3 sm:p-3.5 rounded-2xl border ${
-                            isFinal
-                              ? 'border-2 border-amber-400 bg-gradient-to-br from-amber-50/70 via-white to-amber-50/30 shadow-sm'
-                              : 'border-2 border-amber-500/80 bg-white shadow-sm'
-                          }`}>
-                            <div className="flex flex-wrap justify-between items-center text-[10px] text-zinc-500 font-bold mb-2 gap-1.5">
-                              <span className={`inline-flex items-center gap-1 font-display font-black px-2 py-0.5 rounded-lg text-[10px] uppercase tracking-wider shadow-2xs ${
-                                isFinal
-                                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
-                                  : 'office-nav-tab-active text-white'
-                              }`}>
-                                {isFinal ? (
-                                  <>
-                                    <IconTrophy className="w-3 h-3" />
-                                    <span>The Cup Final</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <IconStar className="w-3 h-3" filled />
-                                    <span>Your Cup Fixture</span>
-                                  </>
-                                )}
+                          <article className="p-3 sm:p-3.5 rounded-xl border border-[var(--border-crisp)] bg-[var(--surface-card)]">
+                            <p className="text-xs text-[var(--ink-muted)] mb-2">
+                              <span className="font-semibold text-[var(--ink-secondary)]">
+                                {isFinal ? 'The cup final' : 'Your cup fixture'}
                               </span>
-                              <div className="flex items-center gap-1.5 font-mono">
-                                <span className={`text-[10px] font-black uppercase px-1.5 py-0.5 rounded ${
-                                  isUserHome
-                                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                                    : 'bg-zinc-100 text-zinc-700 border border-zinc-200'
-                                }`}>
-                                  {isUserHome ? 'Home' : 'Away'}
-                                </span>
-                                <span className="inline-flex items-center gap-1">
-                                  <IconCalendar className="w-3 h-3" />
-                                  <span>{formatCareerDate(userTie.date, save.settings?.dateFormat)}</span>
-                                </span>
-                              </div>
-                            </div>
+                              {' · '}
+                              {isUserHome ? 'Home' : 'Away'}
+                              {' · '}
+                              {formatCareerDate(userTie.date, save.settings?.dateFormat)}
+                            </p>
 
                             <div className="flex items-center justify-between gap-3 my-1">
                               {/* Home Team */}
                               <div className="flex items-center gap-2 flex-1 min-w-0">
                                 <div
                                   data-force-white="true"
-                                  className="club-crest w-4 h-4 rounded-full border border-slate-300 shrink-0 shadow-2xs"
-                                  style={{
-                                    background: `linear-gradient(135deg, ${home?.primaryColor || '#555'}, ${home?.secondaryColor || '#222'})`,
-                                  }}
+                                  className="club-crest w-4 h-4 rounded-full border border-[var(--border-crisp)] shrink-0"
+                                  style={{ background: home?.primaryColor || '#555' }}
                                 />
                                 <span
-                                  className={`text-xs font-bold truncate ${
-                                    userTie.homeClubId === userClubId
-                                      ? 'text-blue-700 font-black'
-                                      : 'text-[#0b1536]'
+                                  className={`text-sm truncate text-[var(--ink-primary)] ${
+                                    userTie.homeClubId === userClubId ? 'font-semibold' : 'font-medium'
                                   }`}
                                 >
                                   {home ? getEffectiveClubName(home, save.club) : userTie.homeClubId === 'tbc' ? 'TBC' : userTie.homeClubId}
@@ -360,35 +293,33 @@ export function TournamentsHub({
                               </div>
 
                               {/* Scoreline */}
-                              <div className="px-3 py-1 bg-white border border-slate-200/90 rounded-xl text-center shrink-0 shadow-2xs">
+                              <div className="px-1 text-center shrink-0">
                                 {userTie.played ? (
                                   <div>
-                                    <span className="font-display font-black text-xs sm:text-sm text-[#0b1536]">
+                                    <span className="font-display font-semibold text-base text-[var(--ink-primary)] tabular-nums">
                                       {userTie.homeScore} - {userTie.awayScore}
                                     </span>
                                     {userTie.leg === 2 && (
-                                      <span className="block text-[10px] font-mono text-amber-700 font-bold leading-none mt-0.5">
-                                        (Agg: {(userTie.aggregateHomeScore ?? 0) + (userTie.homeScore ?? 0)}-{(userTie.aggregateAwayScore ?? 0) + (userTie.awayScore ?? 0)})
+                                      <span className="block text-xs text-[var(--ink-secondary)] tabular-nums">
+                                        (Agg {(userTie.aggregateHomeScore ?? 0) + (userTie.homeScore ?? 0)}-{(userTie.aggregateAwayScore ?? 0) + (userTie.awayScore ?? 0)})
                                       </span>
                                     )}
                                     {userTie.penalties && (
-                                      <span className="block text-[10px] font-mono text-amber-700 font-bold leading-none mt-0.5">
-                                        (Pens: {userTie.penalties.homePenalties}-{userTie.penalties.awayPenalties})
+                                      <span className="block text-xs text-[var(--ink-secondary)] tabular-nums">
+                                        (Pens {userTie.penalties.homePenalties}-{userTie.penalties.awayPenalties})
                                       </span>
                                     )}
                                   </div>
                                 ) : (
                                   <div>
-                                    <span className="text-[10px] font-display font-black text-slate-500 uppercase">
-                                      VS
-                                    </span>
+                                    <span className="text-sm text-[var(--ink-muted)]">v</span>
                                     {userTie.leg === 2 && (
-                                      <span className="block text-[10px] font-mono text-amber-700 font-bold leading-none mt-0.5">
-                                        Agg: {userTie.aggregateHomeScore ?? 0}-{userTie.aggregateAwayScore ?? 0}
+                                      <span className="block text-xs text-[var(--ink-secondary)] tabular-nums">
+                                        Agg {userTie.aggregateHomeScore ?? 0}-{userTie.aggregateAwayScore ?? 0}
                                       </span>
                                     )}
                                     {userTie.leg === 1 && (
-                                      <span className="block text-[10px] font-mono text-slate-400 font-semibold leading-none mt-0.5">
+                                      <span className="block text-xs text-[var(--ink-muted)]">
                                         Leg 1
                                       </span>
                                     )}
@@ -399,35 +330,27 @@ export function TournamentsHub({
                               {/* Away Team */}
                               <div className="flex items-center gap-2 flex-1 min-w-0 justify-end text-right">
                                 <span
-                                  className={`text-xs font-bold truncate ${
-                                    userTie.awayClubId === userClubId
-                                      ? 'text-blue-700 font-black'
-                                      : 'text-[#0b1536]'
+                                  className={`text-sm truncate text-[var(--ink-primary)] ${
+                                    userTie.awayClubId === userClubId ? 'font-semibold' : 'font-medium'
                                   }`}
                                 >
                                   {away ? getEffectiveClubName(away, save.club) : userTie.awayClubId === 'tbc' ? 'TBC' : userTie.awayClubId}
                                 </span>
                                 <div
                                   data-force-white="true"
-                                  className="club-crest w-4 h-4 rounded-full border border-slate-300 shrink-0 shadow-2xs"
-                                  style={{
-                                    background: `linear-gradient(135deg, ${away?.primaryColor || '#555'}, ${away?.secondaryColor || '#222'})`,
-                                  }}
+                                  className="club-crest w-4 h-4 rounded-full border border-[var(--border-crisp)] shrink-0"
+                                  style={{ background: away?.primaryColor || '#555' }}
                                 />
                               </div>
                             </div>
 
                             {/* User Action for Unplayed Match */}
                             {!userTie.played && (
-                              <div className="mt-2.5 pt-2 border-t border-slate-100">
-                                <button
-                                  type="button"
-                                  onClick={() => setActiveCupMatch(userTie)}
-                                  className="office-action-btn-primary w-full py-2.5 px-3 rounded-xl text-white font-display font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-xs cursor-pointer transition-all active:scale-95"
-                                >
+                              <div className="mt-2.5 pt-2.5 border-t border-[var(--border-subtle)]">
+                                <Button variant="primary" fullWidth onClick={() => setActiveCupMatch(userTie)}>
                                   <IconPlay className="w-3.5 h-3.5" />
-                                  <span>Matchday Command Center</span>
-                                </button>
+                                  <span>Open matchday</span>
+                                </Button>
                               </div>
                             )}
                           </article>
@@ -438,8 +361,8 @@ export function TournamentsHub({
                       {otherTies.length > 0 && (
                         <div className="space-y-1">
                           {userTie && (
-                            <span className="text-[10px] uppercase font-black text-slate-500 tracking-wider block pt-1 font-display px-1">
-                              Other {roundName} Matches ({otherTies.length})
+                            <span className="text-xs text-[var(--ink-muted)] block pt-1 px-1">
+                              Other matches in this round ({otherTies.length})
                             </span>
                           )}
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
@@ -451,50 +374,44 @@ export function TournamentsHub({
                               return (
                                 <div
                                   key={fixture.id}
-                                  className={`px-2.5 py-1.5 rounded-xl border border-slate-200/90 bg-white flex items-center justify-between text-xs shadow-2xs hover:border-slate-300 transition-colors ${
-                                    isTbc ? 'opacity-70 bg-slate-50/60' : ''
+                                  className={`px-2.5 py-2 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-card)] flex items-center justify-between text-xs ${
+                                    isTbc ? 'opacity-70' : ''
                                   }`}
                                 >
                                   <div className="flex items-center gap-1.5 flex-1 min-w-0">
                                     <div
                                       data-force-white="true"
-                                      className="club-crest w-3.5 h-3.5 rounded-full border border-slate-300 shrink-0"
-                                      style={{
-                                        background: isTbc
-                                          ? '#94a3b8'
-                                          : `linear-gradient(135deg, ${home?.primaryColor || '#555'}, ${home?.secondaryColor || '#222'})`,
-                                      }}
+                                      className="club-crest w-3.5 h-3.5 rounded-full border border-[var(--border-crisp)] shrink-0"
+                                      style={{ background: isTbc ? '#94a3b8' : home?.primaryColor || '#555' }}
                                     />
-                                    <span className="truncate text-[11px] text-[#0b1536] font-medium">
+                                    <span className="truncate text-xs text-[var(--ink-primary)] font-medium">
                                       {home ? getEffectiveClubName(home, save.club) : isTbc ? 'TBC' : fixture.homeClubId}
                                     </span>
                                   </div>
 
-                                  <div className="px-2 font-mono text-[11px] text-center shrink-0">
+                                  <div className="px-2 text-xs text-center shrink-0 tabular-nums">
                                     {fixture.played ? (
-                                      <span className="font-bold text-[#0b1536] bg-slate-100 px-1.5 py-0.2 rounded border border-slate-200 inline-block">
+                                      <span className="font-semibold text-[var(--ink-primary)] inline-block">
                                         {fixture.homeScore} - {fixture.awayScore}
                                         {fixture.leg === 2 && (
-                                          <span className="text-[10px] text-amber-700 font-bold block leading-none">
-                                            Agg: {(fixture.aggregateHomeScore ?? 0) + (fixture.homeScore ?? 0)}-{(fixture.aggregateAwayScore ?? 0) + (fixture.awayScore ?? 0)}
+                                          <span className="text-xs text-[var(--ink-secondary)] font-normal block">
+                                            Agg {(fixture.aggregateHomeScore ?? 0) + (fixture.homeScore ?? 0)}-{(fixture.aggregateAwayScore ?? 0) + (fixture.awayScore ?? 0)}
                                           </span>
                                         )}
                                         {fixture.penalties && (
-                                          <span className="text-[10px] text-amber-700 font-bold block leading-none">
+                                          <span className="text-xs text-[var(--ink-secondary)] font-normal block">
                                             ({fixture.penalties.homePenalties}-{fixture.penalties.awayPenalties}p)
                                           </span>
                                         )}
                                       </span>
                                     ) : isTbc ? (
-                                      <span className="text-amber-700 text-[10px] uppercase font-mono font-bold bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
-                                        Awaiting Draw
-                                      </span>
+                                      <Tag tone="neutral">Awaiting draw</Tag>
                                     ) : (
                                       <div>
-                                        <span className="text-slate-500 text-[10px] font-bold">VS</span>
+                                        <span className="text-[var(--ink-muted)] text-xs">v</span>
                                         {fixture.leg === 2 && (
-                                          <span className="text-[10px] text-amber-700 font-bold block leading-none">
-                                            Agg: {fixture.aggregateHomeScore ?? 0}-{fixture.aggregateAwayScore ?? 0}
+                                          <span className="text-xs text-[var(--ink-secondary)] block">
+                                            Agg {fixture.aggregateHomeScore ?? 0}-{fixture.aggregateAwayScore ?? 0}
                                           </span>
                                         )}
                                       </div>
@@ -502,17 +419,13 @@ export function TournamentsHub({
                                   </div>
 
                                   <div className="flex items-center gap-1.5 flex-1 min-w-0 justify-end text-right">
-                                    <span className="truncate text-[11px] text-[#0b1536] font-medium">
+                                    <span className="truncate text-xs text-[var(--ink-primary)] font-medium">
                                       {away ? getEffectiveClubName(away, save.club) : isTbc ? 'TBC' : fixture.awayClubId}
                                     </span>
                                     <div
                                       data-force-white="true"
-                                      className="club-crest w-3.5 h-3.5 rounded-full border border-slate-300 shrink-0"
-                                      style={{
-                                        background: isTbc
-                                          ? '#94a3b8'
-                                          : `linear-gradient(135deg, ${away?.primaryColor || '#555'}, ${away?.secondaryColor || '#222'})`,
-                                      }}
+                                      className="club-crest w-3.5 h-3.5 rounded-full border border-[var(--border-crisp)] shrink-0"
+                                      style={{ background: isTbc ? '#94a3b8' : away?.primaryColor || '#555' }}
                                     />
                                   </div>
                                 </div>
@@ -530,7 +443,7 @@ export function TournamentsHub({
         </section>
       )}
 
-      <p className="text-[11px] text-slate-500 text-center">Trophies you have won are listed in the Legacy tab.</p>
+      <p className="text-xs text-[var(--ink-muted)] text-center">Trophies you have won are listed in the Legacy tab.</p>
 
       {/* MatchDay Interactive Modal for Cup Ties */}
       {activeCupMatch && (

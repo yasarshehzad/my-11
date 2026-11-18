@@ -77,7 +77,7 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
             toIndex: targetIdx,
             type: 'era',
             color: '#a855f7', // Purple for era
-            label: `${source.era} Era`,
+            label: `${source.era} era`,
           });
         }
       });
@@ -111,7 +111,7 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
             toIndex: targetIdx,
             type: 'era',
             color: '#a855f7',
-            label: `${highlightedCandidate.era} Era`,
+            label: `${highlightedCandidate.era} era`,
           });
         }
       });
@@ -146,7 +146,7 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
 
   return (
     <div
-      className="w-full relative aspect-[1/1.3] sm:aspect-[1/1.22] rounded-3xl overflow-hidden bg-gradient-to-b from-pitch-green to-pitch-green-light border border-emerald-900/40 shadow-2xl shadow-emerald-950/20 select-none"
+      className="w-full relative aspect-[1/1.3] sm:aspect-[1/1.22] rounded-xl overflow-hidden bg-gradient-to-b from-pitch-green to-pitch-green-light border border-emerald-900/40 shadow-sm select-none"
       onClick={(e) => {
         // If clicking outside players, clear selection
         if ((e.target as HTMLElement).tagName === 'DIV' && selectedSlotIndex !== null) {
@@ -175,7 +175,7 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
 
       {/* 1. Tactical Pitch Lines overlay */}
       <div className="absolute inset-0 p-4 opacity-75 pointer-events-none" aria-hidden="true">
-        <div className="w-full h-full border-2 border-emerald-500/10 rounded-2xl relative">
+        <div className="w-full h-full border-2 border-emerald-500/10 rounded-xl relative">
           {/* Halfway Line */}
           <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-emerald-500/10 transform -translate-y-1/2" />
           
@@ -206,17 +206,6 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
 
       {/* 3. Subtle Connecting Chemistry SVG Lines (Only visible on focus/hover/post-pick) */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none z-15" aria-hidden="true">
-        <defs>
-          <filter id="glow-emerald" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-          </filter>
-          <filter id="glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-          </filter>
-        </defs>
-
         {activeLinks.map((link, idx) => {
           const fromSlot = slots[link.fromIndex];
           const toSlot = slots[link.toIndex];
@@ -246,7 +235,6 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
                 strokeOpacity="0.9"
                 strokeLinecap="round"
                 strokeDasharray={link.type === 'era' ? '5 3' : undefined}
-                className="motion-safe:animate-pulse"
               />
             </g>
           );
@@ -255,7 +243,7 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
 
       {/* 4. Active Link Summary Banner overlay when player is tapped */}
       {selectedSlotIndex !== null && selectedPlayers[selectedSlotIndex] && (
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 bg-white/95 border border-indigo-200 px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider text-[#1d5eff] shadow-xl flex items-center gap-2 motion-safe:animate-card-deal max-w-[92%]">
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 bg-[var(--surface-card)] border border-[var(--border-subtle)] pl-3 pr-1 py-0.5 rounded-lg text-xs font-medium text-[var(--ink-primary)] shadow-sm flex items-center gap-2 motion-safe:animate-card-deal max-w-[92%]">
           <IconHandshake className="w-3.5 h-3.5 shrink-0" />
           <span className="truncate">
             {selectedPlayers[selectedSlotIndex]?.displayName}: {getPlayerLinkCount(selectedSlotIndex)} teammate connection{getPlayerLinkCount(selectedSlotIndex) !== 1 ? 's' : ''}
@@ -266,7 +254,7 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
               e.stopPropagation();
               setSelectedSlotIndex(null);
             }}
-            className="text-[var(--office-text-muted)] hover:text-[var(--office-text-primary)] ml-1 font-bold cursor-pointer shrink-0 flex items-center justify-center"
+            className="w-8 h-8 text-[var(--ink-muted)] hover:text-[var(--ink-primary)] cursor-pointer shrink-0 flex items-center justify-center"
             aria-label="Dismiss link inspection"
           >
             <IconClose className="w-3 h-3" />
@@ -301,9 +289,9 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
             style={positionStyle}
             className={`absolute z-20 transition-all duration-300 ${
               isFocused
-                ? 'scale-110 z-30 drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]'
+                ? 'scale-110 z-30'
                 : isLinkedToFocused
-                ? 'scale-105 z-25 drop-shadow-[0_0_10px_rgba(6,182,212,0.4)]'
+                ? 'scale-105 z-25'
                 : ''
             }`}
             onMouseEnter={() => setHoveredSlotIndex(index)}
@@ -333,7 +321,7 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
                 {/* Subtle link badge on player card when they have active connections */}
                 {linkCount > 0 && (
                   <span
-                    className={`absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-full text-[10px] font-black font-display uppercase tracking-tight shadow-md border leading-none transition-transform inline-flex items-center gap-0.5 ${
+                    className={`absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-full text-2xs font-semibold font-display shadow-sm border leading-none transition-transform inline-flex items-center gap-0.5 ${
                       isLinkedToFocused || isFocused
                         ? 'bg-[#1d5eff] text-white border-blue-400 scale-110'
                         : 'bg-white text-[#1d5eff] border-blue-200'
@@ -351,19 +339,19 @@ export const PitchLayout: React.FC<PitchLayoutProps> = ({
                 type="button"
                 onClick={() => handleSlotClick(index)}
                 aria-label={accessibleLabel}
-                className={`w-[62px] h-[60px] sm:w-[68px] sm:h-[84px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition-all duration-300 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 cursor-pointer ${
+                className={`w-[62px] h-[64px] sm:w-[68px] sm:h-[84px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition-all duration-300 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 cursor-pointer ${
                   isActive
-                    ? 'border-[#1d5eff] bg-blue-50/80 text-[#1d5eff] shadow-[0_0_15px_rgba(29,94,255,0.3)] scale-105 ring-2 ring-blue-500/30 motion-safe:animate-pulse font-black'
-                    : 'border-slate-300/80 bg-white/60 text-slate-500 hover:border-indigo-300 hover:bg-white/90 hover:text-slate-800 hover:scale-102 font-bold'
+                    ? 'border-[#1d5eff] bg-blue-50/80 text-[#1d5eff] scale-105 ring-2 ring-blue-500/30 motion-safe:animate-pulse font-semibold'
+                    : 'border-slate-300/80 bg-white/60 text-slate-500 hover:border-indigo-300 hover:bg-white/90 hover:text-slate-800 font-bold'
                 }`}
               >
-                <span className="text-[10px] font-bold uppercase tracking-wider font-display">
+                <span className="text-2xs sm:text-xs font-semibold font-display">
                   {slot.label}
                 </span>
                 
                 {/* Active marker indicator */}
                 {isActive && (
-                  <span className="absolute bottom-1.5 w-1.5 h-1.5 rounded-full bg-[#1d5eff] motion-safe:animate-ping" />
+                  <span className="absolute bottom-1.5 w-1.5 h-1.5 rounded-full bg-[#1d5eff]" />
                 )}
               </button>
             )}

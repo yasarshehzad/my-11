@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { IconArrowRight } from '@/components/career/GameIcons';
+import { IconArrowLeft } from '@/components/career/GameIcons';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
@@ -10,38 +10,38 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen my11-canvas font-sans flex flex-col p-6 sm:p-12 safe-pb">
-      <main className="flex-1 w-full max-w-2xl mx-auto flex flex-col justify-center my-8 office-floating-card rounded-3xl p-8 sm:p-10 shadow-2xl space-y-6">
-        <h1 className="text-3xl sm:text-4xl font-display font-black text-[#0b1536] uppercase tracking-tight border-b border-[var(--office-divider)] pb-4">
-          Privacy Policy
+    <div className="min-h-screen my11-canvas font-sans flex flex-col p-4 sm:p-12 safe-pb">
+      <main className="flex-1 w-full max-w-2xl mx-auto flex flex-col justify-center my-8 office-floating-card rounded-xl p-6 sm:p-10 space-y-6">
+        <h1 className="text-2xl sm:text-3xl font-display font-bold text-[var(--ink-primary)] border-b border-[var(--border-subtle)] pb-4">
+          Privacy policy
         </h1>
         
-        <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">
-          Effective Date: June 15, 2026
+        <p className="text-xs text-[var(--ink-muted)]">
+          Effective date: June 15, 2026
         </p>
 
-        <div className="text-sm text-slate-600 space-y-4 leading-relaxed font-medium">
+        <div className="text-sm text-[var(--ink-secondary)] space-y-4 leading-relaxed">
           <p>
-            Your privacy is extremely important to us. At <strong className="text-[#0b1536]">MY-11</strong>, we do not collect, store, or sell any personal data.
+            Your privacy is extremely important to us. At <strong className="text-[var(--ink-primary)]">MY-11</strong>, we do not collect, store, or sell any personal data.
           </p>
           <p>
-            <strong className="text-[#0b1536]">Local Storage:</strong> The game uses local storage on your browser strictly to store your gameplay stats, campaign history, personal records, streak count, and daily challenge progress. This data remains on your device and is never uploaded to any external servers.
+            <strong className="text-[var(--ink-primary)]">Local storage:</strong> The game uses local storage on your browser strictly to store your gameplay stats, campaign history, personal records, streak count, and daily challenge progress. This data remains on your device and is never uploaded to any external servers.
           </p>
           <p>
-            <strong className="text-[#0b1536]">Cookies:</strong> We do not use third-party cookies or tracking scripts.
+            <strong className="text-[var(--ink-primary)]">Cookies:</strong> We do not use third-party cookies or tracking scripts.
           </p>
           <p>
-            <strong className="text-[#0b1536]">Third-Party Analytics:</strong> This site uses privacy-conscious placeholder analytics hooks to help us understand gameplay patterns. No personal identifying information (PII) is captured.
+            <strong className="text-[var(--ink-primary)]">Third-party analytics:</strong> This site uses privacy-conscious placeholder analytics hooks to help us understand gameplay patterns. No personal identifying information (PII) is captured.
           </p>
         </div>
 
-        <div className="pt-4 border-t border-[var(--office-divider)]">
+        <div className="pt-4 border-t border-[var(--border-subtle)]">
           <Link
             href="/"
-            className="inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl office-play-match-btn text-white font-display font-black text-xs uppercase tracking-wider shadow-lg hover:shadow-xl transition-all duration-300 transform active:scale-95 cursor-pointer text-center"
+            className="inline-flex items-center justify-center gap-2 min-h-10 px-4 rounded-lg font-semibold text-sm bg-[var(--surface-card)] text-[var(--ink-primary)] border border-[var(--border-crisp)] hover:bg-[var(--surface-subcard)] transition-colors"
           >
-            <IconArrowRight className="w-3.5 h-3.5 rotate-180" />
-            <span>Return to Main Game</span>
+            <IconArrowLeft className="w-4 h-4" />
+            <span>Back to home</span>
           </Link>
         </div>
       </main>
