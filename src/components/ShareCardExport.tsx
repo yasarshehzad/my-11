@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import QRCode from 'qrcode';
 import { Player, FormationType, SimulationResult } from '../types/game';
 import { FORMATION_SLOTS } from '../utils/gameLogic';
+import { generateChallengeUrl } from '../utils/challengeUrl';
 import {
   IconTrophy,
   IconMedal,
@@ -38,6 +40,38 @@ export const ShareCardExport: React.FC<ShareCardExportProps> = ({
   domRef,
 }) => {
   const slots = FORMATION_SLOTS[formation] || [];
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+
+  const challengeUrl = useMemo(
+    () =>
+      generateChallengeUrl({
+        targetWins: simResult.wins,
+        targetPoints: simResult.points,
+        draftMode: simResult.draftModifier || 'classic',
+        formation,
+        leagueId: simResult.selectedLeague || 'english',
+      }),
+    [formation, simResult.draftModifier, simResult.points, simResult.selectedLeague, simResult.wins]
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    QRCode.toDataURL(challengeUrl, {
+      width: 280,
+      margin: 1,
+      errorCorrectionLevel: 'M',
+      color: { dark: '#0f172a', light: '#ffffff' },
+    })
+      .then((url) => {
+        if (!cancelled) setQrDataUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setQrDataUrl(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [challengeUrl]);
 
   // Rarity color/styling mapping for export cards
   const getPlayerCardStyles = (rarity: Player['rarity']) => {
@@ -332,7 +366,7 @@ export const ShareCardExport: React.FC<ShareCardExportProps> = ({
       </div>
 
       {/* 6. Footer / CTA watermark */}
-      <div className="flex justify-between items-center border-t-2 border-slate-900 pt-8 mt-6 relative z-10">
+      <div className="flex justify-between items-center border-t-2 border-slate-900 pt-8 mt-6 relative z-10 gap-6">
         <div>
           <p className="text-2xl font-display font-black tracking-tight text-white uppercase leading-none">
             CAN YOU BEAT {simResult.wins} WINS?
@@ -340,11 +374,28 @@ export const ShareCardExport: React.FC<ShareCardExportProps> = ({
           <p className="text-xs text-blue-400 mt-2 font-black uppercase leading-none tracking-widest font-display">
             PLAY NOW AT MY-11.COM
           </p>
+          <span className="inline-block text-[10px] font-black text-slate-500 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800 uppercase tracking-wider mt-3">
+            {formation} · {simResult.points} PTS · TOP {simResult.percentile}%
+          </span>
         </div>
 
-        <span className="text-xs font-black text-slate-500 bg-slate-900 px-4 py-1.5 rounded-lg border border-slate-800 uppercase tracking-wider">
-          TACTICAL FORMATION: {formation}
-        </span>
+        <div className="flex items-center gap-4 shrink-0">
+          <div className="text-right leading-tight">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">SCAN TO</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">CHALLENGE</p>
+          </div>
+          {qrDataUrl ? (
+            <img
+              src={qrDataUrl}
+              alt=""
+              width={112}
+              height={112}
+              className="w-28 h-28 rounded-xl bg-white p-1"
+            />
+          ) : (
+            <div className="w-28 h-28 rounded-xl bg-slate-900 border border-slate-800" />
+          )}
+        </div>
       </div>
     </div>
   );

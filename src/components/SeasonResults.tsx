@@ -10,7 +10,8 @@ import { createNewCareerSave, hydrateCareerSaveVault, listSaveSlots, ValidSlotId
 import { ensureCareerDatabaseLoaded } from '../career/databaseExpansion';
 import { validateSettings } from '../career/settings';
 import { formatCareerCurrency } from '../career/formatters';
-import { Button, SectionHeader, StatRow } from '@/components/ui';
+import { logDraftExportedToCareer } from '../utils/analytics';
+import { Button, Eyebrow, SectionHeader, StatRow } from '@/components/ui';
 import {
   IconClock,
   IconCheck,
@@ -130,6 +131,7 @@ export function SeasonResults({
         initialFormation: formation,
       });
 
+      logDraftExportedToCareer(stats.overall, formation);
       router.push(`/career/play?slot=${selectedSlot}`);
     } catch {
       setIsExporting(false);
@@ -285,8 +287,8 @@ export function SeasonResults({
           Season complete
         </h2>
         <p className="text-sm text-[var(--ink-secondary)] mt-1">
-          {leagueName} · {modeName}
-          {isDailyChallenge && todayChallenge ? ` · ${todayChallenge.title}` : ''}
+          {leagueName}, {modeName}
+          {isDailyChallenge && todayChallenge ? `, ${todayChallenge.title}` : ''}
         </p>
       </div>
 
@@ -385,6 +387,24 @@ export function SeasonResults({
         </div>
       )}
 
+      {/* Daily scenario summary: make the shared result the first next step */}
+      {isDailyChallenge && todayChallenge && (
+        <div className="w-full rounded-xl bg-[var(--surface-card)] border border-[var(--border-crisp)] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10 text-left">
+          <div className="min-w-0">
+            <Eyebrow>Today&apos;s scenario</Eyebrow>
+            <p className="text-sm font-display font-semibold text-[var(--ink-primary)] mt-0.5">
+              {todayChallenge.title} · top {simResult.percentile}%
+            </p>
+            <p className="text-xs text-[var(--ink-secondary)] mt-0.5">
+              {challengeBeaten ? 'Cleared. Send it to someone who said it was easy.' : 'Not cleared this time. The same scenario is open until midnight.'}
+            </p>
+          </div>
+          <Button variant="primary" className="shrink-0" onClick={() => setShowShare(true)}>
+            Share today&apos;s result
+          </Button>
+        </div>
+      )}
+
       {/* Main League Outcome Card */}
       <div className="w-full flex flex-col items-center p-5 office-floating-card rounded-xl relative overflow-hidden text-center z-10">
         <p className={`text-sm font-medium mb-2 ${
@@ -404,6 +424,7 @@ export function SeasonResults({
         <p className="text-sm text-[var(--ink-secondary)] mt-2">
           <span className="text-[var(--ink-primary)] font-semibold">{simResult.points} pts</span> · goals{' '}
           <span className="text-[var(--ink-primary)] font-semibold">{simResult.goalsFor}-{simResult.goalsAgainst}</span>
+          {' '}· top <span className="text-[var(--ink-primary)] font-semibold">{simResult.percentile}%</span>
           {story ? ` · expected ${story.expectedWinsBand}` : ''}
         </p>
 
@@ -428,7 +449,7 @@ export function SeasonResults({
           <IconRefresh className="w-4 h-4 shrink-0" />
           <span>New draft</span>
         </Button>
-        <Button variant="secondary" onClick={() => setShowShare(true)}>
+        <Button variant={isDailyChallenge ? 'primary' : 'secondary'} onClick={() => setShowShare(true)}>
           Share or challenge
         </Button>
         <Button variant="secondary" onClick={onRandomDraft}>

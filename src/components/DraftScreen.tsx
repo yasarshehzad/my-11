@@ -23,7 +23,7 @@ interface DraftScreenProps {
   formation: FormationType;
   selectedPlayers: (Player | null)[];
   currentSlotIndex: number;
-  draftOptions: [Player, Player, Player] | null;
+  draftOptions: Player[] | null;
   stats: { attack: number; midfield: number; defence: number; chemistry: number; overall: number };
   simResult: SimulationResult | null;
   draftIQMode: boolean;
@@ -32,6 +32,7 @@ interface DraftScreenProps {
   freeSearchEnabled: boolean;
   isDailyChallenge: boolean;
   todayChallenge: ChallengeTemplate | null;
+  poolLabel?: string;
   targetToBeat?: ChallengeTarget | null;
   showOnboarding?: boolean;
   onSkipOnboarding?: () => void;
@@ -70,6 +71,7 @@ export function DraftScreen({
   freeSearchEnabled,
   isDailyChallenge,
   todayChallenge,
+  poolLabel = '',
   targetToBeat,
   showOnboarding = false,
   onSkipOnboarding,
@@ -209,6 +211,7 @@ export function DraftScreen({
   // One plain line above the title: the daily challenge name and the draft mode.
   const modeLine = [
     isDailyChallenge ? todayChallenge?.title : null,
+    poolLabel || null,
     draftModifier === 'quick'
       ? 'Quick'
       : draftModifier === 'mystery'
@@ -218,7 +221,7 @@ export function DraftScreen({
       : null,
   ]
     .filter(Boolean)
-    .join(' · ');
+    .join(', ');
 
   const timerBar = (
     <div

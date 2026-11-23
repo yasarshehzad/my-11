@@ -8,7 +8,7 @@ import { Button } from '@/components/ui';
 interface DraftOptionsProps {
   currentSlot: PitchSlot | undefined;
   currentSlotIndex: number;
-  draftOptions: [Player, Player, Player] | null;
+  draftOptions: Player[] | null;
   selectedPlayers: (Player | null)[];
   slots: PitchSlot[];
   draftIQMode: boolean;
@@ -87,7 +87,7 @@ export function DraftOptions({
           <span className="text-[var(--ink-primary)] font-display font-semibold">{currentSlot?.label}</span>
         </span>
 
-        {!freeSearchEnabled && (
+        {!freeSearchEnabled && (draftOptions?.length ?? 0) > 1 && (
           <Button
             variant="secondary"
             onClick={onRerollOptions}

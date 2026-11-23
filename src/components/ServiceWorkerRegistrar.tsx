@@ -1,12 +1,16 @@
 'use client';
 
 import { useEffect } from 'react';
+import { logPwaInstalled } from '../utils/analytics';
 
 export function ServiceWorkerRegistrar() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!('serviceWorker' in navigator)) return;
     if (process.env.NODE_ENV !== 'production') return;
+
+    const handleInstalled = () => logPwaInstalled();
+    window.addEventListener('appinstalled', handleInstalled);
 
     const register = () => {
       navigator.serviceWorker.register('/sw.js').catch(() => {
@@ -19,6 +23,10 @@ export function ServiceWorkerRegistrar() {
     } else {
       window.addEventListener('load', register, { once: true });
     }
+
+    return () => {
+      window.removeEventListener('appinstalled', handleInstalled);
+    };
   }, []);
 
   return null;

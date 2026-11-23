@@ -13,6 +13,11 @@ import {
 } from '../../career/types';
 import { importCareerSaveFromJson, ValidSlotId } from '../../career/saveVault';
 import {
+  copyTextToClipboard,
+  decodeCareerSaveCode,
+  encodeCareerSaveCode,
+} from '../../career/saveCode';
+import {
   IconLock,
   IconSave,
   IconAlert,
@@ -57,6 +62,10 @@ export function CareerSettingsTab({
 }: CareerSettingsTabProps) {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
+  const [showSaveCode, setShowSaveCode] = useState(false);
+  const [saveCodeInput, setSaveCodeInput] = useState('');
+  const [saveCodeStatus, setSaveCodeStatus] = useState<string | null>(null);
+  const [saveCodeBusy, setSaveCodeBusy] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const slotLabel = slotId.replace(/_/g, ' ');
   const presetLabel = save.settings.preset
@@ -84,6 +93,51 @@ export function CareerSettingsTab({
       }
     }
   };
+
+  const handleCopySaveCode = async () => {
+    setSaveCodeBusy(true);
+    setSaveCodeStatus(null);
+    try {
+      const code = await encodeCareerSaveCode(save);
+      const copied = await copyTextToClipboard(code);
+      setSaveCodeStatus(
+        copied
+          ? 'Save code copied. Paste it into the same box on another device.'
+          : 'Save code created, but the clipboard was blocked. Select and copy it from the box below.'
+      );
+      setSaveCodeInput(code);
+      setShowSaveCode(true);
+    } catch {
+      setSaveCodeStatus('Could not create a save code in this browser.');
+    } finally {
+      setSaveCodeBusy(false);
+    }
+  };
+
+  const handleRestoreSaveCode = async () => {
+    setSaveCodeBusy(true);
+    setSaveCodeStatus(null);
+    try {
+      const decoded = await decodeCareerSaveCode(saveCodeInput);
+      if (!decoded.success || !decoded.json) {
+        setSaveCodeStatus(decoded.error || 'Could not read that save code.');
+        return;
+      }
+      const result = importCareerSaveFromJson(slotId, decoded.json);
+      if (!result.success || !result.save) {
+        setSaveCodeStatus(result.error || 'Could not restore that career.');
+        return;
+      }
+      onImportSaveSuccess(result.save);
+      setSaveCodeStatus(`Career restored into ${slotLabel}.`);
+      setSaveCodeInput('');
+    } catch {
+      setSaveCodeStatus('Could not restore that save code.');
+    } finally {
+      setSaveCodeBusy(false);
+    }
+  };
+
 
   const cardClass =
     'office-floating-card rounded-xl p-4 sm:p-5 space-y-3 border border-[var(--border-subtle)] bg-[var(--surface-card)]';
@@ -301,12 +355,12 @@ export function CareerSettingsTab({
         <div className="grid grid-cols-2 gap-2">
           <Button variant="secondary" data-office-ui="true" onClick={onExport}>
             <IconSave className="w-3.5 h-3.5 text-[var(--ink-secondary)] shrink-0" />
-            <span>Export</span>
+            <span>Export file</span>
           </Button>
 
           <Button variant="secondary" data-office-ui="true" onClick={() => fileInputRef.current?.click()}>
             <IconUpload className="w-3.5 h-3.5 text-[var(--ink-secondary)] shrink-0" />
-            <span>Restore</span>
+            <span>Restore file</span>
           </Button>
           <input
             ref={fileInputRef}
@@ -317,6 +371,62 @@ export function CareerSettingsTab({
             aria-label="Import career save JSON backup"
           />
         </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            variant="secondary"
+            data-office-ui="true"
+            onClick={handleCopySaveCode}
+            disabled={saveCodeBusy}
+          >
+            <span>{saveCodeBusy ? 'Working…' : 'Copy save code'}</span>
+          </Button>
+          <Button
+            variant="secondary"
+            data-office-ui="true"
+            onClick={() => setShowSaveCode((open) => !open)}
+            aria-expanded={showSaveCode}
+          >
+            <span>{showSaveCode ? 'Hide code box' : 'Restore from code'}</span>
+          </Button>
+        </div>
+
+        <p className="text-xs text-[var(--ink-muted)] leading-relaxed">
+          A save code moves this career to another browser or phone without an account. Keep it somewhere private;
+          anyone with the code can open the save.
+        </p>
+
+        {showSaveCode && (
+          <div className="space-y-2">
+            <label htmlFor="career-save-code" className={fieldLabelClass}>
+              Save code
+            </label>
+            <textarea
+              id="career-save-code"
+              value={saveCodeInput}
+              onChange={(e) => setSaveCodeInput(e.target.value)}
+              placeholder="Paste a MY11 save code here, then restore."
+              rows={4}
+              spellCheck={false}
+              className="w-full rounded-lg border border-[var(--border-crisp)] bg-[var(--surface-card)] p-3 text-xs font-mono text-[var(--ink-primary)] focus:outline-none focus:border-[#1d5eff] focus:ring-2 focus:ring-blue-100"
+            />
+            <Button
+              variant="secondary"
+              data-office-ui="true"
+              onClick={handleRestoreSaveCode}
+              disabled={!saveCodeInput.trim() || saveCodeBusy}
+              fullWidth
+            >
+              Restore this career
+            </Button>
+          </div>
+        )}
+
+        {saveCodeStatus && (
+          <div role="status" className="bg-[var(--surface-subcard)] rounded-lg px-3 py-2 text-xs font-medium text-[var(--ink-secondary)]">
+            {saveCodeStatus}
+          </div>
+        )}
 
         {importError && (
           <div role="alert" className="bg-rose-50 rounded-lg px-3 py-2 text-xs font-medium text-rose-800">

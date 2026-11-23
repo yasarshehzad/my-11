@@ -7,6 +7,7 @@ import { getClubsForSeason } from '../../../career/clubs';
 import { getPresetSettings, validateSettings } from '../../../career/settings';
 import { createNewCareerSave, hydrateCareerSaveVault, isValidSlotId, ValidSlotId } from '../../../career/saves';
 import { ensureCareerDatabaseLoaded, getCareerDatabaseLoadError } from '../../../career/databaseExpansion';
+import { logCareerCreated } from '../../../utils/analytics';
 import {
   CareerSettings,
   Club,
@@ -280,6 +281,7 @@ function SetupWizardContent() {
         settings: finalSettings,
       });
 
+      logCareerCreated(finalClub.defaultName, preset, databaseSeason);
       router.push(`/career/play?slot=${targetSlot}`);
     } catch {
       setIsStartingCareer(false);

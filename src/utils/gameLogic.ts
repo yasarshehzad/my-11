@@ -321,14 +321,16 @@ function pickSeasonForPlayer(
   targetPos: Position,
   preferredRarity: Rarity,
   preferredClub: string | undefined,
-  rand: () => number
+  rand: () => number,
+  cardFilter?: (card: Player) => boolean
 ): Player | null {
   const cards = cardsByPlayerName.get(playerName) || [];
-  if (cards.length === 0) return null;
+  const eligibleCards = cardFilter ? cards.filter(cardFilter) : cards;
+  if (eligibleCards.length === 0) return null;
 
   // 1. Try matching preferred club (for chemistry slot) + position
   if (preferredClub) {
-    const clubMatch = cards.filter((c) =>
+    const clubMatch = eligibleCards.filter((c) =>
       c.club === preferredClub && isNaturalPositionFit(c, targetPos)
     );
     if (clubMatch.length > 0) {
@@ -340,15 +342,15 @@ function pickSeasonForPlayer(
   }
 
   // 2. Try matching preferred rarity and position
-  let pool = cards.filter((c) => isNaturalPositionFit(c, targetPos) && c.rarity === preferredRarity);
+  let pool = eligibleCards.filter((c) => isNaturalPositionFit(c, targetPos) && c.rarity === preferredRarity);
   if (pool.length > 0) return pool[Math.floor(rand() * pool.length)];
 
   // 3. Try matching position with any rarity
-  pool = cards.filter((c) => isNaturalPositionFit(c, targetPos));
+  pool = eligibleCards.filter((c) => isNaturalPositionFit(c, targetPos));
   if (pool.length > 0) return pool[Math.floor(rand() * pool.length)];
 
-  // 4. Fallback: any card of this player
-  return cards[Math.floor(rand() * cards.length)];
+  // 4. Fallback: any eligible card of this player
+  return eligibleCards[Math.floor(rand() * eligibleCards.length)];
 }
 
 /**
@@ -359,8 +361,9 @@ export function getDraftOptions(
   currentSelection: (Player | null)[],
   customRandom?: () => number,
   challengeRule?: ChallengeRuleType,
-  selectedLeagueId?: string
-): [Player, Player, Player] {
+  selectedLeagueId?: string,
+  poolFilter?: (player: Player) => boolean
+): Player[] {
   const rand = customRandom || Math.random;
 
   // Exclude all players already drafted anywhere in the starting XI
@@ -381,19 +384,37 @@ export function getDraftOptions(
   const activeEras = new Set(activePlayers.map((p) => p.era));
 
   const satisfiesChallengeRule = (p: Player) => {
+    if (poolFilter && !poolFilter(p)) return false;
     if (!challengeRule) return true;
     switch (challengeRule) {
+      case 'only_90s':
+        return p.era === '90s';
       case 'only_2000s':
         return p.era === '00s';
+      case 'only_10s':
+        return p.era === '10s';
+      case 'only_modern':
+        return p.era === 'Modern';
       case 'underdog_xi':
         return p.rarity === 'common' || p.rarity === 'rare';
       case 'no_legends':
         return !p.isLegendaryPlayer;
+      case 'only_legends':
+        return Boolean(p.isLegendaryPlayer);
       case 'under_90_rating':
         return p.rating < 90;
-      case 'only_modern':
-        return p.era === 'Modern';
+      case 'only_85_plus':
+        return p.rating >= 85;
+      case 'only_under_85':
+        return p.rating < 85;
+      case 'only_solid_or_below':
+        return p.rarity === 'common' || p.rarity === 'solid' || p.rarity === 'rare';
       case 'one_superstar':
+      case 'best_defence':
+      case 'best_attack':
+      case 'best_midfield':
+      case 'perfect_chemistry':
+      case 'unbeaten':
         return true;
       default:
         return true;
@@ -482,8 +503,59 @@ export function getDraftOptions(
       if (candidates.length === 0) candidates = getEligiblePlayers({ positionStrict: false });
     }
 
-    // Fallback: any available player not drafted or already picked in options
+    // Fallback: any available player that still satisfies the challenge and pool.
     if (candidates.length === 0) {
+      candidates = Array.from(cardsByPlayerName.entries())
+        .filter(
+          ([name, cards]) =>
+            !draftedPlayerNames.has(name) &&
+            !selectedPlayerNames.has(name) &&
+            cards.some(
+              (card) =>
+                satisfiesChallengeRule(card) &&
+                matchLeague(card) &&
+                isNaturalPositionFit(card, targetPos)
+            )
+        )
+        .map(([name]) => name);
+    }
+
+    // Then widen to related positions, still inside the challenge and pool.
+    if (candidates.length === 0) {
+      candidates = Array.from(cardsByPlayerName.entries())
+        .filter(
+          ([name, cards]) =>
+            !draftedPlayerNames.has(name) &&
+            !selectedPlayerNames.has(name) &&
+            cards.some(
+              (card) =>
+                satisfiesChallengeRule(card) &&
+                matchLeague(card) &&
+                relatedPositions.includes(card.primaryPosition)
+            )
+        )
+        .map(([name]) => name);
+    }
+
+    // If the pool is genuinely too small for this slot, keep the challenge
+    // intact rather than leaking an ineligible player into the XI.
+    if (candidates.length === 0) {
+      if (poolFilter || challengeRule) {
+        // Themed and challenge drafts must never invent an illegal pick.
+        // Returning fewer than three options is correct here; the UI handles it.
+        continue;
+      }
+      candidates = Array.from(cardsByPlayerName.entries())
+        .filter(
+          ([name, cards]) =>
+            !draftedPlayerNames.has(name) &&
+            !selectedPlayerNames.has(name) &&
+            cards.some((card) => isNaturalPositionFit(card, targetPos))
+        )
+        .map(([name]) => name);
+    }
+
+    if (candidates.length === 0 && !poolFilter && !challengeRule) {
       candidates = Array.from(cardsByPlayerName.keys()).filter(
         (n) => !draftedPlayerNames.has(n) && !selectedPlayerNames.has(n)
       );
@@ -499,19 +571,33 @@ export function getDraftOptions(
       targetPos,
       preferredRarity,
       preferredClub,
-      rand
+      rand,
+      (candidate) => satisfiesChallengeRule(candidate) && matchLeague(candidate)
     );
 
     if (card) {
       selectedOptions.push(card);
     } else {
-      // Emergency: fallback to raw card
-      const fallbackCard = (cardsByPlayerName.get(chosenPlayerName) || [])[0] || players[0];
-      selectedOptions.push(fallbackCard);
+      // Emergency: fallback to an eligible card or the first available card.
+      const eligibleCard = (cardsByPlayerName.get(chosenPlayerName) || []).find(
+        (candidate) => satisfiesChallengeRule(candidate) && matchLeague(candidate)
+      );
+      selectedOptions.push(eligibleCard || (cardsByPlayerName.get(chosenPlayerName) || [])[0] || players[0]);
     }
   }
 
-  return [selectedOptions[0], selectedOptions[1], selectedOptions[2]];
+  // A themed pool can be thinner than three legal options for one slot.
+  // Give the UI one legal card rather than an illegal fallback.
+  if (selectedOptions.length === 0) {
+    const legalFallback = players.find((player) => {
+      if (draftedPlayerNames.has(player.playerName)) return false;
+      if (!satisfiesChallengeRule(player)) return false;
+      return matchLeague(player);
+    });
+    if (legalFallback) selectedOptions.push(legalFallback);
+  }
+
+  return selectedOptions;
 }
 
 export interface SquadStats {
@@ -1652,7 +1738,8 @@ export function simulateLeagueSeason(
 export function generateRandomSquad(
   formation: FormationType,
   challengeRule?: ChallengeRuleType,
-  selectedLeagueId?: string
+  selectedLeagueId?: string,
+  poolFilter?: (player: Player) => boolean
 ): Player[] {
   const slots = FORMATION_SLOTS[formation];
   const selected: Player[] = [];
@@ -1660,9 +1747,10 @@ export function generateRandomSquad(
 
   for (let i = 0; i < slots.length; i++) {
     const slot = slots[i];
-    const options = getDraftOptions(slot.position, selected, undefined, challengeRule, selectedLeagueId);
+    const options = getDraftOptions(slot.position, selected, undefined, challengeRule, selectedLeagueId, poolFilter);
     // Pick the best option
     const pick = options[0];
+    if (!pick) break;
     selected.push(pick);
     draftedNames.add(pick.playerName);
   }

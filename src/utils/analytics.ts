@@ -1,18 +1,32 @@
 /**
- * MY-11 Analytics Utility (Placeholder Hooks)
- * Logs events to console in development. Replace with your chosen
- * analytics provider (Google Analytics, Plausible, Mixpanel, etc.) in production.
+ * MY-11 analytics utility.
+ *
+ * GA4 is loaded in the root layout. Events are sent through gtag when it is
+ * available, with a dataLayer fallback for consent-managed setups.
  */
-
 export const trackEvent = (eventName: string, params?: Record<string, unknown>) => {
   if (process.env.NODE_ENV === 'development') {
     console.log(`[Analytics Event] ${eventName}`, params || '');
   }
-  
-  // Example wiring for Google Analytics / gtag:
-  // if (typeof window !== 'undefined' && (window as any).gtag) {
-  //   (window as any).gtag('event', eventName, params);
-  // }
+
+  if (typeof window === 'undefined') return;
+
+  const analyticsWindow = window as Window & {
+    gtag?: (...args: unknown[]) => void;
+    dataLayer?: unknown[];
+  };
+
+  try {
+    if (typeof analyticsWindow.gtag === 'function') {
+      analyticsWindow.gtag('event', eventName, params || {});
+      return;
+    }
+    if (Array.isArray(analyticsWindow.dataLayer)) {
+      analyticsWindow.dataLayer.push({ event: eventName, ...(params || {}) });
+    }
+  } catch {
+    // Analytics must never break gameplay.
+  }
 };
 
 export const logGameStarted = () => {
@@ -107,5 +121,51 @@ export const logOnboardingSkipped = (step?: number) => {
 
 export const logOnboardingCompleted = () => {
   trackEvent('onboarding_completed');
+};
+
+// Career Mode Events
+export const logCareerCreated = (clubName: string, preset: string, season: string) => {
+  trackEvent('career_created', { club: clubName, preset, season });
+};
+
+export const logCareerSaveOpened = (slot: string, seasonNumber: number) => {
+  trackEvent('career_save_opened', { slot, season: seasonNumber });
+};
+
+export const logCareerMatchPlayed = (
+  competition: string,
+  outcome: 'win' | 'draw' | 'loss',
+  matchday?: number
+) => {
+  trackEvent('career_match_played', { competition, outcome, matchday });
+};
+
+export const logCareerSeasonAdvanced = (seasonNumber: number) => {
+  trackEvent('career_season_advanced', { season: seasonNumber });
+};
+
+export const logDraftExportedToCareer = (overall: number, formation: string) => {
+  trackEvent('draft_exported_to_career', { overall, formation });
+};
+
+// Daily ritual and progression events
+export const logDailyResultShared = (score: number, beaten: boolean) => {
+  trackEvent('daily_result_shared', { score, beaten });
+};
+
+export const logAchievementUnlocked = (achievementId: string, tier: string, xp: number) => {
+  trackEvent('achievement_unlocked', { achievement: achievementId, tier, xp });
+};
+
+export const logLevelUp = (level: number, totalXp: number) => {
+  trackEvent('level_up', { level, total_xp: totalXp });
+};
+
+export const logCollectionMilestone = (uniquePlayers: number, clubs: number, eras: number) => {
+  trackEvent('collection_milestone', { unique_players: uniquePlayers, clubs, eras });
+};
+
+export const logPwaInstalled = () => {
+  trackEvent('pwa_installed');
 };
 

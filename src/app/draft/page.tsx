@@ -53,6 +53,10 @@ function DraftPageContent() {
   const phaseParam = searchParams.get('phase');
   const h2hParam = searchParams.get('h2h');
   const challengeParam = searchParams.get('challenge');
+  const clubParam = searchParams.get('club');
+  const eraParam = searchParams.get('era');
+  const nationParam = searchParams.get('nation');
+  const poolLeagueParam = searchParams.get('poolLeague');
 
   const game = useDraftGame('formation');
 
@@ -101,11 +105,23 @@ function DraftPageContent() {
     } else if (phaseParam === 'history') {
       initializedRef.current = true;
       game.handleViewHistory();
+    } else if (clubParam || eraParam || nationParam || poolLeagueParam) {
+      initializedRef.current = true;
+      game.startThemedDraft({
+        club: clubParam || undefined,
+        era: eraParam || undefined,
+        nation: nationParam || undefined,
+        league: poolLeagueParam || undefined,
+      });
+    } else if (mode === 'quick' || mode === 'mystery') {
+      initializedRef.current = true;
+      game.setDraftModifier(mode);
+      game.handleStartDraft();
     } else {
       initializedRef.current = true;
       game.handleStartDraft();
     }
-  }, [mode, phaseParam, h2hParam, challengeParam, searchParams, game.todayChallenge]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [mode, phaseParam, h2hParam, challengeParam, clubParam, eraParam, nationParam, poolLeagueParam, searchParams, game.todayChallenge]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleReturnHome = () => {
     if (game.phase === 'results' || game.phase === 'history' || window.confirm('Abandon current draft run and return to homepage?')) {
@@ -154,8 +170,8 @@ function DraftPageContent() {
           </Button>
           <span className="min-w-0 text-sm text-[var(--ink-secondary)]">
             <span className="font-semibold text-[var(--ink-primary)]">Draft</span>
-            {game.streakStats.currentDailyStreak > 0 && (
-              <span className="hidden min-[440px]:inline whitespace-nowrap"> · {game.streakStats.currentDailyStreak}-day streak</span>
+            {(game.streakStats.currentChallengeStreak || 0) > 0 && (
+              <span className="hidden min-[440px]:inline whitespace-nowrap">, {game.streakStats.currentChallengeStreak || 0}-day clear streak</span>
             )}
           </span>
         </div>
@@ -183,7 +199,7 @@ function DraftPageContent() {
             }}
             aria-label="View squad history and personal bests"
             title="View squad history and personal bests"
-            className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] cursor-pointer transition-colors shrink-0"
+            className="w-11 h-11 rounded-lg flex items-center justify-center text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] cursor-pointer transition-colors shrink-0"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 8v4l3 3" />
@@ -197,7 +213,7 @@ function DraftPageContent() {
             onClick={() => setShowTutorial(true)}
             aria-label="How to play and game guides"
             title="How to play and game guides"
-            className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] cursor-pointer transition-colors shrink-0"
+            className="w-11 h-11 rounded-lg flex items-center justify-center text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--surface-subcard)] cursor-pointer transition-colors shrink-0"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="9" />
@@ -243,6 +259,8 @@ function DraftPageContent() {
             draftIQMode={game.draftIQMode}
             draftModifier={game.draftModifier}
             freeSearchEnabled={game.freeSearchEnabled}
+            themeLabel={game.poolLabel}
+            dailyChallenge={game.isDailyChallenge ? game.todayChallenge : null}
             onSelectFormation={game.handleSelectFormation}
             onSelectLeague={game.setSelectedLeague}
             onToggleDraftIQMode={() => game.setDraftIQMode(!game.draftIQMode)}
@@ -266,6 +284,7 @@ function DraftPageContent() {
             freeSearchEnabled={game.freeSearchEnabled}
             isDailyChallenge={game.isDailyChallenge}
             todayChallenge={game.todayChallenge}
+            poolLabel={game.poolLabel}
             targetToBeat={game.targetToBeat}
             showOnboarding={game.showOnboarding}
             onSkipOnboarding={game.handleSkipOnboarding}

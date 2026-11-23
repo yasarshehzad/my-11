@@ -12,19 +12,20 @@ import {
   CampaignPlayerSnapshot,
   ChallengeTarget,
   H2HSquadChallenge,
-  H2HShowdownResult
+  H2HShowdownResult,
+  DailyResult
 } from '../types/game';
 import { 
   FORMATION_SLOTS, 
   getDraftOptions, 
   calculateSquadStats, 
   simulateLeagueSeason,
-  DAILY_CHALLENGES,
   createSeedableRandom,
   getDetailedChemistryLogs,
   generateRandomSquad,
   getProjectedChemistry
 } from '../utils/gameLogic';
+import { getTodayChallenge } from '../utils/dailyChallenges';
 import { players } from '../data/players';
 import {
   parseChallengeFromUrl,
@@ -60,10 +61,13 @@ import {
   getSavedPersonalBests,
   checkAndApplyPersonalBests,
   updatePlayStreak,
+  applyDailyChallengeResult,
+  saveDailyResult,
   createCampaignPlayerSnapshot,
   getOnboardingCompleted,
   saveOnboardingCompleted
 } from '../utils/storage';
+import { recordDraftCompletion } from '../progression/progress';
 
 export type GamePhase = 'home' | 'formation' | 'draft' | 'simulating' | 'results' | 'history';
 
@@ -74,7 +78,7 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
   const [selectedLeague, setSelectedLeague] = useState<string>('english');
   const [selectedPlayers, setSelectedPlayers] = useState<(Player | null)[]>(Array(11).fill(null));
   const [currentSlotIndex, setCurrentSlotIndex] = useState<number>(0);
-  const [draftOptions, setDraftOptions] = useState<[Player, Player, Player] | null>(null);
+  const [draftOptions, setDraftOptions] = useState<Player[] | null>(null);
   const [stats, setStats] = useState({ attack: 0, midfield: 0, defence: 0, chemistry: 0, overall: 0 });
   const [simResult, setSimResult] = useState<SimulationResult | null>(null);
 
@@ -103,6 +107,30 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
   const [selectedClub, setSelectedClub] = useState('');
   const [selectedEra, setSelectedEra] = useState('');
   const [onlyMatchingPosition, setOnlyMatchingPosition] = useState(true);
+
+  // Optional theme seed used by the public club / era / nation draft pages.
+  const [poolClub, setPoolClub] = useState('');
+  const [poolEra, setPoolEra] = useState('');
+  const [poolNation, setPoolNation] = useState('');
+  const [poolLeague, setPoolLeague] = useState('');
+  const poolFilter = useCallback(
+    (player: Player) => {
+      if (poolClub && player.club !== poolClub) return false;
+      if (poolEra && player.era !== poolEra) return false;
+      if (poolNation && player.nationality !== poolNation) return false;
+      if (poolLeague && player.league !== poolLeague) return false;
+      return true;
+    },
+    [poolClub, poolEra, poolNation, poolLeague]
+  );
+  const poolLabel = useMemo(() => {
+    if (poolClub) return `${poolClub} only`;
+    if (poolNation) return `${poolNation} only`;
+    if (poolLeague && poolEra) return `${poolLeague} ${poolEra} only`;
+    if (poolLeague) return `${poolLeague} only`;
+    if (poolEra) return `${poolEra} only`;
+    return '';
+  }, [poolClub, poolNation, poolLeague, poolEra]);
 
   // --- Stored Stats & Status ---
   const [streakStats, setStreakStats] = useState<StreakStats>({
@@ -176,9 +204,8 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
       const dateStr = `${YYYY}-${MM}-${DD}`;
       setTodayDateStr(dateStr);
 
-      // 2. Set today's challenge
-      const day = today.getDay(); // 0 = Sun, ..., 6 = Sat
-      setTodayChallenge(DAILY_CHALLENGES[day]);
+      // 2. Set today's challenge (calendar-day rotation, shared by everyone)
+      setTodayChallenge(getTodayChallenge(today));
 
       // 3. Load stats, streaks, history, personal bests and daily status via storage utility
       setStreakStats(getSavedStreaks());
@@ -250,16 +277,35 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
     if (!isDailyChallenge || !todayChallenge) return true;
     const rule = todayChallenge.rule;
     switch (rule) {
+      case 'only_90s':
+        return player.era === '90s';
       case 'only_2000s':
         return player.era === '00s';
+      case 'only_10s':
+        return player.era === '10s';
+      case 'only_modern':
+        return player.era === 'Modern';
       case 'underdog_xi':
         return player.rarity === 'common' || player.rarity === 'rare';
       case 'no_legends':
         return !player.isLegendaryPlayer;
+      case 'only_legends':
+        return Boolean(player.isLegendaryPlayer);
       case 'under_90_rating':
         return player.rating < 90;
-      case 'only_modern':
-        return player.era === 'Modern';
+      case 'only_85_plus':
+        return player.rating >= 85;
+      case 'only_under_85':
+        return player.rating < 85;
+      case 'only_solid_or_below':
+        return player.rarity === 'common' || player.rarity === 'solid' || player.rarity === 'rare';
+      case 'one_superstar':
+      case 'best_defence':
+      case 'best_attack':
+      case 'best_midfield':
+      case 'perfect_chemistry':
+      case 'unbeaten':
+        return true;
       default:
         return true;
     }
@@ -275,7 +321,7 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
       selectedPlayers.filter((p): p is Player => p !== null).map((p) => p.id)
     );
 
-    let list = players.filter((p) => !draftedIds.has(p.id) && satisfiesChallenge(p));
+    let list = players.filter((p) => !draftedIds.has(p.id) && satisfiesChallenge(p) && poolFilter(p));
 
     // 1. Position Filter
     if (onlyMatchingPosition) {
@@ -312,7 +358,7 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
     list.sort((a, b) => b.rating - a.rating);
 
     return list.slice(0, 24); // Top 24 results
-  }, [formation, currentSlotIndex, selectedPlayers, satisfiesChallenge, onlyMatchingPosition, searchQuery, selectedClub, selectedEra]);
+  }, [formation, currentSlotIndex, selectedPlayers, satisfiesChallenge, onlyMatchingPosition, searchQuery, selectedClub, selectedEra, poolFilter]);
 
   // ==========================================
   // GAMEPLAY ACTIONS
@@ -324,6 +370,10 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
     if (clearTarget) {
       setTargetToBeat(null);
     }
+    setPoolClub('');
+    setPoolEra('');
+    setPoolNation('');
+    setPoolLeague('');
     transitionDOM(() => {
       setIsDailyChallenge(false);
       setFormation(null);
@@ -331,6 +381,29 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
       setCurrentSlotIndex(0);
       setDraftOptions(null);
       setRerollsRemaining(3);
+      setFreeSearchEnabled(false);
+      setStats({ attack: 0, midfield: 0, defence: 0, chemistry: 0, overall: 0 });
+      setSimResult(null);
+      setPhase('formation');
+    });
+  }, [transitionDOM]);
+
+  // --- Start a themed draft from a public club / era / nation page ---
+  const startThemedDraft = useCallback((theme: { club?: string; era?: string; nation?: string; league?: string }) => {
+    logGameStarted();
+    setTargetToBeat(null);
+    setPoolClub(theme.club || '');
+    setPoolEra(theme.era || '');
+    setPoolNation(theme.nation || '');
+    setPoolLeague(theme.league || '');
+    transitionDOM(() => {
+      setIsDailyChallenge(false);
+      setFormation(null);
+      setSelectedPlayers(Array(11).fill(null));
+      setCurrentSlotIndex(0);
+      setDraftOptions(null);
+      setRerollsRemaining(3);
+      setFreeSearchEnabled(false);
       setStats({ attack: 0, midfield: 0, defence: 0, chemistry: 0, overall: 0 });
       setSimResult(null);
       setPhase('formation');
@@ -341,6 +414,12 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
   const handlePlayDailyChallenge = useCallback(() => {
     if (!todayChallenge) return;
     logDailyChallengeStarted(todayChallenge.title);
+    setPoolClub('');
+    setPoolEra('');
+    setPoolNation('');
+    setPoolLeague('');
+    setDraftModifierState(todayChallenge.modifier || 'classic');
+    logDraftModeSelected(todayChallenge.modifier || 'classic');
     
     transitionDOM(() => {
       setIsDailyChallenge(true);
@@ -370,7 +449,7 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
       
       // 2. Generate random eligible unique squad
       const rule = useChallenge && todayChallenge ? todayChallenge.rule : undefined;
-      const randomSquad = generateRandomSquad(randomFormation, rule, selectedLeague);
+      const randomSquad = generateRandomSquad(randomFormation, rule, selectedLeague, poolFilter);
       setSelectedPlayers(randomSquad);
       setCurrentSlotIndex(11);
       setDraftOptions(null);
@@ -398,7 +477,7 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
       // 6. Navigate to draft screen to review the random team first
       setPhase('draft');
     });
-  }, [isDailyChallenge, todayChallenge, selectedLeague, transitionDOM]);
+  }, [isDailyChallenge, todayChallenge, selectedLeague, transitionDOM, poolFilter]);
 
   // --- Selection of Formation ---
   const handleSelectFormation = useCallback((form: FormationType) => {
@@ -413,19 +492,19 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
       const slots = FORMATION_SLOTS[formation];
 
       // If Daily Challenge, use date-based seed
-      let options: [Player, Player, Player];
+      let options: Player[];
       if (isDailyChallenge && todayChallenge) {
         const seedValue = parseInt(todayDateStr.replace(/-/g, ''), 10);
         const randFn = createSeedableRandom(seedValue + 0 * 1000);
-        options = getDraftOptions(slots[0].position, Array(11).fill(null), randFn, todayChallenge.rule, selectedLeague);
+        options = getDraftOptions(slots[0].position, Array(11).fill(null), randFn, todayChallenge.rule, selectedLeague, poolFilter);
       } else {
-        options = getDraftOptions(slots[0].position, Array(11).fill(null), undefined, undefined, selectedLeague);
+        options = getDraftOptions(slots[0].position, Array(11).fill(null), undefined, undefined, selectedLeague, poolFilter);
       }
 
       setDraftOptions(options);
       setPhase('draft');
     });
-  }, [formation, isDailyChallenge, todayChallenge, todayDateStr, selectedLeague, transitionDOM]);
+  }, [formation, isDailyChallenge, todayChallenge, todayDateStr, selectedLeague, transitionDOM, poolFilter]);
 
   // --- Reroll Draft Choices ---
   const handleRerollOptions = useCallback(() => {
@@ -435,17 +514,17 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
     const newRerolls = rerollsRemaining - 1;
     setRerollsRemaining(newRerolls);
 
-    let options: [Player, Player, Player];
+    let options: Player[];
     if (isDailyChallenge && todayChallenge) {
       const seedValue = parseInt(todayDateStr.replace(/-/g, ''), 10);
       const randFn = createSeedableRandom(seedValue + currentSlotIndex * 1000 + (3 - newRerolls) * 50000);
-      options = getDraftOptions(slots[currentSlotIndex].position, selectedPlayers, randFn, todayChallenge.rule, selectedLeague);
+      options = getDraftOptions(slots[currentSlotIndex].position, selectedPlayers, randFn, todayChallenge.rule, selectedLeague, poolFilter);
     } else {
-      options = getDraftOptions(slots[currentSlotIndex].position, selectedPlayers, undefined, undefined, selectedLeague);
+      options = getDraftOptions(slots[currentSlotIndex].position, selectedPlayers, undefined, undefined, selectedLeague, poolFilter);
     }
 
     setDraftOptions(options);
-  }, [rerollsRemaining, formation, currentSlotIndex, isDailyChallenge, todayChallenge, todayDateStr, selectedPlayers, selectedLeague]);
+  }, [rerollsRemaining, formation, currentSlotIndex, isDailyChallenge, todayChallenge, todayDateStr, selectedPlayers, selectedLeague, poolFilter]);
 
   // --- Undo Pick ---
   const handleUndoPick = useCallback(() => {
@@ -466,16 +545,16 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
     const newStats = calculateSquadStats(updatedSelection, slots);
     setStats(newStats);
 
-    let prevOptions: [Player, Player, Player];
+    let prevOptions: Player[];
     if (isDailyChallenge && todayChallenge) {
       const seedValue = parseInt(todayDateStr.replace(/-/g, ''), 10);
       const randFn = createSeedableRandom(seedValue + targetIndex * 1000);
-      prevOptions = getDraftOptions(slots[targetIndex].position, updatedSelection, randFn, todayChallenge.rule, selectedLeague);
+      prevOptions = getDraftOptions(slots[targetIndex].position, updatedSelection, randFn, todayChallenge.rule, selectedLeague, poolFilter);
     } else {
-      prevOptions = getDraftOptions(slots[targetIndex].position, updatedSelection, undefined, undefined, selectedLeague);
+      prevOptions = getDraftOptions(slots[targetIndex].position, updatedSelection, undefined, undefined, selectedLeague, poolFilter);
     }
     setDraftOptions(prevOptions);
-  }, [formation, currentSlotIndex, selectedPlayers, isDailyChallenge, todayChallenge, todayDateStr, selectedLeague]);
+  }, [formation, currentSlotIndex, selectedPlayers, isDailyChallenge, todayChallenge, todayDateStr, selectedLeague, poolFilter]);
 
   // --- Select Player and Draft ---
   const handleSelectPlayer = useCallback((player: Player) => {
@@ -526,13 +605,13 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
       setCurrentSlotIndex(nextIndex);
       
       // Determine next options
-      let nextOptions: [Player, Player, Player];
+      let nextOptions: Player[];
       if (isDailyChallenge && todayChallenge) {
         const seedValue = parseInt(todayDateStr.replace(/-/g, ''), 10);
         const randFn = createSeedableRandom(seedValue + nextIndex * 1000);
-        nextOptions = getDraftOptions(slots[nextIndex].position, updatedSelection, randFn, todayChallenge.rule, selectedLeague);
+        nextOptions = getDraftOptions(slots[nextIndex].position, updatedSelection, randFn, todayChallenge.rule, selectedLeague, poolFilter);
       } else {
-        nextOptions = getDraftOptions(slots[nextIndex].position, updatedSelection, undefined, undefined, selectedLeague);
+        nextOptions = getDraftOptions(slots[nextIndex].position, updatedSelection, undefined, undefined, selectedLeague, poolFilter);
       }
       setDraftOptions(nextOptions);
     } else {
@@ -543,7 +622,7 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
       logDraftCompleted(newStats.overall, newStats.chemistry);
       setSimResult(result);
     }
-  }, [formation, currentSlotIndex, selectedPlayers, isDailyChallenge, todayChallenge, todayDateStr, selectedLeague, draftModifier, showOnboarding]);
+  }, [formation, currentSlotIndex, selectedPlayers, isDailyChallenge, todayChallenge, todayDateStr, selectedLeague, draftModifier, showOnboarding, poolFilter]);
 
   // --- Begin League Season Simulation ---
   const startSimulation = useCallback(() => {
@@ -647,12 +726,32 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
     // 1. Calculate challenge beaten status
     let isBeaten = false;
     if (isDailyChallenge && todayChallenge) {
-      if (todayChallenge.rule === 'underdog_xi') {
-        isBeaten = simResult.points >= 50;
-      } else if (todayChallenge.rule === 'best_defence') {
-        isBeaten = simResult.points >= 60 && stats.defence >= 88;
-      } else {
-        isBeaten = simResult.points >= 60;
+      const targetPoints = todayChallenge.targetPoints ?? 60;
+      const legendCount = selectedPlayers.filter((p) => p?.isLegendaryPlayer).length;
+      const pointsMet = simResult.points >= targetPoints;
+
+      switch (todayChallenge.rule) {
+        case 'best_defence':
+          isBeaten = pointsMet && stats.defence >= (todayChallenge.targetStat ?? 88);
+          break;
+        case 'best_attack':
+          isBeaten = pointsMet && stats.attack >= (todayChallenge.targetStat ?? 88);
+          break;
+        case 'best_midfield':
+          isBeaten = pointsMet && stats.midfield >= (todayChallenge.targetStat ?? 88);
+          break;
+        case 'perfect_chemistry':
+          isBeaten = pointsMet && stats.chemistry >= (todayChallenge.targetChemistry ?? 90);
+          break;
+        case 'one_superstar':
+          isBeaten = pointsMet && legendCount === (todayChallenge.targetLegends ?? 1);
+          break;
+        case 'unbeaten':
+          isBeaten = simResult.losses === 0;
+          break;
+        default:
+          isBeaten = pointsMet;
+          break;
       }
       setChallengeBeaten(isBeaten);
     }
@@ -770,7 +869,7 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
     }
 
     // 6. Streak & Lifetime statistics
-    const newStreakStats = updatePlayStreak(streakStats, todayDateStr);
+    let newStreakStats = updatePlayStreak(streakStats, todayDateStr);
     newStreakStats.gamesPlayed += 1;
     newStreakStats.totalWins = (newStreakStats.totalWins || 0) + simResult.wins;
     if (simResult.leaguePosition === 1) {
@@ -800,6 +899,23 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
         newStreakStats.dailyChallengesCompleted += 1;
       }
       const challengeScore = stats.overall + simResult.points + (isBeaten ? 50 : 0);
+      const dailyResult: DailyResult = {
+        date: todayDateStr,
+        challengeId: todayChallenge.id,
+        challengeTitle: todayChallenge.title,
+        score: challengeScore,
+        points: simResult.points,
+        wins: simResult.wins,
+        overall: stats.overall,
+        chemistry: stats.chemistry,
+        percentile: simResult.percentile,
+        beaten: isBeaten,
+        completedAt: new Date().toISOString(),
+      };
+      saveDailyResult(dailyResult);
+      const streakUpdate = applyDailyChallengeResult(newStreakStats, dailyResult);
+      newStreakStats = streakUpdate.stats;
+
       const statusUpdate: DailyChallengeStatus = { completed: true, score: challengeScore, beaten: isBeaten };
       setDailyStatus(statusUpdate);
       logDailyChallengeCompleted(todayChallenge.title, isBeaten, challengeScore);
@@ -809,6 +925,17 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
     // Save and set streak stats
     setStreakStats(newStreakStats);
     saveStreaks(newStreakStats);
+
+    // 7. Long-term progression (XP, achievements, collection)
+    recordDraftCompletion({
+      simResult,
+      stats,
+      mode: isDailyChallenge ? 'daily_challenge' : draftModifier,
+      isDaily: isDailyChallenge,
+      challengeBeaten: isBeaten,
+      selectedPlayers: selectedPlayers.filter((p): p is Player => p !== null),
+      streakStats: newStreakStats,
+    });
   }, [
     simResult,
     formation,
@@ -856,6 +983,10 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
       setSelectedLeague(challenge.leagueId);
     }
     setIsDailyChallenge(false);
+    setPoolClub('');
+    setPoolEra('');
+    setPoolNation('');
+    setPoolLeague('');
     setSelectedPlayers(Array(11).fill(null));
     setCurrentSlotIndex(0);
     setDraftOptions(null);
@@ -902,6 +1033,10 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
       setSelectedLeague(h2h.leagueId);
     }
     setIsDailyChallenge(false);
+    setPoolClub('');
+    setPoolEra('');
+    setPoolNation('');
+    setPoolLeague('');
     setSelectedPlayers(Array(11).fill(null));
     setCurrentSlotIndex(0);
     setDraftOptions(null);
@@ -1003,6 +1138,7 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
     allClubs,
     allEras,
     getFilteredPlayers,
+    poolLabel,
     campaignHistory,
     personalBests,
     targetToBeat,
@@ -1014,6 +1150,7 @@ export function useDraftGame(initialPhase: GamePhase = 'home') {
 
     // Handlers
     handleStartDraft,
+    startThemedDraft,
     handlePlayDailyChallenge,
     handleRandomDraft,
     handleSelectFormation,

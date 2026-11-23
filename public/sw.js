@@ -9,6 +9,8 @@ const CORE_SHELL_URLS = [
   '/career/',
   '/career/play/',
   '/career/setup/',
+  '/drafts/',
+  '/progress/',
   '/manifest.json',
   '/icon.png',
   '/data/supplemental-2026-27.json',

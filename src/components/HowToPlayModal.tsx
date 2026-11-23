@@ -20,7 +20,7 @@ const draftSteps: GuideStep[] = [
     title: 'Draft 11 player cards',
     body: (
       <>
-        Pick from 3 player choices per slot. Link teammates with matching <b>nationality</b>, <b>club</b> or <b>era</b> to raise chemistry.
+        Pick from up to 3 player choices per slot. Link teammates with matching <b>nationality</b>, <b>club</b> or <b>era</b> to raise chemistry.
       </>
     ),
   },

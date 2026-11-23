@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "./globals.css";
 import { ServiceWorkerRegistrar } from "../components/ServiceWorkerRegistrar";
+import { ProgressionToaster } from "../components/ProgressionToaster";
 
 export const viewport: Viewport = {
   themeColor: "#F2F1EE",
@@ -78,6 +79,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground select-none">
         {children}
         <ServiceWorkerRegistrar />
+        <ProgressionToaster />
         {/* Google tag (gtag.js) */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-C5ETLYL50J"

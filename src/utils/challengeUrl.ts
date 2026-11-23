@@ -167,6 +167,8 @@ export function generateChallengeShareText({
   challengeUrl,
   isDailyChallenge = false,
   dailyChallengeTitle = '',
+  percentile,
+  dailyChallengeBeaten = false,
 }: {
   wins: number;
   draws?: number;
@@ -176,9 +178,19 @@ export function generateChallengeShareText({
   challengeUrl: string;
   isDailyChallenge?: boolean;
   dailyChallengeTitle?: string;
+  percentile?: number;
+  dailyChallengeBeaten?: boolean;
 }): string {
   let hook = '';
-  if (wins === 38 || (losses === 0 && (wins + draws === 38))) {
+  if (isDailyChallenge) {
+    const scoreLine =
+      points !== undefined
+        ? `${points} pts${percentile !== undefined ? `, top ${percentile}%` : ''}`
+        : `${wins} wins`;
+    hook = dailyChallengeBeaten
+      ? `I cleared today's Daily Challenge "${dailyChallengeTitle}" with ${scoreLine}. Can you beat it?`
+      : `I took on today's Daily Challenge "${dailyChallengeTitle}" and got ${scoreLine}. Your turn.`;
+  } else if (wins === 38 || (losses === 0 && (wins + draws === 38))) {
     hook = '38 games. No defeats. Can you do better?';
   } else if (wins >= 30) {
     hook = `I somehow won ${wins} of 38. Can you beat it?`;
@@ -186,8 +198,6 @@ export function generateChallengeShareText({
     hook = `I took on the Mystery Draft and got ${wins} wins. Beat that.`;
   } else if (mode === 'quick') {
     hook = `${QUICK_DRAFT_TIMER_SECONDS}-second timer per pick and still reached ${wins} wins on MY-11. Think you can beat it?`;
-  } else if (isDailyChallenge) {
-    hook = `I completed today's Daily Challenge "${dailyChallengeTitle}" with ${wins} wins. Can you beat this?`;
   } else {
     hook = `I went ${wins}–${draws}–${losses} with this XI on MY-11. Can you beat ${wins} wins?`;
   }

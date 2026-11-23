@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormationType, DraftModifier, QUICK_DRAFT_TIMER_SECONDS } from '../types/game';
+import { FormationType, DraftModifier, ChallengeTemplate, QUICK_DRAFT_TIMER_SECONDS } from '../types/game';
 import { IconArrowRight } from './career/GameIcons';
 import { Button } from '@/components/ui';
 
@@ -9,6 +9,8 @@ interface FormationSelectionProps {
   draftIQMode: boolean;
   draftModifier?: DraftModifier;
   freeSearchEnabled?: boolean;
+  themeLabel?: string;
+  dailyChallenge?: ChallengeTemplate | null;
   onSelectFormation: (form: FormationType) => void;
   onSelectLeague: (league: string) => void;
   onToggleDraftIQMode: () => void;
@@ -23,6 +25,8 @@ export function FormationSelection({
   draftIQMode,
   draftModifier = 'classic',
   freeSearchEnabled = false,
+  themeLabel = '',
+  dailyChallenge = null,
   onSelectFormation,
   onSelectLeague,
   onToggleDraftIQMode,
@@ -91,6 +95,18 @@ export function FormationSelection({
         <h2 className="text-xl font-display font-semibold text-[var(--ink-primary)]">
           Draft setup
         </h2>
+        {themeLabel && (
+          <p className="text-xs font-medium text-emerald-800 bg-emerald-50 rounded-md px-2 py-1 inline-flex">
+            Draft pool: {themeLabel}
+          </p>
+        )}
+        {dailyChallenge && (
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-left">
+            <p className="text-xs font-medium text-emerald-800">Daily scenario</p>
+            <p className="text-sm font-semibold text-[var(--ink-primary)] mt-0.5">{dailyChallenge.title}</p>
+            <p className="text-xs text-[var(--ink-secondary)] mt-0.5 leading-relaxed">{dailyChallenge.description}</p>
+          </div>
+        )}
 
         {/* Formation */}
         <div className="w-full space-y-1.5">

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FormationType, Player, SimulationResult } from '../types/game';
 import { toPng } from 'html-to-image';
+import { recordShare } from '../progression/progress';
 import {
   generateChallengeUrl,
   generateChallengeShareText,
@@ -46,6 +47,13 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
   const [generating, setGenerating] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const recordedShareRef = useRef(false);
+
+  const markShared = () => {
+    if (recordedShareRef.current) return;
+    recordedShareRef.current = true;
+    recordShare();
+  };
 
   // Track share view on mount
   useEffect(() => {
@@ -62,6 +70,10 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
       leagueId: simResult.selectedLeague || 'english',
     });
   }, [simResult.wins, simResult.points, simResult.draftModifier, formation, simResult.selectedLeague]);
+
+  const shareUrl = isDailyChallenge
+    ? 'https://my-11.com/draft?mode=daily_challenge'
+    : challengeUrl;
 
   const h2hChallengeUrl = React.useMemo(() => {
     return generateH2HChallengeUrl({
@@ -85,17 +97,20 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
       losses: simResult.losses,
       points: simResult.points,
       mode: simResult.draftModifier || 'classic',
-      challengeUrl,
+      challengeUrl: shareUrl,
       isDailyChallenge,
       dailyChallengeTitle,
+      percentile: simResult.percentile,
+      dailyChallengeBeaten,
     });
-  }, [simResult.wins, simResult.draws, simResult.losses, simResult.points, simResult.draftModifier, challengeUrl, isDailyChallenge, dailyChallengeTitle]);
+  }, [simResult.wins, simResult.draws, simResult.losses, simResult.points, simResult.percentile, simResult.draftModifier, shareUrl, isDailyChallenge, dailyChallengeTitle, dailyChallengeBeaten]);
 
   // Helper: Copy challenge link specifically
   const handleCopyChallengeLink = async () => {
     try {
-      await navigator.clipboard.writeText(challengeUrl);
+      await navigator.clipboard.writeText(shareUrl);
       logChallengeLinkCopied(simResult.wins, simResult.points);
+      markShared();
       setFeedbackMessage('Challenge link copied.');
       setTimeout(() => setFeedbackMessage(null), 3000);
     } catch (e) {
@@ -109,6 +124,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
     try {
       await navigator.clipboard.writeText(h2hChallengeUrl);
       logChallengeLinkCopied(simResult.wins, simResult.points);
+      markShared();
       setFeedbackMessage('Head-to-head link copied. Send it to a friend.');
       setTimeout(() => setFeedbackMessage(null), 3500);
     } catch {
@@ -122,6 +138,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
     try {
       await navigator.clipboard.writeText(shareText);
       logChallengeLinkCopied(simResult.wins, simResult.points);
+      markShared();
       setFeedbackMessage('Summary and link copied.');
       setTimeout(() => setFeedbackMessage(null), 3000);
     } catch (e) {
@@ -136,6 +153,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
     setGenerating(true);
     setErrorMessage(null);
     logShareCardDownloaded();
+    markShared();
 
     // Wait slightly to ensure styles are stable
     await new Promise((resolve) => setTimeout(resolve, 300));
@@ -165,13 +183,14 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
   const handleShareResult = async () => {
     logNativeShareTriggered(simResult.wins, simResult.points);
     logResultShared(simResult.wins, simResult.points);
+    markShared();
 
     if (navigator.share) {
       try {
         await navigator.share({
           title: `Beat my score on MY-11 (${simResult.wins} wins)`,
           text: shareText,
-          url: challengeUrl,
+          url: shareUrl,
         });
         setFeedbackMessage('Shared.');
         setTimeout(() => setFeedbackMessage(null), 3000);

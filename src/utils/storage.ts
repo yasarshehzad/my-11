@@ -1,4 +1,4 @@
-import { StreakStats, CampaignHistoryEntry, PersonalBests, ModePersonalBest, CampaignPlayerSnapshot, Player } from '../types/game';
+import { StreakStats, CampaignHistoryEntry, PersonalBests, ModePersonalBest, CampaignPlayerSnapshot, Player, DailyResult } from '../types/game';
 
 const THEME_KEY = 'drafted_xi_theme';
 const HIDE_TUTORIAL_KEY = 'drafted_xi_hide_tutorial';
@@ -6,6 +6,8 @@ const HIDE_CAREER_TUTORIAL_KEY = 'drafted_xi_hide_career_tutorial';
 const ONBOARDING_COMPLETED_KEY = 'drafted_xi_onboarding_completed_v1';
 const STREAKS_KEY = 'drafted_xi_streaks';
 const CHALLENGE_PREFIX = 'drafted_xi_challenge_';
+export const DAILY_RESULTS_KEY = 'my11_daily_results_v1';
+export const MAX_DAILY_RESULTS = 90;
 export const CAMPAIGN_HISTORY_KEY = 'drafted_xi_campaign_history_v1';
 export const PERSONAL_BESTS_KEY = 'drafted_xi_personal_bests_v1';
 export const MAX_CAMPAIGN_HISTORY = 50;
@@ -30,6 +32,10 @@ export const DEFAULT_STREAKS: StreakStats = {
   classicGamesPlayed: 0,
   quickGamesPlayed: 0,
   mysteryGamesPlayed: 0,
+  currentChallengeStreak: 0,
+  bestChallengeStreak: 0,
+  lastChallengeDate: '',
+  challengeFreezes: 1,
 };
 
 const isClient = () => typeof window !== 'undefined' && typeof localStorage !== 'undefined';
@@ -448,8 +454,140 @@ export function updatePlayStreak(
 }
 
 /**
- * Creates a lightweight snapshot of a drafted Player for campaign history
+ * Number of whole local calendar days between two YYYY-MM-DD strings.
+ * Returns null when either date is invalid.
  */
+export function daysBetweenLocalDates(prevDateStr: string, nextDateStr: string): number | null {
+  if (!prevDateStr || !nextDateStr) return null;
+  const [y1, m1, d1] = prevDateStr.split('-').map(Number);
+  const [y2, m2, d2] = nextDateStr.split('-').map(Number);
+  if (!y1 || !m1 || !d1 || !y2 || !m2 || !d2) return null;
+  const prevDate = new Date(y1, m1 - 1, d1, 12, 0, 0);
+  const nextDate = new Date(y2, m2 - 1, d2, 12, 0, 0);
+  return Math.round((nextDate.getTime() - prevDate.getTime()) / 86_400_000);
+}
+
+export function getSavedDailyResults(): DailyResult[] {
+  if (!isClient()) return [];
+  try {
+    const raw = localStorage.getItem(DAILY_RESULTS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((item): item is DailyResult => {
+        return Boolean(
+          item &&
+            typeof item === 'object' &&
+            typeof item.date === 'string' &&
+            item.date.length === 10 &&
+            typeof item.score === 'number'
+        );
+      })
+      .sort((a, b) => (a.date < b.date ? 1 : -1))
+      .slice(0, MAX_DAILY_RESULTS);
+  } catch {
+    return [];
+  }
+}
+
+export function saveDailyResult(result: DailyResult): DailyResult[] {
+  if (!isClient()) return [result];
+  try {
+    const existing = getSavedDailyResults();
+    const updated = [result, ...existing.filter((item) => item.date !== result.date)]
+      .sort((a, b) => (a.date < b.date ? 1 : -1))
+      .slice(0, MAX_DAILY_RESULTS);
+    localStorage.setItem(DAILY_RESULTS_KEY, JSON.stringify(updated));
+    return updated;
+  } catch {
+    return [result];
+  }
+}
+
+export function getDailyResultForDate(date: string): DailyResult | null {
+  return getSavedDailyResults().find((item) => item.date === date) || null;
+}
+
+export interface DailyStreakUpdate {
+  stats: StreakStats;
+  /** The cleared streak was extended. */
+  extended: boolean;
+  /** A streak freeze covered exactly one missed day. */
+  freezeUsed: boolean;
+  /** The cleared streak was reset to a fresh attempt. */
+  reset: boolean;
+  /** A milestone the player just reached (3, 7, 14, 30, 100). */
+  milestone: number | null;
+}
+
+/**
+ * Updates the daily *challenge* streak, which is distinct from the play streak.
+ * - A cleared daily extends the streak.
+ * - Missing exactly one day can consume a streak freeze.
+ * - A failed attempt starts a new streak, but never destroys the best record.
+ */
+export function applyDailyChallengeResult(
+  currentStats: StreakStats,
+  result: DailyResult
+): DailyStreakUpdate {
+  const stats: StreakStats = {
+    ...currentStats,
+    currentChallengeStreak: currentStats.currentChallengeStreak || 0,
+    bestChallengeStreak: currentStats.bestChallengeStreak || 0,
+    challengeFreezes: currentStats.challengeFreezes ?? 1,
+  };
+
+  if (stats.lastChallengeDate === result.date) {
+    return { stats, extended: false, freezeUsed: false, reset: false, milestone: null };
+  }
+
+  let nextStreak = result.beaten ? 1 : 0;
+  let freezeUsed = false;
+  let reset = false;
+
+  if (stats.lastChallengeDate && result.beaten) {
+    const gap = daysBetweenLocalDates(stats.lastChallengeDate, result.date);
+    if (gap === 1) {
+      nextStreak = (stats.currentChallengeStreak || 0) + 1;
+    } else if (gap === 2 && (stats.challengeFreezes || 0) > 0) {
+      nextStreak = (stats.currentChallengeStreak || 0) + 1;
+      stats.challengeFreezes = Math.max(0, (stats.challengeFreezes || 0) - 1);
+      stats.lastFreezeUsedDate = result.date;
+      freezeUsed = true;
+    } else {
+      reset = (stats.currentChallengeStreak || 0) > 0;
+      nextStreak = 1;
+    }
+  } else if (!result.beaten) {
+    reset = (stats.currentChallengeStreak || 0) > 0;
+    nextStreak = 0;
+  }
+
+  stats.currentChallengeStreak = nextStreak;
+  stats.bestChallengeStreak = Math.max(stats.bestChallengeStreak || 0, nextStreak);
+  stats.lastChallengeDate = result.date;
+  stats.lastChallengeDateResult = result.date;
+  stats.lastChallengeScore = result.score;
+  stats.lastChallengeBeaten = result.beaten;
+
+  let milestone: number | null = null;
+  if (result.beaten && [3, 7, 14, 30, 100].includes(nextStreak)) {
+    milestone = nextStreak;
+    if (nextStreak === 7 || nextStreak === 30) {
+      stats.challengeFreezes = Math.min(2, (stats.challengeFreezes || 0) + 1);
+    }
+  }
+
+  return { stats, extended: result.beaten, freezeUsed, reset, milestone };
+}
+
+export function getNextStreakMilestone(streak: number): number | null {
+  const milestones = [3, 7, 14, 30, 100];
+  return milestones.find((milestone) => milestone > streak) || null;
+}
+
+
 export function createCampaignPlayerSnapshot(
   player: Player,
   selectedPosition?: string

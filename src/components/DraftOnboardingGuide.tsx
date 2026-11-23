@@ -34,7 +34,7 @@ export function DraftOnboardingGuide({
   };
 
   const steps = [
-    { title: 'Pick your player', description: 'Each round gives you 3 choices. Rating matters, but so does team fit.', actionLabel: 'Next' },
+    { title: 'Pick your player', description: 'Each round gives you up to 3 choices. Rating matters, but so does team fit.', actionLabel: 'Next' },
     { title: 'Build chemistry', description: 'Shared club, nation and era links lift your XI. Watch the chemistry value on each choice.', actionLabel: 'Next' },
     { title: 'Simulate the season', description: 'Draft all 11, then play a 38-game season. Can you go unbeaten?', actionLabel: 'Got it' },
   ];

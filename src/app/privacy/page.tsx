@@ -5,7 +5,7 @@ import { IconArrowLeft } from '@/components/career/GameIcons';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
-  description: 'Privacy Policy for MY-11. We respect your privacy and do not collect, store, or sell personal data.',
+  description: 'How MY-11 handles local saves, Google Analytics events and portable save codes.',
 };
 
 export default function PrivacyPage() {
@@ -17,21 +17,24 @@ export default function PrivacyPage() {
         </h1>
         
         <p className="text-xs text-[var(--ink-muted)]">
-          Effective date: June 15, 2026
+          Effective date: November 23, 2026
         </p>
 
         <div className="text-sm text-[var(--ink-secondary)] space-y-4 leading-relaxed">
           <p>
-            Your privacy is extremely important to us. At <strong className="text-[var(--ink-primary)]">MY-11</strong>, we do not collect, store, or sell any personal data.
+            At <strong className="text-[var(--ink-primary)]">MY-11</strong>, we do not ask for an account, name, email address or payment details. The game is played as a guest.
           </p>
           <p>
-            <strong className="text-[var(--ink-primary)]">Local storage:</strong> The game uses local storage on your browser strictly to store your gameplay stats, campaign history, personal records, streak count, and daily challenge progress. This data remains on your device and is never uploaded to any external servers.
+            <strong className="text-[var(--ink-primary)]">Local storage:</strong> The game uses local storage and IndexedDB on your browser to store your gameplay stats, campaign history, personal records, streak count, daily challenge progress, manager level and career saves. This data remains on your device and is not uploaded to a MY-11 server. If you clear your browser storage, it is removed.
           </p>
           <p>
-            <strong className="text-[var(--ink-primary)]">Cookies:</strong> We do not use third-party cookies or tracking scripts.
+            <strong className="text-[var(--ink-primary)]">Analytics:</strong> We use Google Analytics 4 to understand which modes are played and where players stop. It records page views and gameplay events such as starting a draft, completing a season, opening a daily scenario, sharing a result and creating a career. We do not send names, email addresses or save contents. Google may process device and approximate location data under its own privacy policy.
           </p>
           <p>
-            <strong className="text-[var(--ink-primary)]">Third-party analytics:</strong> This site uses privacy-conscious placeholder analytics hooks to help us understand gameplay patterns. No personal identifying information (PII) is captured.
+            <strong className="text-[var(--ink-primary)]">Cookies:</strong> Google Analytics may set cookies. You can block them with your browser or an ad blocker; the game still works.
+          </p>
+          <p>
+            <strong className="text-[var(--ink-primary)]">Save codes:</strong> If you create a portable save code, it contains your career data and is shown only to you. Anyone you give the code to can open that career, so keep it private.
           </p>
         </div>
 

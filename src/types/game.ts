@@ -187,13 +187,23 @@ export interface SimulationResult {
 }
 
 export type ChallengeRuleType =
+  | 'only_90s'
   | 'only_2000s'
+  | 'only_10s'
+  | 'only_modern'
   | 'no_legends'
+  | 'only_legends'
   | 'best_defence'
+  | 'best_attack'
+  | 'best_midfield'
+  | 'perfect_chemistry'
   | 'one_superstar'
   | 'under_90_rating'
+  | 'only_85_plus'
+  | 'only_under_85'
   | 'underdog_xi'
-  | 'only_modern';
+  | 'only_solid_or_below'
+  | 'unbeaten';
 
 export interface ChallengeTemplate {
   id: string;
@@ -201,6 +211,14 @@ export interface ChallengeTemplate {
   description: string;
   rule: ChallengeRuleType;
   modifier?: DraftModifier;
+  /** Points required to clear the scenario. Defaults to 60. */
+  targetPoints?: number;
+  /** Required Attack / Midfield / Defence rating for stat scenarios. */
+  targetStat?: number;
+  /** Required chemistry for chemistry scenarios. */
+  targetChemistry?: number;
+  /** Required number of Legends for the one-superstar scenario. */
+  targetLegends?: number;
 }
 
 export interface ChallengeTarget {
@@ -264,6 +282,7 @@ export interface StreakStats {
   bestPoints: number;
   perfectSeasons: number;
   dailyChallengesCompleted: number;
+  /** Consecutive days with any completed draft (the original play streak). */
   currentDailyStreak: number;
   bestDailyStreak?: number;
   lastPlayedDate: string; // YYYY-MM-DD
@@ -273,6 +292,31 @@ export interface StreakStats {
   classicGamesPlayed?: number;
   quickGamesPlayed?: number;
   mysteryGamesPlayed?: number;
+  /** Consecutive days with a cleared daily scenario. */
+  currentChallengeStreak?: number;
+  bestChallengeStreak?: number;
+  lastChallengeDate?: string;
+  /** Streak savers earned at milestones; one can cover a single missed day. */
+  challengeFreezes?: number;
+  lastFreezeUsedDate?: string;
+  /** Most recent daily result, mirrored here for cheap home-screen reads. */
+  lastChallengeDateResult?: string;
+  lastChallengeScore?: number;
+  lastChallengeBeaten?: boolean;
+}
+
+export interface DailyResult {
+  date: string; // YYYY-MM-DD, local calendar day
+  challengeId: string;
+  challengeTitle: string;
+  score: number;
+  points: number;
+  wins: number;
+  overall: number;
+  chemistry: number;
+  percentile: number;
+  beaten: boolean;
+  completedAt: string; // ISO timestamp
 }
 
 export interface ChemistryLog {

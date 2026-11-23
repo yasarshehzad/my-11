@@ -29,6 +29,12 @@ import {
 import { getSavedTheme, saveTheme } from '../../../utils/storage';
 import { isSfxEnabled, toggleSfxEnabled, playUiTap } from '../../../utils/soundEffects';
 import { CareerErrorBoundary } from '../../../components/career/CareerErrorBoundary';
+import { recordCareerSnapshot } from '../../../progression/progress';
+import {
+  logCareerMatchPlayed,
+  logCareerSaveOpened,
+  logCareerSeasonAdvanced,
+} from '../../../utils/analytics';
 import { OfficeDeadlineHeroTakeover } from '../../../components/career/OfficeDeadlineHeroTakeover';
 import {
   IconCheck,
@@ -867,6 +873,7 @@ function CareerPlayHubContent() {
   // Latest save handed to storage. State can lag when several updates land in one tick,
   // so confidence changes are measured against this ref, not the render's `save`.
   const latestSaveRef = useRef<CareerSaveFile | null>(save);
+  const loggedCareerOpenRef = useRef(false);
   useEffect(() => {
     latestSaveRef.current = save;
   }, [save]);
@@ -877,6 +884,7 @@ function CareerPlayHubContent() {
     latestSaveRef.current = logged;
     saveCareerSave(logged);
     setSave(logged);
+    recordCareerSnapshot(logged);
     return logged;
   }, []);
 
@@ -1332,6 +1340,13 @@ function CareerPlayHubContent() {
         setSave(loaded);
         setEditableSettings(loaded?.settings || null);
         setEditingClubName(loaded?.club.customName || loaded?.club.defaultName || '');
+        if (loaded) {
+          recordCareerSnapshot(loaded);
+          if (!loggedCareerOpenRef.current) {
+            loggedCareerOpenRef.current = true;
+            logCareerSaveOpened(slotId, loaded.season.seasonNumber);
+          }
+        }
         if (!dbLoaded) {
           setDbLoadError(getCareerDatabaseLoadError() || 'Expanded player database could not be fetched (offline or network error).');
         } else {
@@ -1855,6 +1870,7 @@ function CareerPlayHubContent() {
     setSimulating(true);
     const { updatedSave } = advanceToNextSeason(save);
     commitSave(updatedSave);
+    logCareerSeasonAdvanced(updatedSave.season.seasonNumber);
     setSimulating(false);
     showToast(`Welcome to season ${updatedSave.season.seasonNumber}. Summer transfer window open.`);
   };
@@ -1939,6 +1955,19 @@ function CareerPlayHubContent() {
       enrichedSave = evaluateDressingRoomDynamics(enrichedSave, enrichedSave.season.currentDate);
     }
     const finalSave = checkAndTriggerCelebration(enrichedSave, activeMatchFixture || undefined);
+    if (activeMatchFixture && 'homeScore' in activeMatchFixture) {
+      const isHome = activeMatchFixture.homeClubId === finalSave.club.id;
+      const userScore = isHome ? activeMatchFixture.homeScore || 0 : activeMatchFixture.awayScore || 0;
+      const opponentScore = isHome ? activeMatchFixture.awayScore || 0 : activeMatchFixture.homeScore || 0;
+      const outcome = userScore > opponentScore ? 'win' : userScore < opponentScore ? 'loss' : 'draw';
+      logCareerMatchPlayed(
+        'roundName' in activeMatchFixture ? 'cup' : 'league',
+        outcome,
+        'round' in activeMatchFixture && typeof activeMatchFixture.round === 'number'
+          ? activeMatchFixture.round
+          : undefined
+      );
+    }
     commitSave(finalSave);
     setActiveMatchFixture(null);
     showToast('Match completed and results saved. Press conference open in the media desk.');
@@ -3511,6 +3540,19 @@ function CareerPlayHubContent() {
           onComplete={() => {
             const { updatedSave, simmedFixture } = instantSimLoadingData;
             const finalSave = checkAndTriggerCelebration(updatedSave, simmedFixture);
+            if ('homeScore' in simmedFixture) {
+              const isHome = simmedFixture.homeClubId === finalSave.club.id;
+              const userScore = isHome ? simmedFixture.homeScore || 0 : simmedFixture.awayScore || 0;
+              const opponentScore = isHome ? simmedFixture.awayScore || 0 : simmedFixture.homeScore || 0;
+              const outcome = userScore > opponentScore ? 'win' : userScore < opponentScore ? 'loss' : 'draw';
+              logCareerMatchPlayed(
+                'roundName' in simmedFixture ? 'cup' : 'league',
+                outcome,
+                'round' in simmedFixture && typeof simmedFixture.round === 'number'
+                  ? simmedFixture.round
+                  : undefined
+              );
+            }
             commitSave(finalSave);
             setSimulating(false);
             setInstantSimLoadingData(null);

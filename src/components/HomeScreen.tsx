@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+'use client';
+
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   ChallengeTemplate,
@@ -6,12 +8,16 @@ import {
   PersonalBests,
   ChallengeTarget,
   H2HSquadChallenge,
+  DailyResult,
 } from '../types/game';
-import { DailyChallengeStatus } from '../utils/storage';
+import { DailyChallengeStatus, getSavedDailyResults } from '../utils/storage';
 import { hydrateCareerSaveVault, listSaveSlots, readRawCareerSave } from '../career/saveVault';
 import { CareerSaveFile, SaveSlotMeta } from '../career/types';
+import { getProgressionSummary, type ProgressionSummary } from '../progression/progress';
+import { DailyHubCard } from './DailyHubCard';
+import { ProgressionStrip } from './ProgressionStrip';
 import { IconArrowRight } from './career/GameIcons';
-import { Button, Eyebrow, SectionHeader } from './ui';
+import { Button, Eyebrow } from './ui';
 
 export interface HomeScreenProps {
   streakStats: StreakStats;
@@ -20,7 +26,6 @@ export interface HomeScreenProps {
   dailyStatus: DailyChallengeStatus;
   onStartDraft: () => void;
   onPlayDailyChallenge: () => void;
-  onRandomDraft?: () => void;
   onViewHistory?: () => void;
   incomingChallenge?: ChallengeTarget | null;
   onAcceptChallenge?: (target: ChallengeTarget) => void;
@@ -57,7 +62,6 @@ export function HomeScreen({
   dailyStatus,
   onStartDraft,
   onPlayDailyChallenge,
-  onRandomDraft,
   incomingChallenge,
   onAcceptChallenge,
   onDismissChallenge,
@@ -68,6 +72,8 @@ export function HomeScreen({
 }: HomeScreenProps) {
   const [careerSlots, setCareerSlots] = useState<SaveSlotMeta[]>([]);
   const [activeFullSave, setActiveFullSave] = useState<CareerSaveFile | null>(null);
+  const [dailyResults, setDailyResults] = useState<DailyResult[]>([]);
+  const [progression, setProgression] = useState<ProgressionSummary | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -95,10 +101,21 @@ export function HomeScreen({
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    Promise.resolve().then(() => {
+      if (cancelled) return;
+      setDailyResults(getSavedDailyResults());
+      setProgression(getProgressionSummary());
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const activeSlot = careerSlots.find((s) => !s.isEmpty);
   const activeCareerSave = activeSlot?.save;
   const activeSlotId = activeSlot?.slotId;
-  const occupiedSlotsCount = careerSlots.filter((s) => !s.isEmpty).length;
 
   const activeStanding = useMemo(() => {
     if (!activeFullSave?.standings || !activeFullSave?.club) return null;
@@ -111,7 +128,7 @@ export function HomeScreen({
   }, [activeFullSave]);
 
   return (
-    <div className="space-y-5 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       {/* Incoming Friend H2H Squad Battle Banner */}
       {incomingH2HChallenge && (
         <section
@@ -173,51 +190,80 @@ export function HomeScreen({
         </section>
       )}
 
+      {/* Draft-first hero: the fastest route into the game */}
+      <section
+        aria-label="Draft mode"
+        data-force-white="true"
+        className="relative overflow-hidden rounded-xl bg-[#10140f] text-white grid sm:grid-cols-[1.15fr_0.85fr]"
+      >
+        <div className="relative z-10 p-5 sm:p-7 flex flex-col justify-center text-left">
+          <h1 className="text-3xl sm:text-4xl font-display font-semibold leading-[1.08] text-white text-balance max-w-[22ch]">
+            Pick 11. Simulate the season. Argue about it.
+          </h1>
+          <p className="text-sm text-white/90 leading-relaxed max-w-md mt-2.5">
+            3,600+ player seasons. 38 games. No sign-up.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-4">
+            <button type="button" onClick={onStartDraft} className={`${CAREER_PRIMARY_CLASS} cursor-pointer`}>
+              <span>Draft your XI</span>
+              <ArrowIcon />
+            </button>
+          </div>
+        </div>
+
+        <div className="relative hidden sm:block min-h-[290px]" aria-hidden="true">
+          <img
+            src="/images/photo_stadium_bowl.jpg"
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#10140f] via-[#10140f]/30 to-transparent" />
+        </div>
+      </section>
+
+      {/* Today's shared scenario */}
+      <DailyHubCard
+        challenge={todayChallenge}
+        dailyStatus={dailyStatus}
+        streakStats={streakStats}
+        dailyResults={dailyResults}
+        onPlay={onPlayDailyChallenge}
+      />
+
+      {/* Manager progress */}
+      {progression && <ProgressionStrip summary={progression} />}
+
       {/* Career Mode: one card, one primary action, one link to all saves */}
       <section
         aria-label="Career mode"
         data-force-white="true"
-        className="relative overflow-hidden rounded-xl min-h-[220px] sm:min-h-[280px] flex flex-col justify-end p-5 sm:p-7"
-        style={{ backgroundColor: '#18181B' }}
+        className="overflow-hidden rounded-xl bg-[#18181B] text-white grid sm:grid-cols-[1.2fr_0.8fr]"
       >
-        <img
-          src="/images/hero_tunnel_stadium.jpg"
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover object-center opacity-70"
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              'linear-gradient(95deg, rgba(24,24,27,0.92) 0%, rgba(24,24,27,0.72) 55%, rgba(24,24,27,0.28) 100%)',
-          }}
-        />
-
-        <div className="relative z-10 max-w-xl space-y-2 text-left">
+        <div className="relative z-10 p-5 sm:p-7 flex flex-col justify-center text-left">
           {activeCareerSave && activeSlotId ? (
             <>
-              <p className="text-xs font-medium text-white">Career mode</p>
-              <h1 className="text-2xl sm:text-3xl font-display font-semibold leading-tight text-white">
+              <h2 className="text-2xl sm:text-3xl font-display font-semibold leading-tight text-white">
                 {activeCareerSave.clubName}
-              </h1>
-              <p className="text-sm text-white leading-relaxed">
-                {activeCareerSave.managerName} · Season {activeCareerSave.seasonNumber}
-                {activeStanding ? ` · ${ordinal(activeStanding.position)} in the league` : ''} ·{' '}
-                {formatBudgetCompact(activeCareerSave.budget)} budget
+              </h2>
+              <p className="text-sm text-white leading-relaxed mt-1">
+                {activeCareerSave.managerName}, season {activeCareerSave.seasonNumber}
+                {activeStanding ? `, ${ordinal(activeStanding.position)} in the league` : ''}
               </p>
+              <p className="text-xs text-white/75 mt-0.5">{formatBudgetCompact(activeCareerSave.budget)} transfer budget</p>
             </>
           ) : (
             <>
-              <h1 className="text-2xl sm:text-3xl font-display font-semibold leading-tight text-white">
+              <h2 className="text-2xl sm:text-3xl font-display font-semibold leading-tight text-white">
                 Career mode
-              </h1>
-              <p className="text-sm text-white leading-relaxed">
-                Manage one of 20 top-flight clubs through the 2026/27 season and six cups.
+              </h2>
+              <p className="text-sm text-white leading-relaxed max-w-md mt-1">
+                Take your XI through a season.
               </p>
             </>
           )}
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-3">
             {activeCareerSave && activeSlotId ? (
               <Link href={`/career/play?slot=${activeSlotId}`} className={CAREER_PRIMARY_CLASS}>
                 <span>Continue career</span>
@@ -225,58 +271,25 @@ export function HomeScreen({
               </Link>
             ) : onSelectCareerMode ? (
               <button type="button" onClick={onSelectCareerMode} className={`${CAREER_PRIMARY_CLASS} cursor-pointer`}>
-                <span>Start new career</span>
+                <span>Start a career</span>
                 <ArrowIcon />
               </button>
             ) : (
               <Link href="/career/setup?slot=slot_1" className={CAREER_PRIMARY_CLASS}>
-                <span>Start new career</span>
+                <span>Start a career</span>
                 <ArrowIcon />
               </Link>
             )}
-            <Link
-              href="/career"
-              className="inline-flex items-center min-h-11 text-sm font-semibold text-white underline underline-offset-4 decoration-white/50 hover:decoration-white"
-            >
-              All saves ({occupiedSlotsCount}/3)
-            </Link>
           </div>
         </div>
-      </section>
 
-      {/* Draft Mode */}
-      <section aria-label="Draft mode" className="rounded-xl bg-[var(--surface-card)] border border-[var(--border-crisp)] text-left">
-        <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <SectionHeader
-            as="h2"
-            className="min-w-0"
-            title="Draft mode"
-            meta={
-              streakStats.currentDailyStreak > 0
-                ? `Daily streak: ${streakStats.currentDailyStreak} ${streakStats.currentDailyStreak === 1 ? 'day' : 'days'}`
-                : undefined
-            }
-            description={
-              todayChallenge
-                ? `Draft 11 players in minutes, or try today’s challenge: ${todayChallenge.title}.`
-                : 'Draft 11 players and simulate a 38-match season in minutes.'
-            }
+        <div className="relative hidden sm:block min-h-[220px]" aria-hidden="true">
+          <img
+            src="/images/hero_tunnel_stadium.jpg"
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover object-center"
           />
-
-
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <Button variant="secondary" onClick={onStartDraft}>
-              Play draft mode
-            </Button>
-            <Button variant="secondary" onClick={onPlayDailyChallenge}>
-              {dailyStatus.completed ? 'Replay daily' : 'Daily scenario'}
-            </Button>
-            {onRandomDraft && (
-              <Button variant="ghost" onClick={onRandomDraft}>
-                Random XI
-              </Button>
-            )}
-          </div>
+          <div className="absolute inset-0 bg-gradient-to-r from-[#18181B] via-[#18181B]/25 to-transparent" />
         </div>
       </section>
     </div>
